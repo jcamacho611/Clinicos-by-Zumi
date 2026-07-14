@@ -7,7 +7,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { encounters, getAppointmentsForOrganization, getPatientsForOrganization, tasks } from "@/lib/clinic-data";
+import { encounters, getAppointmentsForOrganization, tasks } from "@/lib/clinic-data";
+import type { Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge, TextAction } from "@/components/clinic/workspace-kit";
 
 export function FrontDeskWorkspace({ organizationId }: { organizationId: string }) {
@@ -56,8 +57,7 @@ export function ProviderWorkspace({ organizationId }: { organizationId: string }
   </div>;
 }
 
-export function PatientsWorkspace({ organizationId }: { organizationId: string }) {
-  const patients = getPatientsForOrganization(organizationId);
+export function PatientsWorkspace({ patients }: { patients: Patient[] }) {
   return <div className="space-y-6">
     <PageIntro title="Every patient, one continuous record." description="Search demographics, care team, risk, portal status, balance, and the next clinical step without leaving the patient index." action={<Button variant="primary"><Plus className="size-4" /> Add patient</Button>} />
     <Card className="overflow-hidden">
@@ -82,8 +82,7 @@ export function ScheduleWorkspace({ organizationId }: { organizationId: string }
   </div>;
 }
 
-export function EncountersWorkspace({ organizationId }: { organizationId: string }) {
-  const patients = getPatientsForOrganization(organizationId);
+export function EncountersWorkspace({ organizationId, patients }: { organizationId: string; patients: Patient[] }) {
   const organizationEncounters = encounters.filter((encounter) => encounter.organizationId === organizationId);
   const baseEncounter = organizationEncounters[0];
   const visibleEncounters = baseEncounter ? [

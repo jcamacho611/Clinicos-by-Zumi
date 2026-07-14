@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { can } from "@/lib/auth/rbac";
 import { signSessionToken, verifySessionToken } from "@/lib/auth/token";
-import { getPatientForOrganization, getPatientsForOrganization } from "@/lib/clinic-data";
 import type { ClinicSession } from "@/lib/auth/types";
+import { mapPatientAggregate } from "@/lib/repositories/patient-mapper";
 
 const session: ClinicSession = {
   sessionId: "session-test-1",
@@ -37,9 +37,20 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "settings", "update")).toBe(false);
   });
 
-  it("does not return another organization's patient from a guessed id", () => {
-    expect(getPatientForOrganization("pt-1004", "org-bfm")).toBeUndefined();
-    expect(getPatientForOrganization("pt-1004", "org-luxe")?.mrn).toBe("LUX-10428");
-    expect(getPatientsForOrganization("org-bfm").every((patient) => patient.organizationId === "org-bfm")).toBe(true);
+  it("preserves the repository's tenant identity while mapping database records", () => {
+    const patient = mapPatientAggregate({
+      patient: {
+        id: "pt-1001", organizationId: "org-bfm", locationId: null, mrn: "BFM-28419",
+        firstName: "Maya", lastName: "Thompson", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"),
+        sexAtBirth: "Female", pronouns: "she/her", phone: null, email: null, preferredLanguage: "English",
+        portalStatus: "active", riskLevel: "NEEDS_PROVIDER", requiresHumanReview: true,
+      },
+      allergies: [], medications: [], problems: [],
+    }, new Date("2026-07-14T12:00:00.000Z"));
+
+    expect(patient.organizationId).toBe("org-bfm");
+    expect(patient.mrn).toBe("BFM-28419");
+    expect(patient.riskLevel).toBe("Needs Provider");
+    expect(patient.riskFlags).toContain("Human review required");
   });
 });

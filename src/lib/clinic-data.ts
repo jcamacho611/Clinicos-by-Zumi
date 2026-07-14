@@ -4,7 +4,6 @@ import type {
   Encounter,
   LabResult,
   Organization,
-  Patient,
   QualityGap,
   TimelineEvent,
   WorkTask,
@@ -13,45 +12,6 @@ import type {
 export const organizations: Organization[] = [
   { id: "org-bfm", name: "Brooklyn Family Medicine", type: "Primary Care", locations: ["Brooklyn Heights", "Crown Heights"] },
   { id: "org-luxe", name: "Luxe Medi", type: "Med Spa", locations: ["Midtown Manhattan"] },
-];
-
-export const patients: Patient[] = [
-  {
-    id: "pt-1001", organizationId: "org-bfm", mrn: "BFM-28419", firstName: "Maya", lastName: "Thompson", initials: "MT", dob: "1985-09-12", age: 40,
-    sex: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", preferredLanguage: "English",
-    insurance: "Healthfirst", plan: "Essential Plan 3", memberId: "HF-TEST-40218", copay: 25, balance: 75, portalStatus: "Active",
-    riskLevel: "Needs Provider", riskFlags: ["Abnormal A1C", "Penicillin allergy"], nextAppointment: "Today, 10:30 AM", provider: "Nadja R., NP",
-    location: "Brooklyn Heights", allergies: ["Penicillin - hives"], medications: ["Metformin 500 mg BID", "Lisinopril 10 mg daily"],
-    problems: ["Type 2 diabetes", "Essential hypertension"], lastVisit: "Jun 18, 2026",
-  },
-  {
-    id: "pt-1002", organizationId: "org-bfm", mrn: "BFM-28104", firstName: "Darius", lastName: "Coleman", initials: "DC", dob: "1972-02-07", age: 54,
-    sex: "Male", pronouns: "he/him", phone: "(718) 555-0188", email: "darius.coleman@example.test", preferredLanguage: "English",
-    insurance: "EmblemHealth", plan: "GHI CBP", memberId: "EMB-TEST-90116", copay: 30, balance: 0, portalStatus: "Active",
-    riskLevel: "Normal", riskFlags: [], nextAppointment: "Jul 21, 9:00 AM", provider: "Nadja R., NP", location: "Crown Heights",
-    allergies: ["No known drug allergies"], medications: ["Atorvastatin 20 mg nightly"], problems: ["Hyperlipidemia"], lastVisit: "May 02, 2026",
-  },
-  {
-    id: "pt-1003", organizationId: "org-bfm", mrn: "BFM-29011", firstName: "Elena", lastName: "Rivera", initials: "ER", dob: "1993-11-21", age: 32,
-    sex: "Female", pronouns: "she/her", phone: "(347) 555-0109", email: "elena.rivera@example.test", preferredLanguage: "Spanish",
-    insurance: "MetroPlus", plan: "GoldPlus", memberId: "MP-TEST-33981", copay: 15, balance: 40, portalStatus: "Invited",
-    riskLevel: "Needs Staff", riskFlags: ["Forms incomplete"], nextAppointment: "Today, 11:15 AM", provider: "Dr. Samuel Lee", location: "Brooklyn Heights",
-    allergies: ["Latex - rash"], medications: ["Albuterol HFA as needed"], problems: ["Mild intermittent asthma"], lastVisit: "New patient",
-  },
-  {
-    id: "pt-1004", organizationId: "org-luxe", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", initials: "CB", dob: "1989-05-15", age: 37,
-    sex: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", preferredLanguage: "English",
-    insurance: "Self Pay", plan: "Luxe Membership", memberId: "N/A", copay: 0, balance: 350, portalStatus: "Active",
-    riskLevel: "Normal", riskFlags: [], nextAppointment: "Today, 2:00 PM", provider: "Nadja R., NP", location: "Midtown Manhattan",
-    allergies: ["No known drug allergies"], medications: [], problems: ["Weight management program"], lastVisit: "Jun 30, 2026",
-  },
-  {
-    id: "pt-1005", organizationId: "org-bfm", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", initials: "AN", dob: "1966-01-31", age: 60,
-    sex: "Male", pronouns: "he/him", phone: "(917) 555-0124", email: "anthony.nguyen@example.test", preferredLanguage: "English",
-    insurance: "Aetna", plan: "Open Access", memberId: "AET-TEST-77241", copay: 35, balance: 110, portalStatus: "Inactive",
-    riskLevel: "Urgent", riskFlags: ["BP follow-up overdue", "Open care gaps"], nextAppointment: "Not scheduled", provider: "Dr. Samuel Lee", location: "Crown Heights",
-    allergies: ["Sulfa - swelling"], medications: ["Amlodipine 10 mg daily"], problems: ["Uncontrolled hypertension"], lastVisit: "Mar 11, 2026",
-  },
 ];
 
 export const appointments: Appointment[] = [
@@ -143,16 +103,8 @@ export const auditEvents = [
   { actor: "Billing Team", action: "Updated claim status", target: "CLM-71802", time: "8:56 AM", source: "Billing" },
 ];
 
-export function getPatientsForOrganization(organizationId: string) {
-  return patients.filter((patient) => patient.organizationId === organizationId);
-}
-
 export function getAppointmentsForOrganization(organizationId: string) {
   return appointments.filter((appointment) => appointment.organizationId === organizationId);
-}
-
-export function getPatientForOrganization(patientId: string, organizationId: string) {
-  return patients.find((patient) => patient.id === patientId && patient.organizationId === organizationId);
 }
 
 export function getEncounterForOrganization(encounterId: string, organizationId: string) {

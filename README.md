@@ -48,14 +48,14 @@ Requirements: Node.js 20+, npm 10+, and PostgreSQL 15+.
 npm install
 cp .env.example .env
 npm run db:generate
-npm run db:push
+npm run db:migrate:deploy
 npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000`. The application UI uses fake in-memory demo records even when PostgreSQL is not running; database commands require `DATABASE_URL`.
+Open `http://localhost:3000`. Authentication and patient index/chart reads require the PostgreSQL database configured by `DATABASE_URL`; other workspaces still use explicit fake demonstration fixtures while their repositories are implemented.
 
-In local development, the login page prefills a fake demo account. Development demo authentication is forcibly disabled when `NODE_ENV=production`. To seed a database-backed clinic owner, replace `CLINICOS_SEED_ADMIN_PASSWORD` with a strong local value before running `npm run db:seed`.
+The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEED_ADMIN_PASSWORD` to a strong value before running it. The demo seed is destructive and must never be run against a database containing real records. Development-only fallback authentication is forcibly disabled when `NODE_ENV=production` and can also be disabled locally with `DEMO_AUTH=false`.
 
 ## Environment variables
 
@@ -93,13 +93,18 @@ npm start            # production server
 - `GET /api/health` returns service and demo-mode health.
 - `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
 - `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
-- `GET /api/patients` requires authentication and returns only the session organization's fake demo patients.
+- `GET /api/patients` requires authentication and queries PostgreSQL with the session organization ID in every patient and related-record filter.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
 
-Example:
+Authenticated example:
 
 ```bash
+curl -c /tmp/clinicos.cookies -X POST http://localhost:3000/api/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"nadja@example.test","password":"YOUR_SEEDED_PASSWORD"}'
+
 curl -X POST http://localhost:3000/api/workflows/classify \
+  -b /tmp/clinicos.cookies \
   -H 'content-type: application/json' \
   -d '{"message":"Can someone explain my lab result?"}'
 ```
@@ -108,7 +113,7 @@ curl -X POST http://localhost:3000/api/workflows/classify \
 
 [`prisma/schema.prisma`](./prisma/schema.prisma) defines multi-tenant organization, identity, patient, scheduling, clinical, document, lab, imaging, revenue-cycle, insurance, case, quality, communication, AI-governance, audit, settings, integration, and API-key records.
 
-Core connected relations are intentionally conservative. Before production use, add row-level tenant enforcement, authorization policies, immutable audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
+Patient list/detail reads are now implemented through a server-only Prisma repository. Every base and related query requires `organizationId`, and API responses are marked private/no-store. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
 The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
 
@@ -143,7 +148,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
 - Authorization enforcement beyond the currently protected patient and workflow reads
-- Database-backed application reads and mutations
+- Database-backed reads and mutations for modules beyond the patient index/chart
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - Encryption/key-management controls and private object storage
 - Lab, imaging, payer, clearinghouse, e-prescribing, and telemedicine integrations

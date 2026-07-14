@@ -3,6 +3,7 @@ import { DocumentsWorkspace, FormsWorkspace, ImagingWorkspace, LabsWorkspace } f
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PortalWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
+import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -10,13 +11,13 @@ export const workspaceSlugs = [
   "messages", "tasks", "escalations", "ai-assistants", "portal", "integrations", "settings",
 ] as const;
 
-export function WorkspaceRenderer({ organizationId, workspace }: { organizationId: string; workspace: string }) {
+export async function WorkspaceRenderer({ organizationId, workspace }: { organizationId: string; workspace: string }) {
   switch (workspace) {
     case "front-desk": return <FrontDeskWorkspace organizationId={organizationId} />;
     case "provider": return <ProviderWorkspace organizationId={organizationId} />;
-    case "patients": return <PatientsWorkspace organizationId={organizationId} />;
+    case "patients": return <PatientsWorkspace patients={await listPatientsForOrganization(organizationId)} />;
     case "schedule": return <ScheduleWorkspace organizationId={organizationId} />;
-    case "encounters": return <EncountersWorkspace organizationId={organizationId} />;
+    case "encounters": return <EncountersWorkspace organizationId={organizationId} patients={await listPatientsForOrganization(organizationId)} />;
     case "telemedicine": return <TelemedicineWorkspace />;
     case "labs": return <LabsWorkspace />;
     case "imaging": return <ImagingWorkspace />;
