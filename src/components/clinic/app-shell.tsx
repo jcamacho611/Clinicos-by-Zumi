@@ -6,7 +6,7 @@ import { useState } from "react";
 import {
   Bell, Blocks, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown,
   AudioLines, BookOpenCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
-  LayoutDashboard, ListChecks, LogOut, Menu, MessagesSquare, MonitorSmartphone,
+  LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, ReceiptText, Route, ScanLine, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X,
 } from "lucide-react";
@@ -23,7 +23,7 @@ const icons = {
   FlaskConical, ScanLine, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
   ChartNoAxesCombined, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Settings2,
-  Network, Orbit, Route, HeartHandshake, Fingerprint, AudioLines, BookOpenCheck,
+  Network, Orbit, Route, HeartHandshake, Fingerprint, AudioLines, BookOpenCheck, LockKeyhole,
 };
 
 function initials(name: string) {
@@ -101,7 +101,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
   const [globalSearch, setGlobalSearch] = useState("");
   const slug = pathname.split("/").filter(Boolean)[0] || "dashboard";
   const meta = workspaceMeta[slug] ?? workspaceMeta.dashboard;
-  const networkMode = ["network", "care-teams", "capacity-exchange", "injury-episodes", "health-passport"].includes(slug);
+  const networkMode = ["network", "access-controls", "care-teams", "capacity-exchange", "injury-episodes", "health-passport"].includes(slug);
   const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
 
   return (

@@ -1756,9 +1756,17 @@ model AccessGrant {
   purposeOfUse          String
   dataCategories        String[]
   accessLevel           String       @default("read_only")
+  requestId             String?
+  reason                String?
+  approvedBy            String?
+  approvedAt            DateTime?
   startsAt              DateTime     @default(now())
   expiresAt             DateTime?
   revokedAt             DateTime?
+  revokedBy             String?
+  revocationReason      String?
+  downloadAllowed       Boolean      @default(false)
+  printAllowed          Boolean      @default(false)
   consentId             String?
   createdBy             String
   createdAt             DateTime     @default(now())
@@ -1768,6 +1776,7 @@ model AccessGrant {
 
   @@index([organizationId, patientId, purposeOfUse])
   @@index([granteeOrganizationId, granteeUserId, revokedAt])
+  @@index([requestId])
   @@map("access_grants")
 }
 
@@ -1784,6 +1793,9 @@ model RecordRequest {
   requestedBy              String
   reviewedBy               String?
   reviewedAt               DateTime?
+  decisionReason           String?
+  approvedGrantId          String?
+  deliveredAt              DateTime?
   failureReason            String?
   createdAt                DateTime     @default(now())
   updatedAt                DateTime     @updatedAt

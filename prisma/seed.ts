@@ -144,6 +144,15 @@ async function main() {
       clinicType: "Med Spa",
       demoMode: true,
       locations: { create: { id: "loc-midtown", name: "Midtown Manhattan", address: { line1: "300 Example Plaza", city: "New York", state: "NY", postalCode: "10001" } } },
+      users: {
+        create: {
+          id: "user-luxe-owner",
+          email: "owner@luxe.example.test",
+          name: "Nadja R., NP",
+          roleKey: "clinic_owner",
+          authCredential: { create: { passwordHash } },
+        },
+      },
     },
   });
 
@@ -151,7 +160,7 @@ async function main() {
     data: [
       { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", credential: "NP", specialty: "Family Medicine", status: "active" },
       { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", credential: "MD", specialty: "Family Medicine", status: "active" },
-      { id: "provider-nadja-luxe", organizationId: luxe.id, name: "Nadja R.", credential: "NP", specialty: "Aesthetic Medicine", status: "active" },
+      { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", credential: "NP", specialty: "Aesthetic Medicine", status: "active" },
     ],
   });
 
@@ -384,7 +393,7 @@ async function main() {
       targetOrganizationId: luxe.id,
       status: "active_demo",
       allowedPurposes: ["treatment"],
-      dataCategories: ["demographics", "allergies", "medications", "approved_summaries"],
+      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary"],
       effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
       expiresAt: new Date("2027-07-01T12:00:00.000Z"),
     },
@@ -406,6 +415,10 @@ async function main() {
       purposeOfUse: "treatment",
       dataCategories: ["demographics", "allergies", "medications"],
       accessLevel: "read_only",
+      requestId: "record-request-maya-demo",
+      reason: "Approved for treatment coordination in the connected-care demo.",
+      approvedBy: "user-nadja",
+      approvedAt: new Date("2026-07-14T12:30:00.000Z"),
       startsAt: new Date("2026-07-14T12:00:00.000Z"),
       expiresAt: new Date("2026-08-14T12:00:00.000Z"),
       consentId: "consent-demo-network",
@@ -422,12 +435,72 @@ async function main() {
       receivingOrganizationId: bfm.id,
       purposeOfUse: "treatment",
       dataCategories: ["approved_visit_summary", "medications", "allergies"],
-      status: "approved_demo",
-      deliveryStatus: "delivered_demo",
-      requestedBy: "user-nadja",
+      status: "approved",
+      deliveryStatus: "delivered",
+      requestedBy: "user-luxe-owner",
       reviewedBy: "user-nadja",
       reviewedAt: new Date("2026-07-14T12:30:00.000Z"),
+      decisionReason: "Approved for treatment coordination in the connected-care demo.",
+      approvedGrantId: "grant-maya-network-demo",
+      deliveredAt: new Date("2026-07-14T12:35:00.000Z"),
     },
+  });
+
+  await prisma.recordRequest.create({
+    data: {
+      id: "record-request-maya-pending",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      requestingOrganizationId: luxe.id,
+      receivingOrganizationId: bfm.id,
+      purposeOfUse: "treatment",
+      dataCategories: ["approved_visit_summary"],
+      status: "requested",
+      deliveryStatus: "not_started",
+      requestedBy: "user-luxe-owner",
+      createdAt: new Date("2026-07-14T15:20:00.000Z"),
+    },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        id: "audit-network-approved-demo",
+        organizationId: bfm.id,
+        actorId: "user-nadja",
+        actorType: "user",
+        action: "network.record_request_approved",
+        resourceType: "access_grant",
+        resourceId: "grant-maya-network-demo",
+        patientId: maya.id,
+        metadata: { representedOrganizationId: bfm.id, purposeOfUse: "treatment", dataCategories: ["demographics", "allergies", "medications"], downloadAllowed: false, printAllowed: false },
+        createdAt: new Date("2026-07-14T12:30:00.000Z"),
+      },
+      {
+        id: "audit-network-read-demo",
+        organizationId: bfm.id,
+        actorId: "user-luxe-owner",
+        actorType: "user",
+        action: "network.record_read",
+        resourceType: "access_receipt",
+        resourceId: "access-receipt-demo",
+        patientId: maya.id,
+        metadata: { representedOrganizationId: luxe.id, purposeOfUse: "treatment", informationAccessed: ["demographics", "allergies", "medications"], accessGrantId: "grant-maya-network-demo", downloadAllowed: false, printAllowed: false },
+        createdAt: new Date("2026-07-14T12:35:00.000Z"),
+      },
+      {
+        id: "audit-network-request-pending",
+        organizationId: bfm.id,
+        actorId: "user-luxe-owner",
+        actorType: "user",
+        action: "network.record_requested",
+        resourceType: "record_request",
+        resourceId: "record-request-maya-pending",
+        patientId: maya.id,
+        metadata: { representedOrganizationId: luxe.id, purposeOfUse: "treatment", dataCategories: ["approved_visit_summary"], minimumNecessary: true },
+        createdAt: new Date("2026-07-14T15:20:00.000Z"),
+      },
+    ],
   });
 
   await prisma.clinicSubscription.createMany({

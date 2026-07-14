@@ -30,6 +30,10 @@ function demoIdentity(): AuthenticatedIdentity {
 export async function authenticateCredentials(emailInput: string, password: string): Promise<AuthenticatedIdentity | null> {
   const email = emailInput.trim().toLowerCase();
 
+  if (isDemoAuthEnabled() && email === DEVELOPMENT_DEMO_EMAIL && password === DEVELOPMENT_DEMO_PASSWORD) {
+    return demoIdentity();
+  }
+
   if (process.env.DATABASE_URL) {
     try {
       const user = await db.user.findUnique({
@@ -80,10 +84,6 @@ export async function authenticateCredentials(emailInput: string, password: stri
         throw error;
       }
     }
-  }
-
-  if (isDemoAuthEnabled() && email === DEVELOPMENT_DEMO_EMAIL && password === DEVELOPMENT_DEMO_PASSWORD) {
-    return demoIdentity();
   }
 
   return null;
