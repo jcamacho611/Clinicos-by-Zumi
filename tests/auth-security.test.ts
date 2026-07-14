@@ -39,6 +39,13 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "settings", "update")).toBe(false);
   });
 
+  it("allows registry visibility without granting operational voice or network writes", () => {
+    expect(can("viewer", "registry", "read")).toBe(true);
+    expect(can("viewer", "voice", "create")).toBe(false);
+    expect(can("viewer", "network", "update")).toBe(false);
+    expect(can("clinic_owner", "registry", "manage")).toBe(true);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

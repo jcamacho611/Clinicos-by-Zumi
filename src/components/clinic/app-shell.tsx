@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Bell, Blocks, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown,
-  ClipboardList, ClipboardPlus, Command, Files, FlaskConical, Headphones,
+  AudioLines, BookOpenCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LogOut, Menu, MessagesSquare, MonitorSmartphone,
-  ReceiptText, ScanLine, Search, Settings2, ShieldCheck, Siren, Sparkles,
+  Network, Orbit, ReceiptText, Route, ScanLine, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X,
 } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
+import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
 import { roleLabel } from "@/lib/auth/rbac";
@@ -22,6 +23,7 @@ const icons = {
   FlaskConical, ScanLine, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
   ChartNoAxesCombined, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Settings2,
+  Network, Orbit, Route, HeartHandshake, Fingerprint, AudioLines, BookOpenCheck,
 };
 
 function initials(name: string) {
@@ -96,11 +98,14 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
 export function AppShell({ children, session }: { children: React.ReactNode; session: ClinicSession }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
   const slug = pathname.split("/").filter(Boolean)[0] || "dashboard";
   const meta = workspaceMeta[slug] ?? workspaceMeta.dashboard;
+  const networkMode = ["network", "care-teams", "capacity-exchange", "injury-episodes", "health-passport"].includes(slug);
+  const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
 
   return (
-    <div className="min-h-screen bg-[#f4f7f7]">
+    <div className="min-h-screen bg-[var(--mode-background)]" data-clinic-mode={designMode}>
       <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar session={session} /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -110,15 +115,16 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
         </div>
       )}
       <div className="lg:pl-[272px]">
-        <header className="sticky top-0 z-30 flex h-[78px] items-center gap-4 border-b border-slate-200/80 bg-[#f4f7f7]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-[78px] items-center gap-4 border-b border-slate-200/80 bg-[color:var(--mode-header)] px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <Button className="lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
           <div className="min-w-0">
             <p className="text-[9px] font-extrabold uppercase tracking-[.2em] text-teal-700">{meta.eyebrow}</p>
             <h1 className="truncate text-xl font-extrabold tracking-[-.035em] text-slate-950">{meta.title}</h1>
           </div>
-          <div className="ml-auto hidden w-full max-w-[350px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm md:flex">
+          <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm md:flex">
             <Search className="size-4 text-slate-400" />
-            <input className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" placeholder="Search patients, claims, labs..." aria-label="Global search" />
+            <input className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" placeholder="Search or ask ClinicOS..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
+            <VoiceInputButton className="[&_button]:h-7 [&_button]:px-2 [&_button]:text-[10px]" onTranscript={setGlobalSearch} />
             <kbd className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">⌘ K</kbd>
           </div>
           <div className="hidden items-center gap-2 sm:flex">

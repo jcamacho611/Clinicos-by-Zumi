@@ -3,14 +3,20 @@ import { DocumentsWorkspace, FormsWorkspace, ImagingWorkspace, LabsWorkspace } f
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PortalWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
+import { FeatureRegistryWorkspace } from "@/components/clinic/feature-registry-workspace";
+import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace, InjuryEpisodesWorkspace, NetworkWorkspace, RegistryDomainWorkspace, VoiceAssistantWorkspace } from "@/components/clinic/workspaces/vision";
+import { clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
+import { getConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
 import { listEncountersForOrganization } from "@/lib/repositories/encounter-repository";
+import { listPriorityZeroRegistry } from "@/lib/repositories/feature-registry-repository";
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
   "labs", "imaging", "documents", "forms", "billing", "insurance", "cases", "quality",
   "messages", "tasks", "escalations", "ai-assistants", "portal", "integrations", "settings",
+  "network", "care-teams", "capacity-exchange", "health-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
 
 export async function WorkspaceRenderer({ organizationId, workspace }: { organizationId: string; workspace: string }) {
@@ -39,9 +45,38 @@ export async function WorkspaceRenderer({ organizationId, workspace }: { organiz
     case "tasks": return <TasksWorkspace />;
     case "escalations": return <EscalationsWorkspace />;
     case "ai-assistants": return <AiAssistantsWorkspace />;
+    case "network": return <NetworkWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "care-teams": return <CareTeamsWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "capacity-exchange": return <CapacityExchangeWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "health-passport": return <HealthPassportWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "injury-episodes": return <InjuryEpisodesWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "voice-assistant": return <VoiceAssistantWorkspace />;
+    case "feature-registry": {
+      const sections = await listPriorityZeroRegistry();
+      return <FeatureRegistryWorkspace sections={sections.map((section) => ({
+        id: section.id,
+        number: section.number,
+        slug: section.slug,
+        title: section.title,
+        mandate: section.mandate,
+        priority: section.priority,
+        deliveryStatus: section.deliveryStatus,
+        deliveryMode: section.deliveryMode,
+        interfaceRoute: section.interfaceRoute,
+        ownerRoles: section.ownerRoles,
+        databaseObjects: section.databaseObjects,
+        featureCount: section.featureCount,
+        canonVersion: section.canonVersion,
+        capabilities: section.capabilities,
+      }))} />;
+    }
     case "portal": return <PortalWorkspace />;
     case "integrations": return <IntegrationsWorkspace />;
     case "settings": return <SettingsWorkspace />;
-    default: return notFound();
+    default: {
+      const registrySection = clinicOsDayOneRegistry.find((section) => section.interfaceRoute === `/${workspace}`);
+      if (registrySection) return <RegistryDomainWorkspace section={registrySection} />;
+      return notFound();
+    }
   }
 }

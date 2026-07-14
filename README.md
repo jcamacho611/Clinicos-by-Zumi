@@ -28,6 +28,13 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Same-page AI safety-routing simulator
 - Patient portal preview
 - Integration roadmap and organization audit settings
+- Network Command, Care Constellation, and purpose-bound clinic connections
+- Diagnostic Capacity Exchange and Injury Episode Room
+- Health Passport and Consent Wallet preview
+- Voice-first ClinicOS Copilot with same-screen transcript review and typing fallback
+- Searchable, PostgreSQL-backed Priority Zero registry covering 62 domains and 2,143 capabilities
+
+The full non-removable product constitution is documented in [`docs/CLINICOS_MASTER_CANON.md`](./docs/CLINICOS_MASTER_CANON.md) and encoded in [`src/lib/feature-registry-canon.ts`](./src/lib/feature-registry-canon.ts). Priority Zero means permanent scope, not a claim that every integration is live.
 
 ## Stack
 
@@ -100,6 +107,7 @@ npm start            # production server
 - `PATCH /api/encounters/:encounterId` autosaves draft-only structured documentation.
 - `POST /api/encounters/:encounterId/transition` submits a complete draft for review or signs and permanently locks a reviewed note.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
+- `GET /api/feature-registry` requires authentication and registry-read permission, then returns the PostgreSQL-backed P0 canon and delivery summary with private/no-store caching.
 
 Authenticated example:
 
@@ -116,7 +124,9 @@ curl -X POST http://localhost:3000/api/workflows/classify \
 
 ## Database architecture
 
-[`prisma/schema.prisma`](./prisma/schema.prisma) defines multi-tenant organization, identity, patient, scheduling, clinical, document, lab, imaging, revenue-cycle, insurance, case, quality, communication, AI-governance, audit, settings, integration, and API-key records.
+[`prisma/schema.prisma`](./prisma/schema.prisma) defines multi-tenant organization, identity, patient, scheduling, clinical, document, lab, imaging, revenue-cycle, insurance, case, quality, communication, AI-governance, audit, settings, integration, and API-key records. It also includes connected-care network relationships, sharing agreements, master-patient identifiers and matches, access grants, record requests, Care Team Rooms, Injury Episode Rooms, Health Passports, Consent Wallets, Intake Passports, care handoffs, capacity listings, provider consultations, governed knowledge, remote observations, inventory, voice sessions, subscriptions, and immutable feature-registry records.
+
+Migration `20260714225102_priority_zero_connected_care` adds database checks and triggers that reject deletion, downgrade, or mutability changes for Priority Zero registry rows. Delivery status can still advance as implementation evidence is completed.
 
 Patient, appointment, and encounter reads are implemented through server-only Prisma repositories. Every base and related query requires `organizationId`, and API responses are marked private/no-store where appropriate. Appointment transitions and encounter draft/review/sign-lock mutations use guarded tenant filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, and editor now consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
@@ -158,6 +168,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 - Encryption/key-management controls and private object storage
 - Lab, imaging, payer, clearinghouse, e-prescribing, and telemedicine integrations
 - Production payment and communication webhooks
+- Approved, BAA-reviewed production speech transcription; current push-to-talk uses the browser speech adapter with synthetic demo data only and stores no audio
 - Clinical terminology services and validated quality-measure logic
 - Certification, legal review, threat model, penetration test, accessibility audit, and clinical safety validation
 

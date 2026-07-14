@@ -63,33 +63,60 @@ enum MessageDirection {
 }
 
 model Organization {
-  id           String        @id @default(cuid())
-  name         String
-  slug         String        @unique
-  clinicType   String
-  status       String        @default("active")
-  demoMode     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  locations    Location[]
-  users        User[]
-  patients     Patient[]
-  appointments Appointment[]
-  encounters   Encounter[]
+  id                         String                 @id @default(cuid())
+  name                       String
+  slug                       String                 @unique
+  clinicType                 String
+  status                     String                 @default("active")
+  demoMode                   Boolean                @default(true)
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @updatedAt
+  locations                  Location[]
+  users                      User[]
+  patients                   Patient[]
+  appointments               Appointment[]
+  encounters                 Encounter[]
+  facilities                 Facility[]
+  patientIdentifiers         PatientIdentifier[]
+  patientMatches             PatientMatch[]
+  accessGrants               AccessGrant[]
+  recordRequests             RecordRequest[]
+  resources                  ClinicResource[]
+  subscriptions              ClinicSubscription[]
+  careTeamRooms              CareTeamRoom[]
+  episodeRooms               EpisodeRoom[]
+  healthPassports            HealthPassport[]
+  consentWallets             ConsentWallet[]
+  intakePassports            IntakePassport[]
+  careHandoffs               CareHandoff[]
+  capacityListings           CapacityListing[]
+  providerConsultations      ProviderConsultation[]
+  knowledgeItems             KnowledgeItem[]
+  remoteObservations         RemoteObservation[]
+  inventoryItems             InventoryItem[]
+  voiceSessions              VoiceSession[]
+  outboundNetworkConnections NetworkConnection[]    @relation("NetworkSource")
+  inboundNetworkConnections  NetworkConnection[]    @relation("NetworkTarget")
+  outboundSharingAgreements  DataSharingAgreement[] @relation("SharingSource")
+  inboundSharingAgreements   DataSharingAgreement[] @relation("SharingTarget")
 
   @@map("organizations")
 }
 
 model Location {
-  id             String       @id @default(cuid())
-  organizationId String
-  name           String
-  address        Json?
-  timezone       String       @default("America/New_York")
-  status         String       @default("active")
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id               String            @id @default(cuid())
+  organizationId   String
+  name             String
+  address          Json?
+  timezone         String            @default("America/New_York")
+  status           String            @default("active")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facilities       Facility[]
+  resources        ClinicResource[]
+  capacityListings CapacityListing[]
+  inventoryItems   InventoryItem[]
 
   @@index([organizationId])
   @@map("locations")
@@ -123,6 +150,7 @@ model User {
   authCredential AuthCredential?
   sessions       AuthSession[]
   passkeys       PasskeyCredential[]
+  voiceSessions  VoiceSession[]
 
   @@index([organizationId])
   @@map("users")
@@ -238,7 +266,7 @@ model ProviderCredential {
 }
 
 model Patient {
-  id                  String        @id @default(cuid())
+  id                  String              @id @default(cuid())
   organizationId      String
   locationId          String?
   mrn                 String
@@ -250,21 +278,34 @@ model Patient {
   pronouns            String?
   phone               String?
   email               String?
-  preferredLanguage   String        @default("English")
-  portalStatus        String        @default("inactive")
+  preferredLanguage   String              @default("English")
+  portalStatus        String              @default("inactive")
   communicationPrefs  Json?
-  riskLevel           RiskLevel     @default(NORMAL)
-  requiresHumanReview Boolean       @default(false)
+  riskLevel           RiskLevel           @default(NORMAL)
+  requiresHumanReview Boolean             @default(false)
   reviewedBy          String?
   reviewedAt          DateTime?
-  status              String        @default("active")
+  status              String              @default("active")
   createdBy           String?
   updatedBy           String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  organization        Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   appointments        Appointment[]
   encounters          Encounter[]
+  identifiers         PatientIdentifier[]
+  matchSources        PatientMatch[]      @relation("PatientMatchSource")
+  matchCandidates     PatientMatch[]      @relation("PatientMatchCandidate")
+  accessGrants        AccessGrant[]
+  recordRequests      RecordRequest[]
+  careTeamRooms       CareTeamRoom[]
+  episodeRooms        EpisodeRoom[]
+  healthPassport      HealthPassport?
+  consentWallet       ConsentWallet?
+  intakePassport      IntakePassport?
+  careHandoffs        CareHandoff[]
+  remoteObservations  RemoteObservation[]
+  voiceSessions       VoiceSession[]
 
   @@unique([organizationId, mrn])
   @@index([organizationId, lastName, firstName])
@@ -1603,4 +1644,510 @@ model ApiKey {
 
   @@index([organizationId, status])
   @@map("api_keys")
+}
+
+model Facility {
+  id               String            @id @default(cuid())
+  organizationId   String
+  locationId       String?
+  name             String
+  type             String
+  npi              String?
+  specialty        String?
+  address          Json?
+  verifiedAt       DateTime?
+  status           String            @default("pending")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  capacityListings CapacityListing[]
+
+  @@index([organizationId, type, status])
+  @@map("facilities")
+}
+
+model NetworkConnection {
+  id                   String       @id @default(cuid())
+  sourceOrganizationId String
+  targetOrganizationId String
+  status               String       @default("pending")
+  trustLevel           String       @default("standard")
+  allowedPurposes      String[]
+  requestedBy          String?
+  approvedBy           String?
+  activatedAt          DateTime?
+  suspendedAt          DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  sourceOrganization   Organization @relation("NetworkSource", fields: [sourceOrganizationId], references: [id], onDelete: Cascade)
+  targetOrganization   Organization @relation("NetworkTarget", fields: [targetOrganizationId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceOrganizationId, targetOrganizationId])
+  @@index([targetOrganizationId, status])
+  @@map("network_connections")
+}
+
+model DataSharingAgreement {
+  id                   String       @id @default(cuid())
+  sourceOrganizationId String
+  targetOrganizationId String
+  status               String       @default("draft")
+  allowedPurposes      String[]
+  dataCategories       String[]
+  effectiveAt          DateTime?
+  expiresAt            DateTime?
+  documentId           String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  sourceOrganization   Organization @relation("SharingSource", fields: [sourceOrganizationId], references: [id], onDelete: Cascade)
+  targetOrganization   Organization @relation("SharingTarget", fields: [targetOrganizationId], references: [id], onDelete: Cascade)
+
+  @@index([sourceOrganizationId, targetOrganizationId, status])
+  @@map("data_sharing_agreements")
+}
+
+model PatientIdentifier {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  patientId            String
+  system               String
+  value                String
+  sourceOrganizationId String?
+  status               String       @default("active")
+  verifiedAt           DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient              Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([system, value])
+  @@index([organizationId, patientId])
+  @@map("patient_identifiers")
+}
+
+model PatientMatch {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  patientId          String
+  candidatePatientId String
+  confidenceScore    Float
+  matchedFields      Json?
+  status             String       @default("possible")
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient            Patient      @relation("PatientMatchSource", fields: [patientId], references: [id], onDelete: Cascade)
+  candidatePatient   Patient      @relation("PatientMatchCandidate", fields: [candidatePatientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, candidatePatientId])
+  @@index([organizationId, status, confidenceScore])
+  @@map("patient_matches")
+}
+
+model AccessGrant {
+  id                    String       @id @default(cuid())
+  organizationId        String
+  patientId             String
+  granteeOrganizationId String?
+  granteeUserId         String?
+  purposeOfUse          String
+  dataCategories        String[]
+  accessLevel           String       @default("read_only")
+  startsAt              DateTime     @default(now())
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  consentId             String?
+  createdBy             String
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient               Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, patientId, purposeOfUse])
+  @@index([granteeOrganizationId, granteeUserId, revokedAt])
+  @@map("access_grants")
+}
+
+model RecordRequest {
+  id                       String       @id @default(cuid())
+  organizationId           String
+  patientId                String
+  requestingOrganizationId String
+  receivingOrganizationId  String
+  purposeOfUse             String
+  dataCategories           String[]
+  status                   String       @default("requested")
+  deliveryStatus           String       @default("not_started")
+  requestedBy              String
+  reviewedBy               String?
+  reviewedAt               DateTime?
+  failureReason            String?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient                  Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, patientId, status])
+  @@index([requestingOrganizationId, receivingOrganizationId])
+  @@map("record_requests")
+}
+
+model ClinicResource {
+  id             String       @id @default(cuid())
+  organizationId String
+  locationId     String?
+  type           String
+  name           String
+  capacity       Int?
+  status         String       @default("active")
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location       Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, locationId, type, status])
+  @@map("resources")
+}
+
+model ClinicSubscription {
+  id                     String       @id @default(cuid())
+  organizationId         String
+  planKey                String
+  status                 String       @default("trialing")
+  modules                String[]
+  trialEndsAt            DateTime?
+  currentPeriodEndsAt    DateTime?
+  externalCustomerId     String?
+  externalSubscriptionId String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("subscriptions")
+}
+
+model CareTeamRoom {
+  id             String           @id @default(cuid())
+  organizationId String
+  patientId      String
+  name           String
+  sourceType     String
+  sourceId       String?
+  status         String           @default("active")
+  sharedPlan     Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient        Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  members        CareTeamMember[]
+
+  @@index([organizationId, patientId, status])
+  @@map("care_team_rooms")
+}
+
+model CareTeamMember {
+  id                        String       @id @default(cuid())
+  careTeamRoomId            String
+  representedOrganizationId String
+  userId                    String?
+  providerId                String?
+  role                      String
+  accessLevel               String       @default("minimum_necessary")
+  status                    String       @default("invited")
+  joinedAt                  DateTime?
+  removedAt                 DateTime?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+  careTeamRoom              CareTeamRoom @relation(fields: [careTeamRoomId], references: [id], onDelete: Cascade)
+
+  @@index([careTeamRoomId, status])
+  @@map("care_team_members")
+}
+
+model EpisodeRoom {
+  id              String       @id @default(cuid())
+  organizationId  String
+  patientId       String
+  type            String
+  caseId          String?
+  title           String
+  status          String       @default("open")
+  readinessScore  Int          @default(0)
+  nextAction      String?
+  responsibleRole String?
+  riskLevel       RiskLevel    @default(NORMAL)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient         Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, patientId, status])
+  @@map("episode_rooms")
+}
+
+model HealthPassport {
+  id              String       @id @default(cuid())
+  organizationId  String
+  patientId       String       @unique
+  status          String       @default("active")
+  summary         Json
+  lastConfirmedAt DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient         Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("health_passports")
+}
+
+model ConsentWallet {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  patientId           String       @unique
+  sharingDefaults     Json
+  emergencyPreference String?
+  recoveryStatus      String       @default("active")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient             Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("consent_wallets")
+}
+
+model IntakePassport {
+  id             String       @id @default(cuid())
+  organizationId String
+  patientId      String       @unique
+  reusableFields Json
+  confirmedAt    DateTime?
+  version        Int          @default(1)
+  status         String       @default("active")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("intake_passports")
+}
+
+model CareHandoff {
+  id              String       @id @default(cuid())
+  organizationId  String
+  patientId       String
+  senderId        String
+  receiverId      String
+  type            String
+  summary         Json
+  requestedAction String
+  priority        String       @default("normal")
+  dueAt           DateTime?
+  status          String       @default("sent")
+  acknowledgedAt  DateTime?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient         Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, patientId, status, dueAt])
+  @@map("care_handoffs")
+}
+
+model CapacityListing {
+  id             String       @id @default(cuid())
+  organizationId String
+  locationId     String?
+  facilityId     String?
+  type           String
+  service        String
+  startsAt       DateTime
+  endsAt         DateTime
+  acceptedPayers String[]
+  urgencyLevels  String[]
+  status         String       @default("open")
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location       Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  facility       Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, type, service, startsAt, status])
+  @@map("capacity_listings")
+}
+
+model ProviderConsultation {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  patientId            String?
+  requestingProviderId String
+  consultantProviderId String?
+  specialty            String
+  clinicalQuestion     String
+  priority             String       @default("routine")
+  status               String       @default("requested")
+  scheduledAt          DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, specialty])
+  @@map("provider_consultations")
+}
+
+model KnowledgeItem {
+  id             String            @id @default(cuid())
+  organizationId String?
+  layer          String
+  title          String
+  content        String
+  sourceName     String
+  sourceUrl      String?
+  sourceDate     DateTime?
+  version        Int               @default(1)
+  status         String            @default("draft")
+  effectiveAt    DateTime?
+  expiresAt      DateTime?
+  supersedesId   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviews        KnowledgeReview[]
+
+  @@index([organizationId, layer, status])
+  @@map("knowledge_items")
+}
+
+model KnowledgeReview {
+  id              String        @id @default(cuid())
+  knowledgeItemId String
+  reviewerId      String
+  decision        String
+  notes           String?
+  reviewedAt      DateTime      @default(now())
+  knowledgeItem   KnowledgeItem @relation(fields: [knowledgeItemId], references: [id], onDelete: Cascade)
+
+  @@index([knowledgeItemId, reviewedAt])
+  @@map("knowledge_reviews")
+}
+
+model RemoteObservation {
+  id             String       @id @default(cuid())
+  organizationId String
+  patientId      String
+  type           String
+  value          String
+  unit           String?
+  source         String
+  observedAt     DateTime
+  qualityFlag    String?
+  reviewStatus   String       @default("pending")
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, patientId, type, observedAt])
+  @@map("remote_observations")
+}
+
+model InventoryItem {
+  id               String       @id @default(cuid())
+  organizationId   String
+  locationId       String?
+  sku              String
+  name             String
+  category         String
+  lotNumber        String?
+  expiresAt        DateTime?
+  quantityOnHand   Decimal      @default(0) @db.Decimal(12, 3)
+  quantityReserved Decimal      @default(0) @db.Decimal(12, 3)
+  reorderPoint     Decimal?     @db.Decimal(12, 3)
+  unitCostCents    Int?
+  status           String       @default("active")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location         Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, sku, lotNumber])
+  @@index([organizationId, locationId, status, expiresAt])
+  @@map("inventory_items")
+}
+
+model VoiceSession {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  userId               String?
+  patientId            String?
+  purpose              String
+  language             String       @default("en-US")
+  status               String       @default("draft")
+  transcript           String?
+  transcriptConfidence Float?
+  provider             String
+  consentConfirmedAt   DateTime?
+  confirmedAt          DateTime?
+  retentionExpiresAt   DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                 User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  patient              Patient?     @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, userId, status, createdAt])
+  @@map("voice_sessions")
+}
+
+model FeatureRegistrySection {
+  id              String                      @id
+  number          Int                         @unique
+  slug            String                      @unique
+  title           String
+  mandate         String
+  priority        String                      @default("P0")
+  deliveryStatus  String
+  deliveryMode    String
+  interfaceRoute  String
+  ownerRoles      String[]
+  databaseObjects String[]
+  featureCount    Int
+  canonVersion    String
+  immutable       Boolean                     @default(true)
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  capabilities    FeatureRegistryCapability[]
+
+  @@map("feature_registry_sections")
+}
+
+model FeatureRegistryCapability {
+  id             String                 @id
+  sectionId      String
+  slug           String
+  name           String
+  priority       String                 @default("P0")
+  deliveryStatus String
+  deliveryMode   String
+  completionPlan Json
+  canonVersion   String
+  immutable      Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  section        FeatureRegistrySection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+
+  @@unique([sectionId, slug])
+  @@index([deliveryStatus, priority])
+  @@map("feature_registry_capabilities")
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, LoaderCircle, Send, ShieldAlert, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { classifyWorkflow } from "@/lib/workflow-rules";
 import type { WorkflowDecision } from "@/lib/types";
 
@@ -39,8 +40,10 @@ export function AiWorkflowDemo() {
           <textarea className="min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" onChange={(event) => setInput(event.target.value)} value={input} aria-label="Message to classify" />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="flex flex-1 flex-wrap gap-1.5">{examples.slice(0, 3).map((example, index) => <button className="rounded-full bg-white/8 px-2.5 py-1 text-[9px] font-bold text-slate-300 transition hover:bg-white/15" key={example} onClick={() => setInput(example)}>Example {index + 1}</button>)}</div>
+            <VoiceInputButton className="[&_button]:border-white/15 [&_button]:bg-white/10 [&_button]:text-white [&_button]:hover:bg-white/15" onTranscript={setInput} />
             <Button className="bg-lime-300 text-slate-950 hover:bg-lime-200" disabled={Boolean(phase)} onClick={runWorkflow} size="sm">Analyze <Send className="size-3.5" /></Button>
           </div>
+          <p className="mt-2 text-[9px] leading-4 text-slate-400">Push to talk, review the visible transcript above, then choose Analyze. Browser demo only; do not use real patient information.</p>
         </div>
       </div>
 

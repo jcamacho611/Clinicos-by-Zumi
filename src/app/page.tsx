@@ -3,6 +3,7 @@ import { ArrowRight, Check, CirclePlay, ShieldCheck, Sparkles, Stethoscope } fro
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { canonicalCapabilityCount, clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 
 export default function LandingPage() {
   return (
@@ -13,7 +14,7 @@ export default function LandingPage() {
           <div><p className="text-sm font-extrabold tracking-[-.03em] text-slate-950">ClinicOS</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">by Zumi</p></div>
         </Link>
         <nav className="ml-auto hidden items-center gap-7 text-xs font-bold text-slate-600 md:flex">
-          <a href="#platform">Platform</a><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
+          <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
         </nav>
         <Button asChild className="ml-4" size="sm"><Link href="/dashboard">Open live demo <ArrowRight className="size-4" /></Link></Button>
       </header>
@@ -22,8 +23,8 @@ export default function LandingPage() {
         <section className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[.9fr_1.1fr] lg:py-20">
           <div>
             <Badge className="mb-7 bg-white/80" tone="teal"><Sparkles className="mr-1.5 size-3" /> Modern care operations</Badge>
-            <h1 className="max-w-[720px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] text-slate-950 sm:text-6xl lg:text-[76px]">One calm system for the entire clinic.</h1>
-            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">Patient charts, scheduling, encounters, labs, billing, quality, and high-risk human review in a single premium workspace built for community practices.</p>
+            <h1 className="max-w-[720px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] text-slate-950 sm:text-6xl lg:text-[76px]">The medical world finally has an operating system.</h1>
+            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">ClinicOS combines a complete clinic workspace, connected-care network, patient-controlled record, revenue command center, and a Copilot people can speak to or type into.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary"><Link href="/dashboard">Explore ClinicOS <ArrowRight className="size-4" /></Link></Button>
               <Button asChild size="lg" variant="secondary"><Link href="/patients/pt-1001"><CirclePlay className="size-4" /> View a patient chart</Link></Button>
@@ -32,6 +33,7 @@ export default function LandingPage() {
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Fake demo data only</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Multi-clinic foundation</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Human review gates</span>
+              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> {clinicOsDayOneRegistry.length} P0 domains · {canonicalCapabilityCount.toLocaleString()} capabilities</span>
             </div>
           </div>
 
@@ -57,7 +59,7 @@ export default function LandingPage() {
 
         <section className="border-y border-slate-200 bg-white/70" id="platform">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-3 sm:px-8">
-            {[["Unified patient record", "A clinical timeline ties encounters, results, documents, messages, billing, and cases to one chart."], ["Operations that move", "Front desk, provider, billing, and quality teams each get focused queues without splitting the record."], ["AI with a hard boundary", "AI may summarize, classify, and draft. Clinical or risky output is held for licensed human review."]].map(([title, body], index) => <div key={title}><p className="text-xs font-extrabold text-teal-700">0{index + 1}</p><h3 className="mt-3 text-lg font-extrabold tracking-[-.03em] text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p></div>)}
+            {[["LifeChart + Care Constellation", "A longitudinal timeline and visual care team connect authorized records, providers, referrals, results, tasks, billing, and provenance."], ["Capacity + Injury Episode Rooms", "Diagnostic availability and injury-case readiness become visible action systems instead of phone tag and scattered documents."], ["Copilot: speak or type", "People can use push-to-talk or typing on the same screen. Clinical and risky output remains held for licensed human review."]].map(([title, body], index) => <div key={title}><p className="text-xs font-extrabold text-teal-700">0{index + 1}</p><h3 className="mt-3 text-lg font-extrabold tracking-[-.03em] text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p></div>)}
           </div>
         </section>
 

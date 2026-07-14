@@ -8,7 +8,13 @@
   --clinic-blue: #0c7f9d;
   --clinic-teal: #0e9f83;
   --clinic-lime: #c8f169;
+  --mode-background: #f4f7f7;
+  --mode-header: rgba(244, 247, 247, 0.9);
 }
+
+[data-clinic-mode="medical"] { --mode-background: #f4f7f7; --mode-header: rgba(244, 247, 247, 0.9); }
+[data-clinic-mode="luxe"] { --mode-background: #f8f5f1; --mode-header: rgba(248, 245, 241, 0.92); }
+[data-clinic-mode="network"] { --mode-background: #edf3f5; --mode-header: rgba(237, 243, 245, 0.9); }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

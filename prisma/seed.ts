@@ -1,8 +1,83 @@
 import "dotenv/config";
 import { AppointmentStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
+import {
+  buildCompletionPlan,
+  canonicalCapabilityId,
+  clinicOsDayOneRegistry,
+  REGISTRY_CANON_VERSION,
+  slugifyRegistryValue,
+} from "../src/lib/feature-registry-canon";
 
 const prisma = new PrismaClient();
+
+async function seedPriorityZeroRegistry() {
+  for (const registrySection of clinicOsDayOneRegistry) {
+    const sectionId = `p0-section-${String(registrySection.number).padStart(2, "0")}`;
+
+    await prisma.featureRegistrySection.upsert({
+      where: { id: sectionId },
+      update: {
+        number: registrySection.number,
+        slug: registrySection.slug,
+        title: registrySection.title,
+        mandate: registrySection.mandate,
+        priority: "P0",
+        deliveryStatus: registrySection.deliveryStatus,
+        deliveryMode: registrySection.deliveryMode,
+        interfaceRoute: registrySection.interfaceRoute,
+        ownerRoles: registrySection.ownerRoles,
+        databaseObjects: registrySection.databaseObjects,
+        featureCount: registrySection.features.length,
+        canonVersion: REGISTRY_CANON_VERSION,
+        immutable: true,
+      },
+      create: {
+        id: sectionId,
+        number: registrySection.number,
+        slug: registrySection.slug,
+        title: registrySection.title,
+        mandate: registrySection.mandate,
+        priority: "P0",
+        deliveryStatus: registrySection.deliveryStatus,
+        deliveryMode: registrySection.deliveryMode,
+        interfaceRoute: registrySection.interfaceRoute,
+        ownerRoles: registrySection.ownerRoles,
+        databaseObjects: registrySection.databaseObjects,
+        featureCount: registrySection.features.length,
+        canonVersion: REGISTRY_CANON_VERSION,
+        immutable: true,
+      },
+    });
+
+    await prisma.featureRegistryCapability.createMany({
+      skipDuplicates: true,
+      data: registrySection.features.map((feature) => ({
+        id: canonicalCapabilityId(registrySection.number, feature),
+        sectionId,
+        slug: slugifyRegistryValue(feature),
+        name: feature,
+        priority: "P0",
+        deliveryStatus: registrySection.deliveryStatus,
+        deliveryMode: registrySection.deliveryMode,
+        completionPlan: buildCompletionPlan(registrySection, feature),
+        canonVersion: REGISTRY_CANON_VERSION,
+        immutable: true,
+      })),
+    });
+
+    await prisma.featureRegistryCapability.updateMany({
+      where: { sectionId },
+      data: {
+        priority: "P0",
+        deliveryStatus: registrySection.deliveryStatus,
+        deliveryMode: registrySection.deliveryMode,
+        canonVersion: REGISTRY_CANON_VERSION,
+        immutable: true,
+      },
+    });
+  }
+}
 
 async function main() {
   const adminPassword = process.env.CLINICOS_SEED_ADMIN_PASSWORD;
@@ -11,6 +86,8 @@ async function main() {
   }
 
   const passwordHash = await hash(adminPassword, 12);
+
+  await seedPriorityZeroRegistry();
 
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
@@ -278,7 +355,262 @@ async function main() {
     },
   });
 
-  console.log("Seeded ClinicOS demo organizations, patients, scheduling, encounter, and roadmap data.");
+  await prisma.facility.createMany({
+    data: [
+      { id: "facility-bfm-main", organizationId: bfm.id, locationId: "loc-brooklyn-heights", name: "Brooklyn Family Medicine", type: "primary_care", specialty: "Family Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "facility-bfm-diagnostic", organizationId: bfm.id, locationId: "loc-crown-heights", name: "Brooklyn Diagnostic Exchange Demo", type: "imaging", specialty: "Diagnostic Radiology", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "facility-luxe-main", organizationId: luxe.id, locationId: "loc-midtown", name: "Luxe Medi", type: "medical_spa", specialty: "Aesthetic Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+    ],
+  });
+
+  await prisma.networkConnection.create({
+    data: {
+      id: "network-bfm-luxe",
+      sourceOrganizationId: bfm.id,
+      targetOrganizationId: luxe.id,
+      status: "active",
+      trustLevel: "verified_demo",
+      allowedPurposes: ["treatment", "operations"],
+      requestedBy: "user-nadja",
+      approvedBy: "user-nadja",
+      activatedAt: new Date("2026-07-01T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.dataSharingAgreement.create({
+    data: {
+      id: "sharing-bfm-luxe",
+      sourceOrganizationId: bfm.id,
+      targetOrganizationId: luxe.id,
+      status: "active_demo",
+      allowedPurposes: ["treatment"],
+      dataCategories: ["demographics", "allergies", "medications", "approved_summaries"],
+      effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
+      expiresAt: new Date("2027-07-01T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.patientIdentifier.createMany({
+    data: [
+      { id: "identifier-maya-bfm", organizationId: bfm.id, patientId: maya.id, system: "urn:clinicos:mrn:org-bfm", value: "BFM-28419", sourceOrganizationId: bfm.id, status: "verified", verifiedAt: new Date("2026-07-14T12:00:00.000Z") },
+      { id: "identifier-camille-luxe", organizationId: luxe.id, patientId: "pt-1004", system: "urn:clinicos:mrn:org-luxe", value: "LUX-10428", sourceOrganizationId: luxe.id, status: "verified", verifiedAt: new Date("2026-07-14T12:00:00.000Z") },
+    ],
+  });
+
+  await prisma.accessGrant.create({
+    data: {
+      id: "grant-maya-network-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      granteeOrganizationId: luxe.id,
+      purposeOfUse: "treatment",
+      dataCategories: ["demographics", "allergies", "medications"],
+      accessLevel: "read_only",
+      startsAt: new Date("2026-07-14T12:00:00.000Z"),
+      expiresAt: new Date("2026-08-14T12:00:00.000Z"),
+      consentId: "consent-demo-network",
+      createdBy: "user-nadja",
+    },
+  });
+
+  await prisma.recordRequest.create({
+    data: {
+      id: "record-request-maya-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      requestingOrganizationId: luxe.id,
+      receivingOrganizationId: bfm.id,
+      purposeOfUse: "treatment",
+      dataCategories: ["approved_visit_summary", "medications", "allergies"],
+      status: "approved_demo",
+      deliveryStatus: "delivered_demo",
+      requestedBy: "user-nadja",
+      reviewedBy: "user-nadja",
+      reviewedAt: new Date("2026-07-14T12:30:00.000Z"),
+    },
+  });
+
+  await prisma.clinicSubscription.createMany({
+    data: [
+      { id: "subscription-bfm", organizationId: bfm.id, planKey: "founding-clinic", status: "demo", modules: ["emr", "network", "revenue", "quality", "voice"] },
+      { id: "subscription-luxe", organizationId: luxe.id, planKey: "luxe-network", status: "demo", modules: ["emr", "medspa", "network", "inventory", "voice"] },
+    ],
+  });
+
+  await prisma.careTeamRoom.create({
+    data: {
+      id: "care-team-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      name: "Maya Thompson Care Constellation",
+      sourceType: "care_plan",
+      sourceId: "enc-1001",
+      status: "active",
+      sharedPlan: { goal: "Coordinate chronic-care follow-up", nextAction: "Provider reviews repeat A1C order", riskLevel: "needs_provider" },
+      members: {
+        create: [
+          { id: "care-member-nadja", representedOrganizationId: bfm.id, userId: "user-nadja", providerId: "provider-nadja", role: "primary_care", status: "active", joinedAt: new Date("2026-07-14T12:00:00.000Z") },
+          { id: "care-member-luxe-demo", representedOrganizationId: luxe.id, providerId: "provider-nadja-luxe", role: "authorized_network_provider", status: "invited" },
+        ],
+      },
+    },
+  });
+
+  await prisma.episodeRoom.create({
+    data: {
+      id: "episode-maya-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      type: "no_fault_demo",
+      title: "Synthetic Injury Episode",
+      status: "open",
+      readinessScore: 82,
+      nextAction: "Attach imaging report",
+      responsibleRole: "case_manager",
+      riskLevel: RiskLevel.NEEDS_STAFF,
+    },
+  });
+
+  await prisma.healthPassport.create({
+    data: {
+      id: "passport-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      status: "active_demo",
+      summary: { allergies: ["Penicillin"], medications: ["Metformin", "Lisinopril"], problems: ["Type 2 diabetes", "Essential hypertension"], provenance: "synthetic_seed" },
+      lastConfirmedAt: new Date("2026-07-14T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.consentWallet.create({
+    data: {
+      id: "consent-wallet-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      sharingDefaults: { treatment: "ask_each_time", payment: "organization_only", operations: "organization_only", sensitiveRecords: "blocked" },
+      emergencyPreference: "allow_break_glass_with_alert",
+    },
+  });
+
+  await prisma.intakePassport.create({
+    data: {
+      id: "intake-passport-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      reusableFields: { demographics: "confirmed", insurance: "confirmed", pharmacy: "review_due", medications: "provider_review" },
+      confirmedAt: new Date("2026-07-14T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.careHandoff.create({
+    data: {
+      id: "handoff-maya-lab",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      senderId: "provider-nadja",
+      receiverId: "provider-lee",
+      type: "lab_review",
+      summary: { situation: "Repeat A1C follow-up", background: "Above-goal recent values", assessment: "Provider review required" },
+      requestedAction: "Review result and approve patient communication",
+      priority: "needs_provider",
+      dueAt: new Date("2026-07-15T17:00:00.000Z"),
+      status: "sent",
+    },
+  });
+
+  await prisma.capacityListing.create({
+    data: {
+      id: "capacity-mri-demo",
+      organizationId: bfm.id,
+      locationId: "loc-crown-heights",
+      facilityId: "facility-bfm-diagnostic",
+      type: "imaging",
+      service: "MRI Lumbar Spine",
+      startsAt: new Date("2026-07-15T18:30:00.000Z"),
+      endsAt: new Date("2026-07-15T19:15:00.000Z"),
+      acceptedPayers: ["GEICO No-Fault", "Self Pay"],
+      urgencyLevels: ["routine", "high"],
+      status: "open_demo",
+      metadata: { source: "synthetic_seed", bookingMode: "manual_confirmation" },
+    },
+  });
+
+  await prisma.providerConsultation.create({
+    data: {
+      id: "consult-maya-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      requestingProviderId: "provider-nadja",
+      consultantProviderId: "provider-lee",
+      specialty: "Family Medicine",
+      clinicalQuestion: "Synthetic demo consultation requiring provider review.",
+      status: "requested_demo",
+    },
+  });
+
+  await prisma.knowledgeItem.create({
+    data: {
+      id: "knowledge-safety-demo",
+      organizationId: bfm.id,
+      layer: "organization",
+      title: "ClinicOS mandatory emergency routing",
+      content: "If this is a medical emergency, call 911 or go to the nearest emergency room. Routine automation must stop and staff must be alerted.",
+      sourceName: "ClinicOS Master Canon",
+      sourceDate: new Date("2026-07-14T00:00:00.000Z"),
+      status: "approved_demo",
+      effectiveAt: new Date("2026-07-14T00:00:00.000Z"),
+      reviews: { create: { id: "knowledge-review-safety-demo", reviewerId: "user-nadja", decision: "approved_for_demo", notes: "Synthetic demonstration policy." } },
+    },
+  });
+
+  await prisma.remoteObservation.create({
+    data: {
+      id: "observation-maya-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      type: "blood_pressure",
+      value: "132/84",
+      unit: "mmHg",
+      source: "patient_entered_demo",
+      observedAt: new Date("2026-07-14T11:00:00.000Z"),
+      reviewStatus: "reviewed_demo",
+      reviewedBy: "user-nadja",
+      reviewedAt: new Date("2026-07-14T13:00:00.000Z"),
+    },
+  });
+
+  await prisma.inventoryItem.create({
+    data: {
+      id: "inventory-luxe-demo",
+      organizationId: luxe.id,
+      locationId: "loc-midtown",
+      sku: "DEMO-NEUROMODULATOR",
+      name: "Synthetic neuromodulator demo lot",
+      category: "injectable_demo",
+      lotNumber: "LOT-DEMO-2026",
+      expiresAt: new Date("2027-01-31T00:00:00.000Z"),
+      quantityOnHand: "24",
+      quantityReserved: "4",
+      reorderPoint: "8",
+      unitCostCents: 0,
+      status: "demo_only",
+    },
+  });
+
+  await prisma.voiceSession.create({
+    data: {
+      id: "voice-session-demo",
+      organizationId: bfm.id,
+      userId: "user-nadja",
+      purpose: "command_bar_demo",
+      language: "en-US",
+      status: "ready_for_demo",
+      provider: "browser_web_speech_demo",
+      retentionExpiresAt: new Date("2026-07-15T12:00:00.000Z"),
+    },
+  });
+
+  console.log(`Seeded ClinicOS demo data and ${clinicOsDayOneRegistry.length} immutable Priority Zero registry sections.`);
 }
 
 main()
