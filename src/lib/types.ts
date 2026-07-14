@@ -21,6 +21,7 @@ export interface Organization {
 
 export interface Patient {
   id: string;
+  organizationId: string;
   mrn: string;
   firstName: string;
   lastName: string;
@@ -51,6 +52,7 @@ export interface Patient {
 
 export interface Appointment {
   id: string;
+  organizationId: string;
   patientId: string;
   patient: string;
   initials: string;
@@ -69,6 +71,7 @@ export interface Appointment {
 
 export interface Encounter {
   id: string;
+  organizationId: string;
   patientId: string;
   date: string;
   type: string;

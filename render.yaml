@@ -13,3 +13,7 @@ services:
         sync: false
       - key: NEXT_PUBLIC_APP_URL
         sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: DEMO_AUTH
+        value: "false"

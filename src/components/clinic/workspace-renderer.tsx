@@ -10,13 +10,13 @@ export const workspaceSlugs = [
   "messages", "tasks", "escalations", "ai-assistants", "portal", "integrations", "settings",
 ] as const;
 
-export function WorkspaceRenderer({ workspace }: { workspace: string }) {
+export function WorkspaceRenderer({ organizationId, workspace }: { organizationId: string; workspace: string }) {
   switch (workspace) {
-    case "front-desk": return <FrontDeskWorkspace />;
-    case "provider": return <ProviderWorkspace />;
-    case "patients": return <PatientsWorkspace />;
-    case "schedule": return <ScheduleWorkspace />;
-    case "encounters": return <EncountersWorkspace />;
+    case "front-desk": return <FrontDeskWorkspace organizationId={organizationId} />;
+    case "provider": return <ProviderWorkspace organizationId={organizationId} />;
+    case "patients": return <PatientsWorkspace organizationId={organizationId} />;
+    case "schedule": return <ScheduleWorkspace organizationId={organizationId} />;
+    case "encounters": return <EncountersWorkspace organizationId={organizationId} />;
     case "telemedicine": return <TelemedicineWorkspace />;
     case "labs": return <LabsWorkspace />;
     case "imaging": return <ImagingWorkspace />;

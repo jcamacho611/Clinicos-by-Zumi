@@ -6,13 +6,15 @@ import { useState } from "react";
 import {
   Bell, Blocks, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown,
   ClipboardList, ClipboardPlus, Command, Files, FlaskConical, Headphones,
-  LayoutDashboard, ListChecks, Menu, MessagesSquare, MonitorSmartphone,
+  LayoutDashboard, ListChecks, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   ReceiptText, ScanLine, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X,
 } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
+import { roleLabel } from "@/lib/auth/rbac";
+import type { ClinicSession } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
 
 const icons = {
@@ -22,7 +24,11 @@ const icons = {
   Blocks, Settings2,
 };
 
-function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+function initials(name: string) {
+  return name.split(/\s+/).map((part) => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+}
+
+function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: ClinicSession }) {
   const pathname = usePathname();
   return (
     <aside className="flex h-full w-[272px] flex-col border-r border-slate-200 bg-[#f8faf9]">
@@ -35,10 +41,10 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
       <div className="px-3 pt-4">
         <button className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-slate-300">
-          <span className="grid size-8 place-items-center rounded-lg bg-teal-50 text-xs font-black text-teal-700">BF</span>
+          <span className="grid size-8 place-items-center rounded-lg bg-teal-50 text-xs font-black text-teal-700">{initials(session.organizationName)}</span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-xs font-bold text-slate-900">Brooklyn Family Medicine</span>
-            <span className="block text-[10px] text-slate-500">Brooklyn Heights</span>
+            <span className="block truncate text-xs font-bold text-slate-900">{session.organizationName}</span>
+            <span className="block text-[10px] text-slate-500">Authenticated workspace</span>
           </span>
           <ChevronDown className="size-4 text-slate-400" />
         </button>
@@ -73,19 +79,21 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
       <div className="border-t border-slate-200 p-3">
         <div className="flex items-center gap-3 rounded-xl p-2">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 text-xs font-extrabold text-white">NR</span>
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 text-xs font-extrabold text-white">{initials(session.name)}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-slate-900">Nadja R., NP</p>
-            <p className="text-[10px] text-slate-500">Clinic owner</p>
+            <p className="truncate text-xs font-bold text-slate-900">{session.name}</p>
+            <p className="text-[10px] text-slate-500">{roleLabel(session.role)}</p>
           </div>
-          <ChevronDown className="size-4 text-slate-400" />
+          <form action="/api/auth/logout" method="post">
+            <Button aria-label="Sign out" size="icon" title="Sign out" type="submit" variant="ghost"><LogOut className="size-4" /></Button>
+          </form>
         </div>
       </div>
     </aside>
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, session }: { children: React.ReactNode; session: ClinicSession }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const slug = pathname.split("/").filter(Boolean)[0] || "dashboard";
@@ -93,11 +101,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f4f7f7]">
-      <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar /></div>
+      <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar session={session} /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button className="absolute inset-0 bg-slate-950/35 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
-          <div className="relative h-full w-[290px] shadow-2xl"><Sidebar onNavigate={() => setMobileOpen(false)} /></div>
+          <div className="relative h-full w-[290px] shadow-2xl"><Sidebar onNavigate={() => setMobileOpen(false)} session={session} /></div>
           <button className="absolute left-[302px] top-4 grid size-10 place-items-center rounded-full bg-white text-slate-900 shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
         </div>
       )}

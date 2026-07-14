@@ -1,8 +1,16 @@
 import { AppointmentStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const adminPassword = process.env.CLINICOS_SEED_ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.length < 12 || adminPassword.includes("replace-with")) {
+    throw new Error("CLINICOS_SEED_ADMIN_PASSWORD must be set to a non-placeholder value with at least 12 characters.");
+  }
+
+  const passwordHash = await hash(adminPassword, 12);
+
   await prisma.encounter.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.patient.deleteMany();
@@ -26,7 +34,13 @@ async function main() {
         ],
       },
       users: {
-        create: { id: "user-nadja", email: "nadja@example.test", name: "Nadja R., NP", roleKey: "clinic_owner" },
+        create: {
+          id: "user-nadja",
+          email: "nadja@example.test",
+          name: "Nadja R., NP",
+          roleKey: "clinic_owner",
+          authCredential: { create: { passwordHash } },
+        },
       },
     },
   });

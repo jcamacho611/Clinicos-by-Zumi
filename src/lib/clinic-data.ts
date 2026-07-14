@@ -17,7 +17,7 @@ export const organizations: Organization[] = [
 
 export const patients: Patient[] = [
   {
-    id: "pt-1001", mrn: "BFM-28419", firstName: "Maya", lastName: "Thompson", initials: "MT", dob: "1985-09-12", age: 40,
+    id: "pt-1001", organizationId: "org-bfm", mrn: "BFM-28419", firstName: "Maya", lastName: "Thompson", initials: "MT", dob: "1985-09-12", age: 40,
     sex: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", preferredLanguage: "English",
     insurance: "Healthfirst", plan: "Essential Plan 3", memberId: "HF-TEST-40218", copay: 25, balance: 75, portalStatus: "Active",
     riskLevel: "Needs Provider", riskFlags: ["Abnormal A1C", "Penicillin allergy"], nextAppointment: "Today, 10:30 AM", provider: "Nadja R., NP",
@@ -25,28 +25,28 @@ export const patients: Patient[] = [
     problems: ["Type 2 diabetes", "Essential hypertension"], lastVisit: "Jun 18, 2026",
   },
   {
-    id: "pt-1002", mrn: "BFM-28104", firstName: "Darius", lastName: "Coleman", initials: "DC", dob: "1972-02-07", age: 54,
+    id: "pt-1002", organizationId: "org-bfm", mrn: "BFM-28104", firstName: "Darius", lastName: "Coleman", initials: "DC", dob: "1972-02-07", age: 54,
     sex: "Male", pronouns: "he/him", phone: "(718) 555-0188", email: "darius.coleman@example.test", preferredLanguage: "English",
     insurance: "EmblemHealth", plan: "GHI CBP", memberId: "EMB-TEST-90116", copay: 30, balance: 0, portalStatus: "Active",
     riskLevel: "Normal", riskFlags: [], nextAppointment: "Jul 21, 9:00 AM", provider: "Nadja R., NP", location: "Crown Heights",
     allergies: ["No known drug allergies"], medications: ["Atorvastatin 20 mg nightly"], problems: ["Hyperlipidemia"], lastVisit: "May 02, 2026",
   },
   {
-    id: "pt-1003", mrn: "BFM-29011", firstName: "Elena", lastName: "Rivera", initials: "ER", dob: "1993-11-21", age: 32,
+    id: "pt-1003", organizationId: "org-bfm", mrn: "BFM-29011", firstName: "Elena", lastName: "Rivera", initials: "ER", dob: "1993-11-21", age: 32,
     sex: "Female", pronouns: "she/her", phone: "(347) 555-0109", email: "elena.rivera@example.test", preferredLanguage: "Spanish",
     insurance: "MetroPlus", plan: "GoldPlus", memberId: "MP-TEST-33981", copay: 15, balance: 40, portalStatus: "Invited",
     riskLevel: "Needs Staff", riskFlags: ["Forms incomplete"], nextAppointment: "Today, 11:15 AM", provider: "Dr. Samuel Lee", location: "Brooklyn Heights",
     allergies: ["Latex - rash"], medications: ["Albuterol HFA as needed"], problems: ["Mild intermittent asthma"], lastVisit: "New patient",
   },
   {
-    id: "pt-1004", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", initials: "CB", dob: "1989-05-15", age: 37,
+    id: "pt-1004", organizationId: "org-luxe", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", initials: "CB", dob: "1989-05-15", age: 37,
     sex: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", preferredLanguage: "English",
     insurance: "Self Pay", plan: "Luxe Membership", memberId: "N/A", copay: 0, balance: 350, portalStatus: "Active",
     riskLevel: "Normal", riskFlags: [], nextAppointment: "Today, 2:00 PM", provider: "Nadja R., NP", location: "Midtown Manhattan",
     allergies: ["No known drug allergies"], medications: [], problems: ["Weight management program"], lastVisit: "Jun 30, 2026",
   },
   {
-    id: "pt-1005", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", initials: "AN", dob: "1966-01-31", age: 60,
+    id: "pt-1005", organizationId: "org-bfm", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", initials: "AN", dob: "1966-01-31", age: 60,
     sex: "Male", pronouns: "he/him", phone: "(917) 555-0124", email: "anthony.nguyen@example.test", preferredLanguage: "English",
     insurance: "Aetna", plan: "Open Access", memberId: "AET-TEST-77241", copay: 35, balance: 110, portalStatus: "Inactive",
     riskLevel: "Urgent", riskFlags: ["BP follow-up overdue", "Open care gaps"], nextAppointment: "Not scheduled", provider: "Dr. Samuel Lee", location: "Crown Heights",
@@ -55,15 +55,15 @@ export const patients: Patient[] = [
 ];
 
 export const appointments: Appointment[] = [
-  { id: "apt-1", patientId: "pt-1001", patient: "Maya Thompson", initials: "MT", time: "9:00 AM", endTime: "9:30 AM", date: "Today", type: "Diabetes follow-up", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Checked In", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 25 },
-  { id: "apt-2", patientId: "pt-1003", patient: "Elena Rivera", initials: "ER", time: "9:45 AM", endTime: "10:30 AM", date: "Today", type: "New patient", provider: "Dr. Samuel Lee", location: "Brooklyn Heights", status: "In Room", telemedicine: false, formsComplete: false, insuranceVerified: false, paymentDue: 15 },
-  { id: "apt-3", patientId: "pt-1002", patient: "Darius Coleman", initials: "DC", time: "10:45 AM", endTime: "11:15 AM", date: "Today", type: "Annual wellness", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Confirmed", telemedicine: true, formsComplete: true, insuranceVerified: true, paymentDue: 30 },
-  { id: "apt-4", patientId: "pt-1004", patient: "Camille Brooks", initials: "CB", time: "2:00 PM", endTime: "2:45 PM", date: "Today", type: "Weight management", provider: "Nadja R., NP", location: "Midtown Manhattan", status: "Confirmed", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 350 },
+  { id: "apt-1", organizationId: "org-bfm", patientId: "pt-1001", patient: "Maya Thompson", initials: "MT", time: "9:00 AM", endTime: "9:30 AM", date: "Today", type: "Diabetes follow-up", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Checked In", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 25 },
+  { id: "apt-2", organizationId: "org-bfm", patientId: "pt-1003", patient: "Elena Rivera", initials: "ER", time: "9:45 AM", endTime: "10:30 AM", date: "Today", type: "New patient", provider: "Dr. Samuel Lee", location: "Brooklyn Heights", status: "In Room", telemedicine: false, formsComplete: false, insuranceVerified: false, paymentDue: 15 },
+  { id: "apt-3", organizationId: "org-bfm", patientId: "pt-1002", patient: "Darius Coleman", initials: "DC", time: "10:45 AM", endTime: "11:15 AM", date: "Today", type: "Annual wellness", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Confirmed", telemedicine: true, formsComplete: true, insuranceVerified: true, paymentDue: 30 },
+  { id: "apt-4", organizationId: "org-luxe", patientId: "pt-1004", patient: "Camille Brooks", initials: "CB", time: "2:00 PM", endTime: "2:45 PM", date: "Today", type: "Weight management", provider: "Nadja R., NP", location: "Midtown Manhattan", status: "Confirmed", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 350 },
 ];
 
 export const encounters: Encounter[] = [
   {
-    id: "enc-1001", patientId: "pt-1001", date: "Jul 14, 2026", type: "Diabetes follow-up", provider: "Nadja R., NP", status: "Draft",
+    id: "enc-1001", organizationId: "org-bfm", patientId: "pt-1001", date: "Jul 14, 2026", type: "Diabetes follow-up", provider: "Nadja R., NP", status: "Draft",
     chiefComplaint: "Follow-up for diabetes and elevated home glucose readings.",
     hpi: "40-year-old patient returns for chronic care follow-up. Reports consistent medication use and increased thirst over the last two weeks. Denies acute distress.",
     subjective: "Home fasting readings reported between 145-170 mg/dL. Working on meal planning and walking three days per week.",
@@ -143,10 +143,18 @@ export const auditEvents = [
   { actor: "Billing Team", action: "Updated claim status", target: "CLM-71802", time: "8:56 AM", source: "Billing" },
 ];
 
-export function getPatient(patientId: string) {
-  return patients.find((patient) => patient.id === patientId) ?? patients[0];
+export function getPatientsForOrganization(organizationId: string) {
+  return patients.filter((patient) => patient.organizationId === organizationId);
 }
 
-export function getEncounter(encounterId: string) {
-  return encounters.find((encounter) => encounter.id === encounterId) ?? encounters[0];
+export function getAppointmentsForOrganization(organizationId: string) {
+  return appointments.filter((appointment) => appointment.organizationId === organizationId);
+}
+
+export function getPatientForOrganization(patientId: string, organizationId: string) {
+  return patients.find((patient) => patient.id === patientId && patient.organizationId === organizationId);
+}
+
+export function getEncounterForOrganization(encounterId: string, organizationId: string) {
+  return encounters.find((encounter) => encounter.id === encounterId && encounter.organizationId === organizationId);
 }

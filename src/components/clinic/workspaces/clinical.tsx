@@ -48,7 +48,7 @@ export function FormsWorkspace() {
   const forms = [
     { title: "New patient intake", use: "Primary care", fields: 32, status: "Active", completion: 88 },
     { title: "Telemedicine consent", use: "All virtual visits", fields: 9, status: "Active", completion: 96 },
-    { title: "Weight management consent", use: "Luxe Medi", fields: 18, status: "Active", completion: 91 },
+    { title: "Chronic care follow-up", use: "Primary care", fields: 18, status: "Active", completion: 91 },
     { title: "No-fault intake", use: "Case management", fields: 41, status: "Draft", completion: 64 },
   ];
   return <div className="space-y-6"><PageIntro title="Intake that arrives chart-ready." description="Build conditional forms, collect signatures, route reviews, lock submissions, and attach the approved record directly to the patient chart." action={<Button variant="primary"><FilePlus2 className="size-4" /> New template</Button>} aside={<Button variant="secondary"><Send className="size-4" /> Send forms</Button>} />

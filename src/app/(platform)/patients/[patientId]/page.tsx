@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { PatientChart } from "@/components/clinic/patient-chart";
-import { getPatient } from "@/lib/clinic-data";
+import { getClinicSession, requireClinicSession } from "@/lib/auth/session";
+import { getPatientForOrganization } from "@/lib/clinic-data";
 
 export async function generateMetadata({ params }: { params: Promise<{ patientId: string }> }): Promise<Metadata> {
   const { patientId } = await params;
-  const patient = getPatient(patientId);
-  return { title: `${patient.firstName} ${patient.lastName}` };
+  const session = await getClinicSession();
+  const patient = session ? getPatientForOrganization(patientId, session.organizationId) : undefined;
+  return { title: patient ? `${patient.firstName} ${patient.lastName}` : "Patient chart" };
 }
 
 export default async function PatientPage({ params }: { params: Promise<{ patientId: string }> }) {
   const { patientId } = await params;
-  return <PatientChart patient={getPatient(patientId)} />;
+  const session = await requireClinicSession();
+  const patient = getPatientForOrganization(patientId, session.organizationId);
+  if (!patient) notFound();
+  return <PatientChart patient={patient} />;
 }

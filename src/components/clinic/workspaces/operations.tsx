@@ -7,10 +7,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { appointments, encounters, patients, tasks } from "@/lib/clinic-data";
+import { encounters, getAppointmentsForOrganization, getPatientsForOrganization, tasks } from "@/lib/clinic-data";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge, TextAction } from "@/components/clinic/workspace-kit";
 
-export function FrontDeskWorkspace() {
+export function FrontDeskWorkspace({ organizationId }: { organizationId: string }) {
+  const appointments = getAppointmentsForOrganization(organizationId);
   return <div className="space-y-6">
     <PageIntro title="Run today without the scramble." description="One readiness board for arrivals, forms, insurance, balances, missed calls, and provider handoffs." action={<Button variant="primary"><Plus className="size-4" /> Create patient</Button>} aside={<Button variant="secondary"><CalendarPlus className="size-4" /> Book visit</Button>} />
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -25,7 +26,7 @@ export function FrontDeskWorkspace() {
       </SectionCard>
       <div className="space-y-6">
         <SectionCard title="Callback queue" description="Newest missed requests first.">
-          <div className="space-y-1 p-3">{[["KB", "Kendra B.", "New patient request", "6 min"], ["RM", "Rafael M.", "Billing question", "18 min"], ["SP", "Simone P.", "Luxe consultation", "34 min"]].map(([initials, name, reason, time], index) => <div className="flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50" key={name}><span className={`grid size-9 place-items-center rounded-xl text-[10px] font-extrabold ${index === 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{initials}</span><div className="min-w-0 flex-1"><p className="text-xs font-bold text-slate-900">{name}</p><p className="mt-0.5 truncate text-[10px] text-slate-400">{reason} · {time} ago</p></div><Button size="icon" variant="ghost" aria-label={`Call ${name}`}><PhoneCall className="size-4" /></Button></div>)}</div>
+          <div className="space-y-1 p-3">{[["KB", "Kendra B.", "New patient request", "6 min"], ["RM", "Rafael M.", "Billing question", "18 min"], ["SP", "Simone P.", "Appointment request", "34 min"]].map(([initials, name, reason, time], index) => <div className="flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50" key={name}><span className={`grid size-9 place-items-center rounded-xl text-[10px] font-extrabold ${index === 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{initials}</span><div className="min-w-0 flex-1"><p className="text-xs font-bold text-slate-900">{name}</p><p className="mt-0.5 truncate text-[10px] text-slate-400">{reason} · {time} ago</p></div><Button size="icon" variant="ghost" aria-label={`Call ${name}`}><PhoneCall className="size-4" /></Button></div>)}</div>
         </SectionCard>
         <Card className="bg-slate-950 p-5 text-white"><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-lime-300">Front desk focus</p><p className="mt-3 text-lg font-extrabold tracking-[-.03em]">Elena arrives in 12 minutes.</p><p className="mt-2 text-xs leading-5 text-slate-400">Insurance and intake are incomplete. Spanish-language forms are ready to resend.</p><Button className="mt-5 bg-white text-slate-950 hover:bg-slate-100" size="sm" variant="secondary">Open readiness checklist <ArrowRight className="size-3.5" /></Button></Card>
       </div>
@@ -33,7 +34,8 @@ export function FrontDeskWorkspace() {
   </div>;
 }
 
-export function ProviderWorkspace() {
+export function ProviderWorkspace({ organizationId }: { organizationId: string }) {
+  const appointments = getAppointmentsForOrganization(organizationId);
   const clinicalTasks = tasks.filter((task) => task.category === "Clinical" || task.category === "Quality");
   return <div className="space-y-6">
     <PageIntro title="Clinical work, prioritized safely." description="Review results, messages, encounters, and care gaps in one provider-focused queue. No AI draft can become a final clinical response without review." action={<Button asChild variant="primary"><Link href="/encounters/enc-1001"><Stethoscope className="size-4" /> Resume encounter</Link></Button>} />
@@ -54,7 +56,8 @@ export function ProviderWorkspace() {
   </div>;
 }
 
-export function PatientsWorkspace() {
+export function PatientsWorkspace({ organizationId }: { organizationId: string }) {
+  const patients = getPatientsForOrganization(organizationId);
   return <div className="space-y-6">
     <PageIntro title="Every patient, one continuous record." description="Search demographics, care team, risk, portal status, balance, and the next clinical step without leaving the patient index." action={<Button variant="primary"><Plus className="size-4" /> Add patient</Button>} />
     <Card className="overflow-hidden">
@@ -64,29 +67,33 @@ export function PatientsWorkspace() {
   </div>;
 }
 
-export function ScheduleWorkspace() {
+export function ScheduleWorkspace({ organizationId }: { organizationId: string }) {
   const days = ["Mon 13", "Tue 14", "Wed 15", "Thu 16", "Fri 17"];
   const blocks = [
     { patient: "Maya Thompson", time: "9:00", type: "Follow-up", day: 1, span: 1, color: "bg-teal-100 border-teal-200 text-teal-950" },
     { patient: "Elena Rivera", time: "9:45", type: "New patient", day: 1, span: 2, color: "bg-sky-100 border-sky-200 text-sky-950" },
     { patient: "Darius Coleman", time: "10:45", type: "Telemedicine", day: 1, span: 1, color: "bg-amber-100 border-amber-200 text-amber-950" },
-    { patient: "Camille Brooks", time: "2:00", type: "Weight management", day: 1, span: 2, color: "bg-lime-100 border-lime-200 text-lime-950" },
     { patient: "Open", time: "11:30", type: "Urgent hold", day: 2, span: 1, color: "bg-rose-50 border-rose-200 text-rose-900" },
   ];
+  const visibleBlocks = organizationId === "org-bfm" ? blocks : [];
   return <div className="space-y-6"><PageIntro title="A schedule built around clinical flow." description="See provider availability, appointment readiness, telemedicine, no-show risk, and waitlist demand across every location." action={<Button variant="primary"><CalendarPlus className="size-4" /> New appointment</Button>} aside={<Button variant="secondary">Today</Button>} />
     <div className="grid gap-4 sm:grid-cols-3"><StatCard accent="teal" detail="Across 3 providers" icon={<CalendarClock className="size-4" />} label="Booked today" value="18" /><StatCard accent="amber" detail="4 forms incomplete" icon={<Clock3 className="size-4" />} label="Readiness risk" value="5" /><StatCard accent="sky" detail="Matches 2 open holds" icon={<Users className="size-4" />} label="Waitlist" value="7" /></div>
-    <Card className="overflow-hidden"><div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4"><div><p className="text-sm font-extrabold text-slate-950">Week of July 13</p><p className="mt-1 text-[10px] text-slate-400">Brooklyn Heights · Nadja R., NP</p></div><div className="ml-auto flex gap-2"><Button size="sm" variant="secondary">Provider</Button><Button size="sm" variant="secondary">Location</Button></div></div><div className="overflow-x-auto p-4"><div className="grid min-w-[850px] grid-cols-5 gap-3">{days.map((day, index) => <div key={day}><div className={`rounded-xl px-3 py-2 text-center text-[10px] font-extrabold ${index === 1 ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600"}`}>{day}</div><div className="mt-3 min-h-[500px] space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-2">{blocks.filter((item) => item.day === index).map((item) => <div className={`rounded-xl border p-3 ${item.color}`} key={item.patient + item.time} style={{ minHeight: item.span * 78 }}><p className="text-[9px] font-extrabold">{item.time}</p><p className="mt-2 text-xs font-extrabold">{item.patient}</p><p className="mt-1 text-[9px] opacity-65">{item.type}</p></div>)}</div></div>)}</div></div></Card>
+    <Card className="overflow-hidden"><div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4"><div><p className="text-sm font-extrabold text-slate-950">Week of July 13</p><p className="mt-1 text-[10px] text-slate-400">Brooklyn Heights · Nadja R., NP</p></div><div className="ml-auto flex gap-2"><Button size="sm" variant="secondary">Provider</Button><Button size="sm" variant="secondary">Location</Button></div></div><div className="overflow-x-auto p-4"><div className="grid min-w-[850px] grid-cols-5 gap-3">{days.map((day, index) => <div key={day}><div className={`rounded-xl px-3 py-2 text-center text-[10px] font-extrabold ${index === 1 ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600"}`}>{day}</div><div className="mt-3 min-h-[500px] space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-2">{visibleBlocks.filter((item) => item.day === index).map((item) => <div className={`rounded-xl border p-3 ${item.color}`} key={item.patient + item.time} style={{ minHeight: item.span * 78 }}><p className="text-[9px] font-extrabold">{item.time}</p><p className="mt-2 text-xs font-extrabold">{item.patient}</p><p className="mt-1 text-[9px] opacity-65">{item.type}</p></div>)}</div></div>)}</div></div></Card>
   </div>;
 }
 
-export function EncountersWorkspace() {
+export function EncountersWorkspace({ organizationId }: { organizationId: string }) {
+  const patients = getPatientsForOrganization(organizationId);
+  const organizationEncounters = encounters.filter((encounter) => encounter.organizationId === organizationId);
+  const baseEncounter = organizationEncounters[0];
+  const visibleEncounters = baseEncounter ? [
+    ...organizationEncounters,
+    { ...baseEncounter, id: "enc-1002", patientId: "pt-1003", date: "Jul 14, 2026", type: "New patient visit", provider: "Dr. Samuel Lee", status: "Ready for Review" as const },
+    { ...baseEncounter, id: "enc-1003", patientId: "pt-1002", date: "Jul 14, 2026", type: "Annual wellness", provider: "Nadja R., NP", status: "Signed" as const },
+  ] : [];
   return <div className="space-y-6"><PageIntro title="Documentation without the dead ends." description="Start, continue, review, sign, lock, and amend clinical notes with structured billing fields and a visible audit trail." action={<Button asChild variant="primary"><Link href="/encounters/enc-1001"><Plus className="size-4" /> New encounter</Link></Button>} />
     <div className="grid gap-4 sm:grid-cols-4"><StatCard accent="sky" detail="Autosaved continuously" icon={<FileText className="size-4" />} label="Draft notes" value="3" /><StatCard accent="amber" detail="Prepared for signature" icon={<UserCheck className="size-4" />} label="Ready for review" value="2" /><StatCard accent="teal" detail="Today" icon={<CheckCircle2 className="size-4" />} label="Signed" value="8" /><StatCard accent="rose" detail="Within 24-hour target" icon={<AlertTriangle className="size-4" />} label="Needs attention" value="1" /></div>
-    <SectionCard title="Encounter worklist" description="All notes stay attached to a patient, provider, organization, and immutable audit history."><div className="divide-y divide-slate-100">{[
-      ...encounters,
-      { ...encounters[0], id: "enc-1002", patientId: "pt-1003", date: "Jul 14, 2026", type: "New patient visit", provider: "Dr. Samuel Lee", status: "Ready for Review" as const },
-      { ...encounters[0], id: "enc-1003", patientId: "pt-1002", date: "Jul 14, 2026", type: "Annual wellness", provider: "Nadja R., NP", status: "Signed" as const },
-    ].map((encounter) => { const patient = patients.find((item) => item.id === encounter.patientId) ?? patients[0]; return <Link className="grid gap-4 p-5 transition hover:bg-slate-50 md:grid-cols-[1.1fr_.7fr_.7fr_auto] md:items-center" href={`/encounters/${encounter.id}`} key={encounter.id}><Person detail={`${encounter.date} · ${patient.mrn}`} initials={patient.initials} name={`${patient.firstName} ${patient.lastName}`} /><div><p className="text-[9px] font-bold text-slate-400">VISIT TYPE</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.type}</p></div><div><p className="text-[9px] font-bold text-slate-400">PROVIDER</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.provider}</p></div><div className="flex items-center gap-3"><StatusBadge status={encounter.status} /><ArrowRight className="size-4 text-slate-300" /></div></Link>; })}</div></SectionCard>
+    <SectionCard title="Encounter worklist" description="All notes stay attached to a patient, provider, organization, and immutable audit history."><div className="divide-y divide-slate-100">{visibleEncounters.map((encounter) => { const patient = patients.find((item) => item.id === encounter.patientId); if (!patient) return null; return <Link className="grid gap-4 p-5 transition hover:bg-slate-50 md:grid-cols-[1.1fr_.7fr_.7fr_auto] md:items-center" href={`/encounters/${encounter.id}`} key={encounter.id}><Person detail={`${encounter.date} · ${patient.mrn}`} initials={patient.initials} name={`${patient.firstName} ${patient.lastName}`} /><div><p className="text-[9px] font-bold text-slate-400">VISIT TYPE</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.type}</p></div><div><p className="text-[9px] font-bold text-slate-400">PROVIDER</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.provider}</p></div><div className="flex items-center gap-3"><StatusBadge status={encounter.status} /><ArrowRight className="size-4 text-slate-300" /></div></Link>; })}</div></SectionCard>
   </div>;
 }
 

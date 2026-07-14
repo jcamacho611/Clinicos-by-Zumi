@@ -10,7 +10,7 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { appointments, tasks } from "@/lib/clinic-data";
+import { getAppointmentsForOrganization, tasks } from "@/lib/clinic-data";
 
 const metrics = [
   { label: "Visits today", value: "18", change: "+3 vs. Tuesday", icon: CalendarCheck2, tone: "bg-[#dff7f1] text-teal-700" },
@@ -29,7 +29,9 @@ const statusTone: Record<string, BadgeTone> = {
   "Checked In": "teal", "In Room": "sky", Confirmed: "slate", Urgent: "rose", High: "amber",
 };
 
-export function Dashboard() {
+export function Dashboard({ organizationId, userName }: { organizationId: string; userName: string }) {
+  const appointments = getAppointmentsForOrganization(organizationId);
+  const firstName = userName.split(/\s+/)[0] || "there";
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-[26px] bg-[#102033] p-6 text-white shadow-[0_24px_60px_rgba(16,32,51,.2)] sm:p-8">
@@ -38,7 +40,7 @@ export function Dashboard() {
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-teal-300">Tuesday, July 14 · 9:48 AM</p>
-            <h2 className="mt-3 max-w-2xl text-balance text-3xl font-extrabold tracking-[-.05em] sm:text-4xl">Good morning, Nadja. The clinic is moving.</h2>
+            <h2 className="mt-3 max-w-2xl text-balance text-3xl font-extrabold tracking-[-.05em] sm:text-4xl">Good morning, {firstName}. The clinic is moving.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Three items need human review before the next appointment block. Everything else is on track.</p>
           </div>
           <div className="flex flex-wrap gap-2">

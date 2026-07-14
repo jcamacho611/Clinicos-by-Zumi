@@ -17,7 +17,7 @@ export function MessagesWorkspace() {
     { initials: "MT", name: "Maya Thompson", preview: "Does this lab result change my visit?", time: "9:38 AM", unread: 2, type: "Lab question", risk: "Needs Provider" },
     { initials: "DC", name: "Darius Coleman", preview: "Can I refill my atorvastatin?", time: "9:12 AM", unread: 1, type: "Refill", risk: "Needs Provider" },
     { initials: "ER", name: "Elena Rivera", preview: "I completed the forms in Spanish.", time: "8:48 AM", unread: 0, type: "Office", risk: "Needs Staff" },
-    { initials: "CB", name: "Camille Brooks", preview: "Is my appointment still at 2?", time: "Yesterday", unread: 0, type: "Scheduling", risk: "Normal" },
+    { initials: "DC", name: "Darius Coleman", preview: "Is my appointment still at 10:45?", time: "Yesterday", unread: 0, type: "Scheduling", risk: "Normal" },
   ];
   return <div className="space-y-6"><PageIntro title="One inbox, routed by responsibility." description="Patient, staff, provider, billing, lab, appointment, payment, and form messages remain threaded and attached to the patient record." action={<Button variant="primary"><Plus className="size-4" /> New message</Button>} />
     <Card className="min-h-[680px] overflow-hidden"><div className="grid min-h-[680px] lg:grid-cols-[300px_1fr_290px]">

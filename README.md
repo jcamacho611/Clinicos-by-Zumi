@@ -55,12 +55,17 @@ npm run dev
 
 Open `http://localhost:3000`. The application UI uses fake in-memory demo records even when PostgreSQL is not running; database commands require `DATABASE_URL`.
 
+In local development, the login page prefills a fake demo account. Development demo authentication is forcibly disabled when `NODE_ENV=production`. To seed a database-backed clinic owner, replace `CLINICOS_SEED_ADMIN_PASSWORD` with a strong local value before running `npm run db:seed`.
+
 ## Environment variables
 
 | Variable | Required now | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | For Prisma | PostgreSQL connection string |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Canonical application URL |
+| `AUTH_SECRET` | Production | At least 32 random characters used to sign HTTP-only sessions |
+| `CLINICOS_SEED_ADMIN_PASSWORD` | Seed only | Initial fake clinic-owner password; must be 12+ characters and not the placeholder |
+| `DEMO_AUTH` | Local only | Set `false` to disable the development demo account; ignored in production |
 | `AI_KEY` | No | Reserved for a reviewed AI provider integration |
 | `TWILIO_ACCOUNT_SID` | No | Future voice/SMS integration |
 | `TWILIO_AUTH_TOKEN` | No | Future voice/SMS integration |
@@ -78,6 +83,7 @@ npm run type-check   # strict TypeScript validation
 npm run test         # safety workflow tests
 npm run db:validate  # Prisma schema validation
 npm run db:generate  # generate Prisma client
+npm run db:migrate:deploy # apply reviewed migrations to a configured database
 npm run build        # production build
 npm start            # production server
 ```
@@ -85,8 +91,10 @@ npm start            # production server
 ## API foundation
 
 - `GET /api/health` returns service and demo-mode health.
-- `GET /api/patients` returns fake demo patients.
-- `POST /api/workflows/classify` applies deterministic safety-routing rules.
+- `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
+- `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
+- `GET /api/patients` requires authentication and returns only the session organization's fake demo patients.
+- `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
 
 Example:
 
@@ -102,16 +110,20 @@ curl -X POST http://localhost:3000/api/workflows/classify \
 
 Core connected relations are intentionally conservative. Before production use, add row-level tenant enforcement, authorization policies, immutable audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
+The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
+
 ## Render deployment
 
 The included `render.yaml` describes the web service. Before creating a production deployment:
 
 1. Create a managed PostgreSQL database.
 2. Set `DATABASE_URL` as a secret environment variable.
-3. Run reviewed Prisma migrations rather than `db push` in production.
+3. Run the committed initial migration with `npm run db:migrate:deploy`; never use `db push` in production.
 4. Set `NEXT_PUBLIC_APP_URL` to the public HTTPS URL.
-5. Confirm `/api/health` responds successfully.
-6. Keep all optional vendor credentials unset until contracts, BAAs, consent, security review, and real integrations are complete.
+5. Generate a unique `AUTH_SECRET` with at least 32 random characters and keep `DEMO_AUTH=false`.
+6. Seed the first database user using a temporary `CLINICOS_SEED_ADMIN_PASSWORD`, then rotate/remove the seed value from the service environment.
+7. Confirm `/api/health` responds successfully and `/dashboard` redirects unauthenticated requests to `/login`.
+8. Keep all optional vendor credentials unset until contracts, BAAs, consent, security review, and real integrations are complete.
 
 Render build command:
 
@@ -129,7 +141,8 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 
 ## Production gates that are not complete
 
-- Real authentication, passkeys, MFA, session management, and RBAC enforcement
+- Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
+- Authorization enforcement beyond the currently protected patient and workflow reads
 - Database-backed application reads and mutations
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - Encryption/key-management controls and private object storage
