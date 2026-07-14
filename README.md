@@ -53,7 +53,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000`. Authentication and patient index/chart reads require the PostgreSQL database configured by `DATABASE_URL`; other workspaces still use explicit fake demonstration fixtures while their repositories are implemented.
+Open `http://localhost:3000`. Authentication, patient charts, scheduling, and encounters require the PostgreSQL database configured by `DATABASE_URL`; the remaining workspaces still use explicit fake demonstration fixtures while their repositories are implemented.
 
 The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEED_ADMIN_PASSWORD` to a strong value before running it. The demo seed is destructive and must never be run against a database containing real records. Development-only fallback authentication is forcibly disabled when `NODE_ENV=production` and can also be disabled locally with `DEMO_AUTH=false`.
 
@@ -94,6 +94,11 @@ npm start            # production server
 - `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
 - `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
 - `GET /api/patients` requires authentication and queries PostgreSQL with the session organization ID in every patient and related-record filter.
+- `GET /api/appointments` returns only the signed-in organization's schedule.
+- `PATCH /api/appointments/:appointmentId/status` enforces forward-only scheduling lifecycle transitions and writes an audit event.
+- `GET /api/encounters` returns tenant-scoped encounter, SOAP, coding, and audit data.
+- `PATCH /api/encounters/:encounterId` autosaves draft-only structured documentation.
+- `POST /api/encounters/:encounterId/transition` submits a complete draft for review or signs and permanently locks a reviewed note.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
 
 Authenticated example:
@@ -113,7 +118,7 @@ curl -X POST http://localhost:3000/api/workflows/classify \
 
 [`prisma/schema.prisma`](./prisma/schema.prisma) defines multi-tenant organization, identity, patient, scheduling, clinical, document, lab, imaging, revenue-cycle, insurance, case, quality, communication, AI-governance, audit, settings, integration, and API-key records.
 
-Patient list/detail reads are now implemented through a server-only Prisma repository. Every base and related query requires `organizationId`, and API responses are marked private/no-store. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
+Patient, appointment, and encounter reads are implemented through server-only Prisma repositories. Every base and related query requires `organizationId`, and API responses are marked private/no-store where appropriate. Appointment transitions and encounter draft/review/sign-lock mutations use guarded tenant filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, and editor now consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
 The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
 
@@ -147,8 +152,8 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 ## Production gates that are not complete
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
-- Authorization enforcement beyond the currently protected patient and workflow reads
-- Database-backed reads and mutations for modules beyond the patient index/chart
+- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, and workflow routes
+- Encounter creation, diagnosis/procedure editing, addenda, and database-backed modules beyond patient/scheduling/encounter workflows
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - Encryption/key-management controls and private object storage
 - Lab, imaging, payer, clearinghouse, e-prescribing, and telemedicine integrations

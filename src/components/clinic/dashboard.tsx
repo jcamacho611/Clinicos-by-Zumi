@@ -10,14 +10,9 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getAppointmentsForOrganization, tasks } from "@/lib/clinic-data";
+import { tasks } from "@/lib/clinic-data";
+import type { Appointment } from "@/lib/types";
 
-const metrics = [
-  { label: "Visits today", value: "18", change: "+3 vs. Tuesday", icon: CalendarCheck2, tone: "bg-[#dff7f1] text-teal-700" },
-  { label: "Clinical review", value: "3", change: "2 results · 1 message", icon: ShieldAlert, tone: "bg-rose-50 text-rose-600" },
-  { label: "Open claims", value: "$8,420", change: "$2,180 needs action", icon: CircleDollarSign, tone: "bg-amber-50 text-amber-700" },
-  { label: "Care gaps closed", value: "12", change: "+18% this month", icon: CheckCircle2, tone: "bg-sky-50 text-sky-700" },
-];
 
 const flow = [
   { day: "Mon", visits: 17, completion: 82 }, { day: "Tue", visits: 21, completion: 88 },
@@ -29,9 +24,14 @@ const statusTone: Record<string, BadgeTone> = {
   "Checked In": "teal", "In Room": "sky", Confirmed: "slate", Urgent: "rose", High: "amber",
 };
 
-export function Dashboard({ organizationId, userName }: { organizationId: string; userName: string }) {
-  const appointments = getAppointmentsForOrganization(organizationId);
+export function Dashboard({ appointments, userName }: { appointments: Appointment[]; userName: string }) {
   const firstName = userName.split(/\s+/)[0] || "there";
+  const metrics = [
+    { label: "Visits today", value: String(appointments.length), change: "Live from the schedule", icon: CalendarCheck2, tone: "bg-[#dff7f1] text-teal-700" },
+    { label: "Clinical review", value: "3", change: "2 results · 1 message", icon: ShieldAlert, tone: "bg-rose-50 text-rose-600" },
+    { label: "Open claims", value: "$8,420", change: "$2,180 needs action", icon: CircleDollarSign, tone: "bg-amber-50 text-amber-700" },
+    { label: "Care gaps closed", value: "12", change: "+18% this month", icon: CheckCircle2, tone: "bg-sky-50 text-sky-700" },
+  ];
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-[26px] bg-[#102033] p-6 text-white shadow-[0_24px_60px_rgba(16,32,51,.2)] sm:p-8">

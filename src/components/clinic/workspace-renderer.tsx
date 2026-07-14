@@ -3,6 +3,8 @@ import { DocumentsWorkspace, FormsWorkspace, ImagingWorkspace, LabsWorkspace } f
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PortalWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
+import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
+import { listEncountersForOrganization } from "@/lib/repositories/encounter-repository";
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 
 export const workspaceSlugs = [
@@ -13,11 +15,17 @@ export const workspaceSlugs = [
 
 export async function WorkspaceRenderer({ organizationId, workspace }: { organizationId: string; workspace: string }) {
   switch (workspace) {
-    case "front-desk": return <FrontDeskWorkspace organizationId={organizationId} />;
-    case "provider": return <ProviderWorkspace organizationId={organizationId} />;
+    case "front-desk": return <FrontDeskWorkspace appointments={await listAppointmentsForOrganization(organizationId)} />;
+    case "provider": {
+      const [appointments, encounters] = await Promise.all([
+        listAppointmentsForOrganization(organizationId),
+        listEncountersForOrganization(organizationId),
+      ]);
+      return <ProviderWorkspace appointments={appointments} encounters={encounters} />;
+    }
     case "patients": return <PatientsWorkspace patients={await listPatientsForOrganization(organizationId)} />;
-    case "schedule": return <ScheduleWorkspace organizationId={organizationId} />;
-    case "encounters": return <EncountersWorkspace organizationId={organizationId} patients={await listPatientsForOrganization(organizationId)} />;
+    case "schedule": return <ScheduleWorkspace appointments={await listAppointmentsForOrganization(organizationId)} />;
+    case "encounters": return <EncountersWorkspace encounters={await listEncountersForOrganization(organizationId)} />;
     case "telemedicine": return <TelemedicineWorkspace />;
     case "labs": return <LabsWorkspace />;
     case "imaging": return <ImagingWorkspace />;

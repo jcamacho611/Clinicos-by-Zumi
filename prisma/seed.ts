@@ -12,6 +12,11 @@ async function main() {
 
   const passwordHash = await hash(adminPassword, 12);
 
+  await prisma.auditLog.deleteMany();
+  await prisma.activityLog.deleteMany();
+  await prisma.soapNote.deleteMany();
+  await prisma.diagnosis.deleteMany();
+  await prisma.procedure.deleteMany();
   await prisma.patientBalance.deleteMany();
   await prisma.insuranceVerification.deleteMany();
   await prisma.patientInsurance.deleteMany();
@@ -20,6 +25,7 @@ async function main() {
   await prisma.problem.deleteMany();
   await prisma.encounter.deleteMany();
   await prisma.appointment.deleteMany();
+  await prisma.appointmentType.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.provider.deleteMany();
   await prisma.user.deleteMany();
@@ -72,6 +78,15 @@ async function main() {
     ],
   });
 
+  await prisma.appointmentType.createMany({
+    data: [
+      { id: "type-diabetes-follow-up", organizationId: bfm.id, name: "Diabetes follow-up", durationMinutes: 30, color: "teal" },
+      { id: "type-new-patient", organizationId: bfm.id, name: "New patient visit", durationMinutes: 45, color: "sky" },
+      { id: "type-annual-wellness", organizationId: bfm.id, name: "Annual wellness", durationMinutes: 30, color: "amber", telemedicine: true },
+      { id: "type-weight-management", organizationId: luxe.id, name: "Weight management", durationMinutes: 45, color: "violet" },
+    ],
+  });
+
   const maya = await prisma.patient.create({
     data: {
       id: "pt-1001",
@@ -103,10 +118,10 @@ async function main() {
 
   await prisma.appointment.createMany({
     data: [
-      { id: "apt-1", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: maya.id, providerId: "provider-nadja", startsAt: new Date("2026-07-14T13:00:00.000Z"), endsAt: new Date("2026-07-14T13:30:00.000Z"), status: AppointmentStatus.CHECKED_IN, formsComplete: true, insuranceVerified: true, paymentDueCents: 2500 },
-      { id: "apt-2", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1003", providerId: "provider-lee", startsAt: new Date("2026-07-14T13:45:00.000Z"), endsAt: new Date("2026-07-14T14:30:00.000Z"), status: AppointmentStatus.IN_ROOM, formsComplete: false, insuranceVerified: false, paymentDueCents: 1500 },
-      { id: "apt-3", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1002", providerId: "provider-nadja", startsAt: new Date("2026-07-14T14:45:00.000Z"), endsAt: new Date("2026-07-14T15:15:00.000Z"), status: AppointmentStatus.CONFIRMED, telemedicine: true, formsComplete: true, insuranceVerified: true, paymentDueCents: 3000 },
-      { id: "apt-4", organizationId: luxe.id, locationId: "loc-midtown", patientId: "pt-1004", providerId: "provider-nadja-luxe", startsAt: new Date("2026-07-14T18:00:00.000Z"), endsAt: new Date("2026-07-14T18:45:00.000Z"), status: AppointmentStatus.CONFIRMED, formsComplete: true, insuranceVerified: true, paymentDueCents: 35000 },
+      { id: "apt-1", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: maya.id, providerId: "provider-nadja", appointmentTypeId: "type-diabetes-follow-up", startsAt: new Date("2026-07-14T13:00:00.000Z"), endsAt: new Date("2026-07-14T13:30:00.000Z"), status: AppointmentStatus.CHECKED_IN, formsComplete: true, insuranceVerified: true, paymentDueCents: 2500 },
+      { id: "apt-2", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1003", providerId: "provider-lee", appointmentTypeId: "type-new-patient", startsAt: new Date("2026-07-14T13:45:00.000Z"), endsAt: new Date("2026-07-14T14:30:00.000Z"), status: AppointmentStatus.IN_ROOM, formsComplete: false, insuranceVerified: false, paymentDueCents: 1500 },
+      { id: "apt-3", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1002", providerId: "provider-nadja", appointmentTypeId: "type-annual-wellness", startsAt: new Date("2026-07-14T14:45:00.000Z"), endsAt: new Date("2026-07-14T15:15:00.000Z"), status: AppointmentStatus.CONFIRMED, telemedicine: true, formsComplete: true, insuranceVerified: true, paymentDueCents: 3000 },
+      { id: "apt-4", organizationId: luxe.id, locationId: "loc-midtown", patientId: "pt-1004", providerId: "provider-nadja-luxe", appointmentTypeId: "type-weight-management", startsAt: new Date("2026-07-14T18:00:00.000Z"), endsAt: new Date("2026-07-14T18:45:00.000Z"), status: AppointmentStatus.CONFIRMED, formsComplete: true, insuranceVerified: true, paymentDueCents: 35000 },
     ],
   });
 
@@ -169,23 +184,81 @@ async function main() {
     ],
   });
 
-  await prisma.encounter.create({
-    data: {
-      id: "enc-1001",
-      organizationId: bfm.id,
-      locationId: "loc-brooklyn-heights",
-      patientId: maya.id,
-      providerId: "provider-nadja",
-      appointmentId: "apt-1",
-      type: "Diabetes follow-up",
-      serviceDate: new Date("2026-07-14T13:00:00.000Z"),
-      status: EncounterStatus.DRAFT,
-      chiefComplaint: "Follow-up for diabetes and elevated home glucose readings.",
-      hpi: "Returns for chronic-care follow-up with recent above-goal home readings.",
-      assessment: "Provider review required.",
-      plan: "Draft plan pending provider review and signature.",
-      createdBy: "user-nadja",
-    },
+  await prisma.encounter.createMany({
+    data: [
+      {
+        id: "enc-1001", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: maya.id,
+        providerId: "provider-nadja", appointmentId: "apt-1", type: "Diabetes follow-up",
+        serviceDate: new Date("2026-07-14T13:00:00.000Z"), status: EncounterStatus.DRAFT,
+        chiefComplaint: "Follow-up for diabetes and elevated home glucose readings.",
+        hpi: "40-year-old patient returns for chronic care follow-up with recent above-goal home readings.",
+        assessment: "Type 2 diabetes with above-goal recent A1C; hypertension currently controlled.",
+        plan: "Provider to review medication plan. Reinforce nutrition and activity goals.",
+        patientInstructions: "Continue the plan reviewed with the provider. Contact the office with questions or concerns.",
+        followUpPlan: "Repeat A1C and follow up in 3 months or sooner as directed.", createdBy: "user-nadja",
+      },
+      {
+        id: "enc-1002", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1003",
+        providerId: "provider-lee", appointmentId: "apt-2", type: "New patient visit",
+        serviceDate: new Date("2026-07-14T13:45:00.000Z"), status: EncounterStatus.READY_FOR_REVIEW,
+        chiefComplaint: "Establish care and review intermittent shortness of breath.",
+        hpi: "New patient intake reviewed with episodic symptoms and no current respiratory distress.",
+        assessment: "History requires provider confirmation before finalization.",
+        plan: "Review inhaler use and preventive care history with the patient.",
+        patientInstructions: "Seek urgent care for severe breathing difficulty.",
+        followUpPlan: "Follow up after provider review.", createdBy: "user-nadja", updatedBy: "user-nadja",
+      },
+      {
+        id: "enc-1003", organizationId: bfm.id, locationId: "loc-brooklyn-heights", patientId: "pt-1002",
+        providerId: "provider-nadja", appointmentId: "apt-3", type: "Annual wellness",
+        serviceDate: new Date("2026-07-14T14:45:00.000Z"), status: EncounterStatus.LOCKED,
+        chiefComplaint: "Annual wellness visit.", hpi: "Preventive history and medication list reviewed.",
+        assessment: "Annual wellness review completed.", plan: "Continue preventive screening schedule.",
+        patientInstructions: "Continue current medications as reviewed.", followUpPlan: "Return in one year or as needed.",
+        signedAt: new Date("2026-07-14T15:10:00.000Z"), lockedAt: new Date("2026-07-14T15:10:00.000Z"),
+        createdBy: "user-nadja", updatedBy: "user-nadja",
+      },
+      {
+        id: "enc-luxe-1001", organizationId: luxe.id, locationId: "loc-midtown", patientId: "pt-1004",
+        providerId: "provider-nadja-luxe", appointmentId: "apt-4", type: "Weight management",
+        serviceDate: new Date("2026-07-14T18:00:00.000Z"), status: EncounterStatus.DRAFT,
+        chiefComplaint: "Program follow-up.", hpi: "Demo record for tenant-isolation verification.",
+        assessment: "Requires clinician review.", plan: "Continue reviewed program follow-up.",
+        patientInstructions: "Contact the practice with questions.", followUpPlan: "Follow up as scheduled.",
+      },
+    ],
+  });
+
+  await prisma.soapNote.createMany({
+    data: [
+      { id: "soap-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", subjective: "Home fasting readings reported between 145-170 mg/dL. Working on meal planning and walking three days per week.", objective: "BP 132/84, HR 76, Temp 98.4 F, Weight 171 lb, BMI 29.4. Alert and in no acute distress.", assessment: "Type 2 diabetes with above-goal recent A1C; hypertension currently controlled.", plan: "Provider to review medication plan. Reinforce nutrition and activity goals.", status: EncounterStatus.DRAFT },
+      { id: "soap-1002", organizationId: bfm.id, patientId: "pt-1003", encounterId: "enc-1002", subjective: "Reports intermittent symptoms without current distress.", objective: "Intake vitals reviewed; provider exam pending confirmation.", assessment: "History requires provider confirmation before finalization.", plan: "Review inhaler use and preventive care history with the patient.", status: EncounterStatus.READY_FOR_REVIEW },
+      { id: "soap-1003", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", subjective: "No acute concerns reported during wellness review.", objective: "Preventive screening history reconciled.", assessment: "Annual wellness review completed.", plan: "Continue preventive screening schedule.", status: EncounterStatus.LOCKED, signedBy: "user-nadja", signedAt: new Date("2026-07-14T15:10:00.000Z"), lockedAt: new Date("2026-07-14T15:10:00.000Z") },
+      { id: "soap-luxe-1001", organizationId: luxe.id, patientId: "pt-1004", encounterId: "enc-luxe-1001", subjective: "Demo tenant-isolation record.", objective: "No clinical content for production use.", assessment: "Requires clinician review.", plan: "Continue reviewed program follow-up.", status: EncounterStatus.DRAFT },
+    ],
+  });
+
+  await prisma.diagnosis.createMany({
+    data: [
+      { id: "dx-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia", primary: true },
+      { id: "dx-1002", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", code: "I10", label: "Essential hypertension" },
+      { id: "dx-1003", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", code: "Z00.00", label: "General adult medical examination", primary: true },
+    ],
+  });
+
+  await prisma.procedure.createMany({
+    data: [
+      { id: "proc-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", code: "99214", label: "Established patient office visit", modifiers: [] },
+      { id: "proc-1002", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", code: "G0439", label: "Subsequent annual wellness visit", modifiers: [] },
+    ],
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      { id: "audit-enc-1", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.created", resourceType: "encounter", resourceId: "enc-1001", patientId: maya.id, metadata: { actorName: "Nadja R., NP" }, createdAt: new Date("2026-07-14T13:06:00.000Z") },
+      { id: "audit-enc-2", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.ready_for_review", resourceType: "encounter", resourceId: "enc-1002", patientId: "pt-1003", metadata: { actorName: "Samuel Lee, MD" }, createdAt: new Date("2026-07-14T14:18:00.000Z") },
+      { id: "audit-enc-3", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.signed_and_locked", resourceType: "encounter", resourceId: "enc-1003", patientId: "pt-1002", metadata: { actorName: "Nadja R., NP" }, createdAt: new Date("2026-07-14T15:10:00.000Z") },
+    ],
   });
 
   await prisma.integration.createMany({

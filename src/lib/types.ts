@@ -67,6 +67,15 @@ export interface Appointment {
   formsComplete: boolean;
   insuranceVerified: boolean;
   paymentDue: number;
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface EncounterAuditEvent {
+  id: string;
+  action: string;
+  actor: string;
+  timestamp: string;
 }
 
 export interface Encounter {
@@ -76,6 +85,9 @@ export interface Encounter {
   date: string;
   type: string;
   provider: string;
+  patientName: string;
+  patientInitials: string;
+  patientMrn: string;
   status: "Draft" | "Ready for Review" | "Signed" | "Locked" | "Addendum Needed";
   chiefComplaint: string;
   hpi: string;
@@ -85,8 +97,10 @@ export interface Encounter {
   plan: string;
   diagnoses: Array<{ code: string; label: string }>;
   procedures: Array<{ code: string; label: string }>;
+  patientInstructions: string;
   followUp: string;
   requiresCosignature: boolean;
+  auditHistory: EncounterAuditEvent[];
 }
 
 export interface LabResult {

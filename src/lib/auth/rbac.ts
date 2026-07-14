@@ -13,25 +13,25 @@ export const clinicRoleSchema = z.enum([
 ]);
 
 export type ClinicRole = z.infer<typeof clinicRoleSchema>;
-export type ClinicResource = "patients" | "encounters" | "billing" | "settings" | "users";
+export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "settings" | "users";
 export type ClinicAction = "read" | "create" | "update" | "sign" | "manage";
 
 const permissions: Record<ClinicRole, Partial<Record<ClinicResource, ClinicAction[]>>> = {
   clinic_owner: {
-    patients: ["read", "create", "update"], encounters: ["read", "create", "update", "sign"],
+    patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read", "create", "update", "sign"],
     billing: ["read", "create", "update"], settings: ["read", "update", "manage"], users: ["read", "create", "update", "manage"],
   },
   administrator: {
-    patients: ["read", "create", "update"], encounters: ["read", "create", "update"],
+    patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read", "create", "update"],
     billing: ["read", "create", "update"], settings: ["read", "update"], users: ["read", "create", "update"],
   },
-  provider: { patients: ["read", "update"], encounters: ["read", "create", "update", "sign"], billing: ["read"] },
-  clinical_staff: { patients: ["read", "update"], encounters: ["read", "create", "update"] },
-  front_desk: { patients: ["read", "create", "update"], encounters: ["read"], billing: ["read"] },
-  biller: { patients: ["read"], encounters: ["read"], billing: ["read", "create", "update"] },
-  quality: { patients: ["read"], encounters: ["read"], billing: ["read"] },
-  case_manager: { patients: ["read", "update"], encounters: ["read"] },
-  viewer: { patients: ["read"], encounters: ["read"], billing: ["read"] },
+  provider: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update", "sign"], billing: ["read"] },
+  clinical_staff: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update"] },
+  front_desk: { patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read"], billing: ["read"] },
+  biller: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read", "create", "update"] },
+  quality: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read"] },
+  case_manager: { patients: ["read", "update"], appointments: ["read"], encounters: ["read"] },
+  viewer: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read"] },
 };
 
 export function normalizeClinicRole(value: string): ClinicRole {

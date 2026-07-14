@@ -34,6 +34,8 @@ describe("ClinicOS security boundaries", () => {
   it("keeps role permissions least-privileged", () => {
     expect(can("provider", "encounters", "sign")).toBe(true);
     expect(can("front_desk", "encounters", "sign")).toBe(false);
+    expect(can("front_desk", "appointments", "update")).toBe(true);
+    expect(can("viewer", "appointments", "update")).toBe(false);
     expect(can("viewer", "settings", "update")).toBe(false);
   });
 

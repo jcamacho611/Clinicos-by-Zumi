@@ -1,7 +1,5 @@
 import type {
-  Appointment,
   Claim,
-  Encounter,
   LabResult,
   Organization,
   QualityGap,
@@ -12,27 +10,6 @@ import type {
 export const organizations: Organization[] = [
   { id: "org-bfm", name: "Brooklyn Family Medicine", type: "Primary Care", locations: ["Brooklyn Heights", "Crown Heights"] },
   { id: "org-luxe", name: "Luxe Medi", type: "Med Spa", locations: ["Midtown Manhattan"] },
-];
-
-export const appointments: Appointment[] = [
-  { id: "apt-1", organizationId: "org-bfm", patientId: "pt-1001", patient: "Maya Thompson", initials: "MT", time: "9:00 AM", endTime: "9:30 AM", date: "Today", type: "Diabetes follow-up", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Checked In", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 25 },
-  { id: "apt-2", organizationId: "org-bfm", patientId: "pt-1003", patient: "Elena Rivera", initials: "ER", time: "9:45 AM", endTime: "10:30 AM", date: "Today", type: "New patient", provider: "Dr. Samuel Lee", location: "Brooklyn Heights", status: "In Room", telemedicine: false, formsComplete: false, insuranceVerified: false, paymentDue: 15 },
-  { id: "apt-3", organizationId: "org-bfm", patientId: "pt-1002", patient: "Darius Coleman", initials: "DC", time: "10:45 AM", endTime: "11:15 AM", date: "Today", type: "Annual wellness", provider: "Nadja R., NP", location: "Brooklyn Heights", status: "Confirmed", telemedicine: true, formsComplete: true, insuranceVerified: true, paymentDue: 30 },
-  { id: "apt-4", organizationId: "org-luxe", patientId: "pt-1004", patient: "Camille Brooks", initials: "CB", time: "2:00 PM", endTime: "2:45 PM", date: "Today", type: "Weight management", provider: "Nadja R., NP", location: "Midtown Manhattan", status: "Confirmed", telemedicine: false, formsComplete: true, insuranceVerified: true, paymentDue: 350 },
-];
-
-export const encounters: Encounter[] = [
-  {
-    id: "enc-1001", organizationId: "org-bfm", patientId: "pt-1001", date: "Jul 14, 2026", type: "Diabetes follow-up", provider: "Nadja R., NP", status: "Draft",
-    chiefComplaint: "Follow-up for diabetes and elevated home glucose readings.",
-    hpi: "40-year-old patient returns for chronic care follow-up. Reports consistent medication use and increased thirst over the last two weeks. Denies acute distress.",
-    subjective: "Home fasting readings reported between 145-170 mg/dL. Working on meal planning and walking three days per week.",
-    objective: "BP 132/84, HR 76, Temp 98.4 F, Weight 171 lb, BMI 29.4. Alert and in no acute distress.",
-    assessment: "Type 2 diabetes with above-goal recent A1C; hypertension currently controlled.",
-    plan: "Provider to review medication plan. Reinforce nutrition and activity goals. Repeat A1C in 3 months. Return precautions reviewed.",
-    diagnoses: [{ code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia" }, { code: "I10", label: "Essential hypertension" }],
-    procedures: [{ code: "99214", label: "Established patient office visit" }], followUp: "3 months or sooner as directed", requiresCosignature: false,
-  },
 ];
 
 export const labResults: LabResult[] = [
@@ -102,11 +79,3 @@ export const auditEvents = [
   { actor: "Alex Morgan", action: "Verified insurance", target: "Darius Coleman", time: "9:21 AM", source: "Front desk" },
   { actor: "Billing Team", action: "Updated claim status", target: "CLM-71802", time: "8:56 AM", source: "Billing" },
 ];
-
-export function getAppointmentsForOrganization(organizationId: string) {
-  return appointments.filter((appointment) => appointment.organizationId === organizationId);
-}
-
-export function getEncounterForOrganization(encounterId: string, organizationId: string) {
-  return encounters.find((encounter) => encounter.id === encounterId && encounter.organizationId === organizationId);
-}
