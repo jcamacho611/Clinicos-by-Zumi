@@ -1,0 +1,1553 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RiskLevel {
+  NORMAL
+  NEEDS_STAFF
+  NEEDS_PROVIDER
+  URGENT
+  DO_NOT_AUTOMATE
+}
+
+enum AccessLevel {
+  INTERNAL
+  PATIENT_VISIBLE
+  RESTRICTED
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CHECKED_IN
+  IN_ROOM
+  WITH_PROVIDER
+  CHECKOUT
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum EncounterStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  SIGNED
+  LOCKED
+  ADDENDUM_NEEDED
+}
+
+enum ClaimStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  DENIED
+  PAID
+  PATIENT_BALANCE
+  APPEALED
+  CLOSED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+model Organization {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  clinicType   String
+  status       String        @default("active")
+  demoMode     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  locations    Location[]
+  users        User[]
+  patients     Patient[]
+  appointments Appointment[]
+  encounters   Encounter[]
+
+  @@map("organizations")
+}
+
+model Location {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  address        Json?
+  timezone       String       @default("America/New_York")
+  status         String       @default("active")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("locations")
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  organizationId String
+  locationId     String?
+  name           String
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("departments")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  name           String
+  roleKey        String
+  status         String       @default("active")
+  mfaEnabled     Boolean      @default(false)
+  lastLoginAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@map("users")
+}
+
+model Role {
+  id             String   @id @default(cuid())
+  organizationId String?
+  key            String
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@map("roles")
+}
+
+model Permission {
+  id        String   @id @default(cuid())
+  roleId    String
+  resource  String
+  action    String
+  allowed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roleId])
+  @@map("permissions")
+}
+
+model Provider {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  name           String
+  credential     String
+  specialty      String?
+  npi            String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("providers")
+}
+
+model ProviderCredential {
+  id             String    @id @default(cuid())
+  organizationId String
+  providerId     String
+  type           String
+  number         String
+  state          String?
+  expiresAt      DateTime?
+  status         String    @default("active")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([providerId])
+  @@map("provider_credentials")
+}
+
+model Patient {
+  id                  String        @id @default(cuid())
+  organizationId      String
+  locationId          String?
+  mrn                 String
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime
+  sexAtBirth          String?
+  genderIdentity      String?
+  pronouns            String?
+  phone               String?
+  email               String?
+  preferredLanguage   String        @default("English")
+  portalStatus        String        @default("inactive")
+  communicationPrefs  Json?
+  riskLevel           RiskLevel     @default(NORMAL)
+  requiresHumanReview Boolean       @default(false)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  status              String        @default("active")
+  createdBy           String?
+  updatedBy           String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  organization        Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  appointments        Appointment[]
+  encounters          Encounter[]
+
+  @@unique([organizationId, mrn])
+  @@index([organizationId, lastName, firstName])
+  @@map("patients")
+}
+
+model PatientContact {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  type           String
+  value          String
+  preferred      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("patient_contacts")
+}
+
+model PatientInsurance {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  priority       Int       @default(1)
+  payer          String
+  planName       String?
+  memberId       String
+  groupNumber    String?
+  effectiveDate  DateTime?
+  terminationDate DateTime?
+  status         String    @default("active")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId])
+  @@map("patient_insurance")
+}
+
+model PatientPharmacy {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  name           String
+  phone          String?
+  address        Json?
+  preferred      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("patient_pharmacies")
+}
+
+model PatientPreference {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  key            String
+  value          Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([patientId, key])
+  @@map("patient_preferences")
+}
+
+model EmergencyContact {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  name           String
+  relationship   String
+  phone          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("emergency_contacts")
+}
+
+model AppointmentType {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  durationMinutes Int
+  color          String?
+  telemedicine   Boolean  @default(false)
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("appointment_types")
+}
+
+model Appointment {
+  id                String            @id @default(cuid())
+  organizationId    String
+  locationId        String?
+  patientId         String
+  providerId        String?
+  appointmentTypeId String?
+  startsAt          DateTime
+  endsAt            DateTime
+  status            AppointmentStatus @default(REQUESTED)
+  telemedicine      Boolean           @default(false)
+  formsComplete     Boolean           @default(false)
+  insuranceVerified Boolean           @default(false)
+  paymentDueCents   Int               @default(0)
+  notes             String?
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient           Patient           @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, startsAt])
+  @@index([patientId, startsAt])
+  @@map("appointments")
+}
+
+model ProviderAvailability {
+  id             String   @id @default(cuid())
+  organizationId String
+  providerId     String
+  locationId     String?
+  weekday        Int
+  startsAt       String
+  endsAt         String
+  recurrence     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([providerId])
+  @@map("provider_availability")
+}
+
+model Room {
+  id             String   @id @default(cuid())
+  organizationId String
+  locationId     String
+  name           String
+  type           String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([locationId])
+  @@map("rooms")
+}
+
+model CheckIn {
+  id             String    @id @default(cuid())
+  organizationId String
+  appointmentId  String
+  arrivedAt      DateTime?
+  roomedAt       DateTime?
+  checkoutAt     DateTime?
+  status         String    @default("pending")
+  readiness      Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([appointmentId])
+  @@map("check_ins")
+}
+
+model Waitlist {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  appointmentTypeId String?
+  preferences    Json?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@map("waitlist")
+}
+
+model Encounter {
+  id                    String          @id @default(cuid())
+  organizationId        String
+  locationId            String?
+  patientId             String
+  providerId            String?
+  appointmentId         String?
+  type                  String
+  serviceDate           DateTime
+  status                EncounterStatus @default(DRAFT)
+  chiefComplaint        String?
+  hpi                   String?
+  reviewOfSystems       Json?
+  physicalExam          Json?
+  assessment            String?
+  plan                  String?
+  patientInstructions   String?
+  followUpPlan          String?
+  requiresCosignature   Boolean         @default(false)
+  signedAt              DateTime?
+  lockedAt              DateTime?
+  createdBy             String?
+  updatedBy             String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  organization          Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient               Patient         @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([patientId, serviceDate])
+  @@index([organizationId, status])
+  @@map("encounters")
+}
+
+model SoapNote {
+  id             String          @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String
+  subjective     String?
+  objective      String?
+  assessment     String?
+  plan           String?
+  status         EncounterStatus @default(DRAFT)
+  signedBy       String?
+  signedAt       DateTime?
+  lockedAt       DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([encounterId])
+  @@map("soap_notes")
+}
+
+model ClinicalNote {
+  id             String          @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  type           String
+  content        Json
+  status         EncounterStatus @default(DRAFT)
+  signedBy       String?
+  signedAt       DateTime?
+  lockedAt       DateTime?
+  addendumOfId   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([patientId, createdAt])
+  @@map("clinical_notes")
+}
+
+model NoteTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  encounterType  String?
+  schema         Json
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("note_templates")
+}
+
+model SmartPhrase {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  shortcut       String
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, userId, shortcut])
+  @@map("smart_phrases")
+}
+
+model Vital {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  measuredAt     DateTime @default(now())
+  bloodPressureSystolic Int?
+  bloodPressureDiastolic Int?
+  heartRate      Int?
+  temperatureF   Decimal? @db.Decimal(4, 1)
+  oxygenPercent  Int?
+  weightLbs      Decimal? @db.Decimal(6, 2)
+  heightInches   Decimal? @db.Decimal(5, 2)
+  bmi            Decimal? @db.Decimal(5, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId, measuredAt])
+  @@map("vitals")
+}
+
+model Allergy {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  substance      String
+  reaction       String?
+  severity       String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("allergies")
+}
+
+model Medication {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  name           String
+  dose           String?
+  frequency      String?
+  route          String?
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String    @default("active")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@map("medications")
+}
+
+model Problem {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  code           String?
+  label          String
+  onsetDate      DateTime?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId, status])
+  @@map("problems")
+}
+
+model Diagnosis {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  codeSystem     String   @default("ICD-10-CM")
+  code           String
+  label          String
+  primary        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([encounterId])
+  @@map("diagnoses")
+}
+
+model Procedure {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  codeSystem     String   @default("CPT")
+  code           String
+  label          String
+  modifiers      String[]
+  units          Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([encounterId])
+  @@map("procedures")
+}
+
+model ClinicalOrder {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  providerId     String?
+  type           String
+  details        Json
+  status         String   @default("draft")
+  orderedAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId, type])
+  @@map("orders")
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  specialty      String
+  destination    String?
+  reason         String?
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("referrals")
+}
+
+model Immunization {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  vaccine        String
+  cvxCode        String?
+  administeredAt DateTime?
+  lotNumber      String?
+  status         String    @default("complete")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId])
+  @@map("immunizations")
+}
+
+model CarePlan {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  title          String
+  goals          Json?
+  interventions  Json?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("care_plans")
+}
+
+model PatientInstruction {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  content        String
+  patientVisible Boolean  @default(true)
+  releasedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("patient_instructions")
+}
+
+model DocumentCategory {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  defaultAccess  AccessLevel @default(INTERNAL)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@map("document_categories")
+}
+
+model Document {
+  id             String      @id @default(cuid())
+  organizationId String
+  patientId      String?
+  categoryId     String?
+  name           String
+  storageKey     String
+  mimeType       String
+  sizeBytes      Int
+  accessLevel    AccessLevel @default(INTERNAL)
+  patientVisible Boolean     @default(false)
+  internalOnly   Boolean     @default(true)
+  lockedAt       DateTime?
+  uploadedBy     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([patientId, createdAt])
+  @@map("documents")
+}
+
+model DocumentReview {
+  id             String    @id @default(cuid())
+  organizationId String
+  documentId     String
+  reviewerId     String?
+  status         String    @default("needs_review")
+  notes          String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([documentId])
+  @@map("document_reviews")
+}
+
+model FormTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  version        Int      @default(1)
+  schema         Json
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@map("form_templates")
+}
+
+model FormSubmission {
+  id             String      @id @default(cuid())
+  organizationId String
+  patientId      String
+  templateId     String
+  templateVersion Int
+  answers        Json
+  status         String      @default("incomplete")
+  accessLevel    AccessLevel @default(INTERNAL)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  lockedAt       DateTime?
+  submittedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([patientId, status])
+  @@map("form_submissions")
+}
+
+model Consent {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  templateId     String?
+  type           String
+  version        Int
+  status         String    @default("pending")
+  signedAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, type])
+  @@map("consents")
+}
+
+model Signature {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String?
+  userId         String?
+  entityType     String
+  entityId       String
+  signerName     String
+  signatureHash  String
+  context        Json?
+  signedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("signatures")
+}
+
+model LabOrder {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  providerId     String?
+  vendor         String?
+  tests          Json
+  status         String    @default("draft")
+  orderedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@map("lab_orders")
+}
+
+model LabResult {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String
+  orderId              String?
+  vendor               String?
+  panelName            String
+  collectedAt          DateTime?
+  resultedAt           DateTime?
+  status               String    @default("needs_review")
+  abnormal             Boolean   @default(false)
+  requiresHumanReview  Boolean   @default(true)
+  reviewedBy           String?
+  reviewedAt           DateTime?
+  patientVisible       Boolean   @default(false)
+  releasedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([patientId, resultedAt])
+  @@map("lab_results")
+}
+
+model LabResultItem {
+  id             String   @id @default(cuid())
+  organizationId String
+  labResultId    String
+  name           String
+  loincCode      String?
+  value          String
+  unit           String?
+  referenceRange String?
+  abnormalFlag   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([labResultId])
+  @@map("lab_result_items")
+}
+
+model ImagingOrder {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  providerId     String?
+  study          String
+  facility       String?
+  status         String    @default("draft")
+  orderedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@map("imaging_orders")
+}
+
+model ImagingResult {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String
+  orderId              String?
+  reportDocumentId     String?
+  facility             String?
+  status               String    @default("needs_review")
+  requiresHumanReview  Boolean   @default(true)
+  reviewedBy           String?
+  reviewedAt           DateTime?
+  patientVisible       Boolean   @default(false)
+  releasedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@map("imaging_results")
+}
+
+model BillingAccount {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  guarantorId    String?
+  status         String   @default("active")
+  balanceCents   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("billing_accounts")
+}
+
+model Superbill {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String
+  providerId     String?
+  placeOfService String?
+  diagnoses      Json
+  procedures     Json
+  status         String   @default("draft")
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([encounterId])
+  @@map("superbills")
+}
+
+model ClaimDraft {
+  id             String      @id @default(cuid())
+  organizationId String
+  patientId      String
+  encounterId    String?
+  superbillId    String?
+  payer          String
+  providerNpi    String?
+  facilityNpi    String?
+  taxId          String?
+  placeOfService String?
+  totalCents     Int         @default(0)
+  status         ClaimStatus @default(DRAFT)
+  submittedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([organizationId, status])
+  @@map("claim_drafts")
+}
+
+model ClaimLine {
+  id             String   @id @default(cuid())
+  organizationId String
+  claimDraftId   String
+  cptCode        String
+  icd10Pointers  String[]
+  modifiers      String[]
+  units          Int      @default(1)
+  chargeCents    Int
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([claimDraftId])
+  @@map("claim_lines")
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  billingAccountId String?
+  source         String
+  amountCents    Int
+  status         String   @default("pending")
+  externalId     String?
+  postedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId, createdAt])
+  @@map("payments")
+}
+
+model PaymentLink {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  amountCents    Int
+  tokenHash      String    @unique
+  status         String    @default("active")
+  expiresAt      DateTime?
+  paidAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId])
+  @@map("payment_links")
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  number         String
+  totalCents     Int
+  balanceCents   Int
+  status         String   @default("draft")
+  dueAt          DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, number])
+  @@map("invoices")
+}
+
+model PatientBalance {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  balanceCents   Int      @default(0)
+  asOf           DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([patientId, asOf])
+  @@map("patient_balances")
+}
+
+model Denial {
+  id             String    @id @default(cuid())
+  organizationId String
+  claimDraftId   String
+  reasonCode     String?
+  reason         String
+  amountCents    Int
+  status         String    @default("open")
+  appealDueAt    DateTime?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("denials")
+}
+
+model EraRemittance {
+  id             String   @id @default(cuid())
+  organizationId String
+  payer          String
+  externalId     String?
+  receivedAt     DateTime?
+  payload        Json
+  status         String   @default("unposted")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@map("era_remittances")
+}
+
+model InsuranceVerification {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  insuranceId    String?
+  payer          String
+  eligibilityStatus String
+  copayCents     Int?
+  deductibleCents Int?
+  coinsurancePercent Decimal? @db.Decimal(5, 2)
+  effectiveDate  DateTime?
+  terminationDate DateTime?
+  source         String
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, verifiedAt])
+  @@map("insurance_verifications")
+}
+
+model PriorAuthorization {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  payer          String
+  service        String
+  referenceNumber String?
+  status         String    @default("draft")
+  submittedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId, status])
+  @@map("prior_authorizations")
+}
+
+model NoFaultCase {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  accidentDate   DateTime
+  claimNumber    String
+  carrier        String
+  adjuster       Json?
+  attorney       Json?
+  injuredBodyParts String[]
+  treatmentPlan  String?
+  priorAuthStatus String?
+  imeStatus      String?
+  narrativeDueAt DateTime?
+  packetStatus   String    @default("incomplete")
+  status         String    @default("active")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("nofault_cases")
+}
+
+model WorkersCompCase {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  accidentDate   DateTime
+  claimNumber    String
+  carrier        String
+  employer       Json?
+  adjuster       Json?
+  attorney       Json?
+  injuredBodyParts String[]
+  workStatus     String?
+  authorizationStatus String?
+  narrativeDueAt DateTime?
+  packetStatus   String    @default("incomplete")
+  status         String    @default("active")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("workers_comp_cases")
+}
+
+model CaseDocument {
+  id             String   @id @default(cuid())
+  organizationId String
+  caseType       String
+  caseId         String
+  documentId     String
+  requirementKey String?
+  status         String   @default("attached")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([caseType, caseId])
+  @@map("case_documents")
+}
+
+model CaseTask {
+  id             String    @id @default(cuid())
+  organizationId String
+  caseType       String
+  caseId         String
+  title          String
+  ownerId        String?
+  dueAt          DateTime?
+  status         String    @default("open")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([caseType, caseId, status])
+  @@map("case_tasks")
+}
+
+model CasePacket {
+  id             String    @id @default(cuid())
+  organizationId String
+  caseType       String
+  caseId         String
+  type           String
+  checklist      Json
+  status         String    @default("draft")
+  generatedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([caseType, caseId])
+  @@map("case_packets")
+}
+
+model QualityMeasure {
+  id             String   @id @default(cuid())
+  organizationId String
+  key            String
+  name           String
+  version        String?
+  definition     Json
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@map("quality_measures")
+}
+
+model QualityGap {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String
+  measureId      String
+  dueAt          DateTime?
+  impact         String    @default("medium")
+  status         String    @default("open")
+  closedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([patientId])
+  @@map("quality_gaps")
+}
+
+model PatientQualityStatus {
+  id             String   @id @default(cuid())
+  organizationId String
+  patientId      String
+  measureId      String
+  value          Json?
+  status         String
+  evaluatedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([patientId, measureId])
+  @@map("patient_quality_status")
+}
+
+model OutreachCampaign {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  measureId      String?
+  channels       String[]
+  audience       Json
+  status         String    @default("draft")
+  launchedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("outreach_campaigns")
+}
+
+model MessageThread {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  subject             String?
+  category            String
+  riskLevel           RiskLevel @default(NORMAL)
+  requiresHumanReview Boolean   @default(false)
+  assignedTeam        String?
+  status              String    @default("open")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([patientId])
+  @@map("message_threads")
+}
+
+model Message {
+  id                  String           @id @default(cuid())
+  organizationId      String
+  threadId            String
+  patientId           String?
+  direction           MessageDirection
+  channel             String
+  body                String
+  riskLevel           RiskLevel        @default(NORMAL)
+  requiresHumanReview Boolean          @default(false)
+  approvedBy          String?
+  approvedAt          DateTime?
+  sentAt              DateTime?
+  createdBy           String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+model CallLog {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  direction           String
+  fromNumber          String?
+  toNumber            String?
+  startedAt           DateTime?
+  endedAt             DateTime?
+  outcome             String?
+  transcript          String?
+  riskLevel           RiskLevel @default(NORMAL)
+  requiresHumanReview Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([organizationId, startedAt])
+  @@map("call_logs")
+}
+
+model SmsLog {
+  id             String           @id @default(cuid())
+  organizationId String
+  patientId      String?
+  direction      MessageDirection
+  fromNumber     String
+  toNumber       String
+  body           String
+  externalId     String?
+  status         String
+  sentAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@map("sms_logs")
+}
+
+model EmailLog {
+  id             String           @id @default(cuid())
+  organizationId String
+  patientId      String?
+  direction      MessageDirection
+  fromAddress    String
+  toAddress      String
+  subject        String
+  body           String?
+  externalId     String?
+  status         String
+  sentAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@map("email_logs")
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  organizationId String
+  patientId      String?
+  encounterId    String?
+  category       String
+  title          String
+  details        String?
+  ownerId        String?
+  priority       String    @default("normal")
+  riskLevel      RiskLevel @default(NORMAL)
+  dueAt          DateTime?
+  status         String    @default("open")
+  completedAt    DateTime?
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status, dueAt])
+  @@map("tasks")
+}
+
+model Escalation {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  sourceType          String
+  sourceId            String
+  category            String
+  riskLevel           RiskLevel
+  requiresHumanReview Boolean   @default(true)
+  assignedTeam        String
+  status              String    @default("open")
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  resolution          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([organizationId, status, riskLevel])
+  @@map("escalations")
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String
+  type           String
+  title          String
+  body           String?
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AiSummary {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  sourceType          String
+  sourceId            String
+  content             String
+  model               String?
+  requiresHumanReview Boolean   @default(true)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([sourceType, sourceId])
+  @@map("ai_summaries")
+}
+
+model AiClassification {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  sourceType          String
+  sourceId            String
+  category            String
+  confidence          Decimal?  @db.Decimal(5, 4)
+  riskLevel           RiskLevel
+  requiresHumanReview Boolean
+  assignedTeam        String?
+  rulesVersion        String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([sourceType, sourceId])
+  @@map("ai_classifications")
+}
+
+model AiDraft {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  sourceType          String
+  sourceId            String
+  purpose             String
+  content             String
+  riskLevel           RiskLevel
+  requiresHumanReview Boolean   @default(true)
+  blockedFromSend     Boolean   @default(true)
+  status              String    @default("draft")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([sourceType, sourceId])
+  @@map("ai_drafts")
+}
+
+model AiReview {
+  id             String    @id @default(cuid())
+  organizationId String
+  draftId        String
+  reviewerId     String
+  decision       String
+  notes          String?
+  reviewedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  @@index([draftId])
+  @@map("ai_reviews")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  actorId        String?
+  actorType      String
+  action         String
+  resourceType   String
+  resourceId     String
+  patientId      String?
+  ipAddress      String?
+  userAgent      String?
+  changes        Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([patientId, createdAt])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  type           String
+  description    String
+  entityType     String?
+  entityId       String?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("activity_logs")
+}
+
+model Setting {
+  id             String   @id @default(cuid())
+  organizationId String
+  key            String
+  value          Json
+  encrypted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@map("settings")
+}
+
+model Integration {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String
+  vendor         String
+  status         String   @default("roadmap")
+  config         Json?
+  riskLevel      String
+  baaRequired    Boolean  @default(false)
+  phase          String?
+  lastSyncAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, type, vendor])
+  @@map("integrations")
+}
+
+model ApiKey {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  keyHash        String    @unique
+  scopes         String[]
+  status         String    @default("active")
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("api_keys")
+}
