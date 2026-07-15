@@ -270,8 +270,12 @@ model Patient {
   organizationId      String
   locationId          String?
   mrn                 String
+  masterPatientId     String?
   firstName           String
   lastName            String
+  preferredName       String?
+  formerNames         String[]            @default([])
+  aliases             String[]            @default([])
   dateOfBirth         DateTime
   sexAtBirth          String?
   genderIdentity      String?
@@ -280,12 +284,17 @@ model Patient {
   email               String?
   preferredLanguage   String              @default("English")
   portalStatus        String              @default("inactive")
+  identityStatus      String              @default("unverified")
+  identityVerifiedAt  DateTime?
+  identityVerifiedBy  String?
   communicationPrefs  Json?
   riskLevel           RiskLevel           @default(NORMAL)
   requiresHumanReview Boolean             @default(false)
   reviewedBy          String?
   reviewedAt          DateTime?
   status              String              @default("active")
+  deceasedAt          DateTime?
+  archivedAt          DateTime?
   createdBy           String?
   updatedBy           String?
   createdAt           DateTime            @default(now())
@@ -308,6 +317,7 @@ model Patient {
   voiceSessions       VoiceSession[]
 
   @@unique([organizationId, mrn])
+  @@index([masterPatientId])
   @@index([organizationId, lastName, firstName])
   @@map("patients")
 }
@@ -852,19 +862,35 @@ model FormSubmission {
 }
 
 model Consent {
-  id             String    @id @default(cuid())
-  organizationId String
-  patientId      String
-  templateId     String?
-  type           String
-  version        Int
-  status         String    @default("pending")
-  signedAt       DateTime?
-  expiresAt      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                      String    @id @default(cuid())
+  organizationId          String
+  patientId               String
+  templateId              String?
+  type                    String
+  version                 Int
+  purposeOfUse            String?
+  dataCategories          String[]  @default([])
+  grantedToOrganizationId String?
+  grantedToUserId         String?
+  sensitiveRestrictions   Json?
+  source                  String    @default("staff_capture")
+  signerName              String?
+  signerRelationship      String?
+  capturedBy              String?
+  documentId              String?
+  status                  String    @default("pending")
+  effectiveAt             DateTime?
+  signedAt                DateTime?
+  expiresAt               DateTime?
+  withdrawnAt             DateTime?
+  withdrawnBy             String?
+  withdrawalReason        String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   @@index([patientId, type])
+  @@index([organizationId, status, expiresAt])
+  @@index([grantedToOrganizationId, purposeOfUse, status])
   @@map("consents")
 }
 
@@ -1733,7 +1759,13 @@ model PatientMatch {
   candidatePatientId String
   confidenceScore    Float
   matchedFields      Json?
+  sourceSnapshot     Json?
+  candidateSnapshot  Json?
+  reconciliation     Json?
   status             String       @default("possible")
+  reviewAction       String?
+  decisionReason     String?
+  masterPatientId    String?
   reviewedBy         String?
   reviewedAt         DateTime?
   createdAt          DateTime     @default(now())

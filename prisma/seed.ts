@@ -91,6 +91,8 @@ async function main() {
 
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
+  await prisma.signature.deleteMany();
+  await prisma.consent.deleteMany();
   await prisma.soapNote.deleteMany();
   await prisma.diagnosis.deleteMany();
   await prisma.procedure.deleteMany();
@@ -199,6 +201,7 @@ async function main() {
       { id: "pt-1003", organizationId: bfm.id, locationId: "loc-brooklyn-heights", mrn: "BFM-29011", firstName: "Elena", lastName: "Rivera", dateOfBirth: new Date("1993-11-21T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(347) 555-0109", email: "elena.rivera@example.test", preferredLanguage: "Spanish", portalStatus: "invited", riskLevel: RiskLevel.NEEDS_STAFF },
       { id: "pt-1005", organizationId: bfm.id, locationId: "loc-crown-heights", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", dateOfBirth: new Date("1966-01-31T00:00:00.000Z"), sexAtBirth: "Male", pronouns: "he/him", phone: "(917) 555-0124", email: "anthony.nguyen@example.test", portalStatus: "inactive", riskLevel: RiskLevel.URGENT, requiresHumanReview: true },
       { id: "pt-1004", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", dateOfBirth: new Date("1989-05-15T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", portalStatus: "active" },
+      { id: "pt-2001", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", portalStatus: "invited", identityStatus: "possible_match", requiresHumanReview: true },
     ],
   });
 
@@ -399,11 +402,74 @@ async function main() {
     },
   });
 
+  await prisma.dataSharingAgreement.create({
+    data: {
+      id: "sharing-luxe-bfm-identity",
+      sourceOrganizationId: luxe.id,
+      targetOrganizationId: bfm.id,
+      status: "active_demo",
+      allowedPurposes: ["operations"],
+      dataCategories: ["demographics"],
+      effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
+      expiresAt: new Date("2027-07-01T12:00:00.000Z"),
+    },
+  });
+
   await prisma.patientIdentifier.createMany({
     data: [
       { id: "identifier-maya-bfm", organizationId: bfm.id, patientId: maya.id, system: "urn:clinicos:mrn:org-bfm", value: "BFM-28419", sourceOrganizationId: bfm.id, status: "verified", verifiedAt: new Date("2026-07-14T12:00:00.000Z") },
       { id: "identifier-camille-luxe", organizationId: luxe.id, patientId: "pt-1004", system: "urn:clinicos:mrn:org-luxe", value: "LUX-10428", sourceOrganizationId: luxe.id, status: "verified", verifiedAt: new Date("2026-07-14T12:00:00.000Z") },
+      { id: "identifier-maya-luxe", organizationId: luxe.id, patientId: "pt-2001", system: "urn:clinicos:mrn:org-luxe", value: "LUX-10931", sourceOrganizationId: luxe.id, status: "verified", verifiedAt: new Date("2026-07-14T12:00:00.000Z") },
     ],
+  });
+
+  await prisma.patientMatch.create({
+    data: {
+      id: "patient-match-maya-demo",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      candidatePatientId: "pt-2001",
+      confidenceScore: 1,
+      matchedFields: { matched: ["first_name", "last_name", "date_of_birth", "email", "phone", "sex_at_birth"], conflicts: [], classification: "likely_match" },
+      sourceSnapshot: { patientId: maya.id, organizationId: bfm.id, mrn: "BFM-28419", firstName: "Maya", lastName: "Thompson", dateOfBirth: "1985-09-12T00:00:00.000Z", phone: "(917) 555-0142", email: "maya.thompson@example.test" },
+      candidateSnapshot: { patientId: "pt-2001", organizationId: luxe.id, mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: "1985-09-12T00:00:00.000Z", phone: "(917) 555-0142", email: "maya.thompson@example.test" },
+      status: "possible",
+    },
+  });
+
+  await prisma.consent.create({
+    data: {
+      id: "consent-demo-network",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      type: "network_sharing",
+      version: 1,
+      purposeOfUse: "treatment",
+      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary"],
+      grantedToOrganizationId: luxe.id,
+      source: "demo_seed",
+      signerName: "Maya Thompson",
+      signerRelationship: "self",
+      capturedBy: "user-nadja",
+      status: "active",
+      effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
+      signedAt: new Date("2026-07-01T12:00:00.000Z"),
+      expiresAt: new Date("2027-07-01T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.signature.create({
+    data: {
+      id: "signature-consent-demo-network",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      entityType: "consent",
+      entityId: "consent-demo-network",
+      signerName: "Maya Thompson",
+      signatureHash: "demo-only-synthetic-consent-receipt-not-a-production-signature",
+      context: { signerRelationship: "self", source: "demo_seed", syntheticDemo: true },
+      signedAt: new Date("2026-07-01T12:00:00.000Z"),
+    },
   });
 
   await prisma.accessGrant.create({

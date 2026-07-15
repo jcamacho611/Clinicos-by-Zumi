@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { NetworkAccessError } from "@/lib/repositories/network-access-repository";
+import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 export function networkAccessErrorResponse(error: unknown) {
   if (error instanceof NetworkAccessError) {

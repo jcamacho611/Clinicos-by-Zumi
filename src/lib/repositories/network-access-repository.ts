@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
+import { requireActiveAccessConsent } from "@/lib/repositories/consent-repository";
 import {
   BREAK_GLASS_TTL_MINUTES,
   breakGlassRequestSchema,
@@ -17,13 +18,7 @@ import {
   type NetworkPurpose,
   type ShareableCategory,
 } from "@/lib/network-access-rules";
-
-export class NetworkAccessError extends Error {
-  constructor(message: string, public readonly status: number) {
-    super(message);
-    this.name = "NetworkAccessError";
-  }
-}
+import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 type Transaction = Prisma.TransactionClient;
 
@@ -208,6 +203,7 @@ export async function listNetworkAccessWorkspace(organizationId: string) {
       purposeOfUse: grant.purposeOfUse,
       dataCategories: grant.dataCategories,
       accessLevel: grant.accessLevel,
+      consentId: grant.consentId,
       reason: grant.reason,
       state: getAccessGrantState(grant, now),
       expiresAt: grant.expiresAt?.toISOString() ?? null,
@@ -346,6 +342,14 @@ export async function reviewRecordRequest(session: ClinicSession, requestId: str
       request.dataCategories as ShareableCategory[],
       now,
     );
+    const consent = await requireActiveAccessConsent(tx, {
+      sourceOrganizationId: request.receivingOrganizationId,
+      patientId: request.patientId,
+      requestingOrganizationId: request.requestingOrganizationId,
+      purposeOfUse: request.purposeOfUse as NetworkPurpose,
+      categories: request.dataCategories as ShareableCategory[],
+      now,
+    });
     const grant = await tx.accessGrant.create({
       data: {
         organizationId: request.receivingOrganizationId,
@@ -362,6 +366,7 @@ export async function reviewRecordRequest(session: ClinicSession, requestId: str
         expiresAt: addDays(now, input.expiresInDays),
         downloadAllowed: false,
         printAllowed: false,
+        consentId: consent.id,
         createdBy: session.userId,
       },
     });
@@ -579,14 +584,26 @@ export async function readSharedPatientRecord(session: ClinicSession, input: {
   if (!grant) throw new NetworkAccessError("No active grant covers this purpose and every requested data category.", 403);
 
   if (grant.accessLevel !== "break_glass") {
-    await db.$transaction((tx) => requireActiveAgreement(
-      tx,
-      input.sourceOrganizationId,
-      session.organizationId,
-      input.purposeOfUse,
-      input.categories,
-      now,
-    ));
+    await db.$transaction(async (tx) => {
+      await requireActiveAgreement(
+        tx,
+        input.sourceOrganizationId,
+        session.organizationId,
+        input.purposeOfUse,
+        input.categories,
+        now,
+      );
+      await requireActiveAccessConsent(tx, {
+        consentId: grant.consentId,
+        sourceOrganizationId: input.sourceOrganizationId,
+        patientId: input.patientId,
+        requestingOrganizationId: session.organizationId,
+        requestingUserId: session.userId,
+        purposeOfUse: input.purposeOfUse,
+        categories: input.categories,
+        now,
+      });
+    });
   }
 
   const data = await loadSharedRecord(input.sourceOrganizationId, input.patientId, input.categories);

@@ -46,6 +46,15 @@ describe("ClinicOS security boundaries", () => {
     expect(can("clinic_owner", "registry", "manage")).toBe(true);
   });
 
+  it("keeps patient identity and consent changes limited to authorized roles", () => {
+    expect(can("clinic_owner", "identity", "manage")).toBe(true);
+    expect(can("front_desk", "identity", "update")).toBe(true);
+    expect(can("front_desk", "consents", "create")).toBe(true);
+    expect(can("provider", "consents", "update")).toBe(false);
+    expect(can("viewer", "identity", "read")).toBe(false);
+    expect(can("viewer", "consents", "read")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

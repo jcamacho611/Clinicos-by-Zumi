@@ -29,6 +29,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Patient portal preview
 - Integration roadmap and organization audit settings
 - Network Command, Care Constellation, and purpose-bound clinic connections
+- Human-reviewed master patient identity, source-chart locator, consent ledger, and immediate consent revocation
 - Diagnostic Capacity Exchange and Injury Episode Room
 - Health Passport and Consent Wallet preview
 - Voice-first ClinicOS Copilot with same-screen transcript review and typing fallback
@@ -108,6 +109,12 @@ npm start            # production server
 - `POST /api/encounters/:encounterId/transition` submits a complete draft for review or signs and permanently locks a reviewed note.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
 - `GET /api/feature-registry` requires authentication and registry-read permission, then returns the PostgreSQL-backed P0 canon and delivery summary with private/no-store caching.
+- `GET|POST /api/identity/matches` lists organization-owned match candidates or runs a deterministic, minimum-necessary scan across connected clinics covered by an active demographic-sharing agreement.
+- `POST /api/identity/matches/:matchId/review` requires identity-update permission, an explicit human decision, a reason, and optional field-level reconciliation before linking or separating source charts.
+- `GET /api/identity/record-locator?masterPatientId=...` returns only source clinic, MRN, identity status, and verified identifiers for a locally linked master identity; it does not return clinical content.
+- `GET|POST /api/consents` lists the tenant consent ledger or captures a signed, recipient-, purpose-, category-, and time-scoped authorization receipt.
+- `POST /api/consents/:consentId/withdraw` withdraws authorization and revokes every linked ordinary access grant in the same transaction.
+- `GET|POST /api/network/record-requests` and the connected-care decision/read/revoke routes require role permission, an active relationship, sharing agreement, active consent, purpose/category coverage, and an auditable access grant. Break-glass remains a narrow, time-limited, separately audited exception.
 
 Authenticated example:
 
@@ -128,7 +135,9 @@ curl -X POST http://localhost:3000/api/workflows/classify \
 
 Migration `20260714225102_priority_zero_connected_care` adds database checks and triggers that reject deletion, downgrade, or mutability changes for Priority Zero registry rows. Delivery status can still advance as implementation evidence is completed.
 
-Patient, appointment, and encounter reads are implemented through server-only Prisma repositories. Every base and related query requires `organizationId`, and API responses are marked private/no-store where appropriate. Appointment transitions and encounter draft/review/sign-lock mutations use guarded tenant filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, and editor now consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
+Migration `20260715000354_master_patient_identity_and_consent` adds source-preserving master identity fields, match snapshots and reconciliation evidence, and enforceable consent recipient, purpose, category, effective-date, expiration, and withdrawal fields.
+
+Patient, appointment, encounter, connected-care access, master identity, and consent reads are implemented through server-only Prisma repositories. Every local base and related query requires `organizationId`; cross-organization identity scans require an active demographic-sharing agreement, and cross-organization clinical reads revalidate the relationship, agreement, consent, grant, purpose, categories, role, and time at read time. API responses are marked private/no-store where appropriate. Appointment transitions, encounter draft/review/sign-lock mutations, identity decisions, consent changes, and network reads use guarded filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, access controls, and identity-resolution workspace consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
 The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
 
@@ -162,7 +171,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 ## Production gates that are not complete
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
-- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, and workflow routes
+- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, and consent routes
 - Encounter creation, diagnosis/procedure editing, addenda, and database-backed modules beyond patient/scheduling/encounter workflows
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - Encryption/key-management controls and private object storage

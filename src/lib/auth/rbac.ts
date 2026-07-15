@@ -13,26 +13,26 @@ export const clinicRoleSchema = z.enum([
 ]);
 
 export type ClinicRole = z.infer<typeof clinicRoleSchema>;
-export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "settings" | "users" | "registry" | "network" | "voice";
+export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "settings" | "users" | "registry" | "network" | "identity" | "consents" | "voice";
 export type ClinicAction = "read" | "create" | "update" | "sign" | "manage";
 
 const permissions: Record<ClinicRole, Partial<Record<ClinicResource, ClinicAction[]>>> = {
   clinic_owner: {
     patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read", "create", "update", "sign"],
     billing: ["read", "create", "update"], settings: ["read", "update", "manage"], users: ["read", "create", "update", "manage"],
-    registry: ["read", "manage"], network: ["read", "create", "update", "manage"], voice: ["read", "create", "update", "manage"],
+    registry: ["read", "manage"], network: ["read", "create", "update", "manage"], identity: ["read", "create", "update", "manage"], consents: ["read", "create", "update", "manage"], voice: ["read", "create", "update", "manage"],
   },
   administrator: {
     patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read", "create", "update"],
     billing: ["read", "create", "update"], settings: ["read", "update"], users: ["read", "create", "update"],
-    registry: ["read"], network: ["read", "create", "update"], voice: ["read", "create", "update"],
+    registry: ["read"], network: ["read", "create", "update"], identity: ["read", "create", "update"], consents: ["read", "create", "update"], voice: ["read", "create", "update"],
   },
-  provider: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update", "sign"], billing: ["read"], registry: ["read"], network: ["read", "create"], voice: ["read", "create", "update"] },
-  clinical_staff: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update"], registry: ["read"], network: ["read"], voice: ["read", "create", "update"] },
-  front_desk: { patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read"], billing: ["read"], registry: ["read"], network: ["read"], voice: ["read", "create", "update"] },
-  biller: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read", "create", "update"], registry: ["read"], network: ["read"], voice: ["read", "create"] },
-  quality: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read"], registry: ["read"], network: ["read"], voice: ["read", "create"] },
-  case_manager: { patients: ["read", "update"], appointments: ["read"], encounters: ["read"], registry: ["read"], network: ["read", "create", "update"], voice: ["read", "create", "update"] },
+  provider: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update", "sign"], billing: ["read"], registry: ["read"], network: ["read", "create"], identity: ["read", "update"], consents: ["read"], voice: ["read", "create", "update"] },
+  clinical_staff: { patients: ["read", "update"], appointments: ["read", "update"], encounters: ["read", "create", "update"], registry: ["read"], network: ["read"], identity: ["read"], consents: ["read", "create"], voice: ["read", "create", "update"] },
+  front_desk: { patients: ["read", "create", "update"], appointments: ["read", "create", "update"], encounters: ["read"], billing: ["read"], registry: ["read"], network: ["read"], identity: ["read", "create", "update"], consents: ["read", "create", "update"], voice: ["read", "create", "update"] },
+  biller: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read", "create", "update"], registry: ["read"], network: ["read"], identity: ["read"], consents: ["read"], voice: ["read", "create"] },
+  quality: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read"], registry: ["read"], network: ["read"], identity: ["read"], consents: ["read"], voice: ["read", "create"] },
+  case_manager: { patients: ["read", "update"], appointments: ["read"], encounters: ["read"], registry: ["read"], network: ["read", "create", "update"], identity: ["read", "update"], consents: ["read", "create", "update"], voice: ["read", "create", "update"] },
   viewer: { patients: ["read"], appointments: ["read"], encounters: ["read"], billing: ["read"], registry: ["read"] },
 };
 

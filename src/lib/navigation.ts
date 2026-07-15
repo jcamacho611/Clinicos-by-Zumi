@@ -30,6 +30,7 @@ export const navigation = [
     items: [
       { href: "/network", label: "Network command", icon: "Network" },
       { href: "/access-controls", label: "Access controls", icon: "LockKeyhole" },
+      { href: "/identity-resolution", label: "Identity resolution", icon: "ScanSearch" },
       { href: "/care-teams", label: "Care Constellation", icon: "Orbit" },
       { href: "/capacity-exchange", label: "Capacity Exchange", icon: "Route" },
       { href: "/injury-episodes", label: "Injury Episode Room", icon: "HeartHandshake" },
@@ -88,6 +89,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   "ai-assistants": { title: "AI assistants", eyebrow: "Safe workflow automation" },
   network: { title: "Network command", eyebrow: "Connected-care mission control" },
   "access-controls": { title: "Access controls", eyebrow: "Consent-bound record exchange" },
+  "identity-resolution": { title: "Identity resolution", eyebrow: "Master patient index" },
   "care-teams": { title: "Care Constellation", eyebrow: "Virtual care team" },
   "capacity-exchange": { title: "Capacity Exchange", eyebrow: "Network availability" },
   "injury-episodes": { title: "Injury Episode Room", eyebrow: "Case command center" },
