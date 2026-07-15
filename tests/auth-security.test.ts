@@ -74,6 +74,16 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "labs", "update")).toBe(false);
   });
 
+  it("separates imaging coordination from provider review, release, and correction", () => {
+    expect(can("clinical_staff", "imaging", "create")).toBe(true);
+    expect(can("clinical_staff", "imaging", "sign")).toBe(false);
+    expect(can("provider", "imaging", "sign")).toBe(true);
+    expect(can("clinic_owner", "imaging", "manage")).toBe(true);
+    expect(can("front_desk", "imaging", "update")).toBe(true);
+    expect(can("viewer", "imaging", "read")).toBe(true);
+    expect(can("viewer", "imaging", "update")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

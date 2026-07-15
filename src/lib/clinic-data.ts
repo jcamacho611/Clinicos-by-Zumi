@@ -32,12 +32,6 @@ export const tasks: WorkTask[] = [
   { id: "task-5", title: "Complete no-fault narrative checklist", patient: "Jordan Kim", owner: "Case Team", due: "Tomorrow", priority: "Normal", category: "Case", status: "Open" },
 ];
 
-export const imagingQueue = [
-  { id: "img-1", patient: "Darius Coleman", study: "Chest X-ray, 2 views", facility: "Lenox Hill Radiology (demo)", ordered: "Jul 08", status: "Report received", review: "Needs review" },
-  { id: "img-2", patient: "Elena Rivera", study: "Pelvic ultrasound", facility: "RadNet (demo)", ordered: "Jul 06", status: "Scheduled", review: "Pending" },
-  { id: "img-3", patient: "Anthony Nguyen", study: "MRI lumbar spine", facility: "Hospital imaging (demo)", ordered: "Jun 29", status: "Reviewed", review: "Release approved" },
-];
-
 export const cases = [
   { id: "NF-2026-118", patient: "Jordan Kim", type: "No-Fault", accident: "Apr 19, 2026", carrier: "Demo Mutual", claim: "NF-DEMO-8812", adjuster: "Taylor M.", attorney: "Northline Legal", status: "Active", packet: 72, revenue: 6840, outstanding: 2180 },
   { id: "WC-2026-041", patient: "Rosa Patel", type: "Workers' Comp", accident: "May 02, 2026", carrier: "Demo Casualty", claim: "WC-DEMO-2201", adjuster: "Morgan S.", attorney: "None", status: "Prior auth needed", packet: 46, revenue: 3920, outstanding: 1480 },

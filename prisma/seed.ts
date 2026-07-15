@@ -89,6 +89,9 @@ async function main() {
 
   await seedPriorityZeroRegistry();
 
+  await prisma.imagingEvent.deleteMany();
+  await prisma.imagingResult.deleteMany();
+  await prisma.imagingOrder.deleteMany();
   await prisma.labEvent.deleteMany();
   await prisma.labResultItem.deleteMany();
   await prisma.labResult.deleteMany();
@@ -112,6 +115,7 @@ async function main() {
   await prisma.procedure.deleteMany();
   await prisma.patientBalance.deleteMany();
   await prisma.insuranceVerification.deleteMany();
+  await prisma.priorAuthorization.deleteMany();
   await prisma.patientInsurance.deleteMany();
   await prisma.allergy.deleteMany();
   await prisma.medication.deleteMany();
@@ -283,7 +287,7 @@ async function main() {
       { organizationId: bfm.id, patientId: "pt-1002", code: "E78.5", label: "Hyperlipidemia" },
       { organizationId: bfm.id, patientId: "pt-1003", code: "J45.20", label: "Mild intermittent asthma" },
       { organizationId: bfm.id, patientId: "pt-1005", code: "I10", label: "Uncontrolled hypertension" },
-      { organizationId: luxe.id, patientId: "pt-1004", label: "Weight management program" },
+      { organizationId: luxe.id, patientId: "pt-1004", code: "Z71.3", label: "Dietary counseling and surveillance" },
     ],
   });
 
@@ -369,6 +373,9 @@ async function main() {
       { organizationId: bfm.id, type: "lab", vendor: "Quest Diagnostics", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Phase 4" },
       { organizationId: bfm.id, type: "lab", vendor: "Labcorp", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Phase 4" },
       { organizationId: bfm.id, type: "lab", vendor: "BioReference", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Phase 4" },
+      { organizationId: bfm.id, type: "imaging", vendor: "Lenox Hill / RadNet-style adapter", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Adapter discovery" },
+      { organizationId: bfm.id, type: "imaging", vendor: "Hospital radiology interface", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "HL7/FHIR contract" },
+      { organizationId: luxe.id, type: "imaging", vendor: "Luxe manual imaging exchange", status: "manual_only", riskLevel: "high", baaRequired: true, phase: "Manual fallback" },
       { organizationId: bfm.id, type: "payments", vendor: "Stripe", status: "roadmap", riskLevel: "medium", baaRequired: false, phase: "Phase 2" },
     ],
   });
@@ -526,6 +533,13 @@ async function main() {
     },
   });
 
+  await prisma.priorAuthorization.createMany({
+    data: [
+      { id: "pa-anthony-mri", organizationId: bfm.id, patientId: "pt-1005", payer: "Aetna", service: "MRI lumbar spine without contrast", referenceNumber: "SYNTH-PA-8821", status: "approved", submittedAt: new Date("2026-07-09T14:00:00.000Z"), expiresAt: new Date("2026-08-09T23:59:59.000Z") },
+      { id: "pa-elena-ultrasound", organizationId: bfm.id, patientId: "pt-1003", payer: "MetroPlus", service: "Pelvic ultrasound", referenceNumber: "SYNTH-PA-9014", status: "pending", submittedAt: new Date("2026-07-14T11:30:00.000Z") },
+    ],
+  });
+
   await prisma.clinicalOrder.createMany({
     data: [
       { id: "order-referral-cardio", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", type: "referral", details: { specialty: "Cardiology", reason: "Exertional symptoms require specialty evaluation.", clinicalQuestion: "Please evaluate cardiac risk and return consultation recommendations.", priority: "urgent" }, status: "ordered", orderedAt: new Date("2026-07-14T14:00:00.000Z") },
@@ -536,11 +550,20 @@ async function main() {
       { id: "clinical-lab-pending", organizationId: bfm.id, patientId: "pt-1003", providerId: "provider-lee", type: "lab", details: { tests: [{ name: "CBC with differential", loincCode: "57021-8" }], diagnosisCodes: ["J45.20"], priority: "urgent", vendor: "BioReference" }, status: "ordered", orderedAt: new Date("2026-07-14T12:00:00.000Z") },
       { id: "clinical-lab-lipid-current", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "lab", details: { tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", vendor: "Labcorp" }, status: "result_received", orderedAt: new Date("2026-07-08T12:00:00.000Z") },
       { id: "clinical-lab-lipid-prior", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "lab", details: { tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", vendor: "Labcorp" }, status: "result_received", orderedAt: new Date("2026-04-08T12:00:00.000Z") },
+      { id: "clinical-imaging-darius", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "imaging", details: { study: "Chest radiograph, 2 views", modality: "xray", bodyPart: "Chest", diagnosisCodes: ["E78.5"], clinicalIndication: "Persistent cough documented in the source chart.", priority: "routine", facility: "Brooklyn Diagnostic Exchange Demo" }, status: "result_received", orderedAt: new Date("2026-07-07T13:00:00.000Z") },
+      { id: "clinical-imaging-anthony", organizationId: bfm.id, patientId: "pt-1005", providerId: "provider-lee", type: "imaging", details: { study: "MRI lumbar spine without contrast", modality: "mri", bodyPart: "Lumbar spine", diagnosisCodes: ["I10"], clinicalIndication: "Persistent symptoms documented by the ordering provider.", priority: "urgent", facility: "Brooklyn Diagnostic Exchange Demo" }, status: "result_received", orderedAt: new Date("2026-07-10T13:00:00.000Z") },
+      { id: "clinical-imaging-elena", organizationId: bfm.id, patientId: "pt-1003", providerId: "provider-lee", type: "imaging", details: { study: "Pelvic ultrasound complete", modality: "ultrasound", bodyPart: "Pelvis", diagnosisCodes: ["J45.20"], clinicalIndication: "Imaging request documented during chart review.", priority: "routine", facility: "Community Diagnostic Imaging" }, status: "draft" },
+      { id: "clinical-imaging-maya", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", type: "imaging", details: { study: "DEXA bone density", modality: "dexa", bodyPart: "Hip and spine", diagnosisCodes: ["E11.65"], clinicalIndication: "Preventive imaging review documented in the encounter.", priority: "routine", facility: "Community Diagnostic Imaging" }, status: "result_received", orderedAt: new Date("2026-06-28T13:00:00.000Z") },
+      { id: "clinical-imaging-luxe", organizationId: luxe.id, patientId: "pt-1004", providerId: "provider-nadja-luxe", type: "imaging", details: { study: "Ultrasound source report", modality: "ultrasound", bodyPart: "Abdomen", diagnosisCodes: ["Z71.3"], clinicalIndication: "Synthetic tenant-isolation demonstration only.", priority: "routine", facility: "Luxe Manual Imaging Exchange" }, status: "result_received", orderedAt: new Date("2026-07-12T15:00:00.000Z") },
     ],
   });
 
-  await prisma.document.create({
-    data: { id: "doc-critical-lab-source", organizationId: bfm.id, patientId: "pt-1005", name: "Hospital CMP source report - synthetic demo", storageKey: "synthetic/demo/critical-cmp.pdf", mimeType: "application/pdf", sizeBytes: 48211, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T11:40:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T11:40:00.000Z") },
+  await prisma.document.createMany({
+    data: [
+      { id: "doc-critical-lab-source", organizationId: bfm.id, patientId: "pt-1005", name: "Hospital CMP source report - synthetic demo", storageKey: "synthetic/demo/critical-cmp.pdf", mimeType: "application/pdf", sizeBytes: 48211, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T11:40:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T11:40:00.000Z") },
+      { id: "doc-anthony-mri-source", organizationId: bfm.id, patientId: "pt-1005", name: "MRI lumbar spine source report - synthetic demo", storageKey: "synthetic/demo/anthony-mri-source.pdf", mimeType: "application/pdf", sizeBytes: 68420, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T10:35:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T10:35:00.000Z") },
+      { id: "doc-luxe-imaging-source", organizationId: luxe.id, patientId: "pt-1004", name: "Luxe imaging source report - synthetic demo", storageKey: "synthetic/demo/luxe-imaging-source.pdf", mimeType: "application/pdf", sizeBytes: 32550, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, uploadedBy: "user-luxe-owner", createdAt: new Date("2026-07-13T14:00:00.000Z") },
+    ],
   });
 
   await prisma.labOrder.createMany({
@@ -586,6 +609,37 @@ async function main() {
     ],
   });
 
+  await prisma.imagingOrder.createMany({
+    data: [
+      { id: "img-order-darius-xray", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", clinicalOrderId: "clinical-imaging-darius", study: "Chest radiograph, 2 views", modality: "xray", bodyPart: "Chest", diagnosisCodes: ["E78.5"], clinicalIndication: "Persistent cough documented in the source chart.", priority: "routine", facility: "Brooklyn Diagnostic Exchange Demo", authorizationStatus: "not_required", deliveryMethod: "manual", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-07T13:10:00.000Z"), appointmentStatus: "completed", scheduledAt: new Date("2026-07-08T13:00:00.000Z"), status: "report_received", orderedAt: new Date("2026-07-07T13:00:00.000Z"), readyAt: new Date("2026-07-07T13:02:00.000Z"), transmittedAt: new Date("2026-07-07T13:10:00.000Z"), completedAt: new Date("2026-07-08T13:25:00.000Z"), reportReceivedAt: new Date("2026-07-08T16:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", fallback: true } },
+      { id: "img-order-anthony-mri", organizationId: bfm.id, patientId: "pt-1005", providerId: "provider-lee", clinicalOrderId: "clinical-imaging-anthony", priorAuthorizationId: "pa-anthony-mri", study: "MRI lumbar spine without contrast", modality: "mri", bodyPart: "Lumbar spine", diagnosisCodes: ["I10"], clinicalIndication: "Persistent symptoms documented by the ordering provider.", priority: "urgent", facility: "Brooklyn Diagnostic Exchange Demo", authorizationStatus: "approved", deliveryMethod: "fax", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-10T13:10:00.000Z"), appointmentStatus: "completed", scheduledAt: new Date("2026-07-14T09:00:00.000Z"), status: "report_received", orderedAt: new Date("2026-07-10T13:00:00.000Z"), readyAt: new Date("2026-07-10T13:02:00.000Z"), transmittedAt: new Date("2026-07-10T13:10:00.000Z"), completedAt: new Date("2026-07-14T09:45:00.000Z"), reportReceivedAt: new Date("2026-07-14T10:40:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", priorAuthorizationId: "pa-anthony-mri", fallback: true } },
+      { id: "img-order-elena-ultrasound", organizationId: bfm.id, patientId: "pt-1003", providerId: "provider-lee", clinicalOrderId: "clinical-imaging-elena", priorAuthorizationId: "pa-elena-ultrasound", study: "Pelvic ultrasound complete", modality: "ultrasound", bodyPart: "Pelvis", diagnosisCodes: ["J45.20"], clinicalIndication: "Imaging request documented during chart review.", priority: "routine", facility: "Community Diagnostic Imaging", authorizationStatus: "pending", deliveryMethod: "manual", deliveryStatus: "not_started", appointmentStatus: "not_scheduled", status: "draft", createdBy: "user-nadja", provenance: { source: "synthetic_seed", authorizationBlocked: true } },
+      { id: "img-order-maya-dexa", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", clinicalOrderId: "clinical-imaging-maya", study: "DEXA bone density", modality: "dexa", bodyPart: "Hip and spine", diagnosisCodes: ["E11.65"], clinicalIndication: "Preventive imaging review documented in the encounter.", priority: "routine", facility: "Community Diagnostic Imaging", authorizationStatus: "not_required", deliveryMethod: "direct", deliveryStatus: "delivered", deliveryAttempts: 1, appointmentStatus: "completed", scheduledAt: new Date("2026-06-30T14:00:00.000Z"), status: "report_received", orderedAt: new Date("2026-06-28T13:00:00.000Z"), readyAt: new Date("2026-06-28T13:05:00.000Z"), transmittedAt: new Date("2026-06-28T13:15:00.000Z"), completedAt: new Date("2026-06-30T14:30:00.000Z"), reportReceivedAt: new Date("2026-06-30T17:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", fallback: true } },
+      { id: "img-order-luxe-isolation", organizationId: luxe.id, patientId: "pt-1004", providerId: "provider-nadja-luxe", clinicalOrderId: "clinical-imaging-luxe", study: "Ultrasound source report", modality: "ultrasound", bodyPart: "Abdomen", diagnosisCodes: ["Z71.3"], clinicalIndication: "Synthetic tenant-isolation demonstration only.", priority: "routine", facility: "Luxe Manual Imaging Exchange", authorizationStatus: "not_required", deliveryMethod: "manual", deliveryStatus: "delivered", deliveryAttempts: 1, appointmentStatus: "completed", status: "report_received", orderedAt: new Date("2026-07-12T15:00:00.000Z"), readyAt: new Date("2026-07-12T15:02:00.000Z"), transmittedAt: new Date("2026-07-12T15:10:00.000Z"), completedAt: new Date("2026-07-13T13:45:00.000Z"), reportReceivedAt: new Date("2026-07-13T14:05:00.000Z"), createdBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true } },
+    ],
+  });
+
+  await prisma.imagingResult.createMany({
+    data: [
+      { id: "img-result-darius-xray", organizationId: bfm.id, patientId: "pt-1002", orderId: "img-order-darius-xray", facility: "Brooklyn Diagnostic Exchange Demo", reportTitle: "Chest radiograph source report", sourceType: "structured_manual", sourceReference: "SYNTH-XR-20260708", findings: "Source report describes the submitted chest radiographs. Synthetic demonstration text only.", impression: "Source report impression recorded for demonstration; no ClinicOS interpretation.", imageReference: "SYNTH-PACS-XR-1002", studyPerformedAt: new Date("2026-07-08T13:25:00.000Z"), receivedAt: new Date("2026-07-08T16:00:00.000Z"), status: "released", urgentSourceFlag: false, reviewComments: "Active provider reviewed the source report and documented follow-up in the chart.", reviewedBy: "user-nadja", reviewedAt: new Date("2026-07-08T16:20:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-08T16:25:00.000Z"), patientVisible: true, releasedAt: new Date("2026-07-08T16:25:00.000Z"), patientNotificationStatus: "notified", patientNotifiedAt: new Date("2026-07-08T16:30:00.000Z"), provenance: { source: "synthetic_seed", noClinicalInterpretation: true } },
+      { id: "img-result-anthony-mri", organizationId: bfm.id, patientId: "pt-1005", orderId: "img-order-anthony-mri", reportDocumentId: "doc-anthony-mri-source", facility: "Brooklyn Diagnostic Exchange Demo", reportTitle: "MRI lumbar spine source report", sourceType: "manual_upload", sourceReference: "SYNTH-MRI-20260714", findings: "Source report findings copied from the synthetic demonstration PDF.", impression: "Source report includes an urgent flag requiring immediate provider review. ClinicOS has not interpreted it.", imageReference: "SYNTH-PACS-MRI-1005", studyPerformedAt: new Date("2026-07-14T09:45:00.000Z"), receivedAt: new Date("2026-07-14T10:40:00.000Z"), status: "needs_review", urgentSourceFlag: true, patientVisible: false, provenance: { source: "synthetic_seed", reportDocumentId: "doc-anthony-mri-source", noClinicalInterpretation: true } },
+      { id: "img-result-maya-dexa-v1", organizationId: bfm.id, patientId: maya.id, orderId: "img-order-maya-dexa", facility: "Community Diagnostic Imaging", reportTitle: "DEXA source report", sourceType: "structured_manual", sourceReference: "SYNTH-DEXA-V1", findings: "Original source report version retained after a facility correction.", impression: "Original source impression retained for provenance.", studyPerformedAt: new Date("2026-06-30T14:30:00.000Z"), receivedAt: new Date("2026-06-30T17:00:00.000Z"), status: "corrected", patientVisible: false, version: 1, provenance: { source: "synthetic_seed", corrected: true, noClinicalInterpretation: true } },
+      { id: "img-result-maya-dexa-v2", organizationId: bfm.id, patientId: maya.id, orderId: "img-order-maya-dexa", facility: "Community Diagnostic Imaging", reportTitle: "Corrected DEXA source report", sourceType: "structured_manual", sourceReference: "SYNTH-DEXA-V2", findings: "Corrected source report version supplied by the imaging facility.", impression: "Corrected source impression awaiting provider review.", studyPerformedAt: new Date("2026-06-30T14:30:00.000Z"), receivedAt: new Date("2026-07-01T12:00:00.000Z"), status: "needs_review", patientVisible: false, correctionOfId: "img-result-maya-dexa-v1", correctionReason: "Imaging facility supplied a corrected source report.", version: 2, provenance: { source: "synthetic_seed", correctionOfId: "img-result-maya-dexa-v1", noClinicalInterpretation: true } },
+      { id: "img-result-luxe-isolation", organizationId: luxe.id, patientId: "pt-1004", orderId: "img-order-luxe-isolation", reportDocumentId: "doc-luxe-imaging-source", facility: "Luxe Manual Imaging Exchange", reportTitle: "Luxe ultrasound source report", sourceType: "manual_upload", sourceReference: "SYNTH-LUXE-US-20260713", findings: "Synthetic Luxe-only source findings.", impression: "Synthetic Luxe-only source impression awaiting provider review.", studyPerformedAt: new Date("2026-07-13T13:45:00.000Z"), receivedAt: new Date("2026-07-13T14:05:00.000Z"), status: "needs_review", patientVisible: false, provenance: { source: "synthetic_seed", tenantIsolation: true, noClinicalInterpretation: true } },
+    ],
+  });
+
+  await prisma.imagingEvent.createMany({
+    data: [
+      { id: "img-event-darius-release", organizationId: bfm.id, imagingOrderId: "img-order-darius-xray", imagingResultId: "img-result-darius-xray", actorId: "user-nadja", eventType: "release", fromStatus: "reviewed", toStatus: "released", createdAt: new Date("2026-07-08T16:25:00.000Z") },
+      { id: "img-event-anthony-received", organizationId: bfm.id, imagingOrderId: "img-order-anthony-mri", imagingResultId: "img-result-anthony-mri", actorId: "user-nadja", eventType: "report_received", toStatus: "needs_review", metadata: { urgentSourceFlag: true, sourceType: "manual_upload" }, createdAt: new Date("2026-07-14T10:40:00.000Z") },
+      { id: "img-event-elena-created", organizationId: bfm.id, imagingOrderId: "img-order-elena-ultrasound", actorId: "user-nadja", eventType: "created", toStatus: "draft", metadata: { authorizationStatus: "pending" }, createdAt: new Date("2026-07-14T11:35:00.000Z") },
+      { id: "img-event-maya-corrected", organizationId: bfm.id, imagingOrderId: "img-order-maya-dexa", imagingResultId: "img-result-maya-dexa-v1", actorId: "user-nadja", eventType: "corrected", fromStatus: "released", toStatus: "corrected", note: "Imaging facility supplied a corrected source report.", metadata: { replacementResultId: "img-result-maya-dexa-v2" }, createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "img-event-maya-v2", organizationId: bfm.id, imagingOrderId: "img-order-maya-dexa", imagingResultId: "img-result-maya-dexa-v2", actorId: "user-nadja", eventType: "correction_created", toStatus: "needs_review", metadata: { correctionOfId: "img-result-maya-dexa-v1", version: 2 }, createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "img-event-luxe-received", organizationId: luxe.id, imagingOrderId: "img-order-luxe-isolation", imagingResultId: "img-result-luxe-isolation", actorId: "user-luxe-owner", eventType: "report_received", toStatus: "needs_review", createdAt: new Date("2026-07-13T14:05:00.000Z") },
+    ],
+  });
+
   await prisma.referral.createMany({
     data: [
       {
@@ -620,15 +674,24 @@ async function main() {
       { id: "task-lab-a1c-review", organizationId: bfm.id, patientId: maya.id, category: "lab_review", title: "New lab result requires provider review", details: "Hemoglobin A1C result lab-result-a1c. Review source data, document clinical follow-up, and explicitly approve any patient release.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-11T13:45:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-lab-critical-review", organizationId: bfm.id, patientId: "pt-1005", category: "lab_review", title: "Critical lab result requires provider review", details: "Comprehensive metabolic panel result lab-result-critical. Review source data, document clinical follow-up, and explicitly approve any patient release.", priority: "urgent", riskLevel: RiskLevel.URGENT, dueAt: new Date("2026-07-14T11:45:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-lab-pending-delivery", organizationId: bfm.id, patientId: "pt-1003", category: "lab_delivery", title: "Complete fax lab order delivery", details: "Order lab-order-pending for BioReference. Confirm only after staff verifies delivery.", priority: "high", dueAt: new Date("2026-07-14T12:05:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-imaging-anthony-review", organizationId: bfm.id, patientId: "pt-1005", category: "imaging_review", title: "Urgent-source imaging report requires provider review", details: "MRI lumbar spine source report result img-result-anthony-mri. Review the source report, document clinical follow-up, and explicitly approve any patient release.", priority: "urgent", riskLevel: RiskLevel.URGENT, dueAt: new Date("2026-07-14T10:40:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-imaging-maya-correction", organizationId: bfm.id, patientId: maya.id, category: "imaging_review", title: "Corrected imaging report requires provider review", details: "Corrected DEXA source report result img-result-maya-dexa-v2. Review corrected source content before any portal release.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-01T12:00:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-imaging-luxe-review", organizationId: luxe.id, patientId: "pt-1004", category: "imaging_review", title: "New imaging report requires provider review", details: "Luxe ultrasound source report result img-result-luxe-isolation. Tenant-isolation demonstration.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-13T14:05:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
     ],
   });
 
-  await prisma.escalation.create({
-    data: { id: "escalation-lab-critical", organizationId: bfm.id, patientId: "pt-1005", sourceType: "lab_result", sourceId: "lab-result-critical", category: "critical_lab_result", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
+  await prisma.escalation.createMany({
+    data: [
+      { id: "escalation-lab-critical", organizationId: bfm.id, patientId: "pt-1005", sourceType: "lab_result", sourceId: "lab-result-critical", category: "critical_lab_result", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
+      { id: "escalation-imaging-anthony", organizationId: bfm.id, patientId: "pt-1005", sourceType: "imaging_result", sourceId: "img-result-anthony-mri", category: "urgent_imaging_source_flag", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
+    ],
   });
 
-  await prisma.notification.create({
-    data: { id: "notification-lab-critical-owner", organizationId: bfm.id, userId: "user-nadja", type: "critical_lab_result", title: "Critical result requires immediate human review", body: "Comprehensive metabolic panel is flagged critical by source data. ClinicOS has not interpreted the result.", createdAt: new Date("2026-07-14T11:45:00.000Z") },
+  await prisma.notification.createMany({
+    data: [
+      { id: "notification-lab-critical-owner", organizationId: bfm.id, userId: "user-nadja", type: "critical_lab_result", title: "Critical result requires immediate human review", body: "Comprehensive metabolic panel is flagged critical by source data. ClinicOS has not interpreted the result.", createdAt: new Date("2026-07-14T11:45:00.000Z") },
+      { id: "notification-imaging-anthony-owner", organizationId: bfm.id, userId: "user-nadja", type: "urgent_imaging_source_flag", title: "Imaging report requires urgent human review", body: "MRI lumbar spine source report carries an urgent flag from the source. ClinicOS has not interpreted the report.", createdAt: new Date("2026-07-14T10:40:00.000Z") },
+    ],
   });
 
   await prisma.auditLog.createMany({
@@ -636,6 +699,9 @@ async function main() {
       { id: "audit-lab-a1c-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.received", resourceType: "lab_result", resourceId: "lab-result-a1c", patientId: maya.id, metadata: { sourceType: "manual_entry", abnormal: true, critical: false }, createdAt: new Date("2026-07-11T13:45:00.000Z") },
       { id: "audit-lab-critical-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.received", resourceType: "lab_result", resourceId: "lab-result-critical", patientId: "pt-1005", metadata: { sourceType: "manual_upload", sourceDocumentId: "doc-critical-lab-source", abnormal: true, critical: true }, createdAt: new Date("2026-07-14T11:45:00.000Z") },
       { id: "audit-lab-lipid-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.release", resourceType: "lab_result", resourceId: "lab-result-lipid-current", patientId: "pt-1002", changes: { status: { from: "reviewed", to: "released" } }, createdAt: new Date("2026-07-09T13:05:00.000Z") },
+      { id: "audit-imaging-darius-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.release", resourceType: "imaging_result", resourceId: "img-result-darius-xray", patientId: "pt-1002", changes: { status: { from: "reviewed", to: "released" } }, metadata: { activeProviderIdentity: true, noClinicalInterpretation: true }, createdAt: new Date("2026-07-08T16:25:00.000Z") },
+      { id: "audit-imaging-anthony-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.received", resourceType: "imaging_result", resourceId: "img-result-anthony-mri", patientId: "pt-1005", metadata: { sourceType: "manual_upload", reportDocumentId: "doc-anthony-mri-source", urgentSourceFlag: true, noClinicalInterpretation: true }, createdAt: new Date("2026-07-14T10:40:00.000Z") },
+      { id: "audit-imaging-maya-correction", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.corrected", resourceType: "imaging_result", resourceId: "img-result-maya-dexa-v1", patientId: maya.id, changes: { status: { from: "released", to: "corrected" }, replacementResultId: "img-result-maya-dexa-v2" }, metadata: { reason: "Imaging facility supplied a corrected source report.", replacementVersion: 2 }, createdAt: new Date("2026-07-01T12:00:00.000Z") },
     ],
   });
 

@@ -1,0 +1,17 @@
+import { NextResponse } from "next/server";
+import { can } from "@/lib/auth/rbac";
+import { getClinicSession } from "@/lib/auth/session";
+import { networkAccessErrorResponse } from "@/lib/network-access-http";
+import { correctImagingResult } from "@/lib/repositories/imaging-repository";
+
+export async function POST(request: Request, { params }: { params: Promise<{ imagingResultId: string }> }) {
+  const session = await getClinicSession();
+  if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  if (!can(session.role, "imaging", "sign")) return NextResponse.json({ error: "Provider review permission is required." }, { status: 403 });
+  try {
+    const { imagingResultId } = await params;
+    return NextResponse.json({ data: await correctImagingResult(session, imagingResultId, await request.json()) }, { status: 201 });
+  } catch (error) {
+    return networkAccessErrorResponse(error);
+  }
+}

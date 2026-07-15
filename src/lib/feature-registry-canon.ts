@@ -159,7 +159,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 17, slug: "imaging", title: "Imaging and Radiology",
     mandate: "Manage imaging orders, authorization, transmission, results, review, release, correction, and future PACS connectivity.",
     ownerRoles: ["provider", "clinical_staff", "radiology_reviewer"], interfaceRoute: "/imaging",
-    databaseObjects: ["imaging_orders", "imaging_results", "prior_authorizations", "documents", "integrations"], deliveryStatus: "DEMO", deliveryMode: "adapter-ready",
+    databaseObjects: ["imaging_orders", "imaging_results", "imaging_events", "prior_authorizations", "documents", "tasks", "escalations", "notifications", "audit_logs", "integrations", "integration_events"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Imaging-order creation | Modality selection | Body-part selection | Diagnosis attachment | Clinical indication | Prior-authorization status | Imaging-facility selection | Order transmission | Manual-order fallback | Imaging appointment status | Report receipt | Imaging-report upload | Structured report fields | Radiology-review queue | Provider comments | Patient-release approval | Released-to-portal status | Patient-notified status | Follow-up task | Report correction | Image and link attachment | Longitudinal imaging timeline | Lenox Hill and RadNet-style integration | Local imaging integration | Hospital imaging integration | DICOM and PACS roadmap | HL7 interface readiness | FHIR interface readiness",
   }),
   section({

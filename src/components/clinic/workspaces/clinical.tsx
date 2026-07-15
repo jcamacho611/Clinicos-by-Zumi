@@ -1,21 +1,12 @@
 import {
-  Archive, ArrowRight, Check, ClipboardCheck, CloudUpload, Download, Eye,
-  FileClock, FilePlus2, Files, Image as ImageIcon, LockKeyhole, Plus, ScanLine,
+  Archive, ClipboardCheck, CloudUpload, Download, Eye,
+  FileClock, FilePlus2, Files,
   Send, Signature, SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { imagingQueue } from "@/lib/clinic-data";
-import { PageIntro, Person, Progress, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
-
-export function ImagingWorkspace() {
-  return <div className="space-y-6"><PageIntro title="Imaging, from order to approved release." description="Track studies, facilities, incoming reports, provider review, patient visibility, and the follow-up created from each result." action={<Button variant="primary"><Plus className="size-4" /> New imaging order</Button>} aside={<Button variant="secondary"><CloudUpload className="size-4" /> Upload report</Button>} />
-    <div className="grid gap-4 sm:grid-cols-3"><StatCard accent="amber" detail="Provider action required" icon={<ScanLine className="size-4" />} label="Reports to review" value="2" /><StatCard accent="sky" detail="Across 4 facilities" icon={<ImageIcon className="size-4" />} label="Studies pending" value="6" /><StatCard accent="teal" detail="This week" icon={<Check className="size-4" />} label="Released" value="9" /></div>
-    <SectionCard title="Imaging worklist" description="Facility names below are demo roadmap references, not live interfaces."><div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left"><thead><tr className="border-b border-slate-100 text-[9px] font-extrabold uppercase tracking-[.14em] text-slate-400"><th className="px-5 py-3">Patient</th><th className="px-3 py-3">Study</th><th className="px-3 py-3">Facility</th><th className="px-3 py-3">Ordered</th><th className="px-3 py-3">Report</th><th className="px-5 py-3">Review</th></tr></thead><tbody>{imagingQueue.map((item) => <tr className="border-b border-slate-100 text-xs last:border-0" key={item.id}><td className="px-5 py-5"><Person initials={item.patient.split(" ").map((part) => part[0]).join("")} name={item.patient} /></td><td className="px-3 py-5 font-bold text-slate-800">{item.study}</td><td className="px-3 py-5 text-slate-500">{item.facility}</td><td className="px-3 py-5 text-slate-500">{item.ordered}</td><td className="px-3 py-5"><StatusBadge status={item.status} /></td><td className="px-5 py-5"><div className="flex items-center gap-2"><StatusBadge status={item.review} /><Button size="icon" variant="ghost" aria-label="Open imaging report"><ArrowRight className="size-4" /></Button></div></td></tr>)}</tbody></table></div></SectionCard>
-    <div className="grid gap-6 lg:grid-cols-2"><SectionCard title="Facility connectivity roadmap"><div className="space-y-4 p-5">{[["Lenox Hill Radiology", 25, "Discovery"], ["RadNet", 18, "Future"], ["Hospital imaging", 10, "Future"]].map(([label, value, status]) => <div key={String(label)}><div className="mb-2 flex items-center justify-between"><p className="text-xs font-bold text-slate-800">{label}</p><Badge tone="slate">{status}</Badge></div><Progress value={Number(value)} tone="sky" /></div>)}</div></SectionCard><SectionCard title="Release checklist"><div className="grid gap-3 p-5 sm:grid-cols-2">{["Report attached", "Ordering provider matched", "Provider reviewed", "Patient release approved"].map((label, index) => <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3" key={label}><span className={`grid size-7 place-items-center rounded-lg ${index < 2 ? "bg-teal-100 text-teal-700" : "bg-white text-slate-400"}`}>{index < 2 ? <Check className="size-3.5" /> : <LockKeyhole className="size-3.5" />}</span><p className="text-[10px] font-bold text-slate-700">{label}</p></div>)}</div></SectionCard></div>
-  </div>;
-}
+import { PageIntro, Progress, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 export function DocumentsWorkspace() {
   const docs = [

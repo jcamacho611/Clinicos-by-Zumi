@@ -130,6 +130,27 @@ export interface LabResult {
   }>;
 }
 
+export interface PatientImagingResult {
+  id: string;
+  patientId: string;
+  title: string;
+  study: string;
+  modality: string;
+  bodyPart: string;
+  facility: string;
+  source: string;
+  sourceReference: string | null;
+  findings: string | null;
+  impression: string | null;
+  imageReference: string | null;
+  studyPerformedAt: string;
+  status: string;
+  urgentSourceFlag: boolean;
+  patientVisible: boolean;
+  version: number;
+  correctionOfId: string | null;
+}
+
 export interface Claim {
   id: string;
   patient: string;
@@ -162,7 +183,7 @@ export interface WorkTask {
 
 export interface TimelineEvent {
   id: string;
-  type: "encounter" | "lab" | "message" | "document" | "billing" | "task";
+  type: "encounter" | "lab" | "imaging" | "message" | "document" | "billing" | "task";
   title: string;
   detail: string;
   timestamp: string;

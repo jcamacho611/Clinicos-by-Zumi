@@ -1097,40 +1097,116 @@ model LabEvent {
 }
 
 model ImagingOrder {
-  id             String    @id @default(cuid())
-  organizationId String
-  patientId      String
-  encounterId    String?
-  providerId     String?
-  study          String
-  facility       String?
-  status         String    @default("draft")
-  orderedAt      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                    String         @id @default(cuid())
+  organizationId        String
+  patientId             String
+  encounterId           String?
+  providerId            String?
+  clinicalOrderId       String?
+  priorAuthorizationId  String?
+  integrationId         String?
+  study                 String
+  modality              String
+  bodyPart              String
+  laterality            String?
+  diagnosisCodes        String[]       @default([])
+  clinicalIndication    String
+  priority              String         @default("routine")
+  facility              String?
+  authorizationStatus   String         @default("not_required")
+  deliveryMethod        String         @default("manual")
+  deliveryStatus        String         @default("not_started")
+  deliveryAttempts      Int            @default(0)
+  lastDeliveryAttemptAt DateTime?
+  failureReason         String?
+  appointmentStatus     String         @default("not_scheduled")
+  scheduledAt           DateTime?
+  status                String         @default("draft")
+  orderedAt             DateTime?
+  readyAt               DateTime?
+  transmittedAt         DateTime?
+  completedAt           DateTime?
+  reportReceivedAt      DateTime?
+  cancelledAt           DateTime?
+  createdBy             String?
+  provenance            Json?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  events                ImagingEvent[]
 
+  @@index([organizationId, status, priority])
   @@index([patientId, status])
+  @@index([clinicalOrderId])
+  @@index([priorAuthorizationId, authorizationStatus])
+  @@index([integrationId, deliveryStatus])
   @@map("imaging_orders")
 }
 
 model ImagingResult {
-  id                  String    @id @default(cuid())
-  organizationId      String
-  patientId           String
-  orderId             String?
-  reportDocumentId    String?
-  facility            String?
-  status              String    @default("needs_review")
-  requiresHumanReview Boolean   @default(true)
-  reviewedBy          String?
-  reviewedAt          DateTime?
-  patientVisible      Boolean   @default(false)
-  releasedAt          DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                        String         @id @default(cuid())
+  organizationId            String
+  patientId                 String
+  orderId                   String?
+  integrationId             String?
+  reportDocumentId          String?
+  facility                  String?
+  reportTitle               String
+  sourceType                String         @default("manual_upload")
+  sourceReference           String?
+  findings                  String?
+  impression                String?
+  imageReference            String?
+  studyPerformedAt          DateTime?
+  receivedAt                DateTime       @default(now())
+  status                    String         @default("needs_review")
+  urgentSourceFlag          Boolean        @default(false)
+  requiresHumanReview       Boolean        @default(true)
+  reviewComments            String?
+  reviewedBy                String?
+  reviewedAt                DateTime?
+  releaseApprovedBy         String?
+  releaseApprovedAt         DateTime?
+  patientVisible            Boolean        @default(false)
+  releasedAt                DateTime?
+  patientNotificationStatus String         @default("not_started")
+  patientNotifiedAt         DateTime?
+  correctionOfId            String?
+  correctionReason          String?
+  version                   Int            @default(1)
+  provenance                Json?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  events                    ImagingEvent[]
 
-  @@index([patientId, status])
+  @@index([organizationId, status])
+  @@index([organizationId, urgentSourceFlag, status])
+  @@index([patientId, studyPerformedAt])
+  @@index([orderId])
+  @@index([integrationId, sourceType])
+  @@index([reportDocumentId])
+  @@index([correctionOfId])
   @@map("imaging_results")
+}
+
+model ImagingEvent {
+  id              String         @id @default(cuid())
+  organizationId  String
+  imagingOrderId  String?
+  imagingResultId String?
+  actorId         String?
+  eventType       String
+  fromStatus      String?
+  toStatus        String?
+  note            String?
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+  imagingOrder    ImagingOrder?  @relation(fields: [imagingOrderId], references: [id], onDelete: Cascade)
+  imagingResult   ImagingResult? @relation(fields: [imagingResultId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([imagingOrderId, createdAt])
+  @@index([imagingResultId, createdAt])
+  @@map("imaging_events")
 }
 
 model BillingAccount {
