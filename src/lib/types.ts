@@ -109,12 +109,25 @@ export interface LabResult {
   patient: string;
   panel: string;
   vendor: string;
-  collectedAt: string;
+  collectedAt: string | null;
   resultedAt: string;
   abnormalCount: number;
-  reviewStatus: "Needs Review" | "Reviewed" | "Released";
+  critical: boolean;
+  reviewStatus: "Needs Review" | "Reviewed" | "Released" | "Corrected";
   patientVisible: boolean;
-  items: Array<{ name: string; value: string; unit: string; range: string; flag?: "High" | "Low" }>;
+  source: string;
+  sourceReference: string | null;
+  version: number;
+  correctionOfId: string | null;
+  items: Array<{
+    id: string;
+    name: string;
+    value: string;
+    unit: string | null;
+    range: string | null;
+    flag: string | null;
+    critical: boolean;
+  }>;
 }
 
 export interface Claim {

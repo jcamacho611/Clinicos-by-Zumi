@@ -1,25 +1,13 @@
 import {
-  Archive, ArrowRight, Check, ClipboardCheck, CloudUpload, Download, Eye, FileCheck2,
-  FileClock, FilePlus2, Files, FlaskConical, Image as ImageIcon, LockKeyhole, Plus, ScanLine,
-  Send, Signature, SlidersHorizontal, TriangleAlert,
+  Archive, ArrowRight, Check, ClipboardCheck, CloudUpload, Download, Eye,
+  FileClock, FilePlus2, Files, Image as ImageIcon, LockKeyhole, Plus, ScanLine,
+  Send, Signature, SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { imagingQueue, labResults } from "@/lib/clinic-data";
+import { imagingQueue } from "@/lib/clinic-data";
 import { PageIntro, Person, Progress, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
-
-export function LabsWorkspace() {
-  return <div className="space-y-6"><PageIntro title="Results move only when a provider says so." description="Orders, inbound results, abnormal flags, review state, portal release, and follow-up tasks remain visibly separate." action={<Button variant="primary"><Plus className="size-4" /> New lab order</Button>} aside={<Button variant="secondary"><CloudUpload className="size-4" /> Upload result</Button>} />
-    <div className="grid gap-4 sm:grid-cols-4"><StatCard accent="rose" detail="Portal release blocked" icon={<TriangleAlert className="size-4" />} label="Abnormal / unreviewed" value="2" /><StatCard accent="amber" detail="Assigned provider queue" icon={<FileClock className="size-4" />} label="Needs review" value="2" /><StatCard accent="sky" detail="Waiting on vendor" icon={<FlaskConical className="size-4" />} label="Orders pending" value="7" /><StatCard accent="teal" detail="Approved for patients" icon={<FileCheck2 className="size-4" />} label="Released today" value="5" /></div>
-    <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
-      <SectionCard title="Provider review queue" description="Abnormal means a data flag, never an automated interpretation.">
-        <div className="divide-y divide-slate-100">{labResults.map((result) => <div className="p-5" key={result.id}><div className="flex flex-wrap items-start gap-3"><Person color={result.abnormalCount ? "rose" : "teal"} detail={`${result.vendor} · ${result.resultedAt}`} initials={result.patient.split(" ").map((part) => part[0]).join("")} name={result.patient} /><div className="ml-auto flex gap-2"><StatusBadge status={result.reviewStatus} />{result.abnormalCount > 0 && <Badge tone="rose">{result.abnormalCount} abnormal</Badge>}</div></div><p className="mt-4 text-xs font-extrabold text-slate-900">{result.panel}</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{result.items.slice(0, 3).map((item) => <div className={`rounded-xl p-3 ${item.flag ? "bg-rose-50 ring-1 ring-inset ring-rose-100" : "bg-slate-50"}`} key={item.name}><div className="flex items-center justify-between gap-2"><p className="text-[9px] font-bold text-slate-500">{item.name}</p>{item.flag && <Badge tone="rose">{item.flag}</Badge>}</div><p className="mt-2 text-sm font-extrabold text-slate-950">{item.value} <span className="text-[9px] font-medium text-slate-400">{item.unit}</span></p><p className="mt-1 text-[9px] text-slate-400">Ref {item.range}</p></div>)}</div><div className="mt-4 flex flex-wrap items-center gap-2"><Button size="sm" variant="primary">Open result review</Button><Button size="sm" variant="secondary">Create follow-up</Button><span className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-slate-400"><LockKeyhole className="size-3.5" /> Portal release {result.patientVisible ? "approved" : "held"}</span></div></div>)}</div>
-      </SectionCard>
-      <div className="space-y-6"><Card className="overflow-hidden bg-slate-950 p-6 text-white"><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-300">Safety boundary</p><h3 className="mt-4 text-2xl font-extrabold tracking-[-.04em]">No automated interpretation.</h3><p className="mt-3 text-xs leading-6 text-slate-300">ClinicOS may structure result data and flag values outside the supplied reference range. Only a licensed provider reviews meaning, decides follow-up, and approves patient release.</p></Card><SectionCard title="Inbound vendors" description="Mock/manual mode until contracts and live interfaces are approved."><div className="space-y-3 p-4">{[["Quest Diagnostics", "Manual upload", 4], ["Labcorp", "Manual upload", 2], ["BioReference", "Manual upload", 1]].map(([vendor, status, count]) => <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3" key={String(vendor)}><span className="grid size-9 place-items-center rounded-xl bg-sky-50 text-sky-700"><FlaskConical className="size-4" /></span><div className="flex-1"><p className="text-xs font-bold text-slate-900">{vendor}</p><p className="mt-0.5 text-[9px] text-slate-400">{status}</p></div><Badge tone="sky">{count} items</Badge></div>)}</div></SectionCard></div>
-    </div>
-  </div>;
-}
 
 export function ImagingWorkspace() {
   return <div className="space-y-6"><PageIntro title="Imaging, from order to approved release." description="Track studies, facilities, incoming reports, provider review, patient visibility, and the follow-up created from each result." action={<Button variant="primary"><Plus className="size-4" /> New imaging order</Button>} aside={<Button variant="secondary"><CloudUpload className="size-4" /> Upload report</Button>} />

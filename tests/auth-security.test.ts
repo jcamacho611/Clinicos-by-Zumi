@@ -64,6 +64,16 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "referrals", "read")).toBe(false);
   });
 
+  it("separates laboratory operations from provider review and release", () => {
+    expect(can("clinical_staff", "labs", "create")).toBe(true);
+    expect(can("clinical_staff", "labs", "sign")).toBe(false);
+    expect(can("provider", "labs", "sign")).toBe(true);
+    expect(can("clinic_owner", "labs", "manage")).toBe(true);
+    expect(can("front_desk", "labs", "update")).toBe(true);
+    expect(can("viewer", "labs", "read")).toBe(true);
+    expect(can("viewer", "labs", "update")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

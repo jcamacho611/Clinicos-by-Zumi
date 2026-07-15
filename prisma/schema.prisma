@@ -968,43 +968,88 @@ model Signature {
 }
 
 model LabOrder {
-  id             String    @id @default(cuid())
-  organizationId String
-  patientId      String
-  encounterId    String?
-  providerId     String?
-  vendor         String?
-  tests          Json
-  status         String    @default("draft")
-  orderedAt      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                     String     @id @default(cuid())
+  organizationId         String
+  patientId              String
+  encounterId            String?
+  providerId             String?
+  clinicalOrderId        String?
+  vendor                 String?
+  integrationId          String?
+  tests                  Json
+  diagnosisCodes         String[]   @default([])
+  priority               String     @default("routine")
+  specimenType           String?
+  collectionSite         String?
+  collectionInstructions String?
+  deliveryMethod         String     @default("manual")
+  deliveryStatus         String     @default("not_started")
+  deliveryAttempts       Int        @default(0)
+  lastDeliveryAttemptAt  DateTime?
+  failureReason          String?
+  status                 String     @default("draft")
+  orderedAt              DateTime?
+  readyAt                DateTime?
+  transmittedAt          DateTime?
+  collectedAt            DateTime?
+  resultsReceivedAt      DateTime?
+  cancelledAt            DateTime?
+  createdBy              String?
+  provenance             Json?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  events                 LabEvent[]
 
+  @@index([organizationId, status, priority])
   @@index([patientId, status])
+  @@index([clinicalOrderId])
+  @@index([integrationId, deliveryStatus])
   @@map("lab_orders")
 }
 
 model LabResult {
-  id                  String    @id @default(cuid())
-  organizationId      String
-  patientId           String
-  orderId             String?
-  vendor              String?
-  panelName           String
-  collectedAt         DateTime?
-  resultedAt          DateTime?
-  status              String    @default("needs_review")
-  abnormal            Boolean   @default(false)
-  requiresHumanReview Boolean   @default(true)
-  reviewedBy          String?
-  reviewedAt          DateTime?
-  patientVisible      Boolean   @default(false)
-  releasedAt          DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                        String     @id @default(cuid())
+  organizationId            String
+  patientId                 String
+  orderId                   String?
+  vendor                    String?
+  integrationId             String?
+  panelName                 String
+  sourceType                String     @default("manual_entry")
+  sourceReference           String?
+  sourceDocumentId          String?
+  specimenType              String?
+  collectedAt               DateTime?
+  resultedAt                DateTime?
+  receivedAt                DateTime   @default(now())
+  status                    String     @default("needs_review")
+  abnormal                  Boolean    @default(false)
+  critical                  Boolean    @default(false)
+  requiresHumanReview       Boolean    @default(true)
+  reviewComments            String?
+  reviewedBy                String?
+  reviewedAt                DateTime?
+  releaseApprovedBy         String?
+  releaseApprovedAt         DateTime?
+  patientVisible            Boolean    @default(false)
+  releasedAt                DateTime?
+  patientNotificationStatus String     @default("not_started")
+  patientNotifiedAt         DateTime?
+  correctionOfId            String?
+  correctionReason          String?
+  version                   Int        @default(1)
+  provenance                Json?
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+  events                    LabEvent[]
 
   @@index([organizationId, status])
+  @@index([organizationId, critical, status])
   @@index([patientId, resultedAt])
+  @@index([orderId])
+  @@index([integrationId, sourceType])
+  @@index([sourceDocumentId])
+  @@index([correctionOfId])
   @@map("lab_results")
 }
 
@@ -1012,17 +1057,43 @@ model LabResultItem {
   id             String   @id @default(cuid())
   organizationId String
   labResultId    String
+  sequence       Int      @default(0)
   name           String
   loincCode      String?
   value          String
+  numericValue   Float?
   unit           String?
   referenceRange String?
   abnormalFlag   String?
+  critical       Boolean  @default(false)
+  resultStatus   String   @default("final")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  @@index([labResultId])
+  @@index([labResultId, sequence])
+  @@index([organizationId, loincCode, createdAt])
   @@map("lab_result_items")
+}
+
+model LabEvent {
+  id             String     @id @default(cuid())
+  organizationId String
+  labOrderId     String?
+  labResultId    String?
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  note           String?
+  metadata       Json?
+  createdAt      DateTime   @default(now())
+  labOrder       LabOrder?  @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+  labResult      LabResult? @relation(fields: [labResultId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([labOrderId, createdAt])
+  @@index([labResultId, createdAt])
+  @@map("lab_events")
 }
 
 model ImagingOrder {
@@ -1695,21 +1766,48 @@ model Setting {
 }
 
 model Integration {
-  id             String    @id @default(cuid())
+  id             String             @id @default(cuid())
   organizationId String
   type           String
   vendor         String
-  status         String    @default("roadmap")
+  status         String             @default("roadmap")
   config         Json?
   riskLevel      String
-  baaRequired    Boolean   @default(false)
+  baaRequired    Boolean            @default(false)
   phase          String?
   lastSyncAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  events         IntegrationEvent[]
 
   @@unique([organizationId, type, vendor])
   @@map("integrations")
+}
+
+model IntegrationEvent {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  integrationId      String?
+  resourceType       String
+  resourceId         String
+  direction          String
+  eventType          String
+  status             String       @default("queued")
+  acknowledgmentCode String?
+  errorCode          String?
+  errorMessage       String?
+  retryCount         Int          @default(0)
+  nextRetryAt        DateTime?
+  metadata           Json?
+  occurredAt         DateTime     @default(now())
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  integration        Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, occurredAt])
+  @@index([resourceType, resourceId, occurredAt])
+  @@index([integrationId, status])
+  @@map("integration_events")
 }
 
 model ApiKey {

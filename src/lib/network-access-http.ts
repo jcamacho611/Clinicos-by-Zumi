@@ -8,10 +8,10 @@ export function networkAccessErrorResponse(error: unknown) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
   if (error instanceof ZodError) {
-    return NextResponse.json({ error: "Invalid network access request.", details: error.issues }, { status: 400 });
+    return NextResponse.json({ error: "Invalid ClinicOS request.", details: error.issues }, { status: 400 });
   }
   if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-    return NextResponse.json({ error: "A conflicting network access record already exists." }, { status: 409 });
+    return NextResponse.json({ error: "A conflicting ClinicOS record already exists." }, { status: 409 });
   }
-  return NextResponse.json({ error: "Connected-care access is temporarily unavailable." }, { status: 503 });
+  return NextResponse.json({ error: "ClinicOS data is temporarily unavailable." }, { status: 503 });
 }

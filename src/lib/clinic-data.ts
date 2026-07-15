@@ -1,35 +1,13 @@
 import type {
   Claim,
-  LabResult,
   Organization,
   QualityGap,
-  TimelineEvent,
   WorkTask,
 } from "@/lib/types";
 
 export const organizations: Organization[] = [
   { id: "org-bfm", name: "Brooklyn Family Medicine", type: "Primary Care", locations: ["Brooklyn Heights", "Crown Heights"] },
   { id: "org-luxe", name: "Luxe Medi", type: "Med Spa", locations: ["Midtown Manhattan"] },
-];
-
-export const labResults: LabResult[] = [
-  {
-    id: "lab-1", patientId: "pt-1001", patient: "Maya Thompson", panel: "Comprehensive metabolic + A1C", vendor: "Quest Diagnostics (demo)",
-    collectedAt: "Jul 10, 2026", resultedAt: "Jul 11, 2026", abnormalCount: 2, reviewStatus: "Needs Review", patientVisible: false,
-    items: [
-      { name: "Hemoglobin A1C", value: "8.1", unit: "%", range: "< 7.0", flag: "High" },
-      { name: "Glucose", value: "164", unit: "mg/dL", range: "65-99", flag: "High" },
-      { name: "Creatinine", value: "0.82", unit: "mg/dL", range: "0.50-0.97" },
-    ],
-  },
-  {
-    id: "lab-2", patientId: "pt-1002", patient: "Darius Coleman", panel: "Lipid panel", vendor: "Labcorp (demo)", collectedAt: "Jul 08, 2026", resultedAt: "Jul 09, 2026", abnormalCount: 0, reviewStatus: "Reviewed", patientVisible: false,
-    items: [{ name: "LDL", value: "88", unit: "mg/dL", range: "< 100" }],
-  },
-  {
-    id: "lab-3", patientId: "pt-1003", patient: "Elena Rivera", panel: "CBC with differential", vendor: "BioReference (demo)", collectedAt: "Jul 12, 2026", resultedAt: "Jul 13, 2026", abnormalCount: 1, reviewStatus: "Released", patientVisible: true,
-    items: [{ name: "Hemoglobin", value: "11.4", unit: "g/dL", range: "11.7-15.5", flag: "Low" }],
-  },
 ];
 
 export const claims: Claim[] = [
@@ -52,14 +30,6 @@ export const tasks: WorkTask[] = [
   { id: "task-3", title: "Correct modifier on denied claim", patient: "Anthony Nguyen", owner: "Billing Team", due: "Today", priority: "High", category: "Billing", status: "Open" },
   { id: "task-4", title: "Call for BP follow-up outreach", patient: "Anthony Nguyen", owner: "Quality Team", due: "Today", priority: "High", category: "Quality", status: "Open" },
   { id: "task-5", title: "Complete no-fault narrative checklist", patient: "Jordan Kim", owner: "Case Team", due: "Tomorrow", priority: "Normal", category: "Case", status: "Open" },
-];
-
-export const patientTimeline: TimelineEvent[] = [
-  { id: "tl-1", type: "lab", title: "A1C result received", detail: "Quest demo feed - 8.1%, flagged high and held for provider review.", timestamp: "Jul 11, 9:42 AM", status: "Needs review" },
-  { id: "tl-2", type: "message", title: "Patient portal message", detail: "Patient asked whether the new result changes the upcoming visit.", timestamp: "Jul 11, 10:08 AM", status: "Routed to provider" },
-  { id: "tl-3", type: "encounter", title: "Primary care follow-up", detail: "Chronic care visit completed with medication reconciliation.", timestamp: "Jun 18, 2:30 PM", status: "Signed" },
-  { id: "tl-4", type: "billing", title: "Claim prepared", detail: "Healthfirst claim CLM-72014 is ready for biller review.", timestamp: "Jun 18, 4:12 PM", status: "Ready for review" },
-  { id: "tl-5", type: "document", title: "Updated insurance card", detail: "Patient uploaded front and back images through the portal.", timestamp: "Jun 17, 7:44 PM", status: "Verified" },
 ];
 
 export const imagingQueue = [

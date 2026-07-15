@@ -11,16 +11,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { labResults, patientTimeline, qualityGaps } from "@/lib/clinic-data";
-import type { Encounter, Patient, TimelineEvent } from "@/lib/types";
+import { qualityGaps } from "@/lib/clinic-data";
+import type { Encounter, LabResult, Patient, TimelineEvent } from "@/lib/types";
 import { SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 const tabs = ["Summary", "Timeline", "Encounters", "Notes", "Medications", "Allergies", "Problems", "Vitals", "Labs", "Imaging", "Documents", "Referrals", "Billing", "Messages", "Quality", "Cases"];
 
 const timelineIcons = { encounter: Stethoscope, lab: FlaskConical, message: MessageSquareText, document: FileText, billing: CircleDollarSign, task: ClipboardPlus };
 
-export function PatientChart({ encounters, patient }: { encounters: Encounter[]; patient: Patient }) {
+export function PatientChart({ encounters, labResults, patient }: { encounters: Encounter[]; labResults: LabResult[]; patient: Patient }) {
   const openEncounter = encounters.find((encounter) => encounter.status === "Draft" || encounter.status === "Ready for Review");
+  const timeline = buildPatientTimeline(encounters, labResults);
   return <div className="space-y-5">
     <Link className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-950" href="/patients"><ArrowLeft className="size-4" /> Back to patient charts</Link>
     <section className="sticky top-[94px] z-20 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,.08)] backdrop-blur-xl">
@@ -34,15 +35,15 @@ export function PatientChart({ encounters, patient }: { encounters: Encounter[];
 
     <Tabs.Root defaultValue="Summary">
       <div className="overflow-x-auto"><Tabs.List className="flex min-w-max gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">{tabs.map((tab) => <Tabs.Trigger className="rounded-xl px-3 py-2 text-[10px] font-bold text-slate-500 outline-none transition hover:bg-slate-50 data-[state=active]:bg-slate-950 data-[state=active]:text-white" key={tab} value={tab}>{tab}</Tabs.Trigger>)}</Tabs.List></div>
-      <Tabs.Content className="mt-5 outline-none" value="Summary"><SummaryTab patient={patient} /></Tabs.Content>
-      <Tabs.Content className="mt-5 outline-none" value="Timeline"><TimelineList full /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Summary"><SummaryTab labResults={labResults} patient={patient} timeline={timeline} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Timeline"><TimelineList events={timeline} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Encounters"><EncountersTab encounters={encounters} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Notes"><GenericList title="Clinical notes" items={["Diabetes follow-up note - Draft", "Annual physical - Signed", "Telephone encounter - Signed"]} icon={<FileText className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Medications"><ClinicalList title="Active medications" items={patient.medications} action="Medication reconciliation" icon={<Pill className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Allergies"><ClinicalList title="Allergies and reactions" items={patient.allergies} action="Add allergy" icon={<AlertTriangle className="size-5" />} warning /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Problems"><ClinicalList title="Active problem list" items={patient.problems} action="Add problem" icon={<HeartPulse className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Vitals"><VitalsTab /></Tabs.Content>
-      <Tabs.Content className="mt-5 outline-none" value="Labs"><LabsTab patient={patient} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Labs"><LabsTab results={labResults} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Imaging"><GenericList title="Imaging history" items={["Chest X-ray - Report received", "MRI lumbar spine - Reviewed"]} icon={<ImageIcon className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Documents"><GenericList title="Chart documents" items={["Insurance card - Verified", "HIPAA acknowledgment - Signed", "Telemedicine consent - Signed"]} icon={<FileText className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Referrals"><GenericList title="Referrals" items={["Endocrinology - Sent Jun 18", "Nutrition services - Scheduled"]} icon={<UsersRound className="size-5" />} /></Tabs.Content>
@@ -56,19 +57,53 @@ export function PatientChart({ encounters, patient }: { encounters: Encounter[];
 
 function HeaderFact({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-slate-50 px-3 py-2"><p className="text-[8px] font-extrabold uppercase tracking-[.12em] text-slate-400">{label}</p><p className="mt-1 truncate text-[10px] font-bold text-slate-700">{value}</p></div>; }
 
-function SummaryTab({ patient }: { patient: Patient }) {
+function SummaryTab({ labResults, patient, timeline }: { labResults: LabResult[]; patient: Patient; timeline: TimelineEvent[] }) {
+  const providerReview = labResults.find((result) => result.reviewStatus === "Needs Review");
   return <div className="grid gap-5 xl:grid-cols-[.72fr_1.1fr_.68fr]">
     <div className="space-y-5"><SectionCard title="Clinical snapshot"><div className="space-y-5 p-5"><SnapshotGroup icon={<Pill className="size-4" />} label="Medications" values={patient.medications} /><SnapshotGroup icon={<AlertTriangle className="size-4" />} label="Allergies" values={patient.allergies} warning /><SnapshotGroup icon={<HeartPulse className="size-4" />} label="Problems" values={patient.problems} /></div></SectionCard><SectionCard title="Contact & preferences"><div className="grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-1"><HeaderFact label="Phone" value={patient.phone} /><HeaderFact label="Email" value={patient.email} /><HeaderFact label="Language" value={patient.preferredLanguage} /><HeaderFact label="Location" value={patient.location} /></div></SectionCard></div>
-    <SectionCard title="Clinical timeline" description="Encounters, results, documents, messages, billing, and tasks in sequence." action={<Button size="sm" variant="ghost">Full timeline <ArrowRight className="size-3.5" /></Button>}><TimelineList /></SectionCard>
-    <div className="space-y-5"><Card className="bg-slate-950 p-5 text-white"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-lime-300">Pre-visit brief</p><p className="mt-4 text-lg font-extrabold tracking-[-.03em]">Review A1C before today&apos;s visit.</p><p className="mt-2 text-[10px] leading-5 text-slate-400">The result is held from portal release and a patient question is waiting in the provider queue.</p><Button className="mt-5 w-full bg-white text-slate-950 hover:bg-slate-100" size="sm" variant="secondary">Open provider review</Button></Card><SectionCard title="Open care gaps"><div className="space-y-3 p-4">{qualityGaps.filter((gap) => gap.patient === `${patient.firstName} ${patient.lastName}`).map((gap) => <div className="rounded-xl bg-amber-50 p-3" key={gap.id}><p className="text-xs font-extrabold text-amber-950">{gap.measure}</p><p className="mt-1 text-[9px] text-amber-700">{gap.due}</p><StatusBadge status={gap.status} /></div>)}<div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-extrabold text-slate-800">Depression screening</p><p className="mt-1 text-[9px] text-slate-500">Due at next annual visit</p></div></div></SectionCard></div>
+    <SectionCard title="Clinical timeline" description="This patient&apos;s encounters and laboratory results in sequence." action={<Button size="sm" variant="ghost">Full timeline <ArrowRight className="size-3.5" /></Button>}><TimelineList events={timeline} /></SectionCard>
+    <div className="space-y-5"><Card className="bg-slate-950 p-5 text-white"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-lime-300">Provider queue</p><p className="mt-4 text-lg font-extrabold tracking-[-.03em]">{providerReview ? `Review ${providerReview.panel} before the next clinical action.` : "No laboratory result is waiting for provider review."}</p><p className="mt-2 text-[10px] leading-5 text-slate-400">{providerReview ? `${providerReview.vendor} source data is held from the portal${providerReview.critical ? " and carries a critical source flag" : ""}. ClinicOS has not interpreted the result.` : "Released and reviewed results remain available in this patient&apos;s longitudinal laboratory history."}</p><Button asChild className="mt-5 w-full bg-white text-slate-950 hover:bg-slate-100" size="sm" variant="secondary"><Link href="/labs">Open laboratory worklist</Link></Button></Card><SectionCard title="Open care gaps"><div className="space-y-3 p-4">{qualityGaps.filter((gap) => gap.patient === `${patient.firstName} ${patient.lastName}`).map((gap) => <div className="rounded-xl bg-amber-50 p-3" key={gap.id}><p className="text-xs font-extrabold text-amber-950">{gap.measure}</p><p className="mt-1 text-[9px] text-amber-700">{gap.due}</p><StatusBadge status={gap.status} /></div>)}<div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-extrabold text-slate-800">Depression screening</p><p className="mt-1 text-[9px] text-slate-500">Due at next annual visit</p></div></div></SectionCard></div>
   </div>;
 }
 
 function SnapshotGroup({ icon, label, values, warning }: { icon: React.ReactNode; label: string; values: string[]; warning?: boolean }) { return <div><div className="flex items-center gap-2 text-slate-500">{icon}<p className="text-[9px] font-extrabold uppercase tracking-[.14em]">{label}</p></div><div className="mt-2 space-y-1.5">{values.map((value) => <p className={`rounded-lg px-3 py-2 text-[10px] font-bold ${warning ? "bg-rose-50 text-rose-800" : "bg-slate-50 text-slate-700"}`} key={value}>{value}</p>)}</div></div>; }
 
-function TimelineList({ full }: { full?: boolean }) {
-  const events = full ? [...patientTimeline, ...patientTimeline] : patientTimeline;
-  return <div className="p-5"><div className="relative space-y-6 before:absolute before:bottom-3 before:left-[18px] before:top-3 before:w-px before:bg-slate-200">{events.map((event, index) => <TimelineRow event={event} key={`${event.id}-${index}`} />)}</div></div>;
+function TimelineList({ events }: { events: TimelineEvent[] }) {
+  return <div className="p-5">{events.length > 0 ? <div className="relative space-y-6 before:absolute before:bottom-3 before:left-[18px] before:top-3 before:w-px before:bg-slate-200">{events.map((event) => <TimelineRow event={event} key={event.id} />)}</div> : <p className="text-xs text-slate-500">No longitudinal events are recorded for this patient.</p>}</div>;
+}
+
+function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[]): TimelineEvent[] {
+  const labEvents = labResults.map((result) => ({
+    event: {
+      id: `lab-${result.id}`,
+      type: "lab" as const,
+      title: `${result.panel} result received`,
+      detail: `${result.vendor} source data${result.abnormalCount ? ` contains ${result.abnormalCount} abnormal flag${result.abnormalCount === 1 ? "" : "s"}` : " has no abnormal source flags"}${result.critical ? " and is source flagged critical" : ""}.`,
+      timestamp: formatTimelineDate(result.resultedAt),
+      status: result.reviewStatus,
+    },
+    sortAt: new Date(result.resultedAt).getTime(),
+  }));
+  const encounterEvents = encounters.map((encounter) => ({
+    event: {
+      id: `encounter-${encounter.id}`,
+      type: "encounter" as const,
+      title: encounter.type,
+      detail: encounter.chiefComplaint || "Clinical encounter recorded.",
+      timestamp: formatTimelineDate(encounter.date),
+      status: encounter.status,
+    },
+    sortAt: new Date(encounter.date).getTime(),
+  }));
+  return [...labEvents, ...encounterEvents]
+    .sort((left, right) => right.sortAt - left.sortAt)
+    .map(({ event }) => event);
+}
+
+function formatTimelineDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
 function TimelineRow({ event }: { event: TimelineEvent }) { const Icon = timelineIcons[event.type]; return <div className="relative flex gap-4"><span className={`relative z-10 grid size-9 shrink-0 place-items-center rounded-xl ring-4 ring-white ${event.type === "lab" ? "bg-rose-50 text-rose-700" : event.type === "encounter" ? "bg-teal-50 text-teal-700" : "bg-slate-100 text-slate-600"}`}><Icon className="size-4" /></span><div className="min-w-0 flex-1 pt-0.5"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{event.title}</p>{event.status && <StatusBadge status={event.status} />}</div><p className="mt-1 text-[10px] leading-5 text-slate-500">{event.detail}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-[.12em] text-slate-400">{event.timestamp}</p></div></div>; }
@@ -81,7 +116,13 @@ function GenericList({ title, items, icon }: { title: string; items: string[]; i
 
 function VitalsTab() { return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[["Blood pressure", "132/84", "mmHg"], ["Heart rate", "76", "bpm"], ["Weight", "171", "lb"], ["BMI", "29.4", "kg/m²"], ["Temperature", "98.4", "°F"], ["Oxygen", "98", "%"]].map(([label, value, unit]) => <Card className="p-5" key={label}><Activity className="size-4 text-teal-700" /><p className="mt-5 text-[9px] font-bold uppercase tracking-[.12em] text-slate-400">{label}</p><p className="mt-2 text-2xl font-extrabold text-slate-950">{value} <span className="text-[10px] font-bold text-slate-400">{unit}</span></p><p className="mt-2 text-[9px] text-slate-400">Jul 14, 2026 · 9:02 AM</p></Card>)}</div>; }
 
-function LabsTab({ patient }: { patient: Patient }) { const results = labResults.filter((result) => result.patientId === patient.id); return <SectionCard title="Lab results"><div className="space-y-4 p-5">{results.length ? results.map((result) => <div className="rounded-2xl border border-slate-200 p-5" key={result.id}><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-rose-50 text-rose-700"><FlaskConical className="size-5" /></span><div><p className="text-xs font-extrabold text-slate-900">{result.panel}</p><p className="mt-1 text-[10px] text-slate-400">{result.vendor} · {result.resultedAt}</p></div><div className="ml-auto flex gap-2"><StatusBadge status={result.reviewStatus} /><Badge tone={result.abnormalCount ? "rose" : "teal"}>{result.abnormalCount} abnormal</Badge></div></div><div className="mt-4 grid gap-2 sm:grid-cols-3">{result.items.map((item) => <div className="rounded-xl bg-slate-50 p-3" key={item.name}><p className="text-[9px] font-bold text-slate-400">{item.name}</p><p className="mt-2 text-sm font-extrabold text-slate-900">{item.value} {item.unit}</p>{item.flag && <Badge className="mt-2" tone="rose">{item.flag}</Badge>}</div>)}</div></div>) : <p className="text-xs text-slate-500">No demo lab results for this patient.</p>}</div></SectionCard>; }
+function LabsTab({ results }: { results: LabResult[] }) {
+  return <SectionCard title="Laboratory history" description="Organization-scoped source results, corrections, review state, and patient-release status." action={<Button asChild size="sm" variant="secondary"><Link href="/labs">Open lab worklist <ArrowRight className="size-3.5" /></Link></Button>}><div className="space-y-4 p-5">{results.length ? results.map((result) => <div className={`rounded-2xl border p-5 ${result.critical ? "border-rose-300 bg-rose-50/50" : "border-slate-200"}`} key={result.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><span className={`grid size-10 shrink-0 place-items-center rounded-xl ${result.critical ? "bg-rose-600 text-white" : "bg-cyan-50 text-cyan-700"}`}><FlaskConical className="size-5" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{result.panel}</p>{result.version > 1 && <Badge tone="amber">Version {result.version}</Badge>}{result.correctionOfId && <Badge tone="amber">Correction</Badge>}{result.critical && <Badge tone="rose">Source flagged critical</Badge>}</div><p className="mt-1 text-[10px] text-slate-500">{result.vendor} · {formatLabDate(result.resultedAt)} · {result.source}{result.sourceReference ? ` · ${result.sourceReference}` : ""}</p></div><div className="flex flex-wrap gap-2"><StatusBadge status={result.reviewStatus} /><Badge tone={result.patientVisible ? "teal" : "slate"}>{result.patientVisible ? "Released to portal" : "Held from portal"}</Badge><Badge tone={result.abnormalCount ? "rose" : "teal"}>{result.abnormalCount} abnormal</Badge></div></div><div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{result.items.map((item) => <div className={`rounded-xl p-3 ${item.critical ? "bg-rose-100" : "bg-slate-50"}`} key={item.id}><div className="flex items-start justify-between gap-2"><p className="text-[9px] font-bold text-slate-500">{item.name}</p>{item.critical && <Badge tone="rose">Critical source flag</Badge>}</div><p className="mt-2 text-sm font-extrabold text-slate-900">{item.value}{item.unit ? ` ${item.unit}` : ""}</p>{item.range && <p className="mt-1 text-[9px] text-slate-500">Reference {item.range}</p>}{item.flag && <Badge className="mt-2" tone={item.critical ? "rose" : "amber"}>{item.flag.replaceAll("_", " ")}</Badge>}</div>)}</div></div>) : <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center"><FlaskConical className="mx-auto size-6 text-slate-300" /><p className="mt-3 text-xs font-bold text-slate-700">No laboratory results recorded</p><p className="mt-1 text-[10px] text-slate-500">Received results will appear here after organization and patient validation.</p></div>}</div></SectionCard>;
+}
+
+function formatLabDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
 
 function BillingTab({ patient }: { patient: Patient }) { return <div className="grid gap-5 lg:grid-cols-3"><Card className="bg-slate-950 p-6 text-white"><p className="text-[9px] font-bold text-slate-400">PATIENT BALANCE</p><p className="mt-3 text-4xl font-extrabold">${patient.balance}</p><Button className="mt-6 w-full bg-white text-slate-950" variant="secondary">Create payment link</Button></Card><Card className="p-6"><p className="text-[9px] font-bold text-slate-400">PRIMARY COVERAGE</p><p className="mt-3 text-lg font-extrabold text-slate-950">{patient.insurance}</p><p className="mt-1 text-xs text-slate-500">{patient.plan}</p><StatusBadge status="Verified" /></Card><Card className="p-6"><p className="text-[9px] font-bold text-slate-400">LATEST CLAIM</p><p className="mt-3 text-lg font-extrabold text-slate-950">CLM-72014</p><p className="mt-1 text-xs text-slate-500">$224 · Jun 18, 2026</p><StatusBadge status="Ready for review" /></Card></div>; }
 

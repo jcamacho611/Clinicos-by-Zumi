@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { can, type ClinicRole } from "@/lib/auth/rbac";
-import { DocumentsWorkspace, FormsWorkspace, ImagingWorkspace, LabsWorkspace } from "@/components/clinic/workspaces/clinical";
+import { DocumentsWorkspace, FormsWorkspace, ImagingWorkspace } from "@/components/clinic/workspaces/clinical";
+import { LabsWorkspace } from "@/components/clinic/labs-workspace";
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PortalWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
@@ -18,6 +19,7 @@ import { listPatientsForOrganization } from "@/lib/repositories/patient-reposito
 import { listNetworkAccessWorkspace } from "@/lib/repositories/network-access-repository";
 import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repository";
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
+import { listLabWorkspace } from "@/lib/repositories/lab-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -40,7 +42,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     case "schedule": return <ScheduleWorkspace appointments={await listAppointmentsForOrganization(organizationId)} />;
     case "encounters": return <EncountersWorkspace encounters={await listEncountersForOrganization(organizationId)} />;
     case "telemedicine": return <TelemedicineWorkspace />;
-    case "labs": return <LabsWorkspace />;
+    case "labs": {
+      if (!can(role, "labs", "read")) return notFound();
+      return <LabsWorkspace canCreate={can(role, "labs", "create")} canSign={can(role, "labs", "sign")} canUpdate={can(role, "labs", "update")} workspace={await listLabWorkspace(organizationId)} />;
+    }
     case "imaging": return <ImagingWorkspace />;
     case "documents": return <DocumentsWorkspace />;
     case "forms": return <FormsWorkspace />;

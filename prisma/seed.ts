@@ -89,15 +89,24 @@ async function main() {
 
   await seedPriorityZeroRegistry();
 
+  await prisma.labEvent.deleteMany();
+  await prisma.labResultItem.deleteMany();
+  await prisma.labResult.deleteMany();
+  await prisma.labOrder.deleteMany();
   await prisma.referralEvent.deleteMany();
   await prisma.referral.deleteMany();
   await prisma.clinicalOrder.deleteMany();
+  await prisma.integrationEvent.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.signature.deleteMany();
   await prisma.consent.deleteMany();
+  await prisma.documentReview.deleteMany();
+  await prisma.document.deleteMany();
+  await prisma.documentCategory.deleteMany();
   await prisma.soapNote.deleteMany();
   await prisma.diagnosis.deleteMany();
   await prisma.procedure.deleteMany();
@@ -522,6 +531,58 @@ async function main() {
       { id: "order-referral-cardio", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", type: "referral", details: { specialty: "Cardiology", reason: "Exertional symptoms require specialty evaluation.", clinicalQuestion: "Please evaluate cardiac risk and return consultation recommendations.", priority: "urgent" }, status: "ordered", orderedAt: new Date("2026-07-14T14:00:00.000Z") },
       { id: "order-referral-neuro", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "referral", details: { specialty: "Neurology", reason: "Persistent headaches warrant specialist review.", clinicalQuestion: "Please evaluate persistent headaches and recommend next diagnostic steps.", priority: "routine" }, status: "ordered", orderedAt: new Date("2026-07-14T14:20:00.000Z") },
       { id: "order-referral-derm", organizationId: bfm.id, patientId: maya.id, providerId: "provider-nadja", type: "referral", details: { specialty: "Dermatology", reason: "Skin lesion requires specialty evaluation.", clinicalQuestion: "Please assess the lesion and return the consultation plan.", priority: "routine" }, status: "completed", orderedAt: new Date("2026-06-20T14:00:00.000Z") },
+      { id: "clinical-lab-a1c", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", type: "lab", details: { tests: [{ name: "Hemoglobin A1C", loincCode: "4548-4" }], diagnosisCodes: ["E11.65"], priority: "routine", vendor: "Quest Diagnostics" }, status: "result_received", orderedAt: new Date("2026-07-10T13:00:00.000Z") },
+      { id: "clinical-lab-critical", organizationId: bfm.id, patientId: "pt-1005", providerId: "provider-lee", type: "lab", details: { tests: [{ name: "Comprehensive metabolic panel" }], diagnosisCodes: ["I10"], priority: "stat", vendor: "Brooklyn Hospital Laboratory" }, status: "result_received", orderedAt: new Date("2026-07-14T11:00:00.000Z") },
+      { id: "clinical-lab-pending", organizationId: bfm.id, patientId: "pt-1003", providerId: "provider-lee", type: "lab", details: { tests: [{ name: "CBC with differential", loincCode: "57021-8" }], diagnosisCodes: ["J45.20"], priority: "urgent", vendor: "BioReference" }, status: "ordered", orderedAt: new Date("2026-07-14T12:00:00.000Z") },
+      { id: "clinical-lab-lipid-current", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "lab", details: { tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", vendor: "Labcorp" }, status: "result_received", orderedAt: new Date("2026-07-08T12:00:00.000Z") },
+      { id: "clinical-lab-lipid-prior", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "lab", details: { tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", vendor: "Labcorp" }, status: "result_received", orderedAt: new Date("2026-04-08T12:00:00.000Z") },
+    ],
+  });
+
+  await prisma.document.create({
+    data: { id: "doc-critical-lab-source", organizationId: bfm.id, patientId: "pt-1005", name: "Hospital CMP source report - synthetic demo", storageKey: "synthetic/demo/critical-cmp.pdf", mimeType: "application/pdf", sizeBytes: 48211, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T11:40:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T11:40:00.000Z") },
+  });
+
+  await prisma.labOrder.createMany({
+    data: [
+      { id: "lab-order-a1c", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", clinicalOrderId: "clinical-lab-a1c", vendor: "Quest Diagnostics", tests: [{ name: "Hemoglobin A1C", loincCode: "4548-4" }], diagnosisCodes: ["E11.65"], priority: "routine", specimenType: "Whole blood", collectionSite: "Clinic", deliveryMethod: "manual", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-10T13:05:00.000Z"), status: "resulted", orderedAt: new Date("2026-07-10T13:00:00.000Z"), readyAt: new Date("2026-07-10T13:02:00.000Z"), transmittedAt: new Date("2026-07-10T13:05:00.000Z"), collectedAt: new Date("2026-07-10T13:30:00.000Z"), resultsReceivedAt: new Date("2026-07-11T13:42:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", fallback: true } },
+      { id: "lab-order-critical", organizationId: bfm.id, patientId: "pt-1005", providerId: "provider-lee", clinicalOrderId: "clinical-lab-critical", vendor: "Brooklyn Hospital Laboratory", tests: [{ name: "Comprehensive metabolic panel" }], diagnosisCodes: ["I10"], priority: "stat", specimenType: "Serum", collectionSite: "Hospital", deliveryMethod: "fax", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-14T11:05:00.000Z"), status: "resulted", orderedAt: new Date("2026-07-14T11:00:00.000Z"), readyAt: new Date("2026-07-14T11:02:00.000Z"), transmittedAt: new Date("2026-07-14T11:05:00.000Z"), collectedAt: new Date("2026-07-14T11:20:00.000Z"), resultsReceivedAt: new Date("2026-07-14T11:45:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", fallback: true } },
+      { id: "lab-order-pending", organizationId: bfm.id, patientId: "pt-1003", providerId: "provider-lee", clinicalOrderId: "clinical-lab-pending", vendor: "BioReference", tests: [{ name: "CBC with differential", loincCode: "57021-8" }], diagnosisCodes: ["J45.20"], priority: "urgent", specimenType: "Whole blood", collectionSite: "Clinic", deliveryMethod: "fax", deliveryStatus: "pending_manual", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-14T12:05:00.000Z"), status: "ready_to_send", orderedAt: new Date("2026-07-14T12:00:00.000Z"), readyAt: new Date("2026-07-14T12:02:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", fallback: true } },
+      { id: "lab-order-lipid-current", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", clinicalOrderId: "clinical-lab-lipid-current", vendor: "Labcorp", tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", specimenType: "Serum", collectionSite: "Clinic", deliveryMethod: "manual", deliveryStatus: "delivered", deliveryAttempts: 1, status: "resulted", orderedAt: new Date("2026-07-08T12:00:00.000Z"), readyAt: new Date("2026-07-08T12:02:00.000Z"), transmittedAt: new Date("2026-07-08T12:05:00.000Z"), collectedAt: new Date("2026-07-08T12:30:00.000Z"), resultsReceivedAt: new Date("2026-07-09T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed" } },
+      { id: "lab-order-lipid-prior", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", clinicalOrderId: "clinical-lab-lipid-prior", vendor: "Labcorp", tests: [{ name: "Lipid panel", loincCode: "57698-3" }], diagnosisCodes: ["E78.5"], priority: "routine", specimenType: "Serum", collectionSite: "Clinic", deliveryMethod: "manual", deliveryStatus: "delivered", deliveryAttempts: 1, status: "resulted", orderedAt: new Date("2026-04-08T12:00:00.000Z"), readyAt: new Date("2026-04-08T12:02:00.000Z"), transmittedAt: new Date("2026-04-08T12:05:00.000Z"), collectedAt: new Date("2026-04-08T12:30:00.000Z"), resultsReceivedAt: new Date("2026-04-09T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed" } },
+      { id: "lab-order-luxe-isolation", organizationId: luxe.id, patientId: "pt-1004", providerId: "provider-nadja-luxe", vendor: "Luxe Manual Laboratory", tests: [{ name: "Demo metabolic panel" }], diagnosisCodes: ["Z71.3"], priority: "routine", specimenType: "Serum", deliveryMethod: "manual", deliveryStatus: "not_started", status: "draft", createdBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true } },
+    ],
+  });
+
+  await prisma.labResult.createMany({
+    data: [
+      { id: "lab-result-a1c", organizationId: bfm.id, patientId: maya.id, orderId: "lab-order-a1c", vendor: "Quest Diagnostics", panelName: "Hemoglobin A1C", sourceType: "manual_entry", sourceReference: "SYNTHETIC-A1C-20260711", specimenType: "Whole blood", collectedAt: new Date("2026-07-10T13:30:00.000Z"), resultedAt: new Date("2026-07-11T13:42:00.000Z"), receivedAt: new Date("2026-07-11T13:45:00.000Z"), status: "needs_review", abnormal: true, critical: false, provenance: { source: "synthetic_seed", noClinicalInterpretation: true } },
+      { id: "lab-result-critical", organizationId: bfm.id, patientId: "pt-1005", orderId: "lab-order-critical", vendor: "Brooklyn Hospital Laboratory", panelName: "Comprehensive metabolic panel", sourceType: "manual_upload", sourceReference: "SYNTHETIC-HOSPITAL-CMP", sourceDocumentId: "doc-critical-lab-source", specimenType: "Serum", collectedAt: new Date("2026-07-14T11:20:00.000Z"), resultedAt: new Date("2026-07-14T11:40:00.000Z"), receivedAt: new Date("2026-07-14T11:45:00.000Z"), status: "needs_review", abnormal: true, critical: true, provenance: { source: "synthetic_seed", sourceDocumentId: "doc-critical-lab-source", noClinicalInterpretation: true } },
+      { id: "lab-result-lipid-current", organizationId: bfm.id, patientId: "pt-1002", orderId: "lab-order-lipid-current", vendor: "Labcorp", panelName: "Lipid panel", sourceType: "manual_entry", specimenType: "Serum", collectedAt: new Date("2026-07-08T12:30:00.000Z"), resultedAt: new Date("2026-07-09T12:00:00.000Z"), receivedAt: new Date("2026-07-09T12:05:00.000Z"), status: "released", abnormal: false, critical: false, reviewComments: "Provider reviewed source values and documented follow-up in the chart.", reviewedBy: "user-nadja", reviewedAt: new Date("2026-07-09T13:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-09T13:05:00.000Z"), patientVisible: true, releasedAt: new Date("2026-07-09T13:05:00.000Z"), patientNotificationStatus: "notified", patientNotifiedAt: new Date("2026-07-09T13:10:00.000Z"), provenance: { source: "synthetic_seed", noClinicalInterpretation: true } },
+      { id: "lab-result-lipid-prior", organizationId: bfm.id, patientId: "pt-1002", orderId: "lab-order-lipid-prior", vendor: "Labcorp", panelName: "Lipid panel", sourceType: "manual_entry", specimenType: "Serum", collectedAt: new Date("2026-04-08T12:30:00.000Z"), resultedAt: new Date("2026-04-09T12:00:00.000Z"), receivedAt: new Date("2026-04-09T12:05:00.000Z"), status: "released", abnormal: true, critical: false, reviewComments: "Provider reviewed source values and documented follow-up in the chart.", reviewedBy: "user-nadja", reviewedAt: new Date("2026-04-09T13:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-04-09T13:05:00.000Z"), patientVisible: true, releasedAt: new Date("2026-04-09T13:05:00.000Z"), patientNotificationStatus: "notified", patientNotifiedAt: new Date("2026-04-09T13:10:00.000Z"), provenance: { source: "synthetic_seed", noClinicalInterpretation: true } },
+      { id: "lab-result-luxe-isolation", organizationId: luxe.id, patientId: "pt-1004", vendor: "Luxe Manual Laboratory", panelName: "Demo metabolic panel", sourceType: "manual_entry", resultedAt: new Date("2026-07-13T18:00:00.000Z"), receivedAt: new Date("2026-07-13T18:05:00.000Z"), status: "needs_review", abnormal: false, critical: false, provenance: { source: "synthetic_seed", tenantIsolation: true } },
+    ],
+  });
+
+  await prisma.labResultItem.createMany({
+    data: [
+      { id: "lab-item-a1c", organizationId: bfm.id, labResultId: "lab-result-a1c", sequence: 0, name: "Hemoglobin A1C", loincCode: "4548-4", value: "8.1", numericValue: 8.1, unit: "%", referenceRange: "4.0-5.6", abnormalFlag: "high" },
+      { id: "lab-item-critical-k", organizationId: bfm.id, labResultId: "lab-result-critical", sequence: 0, name: "Potassium", loincCode: "2823-3", value: "6.8", numericValue: 6.8, unit: "mmol/L", referenceRange: "3.5-5.1", abnormalFlag: "critical", critical: true },
+      { id: "lab-item-critical-na", organizationId: bfm.id, labResultId: "lab-result-critical", sequence: 1, name: "Sodium", loincCode: "2951-2", value: "138", numericValue: 138, unit: "mmol/L", referenceRange: "136-145", abnormalFlag: "normal" },
+      { id: "lab-item-lipid-current", organizationId: bfm.id, labResultId: "lab-result-lipid-current", sequence: 0, name: "LDL cholesterol", loincCode: "13457-7", value: "94", numericValue: 94, unit: "mg/dL", referenceRange: "0-99", abnormalFlag: "normal" },
+      { id: "lab-item-lipid-prior", organizationId: bfm.id, labResultId: "lab-result-lipid-prior", sequence: 0, name: "LDL cholesterol", loincCode: "13457-7", value: "128", numericValue: 128, unit: "mg/dL", referenceRange: "0-99", abnormalFlag: "high" },
+      { id: "lab-item-luxe-isolation", organizationId: luxe.id, labResultId: "lab-result-luxe-isolation", sequence: 0, name: "Synthetic demo value", value: "Within source range", abnormalFlag: "normal" },
+    ],
+  });
+
+  await prisma.labEvent.createMany({
+    data: [
+      { id: "lab-event-a1c-received", organizationId: bfm.id, labOrderId: "lab-order-a1c", labResultId: "lab-result-a1c", actorId: "user-nadja", eventType: "result_received", fromStatus: "collected", toStatus: "needs_review", metadata: { abnormal: true, critical: false }, createdAt: new Date("2026-07-11T13:45:00.000Z") },
+      { id: "lab-event-critical-received", organizationId: bfm.id, labOrderId: "lab-order-critical", labResultId: "lab-result-critical", actorId: "user-nadja", eventType: "result_received", fromStatus: "collected", toStatus: "needs_review", metadata: { abnormal: true, critical: true }, createdAt: new Date("2026-07-14T11:45:00.000Z") },
+      { id: "lab-event-pending-queued", organizationId: bfm.id, labOrderId: "lab-order-pending", actorId: "user-nadja", eventType: "queue_delivery", fromStatus: "ready_to_send", toStatus: "ready_to_send", note: "Fax order queued for staff delivery confirmation.", createdAt: new Date("2026-07-14T12:05:00.000Z") },
+      { id: "lab-event-lipid-current-release", organizationId: bfm.id, labOrderId: "lab-order-lipid-current", labResultId: "lab-result-lipid-current", actorId: "user-nadja", eventType: "release", fromStatus: "reviewed", toStatus: "released", createdAt: new Date("2026-07-09T13:05:00.000Z") },
+      { id: "lab-event-lipid-prior-release", organizationId: bfm.id, labOrderId: "lab-order-lipid-prior", labResultId: "lab-result-lipid-prior", actorId: "user-nadja", eventType: "release", fromStatus: "reviewed", toStatus: "released", createdAt: new Date("2026-04-09T13:05:00.000Z") },
+      { id: "lab-event-luxe-isolation", organizationId: luxe.id, labResultId: "lab-result-luxe-isolation", actorId: "user-luxe-owner", eventType: "result_received", toStatus: "needs_review", createdAt: new Date("2026-07-13T18:05:00.000Z") },
     ],
   });
 
@@ -552,6 +613,30 @@ async function main() {
 
   await prisma.task.create({
     data: { id: "task-referral-neuro-fax", organizationId: bfm.id, patientId: "pt-1002", category: "referral_delivery", title: "Complete fax referral delivery", details: "Referral referral-neuro-fax to Downtown Neurology Associates. Confirm only after staff verifies receipt.", priority: "normal", dueAt: new Date("2026-07-14T14:25:00.000Z"), status: "open", createdBy: "user-nadja" },
+  });
+
+  await prisma.task.createMany({
+    data: [
+      { id: "task-lab-a1c-review", organizationId: bfm.id, patientId: maya.id, category: "lab_review", title: "New lab result requires provider review", details: "Hemoglobin A1C result lab-result-a1c. Review source data, document clinical follow-up, and explicitly approve any patient release.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-11T13:45:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-lab-critical-review", organizationId: bfm.id, patientId: "pt-1005", category: "lab_review", title: "Critical lab result requires provider review", details: "Comprehensive metabolic panel result lab-result-critical. Review source data, document clinical follow-up, and explicitly approve any patient release.", priority: "urgent", riskLevel: RiskLevel.URGENT, dueAt: new Date("2026-07-14T11:45:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-lab-pending-delivery", organizationId: bfm.id, patientId: "pt-1003", category: "lab_delivery", title: "Complete fax lab order delivery", details: "Order lab-order-pending for BioReference. Confirm only after staff verifies delivery.", priority: "high", dueAt: new Date("2026-07-14T12:05:00.000Z"), status: "open", createdBy: "user-nadja" },
+    ],
+  });
+
+  await prisma.escalation.create({
+    data: { id: "escalation-lab-critical", organizationId: bfm.id, patientId: "pt-1005", sourceType: "lab_result", sourceId: "lab-result-critical", category: "critical_lab_result", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
+  });
+
+  await prisma.notification.create({
+    data: { id: "notification-lab-critical-owner", organizationId: bfm.id, userId: "user-nadja", type: "critical_lab_result", title: "Critical result requires immediate human review", body: "Comprehensive metabolic panel is flagged critical by source data. ClinicOS has not interpreted the result.", createdAt: new Date("2026-07-14T11:45:00.000Z") },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      { id: "audit-lab-a1c-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.received", resourceType: "lab_result", resourceId: "lab-result-a1c", patientId: maya.id, metadata: { sourceType: "manual_entry", abnormal: true, critical: false }, createdAt: new Date("2026-07-11T13:45:00.000Z") },
+      { id: "audit-lab-critical-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.received", resourceType: "lab_result", resourceId: "lab-result-critical", patientId: "pt-1005", metadata: { sourceType: "manual_upload", sourceDocumentId: "doc-critical-lab-source", abnormal: true, critical: true }, createdAt: new Date("2026-07-14T11:45:00.000Z") },
+      { id: "audit-lab-lipid-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "lab_result.release", resourceType: "lab_result", resourceId: "lab-result-lipid-current", patientId: "pt-1002", changes: { status: { from: "reviewed", to: "released" } }, createdAt: new Date("2026-07-09T13:05:00.000Z") },
+    ],
   });
 
   await prisma.recordRequest.create({

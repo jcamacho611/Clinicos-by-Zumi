@@ -20,7 +20,8 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Structured encounter and SOAP note editor
 - Scheduling and telemedicine readiness
 - Forms, signatures, documents, and release controls
-- Lab and imaging review queues
+- Laboratory order-to-result command center with chart-bound diagnoses and tests, truthful manual delivery, structured result entry, document-bound upload fallback, source abnormal/critical flags, urgent human escalation, provider review, explicit portal release, patient-notification confirmation, follow-up, repeat orders, versioned corrections, provenance, and longitudinal numeric trends
+- Imaging review queue
 - Billing, claims, denials, balances, and insurance verification
 - No-fault and workers' compensation case operations
 - Quality measures, care gaps, and outreach
@@ -62,7 +63,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000`. Authentication, patient charts, scheduling, and encounters require the PostgreSQL database configured by `DATABASE_URL`; the remaining workspaces still use explicit fake demonstration fixtures while their repositories are implemented.
+Open `http://localhost:3000`. Authentication, patient charts, scheduling, encounters, connected-care access, identity, consent, referrals, and laboratory workflows require the PostgreSQL database configured by `DATABASE_URL`; workspaces not yet migrated to repositories continue to use explicit fake demonstration fixtures.
 
 The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEED_ADMIN_PASSWORD` to a strong value before running it. The demo seed is destructive and must never be run against a database containing real records. Development-only fallback authentication is forcibly disabled when `NODE_ENV=production` and can also be disabled locally with `DEMO_AUTH=false`.
 
@@ -118,6 +119,12 @@ npm start            # production server
 - `GET|POST /api/network/record-requests` and the connected-care decision/read/revoke routes require role permission, an active relationship, sharing agreement, active consent, purpose/category coverage, and an auditable access grant. Break-glass remains a narrow, time-limited, separately audited exception.
 - `GET|POST /api/referrals` lists the signed-in clinic's outbound referrals and only transmitted inbound referrals whose relationship, agreement, and patient consent still validate at read time, or creates a tenant-owned clinical order and referral draft after destination, document, relationship, agreement, and consent validation.
 - `POST /api/referrals/:referralId/transition` enforces source-versus-receiver lifecycle actions, revalidates connected authority at send/retry, records truthful manual-delivery confirmation, creates failed-delivery escalations and retry tasks, and writes referral events plus audit receipts for each represented clinic.
+- `GET /api/labs` returns the signed-in organization only: orders, results, structured items, source documents, providers, adapter readiness, lifecycle events, integration events, and numeric trend series.
+- `POST /api/labs/orders` creates a tenant-owned clinical order and laboratory order after validating the patient, provider, encounter, chart diagnoses, tests, and any requested active electronic adapter.
+- `POST /api/labs/orders/:labOrderId/transition` enforces draft, readiness, truthful manual/adapter queue, delivery confirmation, collection, failure, retry, and cancellation states while creating delivery tasks, integration events, escalations, and audit receipts.
+- `POST /api/labs/results` receives structured manual, patient-document-bound upload, or active-adapter results; holds every result for human review; creates urgent escalations and provider notifications for critical source flags; and never produces clinical interpretation.
+- `POST /api/labs/results/:labResultId/transition` requires both provider-signing permission and an active same-organization provider identity for review, portal release, and repeat orders; it keeps review and release separate and supports staff-recorded patient notification and follow-up tasks.
+- `POST /api/labs/results/:labResultId/correct` requires the same provider identity gate, preserves the original result, removes obsolete portal visibility, creates a versioned replacement, and routes the correction through mandatory review again.
 
 Authenticated example:
 
@@ -146,7 +153,11 @@ Migration `20260715034000_closed_loop_referral_integrity` adds cascade-safe refe
 
 Migration `20260715035500_referral_outreach_integrity` constrains patient-outreach states and prevents negative referral-delivery attempt counts.
 
-Patient, appointment, encounter, connected-care access, master identity, consent, and referral reads are implemented through server-only Prisma repositories. Every local base and related query requires `organizationId`; cross-organization identity scans require an active demographic-sharing agreement, cross-organization clinical reads revalidate the relationship, agreement, consent, grant, purpose, categories, role, and time at read time, and connected referral sends revalidate the relationship, agreement, and patient consent at transmission. API responses are marked private/no-store where appropriate. Appointment transitions, encounter draft/review/sign-lock mutations, identity decisions, consent changes, network reads, and referral handoffs use guarded filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, access controls, identity resolution, and Referral Relay consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
+Migration `20260715040657_laboratory_lifecycle` adds complete laboratory order delivery state, structured result provenance, source flags, provider review, release, notification, correction versioning, append-only lab events, general integration events, indexes, foreign keys, and PostgreSQL lifecycle checks.
+
+Migration `20260715041013_laboratory_source_binding` binds laboratory results to their exact source document and integration adapter for organization-scoped provenance validation.
+
+Patient, appointment, encounter, connected-care access, master identity, consent, referral, and laboratory reads are implemented through server-only Prisma repositories. Every local base and related query requires `organizationId`; cross-organization identity scans require an active demographic-sharing agreement, cross-organization clinical reads revalidate the relationship, agreement, consent, grant, purpose, categories, role, and time at read time, and connected referral sends revalidate the relationship, agreement, and patient consent at transmission. API responses are marked private/no-store where appropriate. Appointment transitions, encounter draft/review/sign-lock mutations, identity decisions, consent changes, network reads, referral handoffs, and laboratory order/result transitions use guarded filters, lifecycle checks, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, access controls, identity resolution, Referral Relay, and Laboratory Relay consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, encrypted object storage, key management, backups, disaster recovery, retention policies, and formal migration review.
 
 The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
 
@@ -180,11 +191,12 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 ## Production gates that are not complete
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
-- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, and consent routes
+- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, consent, referral, and laboratory routes
 - Encounter creation, diagnosis/procedure editing, addenda, and database-backed modules beyond patient/scheduling/encounter workflows
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - Encryption/key-management controls and private object storage
-- Lab, imaging, payer, clearinghouse, e-prescribing, and telemedicine integrations
+- Live BAA-backed Quest, Labcorp, BioReference, hospital-lab, HL7 v2, and FHIR laboratory adapters; ClinicOS currently provides the native workflow, adapter contract, integration event ledger, and safe manual/document fallbacks without claiming electronic connectivity
+- Imaging, payer, clearinghouse, e-prescribing, and telemedicine integrations
 - Production payment and communication webhooks
 - Approved, BAA-reviewed production speech transcription; current push-to-talk uses the browser speech adapter with synthetic demo data only and stores no audio
 - Clinical terminology services and validated quality-measure logic

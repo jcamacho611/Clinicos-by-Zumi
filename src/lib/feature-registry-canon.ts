@@ -152,7 +152,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 16, slug: "laboratory", title: "Laboratory System",
     mandate: "Manage orders, structured results, review, release, follow-up, provenance, correction, and vendor adapters.",
     ownerRoles: ["provider", "clinical_staff", "lab_reviewer"], interfaceRoute: "/labs",
-    databaseObjects: ["lab_orders", "lab_results", "lab_result_items", "tasks", "integrations", "integration_events"], deliveryStatus: "DEMO", deliveryMode: "adapter-ready",
+    databaseObjects: ["lab_orders", "lab_results", "lab_result_items", "lab_events", "documents", "tasks", "escalations", "notifications", "audit_logs", "integrations", "integration_events"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Laboratory-order creation | Test selection | Diagnosis attachment | Order priority | Collection information | Specimen information | Order printing | Electronic transmission | Manual-order fallback | Result receipt | Manual result upload | Structured result entry | Test name | LOINC mapping | Result value | Unit | Reference range | Abnormal flag | Critical flag | Collection date | Result date | Ordering provider | Result source | Reviewing provider | Provider-review queue | Review comments | Patient-release approval | Released-to-portal status | Patient-notified status | Follow-up task | Repeat-lab order | Longitudinal result graph | Result correction | Result provenance | Quest strategy | Labcorp strategy | BioReference strategy | Local-lab strategy | Hospital-lab strategy | HL7 interface readiness | FHIR interface readiness",
   }),
   section({
