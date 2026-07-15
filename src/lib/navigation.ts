@@ -29,6 +29,7 @@ export const navigation = [
     label: "Connected care",
     items: [
       { href: "/network", label: "Network command", icon: "Network" },
+      { href: "/referrals", label: "Referral relay", icon: "Waypoints" },
       { href: "/access-controls", label: "Access controls", icon: "LockKeyhole" },
       { href: "/identity-resolution", label: "Identity resolution", icon: "ScanSearch" },
       { href: "/care-teams", label: "Care Constellation", icon: "Orbit" },
@@ -88,6 +89,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   escalations: { title: "Escalations", eyebrow: "Human review required" },
   "ai-assistants": { title: "AI assistants", eyebrow: "Safe workflow automation" },
   network: { title: "Network command", eyebrow: "Connected-care mission control" },
+  referrals: { title: "Referral relay", eyebrow: "Closed-loop care coordination" },
   "access-controls": { title: "Access controls", eyebrow: "Consent-bound record exchange" },
   "identity-resolution": { title: "Identity resolution", eyebrow: "Master patient index" },
   "care-teams": { title: "Care Constellation", eyebrow: "Virtual care team" },

@@ -35,7 +35,7 @@ async function requirePatientSource(tx: Transaction, sourceOrganizationId: strin
   return patient;
 }
 
-async function requireActiveConnection(
+export async function requireActiveConnection(
   tx: Transaction,
   sourceOrganizationId: string,
   requestingOrganizationId: string,
@@ -59,7 +59,7 @@ async function requireActiveConnection(
   return connection;
 }
 
-async function requireActiveAgreement(
+export async function requireActiveAgreement(
   tx: Transaction,
   sourceOrganizationId: string,
   requestingOrganizationId: string,

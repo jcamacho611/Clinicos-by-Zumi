@@ -55,6 +55,15 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "consents", "read")).toBe(false);
   });
 
+  it("allows care teams to coordinate referrals without exposing workflow controls to viewers", () => {
+    expect(can("provider", "referrals", "create")).toBe(true);
+    expect(can("clinical_staff", "referrals", "update")).toBe(true);
+    expect(can("front_desk", "referrals", "create")).toBe(false);
+    expect(can("front_desk", "referrals", "update")).toBe(true);
+    expect(can("biller", "referrals", "read")).toBe(true);
+    expect(can("viewer", "referrals", "read")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

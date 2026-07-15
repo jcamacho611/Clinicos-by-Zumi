@@ -145,7 +145,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 15, slug: "orders-referrals", title: "Orders, Referrals, and Care Coordination",
     mandate: "Close the loop on every order and referral across connected and external organizations.",
     ownerRoles: ["provider", "referral_coordinator", "clinical_staff"], interfaceRoute: "/referrals",
-    databaseObjects: ["orders", "referrals", "documents", "tasks", "network_connections"], deliveryStatus: "PLANNED", deliveryMode: "manual-fallback",
+    databaseObjects: ["orders", "referrals", "referral_events", "documents", "tasks", "escalations", "network_connections", "data_sharing_agreements", "consents", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "manual-fallback",
     features: "Create clinical order | Laboratory order | Imaging order | Procedure order | Medication order | Referral order | Referral destination search | Referral reason | Clinical question | Priority level | Supporting-document attachment | Referral authorization | Referral-status tracking | Sent status | Received status | Accepted status | Scheduled status | Completed status | Consultation note received | Closed-loop referral confirmation | Referral reminder | Patient outreach | Specialist response | Follow-up task | Failed-referral escalation | Connected-clinic referral exchange | External-clinic fax fallback | External-clinic Direct fallback",
   }),
   section({

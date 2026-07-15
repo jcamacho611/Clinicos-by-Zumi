@@ -15,5 +15,5 @@ export async function generateMetadata({ params }: { params: Promise<{ workspace
 export default async function WorkspacePage({ params }: { params: Promise<{ workspace: string }> }) {
   const { workspace } = await params;
   const session = await requireClinicSession();
-  return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} workspace={workspace} />;
+  return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />;
 }

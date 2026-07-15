@@ -718,19 +718,75 @@ model ClinicalOrder {
 }
 
 model Referral {
+  id                         String          @id @default(cuid())
+  organizationId             String
+  patientId                  String
+  encounterId                String?
+  orderId                    String?
+  specialty                  String
+  destination                String?
+  destinationType            String          @default("external")
+  destinationOrganizationId  String?
+  destinationFacilityId      String?
+  destinationProviderId      String?
+  reason                     String?
+  clinicalQuestion           String?
+  priority                   String          @default("routine")
+  authorizationStatus        String          @default("not_required")
+  deliveryMethod             String          @default("manual")
+  deliveryStatus             String          @default("not_started")
+  deliveryAttempts           Int             @default(0)
+  lastDeliveryAttemptAt      DateTime?
+  failureReason              String?
+  supportingDocumentIds      String[]        @default([])
+  patientOutreachStatus      String          @default("not_started")
+  patientNotifiedAt          DateTime?
+  followUpDueAt              DateTime?
+  assignedTo                 String?
+  createdBy                  String?
+  status                     String          @default("draft")
+  sentAt                     DateTime?
+  receivedAt                 DateTime?
+  acceptedAt                 DateTime?
+  declinedAt                 DateTime?
+  declineReason              String?
+  scheduledAt                DateTime?
+  appointmentAt              DateTime?
+  completedAt                DateTime?
+  consultationNoteDocumentId String?
+  consultationNoteReceivedAt DateTime?
+  specialistResponse         String?
+  closedLoopAt               DateTime?
+  closedBy                   String?
+  provenance                 Json?
+  createdAt                  DateTime        @default(now())
+  updatedAt                  DateTime        @updatedAt
+  events                     ReferralEvent[]
+
+  @@index([organizationId, status, followUpDueAt])
+  @@index([destinationOrganizationId, status])
+  @@index([patientId, createdAt])
+  @@index([orderId])
+  @@map("referrals")
+}
+
+model ReferralEvent {
   id             String   @id @default(cuid())
   organizationId String
-  patientId      String
-  encounterId    String?
-  specialty      String
-  destination    String?
-  reason         String?
-  status         String   @default("draft")
+  referralId     String
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  deliveryMethod String?
+  note           String?
+  metadata       Json?
   createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  referral       Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
 
-  @@index([patientId])
-  @@map("referrals")
+  @@index([organizationId, referralId, createdAt])
+  @@index([referralId, createdAt])
+  @@map("referral_events")
 }
 
 model Immunization {

@@ -89,6 +89,11 @@ async function main() {
 
   await seedPriorityZeroRegistry();
 
+  await prisma.referralEvent.deleteMany();
+  await prisma.referral.deleteMany();
+  await prisma.clinicalOrder.deleteMany();
+  await prisma.task.deleteMany();
+  await prisma.escalation.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.signature.deleteMany();
@@ -396,7 +401,7 @@ async function main() {
       targetOrganizationId: luxe.id,
       status: "active_demo",
       allowedPurposes: ["treatment"],
-      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary"],
+      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary", "referrals"],
       effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
       expiresAt: new Date("2027-07-01T12:00:00.000Z"),
     },
@@ -445,7 +450,7 @@ async function main() {
       type: "network_sharing",
       version: 1,
       purposeOfUse: "treatment",
-      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary"],
+      dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary", "referrals"],
       grantedToOrganizationId: luxe.id,
       source: "demo_seed",
       signerName: "Maya Thompson",
@@ -510,6 +515,43 @@ async function main() {
       approvedGrantId: "grant-maya-network-demo",
       deliveredAt: new Date("2026-07-14T12:35:00.000Z"),
     },
+  });
+
+  await prisma.clinicalOrder.createMany({
+    data: [
+      { id: "order-referral-cardio", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", type: "referral", details: { specialty: "Cardiology", reason: "Exertional symptoms require specialty evaluation.", clinicalQuestion: "Please evaluate cardiac risk and return consultation recommendations.", priority: "urgent" }, status: "ordered", orderedAt: new Date("2026-07-14T14:00:00.000Z") },
+      { id: "order-referral-neuro", organizationId: bfm.id, patientId: "pt-1002", providerId: "provider-nadja", type: "referral", details: { specialty: "Neurology", reason: "Persistent headaches warrant specialist review.", clinicalQuestion: "Please evaluate persistent headaches and recommend next diagnostic steps.", priority: "routine" }, status: "ordered", orderedAt: new Date("2026-07-14T14:20:00.000Z") },
+      { id: "order-referral-derm", organizationId: bfm.id, patientId: maya.id, providerId: "provider-nadja", type: "referral", details: { specialty: "Dermatology", reason: "Skin lesion requires specialty evaluation.", clinicalQuestion: "Please assess the lesion and return the consultation plan.", priority: "routine" }, status: "completed", orderedAt: new Date("2026-06-20T14:00:00.000Z") },
+    ],
+  });
+
+  await prisma.referral.createMany({
+    data: [
+      {
+        id: "referral-cardio-connected", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", orderId: "order-referral-cardio", specialty: "Cardiology", destination: "Luxe Medi", destinationType: "connected", destinationOrganizationId: luxe.id, destinationFacilityId: "facility-luxe-main", reason: "Exertional symptoms require specialty evaluation.", clinicalQuestion: "Please evaluate cardiac risk and return consultation recommendations.", priority: "urgent", authorizationStatus: "approved", deliveryMethod: "connected_network", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-14T14:05:00.000Z"), followUpDueAt: new Date("2026-07-16T14:05:00.000Z"), createdBy: "user-nadja", status: "sent", sentAt: new Date("2026-07-14T14:05:00.000Z"), provenance: { source: "synthetic_seed", consentId: "consent-demo-network" }, createdAt: new Date("2026-07-14T14:00:00.000Z")
+      },
+      {
+        id: "referral-neuro-fax", organizationId: bfm.id, patientId: "pt-1002", orderId: "order-referral-neuro", specialty: "Neurology", destination: "Downtown Neurology Associates", destinationType: "external", reason: "Persistent headaches warrant specialist review.", clinicalQuestion: "Please evaluate persistent headaches and recommend next diagnostic steps.", priority: "routine", authorizationStatus: "pending", deliveryMethod: "fax", deliveryStatus: "pending_manual", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-07-14T14:25:00.000Z"), followUpDueAt: new Date("2026-07-21T14:20:00.000Z"), createdBy: "user-nadja", status: "ready_to_send", provenance: { source: "synthetic_seed", fallback: true }, createdAt: new Date("2026-07-14T14:20:00.000Z")
+      },
+      {
+        id: "referral-derm-closed", organizationId: bfm.id, patientId: maya.id, orderId: "order-referral-derm", specialty: "Dermatology", destination: "Luxe Medi", destinationType: "connected", destinationOrganizationId: luxe.id, destinationFacilityId: "facility-luxe-main", reason: "Skin lesion requires specialty evaluation.", clinicalQuestion: "Please assess the lesion and return the consultation plan.", priority: "routine", authorizationStatus: "not_required", deliveryMethod: "connected_network", deliveryStatus: "delivered", deliveryAttempts: 1, lastDeliveryAttemptAt: new Date("2026-06-20T14:05:00.000Z"), patientOutreachStatus: "notified", patientNotifiedAt: new Date("2026-06-24T16:05:00.000Z"), followUpDueAt: new Date("2026-06-27T14:00:00.000Z"), createdBy: "user-nadja", status: "closed", sentAt: new Date("2026-06-20T14:05:00.000Z"), receivedAt: new Date("2026-06-20T14:08:00.000Z"), acceptedAt: new Date("2026-06-20T14:15:00.000Z"), scheduledAt: new Date("2026-06-20T14:18:00.000Z"), appointmentAt: new Date("2026-06-24T15:00:00.000Z"), completedAt: new Date("2026-06-24T15:40:00.000Z"), consultationNoteReceivedAt: new Date("2026-06-24T16:00:00.000Z"), specialistResponse: "Consultation completed; source provider should review the returned plan with the patient.", closedLoopAt: new Date("2026-06-24T16:10:00.000Z"), closedBy: "user-nadja", provenance: { source: "synthetic_seed", consentId: "consent-demo-network" }, createdAt: new Date("2026-06-20T14:00:00.000Z")
+      },
+    ],
+  });
+
+  await prisma.referralEvent.createMany({
+    data: [
+      { id: "ref-event-cardio-created", organizationId: bfm.id, referralId: "referral-cardio-connected", actorId: "user-nadja", eventType: "created", toStatus: "draft", deliveryMethod: "connected_network", createdAt: new Date("2026-07-14T14:00:00.000Z") },
+      { id: "ref-event-cardio-sent-source", organizationId: bfm.id, referralId: "referral-cardio-connected", actorId: "user-nadja", eventType: "send", fromStatus: "ready_to_send", toStatus: "sent", deliveryMethod: "connected_network", createdAt: new Date("2026-07-14T14:05:00.000Z") },
+      { id: "ref-event-cardio-sent-destination", organizationId: luxe.id, referralId: "referral-cardio-connected", actorId: "user-nadja", eventType: "send", fromStatus: "ready_to_send", toStatus: "sent", deliveryMethod: "connected_network", metadata: { representedOrganizationId: bfm.id }, createdAt: new Date("2026-07-14T14:05:00.000Z") },
+      { id: "ref-event-neuro-queued", organizationId: bfm.id, referralId: "referral-neuro-fax", actorId: "user-nadja", eventType: "queue_manual_delivery", fromStatus: "ready_to_send", toStatus: "ready_to_send", deliveryMethod: "fax", note: "Fax packet queued for staff delivery confirmation.", createdAt: new Date("2026-07-14T14:25:00.000Z") },
+      { id: "ref-event-derm-closed-source", organizationId: bfm.id, referralId: "referral-derm-closed", actorId: "user-nadja", eventType: "close", fromStatus: "consultation_received", toStatus: "closed", deliveryMethod: "connected_network", createdAt: new Date("2026-06-24T16:10:00.000Z") },
+      { id: "ref-event-derm-closed-destination", organizationId: luxe.id, referralId: "referral-derm-closed", actorId: "user-nadja", eventType: "close", fromStatus: "consultation_received", toStatus: "closed", deliveryMethod: "connected_network", metadata: { representedOrganizationId: bfm.id }, createdAt: new Date("2026-06-24T16:10:00.000Z") },
+    ],
+  });
+
+  await prisma.task.create({
+    data: { id: "task-referral-neuro-fax", organizationId: bfm.id, patientId: "pt-1002", category: "referral_delivery", title: "Complete fax referral delivery", details: "Referral referral-neuro-fax to Downtown Neurology Associates. Confirm only after staff verifies receipt.", priority: "normal", dueAt: new Date("2026-07-14T14:25:00.000Z"), status: "open", createdBy: "user-nadja" },
   });
 
   await prisma.recordRequest.create({
