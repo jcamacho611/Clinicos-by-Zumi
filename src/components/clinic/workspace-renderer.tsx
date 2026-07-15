@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { can, type ClinicRole } from "@/lib/auth/rbac";
-import { DocumentsWorkspace, FormsWorkspace } from "@/components/clinic/workspaces/clinical";
+import { FormsWorkspace } from "@/components/clinic/workspaces/clinical";
+import { DocumentsWorkspace } from "@/components/clinic/documents-workspace";
 import { ImagingWorkspace } from "@/components/clinic/imaging-workspace";
 import { LabsWorkspace } from "@/components/clinic/labs-workspace";
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
@@ -22,6 +23,7 @@ import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repos
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
 import { listImagingWorkspace } from "@/lib/repositories/imaging-repository";
+import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -52,7 +54,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "imaging", "read")) return notFound();
       return <ImagingWorkspace canCreate={can(role, "imaging", "create")} canSign={can(role, "imaging", "sign")} canUpdate={can(role, "imaging", "update")} workspace={await listImagingWorkspace(organizationId)} />;
     }
-    case "documents": return <DocumentsWorkspace />;
+    case "documents": {
+      if (!can(role, "documents", "read")) return notFound();
+      return <DocumentsWorkspace canCreate={can(role, "documents", "create")} canManage={can(role, "documents", "manage")} canSign={can(role, "documents", "sign")} canUpdate={can(role, "documents", "update")} workspace={await listDocumentWorkspace(organizationId)} />;
+    }
     case "forms": return <FormsWorkspace />;
     case "billing": return <BillingWorkspace />;
     case "insurance": return <InsuranceWorkspace />;

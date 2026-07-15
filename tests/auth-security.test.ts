@@ -84,6 +84,17 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "imaging", "update")).toBe(false);
   });
 
+  it("separates document intake from review, release, and export", () => {
+    expect(can("front_desk", "documents", "create")).toBe(true);
+    expect(can("front_desk", "documents", "sign")).toBe(false);
+    expect(can("clinical_staff", "documents", "update")).toBe(true);
+    expect(can("provider", "documents", "sign")).toBe(true);
+    expect(can("provider", "documents", "manage")).toBe(true);
+    expect(can("viewer", "documents", "read")).toBe(true);
+    expect(can("viewer", "documents", "update")).toBe(false);
+    expect(can("viewer", "documents", "manage")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

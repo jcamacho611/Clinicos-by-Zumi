@@ -836,51 +836,119 @@ model PatientInstruction {
 }
 
 model DocumentCategory {
-  id             String      @id @default(cuid())
-  organizationId String
-  name           String
-  defaultAccess  AccessLevel @default(INTERNAL)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                    String      @id @default(cuid())
+  organizationId        String
+  code                  String
+  name                  String
+  description           String?
+  color                 String      @default("slate")
+  defaultAccess         AccessLevel @default(INTERNAL)
+  defaultPatientVisible Boolean     @default(false)
+  reviewRequired        Boolean     @default(true)
+  retentionDays         Int?
+  allowedMimeTypes      String[]    @default([])
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
   @@unique([organizationId, name])
+  @@unique([organizationId, code])
+  @@index([organizationId, active])
   @@map("document_categories")
 }
 
 model Document {
-  id             String      @id @default(cuid())
-  organizationId String
-  patientId      String?
-  categoryId     String?
-  name           String
-  storageKey     String
-  mimeType       String
-  sizeBytes      Int
-  accessLevel    AccessLevel @default(INTERNAL)
-  patientVisible Boolean     @default(false)
-  internalOnly   Boolean     @default(true)
-  lockedAt       DateTime?
-  uploadedBy     String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                    String      @id @default(cuid())
+  organizationId        String
+  patientId             String?
+  encounterId           String?
+  referralId            String?
+  caseType               String?
+  caseId                 String?
+  categoryId             String?
+  versionGroupId        String
+  version                Int         @default(1)
+  supersedesId           String?
+  name                   String
+  originalFileName       String
+  description            String?
+  tags                   String[]    @default([])
+  sourceType             String      @default("upload")
+  storageProvider        String      @default("database_encrypted")
+  storageKey             String
+  mimeType               String
+  sizeBytes              Int
+  checksumSha256         String?
+  encryptedContent       Bytes?
+  encryptionIv           Bytes?
+  encryptionAuthTag      Bytes?
+  encryptionKeyId        String?
+  accessLevel            AccessLevel @default(INTERNAL)
+  reviewRequired         Boolean     @default(true)
+  reviewStatus           String      @default("needs_review")
+  releaseStatus          String      @default("not_requested")
+  releaseRequestedAt     DateTime?
+  releaseApprovedBy      String?
+  releaseApprovedAt      DateTime?
+  patientVisible         Boolean     @default(false)
+  internalOnly           Boolean     @default(true)
+  status                 String      @default("active")
+  expiresAt              DateTime?
+  lockedAt               DateTime?
+  uploadedBy             String?
+  provenance             Json?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
   @@index([patientId, createdAt])
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, reviewStatus, releaseStatus])
+  @@index([organizationId, categoryId, createdAt])
+  @@unique([organizationId, versionGroupId, version])
+  @@unique([organizationId, supersedesId])
+  @@index([encounterId])
+  @@index([referralId])
+  @@index([caseType, caseId])
+  @@index([expiresAt])
   @@map("documents")
 }
 
 model DocumentReview {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
   documentId     String
+  reviewType     String   @default("content")
+  requestedBy    String?
+  assignedTo     String?
   reviewerId     String?
-  status         String    @default("needs_review")
+  status         String   @default("needs_review")
+  decision       String?
   notes          String?
+  dueAt          DateTime?
   reviewedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([documentId])
+  @@index([organizationId, status, dueAt])
   @@map("document_reviews")
+}
+
+model DocumentEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  documentId     String
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  note           String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([documentId, createdAt])
+  @@map("document_events")
 }
 
 model FormTemplate {

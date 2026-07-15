@@ -151,6 +151,87 @@ export interface PatientImagingResult {
   correctionOfId: string | null;
 }
 
+export interface DocumentWorkspaceData {
+  documents: Array<{
+    id: string;
+    organizationId: string;
+    patientId: string | null;
+    encounterId: string | null;
+    referralId: string | null;
+    caseType: string | null;
+    caseId: string | null;
+    categoryId: string | null;
+    categoryName: string;
+    categoryCode: string;
+    categoryColor: string;
+    versionGroupId: string;
+    version: number;
+    supersedesId: string | null;
+    name: string;
+    originalFileName: string;
+    description: string | null;
+    tags: string[];
+    sourceType: string;
+    storageProvider: string;
+    mimeType: string;
+    sizeBytes: number;
+    checksumSha256: string | null;
+    accessLevel: string;
+    reviewRequired: boolean;
+    reviewStatus: string;
+    releaseStatus: string;
+    patientVisible: boolean;
+    internalOnly: boolean;
+    status: string;
+    expiresAt: string | null;
+    lockedAt: string | null;
+    uploadedBy: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+    patientName: string;
+    patientMrn: string | null;
+    hasStoredContent: boolean;
+  }>;
+  categories: Array<{
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    color: string;
+    defaultAccess: string;
+    defaultPatientVisible: boolean;
+    reviewRequired: boolean;
+    retentionDays: number | null;
+    allowedMimeTypes: string[];
+  }>;
+  patients: Array<{ id: string; mrn: string; name: string }>;
+  encounters: Array<{ id: string; patientId: string; type: string; serviceDate: string }>;
+  referrals: Array<{ id: string; patientId: string; specialty: string; destination: string | null }>;
+  cases: Array<{ id: string; patientId: string; claimNumber: string; caseType: "nofault" | "workers_comp" }>;
+  reviews: Array<{ id: string; documentId: string; reviewType: string; status: string; decision: string | null; notes: string | null; dueAt: string | null; reviewedAt: string | null; createdAt: string }>;
+  events: Array<{ id: string; documentId: string; actorId: string | null; eventType: string; fromStatus: string | null; toStatus: string | null; note: string | null; createdAt: string }>;
+  accessEvents: Array<{ id: string; actorId: string | null; action: string; resourceId: string; createdAt: string }>;
+}
+
+export interface PatientDocument {
+  id: string;
+  name: string;
+  category: string;
+  version: number;
+  supersedesId: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  sourceType: string;
+  reviewStatus: string;
+  releaseStatus: string;
+  patientVisible: boolean;
+  status: string;
+  lockedAt: string | null;
+  expiresAt: string | null;
+  hasStoredContent: boolean;
+  createdAt: string;
+}
+
 export interface Claim {
   id: string;
   patient: string;

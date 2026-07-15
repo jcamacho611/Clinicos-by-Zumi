@@ -15,5 +15,7 @@ services:
         sync: false
       - key: AUTH_SECRET
         sync: false
+      - key: DOCUMENT_ENCRYPTION_KEY
+        sync: false
       - key: DEMO_AUTH
         value: "false"

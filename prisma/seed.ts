@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { AppointmentStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
 import {
@@ -10,6 +11,26 @@ import {
 } from "../src/lib/feature-registry-canon";
 
 const prisma = new PrismaClient();
+
+function encryptSeedDocument(content: string) {
+  const configured = process.env.DOCUMENT_ENCRYPTION_KEY?.trim();
+  const key = configured
+    ? (/^[a-f0-9]{64}$/i.test(configured) ? Buffer.from(configured, "hex") : Buffer.from(configured, "base64"))
+    : createHash("sha256").update(`clinicos-document-development:${process.env.AUTH_SECRET ?? ""}`).digest();
+  if (key.length !== 32 || (!configured && !process.env.AUTH_SECRET)) throw new Error("DOCUMENT_ENCRYPTION_KEY or AUTH_SECRET is required to seed encrypted document demonstrations.");
+  const source = Buffer.from(content, "utf8");
+  const encryptionIv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, encryptionIv);
+  const encryptedContent = Buffer.concat([cipher.update(source), cipher.final()]);
+  return {
+    encryptedContent,
+    encryptionIv,
+    encryptionAuthTag: cipher.getAuthTag(),
+    encryptionKeyId: createHash("sha256").update(key).digest("hex").slice(0, 16),
+    checksumSha256: createHash("sha256").update(source).digest("hex"),
+    sizeBytes: source.length,
+  };
+}
 
 async function seedPriorityZeroRegistry() {
   for (const registrySection of clinicOsDayOneRegistry) {
@@ -107,6 +128,7 @@ async function main() {
   await prisma.activityLog.deleteMany();
   await prisma.signature.deleteMany();
   await prisma.consent.deleteMany();
+  await prisma.documentEvent.deleteMany();
   await prisma.documentReview.deleteMany();
   await prisma.document.deleteMany();
   await prisma.documentCategory.deleteMany();
@@ -558,11 +580,71 @@ async function main() {
     ],
   });
 
+  await prisma.documentCategory.createMany({
+    data: [
+      { id: "doccat-bfm-identification", organizationId: bfm.id, code: "identification", name: "Identification", description: "Government-issued patient identity documents.", color: "slate", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["application/pdf", "image/jpeg", "image/png", "image/webp"] },
+      { id: "doccat-bfm-insurance", organizationId: bfm.id, code: "insurance_card", name: "Insurance card", color: "sky", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["application/pdf", "image/jpeg", "image/png", "image/webp"] },
+      { id: "doccat-bfm-intake", organizationId: bfm.id, code: "intake", name: "Intake", color: "amber", reviewRequired: true, retentionDays: 2555 },
+      { id: "doccat-bfm-consent", organizationId: bfm.id, code: "consent", name: "Consent", color: "teal", defaultPatientVisible: true, reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-clinical", organizationId: bfm.id, code: "clinical_note", name: "Clinical note", color: "indigo", reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-lab", organizationId: bfm.id, code: "laboratory_result", name: "Laboratory result", color: "emerald", reviewRequired: true, retentionDays: 3650, allowedMimeTypes: ["application/pdf", "text/plain"] },
+      { id: "doccat-bfm-imaging", organizationId: bfm.id, code: "imaging_report", name: "Imaging report", color: "blue", reviewRequired: true, retentionDays: 3650, allowedMimeTypes: ["application/pdf", "text/plain"] },
+      { id: "doccat-bfm-referral", organizationId: bfm.id, code: "referral", name: "Referral", color: "violet", reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-prior-auth", organizationId: bfm.id, code: "prior_authorization", name: "Prior authorization", color: "orange", reviewRequired: true, retentionDays: 2555 },
+      { id: "doccat-bfm-education", organizationId: bfm.id, code: "patient_education", name: "Patient education", color: "lime", defaultPatientVisible: true, reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["application/pdf", "text/plain"] },
+      { id: "doccat-bfm-billing", organizationId: bfm.id, code: "billing", name: "Billing and claim", color: "stone", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 2555 },
+      { id: "doccat-bfm-nofault", organizationId: bfm.id, code: "nofault", name: "No-fault", color: "rose", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-workers", organizationId: bfm.id, code: "workers_comp", name: "Workers compensation", color: "red", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-legal", organizationId: bfm.id, code: "legal", name: "Attorney and adjuster", color: "zinc", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-signed", organizationId: bfm.id, code: "signed_agreement", name: "Signed agreement", color: "cyan", defaultPatientVisible: true, reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-bfm-media", organizationId: bfm.id, code: "before_after_media", name: "Before and after media", color: "pink", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"] },
+      { id: "doccat-bfm-misc", organizationId: bfm.id, code: "miscellaneous", name: "Miscellaneous", color: "slate", reviewRequired: true, retentionDays: 2555 },
+      { id: "doccat-luxe-consent", organizationId: luxe.id, code: "treatment_consent", name: "Treatment consent", color: "teal", defaultPatientVisible: true, reviewRequired: true, retentionDays: 3650 },
+      { id: "doccat-luxe-aftercare", organizationId: luxe.id, code: "aftercare", name: "Aftercare instructions", color: "amber", defaultPatientVisible: true, reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["application/pdf", "text/plain"] },
+      { id: "doccat-luxe-imaging", organizationId: luxe.id, code: "imaging_report", name: "Imaging report", color: "blue", reviewRequired: true, retentionDays: 3650, allowedMimeTypes: ["application/pdf", "text/plain"] },
+      { id: "doccat-luxe-media", organizationId: luxe.id, code: "before_after_media", name: "Before and after media", color: "pink", defaultAccess: "RESTRICTED", reviewRequired: true, retentionDays: 2555, allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"] },
+      { id: "doccat-luxe-misc", organizationId: luxe.id, code: "miscellaneous", name: "Miscellaneous", color: "slate", reviewRequired: true, retentionDays: 2555 },
+    ],
+  });
+
+  const carePlanV1 = encryptSeedDocument("SYNTHETIC DEMO ONLY\nMaya Thompson care plan, version 1. This version was replaced and is retained for custody history.");
+  const carePlanV2 = encryptSeedDocument("SYNTHETIC DEMO ONLY\nMaya Thompson current care plan, version 2. Follow the provider-authored instructions in the signed encounter.");
+  const telemedicineConsent = encryptSeedDocument("SYNTHETIC DEMO ONLY\nDarius Coleman acknowledged the telemedicine consent in this demonstration record.");
+  const intakeDraft = encryptSeedDocument("SYNTHETIC DEMO ONLY\nElena Rivera submitted an intake document awaiting authorized human review.");
+  const luxeAftercare = encryptSeedDocument("SYNTHETIC DEMO ONLY\nCamille Brooks aftercare instructions. Follow the licensed provider plan and contact the clinic with questions.");
+
   await prisma.document.createMany({
     data: [
-      { id: "doc-critical-lab-source", organizationId: bfm.id, patientId: "pt-1005", name: "Hospital CMP source report - synthetic demo", storageKey: "synthetic/demo/critical-cmp.pdf", mimeType: "application/pdf", sizeBytes: 48211, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T11:40:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T11:40:00.000Z") },
-      { id: "doc-anthony-mri-source", organizationId: bfm.id, patientId: "pt-1005", name: "MRI lumbar spine source report - synthetic demo", storageKey: "synthetic/demo/anthony-mri-source.pdf", mimeType: "application/pdf", sizeBytes: 68420, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T10:35:00.000Z"), uploadedBy: "user-nadja", createdAt: new Date("2026-07-14T10:35:00.000Z") },
-      { id: "doc-luxe-imaging-source", organizationId: luxe.id, patientId: "pt-1004", name: "Luxe imaging source report - synthetic demo", storageKey: "synthetic/demo/luxe-imaging-source.pdf", mimeType: "application/pdf", sizeBytes: 32550, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, uploadedBy: "user-luxe-owner", createdAt: new Date("2026-07-13T14:00:00.000Z") },
+      { id: "doc-critical-lab-source", organizationId: bfm.id, patientId: "pt-1005", categoryId: "doccat-bfm-lab", versionGroupId: "doc-group-critical-lab", originalFileName: "critical-cmp.pdf", name: "Hospital CMP source report - synthetic demo", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/critical-cmp.pdf", mimeType: "application/pdf", sizeBytes: 48211, accessLevel: "INTERNAL", reviewStatus: "approved", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T11:40:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", externalSourceFallback: true }, createdAt: new Date("2026-07-14T11:40:00.000Z") },
+      { id: "doc-anthony-mri-source", organizationId: bfm.id, patientId: "pt-1005", categoryId: "doccat-bfm-imaging", versionGroupId: "doc-group-anthony-mri", originalFileName: "anthony-mri-source.pdf", name: "MRI lumbar spine source report - synthetic demo", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/anthony-mri-source.pdf", mimeType: "application/pdf", sizeBytes: 68420, accessLevel: "INTERNAL", reviewStatus: "approved", patientVisible: false, internalOnly: true, lockedAt: new Date("2026-07-14T10:35:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", externalSourceFallback: true }, createdAt: new Date("2026-07-14T10:35:00.000Z") },
+      { id: "doc-maya-care-plan-v1", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", categoryId: "doccat-bfm-education", versionGroupId: "doc-group-maya-care-plan", version: 1, originalFileName: "maya-care-plan-v1.txt", name: "Diabetes care plan", description: "Superseded patient education version retained for custody history.", tags: ["diabetes", "care-plan"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-maya-care-plan/v1/seed", mimeType: "text/plain", ...carePlanV1, accessLevel: "INTERNAL", reviewStatus: "approved", releaseStatus: "revoked", patientVisible: false, internalOnly: true, status: "superseded", lockedAt: new Date("2026-07-10T14:00:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", replaced: true }, createdAt: new Date("2026-07-10T13:30:00.000Z") },
+      { id: "doc-maya-care-plan-v2", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", categoryId: "doccat-bfm-education", versionGroupId: "doc-group-maya-care-plan", version: 2, supersedesId: "doc-maya-care-plan-v1", originalFileName: "maya-care-plan-v2.txt", name: "Diabetes care plan", description: "Current provider-reviewed patient education plan.", tags: ["diabetes", "care-plan", "current"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-maya-care-plan/v2/seed", mimeType: "text/plain", ...carePlanV2, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-11T14:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-11T14:10:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-11T14:10:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", supersedesId: "doc-maya-care-plan-v1" }, createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "doc-darius-telemed-consent", organizationId: bfm.id, patientId: "pt-1002", categoryId: "doccat-bfm-consent", versionGroupId: "doc-group-darius-telemed", originalFileName: "darius-telemedicine-consent.txt", name: "Telemedicine consent", tags: ["telemedicine", "signed"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-darius-telemed/v1/seed", mimeType: "text/plain", ...telemedicineConsent, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T12:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-13T12:10:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-13T12:10:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", signedFormFallback: true }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
+      { id: "doc-elena-intake", organizationId: bfm.id, patientId: "pt-1003", encounterId: "enc-1002", categoryId: "doccat-bfm-intake", versionGroupId: "doc-group-elena-intake", originalFileName: "elena-intake.txt", name: "New patient intake", tags: ["intake", "new-patient"], sourceType: "scan", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-elena-intake/v1/seed", mimeType: "text/plain", ...intakeDraft, accessLevel: "INTERNAL", reviewStatus: "needs_review", releaseStatus: "pending", releaseRequestedAt: new Date("2026-07-14T13:30:00.000Z"), patientVisible: false, internalOnly: true, status: "active", uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", scannedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
+      { id: "doc-anthony-expired-insurance", organizationId: bfm.id, patientId: "pt-1005", categoryId: "doccat-bfm-insurance", versionGroupId: "doc-group-anthony-expired-insurance", originalFileName: "anthony-old-insurance.pdf", name: "Expired insurance card", sourceType: "import", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/anthony-old-insurance.pdf", mimeType: "application/pdf", sizeBytes: 30110, accessLevel: "RESTRICTED", reviewStatus: "approved", releaseStatus: "not_requested", patientVisible: false, internalOnly: true, status: "archived", expiresAt: new Date("2026-06-30T23:59:59.000Z"), lockedAt: new Date("2026-07-01T12:00:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", archivedExpired: true }, createdAt: new Date("2025-06-30T12:00:00.000Z") },
+      { id: "doc-luxe-imaging-source", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-imaging", versionGroupId: "doc-group-luxe-imaging", originalFileName: "luxe-imaging-source.pdf", name: "Luxe imaging source report - synthetic demo", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/luxe-imaging-source.pdf", mimeType: "application/pdf", sizeBytes: 32550, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T14:00:00.000Z") },
+      { id: "doc-luxe-aftercare", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-aftercare", versionGroupId: "doc-group-luxe-aftercare", originalFileName: "camille-aftercare.txt", name: "Weight management aftercare", tags: ["aftercare", "weight-management"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-luxe/doc-group-luxe-aftercare/v1/seed", mimeType: "text/plain", ...luxeAftercare, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T16:00:00.000Z"), releaseApprovedBy: "user-luxe-owner", releaseApprovedAt: new Date("2026-07-13T16:10:00.000Z"), patientVisible: true, internalOnly: false, lockedAt: new Date("2026-07-13T16:10:00.000Z"), uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T16:00:00.000Z") },
+    ],
+  });
+
+  await prisma.documentReview.createMany({
+    data: [
+      { id: "doc-review-maya-v2", organizationId: bfm.id, documentId: "doc-maya-care-plan-v2", reviewType: "content", requestedBy: "user-nadja", reviewerId: "user-nadja", status: "completed", decision: "approved", notes: "Provider reviewed the current patient education plan before portal release.", reviewedAt: new Date("2026-07-11T14:08:00.000Z"), createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "doc-review-darius-consent", organizationId: bfm.id, documentId: "doc-darius-telemed-consent", reviewType: "content", requestedBy: "user-nadja", reviewerId: "user-nadja", status: "completed", decision: "approved", notes: "Signed consent identity and completion were reviewed.", reviewedAt: new Date("2026-07-13T12:08:00.000Z"), createdAt: new Date("2026-07-13T12:00:00.000Z") },
+      { id: "doc-review-elena-intake", organizationId: bfm.id, documentId: "doc-elena-intake", reviewType: "content", requestedBy: "user-nadja", status: "needs_review", dueAt: new Date("2026-07-14T13:30:00.000Z"), createdAt: new Date("2026-07-14T13:30:00.000Z") },
+      { id: "doc-review-luxe-aftercare", organizationId: luxe.id, documentId: "doc-luxe-aftercare", reviewType: "content", requestedBy: "user-luxe-owner", reviewerId: "user-luxe-owner", status: "completed", decision: "approved", notes: "Luxe provider approved the aftercare instructions for portal release.", reviewedAt: new Date("2026-07-13T16:08:00.000Z"), createdAt: new Date("2026-07-13T16:00:00.000Z") },
+    ],
+  });
+
+  await prisma.documentEvent.createMany({
+    data: [
+      { id: "doc-event-maya-v1-superseded", organizationId: bfm.id, documentId: "doc-maya-care-plan-v1", actorId: "user-nadja", eventType: "superseded", fromStatus: "active/approved/approved", toStatus: "superseded/approved/revoked", note: "Provider issued a corrected current care plan.", metadata: { replacementDocumentId: "doc-maya-care-plan-v2" }, createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "doc-event-maya-v2-version", organizationId: bfm.id, documentId: "doc-maya-care-plan-v2", actorId: "user-nadja", eventType: "version_created", toStatus: "active/needs_review/pending", note: "Provider issued a corrected current care plan.", metadata: { supersedesId: "doc-maya-care-plan-v1", version: 2 }, createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "doc-event-maya-v2-release", organizationId: bfm.id, documentId: "doc-maya-care-plan-v2", actorId: "user-nadja", eventType: "approve_release", fromStatus: "active/approved/pending", toStatus: "active/approved/approved", createdAt: new Date("2026-07-11T14:10:00.000Z") },
+      { id: "doc-event-darius-release", organizationId: bfm.id, documentId: "doc-darius-telemed-consent", actorId: "user-nadja", eventType: "approve_release", fromStatus: "active/approved/pending", toStatus: "active/approved/approved", createdAt: new Date("2026-07-13T12:10:00.000Z") },
+      { id: "doc-event-elena-upload", organizationId: bfm.id, documentId: "doc-elena-intake", actorId: "user-nadja", eventType: "uploaded", toStatus: "active/needs_review/pending", metadata: { sourceType: "scan", encryptedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
+      { id: "doc-event-anthony-archived", organizationId: bfm.id, documentId: "doc-anthony-expired-insurance", actorId: "user-nadja", eventType: "archive", fromStatus: "active/approved/not_requested", toStatus: "archived/approved/not_requested", note: "Expired insurance image replaced by current coverage record.", createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "doc-event-luxe-release", organizationId: luxe.id, documentId: "doc-luxe-aftercare", actorId: "user-luxe-owner", eventType: "approve_release", fromStatus: "active/approved/pending", toStatus: "active/approved/approved", createdAt: new Date("2026-07-13T16:10:00.000Z") },
     ],
   });
 
@@ -677,6 +759,7 @@ async function main() {
       { id: "task-imaging-anthony-review", organizationId: bfm.id, patientId: "pt-1005", category: "imaging_review", title: "Urgent-source imaging report requires provider review", details: "MRI lumbar spine source report result img-result-anthony-mri. Review the source report, document clinical follow-up, and explicitly approve any patient release.", priority: "urgent", riskLevel: RiskLevel.URGENT, dueAt: new Date("2026-07-14T10:40:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-imaging-maya-correction", organizationId: bfm.id, patientId: maya.id, category: "imaging_review", title: "Corrected imaging report requires provider review", details: "Corrected DEXA source report result img-result-maya-dexa-v2. Review corrected source content before any portal release.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-01T12:00:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-imaging-luxe-review", organizationId: luxe.id, patientId: "pt-1004", category: "imaging_review", title: "New imaging report requires provider review", details: "Luxe ultrasound source report result img-result-luxe-isolation. Tenant-isolation demonstration.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-13T14:05:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
+      { id: "task-document-elena-review", organizationId: bfm.id, patientId: "pt-1003", category: "document_review", title: "Document requires human review", details: "New patient intake document doc-elena-intake. Review classification, content, and release suitability.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T13:30:00.000Z"), status: "open", createdBy: "user-nadja" },
     ],
   });
 
@@ -702,6 +785,11 @@ async function main() {
       { id: "audit-imaging-darius-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.release", resourceType: "imaging_result", resourceId: "img-result-darius-xray", patientId: "pt-1002", changes: { status: { from: "reviewed", to: "released" } }, metadata: { activeProviderIdentity: true, noClinicalInterpretation: true }, createdAt: new Date("2026-07-08T16:25:00.000Z") },
       { id: "audit-imaging-anthony-received", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.received", resourceType: "imaging_result", resourceId: "img-result-anthony-mri", patientId: "pt-1005", metadata: { sourceType: "manual_upload", reportDocumentId: "doc-anthony-mri-source", urgentSourceFlag: true, noClinicalInterpretation: true }, createdAt: new Date("2026-07-14T10:40:00.000Z") },
       { id: "audit-imaging-maya-correction", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "imaging_result.corrected", resourceType: "imaging_result", resourceId: "img-result-maya-dexa-v1", patientId: maya.id, changes: { status: { from: "released", to: "corrected" }, replacementResultId: "img-result-maya-dexa-v2" }, metadata: { reason: "Imaging facility supplied a corrected source report.", replacementVersion: 2 }, createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "audit-document-elena-upload", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.uploaded", resourceType: "document", resourceId: "doc-elena-intake", patientId: "pt-1003", metadata: { categoryId: "doccat-bfm-intake", sourceType: "scan", encryptedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
+      { id: "audit-document-maya-version", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.version_created", resourceType: "document", resourceId: "doc-maya-care-plan-v2", patientId: maya.id, changes: { priorDocumentId: "doc-maya-care-plan-v1", priorVersion: 1, replacementVersion: 2 }, metadata: { reason: "Provider issued a corrected current care plan." }, createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "audit-document-maya-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.approve_release", resourceType: "document", resourceId: "doc-maya-care-plan-v2", patientId: maya.id, changes: { releaseStatus: { from: "pending", to: "approved" }, patientVisible: { from: false, to: true } }, createdAt: new Date("2026-07-11T14:10:00.000Z") },
+      { id: "audit-document-darius-preview", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.content.preview", resourceType: "document", resourceId: "doc-darius-telemed-consent", patientId: "pt-1002", metadata: { version: 1, checksumVerified: true, syntheticDemo: true }, createdAt: new Date("2026-07-13T12:15:00.000Z") },
+      { id: "audit-document-luxe-release", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "document.approve_release", resourceType: "document", resourceId: "doc-luxe-aftercare", patientId: "pt-1004", changes: { releaseStatus: { from: "pending", to: "approved" } }, metadata: { tenantIsolation: true }, createdAt: new Date("2026-07-13T16:10:00.000Z") },
     ],
   });
 

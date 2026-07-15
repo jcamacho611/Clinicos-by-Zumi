@@ -138,7 +138,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 14, slug: "documents", title: "Document Management",
     mandate: "Securely capture, classify, version, review, release, search, and export every chart and case document.",
     ownerRoles: ["document_reviewer", "front_desk", "provider", "case_manager"], interfaceRoute: "/documents",
-    databaseObjects: ["documents", "document_categories", "document_reviews", "audit_logs"], deliveryStatus: "DEMO", deliveryMode: "manual-fallback",
+    databaseObjects: ["documents", "document_categories", "document_reviews", "document_events", "tasks", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "manual-fallback",
     features: "Identification documents | Insurance cards | Intake documents | Consent documents | Clinical notes | Laboratory results | Imaging reports | Referrals | Prior authorizations | Patient education | Billing documents | Claim documents | No-fault documents | Workers compensation documents | Attorney documents | Adjuster documents | Medical-necessity documents | Signed agreements | Before-and-after media | Miscellaneous documents | Upload | Camera capture | Scan | Preview | Download | Print | Categorize | Tag | Search | Filter | Link to patient | Link to encounter | Link to referral | Link to case | Internal-only setting | Patient-visible setting | Provider-review status | Release-approval status | Version control | Expiration tracking | Secure storage | Encryption | PDF viewer | Packet export | Full audit log",
   }),
   section({

@@ -1,27 +1,8 @@
-import {
-  Archive, ClipboardCheck, CloudUpload, Download, Eye,
-  FileClock, FilePlus2, Files,
-  Send, Signature, SlidersHorizontal,
-} from "lucide-react";
+import { ClipboardCheck, FilePlus2, Send, Signature } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageIntro, Progress, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
-
-export function DocumentsWorkspace() {
-  const docs = [
-    { name: "Insurance card - front and back", patient: "Maya Thompson", category: "Insurance card", date: "Jul 13, 2026", visibility: "Internal", review: "Verified" },
-    { name: "Telemedicine consent", patient: "Darius Coleman", category: "Consent", date: "Jul 13, 2026", visibility: "Patient visible", review: "Signed" },
-    { name: "MRI lumbar spine report", patient: "Anthony Nguyen", category: "Imaging report", date: "Jul 12, 2026", visibility: "Held", review: "Needs review" },
-    { name: "No-fault assignment of benefits", patient: "Jordan Kim", category: "No-fault", date: "Jul 10, 2026", visibility: "Internal", review: "Complete" },
-  ];
-  return <div className="space-y-6"><PageIntro title="The right document, with the right visibility." description="Upload, categorize, review, lock, release, and export records with patient visibility and audit state visible before every action." action={<Button variant="primary"><CloudUpload className="size-4" /> Upload document</Button>} />
-    <div className="grid gap-4 sm:grid-cols-4"><StatCard accent="sky" detail="Across all categories" icon={<Files className="size-4" />} label="Documents" value="1,284" /><StatCard accent="amber" detail="Provider or staff action" icon={<FileClock className="size-4" />} label="Needs review" value="6" /><StatCard accent="teal" detail="Approved for portal" icon={<Eye className="size-4" />} label="Patient visible" value="418" /><StatCard accent="slate" detail="Retention policy applied" icon={<Archive className="size-4" />} label="Locked records" value="796" /></div>
-    <SectionCard title="Document library" action={<Button size="sm" variant="secondary"><SlidersHorizontal className="size-3.5" /> Filter</Button>}><div className="divide-y divide-slate-100">{docs.map((doc) => <div className="grid gap-4 p-5 md:grid-cols-[1.2fr_.7fr_.55fr_.45fr_auto] md:items-center" key={doc.name}><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-700"><FileTextIcon /></span><div><p className="text-xs font-extrabold text-slate-900">{doc.name}</p><p className="mt-1 text-[10px] text-slate-400">{doc.patient} · {doc.date}</p></div></div><div><p className="text-[9px] font-bold text-slate-400">CATEGORY</p><p className="mt-1 text-xs font-bold text-slate-700">{doc.category}</p></div><StatusBadge status={doc.visibility} /><StatusBadge status={doc.review} /><div className="flex gap-1"><Button size="icon" variant="ghost" aria-label="Preview"><Eye className="size-4" /></Button><Button size="icon" variant="ghost" aria-label="Download"><Download className="size-4" /></Button></div></div>)}</div></SectionCard>
-  </div>;
-}
-
-function FileTextIcon() { return <Files className="size-4" />; }
+import { PageIntro, Progress, SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 export function FormsWorkspace() {
   const forms = [
