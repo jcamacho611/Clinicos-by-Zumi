@@ -425,7 +425,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 55, slug: "credentialing-network", title: "Credentialing and Provider Network",
     mandate: "Keep provider identity, authority, affiliations, expirations, verification, and network eligibility current and reviewable.",
     ownerRoles: ["credentialing_manager", "medical_director", "administrator", "provider"], interfaceRoute: "/provider-network",
-    databaseObjects: ["providers", "provider_credentials", "facilities", "network_connections", "documents", "tasks"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["providers", "provider_credentials", "provider_facility_privileges", "facilities", "network_connections", "documents", "tasks"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Credentialing profile | Primary-source verification status | NPI verification | License verification | DEA verification | Sanction-screening adapter | Malpractice coverage | Facility privilege | Hospital affiliation | Supervising relationship | Credential expiration queue | Renewal task | Credential document | Verification evidence | Network eligibility | Consultation eligibility | Prescribing eligibility | Telemedicine state eligibility | Credential exception review | Credentialing audit history",
   }),
   section({

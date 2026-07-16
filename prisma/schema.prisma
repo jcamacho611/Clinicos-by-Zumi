@@ -91,6 +91,7 @@ model Organization {
   careHandoffs               CareHandoff[]
   capacityListings           CapacityListing[]
   providerConsultations      ProviderConsultation[]
+  providerFacilityPrivileges ProviderFacilityPrivilege[]
   knowledgeItems             KnowledgeItem[]
   remoteObservations         RemoteObservation[]
   inventoryItems             InventoryItem[]
@@ -241,10 +242,20 @@ model Provider {
   name           String
   credential     String
   specialty      String?
+  subspecialty   String?
+  taxonomy       String?
   npi            String?
+  deaNumber      String?
+  deaExpiresAt   DateTime?
+  telemedicineEligible Boolean @default(false)
+  prescribingEligible Boolean @default(false)
+  acceptedInsurance String[] @default([])
+  services       String[] @default([])
   status         String   @default("active")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  facilityPrivileges ProviderFacilityPrivilege[]
+  credentials    ProviderCredential[]
 
   @@index([organizationId])
   @@map("providers")
@@ -259,11 +270,38 @@ model ProviderCredential {
   state          String?
   expiresAt      DateTime?
   status         String    @default("active")
+  verificationStatus String @default("pending")
+  verificationSource String?
+  primarySourceVerifiedAt DateTime?
+  evidenceDocumentId String?
+  exceptionReason String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  provider       Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
   @@map("provider_credentials")
+}
+
+model ProviderFacilityPrivilege {
+  id             String   @id @default(cuid())
+  organizationId String
+  providerId     String
+  facilityId     String
+  status         String   @default("pending")
+  grantedAt      DateTime?
+  expiresAt      DateTime?
+  verificationSource String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  facility       Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, providerId, facilityId])
+  @@index([organizationId, status, expiresAt])
+  @@map("provider_facility_privileges")
 }
 
 model Patient {
@@ -2382,6 +2420,7 @@ model Facility {
   organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   capacityListings CapacityListing[]
+  providerPrivileges ProviderFacilityPrivilege[]
 
   @@index([organizationId, type, status])
   @@map("facilities")

@@ -181,6 +181,7 @@ async function main() {
   await prisma.appointment.deleteMany();
   await prisma.appointmentType.deleteMany();
   await prisma.patient.deleteMany();
+  await prisma.providerFacilityPrivilege.deleteMany();
   await prisma.providerCredential.deleteMany();
   await prisma.providerConsultation.deleteMany();
   await prisma.provider.deleteMany();
@@ -237,18 +238,18 @@ async function main() {
 
   await prisma.provider.createMany({
     data: [
-      { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", credential: "NP", specialty: "Family Medicine", status: "active" },
-      { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", credential: "MD", specialty: "Family Medicine", status: "active" },
-      { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", credential: "NP", specialty: "Aesthetic Medicine", status: "active" },
+      { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", credential: "NP", specialty: "Family Medicine", subspecialty: "Diabetes Care", taxonomy: "363L00000X", npi: "DEMO-NPI-BFM-NADJA", deaNumber: "DEMO-DEA-NOT-VALID", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst", "Aetna"], services: ["Primary care", "Annual wellness", "Diabetes follow-up"], status: "active" },
+      { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", credential: "MD", specialty: "Family Medicine", taxonomy: "207Q00000X", npi: "DEMO-NPI-BFM-LEE", telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst"], services: ["Primary care", "Urgent sick visit"], status: "active" },
+      { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", credential: "NP", specialty: "Aesthetic Medicine", subspecialty: "Injectables", taxonomy: "363A00000X", npi: "DEMO-NPI-LUXE-NADJA", deaNumber: "DEMO-DEA-LUXE", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: false, prescribingEligible: true, acceptedInsurance: [], services: ["Injectables", "IV hydration", "Weight management"], status: "active" },
     ],
   });
 
   await prisma.providerCredential.createMany({
     data: [
-      { id: "credential-nadja-dea", organizationId: bfm.id, providerId: "provider-nadja", type: "DEA", number: "DEMO-DEA-NOT-VALID", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
-      { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
-      { id: "credential-lee-license", organizationId: bfm.id, providerId: "provider-lee", type: "STATE_LICENSE", number: "DEMO-NY-MD", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
-      { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
+      { id: "credential-nadja-dea", organizationId: bfm.id, providerId: "provider-nadja", type: "DEA", number: "DEMO-DEA-NOT-VALID", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo primary-source evidence", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "credential-lee-license", organizationId: bfm.id, providerId: "provider-lee", type: "STATE_LICENSE", number: "DEMO-NY-MD", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
     ],
   });
 
@@ -575,6 +576,14 @@ async function main() {
       { id: "facility-bfm-main", organizationId: bfm.id, locationId: "loc-brooklyn-heights", name: "Brooklyn Family Medicine", type: "primary_care", specialty: "Family Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "facility-bfm-diagnostic", organizationId: bfm.id, locationId: "loc-crown-heights", name: "Brooklyn Diagnostic Exchange Demo", type: "imaging", specialty: "Diagnostic Radiology", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "facility-luxe-main", organizationId: luxe.id, locationId: "loc-midtown", name: "Luxe Medi", type: "medical_spa", specialty: "Aesthetic Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+    ],
+  });
+
+  await prisma.providerFacilityPrivilege.createMany({
+    data: [
+      { id: "privilege-nadja-bfm-main", organizationId: bfm.id, providerId: "provider-nadja", facilityId: "facility-bfm-main", status: "active", grantedAt: new Date("2026-07-01T12:00:00.000Z"), expiresAt: new Date("2027-12-31T00:00:00.000Z"), verificationSource: "Synthetic demo medical-staff file", notes: "Synthetic demonstration privilege; not a legal credential." },
+      { id: "privilege-lee-bfm-main", organizationId: bfm.id, providerId: "provider-lee", facilityId: "facility-bfm-main", status: "pending", expiresAt: new Date("2027-12-31T00:00:00.000Z"), notes: "Pending medical-director review in demo." },
+      { id: "privilege-nadja-luxe-main", organizationId: luxe.id, providerId: "provider-nadja-luxe", facilityId: "facility-luxe-main", status: "active", grantedAt: new Date("2026-07-01T12:00:00.000Z"), expiresAt: new Date("2027-12-31T00:00:00.000Z"), verificationSource: "Synthetic demo facility file", notes: "Synthetic demonstration privilege; not a legal credential." },
     ],
   });
 

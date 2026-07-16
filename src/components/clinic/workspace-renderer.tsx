@@ -40,6 +40,7 @@ import { listProviderConsultationWorkspace } from "@/lib/repositories/provider-c
 import { listKnowledgeWorkspace } from "@/lib/repositories/knowledge-repository";
 import { listRemoteMonitoringWorkspace } from "@/lib/repositories/remote-monitoring-repository";
 import { listInventoryWorkspace } from "@/lib/repositories/inventory-repository";
+import { listCredentialingWorkspace } from "@/lib/repositories/credentialing-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -145,8 +146,9 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       return <CapacityExchangeWorkspace workspace={await listCapacityWorkspace(organizationId)} />;
     }
     case "provider-network": {
-      if (!can(role, "tasks", "read")) return notFound();
-      return <ProviderConsultationWorkspace canCreate={can(role, "tasks", "create")} canReview={can(role, "tasks", "update")} workspace={await listProviderConsultationWorkspace(organizationId)} />;
+      if (!can(role, "tasks", "read") && !can(role, "credentialing", "read")) return notFound();
+      const [consultations, credentialing] = await Promise.all([listProviderConsultationWorkspace(organizationId), listCredentialingWorkspace({ organizationId, role, userId } as Parameters<typeof listCredentialingWorkspace>[0])]);
+      return <ProviderConsultationWorkspace canCreate={can(role, "tasks", "create")} canCredentialingCreate={can(role, "credentialing", "create")} canCredentialingManage={can(role, "credentialing", "manage")} canReview={can(role, "tasks", "update")} credentialing={credentialing} workspace={consultations} />;
     }
     case "health-passport": {
       if (!can(role, "identity", "read")) return notFound();
