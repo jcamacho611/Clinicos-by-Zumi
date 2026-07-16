@@ -96,6 +96,8 @@ model Organization {
   remoteObservations         RemoteObservation[]
   inventoryItems             InventoryItem[]
   inventoryTransactions      InventoryTransaction[]
+  leads                      Lead[]
+  leadEvents                 LeadEvent[]
   voiceSessions              VoiceSession[]
   outboundNetworkConnections NetworkConnection[]    @relation("NetworkSource")
   inboundNetworkConnections  NetworkConnection[]    @relation("NetworkTarget")
@@ -354,6 +356,7 @@ model Patient {
   careHandoffs        CareHandoff[]
   remoteObservations  RemoteObservation[]
   voiceSessions       VoiceSession[]
+  leads              Lead[]
 
   @@unique([organizationId, mrn])
   @@index([masterPatientId])
@@ -2072,10 +2075,71 @@ model OutreachCampaign {
   @@map("outreach_campaigns")
 }
 
+model Lead {
+  id                  String      @id @default(cuid())
+  organizationId      String
+  patientId           String?
+  name                String
+  email               String?
+  phone               String?
+  source              String
+  campaignSource      String?
+  serviceInterest     String?
+  appointmentInterest String?
+  estimatedValueCents Int         @default(0)
+  pipelineStage       String      @default("new")
+  status              String      @default("new")
+  assignedTo          String?
+  followUpDueAt       DateTime?
+  contactAttempts     Int         @default(0)
+  lastContactedAt     DateTime?
+  bookingStatus       String      @default("not_started")
+  paymentStatus       String      @default("not_started")
+  formStatus          String      @default("not_started")
+  lostReason          String?
+  notes               String?
+  consentStatus       String      @default("not_recorded")
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient             Patient?    @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  events              LeadEvent[]
+  messageThreads      MessageThread[]
+  messages            Message[]
+  callLogs            CallLog[]
+  smsLogs             SmsLog[]
+  emailLogs           EmailLog[]
+
+  @@index([organizationId, status, followUpDueAt])
+  @@index([organizationId, pipelineStage, updatedAt])
+  @@index([organizationId, source, createdAt])
+  @@index([patientId])
+  @@map("leads")
+}
+
+model LeadEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  leadId         String
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  note           String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead           Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, leadId, createdAt])
+  @@map("lead_events")
+}
+
 model MessageThread {
   id                  String    @id @default(cuid())
   organizationId      String
   patientId           String?
+  leadId              String?
   subject             String?
   category            String
   riskLevel           RiskLevel @default(NORMAL)
@@ -2084,9 +2148,11 @@ model MessageThread {
   status              String    @default("open")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  lead                Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, status])
   @@index([patientId])
+  @@index([organizationId, leadId, status])
   @@map("message_threads")
 }
 
@@ -2095,6 +2161,7 @@ model Message {
   organizationId      String
   threadId            String
   patientId           String?
+  leadId              String?
   direction           MessageDirection
   channel             String
   body                String
@@ -2106,8 +2173,10 @@ model Message {
   createdBy           String?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
+  lead                Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([threadId, createdAt])
+  @@index([organizationId, leadId, createdAt])
   @@map("messages")
 }
 
@@ -2115,6 +2184,7 @@ model CallLog {
   id                  String    @id @default(cuid())
   organizationId      String
   patientId           String?
+  leadId              String?
   direction           String
   fromNumber          String?
   toNumber            String?
@@ -2126,8 +2196,10 @@ model CallLog {
   requiresHumanReview Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  lead                Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, startedAt])
+  @@index([organizationId, leadId, startedAt])
   @@map("call_logs")
 }
 
@@ -2135,6 +2207,7 @@ model SmsLog {
   id             String           @id @default(cuid())
   organizationId String
   patientId      String?
+  leadId         String?
   direction      MessageDirection
   fromNumber     String
   toNumber       String
@@ -2144,8 +2217,10 @@ model SmsLog {
   sentAt         DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  lead           Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, createdAt])
+  @@index([organizationId, leadId, createdAt])
   @@map("sms_logs")
 }
 
@@ -2153,6 +2228,7 @@ model EmailLog {
   id             String           @id @default(cuid())
   organizationId String
   patientId      String?
+  leadId         String?
   direction      MessageDirection
   fromAddress    String
   toAddress      String
@@ -2163,8 +2239,10 @@ model EmailLog {
   sentAt         DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  lead           Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, createdAt])
+  @@index([organizationId, leadId, createdAt])
   @@map("email_logs")
 }
 

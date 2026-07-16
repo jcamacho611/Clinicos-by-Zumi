@@ -143,6 +143,8 @@ async function main() {
   await prisma.aiReview.deleteMany();
   await prisma.aiDraft.deleteMany();
   await prisma.notification.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.messageThread.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -181,6 +183,8 @@ async function main() {
   await prisma.appointment.deleteMany();
   await prisma.appointmentType.deleteMany();
   await prisma.patient.deleteMany();
+  await prisma.leadEvent.deleteMany();
+  await prisma.lead.deleteMany();
   await prisma.providerFacilityPrivilege.deleteMany();
   await prisma.providerCredential.deleteMany();
   await prisma.providerConsultation.deleteMany();
@@ -289,6 +293,39 @@ async function main() {
       { id: "pt-1005", organizationId: bfm.id, locationId: "loc-crown-heights", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", dateOfBirth: new Date("1966-01-31T00:00:00.000Z"), sexAtBirth: "Male", pronouns: "he/him", phone: "(917) 555-0124", email: "anthony.nguyen@example.test", portalStatus: "inactive", riskLevel: RiskLevel.URGENT, requiresHumanReview: true },
       { id: "pt-1004", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", dateOfBirth: new Date("1989-05-15T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", portalStatus: "active" },
       { id: "pt-2001", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", portalStatus: "invited", identityStatus: "possible_match", requiresHumanReview: true },
+    ],
+  });
+
+  await prisma.lead.createMany({
+    data: [
+      { id: "lead-bfm-new-patient", organizationId: bfm.id, name: "Jordan Ellis", email: "jordan.ellis@example.test", phone: "(917) 555-0199", source: "website", campaignSource: "bfm_new_patient_form", serviceInterest: "New patient visit", appointmentInterest: "Primary care", estimatedValueCents: 18000, pipelineStage: "new", status: "new", assignedTo: "user-nadja", followUpDueAt: new Date("2026-07-16T15:00:00.000Z"), notes: "Synthetic demo lead captured from the practice website." },
+      { id: "lead-bfm-contacted", organizationId: bfm.id, name: "Riley Morgan", email: "riley.morgan@example.test", phone: "(718) 555-0154", source: "phone", serviceInterest: "Annual wellness visit", estimatedValueCents: 24000, pipelineStage: "contacted", status: "contacted", contactAttempts: 1, lastContactedAt: new Date("2026-07-15T14:00:00.000Z"), followUpDueAt: new Date("2026-07-17T14:00:00.000Z"), assignedTo: "user-nadja", notes: "Asked for the next available appointment." },
+      { id: "lead-luxe-booked", organizationId: luxe.id, patientId: "pt-1004", name: "Camille Brooks", email: "camille.brooks@example.test", phone: "(646) 555-0165", source: "social", campaignSource: "luxe_injectables_social", serviceInterest: "Injectables consultation", estimatedValueCents: 85000, pipelineStage: "booked", status: "booked", bookingStatus: "booked", paymentStatus: "deposit_paid", contactAttempts: 2, lastContactedAt: new Date("2026-07-14T16:00:00.000Z"), assignedTo: "user-luxe-owner", notes: "Synthetic demo converted client record." },
+    ],
+  });
+  await prisma.leadEvent.createMany({
+    data: [
+      { id: "lead-event-bfm-new", organizationId: bfm.id, leadId: "lead-bfm-new-patient", actorId: "user-nadja", eventType: "created", toStatus: "new", note: "Synthetic website lead captured." },
+      { id: "lead-event-bfm-contacted", organizationId: bfm.id, leadId: "lead-bfm-contacted", actorId: "user-nadja", eventType: "contact", fromStatus: "new", toStatus: "contacted", note: "Initial phone contact documented." },
+      { id: "lead-event-luxe-booked", organizationId: luxe.id, leadId: "lead-luxe-booked", actorId: "user-luxe-owner", eventType: "book", fromStatus: "contacted", toStatus: "booked", note: "Synthetic social inquiry converted to booked consultation." },
+    ],
+  });
+  await prisma.task.createMany({
+    data: [
+      { id: "task-lead-bfm-new-followup", organizationId: bfm.id, category: "lead_follow_up", title: "Follow up with Jordan Ellis", details: "lead:lead-bfm-new-patient New patient visit", ownerId: "user-nadja", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-16T15:00:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-lead-bfm-contact-followup", organizationId: bfm.id, category: "lead_follow_up", title: "Follow up with Riley Morgan", details: "lead:lead-bfm-contacted Annual wellness visit", ownerId: "user-nadja", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-17T14:00:00.000Z"), status: "open", createdBy: "user-nadja" },
+    ],
+  });
+  await prisma.messageThread.createMany({
+    data: [
+      { id: "thread-lead-bfm-contact", organizationId: bfm.id, leadId: "lead-bfm-contacted", category: "lead_phone", subject: "Riley Morgan · Annual wellness visit", status: "open" },
+      { id: "thread-lead-luxe-booked", organizationId: luxe.id, leadId: "lead-luxe-booked", patientId: "pt-1004", category: "lead_social", subject: "Camille Brooks · Injectables consultation", status: "open" },
+    ],
+  });
+  await prisma.message.createMany({
+    data: [
+      { id: "message-lead-bfm-contact", organizationId: bfm.id, threadId: "thread-lead-bfm-contact", leadId: "lead-bfm-contacted", direction: "OUTBOUND", channel: "phone", body: "Staff left a callback message about the next available wellness visit.", sentAt: new Date("2026-07-15T14:00:00.000Z"), createdBy: "user-nadja" },
+      { id: "message-lead-luxe-booked", organizationId: luxe.id, threadId: "thread-lead-luxe-booked", patientId: "pt-1004", leadId: "lead-luxe-booked", direction: "OUTBOUND", channel: "social", body: "Consultation request confirmed and deposit workflow recorded.", sentAt: new Date("2026-07-14T16:00:00.000Z"), createdBy: "user-luxe-owner" },
     ],
   });
 

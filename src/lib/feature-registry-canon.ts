@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.2";
+export const REGISTRY_CANON_VERSION = "2026-07-16.3";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -229,7 +229,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 27, slug: "crm-revenue-recovery", title: "CRM, Lead Management, and Revenue Recovery",
     mandate: "Capture, route, recover, convert, and attribute every patient, client, campaign, and referral opportunity.",
     ownerRoles: ["front_desk", "growth_manager", "clinic_owner"], interfaceRoute: "/crm",
-    databaseObjects: ["patients", "message_threads", "call_logs", "tasks", "appointments", "payments", "activity_logs"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["leads", "lead_events", "patients", "message_threads", "messages", "call_logs", "sms_logs", "email_logs", "tasks", "appointments", "payments", "activity_logs", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Lead capture | Patient-request capture | Contact records | Lead source | Website leads | Social leads | Phone leads | Referral leads | Campaign source | Service interest | Appointment interest | Estimated value | Pipeline stages | Assigned staff member | Follow-up due | Contact attempts | Lead notes | Booking status | Payment status | Form status | Lost-lead reason | No-response reactivation | Old-lead reactivation | Missed-call recovery | Unanswered-message recovery | Unbooked-consult recovery | No-show recovery | Cancellation refill | Waitlist replacement | Unpaid-deposit tracking | Unpaid-balance tracking | Package and membership opportunity | Follow-up scheduling | Referral follow-up | Lost-money calculation | Recovered-money calculation | Conversion dashboard | Luxe new lead | Luxe contacted | Luxe consultation requested | Luxe forms sent | Luxe deposit or payment needed | Luxe appointment booked | Luxe completed visit | Luxe follow-up needed | Luxe package or membership opportunity | Luxe lost or no response | BFM new-patient inquiry | BFM existing-patient request | BFM appointment requested | BFM intake incomplete | BFM insurance needed | BFM appointment scheduled | BFM checked in | BFM provider review | BFM follow-up needed | BFM billing, lab, or document issue | BFM urgent escalation",
   }),
   section({

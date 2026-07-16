@@ -51,6 +51,7 @@ export const navigation = [
       { href: "/insurance", label: "Insurance", icon: "ShieldCheck" },
       { href: "/cases", label: "No-fault / WC", icon: "BriefcaseMedical" },
       { href: "/quality", label: "Quality & HEDIS", icon: "ChartNoAxesCombined" },
+      { href: "/crm", label: "CRM & revenue recovery", icon: "CircleDollarSign" },
     ],
   },
   {
@@ -95,6 +96,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },
   quality: { title: "Quality & HEDIS", eyebrow: "Care-gap intelligence" },
+  crm: { title: "CRM & revenue recovery", eyebrow: "Lead conversion and follow-up" },
   messages: { title: "Messages", eyebrow: "Secure communication" },
   tasks: { title: "Tasks", eyebrow: "Work queue" },
   escalations: { title: "Escalations", eyebrow: "Human review required" },

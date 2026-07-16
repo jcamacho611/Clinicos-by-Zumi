@@ -41,10 +41,12 @@ import { listKnowledgeWorkspace } from "@/lib/repositories/knowledge-repository"
 import { listRemoteMonitoringWorkspace } from "@/lib/repositories/remote-monitoring-repository";
 import { listInventoryWorkspace } from "@/lib/repositories/inventory-repository";
 import { listCredentialingWorkspace } from "@/lib/repositories/credentialing-repository";
+import { listCRMWorkspace } from "@/lib/repositories/crm-repository";
+import { CRMWorkspace } from "@/components/clinic/crm-workspace";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
-  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "insurance", "cases", "quality",
+  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "insurance", "cases", "quality", "crm",
   "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
@@ -97,6 +99,12 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "inventory", "read")) return notFound();
       const session = { organizationId, role, userId } as Parameters<typeof listInventoryWorkspace>[0];
       return <InventoryWorkspace canCreate={can(role, "inventory", "create")} canUpdate={can(role, "inventory", "update")} workspace={await listInventoryWorkspace(session)} />;
+    }
+    case "crm": {
+      if (!can(role, "crm", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listCRMWorkspace>[0];
+      const workspace = await listCRMWorkspace(session);
+      return <CRMWorkspace canCreate={can(role, "crm", "create")} canUpdate={can(role, "crm", "update")} workspace={workspace} />;
     }
     case "billing": {
       if (!can(role, "billing", "read")) return notFound();
