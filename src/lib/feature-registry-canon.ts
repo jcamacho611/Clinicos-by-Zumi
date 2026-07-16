@@ -334,7 +334,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 42, slug: "diagnostic-capacity-exchange", title: "Diagnostic Capacity Exchange",
     mandate: "Match authorized orders to verified diagnostic capacity without hiding payer, urgency, provenance, or manual fallback.",
     ownerRoles: ["provider", "referral_coordinator", "scheduler", "diagnostic_partner"], interfaceRoute: "/capacity-exchange",
-    databaseObjects: ["capacity_listings", "facilities", "imaging_orders", "lab_orders", "referrals", "appointments", "network_connections"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["capacity_listings", "facilities", "imaging_orders", "lab_orders", "referrals", "appointments", "network_connections"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Diagnostic capacity search | Open-slot publishing | Modality filter | Test filter | Body-part filter | Location filter | Distance filter | Insurance filter | No-fault filter | Workers compensation filter | Urgency filter | Earliest-available ranking | Verified diagnostic facility | Capacity reservation request | Capacity acceptance | Capacity rejection | Cross-clinic scheduling | Patient scheduling confirmation | Order packet transfer | Authorization status | Diagnostic appointment tracking | Travel-booking-style comparison | Manual phone fallback | Failed reservation recovery | Capacity Exchange audit history",
   }),
   section({
@@ -390,7 +390,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 50, slug: "capacity-marketplace", title: "Cross-Clinic Scheduling and Capacity Marketplace",
     mandate: "Expose approved clinical capacity across the network without bypassing eligibility, authorization, or clinic control.",
     ownerRoles: ["scheduler", "location_manager", "provider", "network_partner"], interfaceRoute: "/capacity-exchange",
-    databaseObjects: ["capacity_listings", "provider_availability", "rooms", "resources", "appointments", "network_connections"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["capacity_listings", "provider_availability", "rooms", "resources", "appointments", "network_connections"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Cross-clinic availability | Provider capacity listing | Room capacity listing | Equipment capacity listing | Diagnostic capacity listing | Specialty capacity listing | Telemedicine capacity listing | Capacity eligibility rule | Capacity payer rule | Capacity geographic rule | Capacity request | Capacity hold | Capacity expiration | Capacity booking | Capacity cancellation | Capacity waitlist | Network transfer confirmation | Referral-linked booking | Capacity utilization analytics | Capacity marketplace audit history",
   }),
   section({

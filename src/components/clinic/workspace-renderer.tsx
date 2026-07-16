@@ -31,6 +31,7 @@ import { listFormWorkspace } from "@/lib/repositories/form-repository";
 import { listPaymentWorkspace } from "@/lib/repositories/payment-repository";
 import { listPassportWorkspace } from "@/lib/repositories/passport-repository";
 import { listCareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
+import { listCapacityWorkspace } from "@/lib/repositories/capacity-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -112,7 +113,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       const [overview, collaboration] = await Promise.all([getConnectedCareOverview(organizationId), listCareCoordinationWorkspace(organizationId, userId)]);
       return <CareTeamsWorkspace collaboration={collaboration} overview={overview} />;
     }
-    case "capacity-exchange": return <CapacityExchangeWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "capacity-exchange": {
+      if (!can(role, "appointments", "read")) return notFound();
+      return <CapacityExchangeWorkspace workspace={await listCapacityWorkspace(organizationId)} />;
+    }
     case "health-passport": {
       if (!can(role, "identity", "read")) return notFound();
       return <HealthPassportWorkspace workspace={await listPassportWorkspace(organizationId)} />;
