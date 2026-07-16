@@ -24,6 +24,7 @@ export const navigation = [
       { href: "/medications", label: "Medications", icon: "Pill" },
       { href: "/documents", label: "Documents", icon: "Files" },
       { href: "/forms", label: "Intake & forms", icon: "ClipboardList" },
+      { href: "/knowledge", label: "Knowledge engine", icon: "BookOpenCheck" },
     ],
   },
   {
@@ -85,6 +86,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   medications: { title: "Medications", eyebrow: "Reconcile, review, transmit" },
   documents: { title: "Documents", eyebrow: "Controlled clinical records" },
   forms: { title: "Intake & forms", eyebrow: "Consent and readiness" },
+  knowledge: { title: "Medical Knowledge Engine", eyebrow: "Governed reference layer" },
   billing: { title: "Billing", eyebrow: "Revenue cycle" },
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },

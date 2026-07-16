@@ -355,7 +355,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 45, slug: "medical-knowledge-engine", title: "Medical Knowledge Engine",
     mandate: "Serve governed, provenance-rich knowledge through trusted, network, and organization-specific layers.",
     ownerRoles: ["medical_director", "knowledge_reviewer", "provider", "administrator"], interfaceRoute: "/knowledge",
-    databaseObjects: ["knowledge_items", "knowledge_reviews", "documents", "settings", "audit_logs"], deliveryStatus: "PLANNED", deliveryMode: "governance",
+    databaseObjects: ["knowledge_items", "knowledge_reviews", "documents", "settings", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "governance",
     features: "Trusted-reference knowledge layer | Network-approved knowledge layer | Organization-specific knowledge layer | Knowledge source provenance | Source publication date | Source effective date | Knowledge version | Review status | Clinical reviewer | Review date | Expiration date | Superseded-content status | Knowledge search | Contextual retrieval | Citation display | Organization policy overlay | Conflict warning | Knowledge correction workflow | Knowledge rollback | Knowledge-access audit | No unreviewed clinical authority | Human interpretation requirement",
   }),
   section({
