@@ -5,14 +5,16 @@ import {
   RadioTower, Route, ShieldCheck, Sparkles,
 } from "lucide-react";
 import { AiWorkflowDemo } from "@/components/clinic/ai-workflow-demo";
+import { NetworkDirectoryPanel } from "@/components/clinic/network-directory-panel";
 import { PageIntro, Progress, SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { CanonicalRegistrySection } from "@/lib/feature-registry-canon";
 import type { ConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
+import type { NetworkDirectoryWorkspace } from "@/lib/repositories/network-directory-repository";
 
-export function NetworkWorkspace({ overview }: { overview: ConnectedCareOverview }) {
+export function NetworkWorkspace({ overview, directory, canCreate, canManage }: { overview: ConnectedCareOverview; directory: NetworkDirectoryWorkspace; canCreate: boolean; canManage: boolean }) {
   return <div className="space-y-6">
     <div className="network-command relative overflow-hidden rounded-[28px] bg-[#07131f] p-6 text-white shadow-[0_28px_80px_rgba(2,12,23,.22)] sm:p-8">
       <div className="absolute -right-20 -top-24 size-80 rounded-full border border-sky-300/20 bg-sky-400/5" /><div className="absolute -right-4 top-12 size-40 rounded-full border border-teal-300/20" />
@@ -23,6 +25,7 @@ export function NetworkWorkspace({ overview }: { overview: ConnectedCareOverview
       <SectionCard title="Verified clinic graph" description="Synthetic demo connections. Joining the network never grants unlimited chart access.">{overview.connections.length ? <div className="space-y-3 p-4">{overview.connections.map((connection) => <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4" key={connection.id}><span className="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-700"><Building2 className="size-5" /></span><div className="min-w-0 flex-1"><p className="text-xs font-extrabold text-slate-900">{connection.source} <span className="text-slate-300">→</span> {connection.target}</p><p className="mt-1 text-[10px] text-slate-500">{connection.allowedPurposes.join(" · ")} · {connection.trustLevel}</p></div><StatusBadge status={connection.status} /></div>)}</div> : <Empty label="No verified connections yet" />}</SectionCard>
       <SectionCard title="Closed-loop movement" description="Every exchange must show what is happening, who acts next, and what is blocked."><div className="space-y-3 p-4">{[["Referral accepted", "Diagnostic partner", "Schedule the patient", "Complete"], ["Record request", "Privacy reviewer", "Confirm data categories", "Needs review"], ["Consultation note", "Referring provider", "Acknowledge and close loop", "Pending"]].map(([event, owner, action, status]) => <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-[1fr_1fr_auto]" key={event}><div><p className="text-[9px] font-bold text-slate-400">WHAT IS HAPPENING</p><p className="mt-1 text-xs font-extrabold text-slate-900">{event}</p></div><div><p className="text-[9px] font-bold text-slate-400">NEXT OWNER</p><p className="mt-1 text-xs font-bold text-slate-700">{owner}: {action}</p></div><StatusBadge status={status} /></div>)}</div></SectionCard>
     </div>
+    <NetworkDirectoryPanel canCreate={canCreate} canManage={canManage} data={directory} />
   </div>;
 }
 

@@ -20,6 +20,7 @@ import { listEncountersForOrganization } from "@/lib/repositories/encounter-repo
 import { listPriorityZeroRegistry } from "@/lib/repositories/feature-registry-repository";
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 import { listNetworkAccessWorkspace } from "@/lib/repositories/network-access-repository";
+import { listNetworkDirectory } from "@/lib/repositories/network-directory-repository";
 import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repository";
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
@@ -77,7 +78,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     case "tasks": return <TasksWorkspace />;
     case "escalations": return <EscalationsWorkspace />;
     case "ai-assistants": return <AiAssistantsWorkspace />;
-    case "network": return <NetworkWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "network": {
+      if (!can(role, "network", "read")) return notFound();
+      const [overview, directory] = await Promise.all([getConnectedCareOverview(organizationId), listNetworkDirectory(organizationId)]);
+      return <NetworkWorkspace canCreate={can(role, "network", "create")} canManage={can(role, "network", "manage")} directory={directory} overview={overview} />;
+    }
     case "referrals": {
       if (!can(role, "referrals", "read")) return notFound();
       return <ReferralsWorkspace canCreate={can(role, "referrals", "create")} canUpdate={can(role, "referrals", "update")} workspace={await listReferralWorkspace(organizationId, userId)} />;
