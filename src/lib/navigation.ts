@@ -21,6 +21,7 @@ export const navigation = [
     items: [
       { href: "/labs", label: "Labs", icon: "FlaskConical" },
       { href: "/imaging", label: "Imaging", icon: "ScanLine" },
+      { href: "/medications", label: "Medications", icon: "Pill" },
       { href: "/documents", label: "Documents", icon: "Files" },
       { href: "/forms", label: "Intake & forms", icon: "ClipboardList" },
     ],
@@ -78,6 +79,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   telemedicine: { title: "Telemedicine", eyebrow: "Virtual care operations" },
   labs: { title: "Labs", eyebrow: "Review and release" },
   imaging: { title: "Imaging", eyebrow: "Orders and reports" },
+  medications: { title: "Medications", eyebrow: "Reconcile, review, transmit" },
   documents: { title: "Documents", eyebrow: "Controlled clinical records" },
   forms: { title: "Intake & forms", eyebrow: "Consent and readiness" },
   billing: { title: "Billing", eyebrow: "Revenue cycle" },

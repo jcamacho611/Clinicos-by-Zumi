@@ -9,8 +9,8 @@ import {
 } from "../src/lib/feature-registry-canon";
 
 const EXPECTED_SECTION_COUNT = 62;
-const EXPECTED_CAPABILITY_COUNT = 2143;
-const EXPECTED_CANON_SHA256 = "1cc1fa56e75621ac4e0de79070320c3388ba759b30381490437172fca4e84c03";
+const EXPECTED_CAPABILITY_COUNT = 2157;
+const EXPECTED_CANON_SHA256 = "f0bb65cf2dac214136a376c37b59399945e3b39805913e46a061b46a4a507d72";
 
 describe("ClinicOS Priority Zero canon", () => {
   it("keeps every numbered domain present and ordered", () => {

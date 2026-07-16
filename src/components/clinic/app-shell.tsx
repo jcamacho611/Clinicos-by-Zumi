@@ -7,7 +7,7 @@ import {
   Bell, Blocks, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown,
   AudioLines, BookOpenCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
-  Network, Orbit, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
+  Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X,
   Waypoints,
 } from "lucide-react";
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 const icons = {
   LayoutDashboard, Headphones, Stethoscope, Users, CalendarDays, ClipboardPlus, Video,
-  FlaskConical, ScanLine, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
+  FlaskConical, ScanLine, Pill, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
   ChartNoAxesCombined, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Settings2,
   Network, Orbit, Route, HeartHandshake, Fingerprint, AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints,

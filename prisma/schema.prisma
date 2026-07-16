@@ -356,17 +356,28 @@ model PatientInsurance {
 }
 
 model PatientPharmacy {
-  id             String   @id @default(cuid())
-  organizationId String
-  patientId      String
-  name           String
-  phone          String?
-  address        Json?
-  preferred      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                            String    @id @default(cuid())
+  organizationId                String
+  patientId                     String
+  name                          String
+  ncpdpId                       String?
+  npi                           String?
+  phone                         String?
+  fax                           String?
+  address                       Json?
+  hours                         Json?
+  preferred                     Boolean   @default(false)
+  electronicPrescribingEnabled Boolean   @default(false)
+  controlledSubstancesEnabled  Boolean   @default(false)
+  status                        String    @default("active")
+  source                        String    @default("manual")
+  verifiedBy                    String?
+  verifiedAt                    DateTime?
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
 
-  @@index([patientId])
+  @@index([organizationId, status, name])
+  @@index([patientId, preferred])
   @@map("patient_pharmacies")
 }
 
@@ -635,21 +646,194 @@ model Allergy {
 }
 
 model Medication {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String
+  name                  String
+  genericName           String?
+  brandName             String?
+  rxNormCode            String?
+  strength              String?
+  dose                  String?
+  frequency             String?
+  route                 String?
+  quantity              String?
+  refillsAuthorized     Int?
+  indication            String?
+  source                String    @default("provider_entered")
+  patientReported       Boolean   @default(false)
+  prescribingProviderId String?
+  encounterId           String?
+  pharmacyId            String?
+  reconciliationStatus  String    @default("unreconciled")
+  reconciledBy          String?
+  reconciledAt          DateTime?
+  startDate             DateTime?
+  endDate               DateTime?
+  status                String    @default("active")
+  discontinuedBy        String?
+  discontinuedAt        DateTime?
+  discontinuationReason String?
+  provenance            Json?
+  createdBy             String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([organizationId, status, updatedAt])
+  @@index([patientId, status])
+  @@index([prescribingProviderId])
+  @@map("medications")
+}
+
+model MedicationReconciliation {
   id             String    @id @default(cuid())
   organizationId String
   patientId      String
-  name           String
-  dose           String?
-  frequency      String?
-  route          String?
-  startDate      DateTime?
-  endDate        DateTime?
-  status         String    @default("active")
+  encounterId    String?
+  status         String    @default("draft")
+  source         String    @default("staff_review")
+  summary        String?
+  discrepancies  Json?
+  medicationIds  String[]  @default([])
+  createdBy      String
+  completedBy    String?
+  completedAt    DateTime?
+  reopenedBy     String?
+  reopenedAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  @@index([patientId, status])
-  @@map("medications")
+  @@index([organizationId, status, updatedAt])
+  @@index([patientId, createdAt])
+  @@map("medication_reconciliations")
+}
+
+model RefillRequest {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String
+  medicationId          String
+  pharmacyId            String?
+  providerId            String?
+  requestSource         String    @default("staff")
+  requestNote           String?
+  urgency               String    @default("routine")
+  quantityRequested     String?
+  status                String    @default("requested")
+  providerDecision      String?
+  decisionReason        String?
+  decidedBy             String?
+  decidedAt             DateTime?
+  deliveryMethod        String    @default("manual")
+  integrationId         String?
+  transmissionStatus    String    @default("not_started")
+  transmittedAt         DateTime?
+  externalReference     String?
+  failureReason         String?
+  retryCount            Int       @default(0)
+  lastAttemptAt         DateTime?
+  manualConfirmation    String?
+  completedAt           DateTime?
+  createdBy             String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([organizationId, status, updatedAt])
+  @@index([patientId, createdAt])
+  @@index([medicationId, status])
+  @@map("refill_requests")
+}
+
+model Prescription {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String
+  medicationId          String
+  refillRequestId       String?
+  providerId            String
+  pharmacyId            String?
+  status                String    @default("draft")
+  dosageInstructions    String
+  quantity              String
+  refills                Int       @default(0)
+  daysSupply             Int?
+  controlledSubstance   Boolean   @default(false)
+  deaSchedule            String?
+  epcsRequired           Boolean   @default(false)
+  deliveryMethod        String    @default("manual")
+  integrationId         String?
+  transmissionStatus    String    @default("not_started")
+  externalReference     String?
+  approvedBy            String?
+  approvedAt            DateTime?
+  transmittedAt         DateTime?
+  failureReason         String?
+  retryCount            Int       @default(0)
+  lastAttemptAt         DateTime?
+  manualConfirmation    String?
+  cancelledBy           String?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  source                String    @default("clinicos")
+  provenance            Json?
+  createdBy             String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([organizationId, status, updatedAt])
+  @@index([patientId, createdAt])
+  @@index([refillRequestId])
+  @@map("prescriptions")
+}
+
+model MedicationWarning {
+  id                     String    @id @default(cuid())
+  organizationId         String
+  patientId              String
+  medicationId           String?
+  refillRequestId        String?
+  prescriptionId         String?
+  warningType            String
+  severity               String
+  summary                String
+  source                 String
+  evidence               Json?
+  status                 String    @default("open")
+  requiresProviderReview Boolean   @default(true)
+  acknowledgedBy         String?
+  acknowledgedAt         DateTime?
+  acknowledgmentReason   String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([organizationId, status, severity])
+  @@index([patientId, createdAt])
+  @@index([prescriptionId])
+  @@map("medication_warnings")
+}
+
+model MedicationEvent {
+  id               String   @id @default(cuid())
+  organizationId   String
+  patientId        String
+  medicationId     String?
+  reconciliationId String?
+  refillRequestId  String?
+  prescriptionId   String?
+  actorId           String?
+  eventType         String
+  fromStatus        String?
+  toStatus          String?
+  note              String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([patientId, createdAt])
+  @@index([medicationId, createdAt])
+  @@index([refillRequestId, createdAt])
+  @@index([prescriptionId, createdAt])
+  @@map("medication_events")
 }
 
 model Problem {

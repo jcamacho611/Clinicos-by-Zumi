@@ -291,7 +291,7 @@ export interface WorkTask {
 
 export interface TimelineEvent {
   id: string;
-  type: "encounter" | "lab" | "imaging" | "message" | "document" | "form" | "billing" | "task";
+  type: "encounter" | "lab" | "imaging" | "medication" | "message" | "document" | "form" | "billing" | "task";
   title: string;
   detail: string;
   timestamp: string;

@@ -4,6 +4,7 @@ import { FormsWorkspace } from "@/components/clinic/forms-workspace";
 import { DocumentsWorkspace } from "@/components/clinic/documents-workspace";
 import { ImagingWorkspace } from "@/components/clinic/imaging-workspace";
 import { LabsWorkspace } from "@/components/clinic/labs-workspace";
+import { MedicationsWorkspace } from "@/components/clinic/medications-workspace";
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PortalWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
@@ -23,12 +24,13 @@ import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repos
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
 import { listImagingWorkspace } from "@/lib/repositories/imaging-repository";
+import { listMedicationWorkspace } from "@/lib/repositories/medication-repository";
 import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
 import { listFormWorkspace } from "@/lib/repositories/form-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
-  "labs", "imaging", "documents", "forms", "billing", "insurance", "cases", "quality",
+  "labs", "imaging", "medications", "documents", "forms", "billing", "insurance", "cases", "quality",
   "messages", "tasks", "escalations", "ai-assistants", "portal", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "health-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
@@ -54,6 +56,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     case "imaging": {
       if (!can(role, "imaging", "read")) return notFound();
       return <ImagingWorkspace canCreate={can(role, "imaging", "create")} canSign={can(role, "imaging", "sign")} canUpdate={can(role, "imaging", "update")} workspace={await listImagingWorkspace(organizationId)} />;
+    }
+    case "medications": {
+      if (!can(role, "medications", "read")) return notFound();
+      return <MedicationsWorkspace canCreate={can(role, "medications", "create")} canSign={can(role, "medications", "sign")} canUpdate={can(role, "medications", "update")} workspace={await listMedicationWorkspace(organizationId)} />;
     }
     case "documents": {
       if (!can(role, "documents", "read")) return notFound();

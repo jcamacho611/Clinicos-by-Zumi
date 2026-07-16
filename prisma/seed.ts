@@ -135,6 +135,11 @@ async function main() {
   await prisma.referral.deleteMany();
   await prisma.clinicalOrder.deleteMany();
   await prisma.integrationEvent.deleteMany();
+  await prisma.medicationEvent.deleteMany();
+  await prisma.medicationWarning.deleteMany();
+  await prisma.prescription.deleteMany();
+  await prisma.refillRequest.deleteMany();
+  await prisma.medicationReconciliation.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
@@ -157,6 +162,7 @@ async function main() {
   await prisma.patientBalance.deleteMany();
   await prisma.insuranceVerification.deleteMany();
   await prisma.priorAuthorization.deleteMany();
+  await prisma.patientPharmacy.deleteMany();
   await prisma.patientInsurance.deleteMany();
   await prisma.allergy.deleteMany();
   await prisma.medication.deleteMany();
@@ -165,6 +171,7 @@ async function main() {
   await prisma.appointment.deleteMany();
   await prisma.appointmentType.deleteMany();
   await prisma.patient.deleteMany();
+  await prisma.providerCredential.deleteMany();
   await prisma.provider.deleteMany();
   await prisma.user.deleteMany();
   await prisma.location.deleteMany();
@@ -225,6 +232,14 @@ async function main() {
     ],
   });
 
+  await prisma.providerCredential.createMany({
+    data: [
+      { id: "credential-nadja-dea", organizationId: bfm.id, providerId: "provider-nadja", type: "DEA", number: "DEMO-DEA-NOT-VALID", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
+      { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
+      { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
+    ],
+  });
+
   await prisma.appointmentType.createMany({
     data: [
       { id: "type-diabetes-follow-up", organizationId: bfm.id, name: "Diabetes follow-up", durationMinutes: 30, color: "teal" },
@@ -261,6 +276,15 @@ async function main() {
       { id: "pt-1005", organizationId: bfm.id, locationId: "loc-crown-heights", mrn: "BFM-27618", firstName: "Anthony", lastName: "Nguyen", dateOfBirth: new Date("1966-01-31T00:00:00.000Z"), sexAtBirth: "Male", pronouns: "he/him", phone: "(917) 555-0124", email: "anthony.nguyen@example.test", portalStatus: "inactive", riskLevel: RiskLevel.URGENT, requiresHumanReview: true },
       { id: "pt-1004", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", dateOfBirth: new Date("1989-05-15T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", portalStatus: "active" },
       { id: "pt-2001", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", portalStatus: "invited", identityStatus: "possible_match", requiresHumanReview: true },
+    ],
+  });
+
+  await prisma.patientPharmacy.createMany({
+    data: [
+      { id: "pharmacy-maya", organizationId: bfm.id, patientId: maya.id, name: "Brooklyn Community Pharmacy", ncpdpId: "DEMO-100001", phone: "(718) 555-0110", fax: "(718) 555-0111", address: { line1: "110 Demo Street", city: "Brooklyn", state: "NY", postalCode: "11201" }, preferred: true, electronicPrescribingEnabled: true, controlledSubstancesEnabled: false, status: "active", source: "synthetic_seed", verifiedBy: "user-nadja", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "pharmacy-darius", organizationId: bfm.id, patientId: "pt-1002", name: "Crown Heights Pharmacy", ncpdpId: "DEMO-100002", phone: "(718) 555-0112", preferred: true, electronicPrescribingEnabled: false, status: "active", source: "synthetic_seed" },
+      { id: "pharmacy-anthony", organizationId: bfm.id, patientId: "pt-1005", name: "Prospect Care Pharmacy", phone: "(718) 555-0113", preferred: true, electronicPrescribingEnabled: false, status: "active", source: "synthetic_seed" },
+      { id: "pharmacy-luxe-camille", organizationId: luxe.id, patientId: "pt-1004", name: "Midtown Wellness Pharmacy", phone: "(212) 555-0114", preferred: true, electronicPrescribingEnabled: false, status: "active", source: "synthetic_seed" },
     ],
   });
 
@@ -313,11 +337,13 @@ async function main() {
 
   await prisma.medication.createMany({
     data: [
-      { organizationId: bfm.id, patientId: "pt-1001", name: "Metformin", dose: "500 mg", frequency: "twice daily" },
-      { organizationId: bfm.id, patientId: "pt-1001", name: "Lisinopril", dose: "10 mg", frequency: "daily" },
-      { organizationId: bfm.id, patientId: "pt-1002", name: "Atorvastatin", dose: "20 mg", frequency: "nightly" },
-      { organizationId: bfm.id, patientId: "pt-1003", name: "Albuterol HFA", frequency: "as needed" },
-      { organizationId: bfm.id, patientId: "pt-1005", name: "Amlodipine", dose: "10 mg", frequency: "daily" },
+      { id: "med-maya-metformin", organizationId: bfm.id, patientId: "pt-1001", name: "Metformin", genericName: "metformin", rxNormCode: "860975", strength: "500 mg", dose: "500 mg", route: "oral", frequency: "twice daily", pharmacyId: "pharmacy-maya", prescribingProviderId: "provider-nadja", source: "provider_entered", reconciliationStatus: "reconciled", reconciledBy: "provider-nadja", reconciledAt: new Date("2026-07-10T14:00:00.000Z"), provenance: { source: "synthetic_seed" }, createdBy: "user-nadja" },
+      { id: "med-maya-lisinopril", organizationId: bfm.id, patientId: "pt-1001", name: "Lisinopril", genericName: "lisinopril", rxNormCode: "314076", strength: "10 mg", dose: "10 mg", route: "oral", frequency: "daily", pharmacyId: "pharmacy-maya", prescribingProviderId: "provider-nadja", source: "provider_entered", reconciliationStatus: "reconciled", reconciledBy: "provider-nadja", reconciledAt: new Date("2026-07-10T14:00:00.000Z"), provenance: { source: "synthetic_seed" }, createdBy: "user-nadja" },
+      { id: "med-maya-penicillin-reported", organizationId: bfm.id, patientId: "pt-1001", name: "Penicillin", dose: "Patient unsure", frequency: "Patient unsure", source: "patient_reported", patientReported: true, reconciliationStatus: "review_due", provenance: { source: "synthetic_seed", safetyDemonstration: true }, createdBy: "user-nadja" },
+      { id: "med-darius-atorvastatin", organizationId: bfm.id, patientId: "pt-1002", name: "Atorvastatin", genericName: "atorvastatin", strength: "20 mg", dose: "20 mg", route: "oral", frequency: "nightly", pharmacyId: "pharmacy-darius", prescribingProviderId: "provider-nadja", source: "provider_entered", reconciliationStatus: "reconciled", reconciledBy: "provider-nadja", reconciledAt: new Date("2026-07-09T14:00:00.000Z"), createdBy: "user-nadja" },
+      { id: "med-elena-albuterol", organizationId: bfm.id, patientId: "pt-1003", name: "Albuterol HFA", frequency: "as needed", source: "patient_reported", patientReported: true, reconciliationStatus: "unreconciled", createdBy: "user-nadja" },
+      { id: "med-anthony-amlodipine", organizationId: bfm.id, patientId: "pt-1005", name: "Amlodipine", strength: "10 mg", dose: "10 mg", route: "oral", frequency: "daily", pharmacyId: "pharmacy-anthony", prescribingProviderId: "provider-nadja", source: "provider_entered", reconciliationStatus: "review_due", createdBy: "user-nadja" },
+      { id: "med-luxe-camille-history", organizationId: luxe.id, patientId: "pt-1004", name: "Weight-management medication history", dose: "See provider-reviewed plan", source: "patient_reported", patientReported: true, reconciliationStatus: "unreconciled", createdBy: "user-luxe-owner", provenance: { source: "synthetic_seed", noTreatmentClaim: true } },
     ],
   });
 
@@ -417,7 +443,60 @@ async function main() {
       { organizationId: bfm.id, type: "imaging", vendor: "Lenox Hill / RadNet-style adapter", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Adapter discovery" },
       { organizationId: bfm.id, type: "imaging", vendor: "Hospital radiology interface", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "HL7/FHIR contract" },
       { organizationId: luxe.id, type: "imaging", vendor: "Luxe manual imaging exchange", status: "manual_only", riskLevel: "high", baaRequired: true, phase: "Manual fallback" },
+      { id: "integration-bfm-erx-demo", organizationId: bfm.id, type: "e_prescribing", vendor: "Synthetic eRx sandbox adapter", status: "connected", riskLevel: "high", baaRequired: true, phase: "Sandbox contract test", config: { sandbox: true, epcsVerified: false, noProductionTransmission: true } },
+      { organizationId: bfm.id, type: "formulary", vendor: "Formulary service roadmap", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Vendor discovery" },
+      { organizationId: bfm.id, type: "pdmp", vendor: "New York PDMP roadmap", status: "roadmap", riskLevel: "high", baaRequired: true, phase: "Legal and vendor review" },
+      { organizationId: luxe.id, type: "e_prescribing", vendor: "Luxe manual prescribing fallback", status: "manual_only", riskLevel: "high", baaRequired: true, phase: "Manual fallback" },
       { organizationId: bfm.id, type: "payments", vendor: "Stripe", status: "roadmap", riskLevel: "medium", baaRequired: false, phase: "Phase 2" },
+    ],
+  });
+
+  await prisma.medicationReconciliation.createMany({
+    data: [
+      { id: "medrec-maya-completed", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", status: "completed", source: "provider_review", summary: "Synthetic medication sources reviewed with the patient; exact-name warning remains separately governed.", discrepancies: [{ medicationId: "med-maya-penicillin-reported", type: "other", detail: "Patient-reported entry conflicts with recorded allergy and requires provider review." }], medicationIds: ["med-maya-metformin", "med-maya-lisinopril"], createdBy: "user-nadja", completedBy: "provider-nadja", completedAt: new Date("2026-07-10T14:00:00.000Z"), createdAt: new Date("2026-07-10T13:50:00.000Z") },
+      { id: "medrec-elena-draft", organizationId: bfm.id, patientId: "pt-1003", status: "draft", source: "staff_review", summary: "Patient-reported inhaler history awaits provider reconciliation.", discrepancies: [], medicationIds: ["med-elena-albuterol"], createdBy: "user-nadja", createdAt: new Date("2026-07-14T13:20:00.000Z") },
+      { id: "medrec-luxe-draft", organizationId: luxe.id, patientId: "pt-1004", status: "draft", source: "patient_confirmation", summary: "Synthetic Luxe intake medication history requires licensed provider review.", discrepancies: [], medicationIds: ["med-luxe-camille-history"], createdBy: "user-luxe-owner", createdAt: new Date("2026-07-13T15:20:00.000Z") },
+    ],
+  });
+
+  await prisma.refillRequest.createMany({
+    data: [
+      { id: "refill-maya-approved", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-metformin", pharmacyId: "pharmacy-maya", providerId: "provider-nadja", requestSource: "patient_portal", requestNote: "Synthetic portal request for normal refill workflow demonstration.", urgency: "routine", status: "approved", providerDecision: "approved", decisionReason: "Synthetic provider-reviewed demonstration only.", decidedBy: "provider-nadja", decidedAt: new Date("2026-07-14T12:20:00.000Z"), createdBy: "user-nadja", createdAt: new Date("2026-07-14T12:00:00.000Z") },
+      { id: "refill-darius-failed", organizationId: bfm.id, patientId: "pt-1002", medicationId: "med-darius-atorvastatin", pharmacyId: "pharmacy-darius", providerId: "provider-nadja", requestSource: "pharmacy", requestNote: "Synthetic pharmacy request demonstrating failed manual delivery recovery.", urgency: "routine", status: "failed", providerDecision: "approved", decisionReason: "Synthetic provider-reviewed demonstration only.", decidedBy: "provider-nadja", decidedAt: new Date("2026-07-13T13:00:00.000Z"), deliveryMethod: "fax", transmissionStatus: "failed", failureReason: "Synthetic fax confirmation was not received.", retryCount: 1, lastAttemptAt: new Date("2026-07-13T13:15:00.000Z"), createdBy: "user-nadja", createdAt: new Date("2026-07-13T12:30:00.000Z") },
+      { id: "refill-anthony-urgent", organizationId: bfm.id, patientId: "pt-1005", medicationId: "med-anthony-amlodipine", pharmacyId: "pharmacy-anthony", providerId: "provider-nadja", requestSource: "phone", requestNote: "Urgent synthetic request routed for immediate provider review; no automated approval.", urgency: "urgent", status: "needs_provider", createdBy: "user-nadja", createdAt: new Date("2026-07-14T11:10:00.000Z") },
+    ],
+  });
+
+  await prisma.prescription.createMany({
+    data: [
+      { id: "rx-maya-draft", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-metformin", refillRequestId: "refill-maya-approved", providerId: "provider-nadja", pharmacyId: "pharmacy-maya", status: "draft", dosageInstructions: "Synthetic draft instructions: follow the provider-reviewed medication plan.", quantity: "60", refills: 0, deliveryMethod: "electronic_adapter", integrationId: "integration-bfm-erx-demo", transmissionStatus: "not_started", provenance: { source: "synthetic_seed", humanApprovalRequired: true, noProductionTransmission: true }, createdBy: "user-nadja", createdAt: new Date("2026-07-14T12:25:00.000Z") },
+      { id: "rx-darius-failed", organizationId: bfm.id, patientId: "pt-1002", medicationId: "med-darius-atorvastatin", providerId: "provider-nadja", pharmacyId: "pharmacy-darius", status: "failed", dosageInstructions: "Synthetic demonstration instructions from provider-reviewed chart.", quantity: "30", refills: 0, deliveryMethod: "fax", transmissionStatus: "failed", approvedBy: "provider-nadja", approvedAt: new Date("2026-07-13T13:00:00.000Z"), failureReason: "Synthetic fax delivery lacked receipt confirmation.", retryCount: 1, lastAttemptAt: new Date("2026-07-13T13:15:00.000Z"), provenance: { source: "synthetic_seed", manualFallback: true }, createdBy: "user-nadja", createdAt: new Date("2026-07-13T12:50:00.000Z") },
+      { id: "rx-luxe-manual", organizationId: luxe.id, patientId: "pt-1004", medicationId: "med-luxe-camille-history", providerId: "provider-nadja-luxe", pharmacyId: "pharmacy-luxe-camille", status: "approved", dosageInstructions: "Synthetic demo only; follow the licensed provider-reviewed plan.", quantity: "1 demo plan", refills: 0, deliveryMethod: "manual", transmissionStatus: "not_started", approvedBy: "provider-nadja-luxe", approvedAt: new Date("2026-07-13T15:40:00.000Z"), provenance: { source: "synthetic_seed", noTreatmentClaim: true }, createdBy: "user-luxe-owner", createdAt: new Date("2026-07-13T15:30:00.000Z") },
+    ],
+  });
+
+  await prisma.medicationWarning.createMany({
+    data: [
+      { id: "med-warning-maya-penicillin", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-penicillin-reported", warningType: "exact_allergy_name_match", severity: "high", summary: "Exact name match with recorded allergy: Penicillin. Provider review is required.", source: "clinicos_exact_name_rule", evidence: { allergySubstance: "Penicillin", reaction: "hives", rule: "normalized_exact_name" }, status: "open", requiresProviderReview: true, createdAt: new Date("2026-07-14T12:15:00.000Z") },
+      { id: "med-warning-darius-reviewed", organizationId: bfm.id, patientId: "pt-1002", medicationId: "med-darius-atorvastatin", prescriptionId: "rx-darius-failed", warningType: "external_formulary_status_unavailable", severity: "warning", summary: "Formulary service is not connected; staff used the documented manual verification fallback.", source: "integration_availability_rule", evidence: { vendorStatus: "roadmap", fallback: "manual" }, status: "acknowledged", requiresProviderReview: true, acknowledgedBy: "provider-nadja", acknowledgedAt: new Date("2026-07-13T12:58:00.000Z"), acknowledgmentReason: "Synthetic provider acknowledged unavailable formulary adapter and reviewed manual verification evidence." },
+    ],
+  });
+
+  await prisma.medicationEvent.createMany({
+    data: [
+      { id: "med-event-maya-reconciled", organizationId: bfm.id, patientId: maya.id, reconciliationId: "medrec-maya-completed", actorId: "user-nadja", eventType: "reconciliation_complete", fromStatus: "draft", toStatus: "completed", note: "Synthetic provider completed medication reconciliation.", createdAt: new Date("2026-07-10T14:00:00.000Z") },
+      { id: "med-event-maya-refill-approved", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-metformin", refillRequestId: "refill-maya-approved", actorId: "user-nadja", eventType: "refill_approve", fromStatus: "needs_provider", toStatus: "approved", note: "Synthetic provider-reviewed demonstration only.", createdAt: new Date("2026-07-14T12:20:00.000Z") },
+      { id: "med-event-maya-rx-draft", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-metformin", refillRequestId: "refill-maya-approved", prescriptionId: "rx-maya-draft", actorId: "user-nadja", eventType: "prescription_drafted", toStatus: "draft", metadata: { humanApprovalRequired: true }, createdAt: new Date("2026-07-14T12:25:00.000Z") },
+      { id: "med-event-maya-warning", organizationId: bfm.id, patientId: maya.id, medicationId: "med-maya-penicillin-reported", actorId: "system", eventType: "warning_created", toStatus: "open", metadata: { warningId: "med-warning-maya-penicillin", source: "clinicos_exact_name_rule" }, createdAt: new Date("2026-07-14T12:15:00.000Z") },
+      { id: "med-event-darius-rx-failed", organizationId: bfm.id, patientId: "pt-1002", medicationId: "med-darius-atorvastatin", refillRequestId: "refill-darius-failed", prescriptionId: "rx-darius-failed", actorId: "user-nadja", eventType: "prescription_fail", fromStatus: "queued", toStatus: "failed", note: "Synthetic fax delivery lacked receipt confirmation.", createdAt: new Date("2026-07-13T13:15:00.000Z") },
+      { id: "med-event-luxe-approved", organizationId: luxe.id, patientId: "pt-1004", medicationId: "med-luxe-camille-history", prescriptionId: "rx-luxe-manual", actorId: "user-luxe-owner", eventType: "prescription_approve", fromStatus: "draft", toStatus: "approved", note: "Synthetic Luxe provider approval with tenant isolation.", createdAt: new Date("2026-07-13T15:40:00.000Z") },
+    ],
+  });
+
+  await prisma.integrationEvent.createMany({
+    data: [
+      { id: "integration-event-rx-darius-failed", organizationId: bfm.id, resourceType: "prescription", resourceId: "rx-darius-failed", direction: "outbound", eventType: "prescription_fail", status: "failed", errorMessage: "Synthetic fax delivery lacked receipt confirmation.", retryCount: 1, metadata: { deliveryMethod: "fax", manualFallback: true }, occurredAt: new Date("2026-07-13T13:15:00.000Z") },
+      { id: "integration-event-rx-maya-draft", organizationId: bfm.id, integrationId: "integration-bfm-erx-demo", resourceType: "prescription", resourceId: "rx-maya-draft", direction: "outbound", eventType: "draft_created", status: "manual_review", metadata: { noProductionTransmission: true, providerApprovalRequired: true, displayStatus: "held_for_provider" }, occurredAt: new Date("2026-07-14T12:25:00.000Z") },
     ],
   });
 
@@ -890,6 +969,10 @@ async function main() {
       { id: "task-form-darius-provider", organizationId: bfm.id, patientId: "pt-1002", category: "form_provider_review", title: "Telemedicine consent requires provider review", details: "Submission form-submission-darius-provider requires an active provider identity, provider attestation, and explicit decision before lock.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-14T14:30:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-form-anthony-staff", organizationId: bfm.id, patientId: "pt-1005", category: "form_staff_review", title: "No-fault intake requires staff review", details: "Imported paper submission form-submission-anthony-review requires identity, completeness, and witness review.", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T16:00:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-form-elena-completion", organizationId: bfm.id, patientId: "pt-1003", category: "form_completion", title: "New patient intake requires completion", details: "Staff-assisted assignment form-assignment-elena-draft remains incomplete. Use the documented manual fallback if needed.", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T13:30:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-med-elena-reconciliation", organizationId: bfm.id, patientId: "pt-1003", category: "medication_reconciliation", title: "Medication reconciliation requires provider completion", details: "Review patient-reported Albuterol HFA history before completing reconciliation.", priority: "normal", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-14T13:20:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-med-anthony-refill", organizationId: bfm.id, patientId: "pt-1005", category: "refill_review", title: "Urgent refill request requires provider review", details: "Amlodipine request refill-anthony-urgent. ClinicOS cannot approve refills.", priority: "urgent", riskLevel: RiskLevel.URGENT, dueAt: new Date("2026-07-14T11:10:00.000Z"), status: "open", ownerId: "provider-nadja", createdBy: "user-nadja" },
+      { id: "task-med-maya-warning", organizationId: bfm.id, patientId: maya.id, category: "medication_safety_review", title: "Medication warning requires provider review", details: "Exact name match with recorded allergy: Penicillin. Rule source: clinicos_exact_name_rule. ClinicOS has not made a clinical determination.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-14T12:15:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-med-luxe-reconciliation", organizationId: luxe.id, patientId: "pt-1004", category: "medication_reconciliation", title: "Medication reconciliation requires provider completion", details: "Synthetic Luxe intake medication history requires licensed provider review.", priority: "normal", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-13T15:20:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
     ],
   });
 
@@ -897,6 +980,7 @@ async function main() {
     data: [
       { id: "escalation-lab-critical", organizationId: bfm.id, patientId: "pt-1005", sourceType: "lab_result", sourceId: "lab-result-critical", category: "critical_lab_result", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
       { id: "escalation-imaging-anthony", organizationId: bfm.id, patientId: "pt-1005", sourceType: "imaging_result", sourceId: "img-result-anthony-mri", category: "urgent_imaging_source_flag", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
+      { id: "escalation-med-anthony-refill", organizationId: bfm.id, patientId: "pt-1005", sourceType: "refill_request", sourceId: "refill-anthony-urgent", category: "urgent_refill_human_review", riskLevel: RiskLevel.URGENT, assignedTeam: "clinical_provider", status: "open" },
     ],
   });
 
@@ -904,6 +988,7 @@ async function main() {
     data: [
       { id: "notification-lab-critical-owner", organizationId: bfm.id, userId: "user-nadja", type: "critical_lab_result", title: "Critical result requires immediate human review", body: "Comprehensive metabolic panel is flagged critical by source data. ClinicOS has not interpreted the result.", createdAt: new Date("2026-07-14T11:45:00.000Z") },
       { id: "notification-imaging-anthony-owner", organizationId: bfm.id, userId: "user-nadja", type: "urgent_imaging_source_flag", title: "Imaging report requires urgent human review", body: "MRI lumbar spine source report carries an urgent flag from the source. ClinicOS has not interpreted the report.", createdAt: new Date("2026-07-14T10:40:00.000Z") },
+      { id: "notification-med-anthony-refill", organizationId: bfm.id, userId: "user-nadja", type: "urgent_refill_review", title: "Urgent refill request requires provider review", body: "Synthetic refill request is held for human review. ClinicOS cannot approve or prescribe.", createdAt: new Date("2026-07-14T11:10:00.000Z") },
     ],
   });
 
@@ -923,6 +1008,10 @@ async function main() {
       { id: "audit-form-maya-lock", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "form_submission.lock", resourceType: "form_submission", resourceId: "form-submission-maya-locked", patientId: maya.id, changes: { status: { from: "approved", to: "locked" } }, metadata: { documentId: "doc-form-maya-intake-locked", checksumSha256: mayaLockedForm.checksumSha256, patientCopy: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
       { id: "audit-form-darius-submit", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "form_submission.submit", resourceType: "form_submission", resourceId: "form-submission-darius-provider", patientId: "pt-1002", changes: { status: { from: "draft", to: "provider_review" } }, metadata: { templateId: "form-template-telemedicine", templateVersion: 1 }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
       { id: "audit-form-luxe-lock", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "form_submission.lock", resourceType: "form_submission", resourceId: "form-submission-luxe-locked", patientId: "pt-1004", changes: { status: { from: "approved", to: "locked" } }, metadata: { documentId: "doc-form-luxe-consent-locked", checksumSha256: luxeLockedForm.checksumSha256, tenantIsolation: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
+      { id: "audit-med-maya-reconciliation", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "medication_reconciliation.complete", resourceType: "medication_reconciliation", resourceId: "medrec-maya-completed", patientId: maya.id, changes: { status: { from: "draft", to: "completed" } }, metadata: { providerId: "provider-nadja", medicationIds: ["med-maya-metformin", "med-maya-lisinopril"], syntheticDemo: true }, createdAt: new Date("2026-07-10T14:00:00.000Z") },
+      { id: "audit-med-maya-refill", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "refill_request.approve", resourceType: "refill_request", resourceId: "refill-maya-approved", patientId: maya.id, changes: { status: { from: "needs_provider", to: "approved" } }, metadata: { providerId: "provider-nadja", noAutonomousApproval: true }, createdAt: new Date("2026-07-14T12:20:00.000Z") },
+      { id: "audit-med-darius-failure", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "prescription.fail", resourceType: "prescription", resourceId: "rx-darius-failed", patientId: "pt-1002", changes: { status: { from: "queued", to: "failed" } }, metadata: { deliveryMethod: "fax", manualFallback: true, failureReason: "Synthetic fax delivery lacked receipt confirmation." }, createdAt: new Date("2026-07-13T13:15:00.000Z") },
+      { id: "audit-med-luxe-approval", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "prescription.approve", resourceType: "prescription", resourceId: "rx-luxe-manual", patientId: "pt-1004", changes: { status: { from: "draft", to: "approved" } }, metadata: { providerId: "provider-nadja-luxe", tenantIsolation: true, manualFallback: true }, createdAt: new Date("2026-07-13T15:40:00.000Z") },
     ],
   });
 

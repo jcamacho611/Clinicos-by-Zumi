@@ -13,19 +13,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { qualityGaps } from "@/lib/clinic-data";
 import type { Encounter, LabResult, Patient, PatientConsentSummary, PatientDocument, PatientFormSubmission, PatientImagingResult, TimelineEvent } from "@/lib/types";
+import type { PatientMedicationHistory } from "@/lib/repositories/medication-repository";
 import { SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 const tabs = ["Summary", "Timeline", "Encounters", "Notes", "Medications", "Allergies", "Problems", "Vitals", "Labs", "Imaging", "Documents", "Forms", "Consents", "Referrals", "Billing", "Messages", "Quality", "Cases"];
 
-const timelineIcons = { encounter: Stethoscope, lab: FlaskConical, imaging: ImageIcon, message: MessageSquareText, document: FileText, form: ClipboardCheck, billing: CircleDollarSign, task: ClipboardPlus };
+const timelineIcons = { encounter: Stethoscope, lab: FlaskConical, imaging: ImageIcon, medication: Pill, message: MessageSquareText, document: FileText, form: ClipboardCheck, billing: CircleDollarSign, task: ClipboardPlus };
 
 function titleCase(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function PatientChart({ consents, documentPermissions, documents, encounters, formSubmissions, imagingResults, labResults, patient }: { consents: PatientConsentSummary[]; documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; patient: Patient }) {
+export function PatientChart({ consents, documentPermissions, documents, encounters, formSubmissions, imagingResults, labResults, medicationHistory, medicationPermissions, patient }: { consents: PatientConsentSummary[]; documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; medicationHistory: PatientMedicationHistory; medicationPermissions: { canCreate: boolean; canSign: boolean; canUpdate: boolean }; patient: Patient }) {
   const openEncounter = encounters.find((encounter) => encounter.status === "Draft" || encounter.status === "Ready for Review");
-  const timeline = buildPatientTimeline(encounters, labResults, imagingResults, documents, formSubmissions);
+  const timeline = buildPatientTimeline(encounters, labResults, imagingResults, medicationHistory, documents, formSubmissions);
   return <div className="space-y-5">
     <Link className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-950" href="/patients"><ArrowLeft className="size-4" /> Back to patient charts</Link>
     <section className="sticky top-[94px] z-20 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,.08)] backdrop-blur-xl">
@@ -43,7 +44,7 @@ export function PatientChart({ consents, documentPermissions, documents, encount
       <Tabs.Content className="mt-5 outline-none" value="Timeline"><TimelineList events={timeline} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Encounters"><EncountersTab encounters={encounters} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Notes"><GenericList title="Clinical notes" items={["Diabetes follow-up note - Draft", "Annual physical - Signed", "Telephone encounter - Signed"]} icon={<FileText className="size-5" />} /></Tabs.Content>
-      <Tabs.Content className="mt-5 outline-none" value="Medications"><ClinicalList title="Active medications" items={patient.medications} action="Medication reconciliation" icon={<Pill className="size-5" />} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Medications"><MedicationsTab history={medicationHistory} permissions={medicationPermissions} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Allergies"><ClinicalList title="Allergies and reactions" items={patient.allergies} action="Add allergy" icon={<AlertTriangle className="size-5" />} warning /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Problems"><ClinicalList title="Active problem list" items={patient.problems} action="Add problem" icon={<HeartPulse className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Vitals"><VitalsTab /></Tabs.Content>
@@ -83,7 +84,7 @@ function TimelineList({ events }: { events: TimelineEvent[] }) {
   return <div className="p-5">{events.length > 0 ? <div className="relative space-y-6 before:absolute before:bottom-3 before:left-[18px] before:top-3 before:w-px before:bg-slate-200">{events.map((event) => <TimelineRow event={event} key={event.id} />)}</div> : <p className="text-xs text-slate-500">No longitudinal events are recorded for this patient.</p>}</div>;
 }
 
-function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], imagingResults: PatientImagingResult[], documents: PatientDocument[], formSubmissions: PatientFormSubmission[]): TimelineEvent[] {
+function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], imagingResults: PatientImagingResult[], medicationHistory: PatientMedicationHistory, documents: PatientDocument[], formSubmissions: PatientFormSubmission[]): TimelineEvent[] {
   const labEvents = labResults.map((result) => ({
     event: {
       id: `lab-${result.id}`,
@@ -106,6 +107,17 @@ function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], 
     },
     sortAt: new Date(result.studyPerformedAt).getTime(),
   }));
+  const medicationEvents = medicationHistory.events.map((record) => ({
+    event: {
+      id: `medication-${record.id}`,
+      type: "medication" as const,
+      title: titleCase(record.eventType),
+      detail: `${record.fromStatus ? `${titleCase(record.fromStatus)} to ` : ""}${record.toStatus ? titleCase(record.toStatus) : "Medication workflow recorded"}${record.note ? ` · ${record.note}` : ""}.`,
+      timestamp: formatTimelineDate(record.createdAt),
+      status: record.toStatus ? titleCase(record.toStatus) : undefined,
+    },
+    sortAt: new Date(record.createdAt).getTime(),
+  }));
   const encounterEvents = encounters.map((encounter) => ({
     event: {
       id: `encounter-${encounter.id}`,
@@ -125,9 +137,26 @@ function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], 
     event: { id: `form-${submission.id}`, type: "form" as const, title: submission.templateName, detail: `Form version ${submission.version} · ${submission.completionPercent}% complete${submission.documentId ? " · locked chart artifact attached" : ""}.`, timestamp: formatTimelineDate(submission.updatedAt), status: titleCase(submission.status) },
     sortAt: new Date(submission.updatedAt).getTime(),
   }));
-  return [...labEvents, ...imagingEvents, ...formEvents, ...documentEvents, ...encounterEvents]
+  return [...labEvents, ...imagingEvents, ...medicationEvents, ...formEvents, ...documentEvents, ...encounterEvents]
     .sort((left, right) => right.sortAt - left.sortAt)
     .map(({ event }) => event);
+}
+
+function MedicationsTab({ history, permissions }: { history: PatientMedicationHistory; permissions: { canCreate: boolean; canSign: boolean; canUpdate: boolean } }) {
+  const openWarnings = history.warnings.filter((warning) => warning.status === "open");
+  const active = history.medications.filter((medication) => medication.status === "active");
+  return <div className="space-y-5">
+    {openWarnings.length > 0 && <section className="rounded-[22px] border border-rose-300 bg-rose-50 p-5"><div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-rose-600 text-white"><ShieldAlert className="size-5" /></span><div><p className="text-sm font-extrabold text-rose-950">{openWarnings.length} medication source warning{openWarnings.length === 1 ? "" : "s"} require provider review</p><p className="mt-1 text-[10px] leading-5 text-rose-800">These are exact-match rule signals with retained evidence, not a diagnosis or clinical interpretation.</p></div></div></section>}
+    <SectionCard title="Medication history" description="Provider-entered, patient-reported, imported, active, historical, and discontinued records with reconciliation provenance." action={<Button asChild size="sm" variant="secondary"><Link href="/medications">Open medication command <ArrowRight className="size-3.5" /></Link></Button>}>
+      <div className="divide-y divide-slate-100">{history.medications.map((medication) => <div className="grid gap-4 p-5 md:grid-cols-[1fr_.65fr_.55fr] md:items-center" key={medication.id}><div className="flex items-start gap-3"><span className={`grid size-10 shrink-0 place-items-center rounded-xl ${medication.patientReported ? "bg-amber-50 text-amber-700" : "bg-teal-50 text-teal-700"}`}><Pill className="size-5" /></span><div><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{medication.name}</p>{medication.strength && <Badge tone="sky">{medication.strength}</Badge>}<StatusBadge status={titleCase(medication.status)} /></div><p className="mt-1 text-[10px] text-slate-500">{[medication.dose, medication.route, medication.frequency].filter(Boolean).join(" · ") || "Directions not recorded"}</p><p className="mt-1 text-[9px] text-slate-400">{titleCase(medication.source)}{medication.rxNormCode ? ` · RxNorm ${medication.rxNormCode}` : " · RxNorm not mapped"}</p></div></div><div><p className="text-[8px] font-black uppercase tracking-[.12em] text-slate-400">Reconciliation</p><div className="mt-2"><StatusBadge status={titleCase(medication.reconciliationStatus)} /></div><p className="mt-1 text-[8px] text-slate-400">{medication.reconciledAt ? formatTimelineDate(medication.reconciledAt) : "No provider attestation"}</p></div><div><p className="text-[8px] font-black uppercase tracking-[.12em] text-slate-400">Source dates</p><p className="mt-2 text-[9px] font-bold text-slate-600">Start {medication.startDate ? formatTimelineDate(medication.startDate) : "not recorded"}</p>{medication.discontinuedAt && <p className="mt-1 text-[8px] text-slate-400">Stopped {formatTimelineDate(medication.discontinuedAt)}</p>}</div></div>)}{!history.medications.length && <p className="p-6 text-xs text-slate-500">No medication history is recorded for this patient.</p>}</div>
+    </SectionCard>
+    <div className="grid gap-5 xl:grid-cols-3">
+      <SectionCard title="Reconciliation"><div className="divide-y divide-slate-100">{history.reconciliations.slice(0, 5).map((record) => <div className="p-4" key={record.id}><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-extrabold text-slate-800">{record.medicationIds.length} medications</p><StatusBadge status={titleCase(record.status)} /></div><p className="mt-2 text-[9px] text-slate-500">{record.summary ?? "No summary recorded"}</p><p className="mt-2 text-[8px] text-slate-400">{record.completedAt ? `Completed ${formatTimelineDate(record.completedAt)}` : `Opened ${formatTimelineDate(record.createdAt)}`}</p></div>)}{!history.reconciliations.length && <p className="p-4 text-[10px] text-slate-500">No reconciliation recorded.</p>}</div></SectionCard>
+      <SectionCard title="Refill activity"><div className="divide-y divide-slate-100">{history.refills.slice(0, 5).map((refill) => { const medication = history.medications.find((item) => item.id === refill.medicationId); return <div className="p-4" key={refill.id}><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-extrabold text-slate-800">{medication?.name ?? "Medication"}</p><StatusBadge status={titleCase(refill.status)} /></div><p className="mt-2 text-[9px] text-slate-500">{titleCase(refill.requestSource)} · {titleCase(refill.urgency)}</p><p className="mt-2 text-[8px] text-slate-400">{formatTimelineDate(refill.createdAt)}</p></div>; })}{!history.refills.length && <p className="p-4 text-[10px] text-slate-500">No refill activity recorded.</p>}</div></SectionCard>
+      <SectionCard title="Pharmacy"><div className="divide-y divide-slate-100">{history.pharmacies.map((pharmacy) => <div className="p-4" key={pharmacy.id}><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-extrabold text-slate-800">{pharmacy.name}</p>{pharmacy.preferred && <Badge tone="teal">Preferred</Badge>}</div><p className="mt-2 text-[9px] text-slate-500">{pharmacy.phone ?? "Phone not recorded"}{pharmacy.ncpdpId ? ` · NCPDP ${pharmacy.ncpdpId}` : ""}</p><p className="mt-2 text-[8px] text-slate-400">{pharmacy.electronicPrescribingEnabled ? "Electronic prescribing enabled" : "Manual workflow"}</p></div>)}{!history.pharmacies.length && <p className="p-4 text-[10px] text-slate-500">No pharmacy recorded.</p>}</div></SectionCard>
+    </div>
+    <Card className="border-[#dfe4f5] bg-[#f8faff] p-5"><div className="flex flex-wrap items-center gap-2"><Badge tone={permissions.canSign ? "teal" : "slate"}>{permissions.canSign ? "Provider signing enabled" : "No provider signing"}</Badge><Badge tone={permissions.canCreate ? "sky" : "slate"}>{permissions.canCreate ? "Intake enabled" : "Read only"}</Badge><Badge tone={permissions.canUpdate ? "amber" : "slate"}>{permissions.canUpdate ? "Workflow updates enabled" : "No workflow updates"}</Badge><span className="ml-auto text-[9px] text-slate-400">{active.length} active medications · {history.prescriptions.length} prescription records</span></div></Card>
+  </div>;
 }
 
 function DocumentsTab({ canManage, canUpdate, documents }: { canManage: boolean; canUpdate: boolean; documents: PatientDocument[] }) {
