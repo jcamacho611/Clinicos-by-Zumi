@@ -23,6 +23,7 @@ export default async function LoginPage() {
           <h1 className="mt-3 text-4xl font-extrabold tracking-[-.055em] text-slate-950">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">Sign in to your clinic workspace. Every session is bound to one organization and role.</p>
           <LoginForm demoCredentials={demoCredentials} />
+          <p className="mt-5 text-center text-xs font-semibold text-slate-500">New to ClinicOS? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/start">Create a free organization workspace</Link></p>
           <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>
           <Button className="w-full" disabled size="lg" variant="secondary"><Fingerprint className="size-5" /> Use a passkey <span className="ml-1 text-[10px] font-medium text-slate-400">Credential model ready</span></Button>
           <p className="mt-8 flex items-center gap-2 text-[10px] leading-5 text-slate-500"><ShieldCheck className="size-4 shrink-0 text-teal-600" />Never enter real patient information in this demonstration environment.</p>

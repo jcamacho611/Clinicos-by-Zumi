@@ -1,6 +1,6 @@
 # ClinicOS by Zumi
 
-ClinicOS is a premium, multi-tenant EMR and clinic-operating-system foundation for community practices. This repository contains a connected sales demo and a PostgreSQL-ready data model for Brooklyn Family Medicine and Luxe Medi.
+ClinicOS is a premium, multi-tenant EMR and clinic-operating-system foundation for community practices. This repository contains an offer-first organization onboarding flow, isolated clinic workspaces, a connected synthetic sales demo, and a PostgreSQL-backed operating model.
 
 ## Important safety status
 
@@ -14,6 +14,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 
 ## Product surfaces
 
+- Offer-first public landing page and self-service organization launch with clinic type, primary location, owner credential, tenant-specific roles and permissions, trial modules, default appointment types, pending connector records, onboarding settings, signed session creation, and audit/activity receipts
 - Owner command center
 - Front desk and provider workspaces
 - Patient index and longitudinal chart with live clinical-domain tabs
@@ -113,6 +114,7 @@ npm start            # production server
 ## API foundation
 
 - `GET /api/health` returns service and demo-mode health.
+- `POST /api/onboarding/organizations` validates and rate-limits public workspace creation, then atomically creates the organization, location, departments, owner credential, roles, permissions, trial, defaults, pending connectors, settings, and audit receipts before issuing a signed session.
 - `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
 - `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
 - `GET /api/patients` requires authentication and queries PostgreSQL with the session organization ID in every patient and related-record filter.

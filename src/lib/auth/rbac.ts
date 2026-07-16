@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const clinicRoleSchema = z.enum([
+export const clinicRoles = [
   "clinic_owner",
   "administrator",
   "provider",
@@ -10,11 +10,17 @@ export const clinicRoleSchema = z.enum([
   "quality",
   "case_manager",
   "viewer",
-]);
+] as const;
+
+export const clinicRoleSchema = z.enum(clinicRoles);
 
 export type ClinicRole = z.infer<typeof clinicRoleSchema>;
-export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "coding" | "luxe_medi" | "settings" | "users" | "registry" | "network" | "identity" | "consents" | "referrals" | "labs" | "imaging" | "medications" | "documents" | "forms" | "voice" | "tasks" | "escalations" | "messages" | "knowledge" | "remote_monitoring" | "inventory" | "credentialing" | "crm" | "reliability" | "care_teams";
-export type ClinicAction = "read" | "create" | "update" | "sign" | "manage";
+export const clinicResources = [
+  "patients", "appointments", "encounters", "billing", "coding", "luxe_medi", "settings", "users", "registry", "network", "identity", "consents", "referrals", "labs", "imaging", "medications", "documents", "forms", "voice", "tasks", "escalations", "messages", "knowledge", "remote_monitoring", "inventory", "credentialing", "crm", "reliability", "care_teams",
+] as const;
+export const clinicActions = ["read", "create", "update", "sign", "manage"] as const;
+export type ClinicResource = (typeof clinicResources)[number];
+export type ClinicAction = (typeof clinicActions)[number];
 
 const permissions: Record<ClinicRole, Partial<Record<ClinicResource, ClinicAction[]>>> = {
   clinic_owner: {

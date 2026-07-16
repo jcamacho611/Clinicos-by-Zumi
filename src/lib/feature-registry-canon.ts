@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.7";
+export const REGISTRY_CANON_VERSION = "2026-07-16.8";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -277,7 +277,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
   section({
     number: 34, slug: "saas-commercialization", title: "SaaS Sales, Onboarding, and Commercialization",
     mandate: "Sell, configure, train, support, bill, and grow ClinicOS as a repeatable clinic SaaS product.",
-    ownerRoles: ["super_administrator", "sales", "customer_success"], interfaceRoute: "/capabilities",
+    ownerRoles: ["super_administrator", "sales", "customer_success"], interfaceRoute: "/start",
     databaseObjects: ["organizations", "subscriptions", "settings", "users", "activity_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "ClinicOS marketing site | Product landing page | Book-a-demo flow | Sales lead capture | Demo scheduling | Demo-mode tenant | Guided product tour | Sample patient data | Sample clinic data | Clinic-type selector | Primary-care template | Med-spa template | Urgent-care template | No-fault template | Workers compensation template | Specialist-office template | Organization onboarding | Location setup | Provider setup | Staff setup | Role setup | Appointment-type setup | Form-template setup | Billing-settings setup | Quality-settings setup | Integration setup | Data-migration planning | Subscription plans | Setup fees | Monthly subscriptions | Module pricing | Usage pricing | Customer billing | Trial controls | Founding-clinic pricing | Customer support | Training center | Knowledge base | Implementation checklist | Support tickets | Feature requests | Customer-success dashboard",
   }),

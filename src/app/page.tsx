@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, CirclePlay, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import { ArrowRight, Check, LogIn, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,22 +16,23 @@ export default function LandingPage() {
         <nav className="ml-auto hidden items-center gap-7 text-xs font-bold text-slate-600 md:flex">
           <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
         </nav>
-        <Button asChild className="ml-4" size="sm"><Link href="/dashboard">Open live demo <ArrowRight className="size-4" /></Link></Button>
+        <Link className="ml-4 hidden text-xs font-extrabold text-slate-700 hover:text-slate-950 sm:block" href="/login">Sign in</Link>
+        <Button asChild className="ml-4" size="sm"><Link href="/start">Start free <ArrowRight className="size-4" /></Link></Button>
       </header>
 
       <main>
         <section className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[.9fr_1.1fr] lg:py-20">
           <div>
-            <Badge className="mb-7 bg-white/80" tone="teal"><Sparkles className="mr-1.5 size-3" /> Modern care operations</Badge>
-            <h1 className="max-w-[720px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] text-slate-950 sm:text-6xl lg:text-[76px]">The medical world finally has an operating system.</h1>
-            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">ClinicOS combines a complete clinic workspace, connected-care network, patient-controlled record, revenue command center, and a Copilot people can speak to or type into.</p>
+            <Badge className="mb-7 bg-white/80" tone="teal"><Sparkles className="mr-1.5 size-3" /> Founding clinic offer · no credit card</Badge>
+            <h1 className="max-w-[720px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] text-slate-950 sm:text-6xl lg:text-[76px]">Run the whole clinic from one place.</h1>
+            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">Create your organization, choose your clinic type, and enter one isolated operating workspace for clinical care, connected referrals, office operations, revenue follow-through, and a Copilot your team can speak to or type into.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="primary"><Link href="/dashboard">Explore ClinicOS <ArrowRight className="size-4" /></Link></Button>
-              <Button asChild size="lg" variant="secondary"><Link href="/patients/pt-1001"><CirclePlay className="size-4" /> View a patient chart</Link></Button>
+              <Button asChild size="lg" variant="primary"><Link href="/start">Create your workspace <ArrowRight className="size-4" /></Link></Button>
+              <Button asChild size="lg" variant="secondary"><Link href="/login"><LogIn className="size-4" /> Sign in</Link></Button>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-slate-500">
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Fake demo data only</span>
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Multi-clinic foundation</span>
+              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Synthetic-data workspace</span>
+              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> 30-day free trial</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Human review gates</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> {clinicOsDayOneRegistry.length} P0 domains · {canonicalCapabilityCount.toLocaleString()} capabilities</span>
             </div>
@@ -67,7 +68,7 @@ export default function LandingPage() {
           <div className="rounded-[30px] bg-[#102033] p-8 text-white sm:p-12"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-lime-300">Clinical safety by design</p><div className="mt-5 grid gap-8 lg:grid-cols-[1fr_.8fr]"><h2 className="text-balance text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">Automation handles the office work. Providers keep every clinical decision.</h2><p className="text-sm leading-7 text-slate-300">Emergency content is escalated. Lab and medication questions are routed for provider review. Insurance guarantees and record releases stay blocked until authorized staff act.</p></div></div>
         </section>
 
-        <section className="border-t border-slate-200 bg-white" id="integrations"><div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-12 sm:px-8 lg:flex-row lg:items-center"><div><p className="text-xs font-extrabold text-teal-700">STANDARDS-READY ROADMAP</p><p className="mt-2 max-w-2xl text-sm text-slate-600">FHIR, SMART, HL7, 270/271, 837, 835, Quest, Labcorp, BioReference, imaging, payments, communications, and telemedicine are mapped as future integrations, not falsely presented as live.</p></div><Button asChild className="lg:ml-auto" variant="secondary"><Link href="/integrations">View roadmap <ArrowRight className="size-4" /></Link></Button></div></section>
+        <section className="border-t border-slate-200 bg-white" id="integrations"><div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-12 sm:px-8 lg:flex-row lg:items-center"><div><p className="text-xs font-extrabold text-teal-700">START WITHOUT WAITING ON VENDORS</p><p className="mt-2 max-w-2xl text-sm text-slate-600">FHIR, SMART, HL7, 270/271, 837, 835, laboratories, imaging, payments, communications, and telemedicine remain visible as pending connectors with safe manual fallbacks until credentials, contracts, BAAs, and verification are complete.</p></div><Button asChild className="lg:ml-auto" variant="secondary"><Link href="/start">Open your clinic workspace <ArrowRight className="size-4" /></Link></Button></div></section>
       </main>
     </div>
   );

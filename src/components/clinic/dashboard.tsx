@@ -4,8 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import {
-  ArrowUpRight, CalendarCheck2, CheckCircle2, CircleDollarSign, Clock3,
-  FileWarning, FlaskConical, PhoneMissed, ShieldAlert, UsersRound,
+  ArrowRight, ArrowUpRight, Building2, CalendarCheck2, CheckCircle2, CircleDollarSign, ClipboardList, Clock3,
+  FileWarning, FlaskConical, PhoneMissed, PlugZap, ShieldAlert, UserPlus, UsersRound,
 } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,30 @@ const statusTone: Record<string, BadgeTone> = {
   "Checked In": "teal", "In Room": "sky", Confirmed: "slate", Urgent: "rose", High: "amber",
 };
 
-export function Dashboard({ appointments, userName }: { appointments: Appointment[]; userName: string }) {
+export function Dashboard({ appointments, onboardingComplete = false, organizationName, seededDemo, userName }: { appointments: Appointment[]; onboardingComplete?: boolean; organizationName: string; seededDemo: boolean; userName: string }) {
   const firstName = userName.split(/\s+/)[0] || "there";
+  if (!seededDemo) {
+    const setupSteps = [
+      [UserPlus, "Add the first patient", "Create a synthetic patient record and verify tenant isolation.", "/patients"],
+      [CalendarCheck2, "Configure scheduling", "Review appointment types and prepare the first clinic schedule.", "/schedule"],
+      [ClipboardList, "Review forms and workflows", "Start with the included manual fallbacks and human review gates.", "/forms"],
+      [PlugZap, "Review pending connections", "See what works manually and what requires a verified vendor connection.", "/integrations"],
+    ] as const;
+    return <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-[28px] bg-[#07151c] p-7 text-white shadow-[0_28px_70px_rgba(7,21,28,.24)] sm:p-10">
+        <div className="absolute -right-20 -top-24 size-72 rounded-full border-[58px] border-cyan-300/10" />
+        <div className="relative max-w-3xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-cyan-300/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.16em] text-cyan-200"><CheckCircle2 className="size-3.5" /> {onboardingComplete ? "Workspace created" : "Workspace ready"}</span>
+          <h2 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.055em] sm:text-5xl">{organizationName} now has a clean operating room.</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">Your organization, owner account, roles, trial modules, scheduling defaults, audit trail, and pending connector records are live. This workspace contains no patient data yet.</p>
+        </div>
+      </section>
+      <section className="grid gap-4 lg:grid-cols-2">
+        {setupSteps.map(([Icon, title, body, href], index) => <Card className="group" key={title}><CardContent><div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-700"><Icon className="size-5" /></span><div className="min-w-0 flex-1"><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Step {index + 1}</p><h3 className="mt-1 text-base font-extrabold text-slate-950">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-500">{body}</p><Link className="mt-4 inline-flex items-center gap-2 text-xs font-extrabold text-cyan-700 hover:text-cyan-600" href={href}>Open setup <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></Link></div></div></CardContent></Card>)}
+      </section>
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5"><div className="flex gap-3"><Building2 className="mt-0.5 size-5 shrink-0 text-amber-700" /><div><h3 className="text-sm font-extrabold text-amber-950">Synthetic data only</h3><p className="mt-1 text-xs leading-6 text-amber-800">Do not enter real patient information until production infrastructure, BAAs, organizational policies, and security review are complete. Vendor-dependent actions remain pending or manual.</p></div></div></section>
+    </div>;
+  }
   const metrics = [
     { label: "Visits today", value: String(appointments.length), change: "Live from the schedule", icon: CalendarCheck2, tone: "bg-[#dff7f1] text-teal-700" },
     { label: "Clinical review", value: "3", change: "2 results · 1 message", icon: ShieldAlert, tone: "bg-rose-50 text-rose-600" },

@@ -10,6 +10,7 @@ import {
   REGISTRY_CANON_VERSION,
   slugifyRegistryValue,
 } from "../src/lib/feature-registry-canon";
+import { can, clinicActions, clinicResources, clinicRoles, roleLabel } from "../src/lib/auth/rbac";
 
 const prisma = new PrismaClient();
 
@@ -114,6 +115,22 @@ async function seedPriorityZeroRegistry() {
   }
 }
 
+async function seedOrganizationRoles(organizationId: string, idPrefix: string) {
+  const roles = clinicRoles.map((key) => ({
+    id: `role-${idPrefix}-${key}`,
+    organizationId,
+    key,
+    name: roleLabel(key),
+    description: `Synthetic default ${roleLabel(key)} role for onboarding and permission demonstrations.`,
+  }));
+  await prisma.role.createMany({ data: roles });
+  await prisma.permission.createMany({
+    data: roles.flatMap((role) => clinicResources.flatMap((resource) => clinicActions
+      .filter((action) => can(role.key, resource, action))
+      .map((action) => ({ roleId: role.id, resource, action, allowed: true })))),
+  });
+}
+
 async function main() {
   const adminPassword = process.env.CLINICOS_SEED_ADMIN_PASSWORD;
   if (!adminPassword || adminPassword.length < 12 || adminPassword.includes("replace-with")) {
@@ -201,7 +218,10 @@ async function main() {
   await prisma.providerCredential.deleteMany();
   await prisma.providerConsultation.deleteMany();
   await prisma.provider.deleteMany();
+  await prisma.permission.deleteMany();
+  await prisma.role.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.department.deleteMany();
   await prisma.location.deleteMany();
   await prisma.integration.deleteMany();
   await prisma.setting.deleteMany();
@@ -250,6 +270,18 @@ async function main() {
         },
       },
     },
+  });
+
+  await seedOrganizationRoles(bfm.id, "bfm");
+  await seedOrganizationRoles(luxe.id, "luxe");
+
+  await prisma.setting.createMany({
+    data: [
+      { organizationId: bfm.id, key: "onboarding.profile", value: { teamSize: "6-15", primaryGoal: "Launch a complete clinic workspace", completedSteps: ["offer", "organization", "owner", "workspace"], syntheticDemo: true } },
+      { organizationId: bfm.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
+      { organizationId: luxe.id, key: "onboarding.profile", value: { teamSize: "1-5", primaryGoal: "Improve clinical and revenue follow-through", completedSteps: ["offer", "organization", "owner", "workspace"], syntheticDemo: true } },
+      { organizationId: luxe.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
+    ],
   });
 
   await prisma.provider.createMany({
