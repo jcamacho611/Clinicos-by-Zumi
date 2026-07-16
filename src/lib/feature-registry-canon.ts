@@ -397,7 +397,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 51, slug: "patient-navigation-agent", title: "Patient Navigation Agent",
     mandate: "Help patients complete approved administrative next steps while escalating clinical, emergency, insurance, and dispute questions.",
     ownerRoles: ["patient", "front_desk", "care_navigator", "provider"], interfaceRoute: "/patient-navigation",
-    databaseObjects: ["tasks", "appointments", "referrals", "messages", "notifications", "ai_drafts", "ai_reviews"], deliveryStatus: "PLANNED", deliveryMode: "governance",
+    databaseObjects: ["tasks", "appointments", "referrals", "messages", "notifications", "ai_drafts", "ai_reviews"], deliveryStatus: "FOUNDATION", deliveryMode: "governance",
     features: "Patient journey guidance | Next administrative step | Appointment guidance | Intake guidance | Insurance-document guidance | Referral guidance | Lab scheduling guidance | Imaging scheduling guidance | Payment guidance | Follow-up reminder | Transportation-resource handoff | Language-aware navigation | Accessibility-aware navigation | Human navigator handoff | Emergency escalation | Medical-question escalation | Insurance no-guarantee script | Progress checklist | Patient acknowledgment | Navigation audit history",
   }),
   section({

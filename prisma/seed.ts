@@ -140,6 +140,8 @@ async function main() {
   await prisma.prescription.deleteMany();
   await prisma.refillRequest.deleteMany();
   await prisma.medicationReconciliation.deleteMany();
+  await prisma.aiReview.deleteMany();
+  await prisma.aiDraft.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
@@ -1032,6 +1034,39 @@ async function main() {
       { id: "task-med-maya-warning", organizationId: bfm.id, patientId: maya.id, category: "medication_safety_review", title: "Medication warning requires provider review", details: "Exact name match with recorded allergy: Penicillin. Rule source: clinicos_exact_name_rule. ClinicOS has not made a clinical determination.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-14T12:15:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-med-luxe-reconciliation", organizationId: luxe.id, patientId: "pt-1004", category: "medication_reconciliation", title: "Medication reconciliation requires provider completion", details: "Synthetic Luxe intake medication history requires licensed provider review.", priority: "normal", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-13T15:20:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
     ],
+  });
+
+  await prisma.aiDraft.create({
+    data: {
+      id: "ai-draft-navigation-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      sourceType: "patient_navigation",
+      sourceId: "navigation-seed-maya",
+      purpose: "administrative_navigation",
+      content: "We can help Maya request an appointment. The front desk will review availability and follow up; this message does not confirm a visit.",
+      riskLevel: RiskLevel.NEEDS_STAFF,
+      requiresHumanReview: true,
+      blockedFromSend: true,
+      status: "draft",
+      createdAt: new Date("2026-07-14T15:30:00.000Z"),
+    },
+  });
+
+  await prisma.task.create({
+    data: {
+      id: "task-navigation-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      category: "patient_navigation",
+      title: "Review patient navigation request",
+      details: "draft:ai-draft-navigation-maya Appointment request requires front desk review; no visit is confirmed.",
+      priority: "normal",
+      riskLevel: RiskLevel.NEEDS_STAFF,
+      dueAt: new Date("2026-07-15T15:30:00.000Z"),
+      status: "open",
+      createdBy: "user-nadja",
+    },
   });
 
   await prisma.escalation.createMany({
