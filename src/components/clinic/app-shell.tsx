@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Bell, Blocks, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown,
-  AudioLines, BookOpenCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
+  AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X,
@@ -24,7 +24,7 @@ const icons = {
   FlaskConical, ScanLine, Pill, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
   ChartNoAxesCombined, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Settings2,
-  Network, Orbit, Route, HeartHandshake, Fingerprint, AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints,
+  Network, Orbit, Route, HeartHandshake, Fingerprint, ClipboardCheck, AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints,
 };
 
 function initials(name: string) {
@@ -102,7 +102,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
   const [globalSearch, setGlobalSearch] = useState("");
   const slug = pathname.split("/").filter(Boolean)[0] || "dashboard";
   const meta = workspaceMeta[slug] ?? workspaceMeta.dashboard;
-  const networkMode = ["network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "injury-episodes", "health-passport"].includes(slug);
+  const networkMode = ["network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "injury-episodes", "health-passport", "intake-passport"].includes(slug);
   const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
 
   return (

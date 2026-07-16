@@ -36,7 +36,8 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Human-reviewed master patient identity, source-chart locator, consent ledger, and immediate consent revocation
 - Closed-loop Referral Relay with clinical orders, consent-bound connected delivery, truthful fax/Direct/manual fallbacks, receiving-clinic actions, consultation return, delivery recovery, tasks, escalations, and dual-clinic audit receipts
 - Diagnostic Capacity Exchange and Injury Episode Room
-- Health Passport and Consent Wallet preview
+- Live Health Passport and Consent Wallet workspace with tenant-filtered chart-derived refresh, explicit human confirmation, category-level defaults, emergency access preference, consent visibility, and audit receipts
+- Universal Intake Passport workspace with reusable patient-confirmed fields, versioned confirmation, patient selection, and manual intake fallback
 - Voice-first ClinicOS Copilot with same-screen transcript review and typing fallback
 - Searchable, PostgreSQL-backed Priority Zero registry covering 62 domains and 2,157 capabilities, including the incorporated 52-section ClinicOS Master Feature List
 
@@ -124,6 +125,9 @@ npm start            # production server
 - `GET|POST /api/payments` returns the tenant billing worklist or records a manual payment with a patient-balance snapshot, invoice reconciliation, payment event, and audit receipt.
 - `POST /api/payments/links` creates a short-lived, tokenized payment link without putting PHI in the checkout URL; `POST /api/payments/:paymentId/transition` records a reviewed failure or refund.
 - `POST /api/payments/memberships` and `POST /api/payments/packages` create paid, auditable med-spa membership and package records using the manual payment fallback until a reviewed processor adapter is active.
+- `GET /api/health-passport` returns only the signed-in organization's patient passports, while `POST /api/health-passport` creates a chart-derived snapshot marked `needs_confirmation`; it never represents the snapshot as a diagnosis or autonomous clinical decision.
+- `GET|POST /api/consent-wallet` returns or updates patient sharing defaults and emergency-access preference with organization checks and audit receipts; ordinary record sharing still requires the consent ledger and access-grant rules.
+- `GET|POST /api/intake-passport` returns or confirms reusable intake fields with version increments, explicit confirmation, tenant checks, and audit receipts; clinic-specific questions and manual forms remain the fallback.
 - `GET|POST /api/network/record-requests` and the connected-care decision/read/revoke routes require role permission, an active relationship, sharing agreement, active consent, purpose/category coverage, and an auditable access grant. Break-glass remains a narrow, time-limited, separately audited exception.
 - `GET /api/network/directory` returns only the participating-clinic directory and signed-in organization's integration/error queue; `POST /api/network/connections` creates a purpose-limited relationship request, while `POST /api/network/connections/:connectionId/transition` restricts approval, suspension, and restoration to the correct organization administrator boundary and writes dual-organization audit receipts.
 - `GET|POST /api/referrals` lists the signed-in clinic's outbound referrals and only transmitted inbound referrals whose relationship, agreement, and patient consent still validate at read time, or creates a tenant-owned clinical order and referral draft after destination, document, relationship, agreement, and consent validation.

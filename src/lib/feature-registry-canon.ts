@@ -369,14 +369,14 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 47, slug: "health-passport-consent-wallet", title: "Health Passport and Consent Wallet",
     mandate: "Give patients a portable, understandable record and fine-grained control over authorized sharing.",
     ownerRoles: ["patient", "patient_proxy", "privacy_officer", "provider"], interfaceRoute: "/health-passport",
-    databaseObjects: ["health_passports", "consent_wallets", "consents", "access_grants", "record_requests", "audit_logs"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["health_passports", "consent_wallets", "consents", "access_grants", "record_requests", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Health Passport | Consent Wallet | Portable identity summary | Portable medication list | Portable allergy list | Portable problem list | Portable immunization list | Portable care-plan summary | Emergency summary | Patient-selected data bundle | Patient-selected receiving organization | Purpose-of-use approval | Time-limited consent | Category-limited consent | Consent withdrawal | Sharing receipt | QR presentation roadmap | Wallet recovery | Proxy management | Patient-visible access history | Correction request | Downloadable approved record | Source provenance | Expiration alert | Emergency-access preference",
   }),
   section({
     number: 48, slug: "universal-intake-passport", title: "Universal Intake Passport",
     mandate: "Let patients reuse verified intake information while requiring review, freshness, consent, and clinic-specific additions.",
     ownerRoles: ["patient", "front_desk", "provider", "privacy_officer"], interfaceRoute: "/intake-passport",
-    databaseObjects: ["intake_passports", "form_submissions", "patient_preferences", "consents", "documents"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["intake_passports", "form_submissions", "patient_preferences", "consents", "documents"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Universal Intake Passport | Reusable demographics | Reusable insurance | Reusable pharmacy | Reusable medication history | Reusable allergy history | Reusable surgical history | Reusable family history | Reusable social history | Patient confirmation date | Field freshness indicator | Field-level reuse consent | Clinic-specific supplemental questions | Conditional intake additions | Changed-answer highlighting | Source submission link | Staff review | Provider review | Patient correction | Version history | Mobile intake reuse | Manual form fallback | Intake Passport audit history",
   }),
   section({

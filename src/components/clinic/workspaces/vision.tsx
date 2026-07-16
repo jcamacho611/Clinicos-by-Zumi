@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { AiWorkflowDemo } from "@/components/clinic/ai-workflow-demo";
 import { NetworkDirectoryPanel } from "@/components/clinic/network-directory-panel";
+import { PassportActions } from "@/components/clinic/passport-actions";
 import { PageIntro, Progress, SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import type { CanonicalRegistrySection } from "@/lib/feature-registry-canon";
 import type { ConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
 import type { NetworkDirectoryWorkspace } from "@/lib/repositories/network-directory-repository";
+import type { PassportWorkspace } from "@/lib/repositories/passport-repository";
 
 export function NetworkWorkspace({ overview, directory, canCreate, canManage }: { overview: ConnectedCareOverview; directory: NetworkDirectoryWorkspace; canCreate: boolean; canManage: boolean }) {
   return <div className="space-y-6">
@@ -49,12 +51,27 @@ export function CapacityExchangeWorkspace({ overview }: { overview: ConnectedCar
   </div>;
 }
 
-export function HealthPassportWorkspace({ overview }: { overview: ConnectedCareOverview }) {
-  const passport = overview.passports[0];
-  return <div className="space-y-6"><PageIntro title="Health Passport + Consent Wallet" description="A portable patient summary paired with category-level, purpose-bound sharing controls and access receipts." aside={<Badge tone="teal">Patient controlled</Badge>} />
-    <div className="grid gap-4 xl:grid-cols-[1fr_.9fr]"><Card className="overflow-hidden"><div className="bg-gradient-to-br from-[#07131f] via-[#102e3d] to-[#0d6b68] p-6 text-white"><div className="flex items-start justify-between"><span className="grid size-12 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/15"><Fingerprint className="size-6 text-teal-200" /></span><Badge className="bg-white/10 text-white ring-white/15">{passport?.status ?? "Unavailable"}</Badge></div><p className="mt-8 text-[9px] font-bold uppercase tracking-[.18em] text-teal-200">ClinicOS Health Passport</p><h3 className="mt-2 text-2xl font-black tracking-[-.04em]">{passport?.patientName ?? "No passport found"}</h3><p className="mt-1 text-xs text-slate-300">{passport?.mrn ?? "Synthetic demo data"} · Last confirmed {passport?.lastConfirmedAt ? new Date(passport.lastConfirmedAt).toLocaleDateString() : "not yet"}</p></div><div className="grid gap-3 p-5 sm:grid-cols-2">{[["Allergies", "Penicillin"], ["Medications", "Metformin · Lisinopril"], ["Problems", "Diabetes · Hypertension"], ["Provenance", "Source organization labeled"]].map(([label, value]) => <div className="rounded-xl bg-slate-50 p-3" key={label}><p className="text-[9px] font-bold text-slate-400">{label.toUpperCase()}</p><p className="mt-1 text-xs font-extrabold text-slate-900">{value}</p></div>)}</div></Card>
-      <SectionCard title="Consent Wallet" description="The patient controls who receives which category, for what purpose, and for how long."><div className="space-y-3 p-4">{[["Treatment sharing", "Ask each time", "Needs review"], ["Payment", "Organization only", "Active"], ["Sensitive records", "Blocked", "Restricted"], ["Emergency access", "Allow with alert", "Audited"]].map(([label, value, status]) => <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3" key={label}><KeyRound className="size-4 text-teal-600" /><div className="flex-1"><p className="text-xs font-extrabold text-slate-900">{label}</p><p className="mt-0.5 text-[10px] text-slate-500">{value}</p></div><StatusBadge status={status} /></div>)}</div></SectionCard></div>
+export function HealthPassportWorkspace({ workspace }: { workspace: PassportWorkspace }) {
+  const passport = workspace.passports[0];
+  const summary = passport?.summary && typeof passport.summary === "object" ? passport.summary as Record<string, unknown> : {};
+  const listSummary = (key: string, field: string) => {
+    const value = summary[key];
+    if (!Array.isArray(value) || value.length === 0) return "None recorded";
+    const labels = value.slice(0, 3).map((item) => typeof item === "object" && item ? String((item as Record<string, unknown>)[field] ?? "") : String(item)).filter(Boolean);
+    return labels.join(" · ") || "Recorded";
+  };
+  const wallet = workspace.wallets.find((item) => item.patientId === passport?.patientId) ?? workspace.wallets[0];
+  const sharingDefaults = wallet?.sharingDefaults && typeof wallet.sharingDefaults === "object" ? wallet.sharingDefaults as Record<string, unknown> : {};
+  const preference = (key: string, fallback: string) => String(sharingDefaults[key] ?? fallback).replaceAll("_", " ");
+  return <div className="space-y-6"><PageIntro title="Health Passport + Consent Wallet" description="A portable patient summary paired with category-level, purpose-bound sharing controls and access receipts." aside={<Badge tone="teal">Patient controlled</Badge>} /><PassportActions workspace={workspace} />
+    <div className="grid gap-4 xl:grid-cols-[1fr_.9fr]"><Card className="overflow-hidden"><div className="bg-gradient-to-br from-[#07131f] via-[#102e3d] to-[#0d6b68] p-6 text-white"><div className="flex items-start justify-between"><span className="grid size-12 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/15"><Fingerprint className="size-6 text-teal-200" /></span><Badge className="bg-white/10 text-white ring-white/15">{passport?.status ?? "Unavailable"}</Badge></div><p className="mt-8 text-[9px] font-bold uppercase tracking-[.18em] text-teal-200">ClinicOS Health Passport</p><h3 className="mt-2 text-2xl font-black tracking-[-.04em]">{passport?.patientName ?? "No passport found"}</h3><p className="mt-1 text-xs text-slate-300">{passport?.patientMrn ?? "No MRN"} · Last confirmed {passport?.lastConfirmedAt ? new Date(passport.lastConfirmedAt).toLocaleDateString() : "not yet"}</p></div><div className="grid gap-3 p-5 sm:grid-cols-2">{[["Allergies", listSummary("allergies", "substance")], ["Medications", listSummary("medications", "name")], ["Problems", listSummary("problems", "label")], ["Provenance", String((summary.provenance as Record<string, unknown> | undefined)?.sourceOrganizationId ? "Current chart snapshot" : "Not refreshed")]].map(([label, value]) => <div className="rounded-xl bg-slate-50 p-3" key={label}><p className="text-[9px] font-bold text-slate-400">{label.toUpperCase()}</p><p className="mt-1 text-xs font-extrabold text-slate-900">{value}</p></div>)}</div></Card>
+      <SectionCard title="Consent Wallet" description="The patient controls who receives which category, for what purpose, and for how long."><div className="space-y-3 p-4">{[["Treatment sharing", preference("treatment", "ask each time"), "Needs review"], ["Payment", preference("payment", "organization only"), "Active"], ["Sensitive records", preference("sensitiveRecords", "blocked"), "Restricted"], ["Emergency access", (wallet?.emergencyPreference ?? "allow_break_glass_with_alert").replaceAll("_", " "), "Audited"]].map(([label, value, status]) => <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3" key={label}><KeyRound className="size-4 text-teal-600" /><div className="flex-1"><p className="text-xs font-extrabold text-slate-900">{label}</p><p className="mt-0.5 text-[10px] capitalize text-slate-500">{value}</p></div><StatusBadge status={status} /></div>)}</div></SectionCard></div>
+    <SectionCard title="Reusable intake passport" description="Patient-confirmed fields can be carried into future intake without silently overwriting a chart."><div className="space-y-3 p-4">{workspace.intakes.length ? workspace.intakes.map((intake) => <div className="rounded-xl border border-slate-200 p-3" key={intake.id}><div className="flex items-center justify-between gap-3"><p className="text-xs font-extrabold text-slate-900">{intake.patientName}</p><StatusBadge status={intake.confirmedAt ? "Confirmed" : "Needs confirmation"} /></div><p className="mt-2 text-[10px] text-slate-500">Version {intake.version} · {Object.keys(intake.reusableFields as Record<string, unknown>).length} reusable fields</p></div>) : <p className="text-xs text-slate-500">No reusable intake passport has been confirmed yet.</p>}</div></SectionCard>
   </div>;
+}
+
+export function IntakePassportWorkspace({ workspace }: { workspace: PassportWorkspace }) {
+  return <div className="space-y-6"><PageIntro title="Universal Intake Passport" description="Reusable demographics, insurance, pharmacy, medication, allergy, and history fields with explicit version and confirmation state." aside={<Badge tone="teal">Confirmation required</Badge>} /><PassportActions workspace={workspace} /><SectionCard title="Passport versions" description="A patient or authorized staff member confirms what may be reused; the intake passport is not a replacement for clinical review."><div className="space-y-3 p-4">{workspace.intakes.map((intake) => <div className="rounded-xl border border-slate-200 p-4" key={intake.id}><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-extrabold text-slate-900">{intake.patientName}</p><p className="mt-1 text-[10px] text-slate-500">Version {intake.version} · {Object.keys(intake.reusableFields as Record<string, unknown>).join(" · ")}</p></div><StatusBadge status={intake.confirmedAt ? "Confirmed" : "Needs confirmation"} /></div></div>)}{!workspace.intakes.length && <p className="text-xs text-slate-500">No intake passport records yet.</p>}</div></SectionCard></div>;
 }
 
 export function InjuryEpisodesWorkspace({ overview }: { overview: ConnectedCareOverview }) {

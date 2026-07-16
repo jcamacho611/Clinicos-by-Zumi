@@ -37,6 +37,7 @@ export const navigation = [
       { href: "/capacity-exchange", label: "Capacity Exchange", icon: "Route" },
       { href: "/injury-episodes", label: "Injury Episode Room", icon: "HeartHandshake" },
       { href: "/health-passport", label: "Health Passport", icon: "Fingerprint" },
+      { href: "/intake-passport", label: "Intake Passport", icon: "ClipboardCheck" },
     ],
   },
   {
@@ -98,6 +99,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   "capacity-exchange": { title: "Capacity Exchange", eyebrow: "Network availability" },
   "injury-episodes": { title: "Injury Episode Room", eyebrow: "Case command center" },
   "health-passport": { title: "Health Passport", eyebrow: "Patient-controlled portability" },
+  "intake-passport": { title: "Intake Passport", eyebrow: "Reusable patient-confirmed intake" },
   "voice-assistant": { title: "Talk to ClinicOS", eyebrow: "Voice-first Copilot" },
   "feature-registry": { title: "Priority Zero registry", eyebrow: "ClinicOS product constitution" },
   portal: { title: "Patient portal", eyebrow: "Patient experience preview" },

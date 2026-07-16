@@ -12,7 +12,7 @@ import { FeatureRegistryWorkspace } from "@/components/clinic/feature-registry-w
 import { AccessControlsWorkspace } from "@/components/clinic/access-controls-workspace";
 import { IdentityResolutionWorkspace } from "@/components/clinic/identity-resolution-workspace";
 import { ReferralsWorkspace } from "@/components/clinic/referrals-workspace";
-import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace, InjuryEpisodesWorkspace, NetworkWorkspace, RegistryDomainWorkspace, VoiceAssistantWorkspace } from "@/components/clinic/workspaces/vision";
+import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace, InjuryEpisodesWorkspace, IntakePassportWorkspace, NetworkWorkspace, RegistryDomainWorkspace, VoiceAssistantWorkspace } from "@/components/clinic/workspaces/vision";
 import { clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 import { getConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
@@ -29,12 +29,13 @@ import { listMedicationWorkspace } from "@/lib/repositories/medication-repositor
 import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
 import { listFormWorkspace } from "@/lib/repositories/form-repository";
 import { listPaymentWorkspace } from "@/lib/repositories/payment-repository";
+import { listPassportWorkspace } from "@/lib/repositories/passport-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
   "labs", "imaging", "medications", "documents", "forms", "billing", "insurance", "cases", "quality",
   "messages", "tasks", "escalations", "ai-assistants", "portal", "integrations", "settings",
-  "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "health-passport", "injury-episodes", "voice-assistant", "feature-registry",
+  "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
 
 export async function WorkspaceRenderer({ organizationId, role, userId, workspace }: { organizationId: string; role: ClinicRole; userId: string; workspace: string }) {
@@ -101,7 +102,14 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "care-teams": return <CareTeamsWorkspace overview={await getConnectedCareOverview(organizationId)} />;
     case "capacity-exchange": return <CapacityExchangeWorkspace overview={await getConnectedCareOverview(organizationId)} />;
-    case "health-passport": return <HealthPassportWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "health-passport": {
+      if (!can(role, "identity", "read")) return notFound();
+      return <HealthPassportWorkspace workspace={await listPassportWorkspace(organizationId)} />;
+    }
+    case "intake-passport": {
+      if (!can(role, "consents", "read")) return notFound();
+      return <IntakePassportWorkspace workspace={await listPassportWorkspace(organizationId)} />;
+    }
     case "injury-episodes": return <InjuryEpisodesWorkspace overview={await getConnectedCareOverview(organizationId)} />;
     case "voice-assistant": return <VoiceAssistantWorkspace />;
     case "feature-registry": {
