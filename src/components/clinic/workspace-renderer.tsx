@@ -49,10 +49,12 @@ import { SystemHealthWorkspace } from "@/components/clinic/system-health-workspa
 import { listCareTeamWorkspace } from "@/lib/repositories/care-team-repository";
 import { CodingRevenueWorkspace } from "@/components/clinic/coding-revenue-workspace";
 import { listCodingWorkspace } from "@/lib/repositories/coding-revenue-repository";
+import { LuxeMediWorkspace } from "@/components/clinic/luxe-medi-workspace";
+import { listLuxeMediWorkspace } from "@/lib/repositories/luxe-medi-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
-  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "claim-readiness", "insurance", "cases", "quality", "crm", "system-health",
+  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "claim-readiness", "luxe-medi", "insurance", "cases", "quality", "crm", "system-health",
   "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
@@ -124,6 +126,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     case "claim-readiness": {
       if (!can(role, "coding", "read")) return notFound();
       return <CodingRevenueWorkspace canWrite={can(role, "coding", "update")} workspace={await listCodingWorkspace({ organizationId, role })} />;
+    }
+    case "luxe-medi": {
+      if (!can(role, "luxe_medi", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listLuxeMediWorkspace>[0];
+      return <LuxeMediWorkspace canCreate={can(role, "luxe_medi", "create")} canManage={can(role, "luxe_medi", "manage")} canUpdate={can(role, "luxe_medi", "update")} workspace={await listLuxeMediWorkspace(session)} />;
     }
     case "insurance": return <InsuranceWorkspace />;
     case "cases": return <CasesWorkspace />;

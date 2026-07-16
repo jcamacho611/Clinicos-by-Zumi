@@ -13,7 +13,7 @@ export const clinicRoleSchema = z.enum([
 ]);
 
 export type ClinicRole = z.infer<typeof clinicRoleSchema>;
-export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "coding" | "settings" | "users" | "registry" | "network" | "identity" | "consents" | "referrals" | "labs" | "imaging" | "medications" | "documents" | "forms" | "voice" | "tasks" | "escalations" | "messages" | "knowledge" | "remote_monitoring" | "inventory" | "credentialing" | "crm" | "reliability" | "care_teams";
+export type ClinicResource = "patients" | "appointments" | "encounters" | "billing" | "coding" | "luxe_medi" | "settings" | "users" | "registry" | "network" | "identity" | "consents" | "referrals" | "labs" | "imaging" | "medications" | "documents" | "forms" | "voice" | "tasks" | "escalations" | "messages" | "knowledge" | "remote_monitoring" | "inventory" | "credentialing" | "crm" | "reliability" | "care_teams";
 export type ClinicAction = "read" | "create" | "update" | "sign" | "manage";
 
 const permissions: Record<ClinicRole, Partial<Record<ClinicResource, ClinicAction[]>>> = {
@@ -60,6 +60,18 @@ const codingPermissions: Record<ClinicRole, ClinicAction[]> = {
   viewer: ["read"],
 };
 
+const luxeMediPermissions: Record<ClinicRole, ClinicAction[]> = {
+  clinic_owner: ["read", "create", "update", "manage"],
+  administrator: ["read", "create", "update", "manage"],
+  provider: ["read", "create", "update"],
+  clinical_staff: ["read", "create", "update"],
+  front_desk: ["read", "create", "update"],
+  biller: ["read"],
+  quality: ["read"],
+  case_manager: ["read"],
+  viewer: ["read"],
+};
+
 export function normalizeClinicRole(value: string): ClinicRole {
   return clinicRoleSchema.safeParse(value).data ?? "viewer";
 }
@@ -67,6 +79,7 @@ export function normalizeClinicRole(value: string): ClinicRole {
 export function can(role: ClinicRole, resource: ClinicResource, action: ClinicAction) {
   if (resource === "care_teams") return careTeamPermissions[role].includes(action);
   if (resource === "coding") return codingPermissions[role].includes(action);
+  if (resource === "luxe_medi") return luxeMediPermissions[role].includes(action);
   return permissions[role][resource]?.includes(action) ?? false;
 }
 

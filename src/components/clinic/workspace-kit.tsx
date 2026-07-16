@@ -9,8 +9,8 @@ export function PageIntro({ title, description, action, aside }: { title: string
   return <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-2xl font-extrabold tracking-[-.045em] text-slate-950 sm:text-3xl">{title}</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{description}</p></div><div className="flex flex-wrap items-center gap-2">{aside}{action}</div></div>;
 }
 
-export function StatCard({ label, value, detail, icon, accent = "slate" }: { label: string; value: string; detail: string; icon: ReactNode; accent?: "slate" | "teal" | "sky" | "amber" | "rose" }) {
-  const accents = { slate: "bg-slate-100 text-slate-600", teal: "bg-teal-50 text-teal-700", sky: "bg-sky-50 text-sky-700", amber: "bg-amber-50 text-amber-700", rose: "bg-rose-50 text-rose-700" };
+export function StatCard({ label, value, detail, icon, accent = "slate" }: { label: string; value: string; detail: string; icon: ReactNode; accent?: "slate" | "teal" | "sky" | "amber" | "rose" | "violet" }) {
+  const accents = { slate: "bg-slate-100 text-slate-600", teal: "bg-teal-50 text-teal-700", sky: "bg-sky-50 text-sky-700", amber: "bg-amber-50 text-amber-700", rose: "bg-rose-50 text-rose-700", violet: "bg-violet-50 text-violet-700" };
   return <Card className="p-4 sm:p-5"><div className={cn("grid size-9 place-items-center rounded-xl", accents[accent])}>{icon}</div><p className="mt-4 text-2xl font-extrabold tracking-[-.045em] text-slate-950">{value}</p><p className="mt-1 text-xs font-bold text-slate-700">{label}</p><p className="mt-2 text-[10px] text-slate-400">{detail}</p></Card>;
 }
 

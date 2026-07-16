@@ -2141,6 +2141,97 @@ model LeadEvent {
   @@map("lead_events")
 }
 
+model LuxeService {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  key                   String
+  name                  String
+  category              String
+  description           String?
+  priceCents            Int      @default(0)
+  durationMinutes      Int      @default(60)
+  mobileAvailable       Boolean  @default(false)
+  requiresConsultation  Boolean  @default(true)
+  providerReviewRequired Boolean @default(true)
+  status                String   @default("active")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([organizationId, key])
+  @@index([organizationId, category, status])
+  @@map("luxe_services")
+}
+
+model LuxeTreatmentPlan {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  patientId             String
+  serviceId             String
+  providerId            String?
+  name                  String
+  goals                 Json?
+  recommendedSessions   Int      @default(1)
+  status                String   @default("draft")
+  reviewStatus          String   @default("needs_provider_review")
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  reviewNotes           String?
+  createdBy             String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([organizationId, status, reviewStatus])
+  @@index([organizationId, patientId, updatedAt])
+  @@index([serviceId])
+  @@map("luxe_treatment_plans")
+}
+
+model LuxeTreatmentSession {
+  id              String   @id @default(cuid())
+  organizationId  String
+  patientId       String
+  serviceId       String
+  treatmentPlanId String?
+  appointmentId   String?
+  encounterId     String?
+  providerId      String?
+  sessionNumber   Int      @default(1)
+  status          String   @default("scheduled")
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  notes           String?
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId, status, scheduledAt])
+  @@index([organizationId, patientId, createdAt])
+  @@index([treatmentPlanId, sessionNumber])
+  @@map("luxe_treatment_sessions")
+}
+
+model LuxePromotion {
+  id             String   @id @default(cuid())
+  organizationId String
+  serviceId      String?
+  name           String
+  code           String?
+  description    String?
+  discountCents  Int?
+  discountPercent Int?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  status         String   @default("draft")
+  usageCount     Int      @default(0)
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, status, startsAt, endsAt])
+  @@index([serviceId])
+  @@map("luxe_promotions")
+}
+
 model MessageThread {
   id                  String    @id @default(cuid())
   organizationId      String

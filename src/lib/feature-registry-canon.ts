@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.6";
+export const REGISTRY_CANON_VERSION = "2026-07-16.7";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -264,7 +264,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 32, slug: "luxe-medi", title: "Luxe Medi-Specific Features",
     mandate: "Support medical-spa services, consent, packages, memberships, media, mobile care, conversion, and provider review.",
     ownerRoles: ["clinic_owner", "provider", "front_desk", "growth_manager"], interfaceRoute: "/luxe-medi",
-    databaseObjects: ["organizations", "appointments", "encounters", "consents", "payments", "subscriptions", "documents"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["organizations", "appointments", "encounters", "consents", "payments", "subscriptions", "documents", "luxe_services", "luxe_treatment_plans", "luxe_treatment_sessions", "luxe_promotions"], deliveryStatus: "FOUNDATION", deliveryMode: "governance",
     features: "Public service catalog | Injectables | Botox | Juvederm and fillers | IV hydration | Weight-loss services | Body contouring | Lymphatic drainage | Pre and post-operative care | Teeth whitening | Tooth gems | Mobile and at-home services | Consultation requests | Treatment-consent templates | Provider treatment-eligibility review | Deposits | Packages | Memberships | Session tracking | Follow-up visits | Before-and-after media | Photography consent | Provider assignment | Inventory roadmap | Service pricing | Promotion tracking | Lead conversion | Client reactivation | Treatment-plan tracking",
   }),
   section({

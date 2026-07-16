@@ -49,6 +49,7 @@ export const navigation = [
     items: [
       { href: "/billing", label: "Billing", icon: "ReceiptText" },
       { href: "/claim-readiness", label: "Claim readiness", icon: "Calculator" },
+      { href: "/luxe-medi", label: "Luxe Medi Studio", icon: "Sparkles" },
       { href: "/insurance", label: "Insurance", icon: "ShieldCheck" },
       { href: "/cases", label: "No-fault / WC", icon: "BriefcaseMedical" },
       { href: "/quality", label: "Quality & HEDIS", icon: "ChartNoAxesCombined" },
@@ -96,6 +97,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   inventory: { title: "Inventory", eyebrow: "Supply and custody intelligence" },
   billing: { title: "Billing", eyebrow: "Revenue cycle" },
   "claim-readiness": { title: "Claim readiness", eyebrow: "Coding and revenue intelligence" },
+  "luxe-medi": { title: "Luxe Medi Studio", eyebrow: "Med-spa operations" },
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },
   quality: { title: "Quality & HEDIS", eyebrow: "Care-gap intelligence" },

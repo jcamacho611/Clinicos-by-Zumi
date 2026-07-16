@@ -142,6 +142,10 @@ async function main() {
   await prisma.medicationReconciliation.deleteMany();
   await prisma.aiReview.deleteMany();
   await prisma.aiDraft.deleteMany();
+  await prisma.luxeTreatmentSession.deleteMany();
+  await prisma.luxeTreatmentPlan.deleteMany();
+  await prisma.luxePromotion.deleteMany();
+  await prisma.luxeService.deleteMany();
   await prisma.denial.deleteMany();
   await prisma.claimLine.deleteMany();
   await prisma.claimDraft.deleteMany();
@@ -302,6 +306,35 @@ async function main() {
       { id: "pt-1004", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", dateOfBirth: new Date("1989-05-15T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", portalStatus: "active" },
       { id: "pt-2001", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", portalStatus: "invited", identityStatus: "possible_match", requiresHumanReview: true },
     ],
+  });
+
+  await prisma.luxeService.createMany({
+    data: [
+      { id: "luxe-service-botox", organizationId: luxe.id, key: "botox", name: "Botox", category: "Injectables", description: "Provider-reviewed neuromodulator consultation and treatment workflow.", priceCents: 45000, durationMinutes: 45, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-fillers", organizationId: luxe.id, key: "fillers", name: "Juvederm and fillers", category: "Injectables", description: "Provider-reviewed filler consultation with consent and aftercare custody.", priceCents: 85000, durationMinutes: 60, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-iv", organizationId: luxe.id, key: "iv-hydration", name: "IV hydration", category: "Wellness", description: "Request workflow with licensed-provider eligibility review.", priceCents: 18000, durationMinutes: 60, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-weight-loss", organizationId: luxe.id, key: "weight-loss", name: "Weight-loss services", category: "Weight management", description: "Structured plan workflow; no automated eligibility or prescribing decision.", priceCents: 35000, durationMinutes: 45, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-body-contour", organizationId: luxe.id, key: "body-contouring", name: "Body contouring", category: "Body", description: "Consultation, provider review, scheduling, and session tracking.", priceCents: 55000, durationMinutes: 60, mobileAvailable: true, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-lymphatic", organizationId: luxe.id, key: "lymphatic-drainage", name: "Lymphatic drainage", category: "Recovery", description: "Manual service workflow with appointment and aftercare tracking.", priceCents: 22000, durationMinutes: 60, mobileAvailable: true, requiresConsultation: false, providerReviewRequired: true },
+      { id: "luxe-service-post-op", organizationId: luxe.id, key: "post-operative-care", name: "Pre/post-operative care", category: "Recovery", description: "Provider-led recovery coordination and documentation workflow.", priceCents: 30000, durationMinutes: 60, mobileAvailable: true, requiresConsultation: true, providerReviewRequired: true },
+      { id: "luxe-service-teeth-whitening", organizationId: luxe.id, key: "teeth-whitening", name: "Teeth whitening", category: "Smile", description: "Service request and consent workflow.", priceCents: 17500, durationMinutes: 45, requiresConsultation: false, providerReviewRequired: true },
+      { id: "luxe-service-tooth-gems", organizationId: luxe.id, key: "tooth-gems", name: "Tooth gems", category: "Smile", description: "Cosmetic service request with documented consent.", priceCents: 9500, durationMinutes: 30, requiresConsultation: false, providerReviewRequired: true },
+    ],
+  });
+  await prisma.luxePromotion.create({
+    data: { id: "luxe-promo-new-client", organizationId: luxe.id, name: "New client consultation offer", code: "WELCOME-LUXE", description: "Synthetic demo promotion held as a draft until an administrator activates it.", discountPercent: 10, status: "draft", createdBy: "user-luxe-owner" },
+  });
+  await prisma.luxeTreatmentPlan.create({
+    data: { id: "luxe-plan-camille-weight", organizationId: luxe.id, patientId: "pt-1004", serviceId: "luxe-service-weight-loss", providerId: "provider-nadja-luxe", name: "Camille weight-management plan", goals: ["Document client goals", "Review consent and eligibility", "Schedule provider-approved follow-up"], recommendedSessions: 4, status: "draft", reviewStatus: "needs_provider_review", createdBy: "user-luxe-owner", createdAt: new Date("2026-07-15T15:30:00.000Z") },
+  });
+  await prisma.luxeTreatmentSession.create({
+    data: { id: "luxe-session-camille-1", organizationId: luxe.id, patientId: "pt-1004", serviceId: "luxe-service-weight-loss", treatmentPlanId: "luxe-plan-camille-weight", appointmentId: "apt-4", providerId: "provider-nadja-luxe", sessionNumber: 1, status: "scheduled", scheduledAt: new Date("2026-07-21T18:00:00.000Z"), createdBy: "user-luxe-owner" },
+  });
+  await prisma.task.create({
+    data: { id: "task-luxe-treatment-review", organizationId: luxe.id, patientId: "pt-1004", category: "luxe_treatment_review", title: "Provider review: Camille weight-management plan", details: "treatment_plan:luxe-plan-camille-weight Review eligibility, goals, consent, and plan before activation.", ownerId: "user-luxe-owner", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-17T15:00:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
+  });
+  await prisma.auditLog.create({
+    data: { id: "audit-luxe-treatment-plan-draft", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "luxe.treatment_plan_seeded", resourceType: "luxe_treatment_plan", resourceId: "luxe-plan-camille-weight", patientId: "pt-1004", metadata: { providerReviewRequired: true, noEligibilityAutomation: true, syntheticDemo: true } },
   });
 
   await prisma.lead.createMany({
