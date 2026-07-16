@@ -48,6 +48,7 @@ export const navigation = [
     label: "Revenue & quality",
     items: [
       { href: "/billing", label: "Billing", icon: "ReceiptText" },
+      { href: "/claim-readiness", label: "Claim readiness", icon: "Calculator" },
       { href: "/insurance", label: "Insurance", icon: "ShieldCheck" },
       { href: "/cases", label: "No-fault / WC", icon: "BriefcaseMedical" },
       { href: "/quality", label: "Quality & HEDIS", icon: "ChartNoAxesCombined" },
@@ -94,6 +95,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   "remote-monitoring": { title: "Remote monitoring", eyebrow: "Consent-bound home observations" },
   inventory: { title: "Inventory", eyebrow: "Supply and custody intelligence" },
   billing: { title: "Billing", eyebrow: "Revenue cycle" },
+  "claim-readiness": { title: "Claim readiness", eyebrow: "Coding and revenue intelligence" },
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },
   quality: { title: "Quality & HEDIS", eyebrow: "Care-gap intelligence" },

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Activity, Bell, Blocks, Boxes, BriefcaseMedical, CalendarDays, ChartNoAxesCombined, ChevronDown, CircleDollarSign, Gauge,
+  Activity, Bell, Blocks, Boxes, BriefcaseMedical, Calculator, CalendarDays, ChartNoAxesCombined, ChevronDown, CircleDollarSign, Gauge,
   AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const icons = {
   Activity, LayoutDashboard, Headphones, Stethoscope, Users, CalendarDays, ClipboardPlus, Video,
   FlaskConical, ScanLine, Pill, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
-  ChartNoAxesCombined, CircleDollarSign, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
+  ChartNoAxesCombined, CircleDollarSign, Calculator, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Boxes, Settings2, Gauge,
   Network, Orbit, Route, HeartHandshake, Fingerprint, ClipboardCheck, AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints,
 };

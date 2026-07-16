@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
-import { AppointmentStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
+import { AppointmentStatus, ClaimStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
@@ -142,6 +142,10 @@ async function main() {
   await prisma.medicationReconciliation.deleteMany();
   await prisma.aiReview.deleteMany();
   await prisma.aiDraft.deleteMany();
+  await prisma.denial.deleteMany();
+  await prisma.claimLine.deleteMany();
+  await prisma.claimDraft.deleteMany();
+  await prisma.superbill.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.message.deleteMany();
   await prisma.messageThread.deleteMany();
@@ -542,6 +546,31 @@ async function main() {
       { id: "proc-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", code: "99214", label: "Established patient office visit", modifiers: [] },
       { id: "proc-1002", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", code: "G0439", label: "Subsequent annual wellness visit", modifiers: [] },
     ],
+  });
+
+  await prisma.superbill.createMany({
+    data: [
+      { id: "superbill-maya-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", providerId: "provider-nadja", placeOfService: "11", diagnoses: [{ code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia" }, { code: "I10", label: "Essential hypertension" }], procedures: [{ code: "99214", label: "Established patient office visit", modifiers: [] }], status: "draft", createdAt: new Date("2026-07-14T15:20:00.000Z") },
+      { id: "superbill-darius-1003", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", providerId: "provider-nadja", placeOfService: "11", diagnoses: [{ code: "Z00.00", label: "General adult medical examination" }], procedures: [{ code: "G0439", label: "Subsequent annual wellness visit", modifiers: [] }], status: "reviewed", reviewedBy: "user-nadja", reviewedAt: new Date("2026-07-14T15:12:00.000Z"), createdAt: new Date("2026-07-14T15:10:00.000Z") },
+    ],
+  });
+
+  await prisma.claimDraft.createMany({
+    data: [
+      { id: "claim-draft-maya-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", superbillId: "superbill-maya-1001", payer: "Healthfirst", providerNpi: "SYNTH-NPI-1001", facilityNpi: "SYNTH-FACILITY-001", taxId: "SYNTH-TAX-001", placeOfService: "11", totalCents: 22400, status: ClaimStatus.DRAFT, createdAt: new Date("2026-07-14T15:25:00.000Z") },
+      { id: "claim-draft-darius-1003", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", superbillId: "superbill-darius-1003", payer: "MetroPlus", providerNpi: "SYNTH-NPI-1001", facilityNpi: "SYNTH-FACILITY-001", taxId: "SYNTH-TAX-001", placeOfService: "11", totalCents: 18500, status: ClaimStatus.DENIED, createdAt: new Date("2026-07-12T15:25:00.000Z") },
+    ],
+  });
+
+  await prisma.claimLine.createMany({
+    data: [
+      { id: "claim-line-maya-99214", organizationId: bfm.id, claimDraftId: "claim-draft-maya-1001", cptCode: "99214", icd10Pointers: ["E11.65", "I10"], modifiers: [], units: 1, chargeCents: 22400 },
+      { id: "claim-line-darius-g0439", organizationId: bfm.id, claimDraftId: "claim-draft-darius-1003", cptCode: "G0439", icd10Pointers: ["Z00.00"], modifiers: [], units: 1, chargeCents: 18500 },
+    ],
+  });
+
+  await prisma.denial.create({
+    data: { id: "denial-darius-modifier", organizationId: bfm.id, claimDraftId: "claim-draft-darius-1003", reasonCode: "CO-4", reason: "Procedure code requires a payer-specific modifier review in this synthetic denial workflow.", amountCents: 18500, status: "open", appealDueAt: new Date("2026-08-01T15:25:00.000Z"), createdAt: new Date("2026-07-15T15:25:00.000Z") },
   });
 
   await prisma.auditLog.createMany({
@@ -1143,6 +1172,24 @@ async function main() {
       createdAt: new Date("2026-07-14T15:30:00.000Z"),
     },
   });
+
+  await prisma.aiDraft.create({
+    data: {
+      id: "ai-draft-coding-maya",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      sourceType: "coding_recommendation",
+      sourceId: "claim-draft-maya-1001",
+      purpose: "coding_readiness",
+      content: JSON.stringify({ rulesVersion: "coding-readiness-2026-07-16.1", generatedAt: "2026-07-14T15:30:00.000Z", readinessScore: 59, readiness: "blocked", findings: [{ code: "provider_signature", severity: "high", title: "Provider signature is missing", detail: "The encounter must be signed or locked by the responsible provider before claim review can be completed.", owner: "provider" }, { code: "authorization_check", severity: "medium", title: "Authorization status needs confirmation", detail: "ClinicOS cannot guarantee payer authorization. Staff must document the manual check or attach an approved authorization.", owner: "staff" }, { code: "supporting_records", severity: "low", title: "Confirm supporting records", detail: "Before submission, the biller should confirm that the documentation and any required results are attached to the claim packet.", owner: "biller" }], suggestions: [{ type: "CPT", code: "99214", label: "Established patient office visit" }, { type: "ICD-10", code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia" }, { type: "ICD-10", code: "I10", label: "Essential hypertension" }], limitations: ["Synthetic seed only. Human review required.", "No claim was submitted or approved."] }),
+      riskLevel: RiskLevel.NEEDS_STAFF,
+      requiresHumanReview: true,
+      blockedFromSend: true,
+      status: "draft",
+      createdAt: new Date("2026-07-14T15:30:00.000Z"),
+    },
+  });
+  await prisma.auditLog.create({ data: { id: "audit-coding-maya-draft", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "coding.draft_created", resourceType: "ai_draft", resourceId: "ai-draft-coding-maya", patientId: maya.id, metadata: { claimDraftId: "claim-draft-maya-1001", readinessScore: 59, humanReviewRequired: true, blockedFromSend: true, syntheticSeed: true }, createdAt: new Date("2026-07-14T15:30:00.000Z") } });
 
   await prisma.task.create({
     data: {

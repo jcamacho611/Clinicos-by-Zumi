@@ -25,6 +25,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Imaging review queue
 - Medication Command with source-labeled active and historical records, provider reconciliation, refill intake and review, prescription drafts, exact-match warning provenance, active-provider approval, truthful manual or eRx transmission state, failure recovery, pharmacy readiness, patient-chart history, and append-only custody events
 - Billing, claims, denials, balances, and insurance verification
+- Claim Readiness workspace with explainable coding preparation, denial intelligence, human review, and no-autonomous-submission guardrails
 - No-fault and workers' compensation case operations
 - Quality measures, care gaps, and outreach
 - Secure-message, task, and escalation workspaces
@@ -182,6 +183,7 @@ npm start            # production server
 - `POST /api/medications/refills` captures patient, pharmacy, phone, SMS, staff, or imported requests without approving them; `POST /api/medications/refills/:refillId/transition` separates triage, provider decision, delivery queue, receipt, failure, retry, and completion while writing tasks, integration events, medication events, and audit receipts.
 - `POST /api/medications/prescriptions` creates a non-transmitting draft assigned to an active provider; `POST /api/medications/prescriptions/:prescriptionId/transition` requires that exact provider identity for approval, blocks approval on unacknowledged high or urgent warnings, and records truthful manual or adapter delivery state.
 - `POST /api/medications/warnings/:warningId/acknowledge` requires provider signing permission, an active provider identity, and a documented reason; deterministic exact-name warnings retain their rule source and evidence and never claim clinical interpretation.
+- `GET|POST /api/coding` returns tenant-filtered claim readiness assessments or creates a blocked, explainable coding recommendation draft over an existing claim draft. `POST /api/coding/:draftId/review` records an authorized human approval or rejection; no code, claim, coverage, appeal, or submission decision is made automatically.
 
 Authenticated example:
 

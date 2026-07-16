@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.5";
+export const REGISTRY_CANON_VERSION = "2026-07-16.6";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -348,7 +348,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 44, slug: "coding-revenue-intelligence", title: "Medical Coding and Revenue Intelligence",
     mandate: "Prepare explainable coding and claim-readiness guidance while preserving coder and provider approval authority.",
     ownerRoles: ["provider", "biller", "revenue_cycle_manager", "coding_reviewer"], interfaceRoute: "/claim-readiness",
-    databaseObjects: ["encounters", "diagnoses", "procedures", "superbills", "claims", "claim_lines", "denials", "ai_drafts", "ai_reviews"], deliveryStatus: "PLANNED", deliveryMode: "governance",
+    databaseObjects: ["encounters", "diagnoses", "procedures", "superbills", "claims", "claim_lines", "denials", "ai_drafts", "ai_reviews"], deliveryStatus: "GOVERNED", deliveryMode: "governance",
     features: "Coding copilot | ICD-10 suggestion draft | CPT suggestion draft | Modifier suggestion draft | Documentation-support check | Medical-necessity checklist | Claim readiness score | Missing provider signature detection | Missing diagnosis support detection | Missing authorization detection | Missing result attachment detection | Claim edit explanation | Denial pattern intelligence | Appeal packet preparation | Revenue leakage detection | Under-coding review flag | Over-coding risk flag | Human coding approval | Provider attestation | Explainable recommendation | Coding provenance | Coding version history | No autonomous claim decision | Claim Readiness progress meter",
   }),
   section({
