@@ -404,7 +404,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 52, slug: "provider-consultation-marketplace", title: "Provider Consultation Marketplace",
     mandate: "Connect verified providers for documented consultation while preserving credential, consent, compensation, and clinical responsibility boundaries.",
     ownerRoles: ["provider", "medical_director", "credentialing_manager", "administrator"], interfaceRoute: "/provider-network",
-    databaseObjects: ["provider_consultations", "providers", "provider_credentials", "network_connections", "messages", "documents"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["provider_consultations", "providers", "provider_credentials", "network_connections", "messages", "documents"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Verified-provider directory | Consultation availability | Specialty search | Subspecialty search | State-license filter | Telemedicine-eligibility filter | Accepted-payer filter | Consultation request | Clinical question | Supporting packet | Consultation acceptance | Consultation decline | Consultation scheduling | Provider-to-provider secure room | Consultation note | Return recommendation | Requesting-provider responsibility | Consultant credential snapshot | Compensation adapter roadmap | Consultation closure | Consultation audit history",
   }),
   section({

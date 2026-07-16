@@ -182,6 +182,7 @@ async function main() {
   await prisma.appointmentType.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.providerCredential.deleteMany();
+  await prisma.providerConsultation.deleteMany();
   await prisma.provider.deleteMany();
   await prisma.user.deleteMany();
   await prisma.location.deleteMany();
@@ -246,6 +247,7 @@ async function main() {
     data: [
       { id: "credential-nadja-dea", organizationId: bfm.id, providerId: "provider-nadja", type: "DEA", number: "DEMO-DEA-NOT-VALID", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
       { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
+      { id: "credential-lee-license", organizationId: bfm.id, providerId: "provider-lee", type: "STATE_LICENSE", number: "DEMO-NY-MD", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
       { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active" },
     ],
   });
