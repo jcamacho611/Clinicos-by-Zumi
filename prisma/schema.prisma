@@ -102,6 +102,8 @@ model Organization {
   voiceSessions              VoiceSession[]
   outboundNetworkConnections NetworkConnection[]         @relation("NetworkSource")
   inboundNetworkConnections  NetworkConnection[]         @relation("NetworkTarget")
+  sentNetworkInvitations     NetworkInvitation[]         @relation("InvitationSource")
+  receivedNetworkInvitations NetworkInvitation[]         @relation("InvitationTarget")
   outboundSharingAgreements  DataSharingAgreement[]      @relation("SharingSource")
   inboundSharingAgreements   DataSharingAgreement[]      @relation("SharingTarget")
 
@@ -2548,6 +2550,35 @@ model NetworkConnection {
   @@unique([sourceOrganizationId, targetOrganizationId])
   @@index([targetOrganizationId, status])
   @@map("network_connections")
+}
+
+model NetworkInvitation {
+  id                     String       @id @default(cuid())
+  invitingOrganizationId String
+  targetOrganizationId   String?
+  inviteeType            String
+  inviteeName            String
+  inviteeEmail           String?
+  specialty              String?
+  location               String?
+  status                 String       @default("sent")
+  requestedBy            String
+  verifiedBy             String?
+  verifiedAt             DateTime?
+  acceptedBy             String?
+  acceptedAt             DateTime?
+  rejectedBy             String?
+  rejectedAt             DateTime?
+  expiresAt              DateTime?
+  notes                  String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  invitingOrganization   Organization @relation("InvitationSource", fields: [invitingOrganizationId], references: [id], onDelete: Cascade)
+  targetOrganization     Organization? @relation("InvitationTarget", fields: [targetOrganizationId], references: [id], onDelete: SetNull)
+
+  @@index([invitingOrganizationId, status, createdAt])
+  @@index([targetOrganizationId, status, createdAt])
+  @@map("network_invitations")
 }
 
 model DataSharingAgreement {

@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.3";
+export const REGISTRY_CANON_VERSION = "2026-07-16.4";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -460,7 +460,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 60, slug: "network-growth", title: "Connected-Care Network Growth",
     mandate: "Grow the verified network through measurable invitations, onboarding, service coverage, and trusted participation controls.",
     ownerRoles: ["clinic_owner", "network_manager", "sales", "customer_success"], interfaceRoute: "/network",
-    databaseObjects: ["organizations", "facilities", "network_connections", "subscriptions", "activity_logs"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["organizations", "facilities", "network_invitations", "network_connections", "referrals", "subscriptions", "activity_logs", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Invite clinic | Invite provider | Referral-partner invitation | Diagnostic-partner invitation | Laboratory-partner invitation | Pharmacy-partner invitation | Hospital-partner invitation | Network application | Verification queue | Participation agreement | Coverage map | Specialty-gap map | Geographic-gap map | Referral-volume insight | Connection activation | Connection suspension | Network service-level monitoring | Network adoption analytics | Network value report | Network growth audit history",
   }),
   section({

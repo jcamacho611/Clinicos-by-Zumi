@@ -150,6 +150,7 @@ async function main() {
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.reliabilityEvent.deleteMany();
+  await prisma.networkInvitation.deleteMany();
   await prisma.formEvent.deleteMany();
   await prisma.formReview.deleteMany();
   await prisma.signature.deleteMany();
@@ -334,6 +335,12 @@ async function main() {
       { id: "reliability-bfm-interface-review", organizationId: bfm.id, category: "incident", severity: "needs_attention", status: "open", title: "Manual laboratory interface review", summary: "A synthetic lab delivery remains manual until the interface adapter is contracted and verified.", source: "manual_fallback", externalRef: "LAB-DEMO-001", createdAt: new Date("2026-07-16T12:00:00.000Z") },
       { id: "reliability-bfm-deployment", organizationId: bfm.id, category: "deployment", severity: "normal", status: "resolved", title: "CRM revenue recovery deployment", summary: "CRM schema, API, seed, and workspace deployment completed with static and live tenant checks.", source: "deployment_log", resolvedBy: "user-nadja", resolvedAt: new Date("2026-07-16T17:30:00.000Z"), createdAt: new Date("2026-07-16T17:00:00.000Z") },
       { id: "reliability-luxe-backup", organizationId: luxe.id, category: "backup", severity: "normal", status: "acknowledged", title: "Synthetic demo backup checkpoint", summary: "Demo data is reseedable from Prisma; production backup restoration remains an infrastructure runbook item.", source: "manual_fallback", acknowledgedBy: "user-luxe-owner", acknowledgedAt: new Date("2026-07-16T12:30:00.000Z"), createdAt: new Date("2026-07-16T12:15:00.000Z") },
+    ],
+  });
+  await prisma.networkInvitation.createMany({
+    data: [
+      { id: "network-invite-bfm-diagnostic", invitingOrganizationId: bfm.id, inviteeType: "diagnostic_partner", inviteeName: "Brooklyn Imaging Partners", inviteeEmail: "network.partner@example.test", specialty: "Imaging", location: "Brooklyn, NY", status: "pending_verification", requestedBy: "user-nadja", notes: "Synthetic external partner application awaiting identity review.", createdAt: new Date("2026-07-16T12:45:00.000Z") },
+      { id: "network-invite-luxe-bfm", invitingOrganizationId: luxe.id, targetOrganizationId: bfm.id, inviteeType: "clinic", inviteeName: "Brooklyn Family Medicine", status: "accepted", requestedBy: "user-luxe-owner", acceptedBy: "user-nadja", acceptedAt: new Date("2026-07-15T16:00:00.000Z"), notes: "Synthetic accepted participation invitation.", createdAt: new Date("2026-07-15T15:00:00.000Z") },
     ],
   });
 

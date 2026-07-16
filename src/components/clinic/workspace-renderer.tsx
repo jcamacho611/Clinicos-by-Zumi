@@ -24,6 +24,7 @@ import { listPriorityZeroRegistry } from "@/lib/repositories/feature-registry-re
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 import { listNetworkAccessWorkspace } from "@/lib/repositories/network-access-repository";
 import { listNetworkDirectory } from "@/lib/repositories/network-directory-repository";
+import { listNetworkGrowthWorkspace } from "@/lib/repositories/network-growth-repository";
 import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repository";
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
@@ -136,8 +137,9 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "network": {
       if (!can(role, "network", "read")) return notFound();
-      const [overview, directory] = await Promise.all([getConnectedCareOverview(organizationId), listNetworkDirectory(organizationId)]);
-      return <NetworkWorkspace canCreate={can(role, "network", "create")} canManage={can(role, "network", "manage")} directory={directory} overview={overview} />;
+      const session = { organizationId, role, userId } as Parameters<typeof listNetworkGrowthWorkspace>[0];
+      const [overview, directory, growth] = await Promise.all([getConnectedCareOverview(organizationId), listNetworkDirectory(organizationId), listNetworkGrowthWorkspace(session)]);
+      return <NetworkWorkspace canCreate={can(role, "network", "create")} canManage={can(role, "network", "manage")} directory={directory} growth={growth} overview={overview} />;
     }
     case "referrals": {
       if (!can(role, "referrals", "read")) return notFound();
