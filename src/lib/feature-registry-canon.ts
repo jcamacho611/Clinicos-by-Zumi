@@ -61,7 +61,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 3, slug: "access-consent-sharing", title: "Access, Consent, and Record-Sharing Controls",
     mandate: "Enforce minimum-necessary, purpose-bound, consent-aware access for every record interaction.",
     ownerRoles: ["privacy_officer", "administrator", "auditor"], interfaceRoute: "/access-controls",
-    databaseObjects: ["consents", "access_grants", "record_requests", "audit_logs"], deliveryStatus: "PLANNED", deliveryMode: "governance",
+    databaseObjects: ["consents", "access_grants", "record_requests", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "governance",
     features: "Organization-based access | Location-based access | Department-based access | Role-based access | Patient-specific access | Care-team access | Minimum-necessary access | Purpose-of-use selection | Treatment access | Payment access | Healthcare-operations access | Patient authorization tracking | Consent capture | Consent expiration | Consent withdrawal | Consent scope by organization | Consent scope by data category | Sensitive-record restrictions | Patient-selected sharing preferences | Provider-requested access | Emergency break-glass access | Break-glass reason requirement | Emergency-access alerts | Access revocation | Temporary access | Read-only access | Download restrictions | Printing restrictions | Patient-visible access history | Full audit history | Accessed-by identity | Represented clinic | Access purpose | Information accessed | Access timestamp | Change history | Download history | Sharing history",
   }),
   section({
@@ -187,7 +187,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 21, slug: "payments-memberships", title: "Payments, Deposits, and Memberships",
     mandate: "Collect and reconcile patient payments and med-spa packages without exposing PHI to payment processors.",
     ownerRoles: ["front_desk", "biller", "clinic_owner"], interfaceRoute: "/billing",
-    databaseObjects: ["payments", "payment_links", "invoices", "patient_balances", "subscriptions"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["payments", "payment_links", "invoices", "patient_balances", "payment_events", "membership_plans", "patient_memberships", "package_plans", "package_purchases", "subscriptions"], deliveryStatus: "FOUNDATION", deliveryMode: "manual-fallback",
     features: "Payment links | Deposits | Copays | Balances | Package payments | Membership payments | Invoices | Receipts | Refunds | Payment status | Payment history | Card-processing integration | Stripe adapter | Square adapter | Secure checkout | No PHI in payment descriptions | Payment-plan support | Failed-payment notices | Overdue-payment tasks | Reconciliation | Refund audit | Medical-spa packages | Luxe Medi memberships | Package-session tracking | Package expiration | Gift-card roadmap",
   }),
   section({

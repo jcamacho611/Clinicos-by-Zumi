@@ -160,6 +160,14 @@ async function main() {
   await prisma.diagnosis.deleteMany();
   await prisma.procedure.deleteMany();
   await prisma.patientBalance.deleteMany();
+  await prisma.paymentEvent.deleteMany();
+  await prisma.packagePurchase.deleteMany();
+  await prisma.patientMembership.deleteMany();
+  await prisma.packagePlan.deleteMany();
+  await prisma.membershipPlan.deleteMany();
+  await prisma.paymentLink.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.invoice.deleteMany();
   await prisma.insuranceVerification.deleteMany();
   await prisma.priorAuthorization.deleteMany();
   await prisma.patientPharmacy.deleteMany();
@@ -324,6 +332,56 @@ async function main() {
       { organizationId: bfm.id, patientId: "pt-1003", balanceCents: 4000 },
       { organizationId: bfm.id, patientId: "pt-1005", balanceCents: 11000 },
       { organizationId: luxe.id, patientId: "pt-1004", balanceCents: 35000 },
+    ],
+  });
+
+  await prisma.invoice.createMany({
+    data: [
+      { id: "invoice-maya-001", organizationId: bfm.id, patientId: "pt-1001", number: "BFM-2026-001", totalCents: 12500, balanceCents: 7500, status: "partially_paid", dueAt: new Date("2026-07-30T00:00:00.000Z") },
+      { id: "invoice-camille-001", organizationId: luxe.id, patientId: "pt-1004", number: "LUX-2026-001", totalCents: 35000, balanceCents: 35000, status: "issued", dueAt: new Date("2026-07-28T00:00:00.000Z") },
+    ],
+  });
+
+  await prisma.payment.createMany({
+    data: [
+      { id: "payment-maya-visit", organizationId: bfm.id, patientId: "pt-1001", amountCents: 5000, source: "manual_card", status: "posted", postedAt: new Date("2026-07-14T14:00:00.000Z") },
+      { id: "payment-camille-deposit", organizationId: luxe.id, patientId: "pt-1004", amountCents: 15000, source: "manual_card", status: "posted", postedAt: new Date("2026-07-13T16:30:00.000Z") },
+    ],
+  });
+
+  await prisma.paymentLink.createMany({
+    data: [
+      { id: "payment-link-maya-balance", organizationId: bfm.id, patientId: "pt-1001", amountCents: 7500, tokenHash: "seed-token-hash-maya", status: "active", expiresAt: new Date("2026-07-30T00:00:00.000Z") },
+      { id: "payment-link-camille-deposit", organizationId: luxe.id, patientId: "pt-1004", amountCents: 20000, tokenHash: "seed-token-hash-camille", status: "active", expiresAt: new Date("2026-07-25T00:00:00.000Z") },
+    ],
+  });
+
+  await prisma.membershipPlan.createMany({
+    data: [
+      { id: "membership-luxe-essential", organizationId: luxe.id, name: "Luxe Essential", description: "Synthetic demo membership for recurring wellness visits.", priceCents: 14900, billingInterval: "monthly", includedSessions: 1 },
+      { id: "membership-luxe-premium", organizationId: luxe.id, name: "Luxe Premium", description: "Synthetic demo membership with two monthly sessions.", priceCents: 24900, billingInterval: "monthly", includedSessions: 2 },
+    ],
+  });
+
+  await prisma.patientMembership.create({
+    data: { id: "patient-membership-camille", organizationId: luxe.id, patientId: "pt-1004", planId: "membership-luxe-essential", status: "active", startedAt: new Date("2026-07-01T12:00:00.000Z"), renewsAt: new Date("2026-08-01T12:00:00.000Z"), remainingSessions: 1 },
+  });
+
+  await prisma.packagePlan.createMany({
+    data: [
+      { id: "package-luxe-iv-3", organizationId: luxe.id, name: "IV Hydration · 3 pack", description: "Synthetic demo session package.", priceCents: 39900, includedSessions: 3, expirationDays: 180 },
+      { id: "package-luxe-injectables", organizationId: luxe.id, name: "Injectables consultation pack", description: "Synthetic demo package requiring provider review for treatment eligibility.", priceCents: 59900, includedSessions: 2, expirationDays: 180 },
+    ],
+  });
+
+  await prisma.packagePurchase.create({
+    data: { id: "package-purchase-camille-iv", organizationId: luxe.id, patientId: "pt-1004", packagePlanId: "package-luxe-iv-3", paymentId: "payment-camille-deposit", status: "active", purchasedAt: new Date("2026-07-13T16:30:00.000Z"), expiresAt: new Date("2027-01-09T16:30:00.000Z"), remainingSessions: 2 },
+  });
+
+  await prisma.paymentEvent.createMany({
+    data: [
+      { id: "payment-event-maya-posted", organizationId: bfm.id, paymentId: "payment-maya-visit", patientId: "pt-1001", actorId: "user-nadja", eventType: "payment_posted", fromStatus: "pending", toStatus: "posted", amountCents: 5000, metadata: { source: "synthetic_seed", invoiceId: "invoice-maya-001" }, createdAt: new Date("2026-07-14T14:00:00.000Z") },
+      { id: "payment-event-camille-membership", organizationId: luxe.id, paymentId: "payment-camille-deposit", patientId: "pt-1004", actorId: "user-luxe-owner", eventType: "package_purchased", toStatus: "active", amountCents: 15000, metadata: { source: "synthetic_seed", packagePurchaseId: "package-purchase-camille-iv" }, createdAt: new Date("2026-07-13T16:30:00.000Z") },
     ],
   });
 

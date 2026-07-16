@@ -1718,6 +1718,93 @@ model PatientBalance {
   @@map("patient_balances")
 }
 
+model PaymentEvent {
+  id             String    @id @default(cuid())
+  organizationId String
+  paymentId      String?
+  patientId      String?
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  amountCents    Int?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([paymentId, createdAt])
+  @@index([patientId, createdAt])
+  @@map("payment_events")
+}
+
+model MembershipPlan {
+  id               String   @id @default(cuid())
+  organizationId   String
+  name             String
+  description      String?
+  priceCents       Int
+  billingInterval  String   @default("monthly")
+  includedSessions Int      @default(0)
+  status           String   @default("active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@map("membership_plans")
+}
+
+model PatientMembership {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  patientId          String
+  planId             String
+  status             String    @default("active")
+  startedAt          DateTime  @default(now())
+  renewsAt           DateTime?
+  expiresAt          DateTime?
+  remainingSessions  Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([patientId, status])
+  @@map("patient_memberships")
+}
+
+model PackagePlan {
+  id               String   @id @default(cuid())
+  organizationId   String
+  name             String
+  description      String?
+  priceCents       Int
+  includedSessions Int
+  expirationDays   Int?
+  status           String   @default("active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@map("package_plans")
+}
+
+model PackagePurchase {
+  id               String    @id @default(cuid())
+  organizationId   String
+  patientId        String
+  packagePlanId    String
+  paymentId        String?
+  status           String    @default("active")
+  purchasedAt      DateTime  @default(now())
+  expiresAt        DateTime?
+  remainingSessions Int
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([patientId, status])
+  @@map("package_purchases")
+}
+
 model Denial {
   id             String    @id @default(cuid())
   organizationId String

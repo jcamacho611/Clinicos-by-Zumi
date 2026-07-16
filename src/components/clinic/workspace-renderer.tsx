@@ -28,6 +28,7 @@ import { listImagingWorkspace } from "@/lib/repositories/imaging-repository";
 import { listMedicationWorkspace } from "@/lib/repositories/medication-repository";
 import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
 import { listFormWorkspace } from "@/lib/repositories/form-repository";
+import { listPaymentWorkspace } from "@/lib/repositories/payment-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -70,7 +71,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "forms", "read")) return notFound();
       return <FormsWorkspace canCreate={can(role, "forms", "create")} canManage={can(role, "forms", "manage")} canSign={can(role, "forms", "sign")} canUpdate={can(role, "forms", "update")} workspace={await listFormWorkspace(organizationId)} />;
     }
-    case "billing": return <BillingWorkspace />;
+    case "billing": {
+      if (!can(role, "billing", "read")) return notFound();
+      return <BillingWorkspace paymentWorkspace={await listPaymentWorkspace(organizationId)} />;
+    }
     case "insurance": return <InsuranceWorkspace />;
     case "cases": return <CasesWorkspace />;
     case "quality": return <QualityWorkspace />;

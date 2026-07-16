@@ -6,13 +6,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PaymentConsole } from "@/components/clinic/payment-actions";
 import { cases, claims, qualityGaps } from "@/lib/clinic-data";
+import type { PaymentWorkspace } from "@/lib/repositories/payment-repository";
 import { formatCurrency } from "@/lib/utils";
 import { PageIntro, Person, Progress, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
-export function BillingWorkspace() {
+export function BillingWorkspace({ paymentWorkspace }: { paymentWorkspace: PaymentWorkspace }) {
   return <div className="space-y-6"><PageIntro title="Revenue cycle with every handoff visible." description="Superbills, claim drafts, payer status, denials, remittance, patient balances, and owner-level cash insight share one work queue." action={<Button variant="primary"><Plus className="size-4" /> New claim draft</Button>} aside={<Button variant="secondary"><ReceiptText className="size-4" /> Create invoice</Button>} />
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard accent="sky" detail="12 claims in motion" icon={<Banknote className="size-4" />} label="Submitted this week" value="$14,860" /><StatCard accent="amber" detail="5 claims need review" icon={<FileWarning className="size-4" />} label="At risk" value="$2,180" /><StatCard accent="rose" detail="3 active denials" icon={<TriangleAlert className="size-4" />} label="Denied" value="$1,044" /><StatCard accent="teal" detail="11.2 days average" icon={<TrendingUp className="size-4" />} label="Collected MTD" value="$38,420" /></div>
+    <PaymentConsole workspace={paymentWorkspace} />
     <div className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
       <SectionCard title="Claim worklist" description="Claims remain drafts until authorized billing review is complete.">
         <div className="overflow-x-auto"><table className="w-full min-w-[770px] text-left"><thead><tr className="border-b border-slate-100 text-[9px] font-extrabold uppercase tracking-[.14em] text-slate-400"><th className="px-5 py-3">Claim / patient</th><th className="px-3 py-3">Payer</th><th className="px-3 py-3">Service date</th><th className="px-3 py-3">Amount</th><th className="px-3 py-3">Issue</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{claims.map((claim) => <tr className="border-b border-slate-100 text-xs last:border-0" key={claim.id}><td className="px-5 py-5"><p className="font-extrabold text-slate-900">{claim.id}</p><p className="mt-1 text-[10px] text-slate-400">{claim.patient}</p></td><td className="px-3 py-5 font-bold text-slate-700">{claim.payer}</td><td className="px-3 py-5 text-slate-500">{claim.serviceDate}</td><td className="px-3 py-5 font-extrabold text-slate-900">{formatCurrency(claim.amount)}</td><td className="px-3 py-5 text-[10px] text-rose-600">{claim.issue ?? "-"}</td><td className="px-5 py-5"><div className="flex items-center gap-2"><StatusBadge status={claim.status} /><Button size="icon" variant="ghost" aria-label="Open claim"><ArrowRight className="size-4" /></Button></div></td></tr>)}</tbody></table></div>
