@@ -26,6 +26,7 @@ export const navigation = [
       { href: "/forms", label: "Intake & forms", icon: "ClipboardList" },
       { href: "/knowledge", label: "Knowledge engine", icon: "BookOpenCheck" },
       { href: "/remote-monitoring", label: "Remote monitoring", icon: "Activity" },
+      { href: "/inventory", label: "Inventory", icon: "Boxes" },
     ],
   },
   {
@@ -89,6 +90,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   forms: { title: "Intake & forms", eyebrow: "Consent and readiness" },
   knowledge: { title: "Medical Knowledge Engine", eyebrow: "Governed reference layer" },
   "remote-monitoring": { title: "Remote monitoring", eyebrow: "Consent-bound home observations" },
+  inventory: { title: "Inventory", eyebrow: "Supply and custody intelligence" },
   billing: { title: "Billing", eyebrow: "Revenue cycle" },
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },

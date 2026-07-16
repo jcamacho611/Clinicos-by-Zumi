@@ -94,6 +94,7 @@ model Organization {
   knowledgeItems             KnowledgeItem[]
   remoteObservations         RemoteObservation[]
   inventoryItems             InventoryItem[]
+  inventoryTransactions      InventoryTransaction[]
   voiceSessions              VoiceSession[]
   outboundNetworkConnections NetworkConnection[]    @relation("NetworkSource")
   inboundNetworkConnections  NetworkConnection[]    @relation("NetworkTarget")
@@ -2814,14 +2815,42 @@ model InventoryItem {
   reorderPoint     Decimal?     @db.Decimal(12, 3)
   unitCostCents    Int?
   status           String       @default("active")
+  serialNumber     String?
+  vendor           String?
+  controlledItem   Boolean      @default(false)
+  coldChain        Boolean      @default(false)
+  recallStatus     String?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   location         Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  transactions     InventoryTransaction[]
 
   @@unique([organizationId, sku, lotNumber])
   @@index([organizationId, locationId, status, expiresAt])
   @@map("inventory_items")
+}
+
+model InventoryTransaction {
+  id              String       @id @default(cuid())
+  organizationId  String
+  inventoryItemId String
+  type            String
+  quantity        Decimal      @db.Decimal(12, 3)
+  direction       String?
+  note            String
+  patientId       String?
+  fromLocationId  String?
+  toLocationId    String?
+  actorId         String?
+  status          String       @default("recorded")
+  createdAt       DateTime     @default(now())
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, inventoryItemId, type, createdAt])
+  @@index([organizationId, patientId, createdAt])
+  @@map("inventory_transactions")
 }
 
 model VoiceSession {

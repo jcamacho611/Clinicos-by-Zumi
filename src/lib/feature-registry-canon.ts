@@ -418,7 +418,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 54, slug: "inventory-supply-intelligence", title: "Inventory and Supply Intelligence",
     mandate: "Track clinical and med-spa inventory, custody, expiration, use, replenishment, and cost with controlled automation.",
     ownerRoles: ["location_manager", "clinical_staff", "inventory_manager", "clinic_owner"], interfaceRoute: "/inventory",
-    databaseObjects: ["inventory_items", "inventory_lots", "inventory_transactions", "procedures", "appointments", "tasks"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["inventory_items", "inventory_lots", "inventory_transactions", "procedures", "appointments", "tasks"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Inventory catalog | Location inventory | Lot number | Serial number | Expiration date | Quantity on hand | Reserved quantity | Reorder point | Unit cost | Vendor | Controlled-item flag | Cold-chain flag | Receipt transaction | Adjustment transaction | Procedure usage | Patient-linked usage where permitted | Waste documentation | Transfer between locations | Recall workflow | Expiration alert | Low-stock alert | Reorder recommendation | Purchase-order adapter | Inventory reconciliation | Inventory audit history",
   }),
   section({

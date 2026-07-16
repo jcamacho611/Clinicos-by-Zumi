@@ -1334,6 +1334,19 @@ async function main() {
     },
   });
 
+  await prisma.inventoryTransaction.create({
+    data: {
+      id: "inventory-transaction-luxe-receipt",
+      organizationId: luxe.id,
+      inventoryItemId: "inventory-luxe-demo",
+      type: "receipt",
+      quantity: "24",
+      note: "Synthetic demo opening balance recorded from manual receiving evidence.",
+      actorId: "user-luxe-owner",
+      status: "recorded_demo",
+    },
+  });
+
   await prisma.voiceSession.create({
     data: {
       id: "voice-session-demo",
