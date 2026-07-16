@@ -43,10 +43,12 @@ import { listInventoryWorkspace } from "@/lib/repositories/inventory-repository"
 import { listCredentialingWorkspace } from "@/lib/repositories/credentialing-repository";
 import { listCRMWorkspace } from "@/lib/repositories/crm-repository";
 import { CRMWorkspace } from "@/components/clinic/crm-workspace";
+import { listSystemHealthWorkspace } from "@/lib/repositories/system-health-repository";
+import { SystemHealthWorkspace } from "@/components/clinic/system-health-workspace";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
-  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "insurance", "cases", "quality", "crm",
+  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "insurance", "cases", "quality", "crm", "system-health",
   "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
@@ -105,6 +107,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       const session = { organizationId, role, userId } as Parameters<typeof listCRMWorkspace>[0];
       const workspace = await listCRMWorkspace(session);
       return <CRMWorkspace canCreate={can(role, "crm", "create")} canUpdate={can(role, "crm", "update")} workspace={workspace} />;
+    }
+    case "system-health": {
+      if (!can(role, "reliability", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listSystemHealthWorkspace>[0];
+      return <SystemHealthWorkspace canCreate={can(role, "reliability", "create")} canUpdate={can(role, "reliability", "update")} workspace={await listSystemHealthWorkspace(session)} />;
     }
     case "billing": {
       if (!can(role, "billing", "read")) return notFound();

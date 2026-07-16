@@ -299,7 +299,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 37, slug: "reliability-observability", title: "Reliability and Observability",
     mandate: "Make system, integration, queue, cost, storage, backup, incident, and deployment health visible and recoverable.",
     ownerRoles: ["super_administrator", "engineering", "security_officer"], interfaceRoute: "/system-health",
-    databaseObjects: ["integration_events", "activity_logs", "audit_logs", "settings"], deliveryStatus: "PLANNED", deliveryMode: "governance",
+    databaseObjects: ["reliability_events", "integration_events", "activity_logs", "audit_logs", "tasks", "escalations", "settings"], deliveryStatus: "FOUNDATION", deliveryMode: "governance",
     features: "System health dashboard | API health | Database health | Integration health | Message-queue health | Failed-job queue | Retry controls | Error logging | Performance monitoring | Audit-log monitoring | Usage monitoring | AI and API cost monitoring | Hosting-cost monitoring | Storage monitoring | Failed-payment monitoring | SMS and email delivery monitoring | Laboratory-interface failures | Claim-interface failures | Backup status | Incident status | Maintenance notices | Service-status page | Rollback support | Version history | Deployment history | Feature-flag rollback | Manual fallback workflows",
   }),
   section({

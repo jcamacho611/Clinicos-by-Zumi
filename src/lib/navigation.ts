@@ -71,6 +71,7 @@ export const navigation = [
       { href: "/portal", label: "Portal preview", icon: "MonitorSmartphone" },
       { href: "/integrations", label: "Integration roadmap", icon: "Blocks" },
       { href: "/settings", label: "Settings & audit", icon: "Settings2" },
+      { href: "/system-health", label: "System health", icon: "Gauge" },
       { href: "/feature-registry", label: "P0 feature registry", icon: "BookOpenCheck" },
     ],
   },
@@ -117,4 +118,5 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   portal: { title: "Patient portal", eyebrow: "Patient experience preview" },
   integrations: { title: "Integration roadmap", eyebrow: "Standards and partners" },
   settings: { title: "Settings & audit", eyebrow: "Organization controls" },
+  "system-health": { title: "System health", eyebrow: "Reliability and recovery" },
 };
