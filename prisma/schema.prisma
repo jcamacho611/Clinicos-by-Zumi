@@ -858,54 +858,54 @@ model DocumentCategory {
 }
 
 model Document {
-  id                    String      @id @default(cuid())
-  organizationId        String
-  patientId             String?
-  encounterId           String?
-  referralId            String?
-  caseType               String?
-  caseId                 String?
-  categoryId             String?
-  versionGroupId        String
-  version                Int         @default(1)
-  supersedesId           String?
-  name                   String
-  originalFileName       String
-  description            String?
-  tags                   String[]    @default([])
-  sourceType             String      @default("upload")
-  storageProvider        String      @default("database_encrypted")
-  storageKey             String
-  mimeType               String
-  sizeBytes              Int
-  checksumSha256         String?
-  encryptedContent       Bytes?
-  encryptionIv           Bytes?
-  encryptionAuthTag      Bytes?
-  encryptionKeyId        String?
-  accessLevel            AccessLevel @default(INTERNAL)
-  reviewRequired         Boolean     @default(true)
-  reviewStatus           String      @default("needs_review")
-  releaseStatus          String      @default("not_requested")
-  releaseRequestedAt     DateTime?
-  releaseApprovedBy      String?
-  releaseApprovedAt      DateTime?
-  patientVisible         Boolean     @default(false)
-  internalOnly           Boolean     @default(true)
-  status                 String      @default("active")
-  expiresAt              DateTime?
-  lockedAt               DateTime?
-  uploadedBy             String?
-  provenance             Json?
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  organizationId     String
+  patientId          String?
+  encounterId        String?
+  referralId         String?
+  caseType           String?
+  caseId             String?
+  categoryId         String?
+  versionGroupId     String
+  version            Int         @default(1)
+  supersedesId       String?
+  name               String
+  originalFileName   String
+  description        String?
+  tags               String[]    @default([])
+  sourceType         String      @default("upload")
+  storageProvider    String      @default("database_encrypted")
+  storageKey         String
+  mimeType           String
+  sizeBytes          Int
+  checksumSha256     String?
+  encryptedContent   Bytes?
+  encryptionIv       Bytes?
+  encryptionAuthTag  Bytes?
+  encryptionKeyId    String?
+  accessLevel        AccessLevel @default(INTERNAL)
+  reviewRequired     Boolean     @default(true)
+  reviewStatus       String      @default("needs_review")
+  releaseStatus      String      @default("not_requested")
+  releaseRequestedAt DateTime?
+  releaseApprovedBy  String?
+  releaseApprovedAt  DateTime?
+  patientVisible     Boolean     @default(false)
+  internalOnly       Boolean     @default(true)
+  status             String      @default("active")
+  expiresAt          DateTime?
+  lockedAt           DateTime?
+  uploadedBy         String?
+  provenance         Json?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
+  @@unique([organizationId, versionGroupId, version])
+  @@unique([organizationId, supersedesId])
   @@index([patientId, createdAt])
   @@index([organizationId, status, createdAt])
   @@index([organizationId, reviewStatus, releaseStatus])
   @@index([organizationId, categoryId, createdAt])
-  @@unique([organizationId, versionGroupId, version])
-  @@unique([organizationId, supersedesId])
   @@index([encounterId])
   @@index([referralId])
   @@index([caseType, caseId])
@@ -914,20 +914,20 @@ model Document {
 }
 
 model DocumentReview {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   documentId     String
-  reviewType     String   @default("content")
+  reviewType     String    @default("content")
   requestedBy    String?
   assignedTo     String?
   reviewerId     String?
-  status         String   @default("needs_review")
+  status         String    @default("needs_review")
   decision       String?
   notes          String?
   dueAt          DateTime?
   reviewedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([documentId])
   @@index([organizationId, status, dueAt])
@@ -952,37 +952,147 @@ model DocumentEvent {
 }
 
 model FormTemplate {
-  id             String   @id @default(cuid())
-  organizationId String
-  name           String
-  version        Int      @default(1)
-  schema         Json
-  status         String   @default("active")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                        String    @id @default(cuid())
+  organizationId            String
+  templateKey               String
+  version                   Int       @default(1)
+  supersedesId              String?
+  name                      String
+  description               String?
+  category                  String    @default("general")
+  audience                  String    @default("patient")
+  completionModes           String[]  @default(["patient", "staff", "provider"])
+  schema                    Json
+  requiresSignature         Boolean   @default(false)
+  requiresWitness           Boolean   @default(false)
+  requiresProviderSignature Boolean   @default(false)
+  staffReviewRequired       Boolean   @default(true)
+  providerReviewRequired    Boolean   @default(false)
+  expirationDays            Int?
+  renewalReminderDays       Int?
+  status                    String    @default("draft")
+  publishedAt               DateTime?
+  retiredAt                 DateTime?
+  createdBy                 String?
+  provenance                Json?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
-  @@index([organizationId, status])
+  @@unique([organizationId, templateKey, version])
+  @@unique([organizationId, supersedesId])
+  @@index([organizationId, status, category])
   @@map("form_templates")
 }
 
-model FormSubmission {
-  id              String      @id @default(cuid())
-  organizationId  String
-  patientId       String
-  templateId      String
-  templateVersion Int
-  answers         Json
-  status          String      @default("incomplete")
-  accessLevel     AccessLevel @default(INTERNAL)
-  reviewedBy      String?
-  reviewedAt      DateTime?
-  lockedAt        DateTime?
-  submittedAt     DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+model FormAssignment {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  patientId          String
+  templateId         String
+  templateVersion    Int
+  appointmentId      String?
+  encounterId        String?
+  assignedBy         String
+  completionMode     String    @default("patient")
+  deliveryMethod     String    @default("portal")
+  status             String    @default("not_started")
+  dueAt              DateTime?
+  expiresAt          DateTime?
+  sentAt             DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  reminderCount      Int       @default(0)
+  lastReminderAt     DateTime?
+  provenance         Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
+  @@index([organizationId, status, dueAt])
   @@index([patientId, status])
+  @@index([templateId, templateVersion])
+  @@map("form_assignments")
+}
+
+model FormSubmission {
+  id                    String      @id @default(cuid())
+  organizationId        String
+  patientId             String
+  templateId            String
+  templateVersion       Int
+  assignmentId          String?
+  appointmentId         String?
+  encounterId           String?
+  completionMode        String      @default("patient")
+  completionPercent     Int         @default(0)
+  answers               Json
+  status                String      @default("draft")
+  currentReviewStage    String?
+  accessLevel           AccessLevel @default(INTERNAL)
+  correctionReason      String?
+  correctionRequestedBy String?
+  correctionRequestedAt DateTime?
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  approvedBy            String?
+  approvedAt            DateTime?
+  documentId            String?
+  checksumSha256        String?
+  expiresAt             DateTime?
+  lockedAt              DateTime?
+  submittedAt           DateTime?
+  provenance            Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@unique([organizationId, assignmentId])
+  @@index([organizationId, status, currentReviewStage])
+  @@index([patientId, status])
+  @@index([templateId, templateVersion])
+  @@index([documentId])
   @@map("form_submissions")
+}
+
+model FormReview {
+  id             String    @id @default(cuid())
+  organizationId String
+  submissionId   String
+  stage          String
+  requestedBy    String?
+  assignedTo     String?
+  reviewerId     String?
+  status         String    @default("needs_review")
+  decision       String?
+  notes          String?
+  dueAt          DateTime?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, status, dueAt])
+  @@index([submissionId, stage])
+  @@map("form_reviews")
+}
+
+model FormEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  templateId     String?
+  assignmentId   String?
+  submissionId   String?
+  actorId        String?
+  eventType      String
+  fromStatus     String?
+  toStatus       String?
+  note           String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([submissionId, createdAt])
+  @@index([assignmentId, createdAt])
+  @@map("form_events")
 }
 
 model Consent {
@@ -1019,19 +1129,33 @@ model Consent {
 }
 
 model Signature {
-  id             String   @id @default(cuid())
-  organizationId String
-  patientId      String?
-  userId         String?
-  entityType     String
-  entityId       String
-  signerName     String
-  signatureHash  String
-  context        Json?
-  signedAt       DateTime @default(now())
-  createdAt      DateTime @default(now())
+  id                 String    @id @default(cuid())
+  organizationId     String
+  patientId          String?
+  userId             String?
+  providerId         String?
+  entityType         String
+  entityId           String
+  signerType         String    @default("signer")
+  signerName         String
+  signerRelationship String?
+  signatureMethod    String    @default("attested_typed")
+  signatureHash      String
+  attestation        String?
+  ipHash             String?
+  userAgentHash      String?
+  witnessSignatureId String?
+  status             String    @default("valid")
+  revokedAt          DateTime?
+  revokedBy          String?
+  revocationReason   String?
+  context            Json?
+  signedAt           DateTime  @default(now())
+  createdAt          DateTime  @default(now())
 
   @@index([entityType, entityId])
+  @@index([organizationId, entityType, entityId, signerType])
+  @@index([organizationId, patientId, signedAt])
   @@map("signatures")
 }
 

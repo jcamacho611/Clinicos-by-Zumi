@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { can, type ClinicRole } from "@/lib/auth/rbac";
-import { FormsWorkspace } from "@/components/clinic/workspaces/clinical";
+import { FormsWorkspace } from "@/components/clinic/forms-workspace";
 import { DocumentsWorkspace } from "@/components/clinic/documents-workspace";
 import { ImagingWorkspace } from "@/components/clinic/imaging-workspace";
 import { LabsWorkspace } from "@/components/clinic/labs-workspace";
@@ -24,6 +24,7 @@ import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
 import { listImagingWorkspace } from "@/lib/repositories/imaging-repository";
 import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
+import { listFormWorkspace } from "@/lib/repositories/form-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -58,7 +59,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "documents", "read")) return notFound();
       return <DocumentsWorkspace canCreate={can(role, "documents", "create")} canManage={can(role, "documents", "manage")} canSign={can(role, "documents", "sign")} canUpdate={can(role, "documents", "update")} workspace={await listDocumentWorkspace(organizationId)} />;
     }
-    case "forms": return <FormsWorkspace />;
+    case "forms": {
+      if (!can(role, "forms", "read")) return notFound();
+      return <FormsWorkspace canCreate={can(role, "forms", "create")} canManage={can(role, "forms", "manage")} canSign={can(role, "forms", "sign")} canUpdate={can(role, "forms", "update")} workspace={await listFormWorkspace(organizationId)} />;
+    }
     case "billing": return <BillingWorkspace />;
     case "insurance": return <InsuranceWorkspace />;
     case "cases": return <CasesWorkspace />;

@@ -20,6 +20,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Structured encounter and SOAP note editor
 - Scheduling and telemedicine readiness
 - Governed Document Airlock with category policy, upload/camera/scan intake, encrypted database fallback, chart/encounter/referral/case links, human review, portal-release approval, immutable versions, expiration, secure preview/print/download, checksum-verified ZIP packets, and custody audit history
+- Intake Runway with drag-and-drop multi-section templates, conditional and repeatable fields, immutable version lineage, patient assignments, staff-assisted and paper fallbacks, save/resume, attested submitter/witness/provider signatures, staged human review and correction, renewal/expiration policy, locked PDF generation, patient-copy controls, chart attachment, and custody history
 - Laboratory order-to-result command center with chart-bound diagnoses and tests, truthful manual delivery, structured result entry, document-bound upload fallback, source abnormal/critical flags, urgent human escalation, provider review, explicit portal release, patient-notification confirmation, follow-up, repeat orders, versioned corrections, provenance, and longitudinal numeric trends
 - Imaging review queue
 - Billing, claims, denials, balances, and insurance verification
@@ -72,6 +73,7 @@ The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEE
 | Variable | Required now | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | For Prisma | PostgreSQL connection string |
+| `DIRECT_DATABASE_URL` | Production migrations | Direct, non-PgBouncer PostgreSQL connection used by Prisma CLI migrations to avoid advisory-lock retention; may equal `DATABASE_URL` for ordinary PostgreSQL |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Canonical application URL |
 | `AUTH_SECRET` | Production | At least 32 random characters used to sign HTTP-only sessions |
 | `DOCUMENT_ENCRYPTION_KEY` | Production | Base64- or hex-encoded 32-byte AES-256-GCM key for the encrypted database document fallback; rotate only through a reviewed re-encryption procedure |
@@ -138,6 +140,15 @@ npm start            # production server
 - `POST /api/documents/:documentId/versions` preserves the prior record, removes obsolete portal visibility, creates an encrypted replacement in the same immutable version lineage, and returns the replacement to review.
 - `GET /api/documents/:documentId/content?intent=preview|print|download` decrypts only after tenant, role, status, and sensitive-access checks; verifies SHA-256 integrity; disables caching; and logs the exact access intent.
 - `POST /api/documents/packet` requires export permission and a stated purpose, verifies every selected encrypted source, logs each disclosure, and returns a size-limited ZIP with a checksum manifest.
+- `GET|POST /api/forms` returns only the signed-in organization's template, assignment, submission, review, signature, patient, appointment, and custody state, or creates a validated draft template from the drag-and-drop schema.
+- `POST /api/forms/templates/:templateId/transition` publishes a draft or retires an active version; publishing a replacement supersedes the prior active version without mutating submissions already bound to it.
+- `POST /api/forms/templates/:templateId/versions` creates a reason-bound draft in the same immutable template lineage.
+- `POST /api/forms/assignments` validates the active patient, exact published template version, optional patient-bound appointment/encounter, completion mode, due/expiration dates, and manual or adapter delivery path before creating both assignment and resumable submission.
+- `PATCH /api/forms/submissions/:submissionId` saves conditional answers and completion state; changing answers revokes prior valid attestations while preserving signature history and requiring re-signature.
+- `POST /api/forms/submissions/:submissionId/sign` stores a SHA-256 attestation receipt bound to signer role, identity, answers, template version, time, and hashed request context; provider signatures also require an active same-organization provider identity.
+- `POST /api/forms/submissions/:submissionId/transition` validates required visible fields and signatures, routes staff/provider review and correction, and allows a managing role to generate, encrypt, checksum, lock, attach, audit, and optionally release the final PDF patient copy.
+- `POST /api/forms/assignments/:assignmentId/remind` records a delivery task and custody receipt rather than claiming that an unconfigured portal, email, or SMS adapter delivered the reminder.
+- `GET /api/forms/submissions/:submissionId/pdf` resolves the locked chart document and inherits tenant, role, decryption, checksum, no-store, and access-intent audit controls from the document service.
 
 Authenticated example:
 
@@ -174,7 +185,11 @@ Migration `20260715050411_imaging_radiology_lifecycle` adds imaging-order diagno
 
 Migration `20260715062500_document_management_lifecycle` safely backfills legacy document lineage and source names, then adds category policy, encrypted fallback payload metadata, chart and workflow links, review and release state, expiration, immutable versioning, append-only custody events, indexes, and PostgreSQL checks for encryption bundles, portal visibility, lineage, source types, review decisions, and release approval.
 
-Patient, appointment, encounter, connected-care access, master identity, consent, referral, laboratory, imaging, and document reads are implemented through server-only Prisma repositories. Every local base and related query requires `organizationId`; cross-organization identity scans require an active demographic-sharing agreement, cross-organization clinical reads revalidate the relationship, agreement, consent, grant, purpose, categories, role, and time at read time, and connected referral sends revalidate the relationship, agreement, and patient consent at transmission. API responses are marked private/no-store where appropriate. Appointment transitions, encounter draft/review/sign-lock mutations, identity decisions, consent changes, network reads, referral handoffs, laboratory transitions, imaging transitions, and document custody actions use guarded filters, lifecycle checks, explicit human gates, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, access controls, identity resolution, Referral Relay, Laboratory Relay, Radiology Command Lane, and Document Airlock consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, BAA-reviewed object storage and managed KMS/HSM key rotation beyond the size-limited encrypted database fallback, backups, disaster recovery, retention/destruction workflows, and formal migration review.
+Migration `20260715070000_forms_esign_lifecycle` adds immutable template version groups, assignments, completion/delivery/expiration state, resumable submission progress, staged staff/provider reviews, correction and approval state, append-only form events, generated-document linkage, attested signer roles and revocation history, partial uniqueness for each valid signer role, foreign keys, indexes, and PostgreSQL checks for form, review, signature, lock, cancellation, and completion invariants.
+
+Migration `20260716060000_forms_signature_integrity` requires every form-submission signature to carry a 64-character SHA-256 attestation receipt and requires provider-role signatures to reference a provider identity.
+
+Patient, appointment, encounter, connected-care access, master identity, consent, referral, laboratory, imaging, document, and form reads are implemented through server-only Prisma repositories. Every local base and related query requires `organizationId`; cross-organization identity scans require an active demographic-sharing agreement, cross-organization clinical reads revalidate the relationship, agreement, consent, grant, purpose, categories, role, and time at read time, and connected referral sends revalidate the relationship, agreement, and patient consent at transmission. API responses are marked private/no-store where appropriate. Appointment transitions, encounter draft/review/sign-lock mutations, identity decisions, consent changes, network reads, referral handoffs, laboratory transitions, imaging transitions, document custody actions, and form completion/signature/review/lock actions use guarded filters, lifecycle checks, explicit human gates, and audit records. The chart, dashboard, front desk, provider panel, schedule, encounter worklist, access controls, identity resolution, Referral Relay, Laboratory Relay, Radiology Command Lane, Document Airlock, and Intake Runway consume those repositories. Remaining modules still need the same repository boundary. Before production use, add database-level row security or equivalent defense in depth, immutable external audit storage, BAA-reviewed object storage and managed KMS/HSM key rotation beyond the size-limited encrypted database fallback, backups, disaster recovery, retention/destruction workflows, and formal migration review.
 
 The current identity foundation includes bcrypt password credentials, signed eight-hour HTTP-only cookies, database-backed revocable session records, role permission definitions, login lockout fields, and a WebAuthn/passkey credential model. Passkey challenge endpoints, MFA enrollment, recovery, and a production distributed rate limiter remain future security work.
 
@@ -183,8 +198,8 @@ The current identity foundation includes bcrypt password credentials, signed eig
 The included `render.yaml` describes the web service. Before creating a production deployment:
 
 1. Create a managed PostgreSQL database.
-2. Set `DATABASE_URL` as a secret environment variable.
-3. Run the committed initial migration with `npm run db:migrate:deploy`; never use `db push` in production.
+2. Set pooled `DATABASE_URL` for application traffic and direct, non-PgBouncer `DIRECT_DATABASE_URL` for Prisma migrations. They may be identical for a standard PostgreSQL host.
+3. Run the committed migrations with `npm run db:migrate:deploy`; never use `db push` in production. Prisma CLI prefers `DIRECT_DATABASE_URL` and falls back to `DATABASE_URL` only when no direct URL is configured.
 4. Set `NEXT_PUBLIC_APP_URL` to the public HTTPS URL.
 5. Generate a unique `AUTH_SECRET` with at least 32 random characters and keep `DEMO_AUTH=false`.
 6. Generate and store a unique 32-byte `DOCUMENT_ENCRYPTION_KEY`; never reuse it across environments or rotate it without re-encrypting stored payloads.
@@ -209,7 +224,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 ## Production gates that are not complete
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
-- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, consent, referral, laboratory, imaging, and document routes
+- Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, consent, referral, laboratory, imaging, document, and form routes
 - Encounter creation, diagnosis/procedure editing, addenda, and database-backed modules beyond patient/scheduling/encounter workflows
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - BAA-reviewed private object storage, managed KMS/HSM key custody, key rotation/re-encryption automation, malware scanning, and larger-file streaming beyond the current AES-256-GCM encrypted 10 MB database fallback
@@ -217,6 +232,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 - Live BAA-backed imaging facility, hospital radiology, DICOM/PACS, HL7, and FHIR adapters; ClinicOS currently provides the native imaging workflow, adapter contract, authorization and delivery controls, event ledger, source-document fallback, and provider release gates without claiming electronic connectivity
 - Payer, clearinghouse, e-prescribing, and telemedicine integrations
 - Production payment and communication webhooks
+- Patient-portal authentication, public assignment tokens, live email/SMS form delivery, qualified electronic-signature vendors, identity-proofing adapters, and automated reminder delivery; current patient completion is staff-assisted inside an authenticated clinic workspace and every external-delivery choice creates a truthful manual fallback task
 - Approved, BAA-reviewed production speech transcription; current push-to-talk uses the browser speech adapter with synthetic demo data only and stores no audio
 - Clinical terminology services and validated quality-measure logic
 - Certification, legal review, threat model, penetration test, accessibility audit, and clinical safety validation

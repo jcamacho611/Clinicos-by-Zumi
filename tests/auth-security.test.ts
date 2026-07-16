@@ -95,6 +95,18 @@ describe("ClinicOS security boundaries", () => {
     expect(can("viewer", "documents", "manage")).toBe(false);
   });
 
+  it("separates form completion from provider signatures and chart locking", () => {
+    expect(can("front_desk", "forms", "create")).toBe(true);
+    expect(can("front_desk", "forms", "update")).toBe(true);
+    expect(can("front_desk", "forms", "sign")).toBe(false);
+    expect(can("clinical_staff", "forms", "manage")).toBe(false);
+    expect(can("provider", "forms", "sign")).toBe(true);
+    expect(can("provider", "forms", "manage")).toBe(true);
+    expect(can("administrator", "forms", "manage")).toBe(true);
+    expect(can("viewer", "forms", "read")).toBe(true);
+    expect(can("viewer", "forms", "update")).toBe(false);
+  });
+
   it("preserves the repository's tenant identity while mapping database records", () => {
     const patient = mapPatientAggregate({
       patient: {

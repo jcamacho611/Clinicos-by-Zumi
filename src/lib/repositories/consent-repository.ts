@@ -7,6 +7,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { createConsentSchema, consentAllowsAccess, withdrawConsentSchema } from "@/lib/patient-identity-rules";
 import type { NetworkPurpose, ShareableCategory } from "@/lib/network-access-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import type { PatientConsentSummary } from "@/lib/types";
 
 type Transaction = Prisma.TransactionClient;
 
@@ -96,6 +97,33 @@ export async function listConsentsForOrganization(organizationId: string) {
 }
 
 export type ConsentSummary = Awaited<ReturnType<typeof listConsentsForOrganization>>[number];
+
+export async function listConsentsForPatient(organizationId: string, patientId: string): Promise<PatientConsentSummary[]> {
+  const patient = await db.patient.findFirst({ where: { id: patientId, organizationId, status: "active" }, select: { id: true } });
+  if (!patient) return [];
+  const consents = await db.consent.findMany({ where: { organizationId, patientId }, orderBy: { createdAt: "desc" }, take: 100 });
+  const recipientIds = [...new Set(consents.map((consent) => consent.grantedToOrganizationId).filter((value): value is string => Boolean(value)))];
+  const recipients = await db.organization.findMany({ where: { id: { in: recipientIds } }, select: { id: true, name: true } });
+  const recipientMap = new Map(recipients.map((recipient) => [recipient.id, recipient.name]));
+  const now = new Date();
+  return consents.map((consent) => ({
+    id: consent.id,
+    type: consent.type,
+    purposeOfUse: consent.purposeOfUse,
+    dataCategories: consent.dataCategories,
+    recipient: consent.grantedToOrganizationId ? recipientMap.get(consent.grantedToOrganizationId) ?? "Unknown organization" : consent.grantedToUserId ? "Named user" : "Internal form consent",
+    signerName: consent.signerName,
+    signerRelationship: consent.signerRelationship,
+    status: consent.withdrawnAt || consent.status === "withdrawn" ? "withdrawn" : consent.expiresAt && consent.expiresAt <= now ? "expired" : consent.status,
+    signedAt: isoConsentDate(consent.signedAt),
+    expiresAt: isoConsentDate(consent.expiresAt),
+    withdrawnAt: isoConsentDate(consent.withdrawnAt),
+  }));
+}
+
+function isoConsentDate(value: Date | null) {
+  return value?.toISOString() ?? null;
+}
 
 export async function createPatientConsent(session: ClinicSession, rawInput: unknown) {
   const input = createConsentSchema.parse(rawInput);

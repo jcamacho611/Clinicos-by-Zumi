@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { AppointmentStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
   buildCompletionPlan,
   canonicalCapabilityId,
@@ -12,13 +13,13 @@ import {
 
 const prisma = new PrismaClient();
 
-function encryptSeedDocument(content: string) {
+function encryptSeedDocument(content: string | Buffer) {
   const configured = process.env.DOCUMENT_ENCRYPTION_KEY?.trim();
   const key = configured
     ? (/^[a-f0-9]{64}$/i.test(configured) ? Buffer.from(configured, "hex") : Buffer.from(configured, "base64"))
     : createHash("sha256").update(`clinicos-document-development:${process.env.AUTH_SECRET ?? ""}`).digest();
   if (key.length !== 32 || (!configured && !process.env.AUTH_SECRET)) throw new Error("DOCUMENT_ENCRYPTION_KEY or AUTH_SECRET is required to seed encrypted document demonstrations.");
-  const source = Buffer.from(content, "utf8");
+  const source = Buffer.isBuffer(content) ? content : Buffer.from(content, "utf8");
   const encryptionIv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, encryptionIv);
   const encryptedContent = Buffer.concat([cipher.update(source), cipher.final()]);
@@ -30,6 +31,19 @@ function encryptSeedDocument(content: string) {
     checksumSha256: createHash("sha256").update(source).digest("hex"),
     sizeBytes: source.length,
   };
+}
+
+async function buildSeedFormPdf(title: string, patient: string) {
+  const pdf = await PDFDocument.create();
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const page = pdf.addPage([612, 792]);
+  page.drawText("SYNTHETIC DEMO ONLY", { x: 48, y: 744, size: 9, font: bold });
+  page.drawText(title, { x: 48, y: 708, size: 22, font: bold });
+  page.drawText(`Patient: ${patient}`, { x: 48, y: 674, size: 11, font: regular });
+  page.drawText("This locked demonstration artifact is generated from synthetic ClinicOS form data.", { x: 48, y: 646, size: 9, font: regular });
+  page.drawText("The source template, answers, signatures, review decisions, and custody events remain in the database.", { x: 48, y: 630, size: 9, font: regular });
+  return Buffer.from(await pdf.save({ useObjectStreams: false }));
 }
 
 async function seedPriorityZeroRegistry() {
@@ -126,7 +140,12 @@ async function main() {
   await prisma.escalation.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
+  await prisma.formEvent.deleteMany();
+  await prisma.formReview.deleteMany();
   await prisma.signature.deleteMany();
+  await prisma.formSubmission.deleteMany();
+  await prisma.formAssignment.deleteMany();
+  await prisma.formTemplate.deleteMany();
   await prisma.consent.deleteMany();
   await prisma.documentEvent.deleteMany();
   await prisma.documentReview.deleteMany();
@@ -612,6 +631,8 @@ async function main() {
   const telemedicineConsent = encryptSeedDocument("SYNTHETIC DEMO ONLY\nDarius Coleman acknowledged the telemedicine consent in this demonstration record.");
   const intakeDraft = encryptSeedDocument("SYNTHETIC DEMO ONLY\nElena Rivera submitted an intake document awaiting authorized human review.");
   const luxeAftercare = encryptSeedDocument("SYNTHETIC DEMO ONLY\nCamille Brooks aftercare instructions. Follow the licensed provider plan and contact the clinic with questions.");
+  const mayaLockedForm = encryptSeedDocument(await buildSeedFormPdf("New patient intake - locked form", "Maya Thompson"));
+  const luxeLockedForm = encryptSeedDocument(await buildSeedFormPdf("Weight management consent - locked form", "Camille Brooks"));
 
   await prisma.document.createMany({
     data: [
@@ -622,8 +643,10 @@ async function main() {
       { id: "doc-darius-telemed-consent", organizationId: bfm.id, patientId: "pt-1002", categoryId: "doccat-bfm-consent", versionGroupId: "doc-group-darius-telemed", originalFileName: "darius-telemedicine-consent.txt", name: "Telemedicine consent", tags: ["telemedicine", "signed"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-darius-telemed/v1/seed", mimeType: "text/plain", ...telemedicineConsent, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T12:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-13T12:10:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-13T12:10:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", signedFormFallback: true }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
       { id: "doc-elena-intake", organizationId: bfm.id, patientId: "pt-1003", encounterId: "enc-1002", categoryId: "doccat-bfm-intake", versionGroupId: "doc-group-elena-intake", originalFileName: "elena-intake.txt", name: "New patient intake", tags: ["intake", "new-patient"], sourceType: "scan", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-elena-intake/v1/seed", mimeType: "text/plain", ...intakeDraft, accessLevel: "INTERNAL", reviewStatus: "needs_review", releaseStatus: "pending", releaseRequestedAt: new Date("2026-07-14T13:30:00.000Z"), patientVisible: false, internalOnly: true, status: "active", uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", scannedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
       { id: "doc-anthony-expired-insurance", organizationId: bfm.id, patientId: "pt-1005", categoryId: "doccat-bfm-insurance", versionGroupId: "doc-group-anthony-expired-insurance", originalFileName: "anthony-old-insurance.pdf", name: "Expired insurance card", sourceType: "import", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/anthony-old-insurance.pdf", mimeType: "application/pdf", sizeBytes: 30110, accessLevel: "RESTRICTED", reviewStatus: "approved", releaseStatus: "not_requested", patientVisible: false, internalOnly: true, status: "archived", expiresAt: new Date("2026-06-30T23:59:59.000Z"), lockedAt: new Date("2026-07-01T12:00:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", archivedExpired: true }, createdAt: new Date("2025-06-30T12:00:00.000Z") },
+      { id: "doc-form-maya-intake-locked", organizationId: bfm.id, patientId: maya.id, categoryId: "doccat-bfm-intake", versionGroupId: "doc-group-form-maya-intake", originalFileName: "maya-new-patient-intake-v2.pdf", name: "New patient intake - locked form", description: "Generated from approved synthetic form submission form-submission-maya-locked.", tags: ["form", "intake", "locked"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/forms/form-submission-maya-locked/seed", mimeType: "application/pdf", ...mayaLockedForm, accessLevel: "PATIENT_VISIBLE", reviewRequired: false, reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-10T13:20:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-10T13:20:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-10T13:20:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "form_submission", submissionId: "form-submission-maya-locked", templateId: "form-template-new-patient-v2", templateVersion: 2, generatedPdf: true, syntheticDemo: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
       { id: "doc-luxe-imaging-source", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-imaging", versionGroupId: "doc-group-luxe-imaging", originalFileName: "luxe-imaging-source.pdf", name: "Luxe imaging source report - synthetic demo", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/luxe-imaging-source.pdf", mimeType: "application/pdf", sizeBytes: 32550, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T14:00:00.000Z") },
       { id: "doc-luxe-aftercare", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-aftercare", versionGroupId: "doc-group-luxe-aftercare", originalFileName: "camille-aftercare.txt", name: "Weight management aftercare", tags: ["aftercare", "weight-management"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-luxe/doc-group-luxe-aftercare/v1/seed", mimeType: "text/plain", ...luxeAftercare, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T16:00:00.000Z"), releaseApprovedBy: "user-luxe-owner", releaseApprovedAt: new Date("2026-07-13T16:10:00.000Z"), patientVisible: true, internalOnly: false, lockedAt: new Date("2026-07-13T16:10:00.000Z"), uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T16:00:00.000Z") },
+      { id: "doc-form-luxe-consent-locked", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-consent", versionGroupId: "doc-group-form-luxe-consent", originalFileName: "camille-weight-management-consent-v1.pdf", name: "Weight management consent - locked form", description: "Generated from approved synthetic form submission form-submission-luxe-locked.", tags: ["form", "consent", "locked"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-luxe/forms/form-submission-luxe-locked/seed", mimeType: "application/pdf", ...luxeLockedForm, accessLevel: "PATIENT_VISIBLE", reviewRequired: false, reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T15:50:00.000Z"), releaseApprovedBy: "user-luxe-owner", releaseApprovedAt: new Date("2026-07-13T15:50:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-13T15:50:00.000Z"), uploadedBy: "user-luxe-owner", provenance: { source: "form_submission", submissionId: "form-submission-luxe-locked", templateId: "form-template-luxe-treatment", templateVersion: 1, generatedPdf: true, tenantIsolation: true, syntheticDemo: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
     ],
   });
 
@@ -644,7 +667,111 @@ async function main() {
       { id: "doc-event-darius-release", organizationId: bfm.id, documentId: "doc-darius-telemed-consent", actorId: "user-nadja", eventType: "approve_release", fromStatus: "active/approved/pending", toStatus: "active/approved/approved", createdAt: new Date("2026-07-13T12:10:00.000Z") },
       { id: "doc-event-elena-upload", organizationId: bfm.id, documentId: "doc-elena-intake", actorId: "user-nadja", eventType: "uploaded", toStatus: "active/needs_review/pending", metadata: { sourceType: "scan", encryptedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
       { id: "doc-event-anthony-archived", organizationId: bfm.id, documentId: "doc-anthony-expired-insurance", actorId: "user-nadja", eventType: "archive", fromStatus: "active/approved/not_requested", toStatus: "archived/approved/not_requested", note: "Expired insurance image replaced by current coverage record.", createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "doc-event-form-maya-generated", organizationId: bfm.id, documentId: "doc-form-maya-intake-locked", actorId: "user-nadja", eventType: "generated_from_form", toStatus: "active/approved/approved", metadata: { submissionId: "form-submission-maya-locked", checksumSha256: mayaLockedForm.checksumSha256, patientCopy: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
       { id: "doc-event-luxe-release", organizationId: luxe.id, documentId: "doc-luxe-aftercare", actorId: "user-luxe-owner", eventType: "approve_release", fromStatus: "active/approved/pending", toStatus: "active/approved/approved", createdAt: new Date("2026-07-13T16:10:00.000Z") },
+      { id: "doc-event-form-luxe-generated", organizationId: luxe.id, documentId: "doc-form-luxe-consent-locked", actorId: "user-luxe-owner", eventType: "generated_from_form", toStatus: "active/approved/approved", metadata: { submissionId: "form-submission-luxe-locked", checksumSha256: luxeLockedForm.checksumSha256, patientCopy: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
+    ],
+  });
+
+  const newPatientV1Definition = {
+    sections: [{ id: "identity", title: "Identity and contact", repeatable: false, fields: [
+      { id: "preferred_name", label: "Preferred name", type: "text", required: true, options: [] },
+      { id: "contact_email", label: "Email address", type: "email", required: true, options: [] },
+      { id: "preferred_language", label: "Preferred language", type: "select", required: true, options: [{ label: "English", value: "english" }, { label: "Spanish", value: "spanish" }, { label: "Other", value: "other" }] },
+    ] }],
+  };
+  const newPatientV2Definition = {
+    sections: [
+      ...newPatientV1Definition.sections,
+      { id: "history", title: "Medical history", repeatable: false, fields: [
+        { id: "has_allergies", label: "Do you have allergies?", type: "yes_no", required: true, options: [] },
+        { id: "allergy_details", label: "Describe allergies and reactions", type: "textarea", required: true, options: [], condition: { fieldId: "has_allergies", operator: "equals", value: true } },
+        { id: "current_medications", label: "Current medications", type: "textarea", required: false, options: [] },
+        { id: "medical_history", label: "Medical history", type: "textarea", required: true, options: [] },
+      ] },
+      { id: "emergency_contacts", title: "Emergency contacts", repeatable: true, fields: [
+        { id: "emergency_contact_name", label: "Emergency contact name", type: "text", required: true, options: [] },
+        { id: "emergency_contact_phone", label: "Emergency contact phone", type: "phone", required: true, options: [] },
+      ] },
+    ],
+  };
+  const telemedicineDefinition = { sections: [{ id: "telemedicine", title: "Telemedicine acknowledgment", repeatable: false, fields: [
+    { id: "identity_confirmed", label: "I confirm my identity and current location", type: "checkbox", required: true, options: [] },
+    { id: "privacy_acknowledged", label: "I understand telemedicine privacy and technology limitations", type: "checkbox", required: true, options: [] },
+    { id: "emergency_plan", label: "Emergency location and callback number", type: "textarea", required: true, options: [] },
+  ] }] };
+  const noFaultDefinition = { sections: [{ id: "accident", title: "Accident and claim", repeatable: false, fields: [
+    { id: "accident_date", label: "Accident date", type: "date", required: true, options: [] },
+    { id: "claim_number", label: "Claim number", type: "text", required: true, options: [] },
+    { id: "carrier", label: "Insurance carrier", type: "text", required: true, options: [] },
+    { id: "injury_description", label: "Injured body parts and symptoms", type: "textarea", required: true, options: [] },
+  ] }] };
+  const luxeTreatmentDefinition = { sections: [{ id: "treatment", title: "Treatment consent", repeatable: false, fields: [
+    { id: "service", label: "Requested service", type: "select", required: true, options: [{ label: "Weight management", value: "weight_management" }, { label: "IV hydration", value: "iv_hydration" }, { label: "Injectables", value: "injectables" }] },
+    { id: "risks_reviewed", label: "A licensed provider reviewed material risks and alternatives", type: "checkbox", required: true, options: [] },
+    { id: "questions_answered", label: "My questions were answered before signing", type: "checkbox", required: true, options: [] },
+  ] }] };
+
+  await prisma.formTemplate.createMany({
+    data: [
+      { id: "form-template-new-patient-v1", organizationId: bfm.id, templateKey: "new-patient-intake", version: 1, name: "New patient intake", description: "Prior intake version retained for active submission provenance.", category: "intake", audience: "patient", completionModes: ["patient", "staff"], schema: newPatientV1Definition, requiresSignature: true, staffReviewRequired: true, status: "superseded", publishedAt: new Date("2026-01-01T12:00:00.000Z"), retiredAt: new Date("2026-07-01T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-01-01T12:00:00.000Z") },
+      { id: "form-template-new-patient-v2", organizationId: bfm.id, templateKey: "new-patient-intake", version: 2, supersedesId: "form-template-new-patient-v1", name: "New patient intake", description: "Primary-care intake with conditional allergy detail and repeatable emergency contacts.", category: "intake", audience: "patient", completionModes: ["patient", "staff", "provider"], schema: newPatientV2Definition, requiresSignature: true, staffReviewRequired: true, providerReviewRequired: false, expirationDays: 365, renewalReminderDays: 30, status: "active", publishedAt: new Date("2026-07-01T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", supersedesId: "form-template-new-patient-v1" }, createdAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "form-template-telemedicine", organizationId: bfm.id, templateKey: "telemedicine-consent", version: 1, name: "Telemedicine consent", description: "Identity, privacy, technology, and emergency-location acknowledgment.", category: "consent", audience: "patient", completionModes: ["patient", "staff"], schema: telemedicineDefinition, requiresSignature: true, requiresProviderSignature: true, staffReviewRequired: false, providerReviewRequired: true, expirationDays: 365, renewalReminderDays: 30, status: "active", publishedAt: new Date("2026-06-01T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-06-01T12:00:00.000Z") },
+      { id: "form-template-nofault", organizationId: bfm.id, templateKey: "no-fault-intake", version: 1, name: "No-fault intake and assignment", description: "Accident, carrier, claim, injury, and assignment-of-benefits intake.", category: "case", audience: "patient", completionModes: ["patient", "staff"], schema: noFaultDefinition, requiresSignature: true, requiresWitness: true, staffReviewRequired: true, providerReviewRequired: false, status: "active", publishedAt: new Date("2026-06-15T12:00:00.000Z"), createdBy: "user-nadja", provenance: { source: "synthetic_seed", manualFallback: true }, createdAt: new Date("2026-06-15T12:00:00.000Z") },
+      { id: "form-template-chronic-draft", organizationId: bfm.id, templateKey: "chronic-care-follow-up", version: 1, name: "Chronic care follow-up", description: "Draft template awaiting administrator publication.", category: "clinical", audience: "patient", completionModes: ["patient", "staff", "provider"], schema: { sections: [{ id: "followup", title: "Follow-up", repeatable: false, fields: [{ id: "changes", label: "Changes since last visit", type: "textarea", required: true, options: [] }] }] }, staffReviewRequired: true, status: "draft", createdBy: "user-nadja", provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-07-14T10:00:00.000Z") },
+      { id: "form-template-luxe-treatment", organizationId: luxe.id, templateKey: "weight-management-consent", version: 1, name: "Weight management consent", description: "Provider-reviewed medical-spa treatment consent.", category: "medical_spa", audience: "patient", completionModes: ["patient", "staff", "provider"], schema: luxeTreatmentDefinition, requiresSignature: true, requiresProviderSignature: true, staffReviewRequired: true, providerReviewRequired: true, expirationDays: 180, renewalReminderDays: 14, status: "active", publishedAt: new Date("2026-06-01T12:00:00.000Z"), createdBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-06-01T12:00:00.000Z") },
+    ],
+  });
+
+  await prisma.formAssignment.createMany({
+    data: [
+      { id: "form-assignment-maya-locked", organizationId: bfm.id, patientId: maya.id, templateId: "form-template-new-patient-v2", templateVersion: 2, appointmentId: "apt-1", assignedBy: "user-nadja", completionMode: "patient", deliveryMethod: "portal", status: "completed", dueAt: new Date("2026-07-10T13:00:00.000Z"), expiresAt: new Date("2027-07-10T13:00:00.000Z"), sentAt: new Date("2026-07-08T13:00:00.000Z"), startedAt: new Date("2026-07-09T13:00:00.000Z"), completedAt: new Date("2026-07-10T13:20:00.000Z"), provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-07-08T13:00:00.000Z") },
+      { id: "form-assignment-darius-provider", organizationId: bfm.id, patientId: "pt-1002", templateId: "form-template-telemedicine", templateVersion: 1, appointmentId: "apt-3", assignedBy: "user-nadja", completionMode: "patient", deliveryMethod: "portal", status: "submitted", dueAt: new Date("2026-07-14T14:30:00.000Z"), expiresAt: new Date("2027-07-13T12:00:00.000Z"), sentAt: new Date("2026-07-13T11:00:00.000Z"), startedAt: new Date("2026-07-13T11:30:00.000Z"), provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-07-13T11:00:00.000Z") },
+      { id: "form-assignment-elena-draft", organizationId: bfm.id, patientId: "pt-1003", templateId: "form-template-new-patient-v2", templateVersion: 2, appointmentId: "apt-2", assignedBy: "user-nadja", completionMode: "staff", deliveryMethod: "staff_assisted", status: "in_progress", dueAt: new Date("2026-07-14T13:30:00.000Z"), expiresAt: new Date("2027-07-14T13:30:00.000Z"), sentAt: new Date("2026-07-14T12:30:00.000Z"), startedAt: new Date("2026-07-14T12:35:00.000Z"), reminderCount: 1, lastReminderAt: new Date("2026-07-14T13:00:00.000Z"), provenance: { source: "synthetic_seed", manualFallback: true }, createdAt: new Date("2026-07-14T12:30:00.000Z") },
+      { id: "form-assignment-anthony-review", organizationId: bfm.id, patientId: "pt-1005", templateId: "form-template-nofault", templateVersion: 1, assignedBy: "user-nadja", completionMode: "patient", deliveryMethod: "paper_import", status: "submitted", dueAt: new Date("2026-07-14T16:00:00.000Z"), sentAt: new Date("2026-07-14T10:00:00.000Z"), startedAt: new Date("2026-07-14T10:30:00.000Z"), provenance: { source: "synthetic_seed", paperImport: true }, createdAt: new Date("2026-07-14T10:00:00.000Z") },
+      { id: "form-assignment-luxe-locked", organizationId: luxe.id, patientId: "pt-1004", templateId: "form-template-luxe-treatment", templateVersion: 1, appointmentId: "apt-4", assignedBy: "user-luxe-owner", completionMode: "patient", deliveryMethod: "tablet", status: "completed", dueAt: new Date("2026-07-13T15:00:00.000Z"), expiresAt: new Date("2027-01-09T15:00:00.000Z"), sentAt: new Date("2026-07-13T14:30:00.000Z"), startedAt: new Date("2026-07-13T14:35:00.000Z"), completedAt: new Date("2026-07-13T15:50:00.000Z"), provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T14:30:00.000Z") },
+    ],
+  });
+
+  await prisma.formSubmission.createMany({
+    data: [
+      { id: "form-submission-maya-locked", organizationId: bfm.id, patientId: maya.id, templateId: "form-template-new-patient-v2", templateVersion: 2, assignmentId: "form-assignment-maya-locked", appointmentId: "apt-1", completionMode: "patient", completionPercent: 100, answers: { preferred_name: "Maya", contact_email: "maya.thompson@example.test", preferred_language: "english", has_allergies: true, allergy_details: "Penicillin - rash", current_medications: "Metformin", medical_history: "Type 2 diabetes", emergency_contact_name: "Jordan Thompson", emergency_contact_phone: "(917) 555-0102" }, status: "locked", accessLevel: "PATIENT_VISIBLE", reviewedBy: "user-nadja", reviewedAt: new Date("2026-07-10T13:15:00.000Z"), approvedBy: "user-nadja", approvedAt: new Date("2026-07-10T13:15:00.000Z"), documentId: "doc-form-maya-intake-locked", checksumSha256: mayaLockedForm.checksumSha256, expiresAt: new Date("2027-07-10T13:00:00.000Z"), submittedAt: new Date("2026-07-10T13:00:00.000Z"), lockedAt: new Date("2026-07-10T13:20:00.000Z"), provenance: { source: "synthetic_seed", generatedPdf: true }, createdAt: new Date("2026-07-09T13:00:00.000Z") },
+      { id: "form-submission-darius-provider", organizationId: bfm.id, patientId: "pt-1002", templateId: "form-template-telemedicine", templateVersion: 1, assignmentId: "form-assignment-darius-provider", appointmentId: "apt-3", completionMode: "patient", completionPercent: 100, answers: { identity_confirmed: true, privacy_acknowledged: true, emergency_plan: "Home in Brooklyn; callback number confirmed in chart." }, status: "provider_review", currentReviewStage: "provider", accessLevel: "INTERNAL", expiresAt: new Date("2027-07-13T12:00:00.000Z"), submittedAt: new Date("2026-07-13T12:00:00.000Z"), provenance: { source: "synthetic_seed" }, createdAt: new Date("2026-07-13T11:30:00.000Z") },
+      { id: "form-submission-elena-draft", organizationId: bfm.id, patientId: "pt-1003", templateId: "form-template-new-patient-v2", templateVersion: 2, assignmentId: "form-assignment-elena-draft", appointmentId: "apt-2", completionMode: "staff", completionPercent: 44, answers: { preferred_name: "Elena", contact_email: "elena.rivera@example.test", preferred_language: "spanish", has_allergies: false }, status: "draft", accessLevel: "INTERNAL", expiresAt: new Date("2027-07-14T13:30:00.000Z"), provenance: { source: "synthetic_seed", staffAssisted: true }, createdAt: new Date("2026-07-14T12:35:00.000Z") },
+      { id: "form-submission-anthony-review", organizationId: bfm.id, patientId: "pt-1005", templateId: "form-template-nofault", templateVersion: 1, assignmentId: "form-assignment-anthony-review", completionMode: "paper_import", completionPercent: 100, answers: { accident_date: "2026-06-30", claim_number: "SYNTH-NF-1102", carrier: "Demo Mutual", injury_description: "Synthetic demonstration injury details for workflow testing only." }, status: "staff_review", currentReviewStage: "staff", accessLevel: "RESTRICTED", submittedAt: new Date("2026-07-14T11:00:00.000Z"), provenance: { source: "synthetic_seed", paperImport: true }, createdAt: new Date("2026-07-14T10:30:00.000Z") },
+      { id: "form-submission-luxe-locked", organizationId: luxe.id, patientId: "pt-1004", templateId: "form-template-luxe-treatment", templateVersion: 1, assignmentId: "form-assignment-luxe-locked", appointmentId: "apt-4", completionMode: "patient", completionPercent: 100, answers: { service: "weight_management", risks_reviewed: true, questions_answered: true }, status: "locked", accessLevel: "PATIENT_VISIBLE", reviewedBy: "user-luxe-owner", reviewedAt: new Date("2026-07-13T15:40:00.000Z"), approvedBy: "user-luxe-owner", approvedAt: new Date("2026-07-13T15:45:00.000Z"), documentId: "doc-form-luxe-consent-locked", checksumSha256: luxeLockedForm.checksumSha256, expiresAt: new Date("2027-01-09T15:00:00.000Z"), submittedAt: new Date("2026-07-13T15:15:00.000Z"), lockedAt: new Date("2026-07-13T15:50:00.000Z"), provenance: { source: "synthetic_seed", generatedPdf: true, tenantIsolation: true }, createdAt: new Date("2026-07-13T14:35:00.000Z") },
+    ],
+  });
+
+  await prisma.signature.createMany({
+    data: [
+      { id: "signature-form-maya-submitter", organizationId: bfm.id, patientId: maya.id, userId: "user-nadja", entityType: "form_submission", entityId: "form-submission-maya-locked", signerType: "submitter", signerName: "Maya Thompson", signerRelationship: "Self", signatureMethod: "attested_typed", signatureHash: createHash("sha256").update("synthetic-maya-form-signature").digest("hex"), attestation: "Synthetic demonstration attestation only.", context: { source: "synthetic_seed" }, signedAt: new Date("2026-07-10T13:05:00.000Z") },
+      { id: "signature-form-darius-submitter", organizationId: bfm.id, patientId: "pt-1002", userId: "user-nadja", entityType: "form_submission", entityId: "form-submission-darius-provider", signerType: "submitter", signerName: "Darius Coleman", signerRelationship: "Self", signatureMethod: "attested_typed", signatureHash: createHash("sha256").update("synthetic-darius-form-signature").digest("hex"), attestation: "Synthetic demonstration attestation only.", context: { source: "synthetic_seed" }, signedAt: new Date("2026-07-13T11:58:00.000Z") },
+      { id: "signature-form-anthony-submitter", organizationId: bfm.id, patientId: "pt-1005", userId: "user-nadja", entityType: "form_submission", entityId: "form-submission-anthony-review", signerType: "submitter", signerName: "Anthony Price", signerRelationship: "Self", signatureMethod: "imported", signatureHash: createHash("sha256").update("synthetic-anthony-imported-signature").digest("hex"), attestation: "Imported from synthetic paper workflow.", context: { source: "synthetic_seed", paperImport: true }, signedAt: new Date("2026-07-14T10:58:00.000Z") },
+      { id: "signature-form-anthony-witness", organizationId: bfm.id, patientId: "pt-1005", userId: "user-nadja", entityType: "form_submission", entityId: "form-submission-anthony-review", signerType: "witness", signerName: "Demo Witness", signerRelationship: "Witness", signatureMethod: "imported", signatureHash: createHash("sha256").update("synthetic-anthony-witness-signature").digest("hex"), attestation: "Imported from synthetic paper workflow.", context: { source: "synthetic_seed", paperImport: true }, signedAt: new Date("2026-07-14T10:59:00.000Z") },
+      { id: "signature-form-luxe-submitter", organizationId: luxe.id, patientId: "pt-1004", userId: "user-luxe-owner", entityType: "form_submission", entityId: "form-submission-luxe-locked", signerType: "submitter", signerName: "Camille Brooks", signerRelationship: "Self", signatureMethod: "attested_typed", signatureHash: createHash("sha256").update("synthetic-luxe-submitter-signature").digest("hex"), attestation: "Synthetic demonstration attestation only.", context: { source: "synthetic_seed", tenantIsolation: true }, signedAt: new Date("2026-07-13T15:18:00.000Z") },
+      { id: "signature-form-luxe-provider", organizationId: luxe.id, patientId: "pt-1004", userId: "user-luxe-owner", providerId: "provider-nadja-luxe", entityType: "form_submission", entityId: "form-submission-luxe-locked", signerType: "provider", signerName: "Nadja R.", signerRelationship: "Licensed provider", signatureMethod: "system_credential", signatureHash: createHash("sha256").update("synthetic-luxe-provider-signature").digest("hex"), attestation: "Synthetic demonstration provider review only.", context: { source: "synthetic_seed", providerCredential: "Nadja R., NP", tenantIsolation: true }, signedAt: new Date("2026-07-13T15:42:00.000Z") },
+    ],
+  });
+
+  await prisma.formReview.createMany({
+    data: [
+      { id: "form-review-maya-staff", organizationId: bfm.id, submissionId: "form-submission-maya-locked", stage: "staff", requestedBy: "user-nadja", reviewerId: "user-nadja", status: "completed", decision: "approved", notes: "Identity and required answers reviewed before lock.", reviewedAt: new Date("2026-07-10T13:15:00.000Z"), createdAt: new Date("2026-07-10T13:00:00.000Z") },
+      { id: "form-review-darius-provider", organizationId: bfm.id, submissionId: "form-submission-darius-provider", stage: "provider", requestedBy: "user-nadja", status: "needs_review", dueAt: new Date("2026-07-14T14:30:00.000Z"), createdAt: new Date("2026-07-13T12:00:00.000Z") },
+      { id: "form-review-anthony-staff", organizationId: bfm.id, submissionId: "form-submission-anthony-review", stage: "staff", requestedBy: "user-nadja", status: "needs_review", dueAt: new Date("2026-07-14T16:00:00.000Z"), createdAt: new Date("2026-07-14T11:00:00.000Z") },
+      { id: "form-review-luxe-staff", organizationId: luxe.id, submissionId: "form-submission-luxe-locked", stage: "staff", requestedBy: "user-luxe-owner", reviewerId: "user-luxe-owner", status: "completed", decision: "approved", notes: "Staff verified completion and signer identity.", reviewedAt: new Date("2026-07-13T15:35:00.000Z"), createdAt: new Date("2026-07-13T15:15:00.000Z") },
+      { id: "form-review-luxe-provider", organizationId: luxe.id, submissionId: "form-submission-luxe-locked", stage: "provider", requestedBy: "user-luxe-owner", reviewerId: "user-luxe-owner", status: "completed", decision: "approved", notes: "Licensed provider reviewed treatment consent before lock.", reviewedAt: new Date("2026-07-13T15:45:00.000Z"), createdAt: new Date("2026-07-13T15:35:00.000Z") },
+    ],
+  });
+
+  await prisma.formEvent.createMany({
+    data: [
+      { id: "form-event-maya-assigned", organizationId: bfm.id, templateId: "form-template-new-patient-v2", assignmentId: "form-assignment-maya-locked", actorId: "user-nadja", eventType: "assigned", toStatus: "not_started", metadata: { deliveryMethod: "portal" }, createdAt: new Date("2026-07-08T13:00:00.000Z") },
+      { id: "form-event-maya-locked", organizationId: bfm.id, templateId: "form-template-new-patient-v2", assignmentId: "form-assignment-maya-locked", submissionId: "form-submission-maya-locked", actorId: "user-nadja", eventType: "lock", fromStatus: "approved", toStatus: "locked", metadata: { documentId: "doc-form-maya-intake-locked", checksumSha256: mayaLockedForm.checksumSha256, patientCopy: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
+      { id: "form-event-darius-review", organizationId: bfm.id, templateId: "form-template-telemedicine", assignmentId: "form-assignment-darius-provider", submissionId: "form-submission-darius-provider", actorId: "user-nadja", eventType: "review_requested", fromStatus: "draft", toStatus: "provider_review", metadata: { stage: "provider" }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
+      { id: "form-event-elena-saved", organizationId: bfm.id, templateId: "form-template-new-patient-v2", assignmentId: "form-assignment-elena-draft", submissionId: "form-submission-elena-draft", actorId: "user-nadja", eventType: "saved", fromStatus: "draft", toStatus: "draft", metadata: { completionPercent: 44, completionMode: "staff" }, createdAt: new Date("2026-07-14T12:45:00.000Z") },
+      { id: "form-event-anthony-review", organizationId: bfm.id, templateId: "form-template-nofault", assignmentId: "form-assignment-anthony-review", submissionId: "form-submission-anthony-review", actorId: "user-nadja", eventType: "review_requested", fromStatus: "draft", toStatus: "staff_review", metadata: { stage: "staff", paperImport: true }, createdAt: new Date("2026-07-14T11:00:00.000Z") },
+      { id: "form-event-luxe-locked", organizationId: luxe.id, templateId: "form-template-luxe-treatment", assignmentId: "form-assignment-luxe-locked", submissionId: "form-submission-luxe-locked", actorId: "user-luxe-owner", eventType: "lock", fromStatus: "approved", toStatus: "locked", metadata: { documentId: "doc-form-luxe-consent-locked", checksumSha256: luxeLockedForm.checksumSha256, tenantIsolation: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
     ],
   });
 
@@ -760,6 +887,9 @@ async function main() {
       { id: "task-imaging-maya-correction", organizationId: bfm.id, patientId: maya.id, category: "imaging_review", title: "Corrected imaging report requires provider review", details: "Corrected DEXA source report result img-result-maya-dexa-v2. Review corrected source content before any portal release.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-01T12:00:00.000Z"), status: "open", createdBy: "user-nadja" },
       { id: "task-imaging-luxe-review", organizationId: luxe.id, patientId: "pt-1004", category: "imaging_review", title: "New imaging report requires provider review", details: "Luxe ultrasound source report result img-result-luxe-isolation. Tenant-isolation demonstration.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-13T14:05:00.000Z"), status: "open", createdBy: "user-luxe-owner" },
       { id: "task-document-elena-review", organizationId: bfm.id, patientId: "pt-1003", category: "document_review", title: "Document requires human review", details: "New patient intake document doc-elena-intake. Review classification, content, and release suitability.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T13:30:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-form-darius-provider", organizationId: bfm.id, patientId: "pt-1002", category: "form_provider_review", title: "Telemedicine consent requires provider review", details: "Submission form-submission-darius-provider requires an active provider identity, provider attestation, and explicit decision before lock.", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-14T14:30:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-form-anthony-staff", organizationId: bfm.id, patientId: "pt-1005", category: "form_staff_review", title: "No-fault intake requires staff review", details: "Imported paper submission form-submission-anthony-review requires identity, completeness, and witness review.", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T16:00:00.000Z"), status: "open", createdBy: "user-nadja" },
+      { id: "task-form-elena-completion", organizationId: bfm.id, patientId: "pt-1003", category: "form_completion", title: "New patient intake requires completion", details: "Staff-assisted assignment form-assignment-elena-draft remains incomplete. Use the documented manual fallback if needed.", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-07-14T13:30:00.000Z"), status: "open", createdBy: "user-nadja" },
     ],
   });
 
@@ -790,6 +920,9 @@ async function main() {
       { id: "audit-document-maya-release", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.approve_release", resourceType: "document", resourceId: "doc-maya-care-plan-v2", patientId: maya.id, changes: { releaseStatus: { from: "pending", to: "approved" }, patientVisible: { from: false, to: true } }, createdAt: new Date("2026-07-11T14:10:00.000Z") },
       { id: "audit-document-darius-preview", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "document.content.preview", resourceType: "document", resourceId: "doc-darius-telemed-consent", patientId: "pt-1002", metadata: { version: 1, checksumVerified: true, syntheticDemo: true }, createdAt: new Date("2026-07-13T12:15:00.000Z") },
       { id: "audit-document-luxe-release", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "document.approve_release", resourceType: "document", resourceId: "doc-luxe-aftercare", patientId: "pt-1004", changes: { releaseStatus: { from: "pending", to: "approved" } }, metadata: { tenantIsolation: true }, createdAt: new Date("2026-07-13T16:10:00.000Z") },
+      { id: "audit-form-maya-lock", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "form_submission.lock", resourceType: "form_submission", resourceId: "form-submission-maya-locked", patientId: maya.id, changes: { status: { from: "approved", to: "locked" } }, metadata: { documentId: "doc-form-maya-intake-locked", checksumSha256: mayaLockedForm.checksumSha256, patientCopy: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
+      { id: "audit-form-darius-submit", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "form_submission.submit", resourceType: "form_submission", resourceId: "form-submission-darius-provider", patientId: "pt-1002", changes: { status: { from: "draft", to: "provider_review" } }, metadata: { templateId: "form-template-telemedicine", templateVersion: 1 }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
+      { id: "audit-form-luxe-lock", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "form_submission.lock", resourceType: "form_submission", resourceId: "form-submission-luxe-locked", patientId: "pt-1004", changes: { status: { from: "approved", to: "locked" } }, metadata: { documentId: "doc-form-luxe-consent-locked", checksumSha256: luxeLockedForm.checksumSha256, tenantIsolation: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
     ],
   });
 

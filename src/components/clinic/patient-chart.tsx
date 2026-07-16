@@ -4,7 +4,7 @@ import Link from "next/link";
 import * as Tabs from "@radix-ui/react-tabs";
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, ChevronRight,
-  CircleDollarSign, ClipboardPlus, Download, Eye, FileText, FlaskConical, HeartPulse, Image as ImageIcon,
+  CircleDollarSign, ClipboardCheck, ClipboardPlus, Download, Eye, FileText, FlaskConical, HeartPulse, Image as ImageIcon,
   Mail, MessageSquareText, MoreHorizontal, Pill, Plus, Printer, ShieldAlert,
   ShieldCheck, Stethoscope, Syringe, UsersRound,
 } from "lucide-react";
@@ -12,20 +12,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { qualityGaps } from "@/lib/clinic-data";
-import type { Encounter, LabResult, Patient, PatientDocument, PatientImagingResult, TimelineEvent } from "@/lib/types";
+import type { Encounter, LabResult, Patient, PatientConsentSummary, PatientDocument, PatientFormSubmission, PatientImagingResult, TimelineEvent } from "@/lib/types";
 import { SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
-const tabs = ["Summary", "Timeline", "Encounters", "Notes", "Medications", "Allergies", "Problems", "Vitals", "Labs", "Imaging", "Documents", "Referrals", "Billing", "Messages", "Quality", "Cases"];
+const tabs = ["Summary", "Timeline", "Encounters", "Notes", "Medications", "Allergies", "Problems", "Vitals", "Labs", "Imaging", "Documents", "Forms", "Consents", "Referrals", "Billing", "Messages", "Quality", "Cases"];
 
-const timelineIcons = { encounter: Stethoscope, lab: FlaskConical, imaging: ImageIcon, message: MessageSquareText, document: FileText, billing: CircleDollarSign, task: ClipboardPlus };
+const timelineIcons = { encounter: Stethoscope, lab: FlaskConical, imaging: ImageIcon, message: MessageSquareText, document: FileText, form: ClipboardCheck, billing: CircleDollarSign, task: ClipboardPlus };
 
 function titleCase(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function PatientChart({ documentPermissions, documents, encounters, imagingResults, labResults, patient }: { documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; patient: Patient }) {
+export function PatientChart({ consents, documentPermissions, documents, encounters, formSubmissions, imagingResults, labResults, patient }: { consents: PatientConsentSummary[]; documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; patient: Patient }) {
   const openEncounter = encounters.find((encounter) => encounter.status === "Draft" || encounter.status === "Ready for Review");
-  const timeline = buildPatientTimeline(encounters, labResults, imagingResults, documents);
+  const timeline = buildPatientTimeline(encounters, labResults, imagingResults, documents, formSubmissions);
   return <div className="space-y-5">
     <Link className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-950" href="/patients"><ArrowLeft className="size-4" /> Back to patient charts</Link>
     <section className="sticky top-[94px] z-20 rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,.08)] backdrop-blur-xl">
@@ -39,7 +39,7 @@ export function PatientChart({ documentPermissions, documents, encounters, imagi
 
     <Tabs.Root defaultValue="Summary">
       <div className="overflow-x-auto"><Tabs.List className="flex min-w-max gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">{tabs.map((tab) => <Tabs.Trigger className="rounded-xl px-3 py-2 text-[10px] font-bold text-slate-500 outline-none transition hover:bg-slate-50 data-[state=active]:bg-slate-950 data-[state=active]:text-white" key={tab} value={tab}>{tab}</Tabs.Trigger>)}</Tabs.List></div>
-      <Tabs.Content className="mt-5 outline-none" value="Summary"><SummaryTab documents={documents} imagingResults={imagingResults} labResults={labResults} patient={patient} timeline={timeline} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Summary"><SummaryTab documents={documents} formSubmissions={formSubmissions} imagingResults={imagingResults} labResults={labResults} patient={patient} timeline={timeline} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Timeline"><TimelineList events={timeline} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Encounters"><EncountersTab encounters={encounters} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Notes"><GenericList title="Clinical notes" items={["Diabetes follow-up note - Draft", "Annual physical - Signed", "Telephone encounter - Signed"]} icon={<FileText className="size-5" />} /></Tabs.Content>
@@ -50,6 +50,8 @@ export function PatientChart({ documentPermissions, documents, encounters, imagi
       <Tabs.Content className="mt-5 outline-none" value="Labs"><LabsTab results={labResults} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Imaging"><ImagingTab results={imagingResults} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Documents"><DocumentsTab canManage={documentPermissions.canManage} canUpdate={documentPermissions.canUpdate} documents={documents} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Forms"><FormsTab submissions={formSubmissions} /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Consents"><ConsentsTab consents={consents} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Referrals"><GenericList title="Referrals" items={["Endocrinology - Sent Jun 18", "Nutrition services - Scheduled"]} icon={<UsersRound className="size-5" />} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Billing"><BillingTab patient={patient} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Messages"><GenericList title="Patient messages" items={["Lab result question - Routed to provider", "Appointment confirmation - Delivered"]} icon={<Mail className="size-5" />} /></Tabs.Content>
@@ -61,16 +63,17 @@ export function PatientChart({ documentPermissions, documents, encounters, imagi
 
 function HeaderFact({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-slate-50 px-3 py-2"><p className="text-[8px] font-extrabold uppercase tracking-[.12em] text-slate-400">{label}</p><p className="mt-1 truncate text-[10px] font-bold text-slate-700">{value}</p></div>; }
 
-function SummaryTab({ documents, imagingResults, labResults, patient, timeline }: { documents: PatientDocument[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; patient: Patient; timeline: TimelineEvent[] }) {
+function SummaryTab({ documents, formSubmissions, imagingResults, labResults, patient, timeline }: { documents: PatientDocument[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; patient: Patient; timeline: TimelineEvent[] }) {
   const labReview = labResults.find((result) => result.reviewStatus === "Needs Review");
   const imagingReview = imagingResults.find((result) => result.status === "needs_review");
   const documentReview = documents.find((document) => document.status === "active" && document.reviewStatus === "needs_review");
-  const reviewTitle = imagingReview ? `Review ${imagingReview.title} before the next clinical action.` : labReview ? `Review ${labReview.panel} before the next clinical action.` : documentReview ? `Review ${documentReview.name} before portal release.` : "No laboratory, imaging, or document item is waiting for review.";
-  const reviewDetail = imagingReview ? `${imagingReview.facility} source report is held from the portal${imagingReview.urgentSourceFlag ? " and carries an urgent source flag" : ""}. ClinicOS has not interpreted the report.` : labReview ? `${labReview.vendor} source data is held from the portal${labReview.critical ? " and carries a critical source flag" : ""}. ClinicOS has not interpreted the result.` : documentReview ? `${documentReview.category} version ${documentReview.version} is encrypted and held from the portal until an authorized human completes review.` : "Released and reviewed source records remain available in this patient's longitudinal record.";
+  const formReview = formSubmissions.find((submission) => ["staff_review", "provider_review"].includes(submission.status));
+  const reviewTitle = imagingReview ? `Review ${imagingReview.title} before the next clinical action.` : labReview ? `Review ${labReview.panel} before the next clinical action.` : formReview ? `Review ${formReview.templateName} before chart attachment.` : documentReview ? `Review ${documentReview.name} before portal release.` : "No laboratory, imaging, form, or document item is waiting for review.";
+  const reviewDetail = imagingReview ? `${imagingReview.facility} source report is held from the portal${imagingReview.urgentSourceFlag ? " and carries an urgent source flag" : ""}. ClinicOS has not interpreted the report.` : labReview ? `${labReview.vendor} source data is held from the portal${labReview.critical ? " and carries a critical source flag" : ""}. ClinicOS has not interpreted the result.` : formReview ? `${formReview.templateName} version ${formReview.version} is awaiting an explicit ${formReview.status.replaceAll("_", " ")} decision.` : documentReview ? `${documentReview.category} version ${documentReview.version} is encrypted and held from the portal until an authorized human completes review.` : "Released and reviewed source records remain available in this patient's longitudinal record.";
   return <div className="grid gap-5 xl:grid-cols-[.72fr_1.1fr_.68fr]">
     <div className="space-y-5"><SectionCard title="Clinical snapshot"><div className="space-y-5 p-5"><SnapshotGroup icon={<Pill className="size-4" />} label="Medications" values={patient.medications} /><SnapshotGroup icon={<AlertTriangle className="size-4" />} label="Allergies" values={patient.allergies} warning /><SnapshotGroup icon={<HeartPulse className="size-4" />} label="Problems" values={patient.problems} /></div></SectionCard><SectionCard title="Contact & preferences"><div className="grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-1"><HeaderFact label="Phone" value={patient.phone} /><HeaderFact label="Email" value={patient.email} /><HeaderFact label="Language" value={patient.preferredLanguage} /><HeaderFact label="Location" value={patient.location} /></div></SectionCard></div>
     <SectionCard title="Clinical timeline" description="This patient&apos;s encounters, laboratory results, source imaging reports, and governed documents in sequence." action={<Button size="sm" variant="ghost">Full timeline <ArrowRight className="size-3.5" /></Button>}><TimelineList events={timeline} /></SectionCard>
-    <div className="space-y-5"><Card className="bg-slate-950 p-5 text-white"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-lime-300">Provider queue</p><p className="mt-4 text-lg font-extrabold tracking-[-.03em]">{reviewTitle}</p><p className="mt-2 text-[10px] leading-5 text-slate-400">{reviewDetail}</p><Button asChild className="mt-5 w-full bg-white text-slate-950 hover:bg-slate-100" size="sm" variant="secondary"><Link href={imagingReview ? "/imaging" : labReview ? "/labs" : "/documents"}>{imagingReview ? "Open imaging worklist" : labReview ? "Open laboratory worklist" : "Open document airlock"}</Link></Button></Card><SectionCard title="Open care gaps"><div className="space-y-3 p-4">{qualityGaps.filter((gap) => gap.patient === `${patient.firstName} ${patient.lastName}`).map((gap) => <div className="rounded-xl bg-amber-50 p-3" key={gap.id}><p className="text-xs font-extrabold text-amber-950">{gap.measure}</p><p className="mt-1 text-[9px] text-amber-700">{gap.due}</p><StatusBadge status={gap.status} /></div>)}<div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-extrabold text-slate-800">Depression screening</p><p className="mt-1 text-[9px] text-slate-500">Due at next annual visit</p></div></div></SectionCard></div>
+    <div className="space-y-5"><Card className="bg-slate-950 p-5 text-white"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-lime-300">Provider queue</p><p className="mt-4 text-lg font-extrabold tracking-[-.03em]">{reviewTitle}</p><p className="mt-2 text-[10px] leading-5 text-slate-400">{reviewDetail}</p><Button asChild className="mt-5 w-full bg-white text-slate-950 hover:bg-slate-100" size="sm" variant="secondary"><Link href={imagingReview ? "/imaging" : labReview ? "/labs" : formReview ? "/forms" : "/documents"}>{imagingReview ? "Open imaging worklist" : labReview ? "Open laboratory worklist" : formReview ? "Open form control room" : "Open document airlock"}</Link></Button></Card><SectionCard title="Open care gaps"><div className="space-y-3 p-4">{qualityGaps.filter((gap) => gap.patient === `${patient.firstName} ${patient.lastName}`).map((gap) => <div className="rounded-xl bg-amber-50 p-3" key={gap.id}><p className="text-xs font-extrabold text-amber-950">{gap.measure}</p><p className="mt-1 text-[9px] text-amber-700">{gap.due}</p><StatusBadge status={gap.status} /></div>)}<div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-extrabold text-slate-800">Depression screening</p><p className="mt-1 text-[9px] text-slate-500">Due at next annual visit</p></div></div></SectionCard></div>
   </div>;
 }
 
@@ -80,7 +83,7 @@ function TimelineList({ events }: { events: TimelineEvent[] }) {
   return <div className="p-5">{events.length > 0 ? <div className="relative space-y-6 before:absolute before:bottom-3 before:left-[18px] before:top-3 before:w-px before:bg-slate-200">{events.map((event) => <TimelineRow event={event} key={event.id} />)}</div> : <p className="text-xs text-slate-500">No longitudinal events are recorded for this patient.</p>}</div>;
 }
 
-function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], imagingResults: PatientImagingResult[], documents: PatientDocument[]): TimelineEvent[] {
+function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], imagingResults: PatientImagingResult[], documents: PatientDocument[], formSubmissions: PatientFormSubmission[]): TimelineEvent[] {
   const labEvents = labResults.map((result) => ({
     event: {
       id: `lab-${result.id}`,
@@ -118,13 +121,25 @@ function buildPatientTimeline(encounters: Encounter[], labResults: LabResult[], 
     event: { id: `document-${document.id}`, type: "document" as const, title: document.name, detail: `${document.category} · version ${document.version} · ${document.patientVisible ? "portal visible" : "held from portal"}.`, timestamp: formatTimelineDate(document.createdAt), status: titleCase(document.reviewStatus) },
     sortAt: new Date(document.createdAt).getTime(),
   }));
-  return [...labEvents, ...imagingEvents, ...documentEvents, ...encounterEvents]
+  const formEvents = formSubmissions.map((submission) => ({
+    event: { id: `form-${submission.id}`, type: "form" as const, title: submission.templateName, detail: `Form version ${submission.version} · ${submission.completionPercent}% complete${submission.documentId ? " · locked chart artifact attached" : ""}.`, timestamp: formatTimelineDate(submission.updatedAt), status: titleCase(submission.status) },
+    sortAt: new Date(submission.updatedAt).getTime(),
+  }));
+  return [...labEvents, ...imagingEvents, ...formEvents, ...documentEvents, ...encounterEvents]
     .sort((left, right) => right.sortAt - left.sortAt)
     .map(({ event }) => event);
 }
 
 function DocumentsTab({ canManage, canUpdate, documents }: { canManage: boolean; canUpdate: boolean; documents: PatientDocument[] }) {
   return <SectionCard title="Chart documents" description="Tenant-scoped document versions, human review state, portal visibility, and audited content access." action={<Button asChild size="sm" variant="secondary"><Link href="/documents">Open document airlock <ArrowRight className="size-3.5" /></Link></Button>}><div className="divide-y divide-slate-100">{documents.length ? documents.map((document) => <div className="grid gap-4 p-5 md:grid-cols-[1fr_.55fr_.55fr_auto] md:items-center" key={document.id}><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-amber-50 text-amber-800"><FileText className="size-5" /></span><div><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{document.name}</p><Badge>v{document.version}</Badge>{document.supersedesId && <Badge tone="amber">Replacement</Badge>}</div><p className="mt-1 text-[10px] text-slate-400">{document.category} · {document.sourceType} · {(document.sizeBytes / 1024).toFixed(1)} KB</p></div></div><StatusBadge status={titleCase(document.reviewStatus)} /><Badge tone={document.patientVisible ? "teal" : "slate"}>{document.patientVisible ? "Portal visible" : titleCase(document.releaseStatus)}</Badge><div className="flex gap-1">{document.hasStoredContent ? <><Button aria-label={`Preview ${document.name}`} onClick={() => window.open(`/api/documents/${document.id}/content?intent=preview`, "_blank", "noopener,noreferrer")} size="icon" variant="ghost"><Eye className="size-4" /></Button>{canUpdate && <Button aria-label={`Print ${document.name}`} onClick={() => window.open(`/api/documents/${document.id}/content?intent=print`, "_blank", "noopener,noreferrer")} size="icon" variant="ghost"><Printer className="size-4" /></Button>}{canManage && <Button aria-label={`Download ${document.name}`} onClick={() => window.open(`/api/documents/${document.id}/content?intent=download`, "_blank", "noopener,noreferrer")} size="icon" variant="ghost"><Download className="size-4" /></Button>}</> : <Badge tone="slate">External source</Badge>}</div></div>) : <p className="p-6 text-xs text-slate-500">No documents are recorded for this patient.</p>}</div></SectionCard>;
+}
+
+function FormsTab({ submissions }: { submissions: PatientFormSubmission[] }) {
+  return <SectionCard title="Forms and attestations" description="Immutable template versions, completion state, human review, and locked chart-artifact linkage." action={<Button asChild size="sm" variant="secondary"><Link href="/forms">Open form control room <ArrowRight className="size-3.5" /></Link></Button>}><div className="divide-y divide-slate-100">{submissions.length ? submissions.map((submission) => <div className="grid gap-4 p-5 md:grid-cols-[1fr_.55fr_.45fr_auto] md:items-center" key={submission.id}><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-indigo-50 text-indigo-700"><ClipboardCheck className="size-5" /></span><div><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{submission.templateName}</p><Badge>v{submission.version}</Badge></div><p className="mt-1 text-[10px] text-slate-400">{titleCase(submission.category)} · updated {formatTimelineDate(submission.updatedAt)}</p></div></div><div><StatusBadge status={titleCase(submission.status)} /><p className="mt-2 text-[9px] text-slate-400">{submission.completionPercent}% complete</p></div><Badge tone={submission.documentId ? "teal" : "slate"}>{submission.documentId ? "Chart artifact" : "No artifact"}</Badge>{submission.status === "locked" ? <Button aria-label={`Preview locked ${submission.templateName}`} onClick={() => window.open(`/api/forms/submissions/${submission.id}/pdf`, "_blank", "noopener,noreferrer")} size="icon" variant="ghost"><Eye className="size-4" /></Button> : <span />}</div>) : <p className="p-6 text-xs text-slate-500">No form submissions are recorded for this patient.</p>}</div></SectionCard>;
+}
+
+function ConsentsTab({ consents }: { consents: PatientConsentSummary[] }) {
+  return <SectionCard title="Consent authorizations" description="Purpose-bound clinical data-sharing consent remains separate from treatment and intake form attestations."><div className="divide-y divide-slate-100">{consents.length ? consents.map((consent) => <div className="grid gap-4 p-5 md:grid-cols-[1fr_.65fr_.5fr] md:items-center" key={consent.id}><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-teal-50 text-teal-700"><ShieldCheck className="size-5" /></span><div><p className="text-xs font-extrabold text-slate-900">{titleCase(consent.type)}</p><p className="mt-1 text-[10px] text-slate-400">{consent.recipient} · {consent.purposeOfUse ? titleCase(consent.purposeOfUse) : "No external purpose"}</p></div></div><div><p className="text-[9px] font-bold uppercase tracking-[.1em] text-slate-400">Authorized categories</p><div className="mt-2 flex flex-wrap gap-1">{consent.dataCategories.map((category) => <Badge key={category}>{titleCase(category)}</Badge>)}{!consent.dataCategories.length && <Badge>Internal consent</Badge>}</div></div><div><StatusBadge status={titleCase(consent.status)} /><p className="mt-2 text-[9px] text-slate-400">Signed {consent.signerName ?? "Not recorded"} · expires {consent.expiresAt ? formatTimelineDate(consent.expiresAt) : "per policy"}</p></div></div>) : <p className="p-6 text-xs text-slate-500">No consent authorizations are recorded for this patient.</p>}</div></SectionCard>;
 }
 
 function formatTimelineDate(value: string) {

@@ -232,6 +232,33 @@ export interface PatientDocument {
   createdAt: string;
 }
 
+export interface PatientFormSubmission {
+  id: string;
+  templateName: string;
+  category: string;
+  version: number;
+  status: string;
+  completionPercent: number;
+  documentId: string | null;
+  submittedAt: string | null;
+  lockedAt: string | null;
+  updatedAt: string;
+}
+
+export interface PatientConsentSummary {
+  id: string;
+  type: string;
+  purposeOfUse: string | null;
+  dataCategories: string[];
+  recipient: string;
+  signerName: string | null;
+  signerRelationship: string | null;
+  status: string;
+  signedAt: string | null;
+  expiresAt: string | null;
+  withdrawnAt: string | null;
+}
+
 export interface Claim {
   id: string;
   patient: string;
@@ -264,7 +291,7 @@ export interface WorkTask {
 
 export interface TimelineEvent {
   id: string;
-  type: "encounter" | "lab" | "imaging" | "message" | "document" | "billing" | "task";
+  type: "encounter" | "lab" | "imaging" | "message" | "document" | "form" | "billing" | "task";
   title: string;
   detail: string;
   timestamp: string;
