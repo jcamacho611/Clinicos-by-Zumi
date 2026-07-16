@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { can, type ClinicRole } from "@/lib/auth/rbac";
 import { FormsWorkspace } from "@/components/clinic/forms-workspace";
 import { KnowledgeWorkspace } from "@/components/clinic/knowledge-workspace";
+import { RemoteMonitoringWorkspace } from "@/components/clinic/remote-monitoring-workspace";
 import { DocumentsWorkspace } from "@/components/clinic/documents-workspace";
 import { ImagingWorkspace } from "@/components/clinic/imaging-workspace";
 import { LabsWorkspace } from "@/components/clinic/labs-workspace";
@@ -36,10 +37,11 @@ import { listCapacityWorkspace } from "@/lib/repositories/capacity-repository";
 import { listPatientNavigationWorkspace } from "@/lib/repositories/patient-navigation-repository";
 import { listProviderConsultationWorkspace } from "@/lib/repositories/provider-consultation-repository";
 import { listKnowledgeWorkspace } from "@/lib/repositories/knowledge-repository";
+import { listRemoteMonitoringWorkspace } from "@/lib/repositories/remote-monitoring-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
-  "labs", "imaging", "medications", "documents", "forms", "knowledge", "billing", "insurance", "cases", "quality",
+  "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "billing", "insurance", "cases", "quality",
   "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
@@ -82,6 +84,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "knowledge", "read")) return notFound();
       const session = { organizationId, role, userId };
       return <KnowledgeWorkspace canCorrect={can(role, "knowledge", "update")} canCreate={can(role, "knowledge", "create")} canReview={can(role, "knowledge", "manage")} workspace={await listKnowledgeWorkspace(session)} />;
+    }
+    case "remote-monitoring": {
+      if (!can(role, "remote_monitoring", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listRemoteMonitoringWorkspace>[0];
+      return <RemoteMonitoringWorkspace canCreate={can(role, "remote_monitoring", "create")} canReview={can(role, "remote_monitoring", "update")} workspace={await listRemoteMonitoringWorkspace(session)} />;
     }
     case "billing": {
       if (!can(role, "billing", "read")) return notFound();

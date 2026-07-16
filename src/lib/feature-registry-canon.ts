@@ -446,7 +446,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 58, slug: "remote-monitoring-wearables", title: "Home Health, Remote Monitoring, and Wearables",
     mandate: "Ingest consented home observations through governed adapters without treating device data as autonomous clinical judgment.",
     ownerRoles: ["patient", "provider", "care_manager", "home_health_partner"], interfaceRoute: "/remote-monitoring",
-    databaseObjects: ["remote_observations", "patients", "care_plans", "tasks", "escalations", "integrations"], deliveryStatus: "PLANNED", deliveryMode: "adapter-ready",
+    databaseObjects: ["remote_observations", "patients", "care_plans", "tasks", "escalations", "integrations"], deliveryStatus: "FOUNDATION", deliveryMode: "adapter-ready",
     features: "Remote monitoring enrollment | Device consent | Device registry | Wearable adapter | Home blood-pressure observation | Home glucose observation | Home weight observation | Pulse-oximetry observation | Symptom check-in | Patient-entered observation | Device-entered observation | Observation provenance | Observation quality flag | Threshold configured by provider | Review queue | Missed-reading task | Human-reviewed escalation | Care-plan linkage | Device disconnection alert | Manual observation fallback | Remote monitoring audit history",
   }),
   section({

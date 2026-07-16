@@ -2787,6 +2787,7 @@ model RemoteObservation {
   unit           String?
   source         String
   observedAt     DateTime
+  thresholdConfig Json?
   qualityFlag    String?
   reviewStatus   String       @default("pending")
   reviewedBy     String?
