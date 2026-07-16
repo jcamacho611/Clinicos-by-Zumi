@@ -1124,7 +1124,9 @@ model Document {
   status             String      @default("active")
   expiresAt          DateTime?
   lockedAt           DateTime?
+  careTeamRoomId     String?
   uploadedBy         String?
+  careTeamRoom       CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
   provenance         Json?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
@@ -1138,6 +1140,7 @@ model Document {
   @@index([encounterId])
   @@index([referralId])
   @@index([caseType, caseId])
+  @@index([careTeamRoomId, createdAt])
   @@index([expiresAt])
   @@map("documents")
 }
@@ -2149,13 +2152,17 @@ model MessageThread {
   requiresHumanReview Boolean   @default(false)
   assignedTeam        String?
   status              String    @default("open")
+  careTeamRoomId      String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   lead                Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  careTeamRoom        CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
+  messages            Message[]
 
   @@index([organizationId, status])
   @@index([patientId])
   @@index([organizationId, leadId, status])
+  @@index([careTeamRoomId, status])
   @@map("message_threads")
 }
 
@@ -2176,6 +2183,7 @@ model Message {
   createdBy           String?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
+  thread              MessageThread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
   lead                Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([threadId, createdAt])
@@ -2262,12 +2270,15 @@ model Task {
   riskLevel      RiskLevel @default(NORMAL)
   dueAt          DateTime?
   status         String    @default("open")
+  careTeamRoomId String?
   completedAt    DateTime?
   createdBy      String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  careTeamRoom   CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, status, dueAt])
+  @@index([careTeamRoomId, status, dueAt])
   @@map("tasks")
 }
 
@@ -2756,6 +2767,9 @@ model CareTeamRoom {
   organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   patient        Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
   members        CareTeamMember[]
+  messageThreads MessageThread[]
+  tasks          Task[]
+  documents      Document[]
 
   @@index([organizationId, patientId, status])
   @@map("care_team_rooms")

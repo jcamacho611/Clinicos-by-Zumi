@@ -46,6 +46,7 @@ import { listCRMWorkspace } from "@/lib/repositories/crm-repository";
 import { CRMWorkspace } from "@/components/clinic/crm-workspace";
 import { listSystemHealthWorkspace } from "@/lib/repositories/system-health-repository";
 import { SystemHealthWorkspace } from "@/components/clinic/system-health-workspace";
+import { listCareTeamWorkspace } from "@/lib/repositories/care-team-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -154,9 +155,10 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       return <IdentityResolutionWorkspace role={role} workspace={await listIdentityWorkspace(organizationId)} />;
     }
     case "care-teams": {
-      if (!can(role, "tasks", "read")) return notFound();
-      const [overview, collaboration] = await Promise.all([getConnectedCareOverview(organizationId), listCareCoordinationWorkspace(organizationId, userId)]);
-      return <CareTeamsWorkspace collaboration={collaboration} overview={overview} />;
+      if (!can(role, "care_teams", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listCareTeamWorkspace>[0];
+      const [overview, collaboration, careTeam] = await Promise.all([getConnectedCareOverview(organizationId), listCareCoordinationWorkspace(organizationId, userId), listCareTeamWorkspace(session)]);
+      return <CareTeamsWorkspace canCreate={can(role, "care_teams", "create")} canManage={can(role, "care_teams", "manage")} careTeam={careTeam} collaboration={collaboration} overview={overview} />;
     }
     case "capacity-exchange": {
       if (!can(role, "appointments", "read")) return notFound();

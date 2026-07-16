@@ -145,6 +145,8 @@ async function main() {
   await prisma.notification.deleteMany();
   await prisma.message.deleteMany();
   await prisma.messageThread.deleteMany();
+  await prisma.careTeamMember.deleteMany();
+  await prisma.careTeamRoom.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -651,6 +653,32 @@ async function main() {
       approvedBy: "user-nadja",
       activatedAt: new Date("2026-07-01T12:00:00.000Z"),
     },
+  });
+
+  const careTeamRoom = await prisma.careTeamRoom.create({
+    data: {
+      id: "care-room-maya-connected",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      name: "Maya · Connected Diabetes Care",
+      sourceType: "referral",
+      sharedPlan: { goals: ["Close the loop on the repeat A1C order"], nextActions: ["Provider review", "Diagnostic scheduling"], humanReviewRequired: true },
+    },
+  });
+  await prisma.careTeamMember.createMany({
+    data: [
+      { id: "care-member-bfm-nadja", careTeamRoomId: careTeamRoom.id, representedOrganizationId: bfm.id, userId: "user-nadja", providerId: "provider-nadja", role: "primary care coordinator", accessLevel: "care_coordination", status: "active", joinedAt: new Date("2026-07-14T13:00:00.000Z") },
+      { id: "care-member-luxe-nadja", careTeamRoomId: careTeamRoom.id, representedOrganizationId: luxe.id, userId: "user-luxe-owner", providerId: "provider-nadja-luxe", role: "connected-care reviewer", accessLevel: "minimum_necessary", status: "active", joinedAt: new Date("2026-07-15T15:00:00.000Z") },
+    ],
+  });
+  await prisma.messageThread.create({
+    data: { id: "thread-care-room-maya", organizationId: bfm.id, patientId: maya.id, careTeamRoomId: careTeamRoom.id, category: "care_team", subject: careTeamRoom.name, status: "open" },
+  });
+  await prisma.message.create({
+    data: { id: "message-care-room-maya", organizationId: bfm.id, threadId: "thread-care-room-maya", patientId: maya.id, direction: "INTERNAL", channel: "secure_care_team", body: "Diagnostic partner follow-up is pending provider review. Keep the shared plan minimum-necessary and document the next human owner.", sentAt: new Date("2026-07-15T16:10:00.000Z"), createdBy: "user-nadja" },
+  });
+  await prisma.task.create({
+    data: { id: "task-care-room-maya-diagnostic", organizationId: bfm.id, patientId: maya.id, careTeamRoomId: careTeamRoom.id, category: "care_team", title: "Confirm diagnostic scheduling", details: "care_team_room:care-room-maya-connected Confirm the repeat A1C and imaging coordination path.", ownerId: "user-nadja", priority: "high", riskLevel: RiskLevel.NEEDS_PROVIDER, dueAt: new Date("2026-07-18T15:00:00.000Z"), status: "open", createdBy: "user-nadja" },
   });
 
   await prisma.dataSharingAgreement.create({

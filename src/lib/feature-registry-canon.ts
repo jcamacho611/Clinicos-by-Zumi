@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.4";
+export const REGISTRY_CANON_VERSION = "2026-07-16.5";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -327,7 +327,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 41, slug: "virtual-care-teams", title: "Virtual Care Teams and Care Team Rooms",
     mandate: "Let authorized clinicians and coordinators work as one accountable care team across organization boundaries.",
     ownerRoles: ["provider", "case_manager", "referral_coordinator", "patient"], interfaceRoute: "/care-teams",
-    databaseObjects: ["care_team_rooms", "care_team_members", "messages", "documents", "tasks", "care_plans", "audit_logs"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["care_team_rooms", "care_team_members", "message_threads", "messages", "documents", "tasks", "care_plans", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Care Team Room | Cross-organization care team | Care-team member role | Represented organization | Shared care plan | Team notes | Team messages | Team documents | Team tasks | Referral-formed care team | Episode-formed care team | Patient-selected care participants | Care-team invitation | Care-team acceptance | Care-team removal | Minimum-necessary team access | Team activity timeline | Team handoff | Team alert | Team audit history | Care Constellation network graph",
   }),
   section({
