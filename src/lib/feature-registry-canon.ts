@@ -383,7 +383,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 49, slug: "care-handoffs", title: "Real-Time Collaboration and Care Handoffs",
     mandate: "Make every transfer of responsibility explicit, acknowledged, time-bound, and recoverable.",
     ownerRoles: ["provider", "nurse", "medical_assistant", "case_manager"], interfaceRoute: "/care-teams",
-    databaseObjects: ["care_handoffs", "tasks", "messages", "notifications", "escalations", "audit_logs"], deliveryStatus: "PLANNED", deliveryMode: "native",
+    databaseObjects: ["care_handoffs", "tasks", "messages", "notifications", "escalations", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "native",
     features: "Structured care handoff | Sending clinician | Receiving clinician | Represented organization | Patient context | Situation summary | Background summary | Assessment summary draft | Requested action | Due time | Priority | Handoff acceptance | Handoff rejection | Clarification request | Read receipt | Acknowledgment timer | Overdue escalation | Shift handoff | Referral handoff | Discharge handoff | Diagnostic-result handoff | Responsibility transfer | Handoff resolution | Handoff audit trail",
   }),
   section({

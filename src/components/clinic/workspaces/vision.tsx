@@ -5,6 +5,7 @@ import {
   RadioTower, Route, ShieldCheck, Sparkles,
 } from "lucide-react";
 import { AiWorkflowDemo } from "@/components/clinic/ai-workflow-demo";
+import { HandoffActions } from "@/components/clinic/care-coordination-actions";
 import { NetworkDirectoryPanel } from "@/components/clinic/network-directory-panel";
 import { PassportActions } from "@/components/clinic/passport-actions";
 import { PageIntro, Progress, SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -15,6 +16,7 @@ import type { CanonicalRegistrySection } from "@/lib/feature-registry-canon";
 import type { ConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
 import type { NetworkDirectoryWorkspace } from "@/lib/repositories/network-directory-repository";
 import type { PassportWorkspace } from "@/lib/repositories/passport-repository";
+import type { CareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
 
 export function NetworkWorkspace({ overview, directory, canCreate, canManage }: { overview: ConnectedCareOverview; directory: NetworkDirectoryWorkspace; canCreate: boolean; canManage: boolean }) {
   return <div className="space-y-6">
@@ -31,7 +33,7 @@ export function NetworkWorkspace({ overview, directory, canCreate, canManage }: 
   </div>;
 }
 
-export function CareTeamsWorkspace({ overview }: { overview: ConnectedCareOverview }) {
+export function CareTeamsWorkspace({ overview, collaboration }: { overview: ConnectedCareOverview; collaboration: CareCoordinationWorkspace }) {
   const room = overview.careTeams[0];
   const nodes = [
     ["Primary care", "Nadja R., NP", "bg-teal-500", "left-[6%] top-[44%]"],
@@ -42,6 +44,7 @@ export function CareTeamsWorkspace({ overview }: { overview: ConnectedCareOvervi
     <div className="grid gap-4 xl:grid-cols-[1.25fr_.75fr]"><Card className="relative min-h-[520px] overflow-hidden bg-[#07131f] p-6 text-white"><div className="absolute inset-0 opacity-30 clinical-grid" /><div className="relative"><div className="flex items-center justify-between"><div><p className="text-[9px] font-extrabold uppercase tracking-[.18em] text-sky-300">{room?.mrn ?? "Synthetic demo"}</p><h3 className="mt-1 text-xl font-black">{room?.name ?? "No active Care Team Room"}</h3></div><Badge className="bg-white/10 text-white ring-white/15">{room?.memberCount ?? 0} members</Badge></div>
       <div className="relative mt-8 h-[390px] rounded-[24px] border border-white/10 bg-white/[.035]"><svg className="absolute inset-0 h-full w-full" aria-hidden><line x1="50%" y1="50%" x2="18%" y2="50%" stroke="rgba(45,212,191,.35)" /><line x1="50%" y1="50%" x2="80%" y2="27%" stroke="rgba(56,189,248,.35)" /><line x1="50%" y1="50%" x2="80%" y2="77%" stroke="rgba(251,191,36,.35)" /></svg><div className="absolute left-1/2 top-1/2 grid size-28 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-center text-slate-950 shadow-[0_0_70px_rgba(125,211,252,.25)] ring-8 ring-white/5"><div><Orbit className="mx-auto size-5 text-teal-600" /><p className="mt-1 text-xs font-black">{room?.patientName ?? "Patient"}</p><p className="text-[8px] text-slate-400">Patient center</p></div></div>{nodes.map(([role, name, color, position]) => <div className={`absolute ${position} w-36 rounded-2xl bg-white/10 p-3 ring-1 ring-white/15 backdrop-blur`} key={role}><span className={`block size-2 rounded-full ${color}`} /><p className="mt-2 text-[9px] font-bold text-slate-400">{role}</p><p className="mt-1 text-[10px] font-extrabold text-white">{name}</p></div>)}</div></div></Card>
       <div className="space-y-4"><SectionCard title="Shared plan" description="Clinical content remains subject to licensed review."><div className="space-y-3 p-4">{[["Current status", room?.status ?? "No room"], ["Responsible", "Primary care"], ["Next action", "Provider reviews repeat A1C order"], ["Risk", "Needs provider"]].map(([label, value]) => <div className="rounded-xl bg-slate-50 p-3" key={label}><p className="text-[9px] font-bold text-slate-400">{label.toUpperCase()}</p><p className="mt-1 text-xs font-extrabold text-slate-900">{value}</p></div>)}</div></SectionCard><SectionCard title="Minimum necessary" description="Membership does not equal full-chart access."><div className="p-4 text-xs leading-6 text-slate-600"><ShieldCheck className="mb-3 size-5 text-teal-600" />Team members receive only purpose-bound categories, with consent expiration, revocation, and a patient-visible access history.</div></SectionCard></div></div>
+    <SectionCard title="Live responsibility transfers" description="Every handoff has a sender, receiving clinician, patient context, requested action, due time, acknowledgment, and recoverable human transition."><div className="space-y-3 p-4">{collaboration.handoffs.map((handoff) => <article className="rounded-2xl border border-slate-200 p-4" key={handoff.id}><div className="flex flex-wrap items-start gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{handoff.type.replaceAll("_", " ")}</p><StatusBadge status={handoff.status} /><StatusBadge status={handoff.priority} /></div><p className="mt-1 text-[10px] text-slate-500">{handoff.patientName} · {handoff.patientMrn} · {handoff.senderName} → {handoff.receiverName}</p><p className="mt-3 text-[10px] leading-5 text-slate-600">{Object.values(handoff.summary as Record<string, string>).join(" · ")}</p><p className="mt-2 text-[10px] font-bold text-slate-500">Requested: {handoff.requestedAction} · Due: {handoff.dueAt ? new Date(handoff.dueAt).toLocaleString() : "No due time"}</p></div></div><HandoffActions handoffId={handoff.id} status={handoff.status} /></article>)}{!collaboration.handoffs.length && <p className="text-xs text-slate-500">No care handoffs are recorded for this organization.</p>}</div></SectionCard>
   </div>;
 }
 

@@ -30,6 +30,7 @@ import { listDocumentWorkspace } from "@/lib/repositories/document-repository";
 import { listFormWorkspace } from "@/lib/repositories/form-repository";
 import { listPaymentWorkspace } from "@/lib/repositories/payment-repository";
 import { listPassportWorkspace } from "@/lib/repositories/passport-repository";
+import { listCareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -80,8 +81,14 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     case "cases": return <CasesWorkspace />;
     case "quality": return <QualityWorkspace />;
     case "messages": return <MessagesWorkspace />;
-    case "tasks": return <TasksWorkspace />;
-    case "escalations": return <EscalationsWorkspace />;
+    case "tasks": {
+      if (!can(role, "tasks", "read")) return notFound();
+      return <TasksWorkspace workspace={await listCareCoordinationWorkspace(organizationId, userId)} />;
+    }
+    case "escalations": {
+      if (!can(role, "escalations", "read")) return notFound();
+      return <EscalationsWorkspace workspace={await listCareCoordinationWorkspace(organizationId, userId)} />;
+    }
     case "ai-assistants": return <AiAssistantsWorkspace />;
     case "network": {
       if (!can(role, "network", "read")) return notFound();
@@ -100,7 +107,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "identity", "read")) return notFound();
       return <IdentityResolutionWorkspace role={role} workspace={await listIdentityWorkspace(organizationId)} />;
     }
-    case "care-teams": return <CareTeamsWorkspace overview={await getConnectedCareOverview(organizationId)} />;
+    case "care-teams": {
+      if (!can(role, "tasks", "read")) return notFound();
+      const [overview, collaboration] = await Promise.all([getConnectedCareOverview(organizationId), listCareCoordinationWorkspace(organizationId, userId)]);
+      return <CareTeamsWorkspace collaboration={collaboration} overview={overview} />;
+    }
     case "capacity-exchange": return <CapacityExchangeWorkspace overview={await getConnectedCareOverview(organizationId)} />;
     case "health-passport": {
       if (!can(role, "identity", "read")) return notFound();

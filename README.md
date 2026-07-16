@@ -38,6 +38,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Diagnostic Capacity Exchange and Injury Episode Room
 - Live Health Passport and Consent Wallet workspace with tenant-filtered chart-derived refresh, explicit human confirmation, category-level defaults, emergency access preference, consent visibility, and audit receipts
 - Universal Intake Passport workspace with reusable patient-confirmed fields, versioned confirmation, patient selection, and manual intake fallback
+- Live Care Constellation responsibility-transfer queue with tenant-filtered handoffs, receiving-clinician acknowledgment, clarification, resolution, escalation, task completion, urgent human review, notifications, and audit receipts
 - Voice-first ClinicOS Copilot with same-screen transcript review and typing fallback
 - Searchable, PostgreSQL-backed Priority Zero registry covering 62 domains and 2,157 capabilities, including the incorporated 52-section ClinicOS Master Feature List
 
@@ -128,6 +129,8 @@ npm start            # production server
 - `GET /api/health-passport` returns only the signed-in organization's patient passports, while `POST /api/health-passport` creates a chart-derived snapshot marked `needs_confirmation`; it never represents the snapshot as a diagnosis or autonomous clinical decision.
 - `GET|POST /api/consent-wallet` returns or updates patient sharing defaults and emergency-access preference with organization checks and audit receipts; ordinary record sharing still requires the consent ledger and access-grant rules.
 - `GET|POST /api/intake-passport` returns or confirms reusable intake fields with version increments, explicit confirmation, tenant checks, and audit receipts; clinic-specific questions and manual forms remain the fallback.
+- `GET|POST /api/care-handoffs` returns or creates tenant-scoped responsibility transfers; `POST /api/care-handoffs/:handoffId/transition` supports acknowledged, clarification, resolved, rejected, and explicitly escalated states with human notes, linked tasks, notifications, and audit receipts.
+- `GET /api/tasks` and `GET /api/escalations` return tenant-scoped operational queues; their transition routes require human notes, update linked records, and record audit history instead of silently completing clinical work.
 - `GET|POST /api/network/record-requests` and the connected-care decision/read/revoke routes require role permission, an active relationship, sharing agreement, active consent, purpose/category coverage, and an auditable access grant. Break-glass remains a narrow, time-limited, separately audited exception.
 - `GET /api/network/directory` returns only the participating-clinic directory and signed-in organization's integration/error queue; `POST /api/network/connections` creates a purpose-limited relationship request, while `POST /api/network/connections/:connectionId/transition` restricts approval, suspension, and restoration to the correct organization administrator boundary and writes dual-organization audit receipts.
 - `GET|POST /api/referrals` lists the signed-in clinic's outbound referrals and only transmitted inbound referrals whose relationship, agreement, and patient consent still validate at read time, or creates a tenant-owned clinical order and referral draft after destination, document, relationship, agreement, and consent validation.
