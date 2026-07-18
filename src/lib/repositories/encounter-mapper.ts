@@ -34,9 +34,24 @@ export interface EncounterAggregate {
     assessment: string | null;
     plan: string | null;
   };
-  diagnoses: Array<{ code: string; label: string }>;
-  procedures: Array<{ code: string; label: string }>;
+  diagnoses: Array<{ code: string; label: string; primary: boolean }>;
+  procedures: Array<{ code: string; label: string; modifiers: string[] }>;
+  addenda: Array<{ id: string; content: unknown; signedBy: string | null; signedAt: Date | null; createdAt: Date }>;
+  addendumAuthors: Array<{ id: string; name: string }>;
   auditHistory: AuditRecord[];
+}
+
+function mapAddendum(addendum: EncounterAggregate["addenda"][number], authors: EncounterAggregate["addendumAuthors"]) {
+  const content = addendum.content && typeof addendum.content === "object"
+    ? addendum.content as { reason?: unknown; text?: unknown }
+    : {};
+  return {
+    id: addendum.id,
+    reason: typeof content.reason === "string" ? content.reason : "Clinical clarification",
+    text: typeof content.text === "string" ? content.text : "",
+    author: authors.find((author) => author.id === addendum.signedBy)?.name ?? addendum.signedBy ?? "Authorized clinician",
+    signedAt: (addendum.signedAt ?? addendum.createdAt).toISOString(),
+  };
 }
 
 function actorName(record: AuditRecord) {
@@ -95,6 +110,7 @@ export function mapEncounterAggregate(aggregate: EncounterAggregate): Encounter 
     patientInstructions: encounter.patientInstructions ?? "",
     followUp: encounter.followUpPlan ?? "",
     requiresCosignature: encounter.requiresCosignature,
+    addenda: aggregate.addenda.map((addendum) => mapAddendum(addendum, aggregate.addendumAuthors)),
     auditHistory: aggregate.auditHistory.map(mapAudit),
   };
 }

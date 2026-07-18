@@ -121,7 +121,10 @@ npm start            # production server
 - `GET /api/appointments` returns only the signed-in organization's schedule.
 - `PATCH /api/appointments/:appointmentId/status` enforces forward-only scheduling lifecycle transitions and writes an audit event.
 - `GET /api/encounters` returns tenant-scoped encounter, SOAP, coding, and audit data.
+- `POST /api/encounters` creates a tenant-scoped encounter draft only after validating the patient, provider, location, and optional appointment inside the signed-in organization.
 - `PATCH /api/encounters/:encounterId` autosaves draft-only structured documentation.
+- `PUT /api/encounters/:encounterId/coding` replaces draft-only ICD-10 and CPT/HCPCS entries, synchronizes draft superbill context, and records an audit receipt.
+- `POST /api/encounters/:encounterId/addenda` lets authorized signers append an immutable signed clarification to a locked note without changing the original.
 - `POST /api/encounters/:encounterId/transition` submits a complete draft for review or signs and permanently locks a reviewed note.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
 - `GET /api/feature-registry` requires authentication and registry-read permission, then returns the PostgreSQL-backed P0 canon and delivery summary with private/no-store caching.
@@ -270,7 +273,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 
 - Passkey challenge endpoints, MFA, recovery codes, session-management UI, and a distributed login rate limiter
 - Authorization enforcement for modules beyond the currently protected patient, appointment, encounter, workflow, connected-care access, master identity, consent, referral, laboratory, imaging, document, and form routes
-- Encounter creation, diagnosis/procedure editing, addenda, and database-backed modules beyond patient/scheduling/encounter workflows
+- Structured vitals, review-of-systems and physical-exam builders, template/smart-phrase administration, co-signature completion, and database-backed modules beyond the currently connected repositories
 - BAA-backed infrastructure and formal HIPAA security/privacy program
 - BAA-reviewed private object storage, managed KMS/HSM key custody, key rotation/re-encryption automation, malware scanning, and larger-file streaming beyond the current AES-256-GCM encrypted 10 MB database fallback
 - Live BAA-backed Quest, Labcorp, BioReference, hospital-lab, HL7 v2, and FHIR laboratory adapters; ClinicOS currently provides the native workflow, adapter contract, integration event ledger, and safe manual/document fallbacks without claiming electronic connectivity

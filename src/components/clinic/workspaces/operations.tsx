@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppointmentStatusControl } from "@/components/clinic/appointment-status-control";
+import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
 import { tasks } from "@/lib/clinic-data";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge, TextAction } from "@/components/clinic/workspace-kit";
@@ -89,9 +90,10 @@ export function ScheduleWorkspace({ appointments }: { appointments: Appointment[
   </div>;
 }
 
-export function EncountersWorkspace({ encounters }: { encounters: Encounter[] }) {
+export function EncountersWorkspace({ canCreate, encounters, options }: { canCreate: boolean; encounters: Encounter[]; options: EncounterCreationOptions }) {
   const draftEncounter = encounters.find((encounter) => encounter.status === "Draft");
-  return <div className="space-y-6"><PageIntro title="Documentation without the dead ends." description="Continue, review, sign, and lock clinical notes with structured billing fields and a visible audit trail." action={draftEncounter ? <Button asChild variant="primary"><Link href={`/encounters/${draftEncounter.id}`}><Stethoscope className="size-4" /> Open draft</Link></Button> : <Button disabled title="Encounter creation is not connected yet" variant="primary"><Plus className="size-4" /> New encounter</Button>} />
+  return <div className="space-y-6"><PageIntro title="Documentation without the dead ends." description="Create, continue, review, sign, lock, and amend clinical notes with structured billing fields and a visible audit trail." action={draftEncounter ? <Button asChild variant="primary"><Link href={`/encounters/${draftEncounter.id}`}><Stethoscope className="size-4" /> Open draft</Link></Button> : undefined} />
+    <EncounterCreateForm canCreate={canCreate} options={options} />
     <div className="grid gap-4 sm:grid-cols-4"><StatCard accent="sky" detail="Autosaved to PostgreSQL" icon={<FileText className="size-4" />} label="Draft notes" value={String(encounters.filter((encounter) => encounter.status === "Draft").length)} /><StatCard accent="amber" detail="Prepared for signature" icon={<UserCheck className="size-4" />} label="Ready for review" value={String(encounters.filter((encounter) => encounter.status === "Ready for Review").length)} /><StatCard accent="teal" detail="Signed and immutable" icon={<CheckCircle2 className="size-4" />} label="Locked" value={String(encounters.filter((encounter) => encounter.status === "Locked").length)} /><StatCard accent="rose" detail="Requires follow-through" icon={<AlertTriangle className="size-4" />} label="Needs attention" value={String(encounters.filter((encounter) => encounter.status === "Addendum Needed").length)} /></div>
     <SectionCard title="Encounter worklist" description="All notes stay attached to a patient, provider, organization, and immutable audit history."><div className="divide-y divide-slate-100">{encounters.map((encounter) => <Link className="grid gap-4 p-5 transition hover:bg-slate-50 md:grid-cols-[1.1fr_.7fr_.7fr_auto] md:items-center" href={`/encounters/${encounter.id}`} key={encounter.id}><Person detail={`${encounter.date} · ${encounter.patientMrn}`} initials={encounter.patientInitials} name={encounter.patientName} /><div><p className="text-[9px] font-bold text-slate-400">VISIT TYPE</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.type}</p></div><div><p className="text-[9px] font-bold text-slate-400">PROVIDER</p><p className="mt-1 text-xs font-bold text-slate-700">{encounter.provider}</p></div><div className="flex items-center gap-3"><StatusBadge status={encounter.status} /><ArrowRight className="size-4 text-slate-300" /></div></Link>)}</div></SectionCard>
   </div>;

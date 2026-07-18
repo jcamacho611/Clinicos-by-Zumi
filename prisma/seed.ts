@@ -189,6 +189,7 @@ async function main() {
   await prisma.documentReview.deleteMany();
   await prisma.document.deleteMany();
   await prisma.documentCategory.deleteMany();
+  await prisma.clinicalNote.deleteMany();
   await prisma.soapNote.deleteMany();
   await prisma.diagnosis.deleteMany();
   await prisma.procedure.deleteMany();
@@ -598,6 +599,10 @@ async function main() {
     ],
   });
 
+  await prisma.clinicalNote.create({
+    data: { id: "addendum-darius-1003", organizationId: bfm.id, patientId: "pt-1002", encounterId: "enc-1003", type: "addendum", content: { reason: "Follow-up clarification", text: "Synthetic addendum: preventive follow-up timing was clarified after the original note was locked.", attestation: "signed_by_author" }, status: EncounterStatus.LOCKED, signedBy: "user-nadja", signedAt: new Date("2026-07-15T12:00:00.000Z"), lockedAt: new Date("2026-07-15T12:00:00.000Z"), createdAt: new Date("2026-07-15T12:00:00.000Z") },
+  });
+
   await prisma.diagnosis.createMany({
     data: [
       { id: "dx-1001", organizationId: bfm.id, patientId: maya.id, encounterId: "enc-1001", code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia", primary: true },
@@ -643,6 +648,7 @@ async function main() {
       { id: "audit-enc-1", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.created", resourceType: "encounter", resourceId: "enc-1001", patientId: maya.id, metadata: { actorName: "Nadja R., NP" }, createdAt: new Date("2026-07-14T13:06:00.000Z") },
       { id: "audit-enc-2", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.ready_for_review", resourceType: "encounter", resourceId: "enc-1002", patientId: "pt-1003", metadata: { actorName: "Samuel Lee, MD" }, createdAt: new Date("2026-07-14T14:18:00.000Z") },
       { id: "audit-enc-3", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.signed_and_locked", resourceType: "encounter", resourceId: "enc-1003", patientId: "pt-1002", metadata: { actorName: "Nadja R., NP" }, createdAt: new Date("2026-07-14T15:10:00.000Z") },
+      { id: "audit-enc-3-addendum", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.addendum_signed", resourceType: "encounter", resourceId: "enc-1003", patientId: "pt-1002", changes: { addendumId: "addendum-darius-1003" }, metadata: { actorName: "Nadja R., NP", originalNotePreserved: true, syntheticDemo: true }, createdAt: new Date("2026-07-15T12:00:00.000Z") },
     ],
   });
 

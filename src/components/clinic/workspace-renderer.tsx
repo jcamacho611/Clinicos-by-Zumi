@@ -19,7 +19,7 @@ import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace,
 import { clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 import { getConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
-import { listEncountersForOrganization } from "@/lib/repositories/encounter-repository";
+import { listEncounterCreationOptions, listEncountersForOrganization } from "@/lib/repositories/encounter-repository";
 import { listPriorityZeroRegistry } from "@/lib/repositories/feature-registry-repository";
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 import { listNetworkAccessWorkspace } from "@/lib/repositories/network-access-repository";
@@ -71,7 +71,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "patients": return <PatientsWorkspace patients={await listPatientsForOrganization(organizationId)} />;
     case "schedule": return <ScheduleWorkspace appointments={await listAppointmentsForOrganization(organizationId)} />;
-    case "encounters": return <EncountersWorkspace encounters={await listEncountersForOrganization(organizationId)} />;
+    case "encounters": {
+      if (!can(role, "encounters", "read")) return notFound();
+      const [encounters, options] = await Promise.all([listEncountersForOrganization(organizationId), listEncounterCreationOptions(organizationId)]);
+      return <EncountersWorkspace canCreate={can(role, "encounters", "create")} encounters={encounters} options={options} />;
+    }
     case "telemedicine": return <TelemedicineWorkspace />;
     case "labs": {
       if (!can(role, "labs", "read")) return notFound();

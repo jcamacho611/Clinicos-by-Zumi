@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle, ArrowLeft, Check, ChevronDown, Clock3, FileClock, History,
-  LoaderCircle, LockKeyhole, Plus, Save, ShieldCheck, Signature, Sparkles,
+  LoaderCircle, LockKeyhole, Save, ShieldCheck, Signature, Sparkles,
   Stethoscope, UserCheck,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EncounterCodingAddenda } from "@/components/clinic/encounter-coding-addenda";
 import { StatusBadge } from "@/components/clinic/workspace-kit";
 import type { Encounter, Patient } from "@/lib/types";
 
@@ -51,7 +51,7 @@ function initialDraft(encounter: Encounter): DraftFields {
   };
 }
 
-export function EncounterEditor({ encounter, patient }: { encounter: Encounter; patient: Patient }) {
+export function EncounterEditor({ canSign, encounter, patient }: { canSign: boolean; encounter: Encounter; patient: Patient }) {
   const router = useRouter();
   const [fields, setFields] = useState<DraftFields>(() => initialDraft(encounter));
   const [status, setStatus] = useState(encounter.status);
@@ -170,10 +170,7 @@ export function EncounterEditor({ encounter, patient }: { encounter: Encounter; 
           <div className="space-y-5 p-5">{structuredSections.map((section) => <label className="block" key={section.key}><span className="text-[10px] font-extrabold uppercase tracking-[.13em] text-slate-500">{section.label}</span><textarea className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs leading-6 text-slate-800 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" disabled={!editable} onChange={(event) => updateField(section.key, event.target.value)} rows={section.rows} value={fields[section.key]} /></label>)}</div>
         </Card>
 
-        <section className="grid gap-5 lg:grid-cols-2">
-          <Card className="overflow-hidden"><div className="border-b border-slate-100 px-5 py-4"><p className="text-sm font-extrabold text-slate-950">Diagnoses · ICD-10</p></div><div className="space-y-2 p-5">{encounter.diagnoses.length > 0 ? encounter.diagnoses.map((diagnosis) => <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3" key={diagnosis.code}><Badge tone="sky">{diagnosis.code}</Badge><p className="text-xs font-bold text-slate-700">{diagnosis.label}</p></div>) : <p className="text-xs text-slate-500">No diagnosis codes attached.</p>}<Button className="mt-2" disabled size="sm" title="Coding changes are not connected" variant="secondary"><Plus className="size-3.5" /> Add diagnosis</Button></div></Card>
-          <Card className="overflow-hidden"><div className="border-b border-slate-100 px-5 py-4"><p className="text-sm font-extrabold text-slate-950">Procedures · CPT</p></div><div className="space-y-2 p-5">{encounter.procedures.length > 0 ? encounter.procedures.map((procedure) => <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3" key={procedure.code}><Badge tone="teal">{procedure.code}</Badge><p className="text-xs font-bold text-slate-700">{procedure.label}</p></div>) : <p className="text-xs text-slate-500">No procedure codes attached.</p>}<Button className="mt-2" disabled size="sm" title="Coding changes are not connected" variant="secondary"><Plus className="size-3.5" /> Add procedure</Button></div></Card>
-        </section>
+        <EncounterCodingAddenda canSign={canSign} editable={editable} encounter={encounter} />
 
         <Card className="p-5"><div className="grid gap-5 md:grid-cols-2"><label className="text-[10px] font-extrabold uppercase tracking-[.12em] text-slate-500">Patient instructions<textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium normal-case leading-6 tracking-normal outline-none focus:border-teal-400 disabled:cursor-not-allowed disabled:bg-slate-100" disabled={!editable} onChange={(event) => updateField("patientInstructions", event.target.value)} value={fields.patientInstructions} /></label><label className="text-[10px] font-extrabold uppercase tracking-[.12em] text-slate-500">Follow-up plan<textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium normal-case leading-6 tracking-normal outline-none focus:border-teal-400 disabled:cursor-not-allowed disabled:bg-slate-100" disabled={!editable} onChange={(event) => updateField("followUp", event.target.value)} value={fields.followUp} /></label></div></Card>
       </div>
@@ -189,7 +186,7 @@ export function EncounterEditor({ encounter, patient }: { encounter: Encounter; 
 
         <Card className="overflow-hidden"><div className="border-b border-slate-100 p-4"><p className="text-sm font-extrabold text-slate-950">Audit history</p></div><div className="space-y-5 p-4">{auditHistory.length > 0 ? auditHistory.map((event, index) => <div className="relative flex gap-3" key={event.id}><span className={`grid size-7 shrink-0 place-items-center rounded-lg ${index === 0 ? "bg-teal-50 text-teal-700" : "bg-slate-100 text-slate-500"}`}><FileClock className="size-3.5" /></span><div><p className="text-[10px] font-extrabold capitalize text-slate-800">{event.action}</p><p className="mt-1 text-[9px] text-slate-400">{event.actor} · {event.timestamp}</p></div></div>) : <p className="text-[10px] text-slate-500">No audit events recorded.</p>}</div></Card>
 
-        <Card className="bg-slate-950 p-5 text-white"><LockKeyhole className="size-5 text-lime-300" /><p className="mt-4 text-sm font-extrabold">Signing is final.</p><p className="mt-2 text-[10px] leading-5 text-slate-400">After signature, the note locks. A timestamped addendum workflow is required for corrections and is not connected yet.</p><Button className="mt-4 w-full border-white/15 bg-white/10 text-white" disabled={status !== "Ready for Review" || actionPending !== null} onClick={() => void runTransition("sign_and_lock")} size="sm" variant="secondary">{actionPending === "sign_and_lock" ? <LoaderCircle className="size-3.5 animate-spin" /> : <UserCheck className="size-3.5" />} Sign & lock note</Button></Card>
+        <Card className="bg-slate-950 p-5 text-white"><LockKeyhole className="size-5 text-lime-300" /><p className="mt-4 text-sm font-extrabold">Signing is final.</p><p className="mt-2 text-[10px] leading-5 text-slate-400">After signature, the original note locks permanently. Authorized providers can append a separately signed, timestamped addendum without overwriting it.</p><Button className="mt-4 w-full border-white/15 bg-white/10 text-white" disabled={!canSign || status !== "Ready for Review" || actionPending !== null} onClick={() => void runTransition("sign_and_lock")} size="sm" variant="secondary">{actionPending === "sign_and_lock" ? <LoaderCircle className="size-3.5 animate-spin" /> : <UserCheck className="size-3.5" />} Sign & lock note</Button></Card>
       </aside>}
     </div>
   </div>;

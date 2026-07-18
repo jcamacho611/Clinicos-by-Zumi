@@ -83,8 +83,10 @@ describe("clinical database mapping", () => {
       patient: { firstName: "Maya", lastName: "Thompson", mrn: "BFM-28419" },
       provider: { name: "Nadja R.", credential: "NP" },
       soapNote: { subjective: "Home readings elevated", objective: "Stable", assessment: "Diabetes", plan: "Provider review" },
-      diagnoses: [{ code: "E11.65", label: "Type 2 diabetes with hyperglycemia" }],
-      procedures: [{ code: "99214", label: "Established patient visit" }],
+      diagnoses: [{ code: "E11.65", label: "Type 2 diabetes with hyperglycemia", primary: true }],
+      procedures: [{ code: "99214", label: "Established patient visit", modifiers: ["25"] }],
+      addenda: [{ id: "addendum-1", content: { reason: "Clarification", text: "Corrected follow-up interval." }, signedBy: "user-nadja", signedAt: new Date("2026-07-15T12:00:00.000Z"), createdAt: new Date("2026-07-15T12:00:00.000Z") }],
+      addendumAuthors: [{ id: "user-nadja", name: "Nadja R., NP" }],
       auditHistory: [{
         id: "audit-1",
         action: "encounter.draft_saved",
@@ -99,6 +101,9 @@ describe("clinical database mapping", () => {
     expect(encounter.patientMrn).toBe("BFM-28419");
     expect(encounter.subjective).toBe("Home readings elevated");
     expect(encounter.diagnoses[0]?.code).toBe("E11.65");
+    expect(encounter.diagnoses[0]?.primary).toBe(true);
+    expect(encounter.procedures[0]?.modifiers).toEqual(["25"]);
+    expect(encounter.addenda[0]).toMatchObject({ reason: "Clarification", author: "Nadja R., NP" });
     expect(encounter.auditHistory[0]).toMatchObject({ action: "draft saved", actor: "Nadja R., NP" });
   });
 });

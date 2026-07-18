@@ -78,6 +78,14 @@ export interface EncounterAuditEvent {
   timestamp: string;
 }
 
+export interface EncounterAddendum {
+  id: string;
+  reason: string;
+  text: string;
+  author: string;
+  signedAt: string;
+}
+
 export interface Encounter {
   id: string;
   organizationId: string;
@@ -95,11 +103,12 @@ export interface Encounter {
   objective: string;
   assessment: string;
   plan: string;
-  diagnoses: Array<{ code: string; label: string }>;
-  procedures: Array<{ code: string; label: string }>;
+  diagnoses: Array<{ code: string; label: string; primary: boolean }>;
+  procedures: Array<{ code: string; label: string; modifiers: string[] }>;
   patientInstructions: string;
   followUp: string;
   requiresCosignature: boolean;
+  addenda: EncounterAddendum[];
   auditHistory: EncounterAuditEvent[];
 }
 
