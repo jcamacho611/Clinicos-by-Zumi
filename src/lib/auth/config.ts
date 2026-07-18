@@ -1,5 +1,7 @@
 export const SESSION_COOKIE_NAME = "clinicos_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 8;
+export const PORTAL_SESSION_COOKIE_NAME = "clinicos_portal_session";
+export const PORTAL_SESSION_TTL_SECONDS = 60 * 60 * 2;
 
 export const DEVELOPMENT_DEMO_EMAIL = "nadja@example.test";
 export const DEVELOPMENT_DEMO_PASSWORD = "ClinicOS-Demo-2026!";
@@ -29,5 +31,15 @@ export function sessionCookieOptions() {
     sameSite: "lax" as const,
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
+  };
+}
+
+export function portalSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: PORTAL_SESSION_TTL_SECONDS,
   };
 }

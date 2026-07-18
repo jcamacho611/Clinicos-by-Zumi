@@ -73,6 +73,7 @@ model Organization {
   updatedAt                  DateTime                    @updatedAt
   locations                  Location[]
   users                      User[]
+  portalAccounts             PortalAccount[]
   patients                   Patient[]
   appointments               Appointment[]
   encounters                 Encounter[]
@@ -176,6 +177,48 @@ model AuthCredential {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("auth_credentials")
+}
+
+model PortalAccount {
+  id              String          @id @default(cuid())
+  organizationId  String
+  patientId       String          @unique
+  email           String
+  passwordHash    String
+  status          String          @default("active")
+  emailVerifiedAt DateTime?
+  mfaEnabled      Boolean         @default(false)
+  mustReset       Boolean         @default(false)
+  failedAttempts  Int             @default(0)
+  lockedUntil     DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  sessions        PortalSession[]
+
+  @@unique([organizationId, email])
+  @@index([email, status])
+  @@map("portal_accounts")
+}
+
+model PortalSession {
+  id              String        @id
+  portalAccountId String
+  expiresAt       DateTime
+  lastSeenAt      DateTime      @default(now())
+  revokedAt       DateTime?
+  ipAddress       String?
+  userAgent       String?
+  deviceLabel     String?
+  authLevel       String        @default("password")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  portalAccount   PortalAccount @relation(fields: [portalAccountId], references: [id], onDelete: Cascade)
+
+  @@index([portalAccountId, revokedAt, expiresAt])
+  @@map("portal_sessions")
 }
 
 model AuthSession {
@@ -360,6 +403,7 @@ model Patient {
   remoteObservations  RemoteObservation[]
   voiceSessions       VoiceSession[]
   leads               Lead[]
+  portalAccount       PortalAccount?
 
   @@unique([organizationId, mrn])
   @@index([masterPatientId])
@@ -1087,7 +1131,7 @@ model DocumentCategory {
 }
 
 model Document {
-  id                 String      @id @default(cuid())
+  id                 String        @id @default(cuid())
   organizationId     String
   patientId          String?
   encounterId        String?
@@ -1096,14 +1140,14 @@ model Document {
   caseId             String?
   categoryId         String?
   versionGroupId     String
-  version            Int         @default(1)
+  version            Int           @default(1)
   supersedesId       String?
   name               String
   originalFileName   String
   description        String?
-  tags               String[]    @default([])
-  sourceType         String      @default("upload")
-  storageProvider    String      @default("database_encrypted")
+  tags               String[]      @default([])
+  sourceType         String        @default("upload")
+  storageProvider    String        @default("database_encrypted")
   storageKey         String
   mimeType           String
   sizeBytes          Int
@@ -1112,24 +1156,24 @@ model Document {
   encryptionIv       Bytes?
   encryptionAuthTag  Bytes?
   encryptionKeyId    String?
-  accessLevel        AccessLevel @default(INTERNAL)
-  reviewRequired     Boolean     @default(true)
-  reviewStatus       String      @default("needs_review")
-  releaseStatus      String      @default("not_requested")
+  accessLevel        AccessLevel   @default(INTERNAL)
+  reviewRequired     Boolean       @default(true)
+  reviewStatus       String        @default("needs_review")
+  releaseStatus      String        @default("not_requested")
   releaseRequestedAt DateTime?
   releaseApprovedBy  String?
   releaseApprovedAt  DateTime?
-  patientVisible     Boolean     @default(false)
-  internalOnly       Boolean     @default(true)
-  status             String      @default("active")
+  patientVisible     Boolean       @default(false)
+  internalOnly       Boolean       @default(true)
+  status             String        @default("active")
   expiresAt          DateTime?
   lockedAt           DateTime?
   careTeamRoomId     String?
   uploadedBy         String?
   careTeamRoom       CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
   provenance         Json?
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@unique([organizationId, versionGroupId, version])
   @@unique([organizationId, supersedesId])
@@ -2142,20 +2186,20 @@ model LeadEvent {
 }
 
 model LuxeService {
-  id                    String   @id @default(cuid())
-  organizationId        String
-  key                   String
-  name                  String
-  category              String
-  description           String?
-  priceCents            Int      @default(0)
-  durationMinutes      Int      @default(60)
-  mobileAvailable       Boolean  @default(false)
-  requiresConsultation  Boolean  @default(true)
-  providerReviewRequired Boolean @default(true)
-  status                String   @default("active")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  organizationId         String
+  key                    String
+  name                   String
+  category               String
+  description            String?
+  priceCents             Int      @default(0)
+  durationMinutes        Int      @default(60)
+  mobileAvailable        Boolean  @default(false)
+  requiresConsultation   Boolean  @default(true)
+  providerReviewRequired Boolean  @default(true)
+  status                 String   @default("active")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   @@unique([organizationId, key])
   @@index([organizationId, category, status])
@@ -2163,22 +2207,22 @@ model LuxeService {
 }
 
 model LuxeTreatmentPlan {
-  id                    String   @id @default(cuid())
-  organizationId        String
-  patientId             String
-  serviceId             String
-  providerId            String?
-  name                  String
-  goals                 Json?
-  recommendedSessions   Int      @default(1)
-  status                String   @default("draft")
-  reviewStatus          String   @default("needs_provider_review")
-  reviewedBy            String?
-  reviewedAt            DateTime?
-  reviewNotes           String?
-  createdBy             String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  organizationId      String
+  patientId           String
+  serviceId           String
+  providerId          String?
+  name                String
+  goals               Json?
+  recommendedSessions Int       @default(1)
+  status              String    @default("draft")
+  reviewStatus        String    @default("needs_provider_review")
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  reviewNotes         String?
+  createdBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([organizationId, status, reviewStatus])
   @@index([organizationId, patientId, updatedAt])
@@ -2187,7 +2231,7 @@ model LuxeTreatmentPlan {
 }
 
 model LuxeTreatmentSession {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   organizationId  String
   patientId       String
   serviceId       String
@@ -2195,14 +2239,14 @@ model LuxeTreatmentSession {
   appointmentId   String?
   encounterId     String?
   providerId      String?
-  sessionNumber   Int      @default(1)
-  status          String   @default("scheduled")
+  sessionNumber   Int       @default(1)
+  status          String    @default("scheduled")
   scheduledAt     DateTime?
   completedAt     DateTime?
   notes           String?
   createdBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([organizationId, status, scheduledAt])
   @@index([organizationId, patientId, createdAt])
@@ -2211,21 +2255,21 @@ model LuxeTreatmentSession {
 }
 
 model LuxePromotion {
-  id             String   @id @default(cuid())
-  organizationId String
-  serviceId      String?
-  name           String
-  code           String?
-  description    String?
-  discountCents  Int?
+  id              String    @id @default(cuid())
+  organizationId  String
+  serviceId       String?
+  name            String
+  code            String?
+  description     String?
+  discountCents   Int?
   discountPercent Int?
-  startsAt       DateTime?
-  endsAt         DateTime?
-  status         String   @default("draft")
-  usageCount     Int      @default(0)
-  createdBy      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  startsAt        DateTime?
+  endsAt          DateTime?
+  status          String    @default("draft")
+  usageCount      Int       @default(0)
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([organizationId, status, startsAt, endsAt])
   @@index([serviceId])
@@ -2233,20 +2277,20 @@ model LuxePromotion {
 }
 
 model MessageThread {
-  id                  String    @id @default(cuid())
+  id                  String        @id @default(cuid())
   organizationId      String
   patientId           String?
   leadId              String?
   subject             String?
   category            String
-  riskLevel           RiskLevel @default(NORMAL)
-  requiresHumanReview Boolean   @default(false)
+  riskLevel           RiskLevel     @default(NORMAL)
+  requiresHumanReview Boolean       @default(false)
   assignedTeam        String?
-  status              String    @default("open")
+  status              String        @default("open")
   careTeamRoomId      String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  lead                Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  lead                Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
   careTeamRoom        CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
   messages            Message[]
 
@@ -2349,7 +2393,7 @@ model EmailLog {
 }
 
 model Task {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   organizationId String
   patientId      String?
   encounterId    String?
@@ -2357,15 +2401,15 @@ model Task {
   title          String
   details        String?
   ownerId        String?
-  priority       String    @default("normal")
-  riskLevel      RiskLevel @default(NORMAL)
+  priority       String        @default("normal")
+  riskLevel      RiskLevel     @default(NORMAL)
   dueAt          DateTime?
-  status         String    @default("open")
+  status         String        @default("open")
   careTeamRoomId String?
   completedAt    DateTime?
   createdBy      String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   careTeamRoom   CareTeamRoom? @relation(fields: [careTeamRoomId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, status, dueAt])
@@ -2655,7 +2699,7 @@ model NetworkConnection {
 }
 
 model NetworkInvitation {
-  id                     String       @id @default(cuid())
+  id                     String        @id @default(cuid())
   invitingOrganizationId String
   targetOrganizationId   String?
   inviteeType            String
@@ -2663,7 +2707,7 @@ model NetworkInvitation {
   inviteeEmail           String?
   specialty              String?
   location               String?
-  status                 String       @default("sent")
+  status                 String        @default("sent")
   requestedBy            String
   verifiedBy             String?
   verifiedAt             DateTime?
@@ -2673,9 +2717,9 @@ model NetworkInvitation {
   rejectedAt             DateTime?
   expiresAt              DateTime?
   notes                  String?
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  invitingOrganization   Organization @relation("InvitationSource", fields: [invitingOrganizationId], references: [id], onDelete: Cascade)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  invitingOrganization   Organization  @relation("InvitationSource", fields: [invitingOrganizationId], references: [id], onDelete: Cascade)
   targetOrganization     Organization? @relation("InvitationTarget", fields: [targetOrganizationId], references: [id], onDelete: SetNull)
 
   @@index([invitingOrganizationId, status, createdAt])

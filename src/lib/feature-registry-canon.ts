@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-16.9";
+export const REGISTRY_CANON_VERSION = "2026-07-18.10";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -124,7 +124,7 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 12, slug: "patient-portal", title: "Patient and Client Portal",
     mandate: "Give patients secure, consent-aware control over appointments, approved records, communication, payments, and sharing.",
     ownerRoles: ["patient", "patient_proxy", "portal_administrator"], interfaceRoute: "/portal",
-    databaseObjects: ["users", "patients", "appointments", "forms", "consents", "documents", "messages", "payments", "access_grants", "audit_logs"], deliveryStatus: "DEMO", deliveryMode: "native",
+    databaseObjects: ["portal_accounts", "portal_sessions", "patients", "appointments", "forms", "consents", "documents", "messages", "payments", "access_grants", "audit_logs"], deliveryStatus: "DEMO", deliveryMode: "native",
     features: "Create portal account | Secure portal login | Portal multifactor authentication | Manage authorized proxies | Request appointments | View upcoming appointments | Permitted rescheduling | Permitted cancellation | Complete intake forms | Sign consents | Upload identification | Upload insurance cards | Update demographics | Update pharmacy | Update contact preferences | Pay deposits | Pay copays | Pay balances | View statements | Download receipts | Secure office messaging | Request prescription refills | Request referrals | View approved visit summaries | View approved laboratory results | View approved imaging reports | View approved documents | Access telemedicine links | View care plans | View patient instructions | View appropriate care gaps | View record-sharing activity | Manage sharing permissions | Download and export permitted records | Request corrections | Request medical records | Receive notifications",
   }),
   section({

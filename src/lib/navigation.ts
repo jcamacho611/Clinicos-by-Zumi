@@ -70,7 +70,7 @@ export const navigation = [
   {
     label: "System",
     items: [
-      { href: "/portal", label: "Portal preview", icon: "MonitorSmartphone" },
+      { href: "/portal-admin", label: "Portal administration", icon: "MonitorSmartphone" },
       { href: "/integrations", label: "Integration roadmap", icon: "Blocks" },
       { href: "/settings", label: "Settings & audit", icon: "Settings2" },
       { href: "/system-health", label: "System health", icon: "Gauge" },
@@ -119,7 +119,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   "intake-passport": { title: "Intake Passport", eyebrow: "Reusable patient-confirmed intake" },
   "voice-assistant": { title: "Talk to ClinicOS", eyebrow: "Voice-first Copilot" },
   "feature-registry": { title: "Priority Zero registry", eyebrow: "ClinicOS product constitution" },
-  portal: { title: "Patient portal", eyebrow: "Patient experience preview" },
+  "portal-admin": { title: "Patient portal administration", eyebrow: "Patient experience controls" },
   integrations: { title: "Integration roadmap", eyebrow: "Standards and partners" },
   settings: { title: "Settings & audit", eyebrow: "Organization controls" },
   "system-health": { title: "System health", eyebrow: "Reliability and recovery" },

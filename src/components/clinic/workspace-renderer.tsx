@@ -55,7 +55,7 @@ import { listLuxeMediWorkspace } from "@/lib/repositories/luxe-medi-repository";
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
   "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "claim-readiness", "luxe-medi", "insurance", "cases", "quality", "crm", "system-health",
-  "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal", "integrations", "settings",
+  "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal-admin", "integrations", "settings",
   "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
 
@@ -215,7 +215,7 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
         capabilities: section.capabilities,
       }))} />;
     }
-    case "portal": return <PortalWorkspace />;
+    case "portal-admin": return <PortalWorkspace />;
     case "integrations": return <IntegrationsWorkspace />;
     case "settings": return <SettingsWorkspace />;
     default: {

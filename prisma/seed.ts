@@ -137,7 +137,13 @@ async function main() {
     throw new Error("CLINICOS_SEED_ADMIN_PASSWORD must be set to a non-placeholder value with at least 12 characters.");
   }
 
+  const patientPassword = process.env.CLINICOS_SEED_PATIENT_PASSWORD ?? adminPassword;
+  if (patientPassword.length < 12 || patientPassword.includes("replace-with")) {
+    throw new Error("CLINICOS_SEED_PATIENT_PASSWORD must be a non-placeholder value with at least 12 characters when provided.");
+  }
+
   const passwordHash = await hash(adminPassword, 12);
+  const portalPasswordHash = await hash(patientPassword, 12);
 
   await seedPriorityZeroRegistry();
 
@@ -209,6 +215,8 @@ async function main() {
   await prisma.allergy.deleteMany();
   await prisma.medication.deleteMany();
   await prisma.problem.deleteMany();
+  await prisma.portalSession.deleteMany();
+  await prisma.portalAccount.deleteMany();
   await prisma.encounter.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.appointmentType.deleteMany();
@@ -339,6 +347,18 @@ async function main() {
       { id: "pt-1004", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10428", firstName: "Camille", lastName: "Brooks", dateOfBirth: new Date("1989-05-15T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(646) 555-0165", email: "camille.brooks@example.test", portalStatus: "active" },
       { id: "pt-2001", organizationId: luxe.id, locationId: "loc-midtown", mrn: "LUX-10931", firstName: "Maya", lastName: "Thompson", preferredName: "Maya T.", dateOfBirth: new Date("1985-09-12T00:00:00.000Z"), sexAtBirth: "Female", pronouns: "she/her", phone: "(917) 555-0142", email: "maya.thompson@example.test", portalStatus: "invited", identityStatus: "possible_match", requiresHumanReview: true },
     ],
+  });
+
+  await prisma.portalAccount.create({
+    data: {
+      id: "portal-maya-bfm",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      email: "maya.thompson@example.test",
+      passwordHash: portalPasswordHash,
+      status: "active",
+      emailVerifiedAt: new Date("2026-07-08T13:00:00.000Z"),
+    },
   });
 
   await prisma.luxeService.createMany({
@@ -649,6 +669,7 @@ async function main() {
       { id: "audit-enc-2", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.ready_for_review", resourceType: "encounter", resourceId: "enc-1002", patientId: "pt-1003", metadata: { actorName: "Samuel Lee, MD" }, createdAt: new Date("2026-07-14T14:18:00.000Z") },
       { id: "audit-enc-3", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.signed_and_locked", resourceType: "encounter", resourceId: "enc-1003", patientId: "pt-1002", metadata: { actorName: "Nadja R., NP" }, createdAt: new Date("2026-07-14T15:10:00.000Z") },
       { id: "audit-enc-3-addendum", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "encounter.addendum_signed", resourceType: "encounter", resourceId: "enc-1003", patientId: "pt-1002", changes: { addendumId: "addendum-darius-1003" }, metadata: { actorName: "Nadja R., NP", originalNotePreserved: true, syntheticDemo: true }, createdAt: new Date("2026-07-15T12:00:00.000Z") },
+      { id: "audit-portal-maya-activated", organizationId: bfm.id, actorId: "portal-maya-bfm", actorType: "patient", action: "portal.account_activated", resourceType: "portal_account", resourceId: "portal-maya-bfm", patientId: maya.id, metadata: { syntheticDemo: true, emailVerified: true }, createdAt: new Date("2026-07-08T13:00:00.000Z") },
     ],
   });
 

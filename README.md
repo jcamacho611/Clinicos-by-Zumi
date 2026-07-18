@@ -76,7 +76,7 @@ npm run dev
 
 Open `http://localhost:3000`. Authentication, patient charts, scheduling, encounters, connected-care access, identity, consent, referrals, and laboratory workflows require the PostgreSQL database configured by `DATABASE_URL`; workspaces not yet migrated to repositories continue to use explicit fake demonstration fixtures.
 
-The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEED_ADMIN_PASSWORD` to a strong value before running it. The demo seed is destructive and must never be run against a database containing real records. Development-only fallback authentication is forcibly disabled when `NODE_ENV=production` and can also be disabled locally with `DEMO_AUTH=false`.
+The seed creates the authenticated owner `nadja@example.test` and a separate synthetic patient portal account for `maya.thompson@example.test` at clinic code `brooklyn-family-medicine`. Set `CLINICOS_SEED_ADMIN_PASSWORD` and a different `CLINICOS_SEED_PATIENT_PASSWORD` to strong values before running it. The patient password falls back to the admin seed password only for backwards-compatible local seeding. The demo seed is destructive and must never be run against a database containing real records. Development-only fallback authentication is forcibly disabled when `NODE_ENV=production` and can also be disabled locally with `DEMO_AUTH=false`.
 
 ## Environment variables
 
@@ -88,6 +88,7 @@ The seed creates the authenticated owner `nadja@example.test`. Set `CLINICOS_SEE
 | `AUTH_SECRET` | Production | At least 32 random characters used to sign HTTP-only sessions |
 | `DOCUMENT_ENCRYPTION_KEY` | Production | Base64- or hex-encoded 32-byte AES-256-GCM key for the encrypted database document fallback; rotate only through a reviewed re-encryption procedure |
 | `CLINICOS_SEED_ADMIN_PASSWORD` | Seed only | Initial fake clinic-owner password; must be 12+ characters and not the placeholder |
+| `CLINICOS_SEED_PATIENT_PASSWORD` | Seed only | Initial synthetic patient-portal password; use a different 12+ character value |
 | `DEMO_AUTH` | Local only | Set `false` to disable the development demo account; ignored in production |
 | `AI_KEY` | No | Reserved for a reviewed AI provider integration |
 | `TWILIO_ACCOUNT_SID` | No | Future voice/SMS integration |
@@ -117,6 +118,9 @@ npm start            # production server
 - `POST /api/onboarding/organizations` validates and rate-limits public workspace creation, then atomically creates the organization, location, departments, owner credential, roles, permissions, trial, defaults, pending connectors, settings, and audit receipts before issuing a signed session.
 - `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
 - `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
+- `POST /api/portal/auth/login` authenticates an organization-scoped patient account using a patient-only token audience, database session, lockout counter, and separate HTTP-only cookie.
+- `POST /api/portal/auth/logout` revokes only the patient portal session and records a patient-visible access event.
+- `GET /api/portal/me` ignores client-supplied patient identifiers and returns only the authenticated patient's organization-filtered appointments, forms, released documents/results/instructions, balances, approved portal messages, and portal access history.
 - `GET /api/patients` requires authentication and queries PostgreSQL with the session organization ID in every patient and related-record filter.
 - `GET /api/appointments` returns only the signed-in organization's schedule.
 - `PATCH /api/appointments/:appointmentId/status` enforces forward-only scheduling lifecycle transitions and writes an audit event.
@@ -280,7 +284,7 @@ For a custom domain, add the domain in the Render service, copy the supplied DNS
 - Live BAA-backed imaging facility, hospital radiology, DICOM/PACS, HL7, and FHIR adapters; ClinicOS currently provides the native imaging workflow, adapter contract, authorization and delivery controls, event ledger, source-document fallback, and provider release gates without claiming electronic connectivity
 - Payer, clearinghouse, production e-prescribing and EPCS, formulary, PDMP, drug-interaction, and telemedicine integrations; the medication workflow currently exposes an adapter-ready contract, deterministic exact-match source warnings, manual, print, and fax fallback, a sandbox eRx demonstration, and a fail-closed EPCS boundary without claiming production connectivity
 - Production Stripe/Square payment webhooks and patient-facing checkout completion; current billing is a connected, tenant-filtered manual workflow with tokenized payment-link creation, explicit adapter status, reconciliation, refund controls, and audit receipts.
-- Patient-portal authentication, public assignment tokens, live email/SMS form delivery, qualified electronic-signature vendors, identity-proofing adapters, and automated reminder delivery; current patient completion is staff-assisted inside an authenticated clinic workspace and every external-delivery choice creates a truthful manual fallback task
+- Patient portal account invitations/recovery, MFA/passkeys, authorized proxies, self-service scheduling, form completion, secure messaging, refill/referral requests, payments, exports/corrections, public assignment tokens, live email/SMS delivery, qualified electronic-signature vendors, identity-proofing adapters, and automated reminders; password authentication and same-patient released-record viewing are now connected through a separate patient principal and audit boundary
 - Approved, BAA-reviewed production speech transcription; current push-to-talk uses the browser speech adapter with synthetic demo data only and stores no audio
 - Clinical terminology services and validated quality-measure logic
 - Certification, legal review, threat model, penetration test, accessibility audit, and clinical safety validation
