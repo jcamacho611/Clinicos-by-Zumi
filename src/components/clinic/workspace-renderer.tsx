@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { can, type ClinicRole } from "@/lib/auth/rbac";
+import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { FormsWorkspace } from "@/components/clinic/forms-workspace";
 import { KnowledgeWorkspace } from "@/components/clinic/knowledge-workspace";
 import { RemoteMonitoringWorkspace } from "@/components/clinic/remote-monitoring-workspace";
@@ -60,6 +61,7 @@ export const workspaceSlugs = [
 ] as const;
 
 export async function WorkspaceRenderer({ organizationId, role, userId, workspace }: { organizationId: string; role: ClinicRole; userId: string; workspace: string }) {
+  if (!canAccessWorkspace(role, workspace)) return notFound();
   switch (workspace) {
     case "front-desk": return <FrontDeskWorkspace appointments={await listAppointmentsForOrganization(organizationId)} />;
     case "provider": {

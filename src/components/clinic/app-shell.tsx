@@ -16,6 +16,7 @@ import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
 import { roleLabel } from "@/lib/auth/rbac";
+import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicSession } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,9 @@ function initials(name: string) {
 
 function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: ClinicSession }) {
   const pathname = usePathname();
+  const visibleNavigation = navigation
+    .map((group) => ({ ...group, items: group.items.filter((item) => canAccessWorkspace(session.role, item.href.slice(1))) }))
+    .filter((group) => group.items.length > 0);
   return (
     <aside className="flex h-full w-[272px] flex-col border-r border-slate-200 bg-[#f8faf9]">
       <div className="flex h-[78px] items-center gap-3 border-b border-slate-200/80 px-5">
@@ -53,7 +57,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
         </button>
       </div>
       <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-6">
-        {navigation.map((group) => (
+        {visibleNavigation.map((group) => (
           <div className="mt-5 first:mt-2" key={group.label}>
             <p className="px-3 pb-1.5 text-[9px] font-extrabold uppercase tracking-[.18em] text-slate-400">{group.label}</p>
             <div className="space-y-0.5">

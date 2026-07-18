@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { zipSync, strToU8 } from "fflate";
+import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { getDocumentPacketContents } from "@/lib/repositories/document-repository";
@@ -13,6 +14,8 @@ function safeFileName(value: string) {
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const denied = await enforceApiPermission(session, "documents", "manage", { request });
+  if (denied) return denied;
   try {
     const packet = await getDocumentPacketContents(session, await request.json());
     const manifest = {

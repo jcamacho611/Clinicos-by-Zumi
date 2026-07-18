@@ -15,13 +15,16 @@ import { findPatientForOrganization } from "@/lib/repositories/patient-repositor
 export async function generateMetadata({ params }: { params: Promise<{ patientId: string }> }): Promise<Metadata> {
   const { patientId } = await params;
   const session = await getClinicSession();
-  const patient = session ? await findPatientForOrganization(patientId, session.organizationId) : null;
+  const patient = session && can(session.role, "patients", "read")
+    ? await findPatientForOrganization(patientId, session.organizationId)
+    : null;
   return { title: patient ? `${patient.firstName} ${patient.lastName}` : "Patient chart" };
 }
 
 export default async function PatientPage({ params }: { params: Promise<{ patientId: string }> }) {
   const { patientId } = await params;
   const session = await requireClinicSession();
+  if (!can(session.role, "patients", "read")) notFound();
   const [patient, encounters, labResults, imagingResults, documents, formSubmissions, consents, medicationHistory] = await Promise.all([
     findPatientForOrganization(patientId, session.organizationId),
     listEncountersForPatient(patientId, session.organizationId),

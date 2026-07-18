@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-18.10";
+export const REGISTRY_CANON_VERSION = "2026-07-18.11";
 
 export const completionGateKeys = [
   "userAndPurpose",

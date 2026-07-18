@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { createNetworkInvitation, listNetworkGrowthWorkspace } from "@/lib/repositories/network-growth-repository";
@@ -6,6 +7,8 @@ import { createNetworkInvitation, listNetworkGrowthWorkspace } from "@/lib/repos
 export async function GET() {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const denied = await enforceApiPermission(session, "network", "read");
+  if (denied) return denied;
   try { return NextResponse.json({ data: await listNetworkGrowthWorkspace(session) }, { headers: { "Cache-Control": "private, no-store" } }); }
   catch (error) { return networkAccessErrorResponse(error); }
 }
@@ -13,6 +16,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const denied = await enforceApiPermission(session, "network", "create", { request });
+  if (denied) return denied;
   try { return NextResponse.json({ data: await createNetworkInvitation(session, await request.json()) }, { status: 201 }); }
   catch (error) { return networkAccessErrorResponse(error); }
 }

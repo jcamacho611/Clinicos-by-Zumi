@@ -121,6 +121,7 @@ npm start            # production server
 - `POST /api/portal/auth/login` authenticates an organization-scoped patient account using a patient-only token audience, database session, lockout counter, and separate HTTP-only cookie.
 - `POST /api/portal/auth/logout` revokes only the patient portal session and records a patient-visible access event.
 - `GET /api/portal/me` ignores client-supplied patient identifiers and returns only the authenticated patient's organization-filtered appointments, forms, released documents/results/instructions, balances, approved portal messages, and portal access history.
+- Staff navigation, workspace rendering, and every staff API method now share an explicit role/resource/action contract. Newly denied API actions write an `authorization.denied` audit event without exposing cross-tenant resource existence.
 - `GET /api/patients` requires authentication and queries PostgreSQL with the session organization ID in every patient and related-record filter.
 - `GET /api/appointments` returns only the signed-in organization's schedule.
 - `PATCH /api/appointments/:appointmentId/status` enforces forward-only scheduling lifecycle transitions and writes an audit event.
