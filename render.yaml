@@ -6,6 +6,7 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /api/health
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: 20.19.4
@@ -14,7 +15,7 @@ services:
       - key: DIRECT_DATABASE_URL
         sync: false
       - key: NEXT_PUBLIC_APP_URL
-        value: https://zumi.onrender.com
+        sync: false
       - key: AUTH_SECRET
         sync: false
       - key: DOCUMENT_ENCRYPTION_KEY

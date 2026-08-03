@@ -260,17 +260,17 @@ The included `render.yaml` describes the web service. Before creating a producti
 1. Create a managed PostgreSQL database.
 2. Set pooled `DATABASE_URL` for application traffic and direct, non-PgBouncer `DIRECT_DATABASE_URL` for Prisma migrations. They may be identical for a standard PostgreSQL host.
 3. Run the committed migrations with `npm run db:migrate:deploy`; never use `db push` in production. Prisma CLI prefers `DIRECT_DATABASE_URL` and falls back to `DATABASE_URL` only when no direct URL is configured.
-4. Set `NEXT_PUBLIC_APP_URL` to the public HTTPS URL.
+4. Set `NEXT_PUBLIC_APP_URL` to the public HTTPS URL. When it is omitted on Render, canonical links fall back to Render's built-in `RENDER_EXTERNAL_URL`.
 5. Generate a unique `AUTH_SECRET` with at least 32 random characters and keep `DEMO_AUTH=false`.
 6. Generate and store a unique 32-byte `DOCUMENT_ENCRYPTION_KEY`; never reuse it across environments or rotate it without re-encrypting stored payloads.
 7. Seed the first database user using a temporary `CLINICOS_SEED_ADMIN_PASSWORD`, then rotate/remove the seed value from the service environment.
 8. Confirm `/api/health` responds successfully and `/dashboard` redirects unauthenticated requests to `/login`.
 9. Keep all optional vendor credentials unset until contracts, BAAs, consent, security review, and real integrations are complete.
 
-Render build command:
+Render build command (the root `postinstall` script generates Prisma Client and builds Next.js so the legacy `zumi` service's existing `npm install` command also remains compatible):
 
 ```bash
-npm ci && npm run db:generate && npm run build
+npm ci
 ```
 
 Render start command:
@@ -278,6 +278,8 @@ Render start command:
 ```bash
 npm start
 ```
+
+The startup runner applies committed migrations when `DATABASE_URL` is configured and refuses to start if that migration fails. Without `DATABASE_URL`, it serves only the public synthetic demonstration shell so the canonical site remains reachable; authenticated and persisted workflows remain unavailable until PostgreSQL is connected.
 
 For a custom domain, add the domain in the Render service, copy the supplied DNS record into the DNS provider, wait for verification, and set `NEXT_PUBLIC_APP_URL=https://your-domain.example`.
 

@@ -112,7 +112,8 @@ export async function createPaymentLink(session: ClinicSession, rawInput: unknow
     const link = await tx.paymentLink.create({ data: { organizationId: session.organizationId, patientId: input.patientId, amountCents: input.amountCents, tokenHash: createHash("sha256").update(token).digest("hex"), expiresAt: new Date(Date.now() + input.expiresInDays * 86_400_000) } });
     await tx.paymentEvent.create({ data: { organizationId: session.organizationId, patientId: input.patientId, actorId: session.userId, eventType: "payment_link_created", amountCents: input.amountCents, metadata: { paymentLinkId: link.id, expiresAt: link.expiresAt?.toISOString() } } });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "payment_link.created", resourceType: "payment_link", resourceId: link.id, patientId: input.patientId, metadata: { amountCents: input.amountCents, expiresAt: link.expiresAt?.toISOString() } } });
-    return { link, checkoutUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/pay/${link.id}?token=${token}` };
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000";
+    return { link, checkoutUrl: `${appUrl}/pay/${link.id}?token=${token}` };
   });
 }
 
