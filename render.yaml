@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: zumi-clinicos
+    name: zumi
     runtime: node
-    plan: starter
-    buildCommand: npm ci && npm run db:generate && npm run build
+    plan: free
+    buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -14,7 +14,7 @@ services:
       - key: DIRECT_DATABASE_URL
         sync: false
       - key: NEXT_PUBLIC_APP_URL
-        sync: false
+        value: https://zumi.onrender.com
       - key: AUTH_SECRET
         sync: false
       - key: DOCUMENT_ENCRYPTION_KEY
