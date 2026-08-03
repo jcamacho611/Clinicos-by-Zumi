@@ -210,6 +210,9 @@ export async function createDocument(session: ClinicSession, rawMetadata: unknow
         provenance: { source: input.sourceType, encryptedFallback: true, uploadedBy: session.userId },
       }, select: documentSummarySelect,
     });
+    if (input.caseType && input.caseId) {
+      await tx.caseDocument.create({ data: { organizationId: session.organizationId, caseType: input.caseType, caseId: input.caseId, documentId: document.id, status: "attached" } });
+    }
     if (reviewRequired) await createReviewWork(tx, { organizationId: session.organizationId, documentId: document.id, patientId: document.patientId, name: document.name, actorId: session.userId });
     await tx.documentEvent.create({ data: { organizationId: session.organizationId, documentId: document.id, actorId: session.userId, eventType: "uploaded", toStatus: document.reviewStatus, metadata: { categoryId: category.id, sourceType: input.sourceType, checksumSha256: encrypted.checksumSha256, releaseRequested } } });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "document.uploaded", resourceType: "document", resourceId: document.id, patientId: document.patientId, metadata: { categoryId: category.id, sourceType: input.sourceType, sizeBytes: file.sizeBytes, mimeType: file.mimeType, checksumSha256: encrypted.checksumSha256 } } });
@@ -243,6 +246,10 @@ export async function createDocumentVersion(session: ClinicSession, documentId: 
         uploadedBy: session.userId, provenance: { source: input.sourceType, encryptedFallback: true, replacementReason: input.reason, supersedesId: original.id },
       }, select: documentSummarySelect,
     });
+    if (original.caseType && original.caseId) {
+      await tx.caseDocument.updateMany({ where: { organizationId: session.organizationId, documentId: original.id, caseType: original.caseType, caseId: original.caseId }, data: { status: "superseded" } });
+      await tx.caseDocument.create({ data: { organizationId: session.organizationId, caseType: original.caseType, caseId: original.caseId, documentId: replacement.id, status: "attached" } });
+    }
     if (replacement.reviewRequired) await createReviewWork(tx, { organizationId: session.organizationId, documentId: replacement.id, patientId: replacement.patientId, name: replacement.name, actorId: session.userId });
     await tx.documentEvent.createMany({ data: [
       { organizationId: session.organizationId, documentId: original.id, actorId: session.userId, eventType: "superseded", fromStatus: original.status, toStatus: "superseded", note: input.reason, metadata: { replacementDocumentId: replacement.id } },

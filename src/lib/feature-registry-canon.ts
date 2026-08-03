@@ -1,4 +1,4 @@
-export const REGISTRY_CANON_VERSION = "2026-07-18.11";
+export const REGISTRY_CANON_VERSION = "2026-07-18.12";
 
 export const completionGateKeys = [
   "userAndPurpose",
@@ -194,14 +194,14 @@ export const clinicOsDayOneRegistry: CanonicalRegistrySection[] = [
     number: 22, slug: "no-fault", title: "No-Fault Case Management",
     mandate: "Coordinate no-fault clinical, legal, document, authorization, billing, and profitability workflows.",
     ownerRoles: ["case_manager", "biller", "provider"], interfaceRoute: "/cases",
-    databaseObjects: ["nofault_cases", "case_documents", "case_tasks", "case_packets", "claims", "payments"], deliveryStatus: "DEMO", deliveryMode: "manual-fallback",
+    databaseObjects: ["nofault_cases", "case_documents", "case_tasks", "case_packets", "claims", "payments", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "manual-fallback",
     features: "No-fault case profile | Accident date | Claim number | Carrier | Adjuster | Attorney | Policy information | Body parts injured | Diagnosis list | Treatment plan | Assignment of benefits | NF-2 tracking | NF-3 support | CMS-1500 support | Medical-necessity documents | Narrative builder | Narrative due dates | Prior-authorization tracking | Denial tracking | Appeal tracking | Independent medical examination tracking | Document checklist | Case-task checklist | Attorney communications | Adjuster communications | Packet builder | Packet export | Billing ledger | Case timeline | Case profitability dashboard",
   }),
   section({
     number: 23, slug: "workers-compensation", title: "Workers Compensation Case Management",
     mandate: "Coordinate workers compensation care, authorization, work status, documents, billing, and case profitability.",
     ownerRoles: ["case_manager", "biller", "provider"], interfaceRoute: "/cases",
-    databaseObjects: ["workers_comp_cases", "case_documents", "case_tasks", "case_packets", "claims"], deliveryStatus: "DEMO", deliveryMode: "manual-fallback",
+    databaseObjects: ["workers_comp_cases", "case_documents", "case_tasks", "case_packets", "claims", "payments", "audit_logs"], deliveryStatus: "FOUNDATION", deliveryMode: "manual-fallback",
     features: "Workers compensation case profile | Employer | Carrier | Claim number | Adjuster | Attorney | Injury date | Injured body parts | Diagnoses | Treatment plan | Work-status tracking | Return-to-work status | Authorization tracking | C-4 support roadmap | Narrative reports | IME tracking | Denials | Appeals | Case documents | Case tasks | Packet builder | Packet export | Billing ledger | Case timeline | Case profitability dashboard",
   }),
   section({

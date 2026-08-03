@@ -9,8 +9,9 @@ import { DocumentsWorkspace } from "@/components/clinic/documents-workspace";
 import { ImagingWorkspace } from "@/components/clinic/imaging-workspace";
 import { LabsWorkspace } from "@/components/clinic/labs-workspace";
 import { MedicationsWorkspace } from "@/components/clinic/medications-workspace";
+import { CasesWorkspace } from "@/components/clinic/cases-workspace";
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
-import { BillingWorkspace, CasesWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
+import { BillingWorkspace, InsuranceWorkspace, QualityWorkspace } from "@/components/clinic/workspaces/revenue";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PatientNavigationWorkspace, PortalWorkspace, ProviderConsultationWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
 import { FeatureRegistryWorkspace } from "@/components/clinic/feature-registry-workspace";
 import { AccessControlsWorkspace } from "@/components/clinic/access-controls-workspace";
@@ -52,6 +53,7 @@ import { CodingRevenueWorkspace } from "@/components/clinic/coding-revenue-works
 import { listCodingWorkspace } from "@/lib/repositories/coding-revenue-repository";
 import { LuxeMediWorkspace } from "@/components/clinic/luxe-medi-workspace";
 import { listLuxeMediWorkspace } from "@/lib/repositories/luxe-medi-repository";
+import { listCaseWorkspace } from "@/lib/repositories/case-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -139,7 +141,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       return <LuxeMediWorkspace canCreate={can(role, "luxe_medi", "create")} canManage={can(role, "luxe_medi", "manage")} canUpdate={can(role, "luxe_medi", "update")} workspace={await listLuxeMediWorkspace(session)} />;
     }
     case "insurance": return <InsuranceWorkspace />;
-    case "cases": return <CasesWorkspace />;
+    case "cases": {
+      if (!can(role, "cases", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listCaseWorkspace>[0];
+      return <CasesWorkspace canCreate={can(role, "cases", "create")} workspace={await listCaseWorkspace(session)} />;
+    }
     case "quality": return <QualityWorkspace />;
     case "messages": return <MessagesWorkspace />;
     case "tasks": {

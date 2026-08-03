@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
-import { AppointmentStatus, ClaimStatus, EncounterStatus, PrismaClient, RiskLevel } from "@prisma/client";
+import { AppointmentStatus, ClaimStatus, EncounterStatus, Prisma, PrismaClient, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
@@ -11,6 +11,7 @@ import {
   slugifyRegistryValue,
 } from "../src/lib/feature-registry-canon";
 import { can, clinicActions, clinicResources, clinicRoles, roleLabel } from "../src/lib/auth/rbac";
+import { buildCaseChecklist } from "../src/lib/case-rules";
 
 const prisma = new PrismaClient();
 
@@ -191,6 +192,11 @@ async function main() {
   await prisma.formAssignment.deleteMany();
   await prisma.formTemplate.deleteMany();
   await prisma.consent.deleteMany();
+  await prisma.caseDocument.deleteMany();
+  await prisma.caseTask.deleteMany();
+  await prisma.casePacket.deleteMany();
+  await prisma.noFaultCase.deleteMany();
+  await prisma.workersCompCase.deleteMany();
   await prisma.documentEvent.deleteMany();
   await prisma.documentReview.deleteMany();
   await prisma.document.deleteMany();
@@ -359,6 +365,83 @@ async function main() {
       status: "active",
       emailVerifiedAt: new Date("2026-07-08T13:00:00.000Z"),
     },
+  });
+
+  await prisma.noFaultCase.create({
+    data: {
+      id: "case-nf-darius-demo",
+      organizationId: bfm.id,
+      patientId: "pt-1002",
+      accidentDate: new Date("2026-04-19T00:00:00.000Z"),
+      claimNumber: "NF-DEMO-8812",
+      carrier: "Demo Mutual",
+      policyNumber: "POLICY-DEMO-1044",
+      adjuster: { name: "Taylor Morgan", organization: "Demo Mutual", phone: "(212) 555-0180", email: "taylor.morgan@example.test" },
+      attorney: { name: "Avery North", organization: "Northline Legal", phone: "(718) 555-0151", email: "avery.north@example.test" },
+      injuredBodyParts: ["Cervical spine", "Right shoulder"],
+      diagnosisCodes: ["S16.1XXA", "M25.511"],
+      treatmentPlan: "Synthetic demonstration plan: continue provider-directed conservative care and reassess documented function at follow-up.",
+      assignmentBenefitsStatus: "signed_demo",
+      nf2Status: "manual_copy_on_file",
+      nf3Status: "pending_human_preparation",
+      priorAuthStatus: "manual_review_required",
+      imeStatus: "not_requested",
+      narrativeDueAt: new Date("2026-07-22T16:00:00.000Z"),
+      packetStatus: "draft",
+      status: "active",
+      createdAt: new Date("2026-07-10T14:00:00.000Z"),
+    },
+  });
+
+  await prisma.workersCompCase.create({
+    data: {
+      id: "case-wc-anthony-demo",
+      organizationId: bfm.id,
+      patientId: "pt-1005",
+      accidentDate: new Date("2026-05-02T00:00:00.000Z"),
+      claimNumber: "WC-DEMO-2201",
+      carrier: "Demo Casualty",
+      employer: { name: "Harbor Demo Services", organization: "Harbor Demo Services", phone: "(718) 555-0148" },
+      adjuster: { name: "Morgan Stone", organization: "Demo Casualty", phone: "(212) 555-0181", email: "morgan.stone@example.test" },
+      injuredBodyParts: ["Lumbar spine"],
+      diagnosisCodes: ["M54.50"],
+      treatmentPlan: "Synthetic demonstration plan pending provider review and carrier authorization follow-through.",
+      workStatus: "restricted_duty_demo",
+      returnToWorkStatus: "provider_review_required",
+      authorizationStatus: "pending_manual_carrier_response",
+      c4Status: "manual_fallback_required",
+      imeStatus: "scheduled_demo",
+      denialStatus: "information_requested",
+      narrativeDueAt: new Date("2026-07-20T16:00:00.000Z"),
+      packetStatus: "draft",
+      status: "disputed",
+      createdAt: new Date("2026-07-11T14:00:00.000Z"),
+    },
+  });
+
+  const caseChecklistCompletedAt = "2026-07-14T15:00:00.000Z";
+  const noFaultChecklist = buildCaseChecklist("nofault", "carrier_submission").map((item) => ["accident_intake", "patient_demographics", "assignment_benefits", "nf2_status"].includes(item.key) ? { ...item, complete: true, completedAt: caseChecklistCompletedAt, completedBy: "user-nadja", note: "Synthetic human-reviewed seed evidence." } : item);
+  const workersChecklist = buildCaseChecklist("workers_comp", "carrier_submission").map((item) => ["accident_intake", "patient_demographics", "employer_details"].includes(item.key) ? { ...item, complete: true, completedAt: caseChecklistCompletedAt, completedBy: "user-nadja", note: "Synthetic human-reviewed seed evidence." } : item);
+  await prisma.casePacket.createMany({
+    data: [
+      { id: "case-packet-nf-carrier", organizationId: bfm.id, caseType: "nofault", caseId: "case-nf-darius-demo", type: "carrier_submission", checklist: noFaultChecklist as unknown as Prisma.InputJsonValue, status: "draft", createdAt: new Date("2026-07-10T14:05:00.000Z") },
+      { id: "case-packet-wc-carrier", organizationId: bfm.id, caseType: "workers_comp", caseId: "case-wc-anthony-demo", type: "carrier_submission", checklist: workersChecklist as unknown as Prisma.InputJsonValue, status: "draft", createdAt: new Date("2026-07-11T14:05:00.000Z") },
+    ],
+  });
+  await prisma.caseTask.createMany({
+    data: [
+      { id: "case-task-nf-narrative", organizationId: bfm.id, caseType: "nofault", caseId: "case-nf-darius-demo", title: "Complete medical-necessity narrative", details: "Use the reviewed encounter record and linked evidence. Human author and review required.", ownerId: "user-nadja", priority: "high", dueAt: new Date("2026-07-22T16:00:00.000Z"), status: "open", createdBy: "user-nadja", createdAt: new Date("2026-07-10T14:10:00.000Z") },
+      { id: "case-task-nf-intake", organizationId: bfm.id, caseType: "nofault", caseId: "case-nf-darius-demo", title: "Verify accident intake", details: "Synthetic intake evidence verified against the demo chart.", ownerId: "user-nadja", priority: "normal", status: "completed", completedAt: new Date("2026-07-14T15:00:00.000Z"), createdBy: "user-nadja", createdAt: new Date("2026-07-10T14:11:00.000Z") },
+      { id: "case-task-wc-auth", organizationId: bfm.id, caseType: "workers_comp", caseId: "case-wc-anthony-demo", title: "Resolve carrier authorization request", details: "Manual carrier follow-up required. No electronic adapter is connected.", ownerId: "user-nadja", priority: "urgent", dueAt: new Date("2026-07-19T16:00:00.000Z"), status: "open", createdBy: "user-nadja", createdAt: new Date("2026-07-11T14:10:00.000Z") },
+    ],
+  });
+  await prisma.auditLog.createMany({
+    data: [
+      { id: "audit-case-nf-created", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "case.created", resourceType: "nofault_case", resourceId: "case-nf-darius-demo", patientId: "pt-1002", metadata: { caseType: "nofault", claimNumber: "NF-DEMO-8812", packetId: "case-packet-nf-carrier", manualFallback: true, syntheticDemo: true }, createdAt: new Date("2026-07-10T14:00:00.000Z") },
+      { id: "audit-case-wc-created", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "case.created", resourceType: "workers_comp_case", resourceId: "case-wc-anthony-demo", patientId: "pt-1005", metadata: { caseType: "workers_comp", claimNumber: "WC-DEMO-2201", packetId: "case-packet-wc-carrier", manualFallback: true, syntheticDemo: true }, createdAt: new Date("2026-07-11T14:00:00.000Z") },
+      { id: "audit-case-nf-checklist", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "case.packet_mark_item", resourceType: "nofault_case", resourceId: "case-nf-darius-demo", patientId: "pt-1002", metadata: { caseType: "nofault", packetId: "case-packet-nf-carrier", reviewedSeedItems: 4, syntheticDemo: true }, createdAt: new Date("2026-07-14T15:00:00.000Z") },
+      { id: "audit-case-wc-checklist", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "case.packet_mark_item", resourceType: "workers_comp_case", resourceId: "case-wc-anthony-demo", patientId: "pt-1005", metadata: { caseType: "workers_comp", packetId: "case-packet-wc-carrier", reviewedSeedItems: 3, syntheticDemo: true }, createdAt: new Date("2026-07-14T15:00:00.000Z") },
+    ],
   });
 
   await prisma.luxeService.createMany({
@@ -994,10 +1077,19 @@ async function main() {
       { id: "doc-darius-telemed-consent", organizationId: bfm.id, patientId: "pt-1002", categoryId: "doccat-bfm-consent", versionGroupId: "doc-group-darius-telemed", originalFileName: "darius-telemedicine-consent.txt", name: "Telemedicine consent", tags: ["telemedicine", "signed"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-darius-telemed/v1/seed", mimeType: "text/plain", ...telemedicineConsent, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T12:00:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-13T12:10:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-13T12:10:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", signedFormFallback: true }, createdAt: new Date("2026-07-13T12:00:00.000Z") },
       { id: "doc-elena-intake", organizationId: bfm.id, patientId: "pt-1003", encounterId: "enc-1002", categoryId: "doccat-bfm-intake", versionGroupId: "doc-group-elena-intake", originalFileName: "elena-intake.txt", name: "New patient intake", tags: ["intake", "new-patient"], sourceType: "scan", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/doc-group-elena-intake/v1/seed", mimeType: "text/plain", ...intakeDraft, accessLevel: "INTERNAL", reviewStatus: "needs_review", releaseStatus: "pending", releaseRequestedAt: new Date("2026-07-14T13:30:00.000Z"), patientVisible: false, internalOnly: true, status: "active", uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", scannedFallback: true }, createdAt: new Date("2026-07-14T13:30:00.000Z") },
       { id: "doc-anthony-expired-insurance", organizationId: bfm.id, patientId: "pt-1005", categoryId: "doccat-bfm-insurance", versionGroupId: "doc-group-anthony-expired-insurance", originalFileName: "anthony-old-insurance.pdf", name: "Expired insurance card", sourceType: "import", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/anthony-old-insurance.pdf", mimeType: "application/pdf", sizeBytes: 30110, accessLevel: "RESTRICTED", reviewStatus: "approved", releaseStatus: "not_requested", patientVisible: false, internalOnly: true, status: "archived", expiresAt: new Date("2026-06-30T23:59:59.000Z"), lockedAt: new Date("2026-07-01T12:00:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", archivedExpired: true }, createdAt: new Date("2025-06-30T12:00:00.000Z") },
+      { id: "doc-darius-nofault-intake", organizationId: bfm.id, patientId: "pt-1002", caseType: "nofault", caseId: "case-nf-darius-demo", categoryId: "doccat-bfm-nofault", versionGroupId: "doc-group-darius-nofault-intake", originalFileName: "darius-accident-intake-demo.pdf", name: "Accident intake - synthetic demo", sourceType: "scan", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/darius-accident-intake.pdf", mimeType: "application/pdf", sizeBytes: 41220, accessLevel: "RESTRICTED", reviewStatus: "approved", releaseStatus: "not_requested", patientVisible: false, internalOnly: true, status: "active", lockedAt: new Date("2026-07-14T15:00:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", caseEvidence: true, manualFallback: true }, createdAt: new Date("2026-07-14T14:55:00.000Z") },
+      { id: "doc-anthony-wc-work-status", organizationId: bfm.id, patientId: "pt-1005", caseType: "workers_comp", caseId: "case-wc-anthony-demo", categoryId: "doccat-bfm-workers", versionGroupId: "doc-group-anthony-wc-work-status", originalFileName: "anthony-work-status-demo.pdf", name: "Work-status record - synthetic demo", sourceType: "scan", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/anthony-work-status.pdf", mimeType: "application/pdf", sizeBytes: 38610, accessLevel: "RESTRICTED", reviewStatus: "needs_review", releaseStatus: "not_requested", patientVisible: false, internalOnly: true, status: "active", uploadedBy: "user-nadja", provenance: { source: "synthetic_seed", caseEvidence: true, manualFallback: true }, createdAt: new Date("2026-07-14T14:58:00.000Z") },
       { id: "doc-form-maya-intake-locked", organizationId: bfm.id, patientId: maya.id, categoryId: "doccat-bfm-intake", versionGroupId: "doc-group-form-maya-intake", originalFileName: "maya-new-patient-intake-v2.pdf", name: "New patient intake - locked form", description: "Generated from approved synthetic form submission form-submission-maya-locked.", tags: ["form", "intake", "locked"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-bfm/forms/form-submission-maya-locked/seed", mimeType: "application/pdf", ...mayaLockedForm, accessLevel: "PATIENT_VISIBLE", reviewRequired: false, reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-10T13:20:00.000Z"), releaseApprovedBy: "user-nadja", releaseApprovedAt: new Date("2026-07-10T13:20:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-10T13:20:00.000Z"), uploadedBy: "user-nadja", provenance: { source: "form_submission", submissionId: "form-submission-maya-locked", templateId: "form-template-new-patient-v2", templateVersion: 2, generatedPdf: true, syntheticDemo: true }, createdAt: new Date("2026-07-10T13:20:00.000Z") },
       { id: "doc-luxe-imaging-source", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-imaging", versionGroupId: "doc-group-luxe-imaging", originalFileName: "luxe-imaging-source.pdf", name: "Luxe imaging source report - synthetic demo", storageProvider: "synthetic_reference", storageKey: "synthetic/demo/luxe-imaging-source.pdf", mimeType: "application/pdf", sizeBytes: 32550, accessLevel: "INTERNAL", patientVisible: false, internalOnly: true, uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T14:00:00.000Z") },
       { id: "doc-luxe-aftercare", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-aftercare", versionGroupId: "doc-group-luxe-aftercare", originalFileName: "camille-aftercare.txt", name: "Weight management aftercare", tags: ["aftercare", "weight-management"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-luxe/doc-group-luxe-aftercare/v1/seed", mimeType: "text/plain", ...luxeAftercare, accessLevel: "PATIENT_VISIBLE", reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T16:00:00.000Z"), releaseApprovedBy: "user-luxe-owner", releaseApprovedAt: new Date("2026-07-13T16:10:00.000Z"), patientVisible: true, internalOnly: false, lockedAt: new Date("2026-07-13T16:10:00.000Z"), uploadedBy: "user-luxe-owner", provenance: { source: "synthetic_seed", tenantIsolation: true }, createdAt: new Date("2026-07-13T16:00:00.000Z") },
       { id: "doc-form-luxe-consent-locked", organizationId: luxe.id, patientId: "pt-1004", categoryId: "doccat-luxe-consent", versionGroupId: "doc-group-form-luxe-consent", originalFileName: "camille-weight-management-consent-v1.pdf", name: "Weight management consent - locked form", description: "Generated from approved synthetic form submission form-submission-luxe-locked.", tags: ["form", "consent", "locked"], sourceType: "generated", storageProvider: "database_encrypted", storageKey: "dbenc/org-luxe/forms/form-submission-luxe-locked/seed", mimeType: "application/pdf", ...luxeLockedForm, accessLevel: "PATIENT_VISIBLE", reviewRequired: false, reviewStatus: "approved", releaseStatus: "approved", releaseRequestedAt: new Date("2026-07-13T15:50:00.000Z"), releaseApprovedBy: "user-luxe-owner", releaseApprovedAt: new Date("2026-07-13T15:50:00.000Z"), patientVisible: true, internalOnly: false, status: "active", lockedAt: new Date("2026-07-13T15:50:00.000Z"), uploadedBy: "user-luxe-owner", provenance: { source: "form_submission", submissionId: "form-submission-luxe-locked", templateId: "form-template-luxe-treatment", templateVersion: 1, generatedPdf: true, tenantIsolation: true, syntheticDemo: true }, createdAt: new Date("2026-07-13T15:50:00.000Z") },
+    ],
+  });
+
+  await prisma.caseDocument.createMany({
+    data: [
+      { id: "case-document-nf-intake", organizationId: bfm.id, caseType: "nofault", caseId: "case-nf-darius-demo", documentId: "doc-darius-nofault-intake", requirementKey: "accident_intake", status: "attached" },
+      { id: "case-document-wc-work-status", organizationId: bfm.id, caseType: "workers_comp", caseId: "case-wc-anthony-demo", documentId: "doc-anthony-wc-work-status", requirementKey: "work_status", status: "needs_review" },
     ],
   });
 

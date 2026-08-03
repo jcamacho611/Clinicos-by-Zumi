@@ -1970,25 +1970,34 @@ model PriorAuthorization {
 }
 
 model NoFaultCase {
-  id               String    @id @default(cuid())
-  organizationId   String
-  patientId        String
-  accidentDate     DateTime
-  claimNumber      String
-  carrier          String
-  adjuster         Json?
-  attorney         Json?
-  injuredBodyParts String[]
-  treatmentPlan    String?
-  priorAuthStatus  String?
-  imeStatus        String?
-  narrativeDueAt   DateTime?
-  packetStatus     String    @default("incomplete")
-  status           String    @default("active")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                       String    @id @default(cuid())
+  organizationId           String
+  patientId                String
+  accidentDate             DateTime
+  claimNumber              String
+  carrier                  String
+  policyNumber             String?
+  adjuster                 Json?
+  attorney                 Json?
+  injuredBodyParts         String[]
+  diagnosisCodes           String[]  @default([])
+  treatmentPlan            String?
+  assignmentBenefitsStatus String?
+  nf2Status                String?
+  nf3Status                String?
+  priorAuthStatus          String?
+  imeStatus                String?
+  denialStatus             String?
+  appealStatus             String?
+  narrativeDueAt           DateTime?
+  packetStatus             String    @default("incomplete")
+  status                   String    @default("active")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
+  @@unique([organizationId, claimNumber])
   @@index([organizationId, status])
+  @@index([organizationId, patientId])
   @@map("nofault_cases")
 }
 
@@ -2003,15 +2012,24 @@ model WorkersCompCase {
   adjuster            Json?
   attorney            Json?
   injuredBodyParts    String[]
+  diagnosisCodes      String[]  @default([])
+  treatmentPlan       String?
   workStatus          String?
+  returnToWorkStatus  String?
   authorizationStatus String?
+  c4Status            String?
+  imeStatus           String?
+  denialStatus        String?
+  appealStatus        String?
   narrativeDueAt      DateTime?
   packetStatus        String    @default("incomplete")
   status              String    @default("active")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
+  @@unique([organizationId, claimNumber])
   @@index([organizationId, status])
+  @@index([organizationId, patientId])
   @@map("workers_comp_cases")
 }
 
@@ -2036,9 +2054,13 @@ model CaseTask {
   caseType       String
   caseId         String
   title          String
+  details        String?
   ownerId        String?
+  priority       String    @default("normal")
   dueAt          DateTime?
   status         String    @default("open")
+  completedAt    DateTime?
+  createdBy      String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -2055,6 +2077,9 @@ model CasePacket {
   checklist      Json
   status         String    @default("draft")
   generatedAt    DateTime?
+  generatedBy    String?
+  approvedAt     DateTime?
+  approvedBy     String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
