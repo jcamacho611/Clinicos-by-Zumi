@@ -23,6 +23,7 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   knowledge: { all: [["knowledge", "read"]] },
   "remote-monitoring": { all: [["remote_monitoring", "read"]] },
   inventory: { all: [["inventory", "read"]] },
+  grid: { any: [["network", "read"], ["credentialing", "read"]] },
   network: { all: [["network", "read"]] },
   referrals: { all: [["referrals", "read"]] },
   "access-controls": { all: [["network", "read"]] },

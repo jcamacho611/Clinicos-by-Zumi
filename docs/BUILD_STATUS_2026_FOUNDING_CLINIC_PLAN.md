@@ -128,6 +128,30 @@ The synthetic scenario builder does not inspect clinic patient records, diagnose
 
 The recap generator currently uses a deterministic fallback. A future Zumi provider adapter may improve the draft when `AI_KEY` is configured, but the output must remain labeled `AI draft. Review before use.`
 
+## Grid provider-network slice
+
+Status: Live persistence and workflow rules with Demo content. Requires production review for real provider participation, patient use, payments, and care delivery.
+
+This slice adds:
+
+- authenticated `/grid`, `/grid/providers`, `/grid/locations`, `/grid/services`, `/grid/availability`, `/grid/requests`, `/grid/handoffs`, `/grid/founding-network`, and `/admin/grid` routes
+- a premium dark Grid command center connected to the existing ClinicOS application shell
+- public-safe cross-organization provider directory records with legal names, license numbers, NPI, malpractice carrier, and policy number restricted to authorized users in the owning tenant
+- all required provider categories and the `Entry`, `Intermediate`, `Experienced`, and `OG / Master Provider` display tiers
+- explicit provider lifecycle states: `draft`, `submitted`, `needs_review`, `verified`, `rejected`, `expired`, and `suspended`
+- human-controlled verification transitions backed by credential evidence, current malpractice coverage, tasks, and audit logs
+- service listings with transparent price ranges and medical-review, consent, deposit, mobile, clinic, and chair controls
+- provider availability with location mode, mobile radius, on-call state, and credential-gated activation
+- clinic, room, chair, mobile, and service-location records with credential and insurance requirements
+- cross-organization Grid requests with provider, location, credential, consent, deposit, confirmation, completion, cancellation, decline, and escalation states
+- append-only request events and audit receipts visible to both the requesting and receiving organization
+- synthetic seed providers, credentials, services, locations, availability, requests, human-review tasks, and dual-organization audit events
+- a direct connection from the existing `/provider-network` consultation and credentialing workspace into the Grid provider directory
+
+The Grid deliberately does not expose a full chart across organizations. The current request flow is blocked outside demo organizations and shares only synthetic request labels, service intent, safety gates, status, and audit context. It does not automatically approve provider credentials, determine scope, confirm clinical eligibility, settle a deposit, schedule real care, or release records.
+
+The experience tier is pricing-display context only and is not a clinical quality, superiority, or credential claim.
+
 ## Claims that must not be made
 
 Do not describe ClinicOS as:
@@ -142,29 +166,29 @@ Do not describe ClinicOS as:
 
 Use the exact labels `Live`, `Demo`, `Manual fallback`, `Pending connection`, `Roadmap`, `Requires production review`, and `Human review required` wherever status could be misunderstood.
 
-## Verification required before this slice is complete
+## Verification record for the paid-demo slice
 
-- apply the reviewed migration to the configured PostgreSQL demonstration database
-- run the non-destructive sales demo seed
-- run Prisma validation and generation
-- run strict TypeScript validation
-- run all Vitest suites, including sales safety and authorization coverage
-- run the Next.js production build
-- verify public intake, scenario persistence, admin pipeline, recap review, owner visibility, and cross-tenant denial at runtime
-- inspect the public pages on desktop and mobile
-- deploy to Render and verify `https://zumi.onrender.com`
+- migration `20260809131500_private_demo_sales_engine` is applied to the configured PostgreSQL demonstration database
+- all paid-demo seed data, tests, type checks, lint checks, Prisma validation, production build checks, runtime workflows, responsive browser checks, Render logs, and live endpoint checks passed
+- Render deployed commit `d325829716a3adc2081b4c03af2f6c93fa2df84f` at `https://zumi.onrender.com`
+
+## Verification record for the Grid slice
+
+- migration `20260809210000_grid_provider_marketplace` is applied to the configured Neon PostgreSQL demonstration database and Prisma reports the database schema as current
+- the destructive synthetic demo seed completed and restored the canonical four providers, three services, four availability windows, three marketplace locations, two requests, and four request events
+- all 147 tests across 35 files passed, including Grid lifecycle, authorization-declaration, and safety-boundary coverage
+- lint, strict TypeScript validation, Prisma validation, production build, and whitespace checks passed; the production build registered every required Grid page and API route
+- authenticated runtime checks covered all nine Grid workspaces, own-tenant sensitive-field visibility, cross-tenant sensitive-field redaction, provider submission, controlled request creation, consent/deposit-gated confirmation, append-only events, and audit receipts
+- unauthenticated Grid API access returned `401`; unauthenticated Grid workspace access redirected to `/login`
+- responsive browser verification confirmed the Grid at a 390 by 844 viewport with full-width layout and no horizontal overflow
 
 ## Next build slice
 
-The next ordered slice is the Grid MVP:
+After the verified Grid slice is committed, pushed, and confirmed on Render, the next ordered slice is the Clinic Network Directory and Partner Handoff Map:
 
-1. credential-aware provider profiles with hidden legal identity fields
-2. provider verification lifecycle and renewal tracking
-3. service listings with medical-review, consent, deposit, and location controls
-4. provider availability and on-call records
-5. clinic space, room, and chair listings
-6. controlled service-request lifecycle with safety flags, required documents, consent, payment status, and audit events
-7. premium `/grid`, provider, location, service, availability, request, and administration surfaces
-8. synthetic provider, clinic, location, credential, and request data
-
-Experience tiers will support pricing display only. They will not imply clinical superiority without verified credentials and lawful scope. The Grid will not claim live medical booking until production review, credential verification, consent, payment, and legal gates are complete.
+1. relationship-aware partner profiles and network-map visualization
+2. sharing-agreement, consent-category, integration-health, capacity, and manual-fallback states
+3. controlled handoff composer for referrals, capacity, documents, navigation, consultation, no-fault, imaging, PT, and med-spa requests
+4. delivery states from draft through connected/manual send, acknowledgment, scheduling, completion, failure, retry, and cancellation
+5. human confirmation and purpose-of-use checks before every send
+6. delivery receipts without unsafe cross-organization chart leakage

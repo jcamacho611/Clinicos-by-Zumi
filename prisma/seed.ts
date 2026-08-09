@@ -180,6 +180,10 @@ async function main() {
   await prisma.messageThread.deleteMany();
   await prisma.careTeamMember.deleteMany();
   await prisma.careTeamRoom.deleteMany();
+  await prisma.gridRequestEvent.deleteMany();
+  await prisma.gridRequest.deleteMany();
+  await prisma.gridServiceListing.deleteMany();
+  await prisma.providerAvailability.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
   await prisma.demoReservationEvent.deleteMany();
@@ -256,8 +260,8 @@ async function main() {
       demoMode: true,
       locations: {
         create: [
-          { id: "loc-brooklyn-heights", name: "Brooklyn Heights", address: { line1: "100 Demo Street", city: "Brooklyn", state: "NY", postalCode: "11201" } },
-          { id: "loc-crown-heights", name: "Crown Heights", address: { line1: "200 Sample Avenue", city: "Brooklyn", state: "NY", postalCode: "11213" } },
+          { id: "loc-brooklyn-heights", name: "Brooklyn Heights", locationType: "Primary care clinic", address: { line1: "100 Demo Street", city: "Brooklyn", state: "NY", postalCode: "11201" }, city: "Brooklyn", state: "NY", zip: "11201", roomTypes: ["Exam room", "Telemedicine room"], servicesAllowed: ["Primary care", "Annual wellness", "Provider consultation"], credentialRequirements: ["Current professional license", "Current malpractice coverage"], insuranceRequirements: ["Professional liability coverage"], marketplaceVisible: true },
+          { id: "loc-crown-heights", name: "Crown Heights", locationType: "Clinic and diagnostic hub", address: { line1: "200 Sample Avenue", city: "Brooklyn", state: "NY", postalCode: "11213" }, city: "Brooklyn", state: "NY", zip: "11213", roomTypes: ["Exam room", "Diagnostic suite"], servicesAllowed: ["Primary care", "Imaging coordination"], credentialRequirements: ["Current professional license"], insuranceRequirements: ["Professional liability coverage"], marketplaceVisible: true },
         ],
       },
       users: {
@@ -279,7 +283,7 @@ async function main() {
       slug: "luxe-medi",
       clinicType: "Med Spa",
       demoMode: true,
-      locations: { create: { id: "loc-midtown", name: "Midtown Manhattan", address: { line1: "300 Example Plaza", city: "New York", state: "NY", postalCode: "10001" } } },
+      locations: { create: { id: "loc-midtown", name: "Midtown Manhattan", locationType: "Med spa and rental studio", address: { line1: "300 Example Plaza", city: "New York", state: "NY", postalCode: "10001" }, city: "New York", state: "NY", zip: "10001", roomTypes: ["Treatment suite", "Injector chair", "IV lounge"], chairRentalAvailable: true, hourlyRateCents: 17500, dailyRateCents: 95000, servicesAllowed: ["Injectables", "IV hydration", "Weight management", "Consultation"], credentialRequirements: ["Current NY professional license", "Service-specific training evidence", "Current malpractice coverage"], insuranceRequirements: ["Professional liability coverage"], marketplaceVisible: true } },
       users: {
         create: {
           id: "user-luxe-owner",
@@ -303,7 +307,11 @@ async function main() {
         create: {
           id: "loc-clinicos-demo-studio",
           name: "Synthetic Demo Studio",
+          locationType: "Synthetic demonstration studio",
           address: { line1: "Synthetic environment only", city: "New York", state: "NY", postalCode: "10001" },
+          city: "New York",
+          state: "NY",
+          zip: "10001",
         },
       },
       users: {
@@ -421,9 +429,10 @@ async function main() {
 
   await prisma.provider.createMany({
     data: [
-      { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", credential: "NP", specialty: "Family Medicine", subspecialty: "Diabetes Care", taxonomy: "363L00000X", npi: "DEMO-NPI-BFM-NADJA", deaNumber: "DEMO-DEA-NOT-VALID", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst", "Aetna"], services: ["Primary care", "Annual wellness", "Diabetes follow-up"], status: "active" },
-      { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", credential: "MD", specialty: "Family Medicine", taxonomy: "207Q00000X", npi: "DEMO-NPI-BFM-LEE", telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst"], services: ["Primary care", "Urgent sick visit"], status: "active" },
-      { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", credential: "NP", specialty: "Aesthetic Medicine", subspecialty: "Injectables", taxonomy: "363A00000X", npi: "DEMO-NPI-LUXE-NADJA", deaNumber: "DEMO-DEA-LUXE", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: false, prescribingEligible: true, acceptedInsurance: [], services: ["Injectables", "IV hydration", "Weight management"], status: "active" },
+      { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", displayName: "Nadja R.", legalName: "Nadja Rivera · synthetic", credential: "NP", providerType: "Nurse Practitioner", specialty: "Family Medicine", subspecialty: "Diabetes Care", taxonomy: "363L00000X", npi: "DEMO-NPI-BFM-NADJA", deaNumber: "DEMO-DEA-NOT-VALID", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), malpracticeCarrier: "Synthetic Clinical Coverage", malpracticePolicyNumber: "SYNTH-BFM-NP-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), certifications: ["Synthetic BLS record", "Synthetic primary care credential set"], servicesOffered: ["Primary care", "Annual wellness", "Diabetes follow-up"], experienceLevel: "OG / Master Provider", bio: "Synthetic founding-provider profile for primary care coordination and controlled provider consultations.", serviceLocations: ["Brooklyn Heights", "Crown Heights"], mobileServiceAllowed: false, chairRentalAllowed: false, atHomeAllowed: false, travelRadiusMiles: 0, verificationStatus: "verified", approvedBy: "user-nadja", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst", "Aetna"], services: ["Primary care", "Annual wellness", "Diabetes follow-up"], status: "active" },
+      { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", displayName: "Samuel Lee", legalName: "Samuel Lee · synthetic", credential: "MD", providerType: "Physician", specialty: "Family Medicine", taxonomy: "207Q00000X", npi: "DEMO-NPI-BFM-LEE", malpracticeCarrier: "Synthetic Clinical Coverage", malpracticePolicyNumber: "SYNTH-BFM-MD-002", malpracticeExpiration: new Date("2028-08-31T00:00:00.000Z"), certifications: ["Synthetic board record"], servicesOffered: ["Primary care", "Urgent sick visit", "Provider consultation"], experienceLevel: "Experienced", bio: "Synthetic physician profile available for controlled provider-to-provider consultation demonstrations.", serviceLocations: ["Brooklyn Heights"], verificationStatus: "verified", approvedBy: "user-nadja", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst"], services: ["Primary care", "Urgent sick visit", "Provider consultation"], status: "active" },
+      { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", displayName: "Nadja R.", legalName: "Nadja Rivera · synthetic", credential: "NP", providerType: "Nurse Injector", specialty: "Aesthetic Medicine", subspecialty: "Injectables", taxonomy: "363A00000X", npi: "DEMO-NPI-LUXE-NADJA", deaNumber: "DEMO-DEA-LUXE", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), malpracticeCarrier: "Synthetic Aesthetic Coverage", malpracticePolicyNumber: "SYNTH-LUXE-NP-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), certifications: ["Synthetic injectables training record", "Synthetic BLS record"], servicesOffered: ["Injectables", "IV hydration", "Weight management"], experienceLevel: "OG / Master Provider", bio: "Synthetic provider profile for controlled med-spa service, chair, and mobile-workflow demonstrations.", serviceLocations: ["Midtown Manhattan"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 25, verificationStatus: "verified", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: false, prescribingEligible: true, acceptedInsurance: [], services: ["Injectables", "IV hydration", "Weight management"], status: "active" },
+      { id: "provider-alex-grid", organizationId: luxe.id, name: "Alex Morgan", displayName: "Alex Morgan", legalName: "Alexis Morgan · synthetic", credential: "RN", providerType: "Nurse Injector", specialty: "Aesthetic services", malpracticeCarrier: "Synthetic Aesthetic Coverage", malpracticePolicyNumber: "SYNTH-LUXE-RN-004", malpracticeExpiration: new Date("2028-03-31T00:00:00.000Z"), certifications: ["Synthetic BLS record", "Synthetic injector training record"], servicesOffered: ["Injectable treatment support", "IV hydration support"], experienceLevel: "Intermediate", bio: "Synthetic contractor profile awaiting a documented human review of license evidence, scope, malpractice coverage, and location privileges.", serviceLocations: ["Midtown Manhattan", "Brooklyn"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 20, verificationStatus: "needs_review", services: ["Injectable treatment support", "IV hydration support"], status: "active" },
     ],
   });
 
@@ -433,6 +442,24 @@ async function main() {
       { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "credential-lee-license", organizationId: bfm.id, providerId: "provider-lee", type: "STATE_LICENSE", number: "DEMO-NY-MD", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "credential-alex-grid-license", organizationId: luxe.id, providerId: "provider-alex-grid", type: "STATE_LICENSE", number: "SYNTH-NY-RN-GRID", state: "NY", expiresAt: new Date("2028-12-31T00:00:00.000Z"), status: "active", verificationStatus: "pending", verificationSource: "Grid manual primary-source review queue" },
+    ],
+  });
+
+  await prisma.providerAvailability.createMany({
+    data: [
+      { id: "grid-availability-nadja-bfm", organizationId: bfm.id, providerId: "provider-nadja", locationId: "loc-brooklyn-heights", weekday: 2, startsAt: "09:00", endsAt: "15:00", locationType: "clinic_location", status: "active" },
+      { id: "grid-availability-lee-bfm", organizationId: bfm.id, providerId: "provider-lee", locationId: "loc-crown-heights", weekday: 4, startsAt: "10:00", endsAt: "17:00", locationType: "clinic_location", status: "active" },
+      { id: "grid-availability-nadja-luxe", organizationId: luxe.id, providerId: "provider-nadja-luxe", locationId: "loc-midtown", weekday: 6, startsAt: "12:00", endsAt: "18:00", locationType: "chair_rental", mobileRadius: 25, onCall: true, status: "active" },
+      { id: "grid-availability-alex-draft", organizationId: luxe.id, providerId: "provider-alex-grid", locationId: "loc-midtown", weekday: 6, startsAt: "10:00", endsAt: "14:00", locationType: "chair_rental", mobileRadius: 20, onCall: true, status: "draft" },
+    ],
+  });
+
+  await prisma.gridServiceListing.createMany({
+    data: [
+      { id: "grid-service-primary-consult", organizationId: bfm.id, providerId: "provider-lee", serviceName: "Provider consultation", category: "Specialist Office", description: "Synthetic provider-to-provider consultation with a documented question, human response, and no autonomous clinical decision.", priceLowCents: 15000, priceHighCents: 25000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: false, mobileAllowed: false, clinicLocationAllowed: true, chairRentalAllowed: false, status: "active", createdBy: "user-nadja", approvedBy: "user-nadja", approvedAt: new Date("2026-08-01T12:00:00.000Z") },
+      { id: "grid-service-injector-consult", organizationId: luxe.id, providerId: "provider-nadja-luxe", serviceName: "Injectables consultation request", category: "Nurse Injector", description: "Synthetic med-spa consultation request. Treatment eligibility and recommendations remain with a licensed provider after human review.", priceLowCents: 10000, priceHighCents: 25000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: true, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "active", createdBy: "user-luxe-owner", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-01T12:00:00.000Z") },
+      { id: "grid-service-iv-support-draft", organizationId: luxe.id, providerId: "provider-alex-grid", serviceName: "IV hydration support", category: "IV Therapy Provider", description: "Synthetic draft listing held until provider license, malpractice coverage, scope, and location privileges receive human approval.", priceLowCents: 20000, priceHighCents: 35000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: true, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "draft", createdBy: "user-luxe-owner" },
     ],
   });
 
@@ -1693,6 +1720,90 @@ async function main() {
       dueAt: new Date("2026-07-15T17:00:00.000Z"),
       status: "sent",
     },
+  });
+
+  await prisma.gridRequest.create({
+    data: {
+      id: "grid-request-maya-injector",
+      organizationId: bfm.id,
+      destinationOrganizationId: luxe.id,
+      requesterId: "user-nadja",
+      patientId: maya.id,
+      syntheticClientLabel: "Maya Thompson",
+      syntheticClientReference: "BFM-28419",
+      serviceListingId: "grid-service-injector-consult",
+      providerId: "provider-nadja-luxe",
+      locationId: "loc-midtown",
+      requestedStartAt: new Date("2026-08-15T16:00:00.000Z"),
+      requestedEndAt: new Date("2026-08-15T16:30:00.000Z"),
+      locationType: "clinic_location",
+      safetyFlags: ["Human review required", "Licensed medical review required"],
+      requiredDocuments: ["Synthetic intake summary", "Synthetic consent packet"],
+      requiredConsent: true,
+      consentStatus: "pending",
+      depositStatus: "manual_link_required",
+      paymentStatus: "not_started",
+      status: "provider_review",
+      notes: "Synthetic med-spa consultation request. No chart was shared. Receiving staff must review scope, consent, location, and manual deposit status.",
+      events: {
+        createMany: {
+          data: [
+            { id: "grid-event-maya-requested", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "request_created", fromStatus: "draft", toStatus: "requested", note: "Synthetic Grid request created without chart exchange.", metadata: { syntheticDemo: true, chartDataShared: false } },
+            { id: "grid-event-maya-review", organizationId: bfm.id, actorId: "user-luxe-owner", actorType: "user", action: "status_changed", fromStatus: "requested", toStatus: "provider_review", note: "Receiving organization accepted the synthetic request into human provider review.", metadata: { humanDecision: true } },
+          ],
+        },
+      },
+    },
+  });
+
+  await prisma.gridRequest.create({
+    data: {
+      id: "grid-request-luxe-consult",
+      organizationId: luxe.id,
+      destinationOrganizationId: bfm.id,
+      requesterId: "user-luxe-owner",
+      patientId: "pt-1004",
+      syntheticClientLabel: "Jordan Brooks",
+      syntheticClientReference: "LUXE-4012",
+      serviceListingId: "grid-service-primary-consult",
+      providerId: "provider-lee",
+      locationId: "loc-brooklyn-heights",
+      requestedStartAt: new Date("2026-08-16T14:00:00.000Z"),
+      requestedEndAt: new Date("2026-08-16T14:30:00.000Z"),
+      locationType: "clinic_location",
+      safetyFlags: ["Human review required", "Licensed medical review required"],
+      requiredDocuments: ["Synthetic consultation question"],
+      requiredConsent: true,
+      consentStatus: "confirmed",
+      depositStatus: "not_required",
+      paymentStatus: "not_started",
+      status: "credential_check",
+      notes: "Synthetic provider consultation handoff. Credential and consent gates are ready for a human confirmation decision.",
+      events: {
+        createMany: {
+          data: [
+            { id: "grid-event-luxe-requested", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "request_created", fromStatus: "draft", toStatus: "requested", note: "Synthetic consultation request created without chart exchange.", metadata: { syntheticDemo: true, chartDataShared: false } },
+            { id: "grid-event-luxe-credential", organizationId: luxe.id, actorId: "user-nadja", actorType: "user", action: "status_changed", fromStatus: "location_review", toStatus: "credential_check", note: "Synthetic provider and location evidence moved to credential review.", metadata: { humanDecision: true } },
+          ],
+        },
+      },
+    },
+  });
+
+  await prisma.task.createMany({
+    data: [
+      { id: "task-grid-maya-review", organizationId: luxe.id, patientId: null, category: "grid_request", title: "Review synthetic injectables consultation request", details: "Grid request grid-request-maya-injector. No chart was shared. Confirm provider scope, consent, location, and manual deposit status.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "grid_intake", createdBy: "user-nadja" },
+      { id: "task-grid-luxe-consult", organizationId: bfm.id, patientId: null, category: "grid_request", title: "Complete synthetic consultation credential check", details: "Grid request grid-request-luxe-consult is ready for a human credential and consent decision.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "grid_intake", createdBy: "user-luxe-owner" },
+    ],
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      { id: "audit-grid-maya-created", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "grid.request_created", resourceType: "grid_request", resourceId: "grid-request-maya-injector", patientId: maya.id, metadata: { destinationOrganizationId: luxe.id, syntheticDemo: true, chartDataShared: false } },
+      { id: "audit-grid-maya-received", organizationId: luxe.id, actorId: "user-nadja", actorType: "network_user", action: "grid.request_received", resourceType: "grid_request", resourceId: "grid-request-maya-injector", metadata: { originOrganizationId: bfm.id, syntheticDemo: true, chartDataShared: false } },
+      { id: "audit-grid-luxe-created", organizationId: luxe.id, actorId: "user-luxe-owner", actorType: "user", action: "grid.request_created", resourceType: "grid_request", resourceId: "grid-request-luxe-consult", patientId: "pt-1004", metadata: { destinationOrganizationId: bfm.id, syntheticDemo: true, chartDataShared: false } },
+      { id: "audit-grid-luxe-received", organizationId: bfm.id, actorId: "user-luxe-owner", actorType: "network_user", action: "grid.request_received", resourceType: "grid_request", resourceId: "grid-request-luxe-consult", metadata: { originOrganizationId: luxe.id, syntheticDemo: true, chartDataShared: false } },
+    ],
   });
 
   await prisma.capacityListing.create({
