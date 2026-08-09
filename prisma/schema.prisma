@@ -89,7 +89,9 @@ model Organization {
   healthPassports            HealthPassport[]
   consentWallets             ConsentWallet[]
   intakePassports            IntakePassport[]
-  careHandoffs               CareHandoff[]
+  careHandoffs               CareHandoff[]               @relation("CareHandoffSource")
+  receivedCareHandoffs       CareHandoff[]               @relation("CareHandoffDestination")
+  careHandoffEvents          CareHandoffEvent[]
   capacityListings           CapacityListing[]
   providerConsultations      ProviderConsultation[]
   providerFacilityPrivileges ProviderFacilityPrivilege[]
@@ -2970,20 +2972,31 @@ model Facility {
 }
 
 model NetworkConnection {
-  id                   String       @id @default(cuid())
-  sourceOrganizationId String
-  targetOrganizationId String
-  status               String       @default("pending")
-  trustLevel           String       @default("standard")
-  allowedPurposes      String[]
-  requestedBy          String?
-  approvedBy           String?
-  activatedAt          DateTime?
-  suspendedAt          DateTime?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-  sourceOrganization   Organization @relation("NetworkSource", fields: [sourceOrganizationId], references: [id], onDelete: Cascade)
-  targetOrganization   Organization @relation("NetworkTarget", fields: [targetOrganizationId], references: [id], onDelete: Cascade)
+  id                        String        @id @default(cuid())
+  sourceOrganizationId      String
+  targetOrganizationId      String
+  status                    String        @default("pending")
+  trustLevel                String        @default("standard")
+  relationshipType          String        @default("referral_partner")
+  allowedPurposes           String[]
+  acceptedReferralTypes     String[]      @default([])
+  services                  String[]      @default([])
+  capacityStatus            String        @default("unknown")
+  contactMethod             String        @default("manual")
+  contactDetails            Json?
+  integrationStatus         String        @default("pending_connection")
+  manualFallbackMethod      String        @default("documented_manual_delivery")
+  consentRequiredCategories String[]      @default([])
+  requestedBy               String?
+  approvedBy                String?
+  activatedAt               DateTime?
+  suspendedAt               DateTime?
+  lastReviewedAt            DateTime?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  sourceOrganization        Organization  @relation("NetworkSource", fields: [sourceOrganizationId], references: [id], onDelete: Cascade)
+  targetOrganization        Organization  @relation("NetworkTarget", fields: [targetOrganizationId], references: [id], onDelete: Cascade)
+  careHandoffs              CareHandoff[]
 
   @@unique([sourceOrganizationId, targetOrganizationId])
   @@index([targetOrganizationId, status])
@@ -3292,26 +3305,70 @@ model IntakePassport {
 }
 
 model CareHandoff {
-  id              String       @id @default(cuid())
-  organizationId  String
-  patientId       String
-  senderId        String
-  receiverId      String
-  type            String
-  summary         Json
-  requestedAction String
-  priority        String       @default("normal")
-  dueAt           DateTime?
-  status          String       @default("sent")
-  acknowledgedAt  DateTime?
-  resolvedAt      DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  patient         Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id                        String             @id @default(cuid())
+  organizationId            String
+  destinationOrganizationId String?
+  networkConnectionId       String?
+  patientId                 String
+  senderId                  String
+  receiverId                String?
+  type                      String
+  category                  String             @default("provider_handoff")
+  purposeOfUse              String             @default("treatment")
+  dataCategories            String[]           @default([])
+  summary                   Json
+  requestedAction           String
+  priority                  String             @default("normal")
+  dueAt                     DateTime?
+  status                    String             @default("draft")
+  deliveryMethod            String             @default("internal")
+  consentId                 String?
+  sharingAgreementId        String?
+  humanReviewRequired       Boolean            @default(true)
+  confirmedBy               String?
+  confirmedAt               DateTime?
+  sentAt                    DateTime?
+  receivedAt                DateTime?
+  acknowledgedAt            DateTime?
+  scheduledAt               DateTime?
+  completedAt               DateTime?
+  resolvedAt                DateTime?
+  failedAt                  DateTime?
+  cancelledAt               DateTime?
+  failureReason             String?
+  manualFallbackReason      String?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  organization              Organization       @relation("CareHandoffSource", fields: [organizationId], references: [id], onDelete: Cascade)
+  destinationOrganization   Organization?      @relation("CareHandoffDestination", fields: [destinationOrganizationId], references: [id], onDelete: Restrict)
+  networkConnection         NetworkConnection? @relation(fields: [networkConnectionId], references: [id], onDelete: SetNull)
+  patient                   Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  events                    CareHandoffEvent[]
 
   @@index([organizationId, patientId, status, dueAt])
+  @@index([destinationOrganizationId, status, updatedAt])
+  @@index([networkConnectionId, status])
   @@map("care_handoffs")
+}
+
+model CareHandoffEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  careHandoffId  String
+  actorId        String?
+  actorType      String       @default("user")
+  action         String
+  fromStatus     String?
+  toStatus       String?
+  note           String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  careHandoff    CareHandoff  @relation(fields: [careHandoffId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([careHandoffId, createdAt])
+  @@map("care_handoff_events")
 }
 
 model CapacityListing {

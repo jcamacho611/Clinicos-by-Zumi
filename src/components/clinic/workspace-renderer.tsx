@@ -17,7 +17,8 @@ import { FeatureRegistryWorkspace } from "@/components/clinic/feature-registry-w
 import { AccessControlsWorkspace } from "@/components/clinic/access-controls-workspace";
 import { IdentityResolutionWorkspace } from "@/components/clinic/identity-resolution-workspace";
 import { ReferralsWorkspace } from "@/components/clinic/referrals-workspace";
-import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace, InjuryEpisodesWorkspace, IntakePassportWorkspace, NetworkWorkspace, RegistryDomainWorkspace, VoiceAssistantWorkspace } from "@/components/clinic/workspaces/vision";
+import { CapacityExchangeWorkspace, CareTeamsWorkspace, HealthPassportWorkspace, InjuryEpisodesWorkspace, IntakePassportWorkspace, RegistryDomainWorkspace, VoiceAssistantWorkspace } from "@/components/clinic/workspaces/vision";
+import { NetworkCommandWorkspace } from "@/components/clinic/network/network-command-workspace";
 import { clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 import { getConnectedCareOverview } from "@/lib/repositories/connected-care-repository";
@@ -25,8 +26,7 @@ import { listEncounterCreationOptions, listEncountersForOrganization } from "@/l
 import { listPriorityZeroRegistry } from "@/lib/repositories/feature-registry-repository";
 import { listPatientsForOrganization } from "@/lib/repositories/patient-repository";
 import { listNetworkAccessWorkspace } from "@/lib/repositories/network-access-repository";
-import { listNetworkDirectory } from "@/lib/repositories/network-directory-repository";
-import { listNetworkGrowthWorkspace } from "@/lib/repositories/network-growth-repository";
+import { listNetworkCommandWorkspace } from "@/lib/repositories/network-handoff-repository";
 import { listIdentityWorkspace } from "@/lib/repositories/patient-identity-repository";
 import { listReferralWorkspace } from "@/lib/repositories/referral-repository";
 import { listLabWorkspace } from "@/lib/repositories/lab-repository";
@@ -163,9 +163,8 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "network": {
       if (!can(role, "network", "read")) return notFound();
-      const session = { organizationId, role, userId } as Parameters<typeof listNetworkGrowthWorkspace>[0];
-      const [overview, directory, growth] = await Promise.all([getConnectedCareOverview(organizationId), listNetworkDirectory(organizationId), listNetworkGrowthWorkspace(session)]);
-      return <NetworkWorkspace canCreate={can(role, "network", "create")} canManage={can(role, "network", "manage")} directory={directory} growth={growth} overview={overview} />;
+      const session = { organizationId, role, userId } as Parameters<typeof listNetworkCommandWorkspace>[0];
+      return <NetworkCommandWorkspace view="overview" workspace={await listNetworkCommandWorkspace(session)} />;
     }
     case "referrals": {
       if (!can(role, "referrals", "read")) return notFound();

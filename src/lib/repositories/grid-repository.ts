@@ -53,6 +53,13 @@ export async function listGridWorkspace(session: ClinicSession) {
   }
 
   const now = new Date();
+  const currentOrganization = await db.organization.findUnique({
+    where: { id: session.organizationId },
+    select: { demoMode: true, status: true },
+  });
+  if (!currentOrganization || currentOrganization.status !== "active") {
+    throw new NetworkAccessError("Current organization not found.", 404);
+  }
   const [providers, services, locations, requests, handoffs, capacities, patients] = await Promise.all([
     db.provider.findMany({
       where: {
@@ -92,14 +99,19 @@ export async function listGridWorkspace(session: ClinicSession) {
       orderBy: { updatedAt: "desc" },
       take: 100,
     }),
-    db.careHandoff.findMany({ where: { organizationId: session.organizationId }, orderBy: { updatedAt: "desc" }, take: 50 }),
+    db.careHandoff.findMany({
+      where: { organizationId: session.organizationId },
+      include: { destinationOrganization: { select: { id: true, name: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+    }),
     db.capacityListing.findMany({
       where: { status: { in: ["open", "open_demo"] } },
       include: { organization: { select: { id: true, name: true } }, location: { select: { id: true, name: true } }, facility: { select: { id: true, name: true, type: true } } },
       orderBy: { startsAt: "asc" },
       take: 100,
     }),
-    session.demo
+    currentOrganization.demoMode
       ? db.patient.findMany({ where: { organizationId: session.organizationId, status: "active" }, select: { id: true, firstName: true, lastName: true, mrn: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }], take: 100 })
       : Promise.resolve([]),
   ]);
@@ -262,13 +274,25 @@ export async function listGridWorkspace(session: ClinicSession) {
 
   return {
     generatedAt: now.toISOString(),
-    mode: "synthetic_demo" as const,
+    mode: currentOrganization.demoMode ? "synthetic_demo" as const : "requires_production_review" as const,
     providers: providerViews,
     services: serviceViews,
     locations: locationViews,
     requests: requestViews,
     patients: patients.map((patient) => ({ id: patient.id, name: `${patient.firstName} ${patient.lastName}`, mrn: patient.mrn, synthetic: true })),
-    handoffs: handoffs.map((handoff) => ({ id: handoff.id, type: handoff.type, senderId: handoff.senderId, receiverId: handoff.receiverId, requestedAction: handoff.requestedAction, priority: handoff.priority, status: handoff.status, dueAt: handoff.dueAt?.toISOString() ?? null, updatedAt: handoff.updatedAt.toISOString() })),
+    handoffs: handoffs.map((handoff) => ({
+      id: handoff.id,
+      type: handoff.type,
+      category: handoff.category,
+      destinationOrganizationName: handoff.destinationOrganization?.name ?? "Internal care team",
+      requestedAction: handoff.requestedAction,
+      priority: handoff.priority,
+      status: handoff.status,
+      deliveryMethod: handoff.deliveryMethod,
+      humanReviewRequired: handoff.humanReviewRequired,
+      dueAt: handoff.dueAt?.toISOString() ?? null,
+      updatedAt: handoff.updatedAt.toISOString(),
+    })),
     capacities: capacities.map((capacity) => ({ id: capacity.id, organizationName: capacity.organization.name, locationName: capacity.location?.name ?? "Network location", facilityName: capacity.facility?.name ?? "Facility pending", type: capacity.type, service: capacity.service, startsAt: capacity.startsAt.toISOString(), endsAt: capacity.endsAt.toISOString(), acceptedPayers: capacity.acceptedPayers, urgencyLevels: capacity.urgencyLevels, status: capacity.status })),
     metrics: {
       providersPendingVerification: providerViews.filter((provider) => provider.owned && provider.verificationStatus !== "verified").length,

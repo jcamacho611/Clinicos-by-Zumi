@@ -39,7 +39,7 @@ export async function listNetworkDirectory(organizationId: string) {
     }),
     db.networkConnection.findMany({
       where: { OR: [{ sourceOrganizationId: organizationId }, { targetOrganizationId: organizationId }] },
-      select: { id: true, sourceOrganizationId: true, targetOrganizationId: true, status: true, trustLevel: true, allowedPurposes: true, requestedBy: true, approvedBy: true, activatedAt: true, suspendedAt: true, updatedAt: true },
+      select: { id: true, sourceOrganizationId: true, targetOrganizationId: true, status: true, trustLevel: true, relationshipType: true, allowedPurposes: true, acceptedReferralTypes: true, services: true, capacityStatus: true, contactMethod: true, contactDetails: true, integrationStatus: true, manualFallbackMethod: true, consentRequiredCategories: true, requestedBy: true, approvedBy: true, activatedAt: true, suspendedAt: true, lastReviewedAt: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     }),
     db.dataSharingAgreement.findMany({
@@ -94,11 +94,21 @@ export async function listNetworkDirectory(organizationId: string) {
               direction: connection.sourceOrganizationId === organizationId ? "outbound" : "inbound",
               status: connection.status,
               trustLevel: connection.trustLevel,
+              relationshipType: connection.relationshipType,
               allowedPurposes: connection.allowedPurposes,
+              acceptedReferralTypes: connection.acceptedReferralTypes,
+              services: connection.services,
+              capacityStatus: connection.capacityStatus,
+              contactMethod: connection.contactMethod,
+              contactDetails: connection.contactDetails,
+              integrationStatus: connection.integrationStatus,
+              manualFallbackMethod: connection.manualFallbackMethod,
+              consentRequiredCategories: connection.consentRequiredCategories,
               requestedBy: connection.requestedBy,
               approvedBy: connection.approvedBy,
               activatedAt: connection.activatedAt?.toISOString() ?? null,
               suspendedAt: connection.suspendedAt?.toISOString() ?? null,
+              lastReviewedAt: connection.lastReviewedAt?.toISOString() ?? null,
             }
           : null,
       };

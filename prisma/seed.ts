@@ -296,6 +296,32 @@ async function main() {
     },
   });
 
+  const metroDiagnostics = await prisma.organization.create({
+    data: {
+      id: "org-metro-diagnostics",
+      name: "Metro Diagnostic Collaborative",
+      slug: "metro-diagnostic-collaborative",
+      clinicType: "Imaging Network",
+      demoMode: true,
+      locations: {
+        create: {
+          id: "loc-metro-diagnostics",
+          name: "Downtown Imaging Exchange",
+          locationType: "MRI and diagnostic imaging center",
+          address: { line1: "400 Synthetic Way", city: "Brooklyn", state: "NY", postalCode: "11211" },
+          city: "Brooklyn",
+          state: "NY",
+          zip: "11211",
+          roomTypes: ["MRI suite", "X-ray suite"],
+          servicesAllowed: ["MRI", "X-ray", "Diagnostic imaging coordination"],
+          credentialRequirements: ["Facility verification", "Modality credential review"],
+          insuranceRequirements: ["Organization liability review"],
+          marketplaceVisible: true,
+        },
+      },
+    },
+  });
+
   const zumi = await prisma.organization.create({
     data: {
       id: "org-clinicos-zumi",
@@ -336,6 +362,7 @@ async function main() {
       { organizationId: bfm.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
       { organizationId: luxe.id, key: "onboarding.profile", value: { teamSize: "1-5", primaryGoal: "Improve clinical and revenue follow-through", completedSteps: ["offer", "organization", "owner", "workspace"], syntheticDemo: true } },
       { organizationId: luxe.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
+      { organizationId: metroDiagnostics.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic network partner demonstration only." } },
       { organizationId: zumi.id, key: "platform.sales_admin", value: { enabled: true, syntheticDemo: true, paymentMode: "manual_fallback" } },
       { organizationId: zumi.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic sales demonstration only. Do not enter patient information." } },
     ],
@@ -981,6 +1008,7 @@ async function main() {
       { id: "facility-bfm-main", organizationId: bfm.id, locationId: "loc-brooklyn-heights", name: "Brooklyn Family Medicine", type: "primary_care", specialty: "Family Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "facility-bfm-diagnostic", organizationId: bfm.id, locationId: "loc-crown-heights", name: "Brooklyn Diagnostic Exchange Demo", type: "imaging", specialty: "Diagnostic Radiology", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "facility-luxe-main", organizationId: luxe.id, locationId: "loc-midtown", name: "Luxe Medi", type: "medical_spa", specialty: "Aesthetic Medicine", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
+      { id: "facility-metro-diagnostics", organizationId: metroDiagnostics.id, locationId: "loc-metro-diagnostics", name: "Metro Diagnostic Collaborative", type: "imaging", specialty: "MRI and Diagnostic Radiology", status: "verified", verifiedAt: new Date("2026-07-01T12:00:00.000Z") },
     ],
   });
 
@@ -992,18 +1020,51 @@ async function main() {
     ],
   });
 
-  await prisma.networkConnection.create({
-    data: {
-      id: "network-bfm-luxe",
-      sourceOrganizationId: bfm.id,
-      targetOrganizationId: luxe.id,
-      status: "active",
-      trustLevel: "verified_demo",
-      allowedPurposes: ["treatment", "operations"],
-      requestedBy: "user-nadja",
-      approvedBy: "user-nadja",
-      activatedAt: new Date("2026-07-01T12:00:00.000Z"),
-    },
+  await prisma.networkConnection.createMany({
+    data: [
+      {
+        id: "network-bfm-luxe",
+        sourceOrganizationId: bfm.id,
+        targetOrganizationId: luxe.id,
+        status: "active",
+        trustLevel: "verified_demo",
+        relationshipType: "med_spa_referral_partner",
+        allowedPurposes: ["treatment", "operations"],
+        acceptedReferralTypes: ["med_spa_provider_request", "weight_management_consultation"],
+        services: ["Provider consultation", "Injectables review", "Weight management review"],
+        capacityStatus: "available",
+        contactMethod: "ClinicOS network inbox",
+        contactDetails: { route: "/network/handoffs", syntheticDemo: true },
+        integrationStatus: "demo",
+        manualFallbackMethod: "documented_phone_and_manual_upload",
+        consentRequiredCategories: ["demographics", "referrals"],
+        requestedBy: "user-nadja",
+        approvedBy: "user-nadja",
+        activatedAt: new Date("2026-07-01T12:00:00.000Z"),
+        lastReviewedAt: new Date("2026-08-08T14:00:00.000Z"),
+      },
+      {
+        id: "network-bfm-metro-diagnostics",
+        sourceOrganizationId: bfm.id,
+        targetOrganizationId: metroDiagnostics.id,
+        status: "active",
+        trustLevel: "verified_demo",
+        relationshipType: "diagnostic_referral_partner",
+        allowedPurposes: ["treatment"],
+        acceptedReferralTypes: ["imaging_request", "capacity_request"],
+        services: ["MRI", "X-ray", "Imaging report return"],
+        capacityStatus: "limited",
+        contactMethod: "Manual scheduling desk",
+        contactDetails: { phone: "(212) 555-0136", syntheticDemo: true },
+        integrationStatus: "manual_fallback",
+        manualFallbackMethod: "documented_fax_with_receipt_confirmation",
+        consentRequiredCategories: ["demographics", "referrals", "imaging"],
+        requestedBy: "user-nadja",
+        approvedBy: "user-nadja",
+        activatedAt: new Date("2026-07-02T12:00:00.000Z"),
+        lastReviewedAt: new Date("2026-08-07T15:00:00.000Z"),
+      },
+    ],
   });
 
   const careTeamRoom = await prisma.careTeamRoom.create({
@@ -1042,6 +1103,19 @@ async function main() {
       dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary", "referrals"],
       effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
       expiresAt: new Date("2027-07-01T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.dataSharingAgreement.create({
+    data: {
+      id: "sharing-bfm-metro-diagnostics",
+      sourceOrganizationId: bfm.id,
+      targetOrganizationId: metroDiagnostics.id,
+      status: "active_demo",
+      allowedPurposes: ["treatment"],
+      dataCategories: ["demographics", "referrals", "imaging"],
+      effectiveAt: new Date("2026-07-02T12:00:00.000Z"),
+      expiresAt: new Date("2027-07-02T12:00:00.000Z"),
     },
   });
 
@@ -1090,6 +1164,27 @@ async function main() {
       purposeOfUse: "treatment",
       dataCategories: ["demographics", "allergies", "medications", "approved_visit_summary", "referrals"],
       grantedToOrganizationId: luxe.id,
+      source: "demo_seed",
+      signerName: "Maya Thompson",
+      signerRelationship: "self",
+      capturedBy: "user-nadja",
+      status: "active",
+      effectiveAt: new Date("2026-07-01T12:00:00.000Z"),
+      signedAt: new Date("2026-07-01T12:00:00.000Z"),
+      expiresAt: new Date("2027-07-01T12:00:00.000Z"),
+    },
+  });
+
+  await prisma.consent.create({
+    data: {
+      id: "consent-demo-network-diagnostics",
+      organizationId: bfm.id,
+      patientId: maya.id,
+      type: "network_sharing",
+      version: 1,
+      purposeOfUse: "treatment",
+      dataCategories: ["demographics", "referrals", "imaging"],
+      grantedToOrganizationId: metroDiagnostics.id,
       source: "demo_seed",
       signerName: "Maya Thompson",
       signerRelationship: "self",
@@ -1722,6 +1817,88 @@ async function main() {
     },
   });
 
+  await prisma.careHandoff.create({
+    data: {
+      id: "handoff-maya-luxe-connected",
+      organizationId: bfm.id,
+      destinationOrganizationId: luxe.id,
+      networkConnectionId: "network-bfm-luxe",
+      patientId: maya.id,
+      senderId: "user-nadja",
+      type: "med_spa_provider_request",
+      category: "med_spa_provider_request",
+      purposeOfUse: "treatment",
+      dataCategories: ["demographics", "referrals"],
+      summary: { minimumNecessary: "Synthetic provider consultation request with routing labels only.", syntheticDemo: true, chartPayloadShared: false },
+      requestedAction: "Review the synthetic consultation request and return a documented provider decision.",
+      priority: "normal",
+      dueAt: new Date("2026-08-15T17:00:00.000Z"),
+      status: "sent_connected",
+      deliveryMethod: "connected_network",
+      consentId: "consent-demo-network",
+      sharingAgreementId: "sharing-bfm-luxe",
+      confirmedBy: "user-nadja",
+      confirmedAt: new Date("2026-08-08T14:00:00.000Z"),
+      sentAt: new Date("2026-08-08T14:05:00.000Z"),
+      events: {
+        createMany: {
+          data: [
+            { id: "handoff-event-luxe-prepare-bfm", organizationId: bfm.id, actorId: "user-nadja", action: "handoff_prepared", fromStatus: "draft", toStatus: "ready_to_send", note: "Synthetic minimum-necessary handoff prepared after human review.", metadata: { syntheticDemo: true, chartPayloadShared: false } },
+            { id: "handoff-event-luxe-prepare-luxe", organizationId: luxe.id, actorId: "user-nadja", action: "handoff_prepared", fromStatus: "draft", toStatus: "ready_to_send", note: "Synthetic minimum-necessary handoff prepared after human review.", metadata: { syntheticDemo: true, chartPayloadShared: false } },
+            { id: "handoff-event-luxe-send-bfm", organizationId: bfm.id, actorId: "user-nadja", action: "send_connected", fromStatus: "ready_to_send", toStatus: "sent_connected", note: "Visible inside the ClinicOS synthetic network; no external protocol delivery claimed.", metadata: { internalDemoDelivery: true } },
+            { id: "handoff-event-luxe-send-luxe", organizationId: luxe.id, actorId: "user-nadja", action: "send_connected", fromStatus: "ready_to_send", toStatus: "sent_connected", note: "Visible inside the ClinicOS synthetic network; no external protocol delivery claimed.", metadata: { internalDemoDelivery: true } },
+          ],
+        },
+      },
+    },
+  });
+
+  await prisma.careHandoff.create({
+    data: {
+      id: "handoff-maya-metro-fax",
+      organizationId: bfm.id,
+      destinationOrganizationId: metroDiagnostics.id,
+      networkConnectionId: "network-bfm-metro-diagnostics",
+      patientId: maya.id,
+      senderId: "user-nadja",
+      type: "imaging_request",
+      category: "imaging_request",
+      purposeOfUse: "treatment",
+      dataCategories: ["demographics", "referrals", "imaging"],
+      summary: { minimumNecessary: "Synthetic MRI scheduling request with approved routing categories only.", syntheticDemo: true, chartPayloadShared: false },
+      requestedAction: "Confirm synthetic MRI capacity and return a documented scheduling response.",
+      priority: "high",
+      dueAt: new Date("2026-08-14T15:00:00.000Z"),
+      status: "fax_pending",
+      deliveryMethod: "fax",
+      consentId: "consent-demo-network-diagnostics",
+      sharingAgreementId: "sharing-bfm-metro-diagnostics",
+      confirmedBy: "user-nadja",
+      confirmedAt: new Date("2026-08-08T15:00:00.000Z"),
+      sentAt: new Date("2026-08-08T15:05:00.000Z"),
+      manualFallbackReason: "Synthetic fax fallback queued; receipt confirmation remains pending.",
+      events: {
+        createMany: {
+          data: [
+            { id: "handoff-event-metro-prepare-bfm", organizationId: bfm.id, actorId: "user-nadja", action: "handoff_prepared", fromStatus: "draft", toStatus: "ready_to_send", note: "Synthetic imaging handoff prepared with active consent and agreement.", metadata: { syntheticDemo: true, chartPayloadShared: false } },
+            { id: "handoff-event-metro-prepare-metro", organizationId: metroDiagnostics.id, actorId: "user-nadja", action: "handoff_prepared", fromStatus: "draft", toStatus: "ready_to_send", note: "Synthetic imaging handoff prepared with active consent and agreement.", metadata: { syntheticDemo: true, chartPayloadShared: false } },
+            { id: "handoff-event-metro-fax-bfm", organizationId: bfm.id, actorId: "user-nadja", action: "queue_fax", fromStatus: "ready_to_send", toStatus: "fax_pending", note: "Fax is queued as a manual fallback; no delivery receipt has been recorded.", metadata: { manualFallback: true, vendorAcknowledgment: false } },
+            { id: "handoff-event-metro-fax-metro", organizationId: metroDiagnostics.id, actorId: "user-nadja", action: "queue_fax", fromStatus: "ready_to_send", toStatus: "fax_pending", note: "Fax is queued as a manual fallback; no delivery receipt has been recorded.", metadata: { manualFallback: true, vendorAcknowledgment: false } },
+          ],
+        },
+      },
+    },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      { id: "audit-handoff-luxe-bfm", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "network.handoff_send_connected", resourceType: "care_handoff", resourceId: "handoff-maya-luxe-connected", patientId: maya.id, metadata: { representedOrganizationId: bfm.id, destinationOrganizationId: luxe.id, consentId: "consent-demo-network", sharingAgreementId: "sharing-bfm-luxe", syntheticDemo: true, chartPayloadShared: false } },
+      { id: "audit-handoff-luxe-receiver", organizationId: luxe.id, actorId: "user-nadja", actorType: "network_user", action: "network.handoff_received_inbox", resourceType: "care_handoff", resourceId: "handoff-maya-luxe-connected", patientId: maya.id, metadata: { representedOrganizationId: bfm.id, consentId: "consent-demo-network", syntheticDemo: true, chartPayloadShared: false } },
+      { id: "audit-handoff-metro-bfm", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "network.handoff_queue_fax", resourceType: "care_handoff", resourceId: "handoff-maya-metro-fax", patientId: maya.id, metadata: { representedOrganizationId: bfm.id, destinationOrganizationId: metroDiagnostics.id, consentId: "consent-demo-network-diagnostics", sharingAgreementId: "sharing-bfm-metro-diagnostics", manualFallback: true, vendorAcknowledgment: false } },
+      { id: "audit-handoff-metro-receiver", organizationId: metroDiagnostics.id, actorId: "user-nadja", actorType: "network_user", action: "network.handoff_manual_fallback_pending", resourceType: "care_handoff", resourceId: "handoff-maya-metro-fax", patientId: maya.id, metadata: { representedOrganizationId: bfm.id, manualFallback: true, vendorAcknowledgment: false } },
+    ],
+  });
+
   await prisma.gridRequest.create({
     data: {
       id: "grid-request-maya-injector",
@@ -1820,6 +1997,23 @@ async function main() {
       urgencyLevels: ["routine", "high"],
       status: "open_demo",
       metadata: { source: "synthetic_seed", bookingMode: "manual_confirmation" },
+    },
+  });
+
+  await prisma.capacityListing.create({
+    data: {
+      id: "capacity-metro-mri-demo",
+      organizationId: metroDiagnostics.id,
+      locationId: "loc-metro-diagnostics",
+      facilityId: "facility-metro-diagnostics",
+      type: "imaging",
+      service: "MRI and X-ray capacity window",
+      startsAt: new Date("2026-08-20T17:00:00.000Z"),
+      endsAt: new Date("2026-08-20T20:00:00.000Z"),
+      acceptedPayers: ["Manual benefits review", "Self Pay"],
+      urgencyLevels: ["routine", "high"],
+      status: "open_demo",
+      metadata: { source: "synthetic_seed", bookingMode: "manual_confirmation", noCoverageGuarantee: true },
     },
   });
 

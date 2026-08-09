@@ -182,13 +182,45 @@ Use the exact labels `Live`, `Demo`, `Manual fallback`, `Pending connection`, `R
 - unauthenticated Grid API access returned `401`; unauthenticated Grid workspace access redirected to `/login`
 - responsive browser verification confirmed the Grid at a 390 by 844 viewport with full-width layout and no horizontal overflow
 
+## Clinic Network Directory and Partner Handoff slice
+
+Status: Live persistence and governed workflow rules with Demo content. External delivery remains Manual fallback or Pending connection. Real patient use Requires production review.
+
+This slice adds:
+
+- a premium authenticated Network Command at `/network`, `/network/map`, `/network/handoffs`, `/network/directory`, and `/admin/network`
+- relationship-aware partner profiles with organization type, locations, departments, facilities, services, accepted referral types, capacity, contact method, integration status, manual fallback, sharing agreement, consent-category requirements, and audit history
+- a clinic-centered constellation view with referral and handoff volume, work awaiting action, failed-delivery state, and available capacity
+- a controlled composer for referral, capacity, document packet, patient navigation, provider consultation, no-fault packet, imaging, physical-therapy, and med-spa provider handoffs
+- relationship, agreement, purpose-of-use, minimum-necessary category, patient-consent, tenant, and human-confirmation validation before a handoff can be prepared
+- exact delivery states from `draft` and `ready_to_send` through connected, manual, fax, or Direct queues, receipt, acknowledgment, clarification, scheduling, completion, failure, retry, and cancellation
+- source-versus-recipient action enforcement, append-only events visible only to the represented organization, dual-organization audit receipts, and staff tasks for manual delivery fallbacks
+- a Grid handoff view that now shows partner organization names, delivery paths, review requirements, and a direct route into the governed Network Command instead of raw user identifiers
+- synthetic Metro Diagnostic Collaborative seed data, connected med-spa and diagnostic relationships, agreements, consent, capacity, connected delivery, fax fallback, tasks, and audit receipts
+
+The Network Command does not silently share a chart. Inbound visibility is recalculated from the active relationship, sharing agreement, consent recipient, purpose, categories, and current user at read time. Prepared handoffs contain a minimum-necessary administrative summary and explicitly record that no chart payload was shared.
+
+Connected delivery means a handoff record became visible inside the authorized ClinicOS recipient workspace. Manual, fax, and Direct states do not claim that an external vendor delivered or acknowledged anything. They create recoverable staff work until a human records evidence.
+
+## Verification record for the Network Directory slice
+
+- migration `20260809231500_network_partner_handoffs` is applied to the configured Neon PostgreSQL demonstration database and Prisma reports the schema as current
+- the destructive synthetic seed completed and restored canonical partner relationships, agreements, consent, handoffs, events, fallback tasks, and audit receipts
+- all 151 tests across 36 files passed, including exact handoff lifecycle and action-boundary coverage
+- authenticated runtime checks covered all five network workspaces, source and recipient visibility, connected send, recipient receipt, append-only events, unrelated-tenant denial, and canonical seed restoration
+- unauthenticated Network Command API access returned `401`
+- lint, strict TypeScript validation, Prisma validation, migration status, whitespace checks, and a clean optimized production build passed
+- responsive browser verification at 390 by 844 confirmed full-width layout, no horizontal overflow, labeled form controls, human-review gating, and no browser warnings or errors
+- the clean local production server returned `200` from `/api/health`, rendered the partner names and governed Grid link without raw user IDs, returned `401` from the unauthenticated Network Command API, and redirected protected pages to `/login`
+- Render deployment verification follows the focused commit and push; this document does not claim that deployment completed before the release exists
+
 ## Next build slice
 
-After the verified Grid slice is committed, pushed, and confirmed on Render, the next ordered slice is the Clinic Network Directory and Partner Handoff Map:
+After the Network Directory slice is committed, pushed, and confirmed on Render, the next ordered slice is the Zumi AI Workflow Copilot:
 
-1. relationship-aware partner profiles and network-map visualization
-2. sharing-agreement, consent-category, integration-health, capacity, and manual-fallback states
-3. controlled handoff composer for referrals, capacity, documents, navigation, consultation, no-fault, imaging, PT, and med-spa requests
-4. delivery states from draft through connected/manual send, acknowledgment, scheduling, completion, failure, retry, and cancellation
-5. human confirmation and purpose-of-use checks before every send
-6. delivery receipts without unsafe cross-organization chart leakage
+1. same-page typed and browser-voice input with visible processing steps and immediate results
+2. bounded administrative intents for task creation, referral preparation, follow-up drafting, missing-information detection, workflow summary, and owner briefing
+3. deterministic local fallback when no reviewed AI provider is configured
+4. explicit draft, citation/provenance, confidence/limits, and human-review state for every output
+5. tool permissions that re-use the current organization, role, patient relationship, consent, and audit boundaries
+6. no autonomous diagnosis, prescribing, record release, claim submission, credential approval, patient messaging, or emergency continuation

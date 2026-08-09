@@ -36,7 +36,7 @@ export async function listCareCoordinationWorkspace(organizationId: string, user
   ]);
   const patientsById = new Map(patients.map((patient) => [patient.id, patient]));
   const providersById = new Map(providers.map((provider) => [provider.id, provider]));
-  const providerLabel = (id: string) => providersById.get(id) ? `${providersById.get(id)!.name}, ${providersById.get(id)!.credential}` : "Unassigned clinician";
+  const providerLabel = (id: string | null) => id && providersById.get(id) ? `${providersById.get(id)!.name}, ${providersById.get(id)!.credential}` : "Organization partner";
   return {
     patients,
     providers,
