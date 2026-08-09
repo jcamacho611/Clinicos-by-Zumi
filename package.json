@@ -14,7 +14,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",

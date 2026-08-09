@@ -12,6 +12,7 @@ import {
 } from "../src/lib/feature-registry-canon";
 import { can, clinicActions, clinicResources, clinicRoles, roleLabel } from "../src/lib/auth/rbac";
 import { buildCaseChecklist } from "../src/lib/case-rules";
+import { buildDemoRecapDraft, buildSyntheticDemoScenario, demoOffers } from "../src/lib/sales-demo-rules";
 
 const prisma = new PrismaClient();
 
@@ -181,6 +182,10 @@ async function main() {
   await prisma.careTeamRoom.deleteMany();
   await prisma.task.deleteMany();
   await prisma.escalation.deleteMany();
+  await prisma.demoReservationEvent.deleteMany();
+  await prisma.demoRecap.deleteMany();
+  await prisma.demoReservation.deleteMany();
+  await prisma.demoScenario.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.reliabilityEvent.deleteMany();
@@ -287,8 +292,35 @@ async function main() {
     },
   });
 
+  const zumi = await prisma.organization.create({
+    data: {
+      id: "org-clinicos-zumi",
+      name: "ClinicOS by Zumi",
+      slug: "clinicos-by-zumi",
+      clinicType: "Healthcare technology platform",
+      demoMode: true,
+      locations: {
+        create: {
+          id: "loc-clinicos-demo-studio",
+          name: "Synthetic Demo Studio",
+          address: { line1: "Synthetic environment only", city: "New York", state: "NY", postalCode: "10001" },
+        },
+      },
+      users: {
+        create: {
+          id: "user-clinicos-founder",
+          email: "founder@clinicos.example.test",
+          name: "ClinicOS Demo Founder",
+          roleKey: "clinic_owner",
+          authCredential: { create: { passwordHash } },
+        },
+      },
+    },
+  });
+
   await seedOrganizationRoles(bfm.id, "bfm");
   await seedOrganizationRoles(luxe.id, "luxe");
+  await seedOrganizationRoles(zumi.id, "clinicos");
 
   await prisma.setting.createMany({
     data: [
@@ -296,6 +328,94 @@ async function main() {
       { organizationId: bfm.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
       { organizationId: luxe.id, key: "onboarding.profile", value: { teamSize: "1-5", primaryGoal: "Improve clinical and revenue follow-through", completedSteps: ["offer", "organization", "owner", "workspace"], syntheticDemo: true } },
       { organizationId: luxe.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic demonstration only." } },
+      { organizationId: zumi.id, key: "platform.sales_admin", value: { enabled: true, syntheticDemo: true, paymentMode: "manual_fallback" } },
+      { organizationId: zumi.id, key: "compliance.phi_mode", value: { enabled: false, reason: "Synthetic sales demonstration only. Do not enter patient information." } },
+    ],
+  });
+
+  const seededSalesScenario = buildSyntheticDemoScenario({
+    clinicType: "Primary care",
+    biggestPainPoint: "referrals",
+    painPoints: ["referrals", "billing_readiness", "staff_accountability"],
+  });
+  await prisma.demoScenario.create({
+    data: {
+      id: "demo-scenario-northstar-referrals",
+      salesOwnerOrganizationId: zumi.id,
+      clinicType: seededSalesScenario.clinicType,
+      primaryPainPoint: seededSalesScenario.primaryPainPoint,
+      title: seededSalesScenario.title,
+      summary: seededSalesScenario.summary,
+      syntheticPatient: seededSalesScenario.syntheticPatient,
+      syntheticAppointment: seededSalesScenario.syntheticAppointment,
+      syntheticDocument: seededSalesScenario.syntheticDocument,
+      syntheticReferral: seededSalesScenario.syntheticReferral,
+      syntheticTask: seededSalesScenario.syntheticTask,
+      syntheticResult: seededSalesScenario.syntheticResult,
+      syntheticBillingItem: seededSalesScenario.syntheticBillingItem,
+      syntheticOwnerAlert: seededSalesScenario.syntheticOwnerAlert,
+      syntheticRevenueLeak: seededSalesScenario.syntheticRevenueLeak,
+      recommendedWorkflow: seededSalesScenario.recommendedWorkflow,
+      status: "ready",
+    },
+  });
+  await prisma.demoReservation.create({
+    data: {
+      id: "demo-reservation-northstar",
+      organizationId: bfm.id,
+      salesOwnerOrganizationId: zumi.id,
+      clinicName: "Northstar Family Practice",
+      contactName: "Jordan Rivera",
+      contactRole: "Practice owner",
+      contactEmail: "nadja@example.test",
+      contactPhone: "(212) 555-0198",
+      clinicType: "Primary care",
+      providerCount: 4,
+      locationCount: 2,
+      biggestPainPoint: "referrals",
+      painPoints: ["referrals", "billing_readiness", "staff_accountability"],
+      currentSystems: { ehr: "Legacy EHR demo", scheduling: "Shared calendar", billing: "External billing company", crm: "Spreadsheet", patientMessaging: "Phone and SMS" },
+      estimatedSoftwareSpendCents: 240_000,
+      wantsPaidDemo: true,
+      wantsFoundingEvaluation: true,
+      selectedOffer: "private_workflow_demo",
+      priceCents: demoOffers.private_workflow_demo.priceCents,
+      status: "scheduled",
+      paymentStatus: "payment_recorded",
+      scheduledAt: new Date("2026-08-12T18:00:00.000Z"),
+      demoScenarioId: "demo-scenario-northstar-referrals",
+    },
+  });
+  const seededRecap = buildDemoRecapDraft({
+    clinicName: "Northstar Family Practice",
+    clinicType: "Primary care",
+    biggestPainPoint: "referrals",
+    painPoints: ["referrals", "billing_readiness", "staff_accountability"],
+    scenarioTitle: seededSalesScenario.title,
+  });
+  await prisma.demoRecap.create({
+    data: {
+      id: "demo-recap-northstar",
+      reservationId: "demo-reservation-northstar",
+      salesOwnerOrganizationId: zumi.id,
+      painPoint: seededRecap.painPoint,
+      whatWasShown: seededRecap.whatWasShown,
+      workflowGaps: seededRecap.workflowGaps,
+      recommendedNextStep: seededRecap.recommendedNextStep,
+      estimatedValueAreas: seededRecap.estimatedValueAreas,
+      productStatusSnapshot: seededRecap.productStatusSnapshot,
+      priceOption: seededRecap.priceOption,
+      callToAction: seededRecap.callToAction,
+      status: "draft",
+      reviewStatus: "human_review_required",
+      draftedBy: "deterministic_fallback",
+    },
+  });
+  await prisma.demoReservationEvent.createMany({
+    data: [
+      { id: "demo-sales-event-inquiry", salesOwnerOrganizationId: zumi.id, reservationId: "demo-reservation-northstar", actorType: "public_contact", eventType: "inquiry_received", toStatus: "inquiry", note: "Synthetic founding-clinic inquiry received." },
+      { id: "demo-sales-event-scheduled", salesOwnerOrganizationId: zumi.id, reservationId: "demo-reservation-northstar", actorId: "user-clinicos-founder", actorType: "user", eventType: "status_changed", fromStatus: "reserved", toStatus: "scheduled", note: "Synthetic private workflow demo scheduled after a reviewed manual payment record." },
+      { id: "demo-sales-event-recap", salesOwnerOrganizationId: zumi.id, reservationId: "demo-reservation-northstar", actorType: "system", eventType: "recap_draft_generated", note: "AI-ready deterministic recap draft created. Human review is required." },
     ],
   });
 

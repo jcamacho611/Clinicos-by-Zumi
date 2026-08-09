@@ -40,6 +40,8 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   cases: { all: [["cases", "read"]] },
   quality: { all: [["quality", "read"]] },
   crm: { all: [["crm", "read"]] },
+  "admin/sales": { all: [["sales", "read"]] },
+  "owner/founding-program": { all: [["sales", "read"]] },
   messages: { all: [["messages", "read"]] },
   tasks: { all: [["tasks", "read"]] },
   escalations: { all: [["escalations", "read"]] },

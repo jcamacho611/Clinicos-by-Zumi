@@ -68,6 +68,13 @@ export const navigation = [
     ],
   },
   {
+    label: "Growth",
+    items: [
+      { href: "/admin/sales", label: "Sales command", icon: "CircleDollarSign" },
+      { href: "/owner/founding-program", label: "Founding program", icon: "BriefcaseMedical" },
+    ],
+  },
+  {
     label: "System",
     items: [
       { href: "/portal-admin", label: "Portal administration", icon: "MonitorSmartphone" },
@@ -123,4 +130,6 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   integrations: { title: "Integration roadmap", eyebrow: "Standards and partners" },
   settings: { title: "Settings & audit", eyebrow: "Organization controls" },
   "system-health": { title: "System health", eyebrow: "Reliability and recovery" },
+  admin: { title: "Sales command", eyebrow: "Private demo pipeline" },
+  owner: { title: "Founding clinic program", eyebrow: "Evaluation and contribution" },
 };

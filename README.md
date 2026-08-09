@@ -16,6 +16,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 
 ## Product surfaces
 
+- Private Workflow Demo & Cost Review sales engine with public `/demo`, `/private-demo`, `/founding-clinic`, and `/sales` routes; server-controlled $500, $1,500, and $8,000 offers; credit-forward disclosure; synthetic scenario generation; a human-reviewed recap lifecycle; tenant-owned `/admin/sales` and `/owner/founding-program` workspaces; and manual payment fallback
 - Offer-first public landing page and self-service organization launch with clinic type, primary location, owner credential, tenant-specific roles and permissions, trial modules, default appointment types, pending connector records, onboarding settings, signed session creation, and audit/activity receipts
 - Owner command center
 - Front desk and provider workspaces
@@ -91,6 +92,7 @@ The seed creates the authenticated owner `nadja@example.test` and a separate syn
 | `DOCUMENT_ENCRYPTION_KEY` | Production | Base64- or hex-encoded 32-byte AES-256-GCM key for the encrypted database document fallback; rotate only through a reviewed re-encryption procedure |
 | `CLINICOS_SEED_ADMIN_PASSWORD` | Seed only | Initial fake clinic-owner password; must be 12+ characters and not the placeholder |
 | `CLINICOS_SEED_PATIENT_PASSWORD` | Seed only | Initial synthetic patient-portal password; use a different 12+ character value |
+| `CLINICOS_SALES_ORGANIZATION_SLUG` | No | Sales-owner tenant for public demo reservations; defaults to `clinicos-by-zumi` |
 | `DEMO_AUTH` | Local only | Set `false` to disable the development demo account; ignored in production |
 | `AI_KEY` | No | Reserved for a reviewed AI provider integration |
 | `TWILIO_ACCOUNT_SID` | No | Future voice/SMS integration |
@@ -110,6 +112,7 @@ npm run test         # safety workflow tests
 npm run db:validate  # Prisma schema validation
 npm run db:generate  # generate Prisma client
 npm run db:migrate:deploy # apply reviewed migrations to a configured database
+npm run db:seed:sales-demo # non-destructive synthetic sales workspace seed after the sales migration
 npm run build        # production build
 npm start            # production server
 ```
@@ -118,6 +121,9 @@ npm start            # production server
 
 - `GET /api/health` returns service and demo-mode health.
 - `POST /api/onboarding/organizations` validates and rate-limits public workspace creation, then atomically creates the organization, location, departments, owner credential, roles, permissions, trial, defaults, pending connectors, settings, and audit receipts before issuing a signed session.
+- `POST /api/sales/reservations` rate-limits and validates a public no-PHI clinic intake, ignores all client tenant selection, assigns the configured ClinicOS sales owner, persists server-controlled pricing, and generates a deterministic synthetic scenario with an append-only event and audit receipt.
+- `GET /api/sales/reservations` returns only reservations managed by the authenticated user's organization and requires the sales-read permission; transition, scenario, recap, and recap-review routes enforce sales update/manage permissions, organization ownership, lifecycle rules, manual payment truth, and human review.
+- `GET /api/sales/founding-program` returns only reservations linked to the authenticated owner organization or exact authenticated owner email; it never lists the platform-wide pipeline.
 - `POST /api/auth/login` verifies credentials, rate-limits failures, and issues a signed HTTP-only session.
 - `POST /api/auth/logout` revokes database sessions and clears the browser cookie.
 - `POST /api/portal/auth/login` authenticates an organization-scoped patient account using a patient-only token audience, database session, lockout counter, and separate HTTP-only cookie.
@@ -246,6 +252,8 @@ Migration `20260716060000_forms_signature_integrity` requires every form-submiss
 Migration `20260716080000_medication_pharmacy_lifecycle` expands patient pharmacies and medication provenance, adds medication reconciliation, refill, prescription, warning, and append-only event records, constrains lifecycle and delivery states, enforces the controlled-substance and EPCS boundary, and adds queue, patient-history, warning, and custody indexes.
 
 Migration `20260718181500_case_room_operations` adds case policy, diagnosis, NF/C-4, work-return, authorization, denial, appeal, task evidence/completion, and packet generation/approval fields; tenant-scoped claim uniqueness and patient-case indexes support the live no-fault and workers compensation rooms.
+
+Migration `20260809131500_private_demo_sales_engine` adds tenant-owned demo reservations, fully synthetic scenario records, human-reviewed recap drafts, append-only sales events, strict price/lifecycle/payment checks, and organization ownership indexes for the founding-clinic sales engine.
 
 The Luxe Medi slice adds organization-scoped `luxe_services`, `luxe_treatment_plans`, `luxe_treatment_sessions`, and `luxe_promotions` records. It intentionally uses manual scheduling and payment/package adapters until external vendors are configured, while keeping provider review, consent, document custody, inventory, lead, and payment sources connected.
 

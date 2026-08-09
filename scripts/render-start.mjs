@@ -4,10 +4,14 @@ import { spawn, spawnSync } from "node:child_process";
 const databaseConfigured = Boolean(process.env.DATABASE_URL);
 
 if (databaseConfigured) {
+  const migrationEnv = {
+    ...process.env,
+    DATABASE_URL: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL,
+  };
   const migration = spawnSync(
     process.execPath,
     ["node_modules/prisma/build/index.js", "migrate", "deploy"],
-    { env: process.env, stdio: "inherit" },
+    { env: migrationEnv, stdio: "inherit" },
   );
 
   if (migration.status !== 0) {

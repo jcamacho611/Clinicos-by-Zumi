@@ -99,6 +99,11 @@ model Organization {
   inventoryTransactions      InventoryTransaction[]
   leads                      Lead[]
   leadEvents                 LeadEvent[]
+  prospectDemoReservations   DemoReservation[]           @relation("ProspectDemoOrganization")
+  managedDemoReservations    DemoReservation[]           @relation("SalesOwnerOrganization")
+  salesDemoScenarios         DemoScenario[]              @relation("SalesScenarioOwner")
+  salesDemoRecaps            DemoRecap[]                 @relation("SalesRecapOwner")
+  salesDemoEvents            DemoReservationEvent[]      @relation("SalesEventOwner")
   reliabilityEvents          ReliabilityEvent[]
   voiceSessions              VoiceSession[]
   outboundNetworkConnections NetworkConnection[]         @relation("NetworkSource")
@@ -2208,6 +2213,120 @@ model LeadEvent {
 
   @@index([organizationId, leadId, createdAt])
   @@map("lead_events")
+}
+
+model DemoReservation {
+  id                          String                 @id @default(cuid())
+  organizationId              String?
+  salesOwnerOrganizationId    String
+  clinicName                  String
+  contactName                 String
+  contactRole                 String
+  contactEmail                String
+  contactPhone                String
+  clinicType                  String
+  providerCount               Int
+  locationCount               Int
+  biggestPainPoint            String
+  painPoints                  Json
+  currentSystems              Json
+  estimatedSoftwareSpendCents Int?
+  wantsFreeIntro              Boolean                @default(false)
+  wantsPaidDemo               Boolean                @default(true)
+  wantsFoundingEvaluation     Boolean                @default(false)
+  wantsFoundingProgram        Boolean                @default(false)
+  selectedOffer               String                 @default("private_workflow_demo")
+  priceCents                  Int                    @default(50000)
+  status                      String                 @default("inquiry")
+  paymentStatus               String                 @default("not_started")
+  scheduledAt                 DateTime?
+  demoScenarioId              String?                @unique
+  createdAt                   DateTime               @default(now())
+  updatedAt                   DateTime               @updatedAt
+  organization                Organization?          @relation("ProspectDemoOrganization", fields: [organizationId], references: [id], onDelete: SetNull)
+  salesOwnerOrganization      Organization           @relation("SalesOwnerOrganization", fields: [salesOwnerOrganizationId], references: [id], onDelete: Restrict)
+  demoScenario                DemoScenario?          @relation("ReservationScenario", fields: [demoScenarioId], references: [id], onDelete: SetNull)
+  recap                       DemoRecap?
+  events                      DemoReservationEvent[]
+
+  @@index([salesOwnerOrganizationId, status, createdAt])
+  @@index([organizationId, updatedAt])
+  @@index([contactEmail, createdAt])
+  @@map("demo_reservations")
+}
+
+model DemoScenario {
+  id                       String           @id @default(cuid())
+  salesOwnerOrganizationId String
+  clinicType               String
+  primaryPainPoint         String
+  title                    String
+  summary                  String
+  syntheticPatient         Json
+  syntheticAppointment     Json
+  syntheticDocument        Json
+  syntheticReferral        Json
+  syntheticTask            Json
+  syntheticResult          Json
+  syntheticBillingItem     Json
+  syntheticOwnerAlert      Json
+  syntheticRevenueLeak     Json
+  recommendedWorkflow      Json
+  status                   String           @default("ready")
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  salesOwnerOrganization   Organization     @relation("SalesScenarioOwner", fields: [salesOwnerOrganizationId], references: [id], onDelete: Restrict)
+  reservation              DemoReservation? @relation("ReservationScenario")
+
+  @@index([salesOwnerOrganizationId, status, createdAt])
+  @@map("demo_scenarios")
+}
+
+model DemoRecap {
+  id                       String          @id @default(cuid())
+  reservationId            String          @unique
+  salesOwnerOrganizationId String
+  painPoint                String
+  whatWasShown             Json
+  workflowGaps             Json
+  recommendedNextStep      String
+  estimatedValueAreas      Json
+  productStatusSnapshot    Json
+  priceOption              Json
+  callToAction             String
+  status                   String          @default("draft")
+  reviewStatus             String          @default("human_review_required")
+  draftedBy                String          @default("deterministic_fallback")
+  reviewedBy               String?
+  reviewedAt               DateTime?
+  reviewNotes              String?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  reservation              DemoReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  salesOwnerOrganization   Organization    @relation("SalesRecapOwner", fields: [salesOwnerOrganizationId], references: [id], onDelete: Restrict)
+
+  @@index([salesOwnerOrganizationId, reviewStatus, createdAt])
+  @@map("demo_recaps")
+}
+
+model DemoReservationEvent {
+  id                       String          @id @default(cuid())
+  salesOwnerOrganizationId String
+  reservationId            String
+  actorId                  String?
+  actorType                String
+  eventType                String
+  fromStatus               String?
+  toStatus                 String?
+  note                     String?
+  metadata                 Json?
+  createdAt                DateTime        @default(now())
+  salesOwnerOrganization   Organization    @relation("SalesEventOwner", fields: [salesOwnerOrganizationId], references: [id], onDelete: Restrict)
+  reservation              DemoReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([salesOwnerOrganizationId, createdAt])
+  @@index([reservationId, createdAt])
+  @@map("demo_reservation_events")
 }
 
 model LuxeService {
