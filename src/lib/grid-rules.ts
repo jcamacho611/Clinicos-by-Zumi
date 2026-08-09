@@ -30,8 +30,10 @@ export const gridProviderTypes = [
 
 export const gridVerificationStatuses = ["draft", "submitted", "needs_review", "verified", "rejected", "expired", "suspended"] as const;
 export const gridExperienceLevels = ["Entry", "Intermediate", "Experienced", "OG / Master Provider"] as const;
-export const gridRequestStatuses = ["draft", "requested", "provider_review", "location_review", "credential_check", "pending_deposit", "confirmed", "completed", "cancelled", "declined", "escalated"] as const;
+export const gridRequestStatuses = ["draft", "requested", "accepted", "countered", "provider_review", "location_review", "credential_check", "pending_deposit", "confirmed", "completed", "cancelled", "declined", "escalated"] as const;
 export const gridLocationTypes = ["clinic_location", "rental_room", "chair_rental", "mobile", "at_home", "virtual"] as const;
+export const gridContractorProviderTypes = ["Nurse Injector", "Registered Nurse", "Nurse Practitioner", "Physician Assistant"] as const;
+export const gridPayoutStatuses = ["estimated", "approved", "paid", "hold", "void"] as const;
 
 const optionalUrl = z.union([z.literal(""), z.string().url()]).optional().nullable();
 const optionalDateTime = z.string().datetime({ offset: true }).optional().nullable();
@@ -67,6 +69,79 @@ export const gridProviderProfileSchema = z.object({
 export const gridProviderTransitionSchema = z.object({
   targetStatus: z.enum(gridVerificationStatuses),
   note: z.string().trim().min(12).max(800),
+});
+
+export const gridContractorEnrollmentSchema = z.object({
+  organizationSlug: z.string().trim().min(2).max(80).default("luxe-medi"),
+  fullName: z.string().trim().min(2).max(160),
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  phone: z.string().trim().min(7).max(40),
+  password: z.string().min(12).max(256)
+    .regex(/[a-z]/, "Password must include a lowercase letter.")
+    .regex(/[A-Z]/, "Password must include an uppercase letter.")
+    .regex(/[0-9]/, "Password must include a number.")
+    .regex(/[^A-Za-z0-9]/, "Password must include a symbol."),
+  providerType: z.enum(gridContractorProviderTypes),
+  credential: z.enum(["RN", "NP", "PA"]),
+  specialty: z.string().trim().min(2).max(120).default("Aesthetic services"),
+  licenseType: z.string().trim().min(2).max(80).default("STATE_LICENSE"),
+  licenseNumber: z.string().trim().min(2).max(120),
+  licenseState: z.string().trim().min(2).max(40),
+  licenseExpiration: z.string().datetime({ offset: true }),
+  licenseEvidenceReference: z.string().trim().min(2).max(240),
+  malpracticeCarrier: z.string().trim().min(2).max(160),
+  malpracticePolicyNumber: z.string().trim().min(2).max(120),
+  malpracticeExpiration: z.string().datetime({ offset: true }),
+  malpracticeCoverageAmountCents: z.number().int().min(0).max(1_000_000_000),
+  malpracticeEvidenceReference: z.string().trim().min(2).max(240),
+  certifications: z.array(z.string().trim().min(1).max(120)).max(30).default([]),
+  servicesOffered: z.array(z.string().trim().min(1).max(120)).min(1).max(40),
+  experienceLevel: z.enum(gridExperienceLevels),
+  bio: z.string().trim().min(20).max(1200),
+  serviceArea: z.string().trim().min(2).max(160),
+  travelRadiusMiles: z.number().int().min(0).max(500),
+  mobileServiceAllowed: z.boolean().default(false),
+  chairRentalAllowed: z.boolean().default(false),
+  partnerLocationAllowed: z.boolean().default(false),
+  atHomeAllowed: z.boolean().default(false),
+  onCallNow: z.boolean().default(false),
+  availability: z.array(z.object({
+    dayOfWeek: z.number().int().min(0).max(6),
+    startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    locationType: z.enum(gridLocationTypes),
+  }).refine((value) => value.endTime > value.startTime, { path: ["endTime"], message: "End time must be after start time." })).min(1).max(14),
+}).refine((value) => value.mobileServiceAllowed || value.chairRentalAllowed || value.partnerLocationAllowed || value.atHomeAllowed, {
+  path: ["mobileServiceAllowed"], message: "Select at least one work setting.",
+});
+
+export const gridContractorPreferencesSchema = z.object({
+  serviceArea: z.string().trim().min(2).max(160),
+  travelRadiusMiles: z.number().int().min(0).max(500),
+  mobileServiceAllowed: z.boolean(),
+  chairRentalAllowed: z.boolean(),
+  partnerLocationAllowed: z.boolean(),
+  atHomeAllowed: z.boolean(),
+  onCallNow: z.boolean(),
+}).refine((value) => value.mobileServiceAllowed || value.chairRentalAllowed || value.partnerLocationAllowed || value.atHomeAllowed, {
+  path: ["mobileServiceAllowed"], message: "Select at least one work setting.",
+});
+
+export const gridCredentialReviewSchema = z.object({
+  decision: z.enum(["verified", "rejected"]),
+  note: z.string().trim().min(12).max(800),
+  verificationSource: z.string().trim().min(4).max(240),
+});
+
+export const gridMalpracticeReviewSchema = z.object({
+  decision: z.enum(["verified", "rejected"]),
+  note: z.string().trim().min(12).max(800),
+});
+
+export const gridPayoutTransitionSchema = z.object({
+  targetStatus: z.enum(gridPayoutStatuses),
+  note: z.string().trim().min(8).max(800),
+  externalReference: z.string().trim().min(2).max(160).optional().nullable(),
 });
 
 export const gridServiceListingSchema = z.object({
@@ -134,6 +209,7 @@ export const gridRequestTransitionSchema = z.object({
   note: z.string().trim().min(12).max(1000),
   consentStatus: z.enum(["not_required", "pending", "confirmed", "blocked"]).optional(),
   depositStatus: z.enum(["not_required", "not_started", "manual_link_required", "pending", "recorded", "waived", "refunded"]).optional(),
+  counterStartAt: optionalDateTime,
 });
 
 const providerTransitions: Record<(typeof gridVerificationStatuses)[number], readonly (typeof gridVerificationStatuses)[number][]> = {
@@ -148,7 +224,9 @@ const providerTransitions: Record<(typeof gridVerificationStatuses)[number], rea
 
 const requestTransitions: Record<(typeof gridRequestStatuses)[number], readonly (typeof gridRequestStatuses)[number][]> = {
   draft: ["requested", "cancelled"],
-  requested: ["provider_review", "declined", "cancelled", "escalated"],
+  requested: ["accepted", "countered", "provider_review", "declined", "cancelled", "escalated"],
+  accepted: ["location_review", "declined", "cancelled", "escalated"],
+  countered: ["accepted", "declined", "cancelled", "escalated"],
   provider_review: ["location_review", "declined", "cancelled", "escalated"],
   location_review: ["credential_check", "declined", "cancelled", "escalated"],
   credential_check: ["pending_deposit", "confirmed", "declined", "cancelled", "escalated"],
@@ -179,9 +257,34 @@ export function credentialIsCurrent(status: string, expiresAt: Date | null, now 
 export function providerReadyForGrid(input: {
   verificationStatus: string;
   malpracticeExpiration: Date | null;
+  malpracticeVerificationStatus: string;
   credentials: { verificationStatus: string; expiresAt: Date | null }[];
 }, now = new Date()) {
   return input.verificationStatus === "verified"
+    && input.malpracticeVerificationStatus === "verified"
     && Boolean(input.malpracticeExpiration && input.malpracticeExpiration > now)
     && input.credentials.some((credential) => credentialIsCurrent(credential.verificationStatus, credential.expiresAt, now));
+}
+
+export function buildZumiGridGuidance(input: {
+  verificationStatus: string;
+  malpracticeVerificationStatus: string;
+  currentCredentials: number;
+  availabilitySlots: number;
+  openRequests: number;
+  estimatedPayoutCents: number;
+}) {
+  const nextSteps: string[] = [];
+  if (input.currentCredentials === 0) nextSteps.push("Wait for the credentialing team to verify your current license evidence.");
+  if (input.malpracticeVerificationStatus !== "verified") nextSteps.push("Wait for human review of your malpractice policy and evidence.");
+  if (input.availabilitySlots === 0) nextSteps.push("Add at least one availability window and work setting.");
+  if (input.verificationStatus === "verified" && input.openRequests === 0) nextSteps.push("Keep availability current so clinics can send an eligible request.");
+  if (input.openRequests > 0) nextSteps.push(`Review ${input.openRequests} open request${input.openRequests === 1 ? "" : "s"} and record an accept, counter, or decline decision.`);
+  if (input.estimatedPayoutCents > 0) nextSteps.push("Review payout estimates; payment is recorded manually only after administrator confirmation.");
+  if (!nextSteps.length) nextSteps.push("Your GRID setup is current. Keep credentials and availability up to date.");
+  return {
+    title: input.verificationStatus === "verified" ? "You are approved for governed GRID requests" : "Your contractor application is in human review",
+    nextSteps,
+    guardrail: "Zumi provides administrative guidance only. It does not verify credentials, determine clinical scope, or guarantee work or payment.",
+  };
 }

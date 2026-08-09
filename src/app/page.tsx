@@ -14,7 +14,7 @@ export default function LandingPage() {
           <div><p className="text-sm font-extrabold tracking-[-.03em] text-slate-950">ClinicOS</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">by Zumi</p></div>
         </Link>
         <nav className="ml-auto hidden items-center gap-7 text-xs font-bold text-slate-600 md:flex">
-          <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
+          <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><Link href="/grid/join">Join GRID</Link><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
         </nav>
         <Link className="ml-4 hidden text-xs font-extrabold text-slate-700 hover:text-slate-950 sm:block" href="/login">Sign in</Link>
         <Button asChild className="ml-4" size="sm"><Link href="/start">Start free <ArrowRight className="size-4" /></Link></Button>
@@ -29,6 +29,7 @@ export default function LandingPage() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary"><Link href="/start">Create your workspace <ArrowRight className="size-4" /></Link></Button>
               <Button asChild size="lg" variant="secondary"><Link href="/login"><LogIn className="size-4" /> Sign in</Link></Button>
+              <Button asChild size="lg" variant="secondary"><Link href="/grid/join">Join GRID</Link></Button>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-slate-500">
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Synthetic-data workspace</span>

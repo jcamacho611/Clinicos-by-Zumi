@@ -27,7 +27,13 @@ describe("ClinicOS authorization contract", () => {
     expect(can("viewer", "billing", "create")).toBe(false);
     expect(can("quality", "quality", "manage")).toBe(true);
     expect(can("case_manager", "cases", "manage")).toBe(true);
-    expect(clinicResources).toEqual(expect.arrayContaining(["cases", "quality", "insurance", "telemedicine", "portal", "integrations", "ai"]));
+    expect(can("contractor", "grid", "read")).toBe(true);
+    expect(can("contractor", "grid", "update")).toBe(true);
+    expect(can("contractor", "credentialing", "read")).toBe(false);
+    expect(can("contractor", "patients", "read")).toBe(false);
+    expect(canAccessWorkspace("contractor", "grid")).toBe(true);
+    expect(canAccessWorkspace("contractor", "dashboard")).toBe(false);
+    expect(clinicResources).toEqual(expect.arrayContaining(["grid", "cases", "quality", "insurance", "telemedicine", "portal", "integrations", "ai"]));
   });
 
   it("requires every staff API method to declare an authorization gate", () => {

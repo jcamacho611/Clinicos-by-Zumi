@@ -6,7 +6,7 @@ import { listGridWorkspace } from "@/lib/repositories/grid-repository";
 
 export async function GridRoute({ view }: { view: GridView }) {
   const session = await requireClinicSession();
-  if (!can(session.role, "network", "read") && !can(session.role, "credentialing", "read")) return notFound();
+  if (!can(session.role, "grid", "read") && !can(session.role, "network", "read") && !can(session.role, "credentialing", "read")) return notFound();
   if (view === "admin" && !can(session.role, "network", "manage") && !can(session.role, "credentialing", "manage")) return notFound();
   return <GridWorkspace view={view} workspace={await listGridWorkspace(session)} />;
 }
