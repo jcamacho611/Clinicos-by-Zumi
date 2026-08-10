@@ -1,4 +1,23 @@
-import {
+import { demoOffers, type DemoOfferKey } from "@/lib/sales-demo-rules";
+
+/**
+ * Zumi command experience.
+ *
+ * The public intake stops being a form and becomes a guided operating analysis:
+ * Zumi asks one focused question at a time, converts each answer into a structured
+ * clinic signal, and builds a live operating map the owner can read.
+ *
+ * Pure module. No database, no network, no AI provider. The signal derivation is
+ * deterministic — it is an organised reflection of what the operator told us, not a
+ * prediction — which is what lets the interface describe it honestly.
+ */
+
+/**
+ * Copy law lives in the design system so every surface shares one definition.
+ * Re-exported here because the sales flow was its first consumer and these are the
+ * import paths its call sites already use.
+ */
+export {
   APPROVED_PUBLIC_COPY,
   BANNED_PUBLIC_COPY,
   CLAIM_ONLY_TERMS,
@@ -9,30 +28,29 @@ import {
   NO_PHI_NOTICE,
 } from "@/lib/design/command-system";
 
-export {
-  APPROVED_PUBLIC_COPY,
-  BANNED_PUBLIC_COPY,
-  CLAIM_ONLY_TERMS,
-  findBannedPublicCopy,
-  findCopyViolations,
-  findUnqualifiedClaims,
-  HUMAN_REVIEW_NOTICE,
-  NO_PHI_NOTICE,
-};
+// ---------------------------------------------------------------------------
+// Mission phases
+// ---------------------------------------------------------------------------
 
 export const missionPhases = [
   { key: "brief", label: "Mission Brief" },
   { key: "interview", label: "Zumi Interview" },
   { key: "map", label: "Operating Map" },
-  { key: "signal", label: "Qualification Signal" },
-  { key: "offer", label: "Paid Audit" },
-  { key: "review", label: "Specialist Review" },
+  { key: "signal", label: "Signal Analysis" },
+  { key: "offer", label: "Engagement" },
+  { key: "submit", label: "Private Review" },
+  { key: "review", label: "Human Review" },
 ] as const;
 
 export type MissionPhaseKey = (typeof missionPhases)[number]["key"];
 
+// ---------------------------------------------------------------------------
+// The interview
+// ---------------------------------------------------------------------------
+
 export type GuidedQuestion = {
   key: string;
+  /** Asked in Zumi's voice, one at a time. */
   prompt: string;
   helper: string;
   multiSelect: boolean;
@@ -43,140 +61,136 @@ export const guidedQuestions: readonly GuidedQuestion[] = [
   {
     key: "clinic_type",
     prompt: "What kind of clinic are you operating?",
-    helper: "This sets which operating surfaces matter first.",
+    helper: "This sets which operating modules matter first.",
     multiSelect: false,
     options: [
-      { value: "primary_care", label: "Primary care", signal: "Longitudinal follow-up" },
-      { value: "specialty", label: "Specialty", signal: "Referral coordination" },
-      { value: "med_spa", label: "Primary care + aesthetics / weight loss", signal: "Mixed insurance + cash-pay operations" },
-      { value: "urgent_care", label: "Urgent care", signal: "Throughput control" },
-      { value: "multi_site", label: "Multi-location group", signal: "Cross-site accountability" },
-    ],
-  },
-  {
-    key: "provider_scale",
-    prompt: "How many providers work across the practice?",
-    helper: "Provider scale sets the starting Operational Audit fee and helps us estimate operating complexity.",
-    multiSelect: false,
-    options: [
-      { value: "1", label: "1 provider", signal: "Solo / micro practice" },
-      { value: "2_5", label: "2–5 providers", signal: "Core founding-clinic scale" },
-      { value: "6_15", label: "6–15 providers", signal: "Advanced operating complexity" },
-      { value: "16_30", label: "16–30 providers", signal: "Multi-provider operating group" },
-      { value: "30_plus", label: "30+ providers", signal: "Custom network review" },
-    ],
-  },
-  {
-    key: "location_scale",
-    prompt: "How many locations are you coordinating?",
-    helper: "Multiple sites increase handoffs, ownership, staffing and visibility requirements.",
-    multiSelect: false,
-    options: [
-      { value: "1", label: "1 location", signal: "Single-site operations" },
-      { value: "2", label: "2 locations", signal: "Cross-site coordination" },
-      { value: "3_5", label: "3–5 locations", signal: "Multi-location command need" },
-      { value: "6_plus", label: "6+ locations", signal: "Network-scale operations" },
+      { value: "primary_care", label: "Primary care", signal: "Longitudinal follow-up and results control" },
+      { value: "specialty", label: "Specialty", signal: "Referral intake and consultation return" },
+      { value: "med_spa", label: "Med spa / aesthetics", signal: "Lead capture and package revenue" },
+      { value: "urgent_care", label: "Urgent care", signal: "Throughput and disposition tracking" },
+      { value: "multi_site", label: "Multi-location group", signal: "Cross-site capacity and accountability" },
     ],
   },
   {
     key: "bottleneck",
     prompt: "Where does work get stuck most often?",
-    helper: "Choose everything that genuinely stalls. Zumi maps each answer to an operating surface.",
+    helper: "Choose everything that genuinely stalls. Zumi maps each one to an operating surface.",
     multiSelect: true,
     options: [
       { value: "follow_ups", label: "Follow-ups", signal: "Follow-up Control" },
       { value: "paperwork", label: "Paperwork", signal: "Paperwork Readiness" },
       { value: "missed_calls", label: "Missed calls", signal: "Patient Access" },
       { value: "no_shows", label: "No-shows", signal: "Schedule Integrity" },
-      { value: "billing_readiness", label: "Billing / claim readiness", signal: "Revenue Readiness" },
-      { value: "results", label: "Results review", signal: "Results Tracking" },
-      { value: "referrals", label: "Referrals", signal: "Referral Tracking" },
+      { value: "billing_readiness", label: "Billing readiness", signal: "Billing Readiness" },
+      { value: "med_spa_leads", label: "Med spa leads", signal: "Med Spa Revenue" },
+      { value: "results", label: "Results review", signal: "Referral / Results Tracking" },
+      { value: "referrals", label: "Referrals", signal: "Referral / Results Tracking" },
       { value: "staff_accountability", label: "Staff accountability", signal: "Staff Ownership" },
-      { value: "provider_coordination", label: "Provider coordination", signal: "Provider Capacity" },
+      { value: "provider_coordination", label: "Provider coordination", signal: "Provider Availability" },
     ],
   },
   {
     key: "current_system",
     prompt: "What are you running the clinic on today?",
-    helper: "Klinikos is designed to replace unnecessary bills and connect relationships that still need to remain external.",
+    helper: "Integration readiness depends on what already exists.",
     multiSelect: false,
     options: [
-      { value: "many_systems", label: "Several disconnected systems", signal: "High fragmentation opportunity" },
-      { value: "legacy_ehr", label: "Legacy EHR + add-ons", signal: "Integration and consolidation review" },
-      { value: "modern_ehr", label: "Modern EHR + separate tools", signal: "Operating-layer opportunity" },
-      { value: "paper_mixed", label: "Paper / spreadsheets / mixed tools", signal: "Greenfield workflow opportunity" },
+      { value: "legacy_ehr", label: "A legacy EHR", signal: "Migration and interface review required" },
+      { value: "modern_ehr", label: "A modern EHR", signal: "Adapter review required" },
+      { value: "paper_mixed", label: "Paper and spreadsheets", signal: "Greenfield operating build" },
+      { value: "none", label: "Nothing consistent", signal: "Greenfield operating build" },
     ],
   },
   {
-    key: "software_spend",
-    prompt: "About how much do the clinic's software and operating subscriptions cost each month?",
-    helper: "A range is enough. We treat this as clinic-reported until the specialist audit verifies it.",
-    multiSelect: false,
+    key: "manual_tracking",
+    prompt: "What does your staff still track by hand?",
+    helper: "Manual tracking is where work quietly disappears.",
+    multiSelect: true,
     options: [
-      { value: "unknown", label: "I need to add it up", signal: "Cost stack not yet measured" },
-      { value: "under_2k", label: "Under $2,000", signal: "Lower subscription burden" },
-      { value: "2k_5k", label: "$2,000–$5,000", signal: "Meaningful cost stack" },
-      { value: "5k_10k", label: "$5,000–$10,000", signal: "High cost-stack opportunity" },
-      { value: "10k_plus", label: "$10,000+", signal: "Major cost-stack opportunity" },
+      { value: "sticky_notes", label: "Notes and whiteboards", signal: "No durable task ownership" },
+      { value: "spreadsheets", label: "Spreadsheets", signal: "Parallel record risk" },
+      { value: "inbox", label: "A shared inbox", signal: "Unrouted inbound work" },
+      { value: "memory", label: "Staff memory", signal: "Single-point-of-failure ownership" },
+      { value: "nothing", label: "Nothing manual", signal: "Existing process discipline" },
     ],
   },
   {
     key: "revenue_belief",
-    prompt: "Where do you believe money or capacity is being lost?",
-    helper: "Zumi records this as a category to investigate. It is not treated as a verified finding yet.",
+    prompt: "Where do you believe money is being lost?",
+    helper: "Zumi records this as a category to review, not as a finding.",
     multiSelect: true,
     options: [
-      { value: "unbilled", label: "Work delivered but not billed cleanly", signal: "Claim readiness review" },
-      { value: "denials", label: "Denials / unresolved A/R", signal: "Revenue follow-through review" },
-      { value: "no_shows_rev", label: "No-shows / unused capacity", signal: "Schedule recovery review" },
-      { value: "lost_leads", label: "Calls or leads that never converted", signal: "Lead recovery review" },
-      { value: "referral_loss", label: "Referrals that never close", signal: "Referral leakage review" },
-      { value: "unsure", label: "Not sure yet", signal: "Requires specialist audit" },
+      { value: "unbilled", label: "Work delivered but never billed", signal: "Claim readiness gap" },
+      { value: "denials", label: "Denials never reworked", signal: "Denial recovery gap" },
+      { value: "no_shows_rev", label: "Empty chairs and no-shows", signal: "Schedule utilisation gap" },
+      { value: "lost_leads", label: "Leads that never converted", signal: "Lead follow-up gap" },
+      { value: "unsure", label: "Not sure yet", signal: "Requires operating review" },
     ],
   },
   {
     key: "first_control",
-    prompt: "What would make tomorrow feel easier first?",
-    helper: "This becomes the first operating surface we recommend reviewing.",
+    prompt: "What would you want Klinikos to take control of first?",
+    helper: "This becomes the recommended starting module.",
     multiSelect: false,
     options: [
-      { value: "follow_ups", label: "Stop losing follow-ups", signal: "Task and escalation layer" },
-      { value: "front_desk", label: "Reduce front-desk strain", signal: "Access and scheduling layer" },
-      { value: "billing", label: "Get cleaner revenue follow-through", signal: "Revenue readiness layer" },
-      { value: "costs", label: "Cut unnecessary subscriptions", signal: "Cost consolidation layer" },
-      { value: "coordination", label: "Control referrals and results", signal: "Care coordination layer" },
+      { value: "follow_ups", label: "Follow-up control", signal: "Task and escalation layer" },
+      { value: "front_desk", label: "Front desk and access", signal: "Access and scheduling layer" },
+      { value: "billing", label: "Billing readiness", signal: "Claim readiness layer" },
+      { value: "med_spa", label: "Med spa revenue", signal: "Luxe Medi layer" },
+      { value: "coordination", label: "Referrals and results", signal: "Care coordination layer" },
     ],
   },
 ];
 
 export type InterviewAnswers = Record<string, string[]>;
-export type OperatingSignalStatus = "attention" | "review" | "stable";
-export type OperatingSignal = { key: string; label: string; status: OperatingSignalStatus; detected: string; whyItMatters: string; humanReview: string };
 
-const operatingMapSurfaces = [
+// ---------------------------------------------------------------------------
+// Operating map
+// ---------------------------------------------------------------------------
+
+export const operatingMapSurfaces = [
   { key: "follow_up_control", label: "Follow-up Control", triggers: ["follow_ups", "results"] },
   { key: "paperwork_readiness", label: "Paperwork Readiness", triggers: ["paperwork"] },
-  { key: "staff_ownership", label: "Staff Ownership", triggers: ["staff_accountability"] },
-  { key: "revenue_readiness", label: "Revenue Readiness", triggers: ["billing_readiness", "unbilled", "denials"] },
-  { key: "referral_results", label: "Referral / Results", triggers: ["referrals", "results", "referral_loss"] },
-  { key: "patient_access", label: "Patient Access", triggers: ["missed_calls", "no_shows", "no_shows_rev", "lost_leads"] },
-  { key: "provider_capacity", label: "Provider Capacity", triggers: ["provider_coordination", "3_5", "6_plus"] },
-  { key: "cost_control", label: "Cost Control", triggers: ["many_systems", "legacy_ehr", "2k_5k", "5k_10k", "10k_plus", "costs"] },
+  { key: "staff_ownership", label: "Staff Ownership", triggers: ["staff_accountability", "sticky_notes", "memory"] },
+  { key: "billing_readiness", label: "Billing Readiness", triggers: ["billing_readiness", "unbilled", "denials"] },
+  { key: "med_spa_revenue", label: "Med Spa Revenue", triggers: ["med_spa_leads", "lost_leads", "med_spa"] },
+  { key: "referral_results", label: "Referral / Results Tracking", triggers: ["referrals", "results"] },
+  { key: "patient_access", label: "Patient Access", triggers: ["missed_calls", "no_shows", "no_shows_rev"] },
+  { key: "provider_availability", label: "Provider Availability", triggers: ["provider_coordination"] },
 ] as const;
 
-const whyItMatters: Record<string, string> = {
-  follow_up_control: "Work that leaves the room without an owner can quietly disappear after the visit.",
-  paperwork_readiness: "Incomplete paperwork can block care operations, documentation and revenue readiness.",
-  staff_ownership: "Work held in memory is difficult to reassign, escalate or audit.",
-  revenue_readiness: "Revenue problems often begin before a claim is sent, when required work is incomplete or unowned.",
-  referral_results: "Unclosed referrals and unreviewed results create operational and care-coordination risk.",
-  patient_access: "Missed access can become lost appointments, unused capacity and frustrated patients.",
-  provider_capacity: "Multi-provider and multi-location work needs visible ownership and capacity.",
-  cost_control: "Disconnected subscriptions can add cost while still leaving staff to bridge the gaps manually.",
+export type OperatingSignalStatus = "attention" | "review" | "stable";
+
+export type OperatingSignal = {
+  key: string;
+  label: string;
+  status: OperatingSignalStatus;
+  detected: string;
+  whyItMatters: string;
+  humanReview: string;
 };
 
+const whyItMatters: Record<string, string> = {
+  follow_up_control: "Work that leaves the room without an owner is the most common place a clinic loses continuity.",
+  paperwork_readiness: "Incomplete paperwork blocks the visit, the note, and the claim behind it.",
+  staff_ownership: "Tasks held in memory or on paper cannot be reassigned, escalated, or audited.",
+  billing_readiness: "Revenue is decided before the claim goes out, by whether the encounter was ready.",
+  med_spa_revenue: "Aesthetic demand is time-sensitive; an unworked lead is usually a lost one.",
+  referral_results: "An unclosed referral or unreviewed result is both a care risk and an operational gap.",
+  patient_access: "Access failures are invisible in most systems because the patient simply never appears.",
+  provider_availability: "Coordination gaps show up as idle capacity in one place and backlog in another.",
+};
+
+/**
+ * Derive the operating map from the interview answers.
+ *
+ * Deliberately deterministic. Each surface is marked for attention only because the
+ * operator selected something that maps to it, which is why the copy says
+ * "you reported" rather than "we detected".
+ */
 export function deriveOperatingMap(answers: InterviewAnswers): OperatingSignal[] {
   const selected = new Set(Object.values(answers).flat());
+
   return operatingMapSurfaces.map((surface) => {
     const hits = surface.triggers.filter((trigger) => selected.has(trigger));
     const status: OperatingSignalStatus = hits.length >= 2 ? "attention" : hits.length === 1 ? "review" : "stable";
@@ -184,9 +198,13 @@ export function deriveOperatingMap(answers: InterviewAnswers): OperatingSignal[]
       key: surface.key,
       label: surface.label,
       status,
-      detected: hits.length ? `You reported ${hits.length} related pressure point${hits.length === 1 ? "" : "s"} here.` : "Nothing reported here yet.",
+      detected: hits.length
+        ? `You reported ${hits.length} related pressure point${hits.length === 1 ? "" : "s"} here.`
+        : "Nothing reported here yet.",
       whyItMatters: whyItMatters[surface.key] ?? "",
-      humanReview: status === "stable" ? "No review requested." : "The paid Operational Audit verifies this with your clinic before any implementation recommendation.",
+      humanReview: status === "stable"
+        ? "No review requested."
+        : "A Klinikos reviewer confirms this with you before any production activation.",
     };
   });
 }
@@ -197,41 +215,128 @@ export type OperatingSignalSummary = {
   accountabilityGap: string;
   recommendedModule: string;
   nextBestAction: string;
+  /** Rendered verbatim so the hedging cannot be edited away by a caller. */
   narrative: string;
 };
 
 const moduleForFirstControl: Record<string, string> = {
   follow_ups: "Task & Escalation Command",
   front_desk: "Front Desk & Access",
-  billing: "Revenue Readiness",
-  costs: "Cost & Connector Review",
+  billing: "Claim Readiness",
+  med_spa: "Luxe Medi Studio",
   coordination: "Referral Relay & Results",
 };
 
+/**
+ * Summarise the analysis.
+ *
+ * Every claim is hedged on purpose — "appears", "may", "should be reviewed". This is
+ * an organised restatement of what the operator reported, and the language must not
+ * imply Klinikos measured their clinic.
+ */
 export function deriveSignalSummary(answers: InterviewAnswers): OperatingSignalSummary {
   const map = deriveOperatingMap(answers);
-  const weight = (status: OperatingSignalStatus) => status === "attention" ? 2 : status === "review" ? 1 : 0;
-  const ranked = [...map].sort((a, b) => weight(b.status) - weight(a.status));
+  const ranked = [...map].sort((a, b) => {
+    const weight = (status: OperatingSignalStatus) => (status === "attention" ? 2 : status === "review" ? 1 : 0);
+    return weight(b.status) - weight(a.status);
+  });
+
   const top = ranked[0]?.status === "stable" ? null : ranked[0];
   const revenue = answers.revenue_belief ?? [];
+  const manual = answers.manual_tracking ?? [];
   const firstControl = answers.first_control?.[0] ?? "";
-  const leakageCategory = revenue.includes("unbilled") ? "Work that may not be reaching a billable-ready state" : revenue.includes("denials") ? "Denials or A/R that may need stronger follow-through" : revenue.includes("lost_leads") ? "Inbound demand that may not be followed through" : revenue.includes("no_shows_rev") ? "Schedule capacity that may be going unused" : revenue.includes("referral_loss") ? "Referral activity that may not be closing" : "Not yet identified — specialist audit required";
-  const accountabilityGap = (answers.bottleneck ?? []).includes("staff_accountability") ? "Task ownership appears to be an operating concern" : "No explicit staff-ownership issue reported yet";
+
+  const leakageCategory = revenue.includes("unbilled")
+    ? "Encounters that may not have reached a billable state"
+    : revenue.includes("denials")
+      ? "Denials that may never have been reworked"
+      : revenue.includes("lost_leads")
+        ? "Inbound demand that may not have been followed up"
+        : revenue.includes("no_shows_rev")
+          ? "Schedule utilisation that may be below capacity"
+          : "Not yet identified — requires operating review";
+
+  const accountabilityGap = manual.includes("memory") || manual.includes("sticky_notes")
+    ? "Task ownership appears to rely on individual staff memory rather than a durable queue"
+    : manual.includes("spreadsheets") || manual.includes("inbox")
+      ? "Work appears to live in parallel tools outside the clinic record"
+      : "No significant manual-tracking gap reported";
+
   return {
     topBottleneck: top?.label ?? "No dominant bottleneck reported",
     leakageCategory,
     accountabilityGap,
-    recommendedModule: moduleForFirstControl[firstControl] ?? "To be determined during the audit",
-    nextBestAction: "If the clinic qualifies, secure the paid Klinikos Operational Audit so AI analysis and a specialist can verify the operating case.",
-    narrative: top ? `Based on what you reported, ${top.label.toLowerCase()} appears to be a meaningful area to investigate. This is a preliminary operating signal from your answers, not a measured finding or guaranteed ROI. The paid audit verifies the actual cost, workflow and revenue case.` : "No dominant operating pressure has been established yet. A specialist should confirm whether a paid audit is justified before Klinikos recommends implementation.",
+    recommendedModule: moduleForFirstControl[firstControl] ?? "To be determined during review",
+    nextBestAction: "Request a Private Workflow Review so a human can confirm this map against your actual operations.",
+    narrative: top
+      ? `Based on what you reported, your clinic appears to lose the most control around ${top.label.toLowerCase()}. ${leakageCategory} should be reviewed before any production workflow is activated. This is an estimated category derived from your answers, not a measurement of your clinic, and it requires human confirmation.`
+      : "You have not yet reported a dominant operational bottleneck. A Private Workflow Review would establish a baseline before any production workflow is activated.",
   };
 }
 
+// ---------------------------------------------------------------------------
+// Engagement options
+// ---------------------------------------------------------------------------
+
+export type EngagementOffer = {
+  key: DemoOfferKey;
+  name: string;
+  shortPrice: string;
+  bestFor: string;
+  whatHappens: string;
+  cta: string;
+  creditForward: string;
+};
+
+/** Offer copy layered over the existing server-controlled pricing. */
+export const engagementOffers: readonly EngagementOffer[] = [
+  {
+    key: "private_workflow_demo",
+    name: "Private Workflow Review",
+    shortPrice: demoOffers.private_workflow_demo.shortPrice,
+    bestFor: "Clinics that want Klinikos to map where work is getting lost before committing to implementation.",
+    whatHappens: "Zumi prepares the workflow map, then a human reviews the clinic's operational fit.",
+    cta: "Request Private Workflow Review",
+    creditForward: demoOffers.private_workflow_demo.creditForward,
+  },
+  {
+    key: "founding_clinic_evaluation",
+    name: "Founding Clinic Evaluation",
+    shortPrice: demoOffers.founding_clinic_evaluation.shortPrice,
+    bestFor: "Operators seriously considering Klinikos as their clinic command layer.",
+    whatHappens: "Klinikos reviews workflow needs, staff roles, current systems, implementation scope, and launch readiness.",
+    cta: "Apply for Founding Evaluation",
+    creditForward: demoOffers.founding_clinic_evaluation.creditForward,
+  },
+  {
+    key: "founding_clinic_program",
+    name: "Founding Clinic Implementation",
+    shortPrice: demoOffers.founding_clinic_program.shortPrice,
+    bestFor: "Clinics ready to become early founding partners.",
+    whatHappens: "Founder-guided setup, workflow configuration, role mapping, initial operating system buildout, and priority implementation planning.",
+    cta: "Apply for Founding Clinic Seat",
+    creditForward: demoOffers.founding_clinic_program.creditForward,
+  },
+];
+
+/** Interview completeness, used to gate the map and the summary. */
 export function interviewProgress(answers: InterviewAnswers) {
-  const answered = guidedQuestions.filter((question) => (answers[question.key] ?? []).length > 0).length;
+  const answered = guidedQuestions.filter((question) => (answers[question.key]?.length ?? 0) > 0).length;
   return { answered, total: guidedQuestions.length, complete: answered === guidedQuestions.length };
 }
 
+// ---------------------------------------------------------------------------
+// Audit pricing and preliminary qualification
+// ---------------------------------------------------------------------------
+
+/**
+ * Price of the paid Operational Audit, derived from reported provider scale.
+ *
+ * Server-derivable from the answers rather than carried in the request. A buyer
+ * cannot name their own price, and an unanswered scale question falls to the lowest
+ * tier rather than the highest — the failure mode is undercharging, not surprising
+ * someone with a bill they did not agree to.
+ */
 export function auditPriceForAnswers(answers: InterviewAnswers) {
   switch (answers.provider_scale?.[0]) {
     case "1": return 750;
@@ -243,23 +348,38 @@ export function auditPriceForAnswers(answers: InterviewAnswers) {
   }
 }
 
+/**
+ * Preliminary audit-fit score, 0–100.
+ *
+ * Scored entirely from what the clinic reported about itself. It is a prioritisation
+ * signal for a human, never a qualification decision — which is why the label below
+ * never says "qualified".
+ */
 export function preliminaryAuditScore(answers: InterviewAnswers) {
   const provider = answers.provider_scale?.[0];
   const locations = answers.location_scale?.[0];
   const spend = answers.software_spend?.[0];
   const bottlenecks = answers.bottleneck ?? [];
   const revenue = answers.revenue_belief ?? [];
+
   let score = 0;
   score += provider === "30_plus" || provider === "16_30" ? 20 : provider === "6_15" ? 18 : provider === "2_5" ? 15 : 8;
   score += locations === "6_plus" || locations === "3_5" ? 15 : locations === "2" ? 10 : 4;
   score += Math.min(20, bottlenecks.length * 4);
   score += spend === "10k_plus" ? 15 : spend === "5k_10k" ? 13 : spend === "2k_5k" ? 9 : spend === "under_2k" ? 4 : 2;
+  // "Unsure" is not evidence of revenue leakage and does not score.
   score += Math.min(15, revenue.filter((item) => item !== "unsure").length * 5);
   score += answers.current_system?.[0] === "many_systems" ? 10 : 6;
   score += answers.first_control?.length ? 5 : 0;
   return Math.min(100, score);
 }
 
+/**
+ * The label shown for a score.
+ *
+ * Deliberately never says "qualified" or "approved". A person decides that, and the
+ * copy law forbids implying an automatic approval.
+ */
 export function preliminaryQualificationLabel(score: number) {
   return score >= 70 ? "STRONG AUDIT CANDIDATE" : score >= 45 ? "SPECIALIST REVIEW RECOMMENDED" : "MORE QUALIFICATION NEEDED";
 }
