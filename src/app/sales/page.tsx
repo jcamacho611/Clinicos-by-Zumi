@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ZumiCommandShell, ZumiBriefingPanel, MissionPhaseProgress } from "@/components/sales/zumi/zumi-command-shell";
-import { ZumiInterview } from "@/components/sales/zumi/zumi-interview";
+import { ZumiCommandShell, ZumiBriefingPanel, MissionPhaseProgress } from "@/components/command/zumi-command-shell";
+import { ZumiInterview } from "@/components/command/zumi-interview";
 
 /**
  * Clinic Operating Analysis — the Zumi command experience.

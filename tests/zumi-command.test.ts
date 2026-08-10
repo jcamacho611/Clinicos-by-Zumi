@@ -1,7 +1,9 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  findCopyViolations,
+  findUnqualifiedClaims,
   BANNED_PUBLIC_COPY,
   deriveOperatingMap,
   deriveSignalSummary,
@@ -13,13 +15,11 @@ import {
   NO_PHI_NOTICE,
   operatingMapSurfaces,
 } from "@/lib/sales/zumi-command";
+import { GOVERNED_PUBLIC_SURFACES } from "@/lib/design/command-system";
 import { demoOffers } from "@/lib/sales-demo-rules";
 
 describe("Klinikos public copy rules", () => {
-  it("flags every banned marketing and compliance claim", () => {
-    expect(findBannedPublicCopy("We are HIPAA compliant and a certified EHR.")).toEqual(
-      expect.arrayContaining(["hipaa compliant", "certified ehr"]),
-    );
+  it("flags marketing language that may never appear", () => {
     expect(findBannedPublicCopy("Start free with a free trial today")).toEqual(
       expect.arrayContaining(["start free", "free trial"]),
     );
@@ -27,25 +27,66 @@ describe("Klinikos public copy rules", () => {
   });
 
   it("is case-insensitive so a capitalised claim cannot slip through", () => {
-    expect(findBannedPublicCopy("GUARANTEED REVENUE")).toContain("guaranteed revenue");
+    expect(findBannedPublicCopy("START FREE")).toContain("start free");
+    expect(findUnqualifiedClaims("GUARANTEED REVENUE")).toContain("guaranteed revenue");
   });
 
-  it("keeps banned phrases out of the redesigned sales surfaces", () => {
+  it("flags a regulatory term asserted as a claim", () => {
+    expect(findUnqualifiedClaims("Klinikos is HIPAA compliant and a certified EHR.")).toEqual(
+      expect.arrayContaining(["hipaa compliant", "certified ehr"]),
+    );
+  });
+
+  it("permits the same term inside a disclaimer, which is where it is most needed", () => {
+    // Banning the phrase outright would push pages into vaguer disclaimers, which is
+    // the opposite of what the rule is for.
+    expect(findUnqualifiedClaims("Klinikos is not a certified EHR.")).toEqual([]);
+    expect(findUnqualifiedClaims("This is not a HIPAA compliant deployment.")).toEqual([]);
+    expect(findUnqualifiedClaims("No guaranteed revenue is implied.")).toEqual([]);
+    expect(findUnqualifiedClaims("Klinikos does not provide a certified EHR.")).toEqual([]);
+  });
+
+  it("does not let a distant negation launder a later claim", () => {
+    const laundered = `We are not perfect. ${"filler text ".repeat(30)} Klinikos is a certified EHR.`;
+    expect(findUnqualifiedClaims(laundered)).toContain("certified ehr");
+  });
+
+  it("combines both rules for a single surface verdict", () => {
+    expect(findCopyViolations("Start free — Klinikos is a certified EHR")).toEqual(
+      expect.arrayContaining(["start free", "certified ehr"]),
+    );
+    expect(findCopyViolations("Klinikos is not a certified EHR. Request a Private Workflow Review.")).toEqual([]);
+  });
+
+  it("keeps banned phrases out of every governed public surface", () => {
+    // GOVERNED_PUBLIC_SURFACES is the enforcement list: adding a page there is what
+    // brings it under design law, so this test grows with the product.
+    for (const source of GOVERNED_PUBLIC_SURFACES) {
+      const text = readFileSync(join(process.cwd(), source), "utf8");
+      expect({ source, hits: findCopyViolations(text) }).toEqual({ source, hits: [] });
+    }
+  });
+
+  it("keeps banned phrases out of the shared command components", () => {
     const sources = [
-      "src/app/sales/page.tsx",
-      "src/lib/sales/zumi-command.ts",
-      "src/components/sales/zumi/zumi-command-shell.tsx",
-      "src/components/sales/zumi/zumi-interview.tsx",
-      "src/components/sales/zumi/zumi-operating-map.tsx",
+      "src/components/command/zumi-command-shell.tsx",
+      "src/components/command/zumi-interview.tsx",
+      "src/components/command/zumi-operating-map.tsx",
+      "src/components/command/founding-offer-cards.tsx",
     ];
 
     for (const source of sources) {
       const text = readFileSync(join(process.cwd(), source), "utf8");
-      // The vocabulary list itself legitimately contains the banned phrases.
-      const body = source.endsWith("zumi-command.ts")
-        ? text.slice(text.indexOf("export const APPROVED_PUBLIC_COPY"))
-        : text;
-      expect({ source, hits: findBannedPublicCopy(body) }).toEqual({ source, hits: [] });
+      expect({ source, hits: findCopyViolations(text) }).toEqual({ source, hits: [] });
+    }
+  });
+
+  it("governs every page the redesign has brought under command law", () => {
+    expect(GOVERNED_PUBLIC_SURFACES).toContain("src/app/sales/page.tsx");
+    expect(GOVERNED_PUBLIC_SURFACES).toContain("src/app/start/page.tsx");
+    expect(GOVERNED_PUBLIC_SURFACES).toContain("src/app/founding-clinic/page.tsx");
+    for (const source of GOVERNED_PUBLIC_SURFACES) {
+      expect(existsSync(join(process.cwd(), source))).toBe(true);
     }
   });
 

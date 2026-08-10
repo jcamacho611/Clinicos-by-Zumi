@@ -10,14 +10,14 @@ import {
   NoPHINotice,
   ZumiAssistantOrb,
   ZumiBriefingPanel,
-} from "@/components/sales/zumi/zumi-command-shell";
+} from "@/components/command/zumi-command-shell";
 import {
   NextBestActionPanel,
   OperatingMapPanel,
   QualificationSummary,
   RevenueSignalCard,
   WorkflowLeakageCard,
-} from "@/components/sales/zumi/zumi-operating-map";
+} from "@/components/command/zumi-operating-map";
 import {
   deriveOperatingMap,
   deriveSignalSummary,
