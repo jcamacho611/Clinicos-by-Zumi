@@ -60,7 +60,11 @@ Full detail: `docs/ZUMI.md`.
 | Student-facing scenario projection | **BUILT** | `projectScenarioForStudent` is the only function permitted to build a student view. Drops the answer key, expected sequence, critical misses, instructor notes, AI prompts, and the `isProblem` / `requiresEscalation` flags. |
 | Roles, navigation, session shape | **BUILT** | |
 | Public `/edu` landing | **BUILT** | Under copy law. |
-| Lab surfaces (dashboard, courses, cohorts, scenarios, grading, competencies, settings) | **PARTIALLY BUILT** | Read paths render from the model. **Write paths — submission, grading, competency marking — are NOT BUILT.** |
+| Lab surfaces (dashboard, courses, cohorts, scenarios, grading, competencies, settings) | **PARTIALLY BUILT** | Read paths render from the model. The surfaces do not yet call the write APIs below — no form is wired. |
+| Submission lifecycle + student write path (`POST /api/edu/submissions`) | **BUILT** | Start, append-only evidence timeline, evidence attachment, submit. Ownership checked for every role, so an instructor cannot do a student's work. Lateness recorded, never blocked. |
+| Grading + release (`POST /api/edu/grades`) | **BUILT** | Separate route from the student path, so no student-reachable handler can write a grade. A total that disagrees with its criterion breakdown is rejected. An assistant may assess but not release. A released grade is not silently overwritten. |
+| Student view of a grade | **BUILT** | An unreleased grade is not partially visible. Release discloses whether an AI draft informed it. |
+| Competency marking and certificates | **NOT BUILT** | Models exist; no write path. |
 | EDU AI features | **ADAPTER READY** | Gated on the Zumi gateway; inert and labelled Pending Connection. |
 | LTI 1.3 / institutional SSO | **BLOCKED** | Needs credentials and a school agreement. |
 | FERPA review | **BLOCKED** | Outside code. |
