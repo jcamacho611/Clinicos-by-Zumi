@@ -11,7 +11,7 @@ export default function LandingPage() {
       <header className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
         <Link className="flex items-center gap-3" href="/">
           <BrandMark />
-          <div><p className="text-sm font-extrabold tracking-[-.03em] text-slate-950">ClinicOS</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">by Zumi</p></div>
+          <div><p className="text-sm font-extrabold tracking-[-.03em] text-slate-950">Klinikos</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#b08d24]">The Clinic Operating System</p></div>
         </Link>
         <nav className="ml-auto hidden items-center gap-7 text-xs font-bold text-slate-600 md:flex">
           <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><Link href="/grid/join">Join GRID</Link><a href="#safety">Safety</a><a href="#integrations">Integrations</a>
@@ -25,7 +25,7 @@ export default function LandingPage() {
           <div>
             <Badge className="mb-7 bg-white/80" tone="teal"><Sparkles className="mr-1.5 size-3" /> Founding clinic offer · no credit card</Badge>
             <h1 className="max-w-[720px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] text-slate-950 sm:text-6xl lg:text-[76px]">Run the whole clinic from one place.</h1>
-            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">Create your organization, choose your clinic type, and enter one isolated operating workspace for clinical care, connected referrals, office operations, revenue follow-through, and a Copilot your team can speak to or type into.</p>
+            <p className="mt-7 max-w-xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">Klinikos gives your organization one isolated operating workspace for clinical care, connected referrals, office operations, revenue follow-through, and a governed Copilot your team can speak to or type into.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary"><Link href="/start">Create your workspace <ArrowRight className="size-4" /></Link></Button>
               <Button asChild size="lg" variant="secondary"><Link href="/login"><LogIn className="size-4" /> Sign in</Link></Button>
@@ -61,7 +61,7 @@ export default function LandingPage() {
 
         <section className="border-y border-slate-200 bg-white/70" id="platform">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-3 sm:px-8">
-            {[["LifeChart + Care Constellation", "A longitudinal timeline and visual care team connect authorized records, providers, referrals, results, tasks, billing, and provenance."], ["Capacity + Injury Episode Rooms", "Diagnostic availability and injury-case readiness become visible action systems instead of phone tag and scattered documents."], ["Copilot: speak or type", "People can use push-to-talk or typing on the same screen. Clinical and risky output remains held for licensed human review."]].map(([title, body], index) => <div key={title}><p className="text-xs font-extrabold text-teal-700">0{index + 1}</p><h3 className="mt-3 text-lg font-extrabold tracking-[-.03em] text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p></div>)}
+            {[["LifeChart + Care Constellation", "A longitudinal timeline and visual care team connect authorized records, providers, referrals, results, tasks, billing, and provenance."], ["Capacity + Injury Episode Rooms", "Diagnostic availability and injury-case readiness become visible action systems instead of phone tag and scattered documents."], ["Klinikos Copilot: speak or type", "People can use push-to-talk or typing on the same screen. Clinical and risky output remains held for licensed human review."]].map(([title, body], index) => <div key={title}><p className="text-xs font-extrabold text-teal-700">0{index + 1}</p><h3 className="mt-3 text-lg font-extrabold tracking-[-.03em] text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p></div>)}
           </div>
         </section>
 
