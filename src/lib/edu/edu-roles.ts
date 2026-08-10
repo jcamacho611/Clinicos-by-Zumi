@@ -230,6 +230,10 @@ export function simulationRoleQueues(key: string): readonly string[] {
  * merely documented, and so no call site can mistake a simulation seat for a
  * clinical authorization.
  */
-export function simulationRoleGrantsClinicalAuthority(_role: EduSimulationRole): false {
+export function simulationRoleGrantsClinicalAuthority(role: EduSimulationRole): false {
+  // Every seat answers the same way. The parameter exists so call sites read as a
+  // question about a specific seat, and so the answer cannot be special-cased later
+  // without changing this function deliberately.
+  void role;
   return false;
 }
