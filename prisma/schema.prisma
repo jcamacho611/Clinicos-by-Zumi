@@ -157,6 +157,63 @@ model WhopWebhookEvent {
   @@map("whop_webhook_events")
 }
 
+/// Marketplace access purchase: a one-time review or onboarding fee.
+///
+/// Distinct from the patient-billing `Payment` model, which is clinical revenue
+/// cycle for a specific patient inside a tenant. This record is a commercial
+/// transaction between Klinikos and a prospective contractor, location owner,
+/// seller, or clinic, and may exist before the buyer has any account.
+model AccessPayment {
+  id                       String          @id @default(cuid())
+  userId                   String?
+  organizationId           String?
+  provider                 String          @default("whop")
+  productKey               String
+  roleTarget               String
+  buyerEmail               String
+  /// Resolved from the server catalog, never from the request body.
+  amountCents              Int
+  currency                 String          @default("USD")
+  externalCheckoutUrl      String?
+  externalPaymentReference String?
+  status                   String          @default("created")
+  portalAccessStatus       String          @default("pending")
+  verifiedBy               String?
+  verifiedAt               DateTime?
+  reviewNotes              String?
+  metadata                 Json?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  onboarding               PaidOnboarding?
+
+  @@index([buyerEmail, status])
+  @@index([status, createdAt])
+  @@index([roleTarget, portalAccessStatus])
+  @@index([externalPaymentReference])
+  @@map("access_payments")
+}
+
+/// Role onboarding sponsored by one access payment. Tracks the human review that
+/// stands between a completed payment and an opened portal.
+model PaidOnboarding {
+  id              String        @id @default(cuid())
+  userId          String?
+  accessPaymentId String        @unique
+  roleTarget      String
+  status          String        @default("pending")
+  reviewApproved  Boolean       @default(false)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  accessPayment   AccessPayment @relation(fields: [accessPaymentId], references: [id], onDelete: Cascade)
+
+  @@index([roleTarget, status])
+  @@index([userId])
+  @@map("paid_onboardings")
+}
+
 /// Server-issued checkout handoff. The opaque state value binds a verified work
 /// email to one tier so the return leg cannot be replayed for a different buyer
 /// or a more privileged tier.
