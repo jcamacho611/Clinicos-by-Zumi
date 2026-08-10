@@ -4,10 +4,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "ClinicOS by Zumi",
-    template: "%s | ClinicOS",
+    default: "Klinikos",
+    template: "%s | Klinikos",
   },
-  description: "A modern clinic operating system and EMR foundation for community healthcare providers.",
+  description: "Klinikos is the clinic operating system for connected care, office operations, revenue follow-through, and governed AI assistance.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
