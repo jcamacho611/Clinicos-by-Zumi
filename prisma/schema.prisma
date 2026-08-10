@@ -104,6 +104,82 @@ model AccessEmailVerification {
   @@map("access_email_verifications")
 }
 
+/// Durable record of a paid Klinikos access pass purchased through Whop.
+/// Whop remains the source of truth for validity; this row is the auditable,
+/// revocable Klinikos-side grant that authorization checks read.
+model WhopEntitlement {
+  id                 String    @id @default(cuid())
+  email              String
+  whopMembershipId   String    @unique
+  whopUserId         String?
+  whopPlanId         String?
+  whopProductId      String?
+  tierKey            String
+  state              String    @default("pending_connection")
+  membershipStatus   String?
+  validUntil         DateTime?
+  grantedAt          DateTime?
+  revokedAt          DateTime?
+  lastVerifiedAt     DateTime?
+  verificationSource String    @default("webhook")
+  organizationId     String?
+  providerId         String?
+  metadata           Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([email, state])
+  @@index([tierKey, state])
+  @@index([organizationId])
+  @@index([validUntil])
+  @@map("whop_entitlements")
+}
+
+/// Append-only ledger of received Whop webhooks. Every delivery is recorded with
+/// its signature outcome before any entitlement is written, so replays are
+/// idempotent and rejected deliveries stay visible.
+model WhopWebhookEvent {
+  id                String    @id @default(cuid())
+  eventId           String    @unique
+  eventType         String
+  membershipId      String?
+  signatureVerified Boolean   @default(false)
+  payloadHash       String
+  processingStatus  String    @default("received")
+  processedAt       DateTime?
+  failureReason     String?
+  receivedAt        DateTime  @default(now())
+  payload           Json?
+
+  @@index([eventType, receivedAt])
+  @@index([membershipId])
+  @@index([processingStatus])
+  @@map("whop_webhook_events")
+}
+
+/// Server-issued checkout handoff. The opaque state value binds a verified work
+/// email to one tier so the return leg cannot be replayed for a different buyer
+/// or a more privileged tier.
+model WhopCheckoutIntent {
+  id            String    @id @default(cuid())
+  state         String    @unique
+  email         String
+  tierKey       String
+  whopPlanId    String
+  status        String    @default("created")
+  entitlementId String?
+  expiresAt     DateTime
+  completedAt   DateTime?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email, status])
+  @@index([expiresAt])
+  @@map("whop_checkout_intents")
+}
+
 model Organization {
   id                         String                      @id @default(cuid())
   name                       String
