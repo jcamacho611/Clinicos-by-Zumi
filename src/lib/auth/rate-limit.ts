@@ -6,12 +6,15 @@ interface AttemptWindow {
 const attempts = new Map<string, AttemptWindow>();
 const onboardingAttempts = new Map<string, AttemptWindow>();
 const salesIntakeAttempts = new Map<string, AttemptWindow>();
+const gridEnrollmentAttempts = new Map<string, AttemptWindow>();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 8;
 const ONBOARDING_WINDOW_MS = 60 * 60 * 1000;
 const MAX_ONBOARDING_ATTEMPTS = 5;
 const SALES_INTAKE_WINDOW_MS = 60 * 60 * 1000;
 const MAX_SALES_INTAKE_ATTEMPTS = 8;
+const GRID_ENROLLMENT_WINDOW_MS = 60 * 60 * 1000;
+const MAX_GRID_ENROLLMENT_ATTEMPTS = 5;
 
 export function checkLoginRateLimit(key: string) {
   const now = Date.now();
@@ -79,5 +82,26 @@ export function recordSalesIntakeAttempt(key: string) {
   const current = salesIntakeAttempts.get(key);
   salesIntakeAttempts.set(key, !current || current.resetAt <= now
     ? { count: 1, resetAt: now + SALES_INTAKE_WINDOW_MS }
+    : { ...current, count: current.count + 1 });
+}
+
+export function checkGridEnrollmentRateLimit(key: string) {
+  const now = Date.now();
+  const current = gridEnrollmentAttempts.get(key);
+  if (!current || current.resetAt <= now) {
+    gridEnrollmentAttempts.set(key, { count: 0, resetAt: now + GRID_ENROLLMENT_WINDOW_MS });
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+  return {
+    allowed: current.count < MAX_GRID_ENROLLMENT_ATTEMPTS,
+    retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+  };
+}
+
+export function recordGridEnrollmentAttempt(key: string) {
+  const now = Date.now();
+  const current = gridEnrollmentAttempts.get(key);
+  gridEnrollmentAttempts.set(key, !current || current.resetAt <= now
+    ? { count: 1, resetAt: now + GRID_ENROLLMENT_WINDOW_MS }
     : { ...current, count: current.count + 1 });
 }

@@ -120,6 +120,7 @@ model Organization {
   gridRequestsSent           GridRequest[]               @relation("GridRequestOrigin")
   gridRequestsReceived       GridRequest[]               @relation("GridRequestDestination")
   gridRequestEvents          GridRequestEvent[]
+  gridPayouts                GridPayout[]
 
   @@map("organizations")
 }
@@ -186,6 +187,7 @@ model User {
   sessions       AuthSession[]
   passkeys       PasskeyCredential[]
   voiceSessions  VoiceSession[]
+  provider       Provider?
 
   @@index([organizationId])
   @@map("users")
@@ -311,50 +313,63 @@ model Permission {
 }
 
 model Provider {
-  id                      String                      @id @default(cuid())
-  organizationId          String
-  userId                  String?
-  name                    String
-  displayName             String
-  legalName               String
-  credential              String
-  providerType            String
-  specialty               String?
-  subspecialty            String?
-  taxonomy                String?
-  npi                     String?
-  deaNumber               String?
-  deaExpiresAt            DateTime?
-  malpracticeCarrier      String?
-  malpracticePolicyNumber String?
-  malpracticeExpiration   DateTime?
-  certifications          String[]                    @default([])
-  servicesOffered         String[]                    @default([])
-  experienceLevel         String                      @default("Entry")
-  bio                     String?
-  profilePhoto            String?
-  serviceLocations        String[]                    @default([])
-  mobileServiceAllowed    Boolean                     @default(false)
-  chairRentalAllowed      Boolean                     @default(false)
-  atHomeAllowed           Boolean                     @default(false)
-  travelRadiusMiles       Int                         @default(0)
-  verificationStatus      String                      @default("draft")
-  approvedBy              String?
-  approvedAt              DateTime?
-  renewalDueAt            DateTime?
-  telemedicineEligible    Boolean                     @default(false)
-  prescribingEligible     Boolean                     @default(false)
-  acceptedInsurance       String[]                    @default([])
-  services                String[]                    @default([])
-  status                  String                      @default("active")
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
-  organization            Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  facilityPrivileges      ProviderFacilityPrivilege[]
-  credentials             ProviderCredential[]
-  availability            ProviderAvailability[]
-  gridServiceListings     GridServiceListing[]
-  gridRequests            GridRequest[]
+  id                             String                      @id @default(cuid())
+  organizationId                 String
+  userId                         String?                     @unique
+  name                           String
+  displayName                    String
+  legalName                      String
+  engagementType                 String                      @default("staff")
+  contactEmail                   String?
+  contactPhone                   String?
+  credential                     String
+  providerType                   String
+  specialty                      String?
+  subspecialty                   String?
+  taxonomy                       String?
+  npi                            String?
+  deaNumber                      String?
+  deaExpiresAt                   DateTime?
+  malpracticeCarrier             String?
+  malpracticePolicyNumber        String?
+  malpracticeExpiration          DateTime?
+  malpracticeCoverageAmountCents Int?
+  malpracticeEvidenceReference   String?
+  malpracticeVerificationStatus  String                      @default("pending")
+  malpracticeVerifiedAt          DateTime?
+  malpracticeVerifiedBy          String?
+  malpracticeReviewNotes         String?
+  certifications                 String[]                    @default([])
+  servicesOffered                String[]                    @default([])
+  experienceLevel                String                      @default("Entry")
+  bio                            String?
+  profilePhoto                   String?
+  serviceLocations               String[]                    @default([])
+  mobileServiceAllowed           Boolean                     @default(false)
+  chairRentalAllowed             Boolean                     @default(false)
+  atHomeAllowed                  Boolean                     @default(false)
+  travelRadiusMiles              Int                         @default(0)
+  onCallNow                      Boolean                     @default(false)
+  verificationStatus             String                      @default("draft")
+  applicationSubmittedAt         DateTime?
+  approvedBy                     String?
+  approvedAt                     DateTime?
+  renewalDueAt                   DateTime?
+  telemedicineEligible           Boolean                     @default(false)
+  prescribingEligible            Boolean                     @default(false)
+  acceptedInsurance              String[]                    @default([])
+  services                       String[]                    @default([])
+  status                         String                      @default("active")
+  createdAt                      DateTime                    @default(now())
+  updatedAt                      DateTime                    @updatedAt
+  organization                   Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                           User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  facilityPrivileges             ProviderFacilityPrivilege[]
+  credentials                    ProviderCredential[]
+  availability                   ProviderAvailability[]
+  gridServiceListings            GridServiceListing[]
+  gridRequests                   GridRequest[]
+  gridPayouts                    GridPayout[]
 
   @@index([organizationId, status, verificationStatus])
   @@index([providerType, verificationStatus])
@@ -374,7 +389,10 @@ model ProviderCredential {
   verificationSource      String?
   primarySourceVerifiedAt DateTime?
   evidenceDocumentId      String?
+  evidenceReference       String?
   exceptionReason         String?
+  verifiedBy              String?
+  reviewNotes             String?
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
   provider                Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -659,6 +677,7 @@ model GridRequest {
   locationId                String?
   requestedStartAt          DateTime
   requestedEndAt            DateTime?
+  counterStartAt            DateTime?
   locationType              String
   safetyFlags               String[]           @default([])
   requiredDocuments         String[]           @default([])
@@ -682,6 +701,7 @@ model GridRequest {
   provider                  Provider           @relation(fields: [providerId], references: [id], onDelete: Restrict)
   location                  Location?          @relation(fields: [locationId], references: [id], onDelete: SetNull)
   events                    GridRequestEvent[]
+  payout                    GridPayout?
 
   @@index([organizationId, status, createdAt])
   @@index([destinationOrganizationId, status, createdAt])
@@ -708,6 +728,30 @@ model GridRequestEvent {
   @@index([organizationId, createdAt])
   @@index([gridRequestId, createdAt])
   @@map("grid_request_events")
+}
+
+model GridPayout {
+  id                String       @id @default(cuid())
+  organizationId    String
+  providerId        String
+  gridRequestId     String       @unique
+  grossAmountCents  Int
+  platformFeeCents  Int          @default(0)
+  netAmountCents    Int
+  status            String       @default("estimated")
+  approvedAt        DateTime?
+  paidAt            DateTime?
+  externalReference String?
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider          Provider     @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  gridRequest       GridRequest  @relation(fields: [gridRequestId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, createdAt])
+  @@index([providerId, status, createdAt])
+  @@map("grid_payouts")
 }
 
 model Room {

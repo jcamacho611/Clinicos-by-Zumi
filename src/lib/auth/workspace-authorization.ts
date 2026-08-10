@@ -8,7 +8,7 @@ interface WorkspaceRule {
 }
 
 export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
-  dashboard: {},
+  dashboard: { any: [["patients", "read"], ["appointments", "read"], ["encounters", "read"], ["sales", "read"], ["reliability", "read"], ["network", "read"]] },
   "front-desk": { all: [["patients", "read"], ["appointments", "read"]] },
   provider: { all: [["patients", "read"], ["encounters", "read"]] },
   patients: { all: [["patients", "read"]] },
@@ -23,7 +23,7 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   knowledge: { all: [["knowledge", "read"]] },
   "remote-monitoring": { all: [["remote_monitoring", "read"]] },
   inventory: { all: [["inventory", "read"]] },
-  grid: { any: [["network", "read"], ["credentialing", "read"]] },
+  grid: { any: [["grid", "read"], ["network", "read"], ["credentialing", "read"]] },
   network: { all: [["network", "read"]] },
   referrals: { all: [["referrals", "read"]] },
   "access-controls": { all: [["network", "read"]] },

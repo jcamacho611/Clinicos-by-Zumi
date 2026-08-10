@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
-import { can } from "@/lib/auth/rbac";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
-import { createGridAvailability } from "@/lib/repositories/grid-repository";
+import { transitionGridPayout } from "@/lib/repositories/grid-repository";
 
-export async function POST(request: Request) {
+export async function POST(request: Request, { params }: { params: Promise<{ payoutId: string }> }) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = can(session.role, "network", "create")
-    ? null
-    : await enforceApiPermission(session, "grid", "update", { request });
+  const { payoutId } = await params;
+  const denied = await enforceApiPermission(session, "grid", "manage", { request, resourceId: payoutId });
   if (denied) return denied;
   try {
-    return NextResponse.json({ data: await createGridAvailability(session, await request.json()) }, { status: 201 });
+    return NextResponse.json({ data: await transitionGridPayout(session, payoutId, await request.json()) });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
