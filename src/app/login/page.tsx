@@ -18,12 +18,12 @@ export default async function LoginPage() {
     <main className="grid min-h-screen bg-[#eef4f3] lg:grid-cols-[.9fr_1.1fr]">
       <section className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          <Link className="mb-12 flex items-center gap-3" href="/"><BrandMark /><div><p className="text-sm font-extrabold">ClinicOS</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">by Zumi</p></div></Link>
+          <Link className="mb-12 flex items-center gap-3" href="/"><BrandMark /><div><p className="text-sm font-extrabold">Klinikos</p></div></Link>
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-teal-700">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-[-.055em] text-slate-950">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">Sign in to your clinic workspace. Every session is bound to one organization and role.</p>
           <LoginForm demoCredentials={demoCredentials} />
-          <p className="mt-5 text-center text-xs font-semibold text-slate-500">New to ClinicOS? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/start">Create a free organization workspace</Link></p>
+          <p className="mt-5 text-center text-xs font-semibold text-slate-500">New to Klinikos? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/start">Create a free organization workspace</Link></p>
           <p className="mt-3 text-center text-xs font-semibold text-slate-500">Looking for your records? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/portal/login">Open the patient portal</Link></p>
           <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>
           <Button className="w-full" disabled size="lg" variant="secondary"><Fingerprint className="size-5" /> Use a passkey <span className="ml-1 text-[10px] font-medium text-slate-400">Credential model ready</span></Button>
@@ -31,8 +31,8 @@ export default async function LoginPage() {
         </div>
       </section>
       <section className="relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-end">
-        <div className="absolute left-[15%] top-[12%] size-[420px] rounded-full border border-teal-300/20" /><div className="absolute left-[25%] top-[20%] size-[270px] rounded-full border border-lime-300/25 animate-pulse-ring" /><div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_20%,rgba(15,163,177,.25),transparent_34%)]" />
-        <div className="relative max-w-xl"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-teal-300">Clinic operations, reimagined</p><h2 className="mt-5 text-5xl font-extrabold leading-[1.02] tracking-[-.055em]">Less hunting. More care. Every team on the same page.</h2><p className="mt-6 max-w-lg text-sm leading-7 text-slate-300">ClinicOS keeps each practice inside its own authenticated workspace while bringing operations, clinical work, and revenue follow-through together.</p></div>
+        <div className="absolute left-[15%] top-[12%] size-[420px] rounded-full border border-teal-300/20" /><div className="absolute left-[25%] top-[20%] size-[270px] rounded-full border border-l[...]
+        <div className="relative max-w-xl"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-teal-300">Clinic operations, reimagined</p><h2 className="mt-5 text-5xl font-extrabol[...]
       </section>
     </main>
   );
