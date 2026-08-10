@@ -62,6 +62,48 @@ enum MessageDirection {
   INTERNAL
 }
 
+model AccessGateAcceptance {
+  id              String                    @id @default(cuid())
+  email           String
+  documentKey     String
+  documentVersion String
+  acceptedAt      DateTime                  @default(now())
+  verifiedEmailAt DateTime?
+  ipAddress       String?
+  userAgent       String?
+  source          String                    @default("web-access-gate")
+  createdAt       DateTime                  @default(now())
+  verifications   AccessEmailVerification[]
+
+  @@index([email, documentKey])
+  @@index([acceptedAt])
+  @@index([verifiedEmailAt])
+  @@map("access_gate_acceptances")
+}
+
+model AccessEmailVerification {
+  id                     String               @id @default(cuid())
+  email                  String
+  acceptanceId           String
+  documentVersion        String
+  tokenHash              String               @unique
+  status                 String               @default("pending")
+  expiresAt              DateTime
+  verifiedAt             DateTime?
+  requestedIpAddress     String?
+  requestedUserAgent     String?
+  verifiedIpAddress      String?
+  verifiedUserAgent      String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  acceptance             AccessGateAcceptance @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
+
+  @@index([email, status])
+  @@index([acceptanceId])
+  @@index([expiresAt])
+  @@map("access_email_verifications")
+}
+
 model Organization {
   id                         String                      @id @default(cuid())
   name                       String
@@ -3632,4 +3674,428 @@ model FeatureRegistryCapability {
   @@unique([sectionId, slug])
   @@index([deliveryStatus, priority])
   @@map("feature_registry_capabilities")
+}
+
+// ---------------------------------------------------------------------------
+// Klinikos EDU
+//
+// The education layer is structurally isolated from clinical data. No model below
+// has a relation to Patient, Encounter, Appointment, or any other clinical record,
+// and EDU synthetic patients live inside EducationScenario.payload rather than in
+// the patient tables. That isolation is a property of the schema, not a filter a
+// query could forget to apply.
+// ---------------------------------------------------------------------------
+
+model EducationInstitution {
+  id             String                @id @default(cuid())
+  name           String
+  slug           String                @unique
+  institutionType String               @default("college")
+  contactEmail   String?
+  status         String                @default("active")
+  /// Optional host Klinikos tenant. Intentionally not a relation: an institution is
+  /// its own isolation root and must not inherit clinical tenant scope.
+  organizationId String?
+  settings       Json?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  programs       EducationProgram[]
+  courses        EducationCourse[]
+  scenarios      EducationScenario[]
+  enrollments    EducationEnrollment[]
+
+  @@index([status])
+  @@map("education_institutions")
+}
+
+model EducationProgram {
+  id            String               @id @default(cuid())
+  institutionId String
+  name          String
+  programType   String               @default("allied_health")
+  description   String?
+  status        String               @default("active")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courses       EducationCourse[]
+
+  @@unique([institutionId, name])
+  @@index([institutionId, status])
+  @@map("education_programs")
+}
+
+model EducationCourse {
+  id                   String               @id @default(cuid())
+  institutionId        String
+  programId            String?
+  /// Curriculum package this course instantiates, from src/lib/edu/edu-curriculum.ts.
+  curriculumPackageKey String?
+  title                String
+  code                 String
+  description          String?
+  status               String               @default("draft")
+  instructorUserId     String?
+  termLabel            String?
+  startsOn             DateTime?
+  endsOn               DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  institution          EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  program              EducationProgram?    @relation(fields: [programId], references: [id], onDelete: SetNull)
+  cohorts              EducationCohort[]
+  scenarios            EducationScenario[]
+  rubrics              EducationRubric[]
+
+  @@unique([institutionId, code])
+  @@index([institutionId, status])
+  @@index([programId])
+  @@map("education_courses")
+}
+
+model EducationCohort {
+  id               String                        @id @default(cuid())
+  institutionId    String
+  courseId         String
+  name             String
+  status           String                        @default("open")
+  instructorUserId String?
+  maxSeats         Int?
+  startsOn         DateTime?
+  endsOn           DateTime?
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+  course           EducationCourse               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments      EducationEnrollment[]
+  assignments      EducationScenarioAssignment[]
+
+  @@unique([courseId, name])
+  @@index([institutionId, status])
+  @@map("education_cohorts")
+}
+
+model EducationEnrollment {
+  id                  String                    @id @default(cuid())
+  institutionId       String
+  cohortId            String
+  /// Klinikos account when the student has one. Rosters may be email-only.
+  userId              String?
+  studentEmail        String
+  studentDisplayName  String
+  platformRole        String                    @default("edu_student")
+  /// Clinic seat this student occupies in simulations. Grants nothing outside them.
+  simulationRole      String?
+  status              String                    @default("invited")
+  invitedAt           DateTime                  @default(now())
+  acceptedAt          DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  institution         EducationInstitution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  cohort              EducationCohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  submissions         EducationSubmission[]
+  competencies        EducationCompetency[]
+  certificates        EducationCertificate[]
+  instructorNotes     EducationInstructorNote[]
+
+  @@unique([cohortId, studentEmail])
+  @@index([institutionId, status])
+  @@index([studentEmail])
+  @@map("education_enrollments")
+}
+
+model EducationScenario {
+  id                   String                        @id @default(cuid())
+  institutionId        String
+  courseId             String?
+  curriculumPackageKey String?
+  title                String
+  summary              String
+  setting              String
+  difficulty           String                        @default("intermediate")
+  simulationRoles      String[]                      @default([])
+  estimatedMinutes     Int                           @default(45)
+  status               String                        @default("draft")
+  /// Immutable version lineage. Editing a published scenario creates a new version
+  /// rather than mutating the one students were graded against.
+  versionGroupId       String
+  version              Int                           @default(1)
+  /// Synthetic scenario content shown to students. Never a clinical record.
+  payload              Json
+  /// Instructor-only. Must never be serialized into a student-facing response.
+  answerKey            Json
+  authoredByUserId     String?
+  /// Set when an AI draft seeded this scenario. A draft is never auto-published.
+  aiGenerated          Boolean                       @default(false)
+  aiReviewedByUserId   String?
+  publishedAt          DateTime?
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
+  institution          EducationInstitution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  course               EducationCourse?              @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  assignments          EducationScenarioAssignment[]
+  rubrics              EducationRubric[]
+
+  @@unique([versionGroupId, version])
+  @@index([institutionId, status])
+  @@index([courseId])
+  @@map("education_scenarios")
+}
+
+model EducationScenarioAssignment {
+  id             String                  @id @default(cuid())
+  institutionId  String
+  cohortId       String
+  scenarioId     String
+  rubricId       String?
+  title          String
+  instructions   String?
+  status         String                  @default("assigned")
+  assignedByUserId String?
+  opensAt        DateTime?
+  dueAt          DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  cohort         EducationCohort         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  scenario       EducationScenario       @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  rubric         EducationRubric?        @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  submissions    EducationSubmission[]
+  events         EducationScenarioEvent[]
+
+  @@unique([cohortId, scenarioId])
+  @@index([institutionId, status])
+  @@index([dueAt])
+  @@map("education_scenario_assignments")
+}
+
+/// Append-only record of what happened inside a simulation run. Forms the evidence
+/// timeline an instructor reviews when grading.
+model EducationScenarioEvent {
+  id             String                      @id @default(cuid())
+  institutionId  String
+  assignmentId   String
+  submissionId   String?
+  actorUserId    String?
+  simulationRole String?
+  eventType      String
+  queue          String?
+  taskKey        String?
+  summary        String
+  detail         Json?
+  occurredAt     DateTime                    @default(now())
+  assignment     EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submission     EducationSubmission?        @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, occurredAt])
+  @@index([submissionId, occurredAt])
+  @@map("education_scenario_events")
+}
+
+model EducationRubric {
+  id            String                        @id @default(cuid())
+  institutionId String
+  courseId      String?
+  scenarioId    String?
+  title         String
+  description   String?
+  totalPoints   Int                           @default(100)
+  status        String                        @default("draft")
+  createdAt     DateTime                      @default(now())
+  updatedAt     DateTime                      @updatedAt
+  course        EducationCourse?              @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  scenario      EducationScenario?            @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
+  criteria      EducationRubricCriterion[]
+  assignments   EducationScenarioAssignment[]
+  grades        EducationGrade[]
+
+  @@index([institutionId, status])
+  @@map("education_rubrics")
+}
+
+model EducationRubricCriterion {
+  id              String          @id @default(cuid())
+  rubricId        String
+  label           String
+  description     String?
+  competencyArea  String?
+  maxPoints       Int
+  orderIndex      Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  rubric          EducationRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+
+  @@index([rubricId, orderIndex])
+  @@map("education_rubric_criteria")
+}
+
+model EducationSubmission {
+  id             String                      @id @default(cuid())
+  institutionId  String
+  assignmentId   String
+  enrollmentId   String
+  simulationRole String?
+  status         String                      @default("not_started")
+  startedAt      DateTime?
+  submittedAt    DateTime?
+  reflection     String?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  assignment     EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  enrollment     EducationEnrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  evidence       EducationEvidence[]
+  events         EducationScenarioEvent[]
+  grade          EducationGrade?
+  instructorNotes EducationInstructorNote[]
+
+  @@unique([assignmentId, enrollmentId])
+  @@index([institutionId, status])
+  @@map("education_submissions")
+}
+
+model EducationEvidence {
+  id           String              @id @default(cuid())
+  institutionId String
+  submissionId String
+  evidenceType String
+  label        String
+  body         String?
+  /// Uploaded student files reuse the governed document custody path rather than a
+  /// second, weaker upload route. Null when the evidence is inline text.
+  documentId   String?
+  metadata     Json?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  submission   EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId, createdAt])
+  @@map("education_evidence")
+}
+
+model EducationGrade {
+  id               String              @id @default(cuid())
+  institutionId    String
+  submissionId     String              @unique
+  rubricId         String?
+  pointsAwarded    Int
+  pointsPossible   Int
+  criterionScores  Json?
+  feedback         String?
+  /// The human who recorded the grade. AI may suggest; only a person grades.
+  gradedByUserId   String
+  gradedAt         DateTime            @default(now())
+  /// Populated when an AI draft informed the grade, for provenance only.
+  aiSuggested      Boolean             @default(false)
+  releasedToStudent Boolean            @default(false)
+  releasedAt       DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  submission       EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  rubric           EducationRubric?    @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+
+  @@index([institutionId, gradedAt])
+  @@map("education_grades")
+}
+
+model EducationInstructorNote {
+  id             String               @id @default(cuid())
+  institutionId  String
+  enrollmentId   String?
+  submissionId   String?
+  authorUserId   String
+  body           String
+  /// Instructor-only notes are never returned on a student-facing response.
+  visibleToStudent Boolean            @default(false)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  enrollment     EducationEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  submission     EducationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId, createdAt])
+  @@index([submissionId, createdAt])
+  @@map("education_instructor_notes")
+}
+
+model EducationCompetency {
+  id                String              @id @default(cuid())
+  institutionId     String
+  enrollmentId      String
+  competencyArea    String
+  status            String              @default("not_assessed")
+  /// Only an instructor or admin may finalise a competency determination.
+  determinedByUserId String?
+  determinedAt      DateTime?
+  evidenceSummary   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  enrollment        EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, competencyArea])
+  @@index([institutionId, status])
+  @@map("education_competencies")
+}
+
+model EducationCertificate {
+  id              String              @id @default(cuid())
+  institutionId   String
+  enrollmentId    String
+  certificateType String              @default("completion")
+  title           String
+  /// Non-removable statement that this is not licensure or clinical credentialing.
+  disclaimer      String
+  serialNumber    String              @unique
+  issuedByUserId  String
+  issuedAt        DateTime            @default(now())
+  revokedAt       DateTime?
+  revokedReason   String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  enrollment      EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, issuedAt])
+  @@index([enrollmentId])
+  @@map("education_certificates")
+}
+
+// ---------------------------------------------------------------------------
+// Zumi AI Gateway
+// ---------------------------------------------------------------------------
+
+/// One row per Zumi invocation, written whether the call was admitted or refused.
+///
+/// This is the metering and accountability record for AI in Klinikos. It stores what
+/// was asked for, who asked, which provider answered, what it cost, and whether the
+/// output was held for human review. It deliberately stores no prompt text and no
+/// model output: the operational question is "was this governed", not "what did it
+/// say", and a table of prompts is a table of the exact content the redaction layer
+/// exists to keep out of places it does not belong.
+model ZumiInvocation {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  userId              String?
+  capability          String
+  tier                String
+  /// admitted | denied | error
+  outcome             String
+  /// Populated when outcome is denied or error. Matches the policy denial reasons.
+  reason              String?
+  providerKey         String?
+  modelId             String?
+  promptVersion       String?
+  inputTokens         Int      @default(0)
+  outputTokens        Int      @default(0)
+  /// Integer micro-USD. Money is never stored as a float.
+  costMicroUsd        Int      @default(0)
+  durationMs          Int      @default(0)
+  /// Whether the produced output was held for a person to confirm.
+  humanReviewRequired Boolean  @default(true)
+  /// Whether the egress redactor removed or dropped anything on the way out.
+  redactionApplied    Boolean  @default(false)
+  /// Names of object keys dropped before egress. Names only, never values.
+  droppedKeys         String[] @default([])
+  auditLogId          String?
+  createdAt           DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, capability, createdAt])
+  @@map("zumi_invocations")
 }
