@@ -4,6 +4,10 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci
+    # Applies committed migrations before the new instance takes traffic.
+    # Deliberately does NOT run `prisma db seed`: prisma/seed.ts begins with a
+    # cascade of deleteMany() calls and would wipe the database on every deploy.
+    preDeployCommand: npx prisma migrate deploy
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeployTrigger: commit
@@ -22,3 +26,23 @@ services:
         sync: false
       - key: DEMO_AUTH
         value: "false"
+      # Paid access. Without these the commerce surfaces report Pending Connection
+      # and no purchase can be started or settled.
+      - key: WHOP_API_KEY
+        sync: false
+      - key: WHOP_WEBHOOK_SECRET
+        sync: false
+      - key: WHOP_PRODUCTS_CLINIC_WORKFLOW_REVIEW
+        sync: false
+      - key: WHOP_PRODUCTS_FOUNDING_CLINIC_SEAT
+        sync: false
+      - key: WHOP_PRODUCTS_CONTRACTOR_APPLICATION_REVIEW
+        sync: false
+      - key: WHOP_PRODUCTS_ROOM_LISTING_REVIEW
+        sync: false
+      - key: WHOP_PRODUCTS_SELLER_LISTING_REVIEW
+        sync: false
+      - key: WHOP_PRODUCTS_AI_CONSULTING_CALL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
