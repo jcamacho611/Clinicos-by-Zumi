@@ -1,0 +1,132 @@
+/*
+ * Klinikos Design System — authoritative tokens.
+ *
+ * Transcribed from the design-system export, values unchanged. OKLCH is kept as
+ * authored: it is perceptually uniform, so the `color-mix` tints the components use
+ * stay even across hues in a way hex approximations do not.
+ *
+ * Scoped to [data-klinikos-ds] rather than :root on purpose. The legacy palette in
+ * globals.css defines --ink as dark text for light surfaces; this system defines
+ * --ink as light text for dark surfaces. Publishing both on :root would silently
+ * invert text colour on every page not yet migrated. Any surface that opts in sets
+ * the attribute and gets the whole system; everything else is untouched.
+ */
+
+[data-klinikos-ds] {
+  /* Neutrals */
+  --obsidian: oklch(15% 0.006 255);
+  --obsidian-2: oklch(19% 0.008 255);
+  --graphite: oklch(24% 0.01 255);
+  --graphite-2: oklch(30% 0.012 255);
+  --stone: oklch(88% 0.012 80);
+  --stone-2: oklch(93% 0.008 80);
+  --off-white: oklch(97% 0.004 90);
+  --silver: oklch(78% 0.006 255);
+  --ink: oklch(97% 0.004 90);
+  --ink-dim: oklch(72% 0.02 255);
+
+  /* Aegean / intelligence */
+  --aegean-900: oklch(22% 0.06 245);
+  --aegean-700: oklch(35% 0.09 245);
+  --aegean-500: oklch(48% 0.11 235);
+  --cyan-400: oklch(78% 0.13 210);
+  --cyan-500: oklch(70% 0.15 205);
+
+  /* Premium */
+  --gold-300: oklch(84% 0.09 85);
+  --gold-500: oklch(70% 0.12 80);
+  --gold-700: oklch(55% 0.1 75);
+
+  /* Semantic surfaces */
+  --surface-primary: var(--obsidian);
+  --surface-secondary: var(--obsidian-2);
+  --surface-raised: var(--graphite);
+  --surface-paper: var(--off-white);
+  --surface-paper-2: var(--stone-2);
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-dim);
+  --text-on-paper: var(--obsidian);
+  --text-on-paper-dim: oklch(45% 0.01 255);
+
+  /* Accents carry meaning, never decoration: cyan = Zumi acting, aegean = signal,
+     gold = premium/paid moments only. */
+  --accent-intelligence: var(--cyan-500);
+  --accent-signal: var(--aegean-500);
+  --accent-premium: var(--gold-500);
+
+  --line-dark: oklch(32% 0.012 255);
+  --line-light: oklch(85% 0.01 80);
+
+  /* The six Zumi operating states, shared by ZumiOrb and Badge. */
+  --status-observing: var(--aegean-500);
+  --status-mapping: var(--cyan-500);
+  --status-analyzing: var(--gold-500);
+  --status-signal: oklch(68% 0.19 25);
+  --status-resolved: oklch(62% 0.13 165);
+
+  /* Type */
+  --font-sans: "Manrope Variable", "Manrope", -apple-system, "Avenir Next", sans-serif;
+  --text-display: clamp(3.4rem, 7vw, 7.2rem);
+  --text-h1: clamp(2.6rem, 4.4vw, 4.6rem);
+  --text-h2: clamp(1.9rem, 2.8vw, 2.9rem);
+  --text-h3: 1.5rem;
+  --text-body-lg: 1.15rem;
+  --text-body: 1rem;
+  --text-small: 0.85rem;
+  --text-micro: 0.7rem;
+  --tracking-tight: -0.04em;
+  --tracking-tighter: -0.06em;
+  --tracking-wide: 0.14em;
+  --tracking-wider: 0.22em;
+  --leading-tight: 0.96;
+  --leading-snug: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Spacing — 8px base unit */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 144px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+  --container-max: 1320px;
+  --grid-unit: 8px;
+
+  /* Effects */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --duration-base: 420ms;
+  --duration-slow: 900ms;
+  --glow-cyan: 0 0 40px oklch(70% 0.15 205 / 0.35);
+  --glow-gold: 0 0 30px oklch(70% 0.12 80 / 0.3);
+  --shadow-card: 0 20px 60px oklch(15% 0.006 255 / 0.35);
+  --shadow-card-light: 0 12px 30px oklch(15% 0.01 80 / 0.08);
+  --border-hair-dark: 1px solid var(--line-dark);
+  --border-hair-light: 1px solid var(--line-light);
+}
+
+/* ZumiOrb node rotation. Declared once here so the component carries no keyframes. */
+@keyframes zumi-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Motion is never decorative, so removing it costs nothing. */
+@media (prefers-reduced-motion: reduce) {
+  [data-klinikos-ds] * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
