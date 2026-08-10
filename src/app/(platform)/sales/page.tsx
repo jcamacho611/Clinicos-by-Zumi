@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+const AUDIT_PAYMENT_URL = "https://f7b959c2-9748-4f7e-9247-7bea69624c5f.paylinks.godaddy.com/";
 const steps = ["Prospect", "Qualify", "Find pain", "Quantify", "Sell audit", "Collect payment", "Audit", "Prove value", "Founding clinic", "Implement"];
 
 type Form = {
@@ -39,7 +40,7 @@ export default function SalesQualificationPage() {
         <div className="rounded-full border border-black/20 px-4 py-2 text-sm">Built toward HIPAA-regulated deployment</div>
       </header>
 
-      <div className="overflow-x-auto"><div className="flex gap-2 min-w-max">{steps.map((x,i)=><span key={x} className={`px-3 py-2 rounded-full text-xs ${i<5?"bg-black text-white":"border border-black/20"}`}>{i+1}. {x}</span>)}</div></div>
+      <div className="overflow-x-auto"><div className="flex gap-2 min-w-max">{steps.map((x,i)=><span key={x} className={`px-3 py-2 rounded-full text-xs ${i<6?"bg-black text-white":"border border-black/20"}`}>{i+1}. {x}</span>)}</div></div>
 
       <section className="grid lg:grid-cols-[1.5fr_.8fr] gap-6">
         <div className="bg-white rounded-[28px] p-6 md:p-8 shadow-sm space-y-8">
@@ -52,7 +53,7 @@ export default function SalesQualificationPage() {
         <aside className="space-y-5 lg:sticky lg:top-6 self-start">
           <div className="bg-[#171714] text-white rounded-[28px] p-7"><p className="text-xs uppercase tracking-[.2em] text-white/55">Qualification score</p><div className="text-7xl font-semibold mt-2">{score}</div><p className="mt-3 font-semibold">{status}</p><p className="text-sm text-white/60 mt-2">Scores guide the associate. They do not establish guaranteed savings or ROI.</p></div>
           <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="text-xs uppercase tracking-[.2em] text-black/50">Recommended audit</p><p className="text-4xl font-semibold mt-2">${auditPrice.toLocaleString()}</p><p className="text-sm text-black/60 mt-2">AI-assisted operational analysis + specialist review. Price is based on provider scale.</p></div>
-          {score>=70 && <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="font-semibold">Close script</p><p className="mt-3 text-sm leading-6 text-black/70">“Based on what you’ve shared, your practice qualifies for a Klinikos Operational Audit. We analyze your operating costs, workflows, patient follow-through, revenue leakage and opportunities for consolidation or automation. You receive the findings whether or not you implement Klinikos. For a practice your size, the audit is <strong>${auditPrice.toLocaleString()}</strong>. Would you like me to secure your audit and get the process started?”</p><button className="mt-5 w-full rounded-full bg-black text-white py-3 font-medium">Start audit checkout</button></div>}
+          {score>=70 && <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="font-semibold">Close script</p><p className="mt-3 text-sm leading-6 text-black/70">“Based on what you’ve shared, your practice qualifies for a Klinikos Operational Audit. We analyze your operating costs, workflows, patient follow-through, revenue leakage and opportunities for consolidation or automation. You receive the findings whether or not you implement Klinikos. For a practice your size, the audit is <strong>${auditPrice.toLocaleString()}</strong>. Would you like me to secure your audit and get the process started?”</p><a href={AUDIT_PAYMENT_URL} target="_blank" rel="noopener noreferrer" className="mt-5 block w-full rounded-full bg-black text-white py-3 px-5 text-center font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">Start secure audit checkout</a><p className="mt-3 text-xs text-black/50">Checkout opens the official Klinikos GoDaddy payment page in a new tab. Confirm the selected audit amount with the buyer before payment.</p></div>}
           <div className="border border-black/15 rounded-[28px] p-7"><p className="font-semibold">Guardrails</p><ul className="mt-3 text-sm text-black/65 space-y-2"><li>• Never describe Klinikos as HIPAA compliant.</li><li>• Never invent savings, revenue, losses, vendor data, or authority.</li><li>• Label clinic-provided numbers as reported.</li><li>• Human review remains required for clinical and financially sensitive actions.</li><li>• Only demonstrate verified production-ready workflows.</li></ul></div>
         </aside>
       </section>
