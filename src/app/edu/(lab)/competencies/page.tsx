@@ -30,10 +30,10 @@ export default async function EduCompetenciesPage() {
       />
       <div className="px-5 py-6 sm:px-8">
         {records.length ? (
-          <div className="overflow-x-auto border border-slate-200 bg-white">
+          <div className="overflow-x-auto border border-white/10 bg-white/[.03]">
             <table className="w-full min-w-[620px] text-left text-sm">
               <caption className="sr-only">Competency determinations</caption>
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+              <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
                 <tr>
                   <th className="px-4 py-3 font-extrabold" scope="col">Student</th>
                   <th className="px-4 py-3 font-extrabold" scope="col">Competency area</th>
@@ -42,10 +42,10 @@ export default async function EduCompetenciesPage() {
               </thead>
               <tbody>
                 {records.map((record, index) => (
-                  <tr className="border-t border-slate-200" key={`${record.competencyArea}-${index}`}>
-                    <th className="px-4 py-3 font-bold text-slate-950" scope="row">{record.enrollment.studentDisplayName}</th>
-                    <td className="px-4 py-3 text-slate-700">{record.competencyArea.replace(/_/g, " ")}</td>
-                    <td className="px-4 py-3 text-slate-600">{record.status.replace(/_/g, " ")}</td>
+                  <tr className="border-t border-white/10" key={`${record.competencyArea}-${index}`}>
+                    <th className="px-4 py-3 font-bold text-white" scope="row">{record.enrollment.studentDisplayName}</th>
+                    <td className="px-4 py-3 text-slate-300">{record.competencyArea.replace(/_/g, " ")}</td>
+                    <td className="px-4 py-3 text-slate-400">{record.status.replace(/_/g, " ")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -57,7 +57,7 @@ export default async function EduCompetenciesPage() {
             title="No determinations recorded"
           />
         )}
-        <p className="mt-6 max-w-3xl border-t border-slate-200 pt-5 text-[11px] leading-5 text-slate-500">{CREDENTIAL_DISCLAIMER}</p>
+        <p className="mt-6 max-w-3xl border-t border-white/10 pt-5 text-[11px] leading-5 text-slate-500">{CREDENTIAL_DISCLAIMER}</p>
       </div>
     </>
   );

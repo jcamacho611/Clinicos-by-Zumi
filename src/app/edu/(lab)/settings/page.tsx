@@ -17,9 +17,9 @@ export default async function EduSettingsPage() {
     <>
       <EduCommandHeader description="Institution configuration and the current state of governed integrations." eyebrow="Administration" title="Settings" />
       <div className="px-5 py-6 sm:px-8">
-        <table className="w-full max-w-3xl border border-slate-200 bg-white text-left text-sm">
+        <table className="w-full max-w-3xl border border-white/10 bg-white/[.03] text-left text-sm">
           <caption className="sr-only">Integration status</caption>
-          <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+          <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
             <tr>
               <th className="px-4 py-3 font-extrabold" scope="col">Capability</th>
               <th className="px-4 py-3 font-extrabold" scope="col">State</th>
@@ -27,20 +27,20 @@ export default async function EduSettingsPage() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t border-slate-200">
-              <th className="px-4 py-3 font-bold text-slate-950" scope="row">AI scenario drafting &amp; feedback</th>
-              <td className="px-4 py-3 font-semibold text-amber-800">Pending Connection</td>
-              <td className="px-4 py-3 leading-6 text-slate-600">{gateway.detail}</td>
+            <tr className="border-t border-white/10">
+              <th className="px-4 py-3 font-bold text-white" scope="row">AI scenario drafting &amp; feedback</th>
+              <td className="px-4 py-3 font-semibold text-[#f0dda0]">Pending Connection</td>
+              <td className="px-4 py-3 leading-6 text-slate-400">{gateway.detail}</td>
             </tr>
-            <tr className="border-t border-slate-200">
-              <th className="px-4 py-3 font-bold text-slate-950" scope="row">LMS interoperability (LTI 1.3, SSO)</th>
-              <td className="px-4 py-3 font-semibold text-amber-800">Pending Connection</td>
-              <td className="px-4 py-3 leading-6 text-slate-600">Requires per-institution credentials and an agreement before it can be enabled.</td>
+            <tr className="border-t border-white/10">
+              <th className="px-4 py-3 font-bold text-white" scope="row">LMS interoperability (LTI 1.3, SSO)</th>
+              <td className="px-4 py-3 font-semibold text-[#f0dda0]">Pending Connection</td>
+              <td className="px-4 py-3 leading-6 text-slate-400">Requires per-institution credentials and an agreement before it can be enabled.</td>
             </tr>
-            <tr className="border-t border-slate-200">
-              <th className="px-4 py-3 font-bold text-slate-950" scope="row">Credential issuance</th>
-              <td className="px-4 py-3 font-semibold text-amber-800">Pending review</td>
-              <td className="px-4 py-3 leading-6 text-slate-600">{CREDENTIAL_DISCLAIMER}</td>
+            <tr className="border-t border-white/10">
+              <th className="px-4 py-3 font-bold text-white" scope="row">Credential issuance</th>
+              <td className="px-4 py-3 font-semibold text-[#f0dda0]">Pending review</td>
+              <td className="px-4 py-3 leading-6 text-slate-400">{CREDENTIAL_DISCLAIMER}</td>
             </tr>
           </tbody>
         </table>

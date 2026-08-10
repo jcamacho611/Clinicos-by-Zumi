@@ -26,10 +26,10 @@ export default async function EduCohortsPage() {
       />
       <div className="px-5 py-6 sm:px-8">
         {cohorts.length ? (
-          <div className="overflow-x-auto border border-slate-200 bg-white">
+          <div className="overflow-x-auto border border-white/10 bg-white/[.03]">
             <table className="w-full min-w-[720px] text-left text-sm">
               <caption className="sr-only">Cohorts</caption>
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+              <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
                 <tr>
                   <th className="px-4 py-3 font-extrabold" scope="col">Cohort</th>
                   <th className="px-4 py-3 font-extrabold" scope="col">Course</th>
@@ -40,12 +40,12 @@ export default async function EduCohortsPage() {
               </thead>
               <tbody>
                 {cohorts.map((cohort) => (
-                  <tr className="border-t border-slate-200" key={cohort.id}>
-                    <th className="px-4 py-3 font-bold text-slate-950" scope="row">{cohort.name}</th>
-                    <td className="px-4 py-3 text-slate-700">{cohort.course.code} — {cohort.course.title}</td>
-                    <td className="px-4 py-3 tabular-nums text-slate-700">{cohort._count.enrollments}</td>
-                    <td className="px-4 py-3 tabular-nums text-slate-600">{cohort.maxSeats ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{cohort.status}</td>
+                  <tr className="border-t border-white/10" key={cohort.id}>
+                    <th className="px-4 py-3 font-bold text-white" scope="row">{cohort.name}</th>
+                    <td className="px-4 py-3 text-slate-300">{cohort.course.code} — {cohort.course.title}</td>
+                    <td className="px-4 py-3 tabular-nums text-slate-300">{cohort._count.enrollments}</td>
+                    <td className="px-4 py-3 tabular-nums text-slate-400">{cohort.maxSeats ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-400">{cohort.status}</td>
                   </tr>
                 ))}
               </tbody>

@@ -60,10 +60,10 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
           <h2 className="text-lg font-extrabold tracking-[-.03em]" id="queue-heading">Work queue</h2>
           <div className="mt-4">
             {view.tasks.length ? (
-              <div className="overflow-x-auto border border-slate-200 bg-white">
+              <div className="overflow-x-auto border border-white/10 bg-white/[.03]">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <caption className="sr-only">Tasks assigned to your seat</caption>
-                  <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+                  <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
                     <tr>
                       <th className="px-4 py-3 font-extrabold" scope="col">Task</th>
                       <th className="px-4 py-3 font-extrabold" scope="col">Queue</th>
@@ -72,13 +72,13 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
                   </thead>
                   <tbody>
                     {view.tasks.map((task) => (
-                      <tr className="border-t border-slate-200 align-top" key={task.key}>
-                        <th className="px-4 py-3 font-bold text-slate-950" scope="row">
+                      <tr className="border-t border-white/10 align-top" key={task.key}>
+                        <th className="px-4 py-3 font-bold text-white" scope="row">
                           {task.title}
-                          {task.detail && <span className="mt-1 block text-[12px] font-normal leading-5 text-slate-600">{task.detail}</span>}
+                          {task.detail && <span className="mt-1 block text-[12px] font-normal leading-5 text-slate-400">{task.detail}</span>}
                         </th>
-                        <td className="px-4 py-3 text-slate-600">{task.queue.replace(/_/g, " ")}</td>
-                        <td className="px-4 py-3 text-slate-600">{task.priority}</td>
+                        <td className="px-4 py-3 text-slate-400">{task.queue.replace(/_/g, " ")}</td>
+                        <td className="px-4 py-3 text-slate-400">{task.priority}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -90,25 +90,25 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
           </div>
         </section>
 
-        <aside aria-labelledby="brief-heading" className="border-l border-slate-200 pl-6">
+        <aside aria-labelledby="brief-heading" className="border-l border-white/10 pl-6">
           <h2 className="text-sm font-extrabold uppercase tracking-[.14em] text-slate-500" id="brief-heading">Scenario brief</h2>
           <ul aria-label="Data classification" className="mt-3 flex flex-wrap gap-1.5">
             {SYNTHETIC_DATA_LABELS.map((label) => (
-              <li className="border border-amber-300 bg-amber-50 px-2 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-amber-900" key={label}>{label}</li>
+              <li className="border border-[#e6c55b]/40 bg-[#e6c55b]/[.08] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-[#f0dda0]" key={label}>{label}</li>
             ))}
           </ul>
-          <p className="mt-4 text-[12px] leading-6 text-slate-700">{view.openingBrief}</p>
+          <p className="mt-4 text-[12px] leading-6 text-slate-300">{view.openingBrief}</p>
           <h3 className="mt-6 text-[11px] font-extrabold uppercase tracking-[.12em] text-slate-500">Evidence timeline</h3>
           <ol className="mt-3 grid gap-3">
             {view.events.map((event) => (
-              <li className="border-l-2 border-slate-300 pl-3" key={event.key}>
-                <p className="text-[12px] font-bold text-slate-950">{event.label}</p>
+              <li className="border-l-2 border-white/15 pl-3" key={event.key}>
+                <p className="text-[12px] font-bold text-white">{event.label}</p>
                 <p className="text-[11px] uppercase tracking-[.1em] text-slate-500">{event.type.replace(/_/g, " ")}</p>
-                {event.detail && <p className="mt-1 text-[12px] leading-5 text-slate-600">{event.detail}</p>}
+                {event.detail && <p className="mt-1 text-[12px] leading-5 text-slate-400">{event.detail}</p>}
               </li>
             ))}
           </ol>
-          <p className="mt-6 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500">{SYNTHETIC_DATA_NOTICE}</p>
+          <p className="mt-6 border-t border-white/10 pt-4 text-[11px] leading-5 text-slate-500">{SYNTHETIC_DATA_NOTICE}</p>
         </aside>
       </div>
     </>

@@ -34,10 +34,10 @@ export default async function EduCourseDetailPage({ params }: { params: Promise<
           <h2 className="text-lg font-extrabold tracking-[-.03em]" id="cohorts-heading">Cohorts</h2>
           <div className="mt-4">
             {course.cohorts.length ? (
-              <div className="overflow-x-auto border border-slate-200 bg-white">
+              <div className="overflow-x-auto border border-white/10 bg-white/[.03]">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <caption className="sr-only">Cohorts in this course</caption>
-                  <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+                  <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
                     <tr>
                       <th className="px-4 py-3 font-extrabold" scope="col">Cohort</th>
                       <th className="px-4 py-3 font-extrabold" scope="col">Enrolled</th>
@@ -46,10 +46,10 @@ export default async function EduCourseDetailPage({ params }: { params: Promise<
                   </thead>
                   <tbody>
                     {course.cohorts.map((cohort) => (
-                      <tr className="border-t border-slate-200" key={cohort.id}>
-                        <th className="px-4 py-3 font-bold text-slate-950" scope="row">{cohort.name}</th>
-                        <td className="px-4 py-3 tabular-nums text-slate-700">{cohort._count.enrollments}</td>
-                        <td className="px-4 py-3 text-slate-600">{cohort.status}</td>
+                      <tr className="border-t border-white/10" key={cohort.id}>
+                        <th className="px-4 py-3 font-bold text-white" scope="row">{cohort.name}</th>
+                        <td className="px-4 py-3 tabular-nums text-slate-300">{cohort._count.enrollments}</td>
+                        <td className="px-4 py-3 text-slate-400">{cohort.status}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -61,21 +61,21 @@ export default async function EduCourseDetailPage({ params }: { params: Promise<
           </div>
         </section>
 
-        <aside aria-labelledby="curriculum-heading" className="border-l border-slate-200 pl-6">
+        <aside aria-labelledby="curriculum-heading" className="border-l border-white/10 pl-6">
           <h2 className="text-sm font-extrabold uppercase tracking-[.14em] text-slate-500" id="curriculum-heading">Curriculum package</h2>
           {curriculum ? (
             <>
-              <p className="mt-3 text-sm font-bold text-slate-950">{curriculum.title}</p>
-              <p className="mt-2 text-[12px] leading-6 text-slate-600">{curriculum.summary}</p>
+              <p className="mt-3 text-sm font-bold text-white">{curriculum.title}</p>
+              <p className="mt-2 text-[12px] leading-6 text-slate-400">{curriculum.summary}</p>
               <h3 className="mt-5 text-[11px] font-extrabold uppercase tracking-[.12em] text-slate-500">Learning objectives</h3>
               <ul className="mt-2 grid gap-1.5">
                 {curriculum.learningObjectives.map((objective) => (
-                  <li className="text-[12px] leading-5 text-slate-600" key={objective}>· {objective}</li>
+                  <li className="text-[12px] leading-5 text-slate-400" key={objective}>· {objective}</li>
                 ))}
               </ul>
             </>
           ) : (
-            <p className="mt-3 text-[12px] leading-6 text-slate-600">This course is not linked to a curriculum package.</p>
+            <p className="mt-3 text-[12px] leading-6 text-slate-400">This course is not linked to a curriculum package.</p>
           )}
         </aside>
       </div>

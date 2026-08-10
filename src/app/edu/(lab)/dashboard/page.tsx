@@ -28,22 +28,22 @@ export default async function EduDashboardPage() {
         title={staff ? "Instructor dashboard" : "My lab"}
       />
       <div className="px-5 py-6 sm:px-8">
-        <table className="w-full max-w-2xl border border-slate-200 bg-white text-left text-sm">
+        <table className="w-full max-w-2xl border border-white/10 bg-white/[.03] text-left text-sm">
           <caption className="sr-only">Current EDU activity</caption>
           <tbody>
-            <tr className="border-b border-slate-200">
-              <th className="px-4 py-3 font-semibold text-slate-600" scope="row">Courses</th>
-              <td className="px-4 py-3 tabular-nums font-extrabold text-slate-950">{courses}</td>
+            <tr className="border-b border-white/10">
+              <th className="px-4 py-3 font-semibold text-slate-400" scope="row">Courses</th>
+              <td className="px-4 py-3 tabular-nums font-extrabold text-white">{courses}</td>
             </tr>
-            <tr className="border-b border-slate-200">
-              <th className="px-4 py-3 font-semibold text-slate-600" scope="row">Cohorts</th>
-              <td className="px-4 py-3 tabular-nums font-extrabold text-slate-950">{cohorts}</td>
+            <tr className="border-b border-white/10">
+              <th className="px-4 py-3 font-semibold text-slate-400" scope="row">Cohorts</th>
+              <td className="px-4 py-3 tabular-nums font-extrabold text-white">{cohorts}</td>
             </tr>
             <tr>
-              <th className="px-4 py-3 font-semibold text-slate-600" scope="row">
+              <th className="px-4 py-3 font-semibold text-slate-400" scope="row">
                 {staff ? "Submissions awaiting grading" : "Scenarios in progress"}
               </th>
-              <td className="px-4 py-3 tabular-nums font-extrabold text-slate-950">{openSubmissions}</td>
+              <td className="px-4 py-3 tabular-nums font-extrabold text-white">{openSubmissions}</td>
             </tr>
           </tbody>
         </table>

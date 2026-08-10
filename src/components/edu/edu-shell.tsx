@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/clinic/brand-mark";
+import { commandSurfaces } from "@/lib/design/command-system";
 import { eduNavigationForRole } from "@/lib/edu/edu-navigation";
 import type { EduPlatformRole } from "@/lib/edu/edu-roles";
 import { SYNTHETIC_DATA_LABELS } from "@/lib/edu/edu-safety";
 
 /**
  * Authenticated Klinikos EDU shell.
+ *
+ * Renders on the shared command ground so the lab reads as the same product as the
+ * clinic command center rather than a bolted-on LMS. Tokens come from the design
+ * system; nothing here defines a colour of its own.
  *
  * One dominant work surface per page. The shell contributes a rail and a command
  * header and then gets out of the way — no hero, no card grid, no KPI boxes.
@@ -36,16 +41,17 @@ export function EduShell({
   const groups = eduNavigationForRole(role);
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-slate-950">
+    <div className={commandSurfaces.shell}>
+      <div aria-hidden="true" className={commandSurfaces.aegeanField} />
       <a
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-slate-950 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-cyan-300 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-[#05090f]"
         href="#edu-main"
       >
         Skip to main content
       </a>
 
-      <div className="lg:grid lg:grid-cols-[250px_1fr]">
-        <div className="bg-[#07151c] text-white lg:min-h-screen">
+      <div className="relative lg:grid lg:grid-cols-[250px_1fr]">
+        <div className="border-r border-white/10 lg:min-h-screen">
           <div className="flex items-center gap-3 px-5 py-6">
             <BrandMark />
             <div>
@@ -76,20 +82,20 @@ export function EduShell({
         </div>
 
         <div className="min-w-0">
-          <header className="border-b border-slate-200 bg-white" role="banner">
+          <header className="border-b border-white/10" role="banner">
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[.14em] text-slate-500">
+                <p className="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">
                   {institutionName ?? "No institution linked"}
                 </p>
-                <p className="mt-0.5 text-sm font-extrabold text-slate-950">
-                  {userName} · <span className="font-semibold text-slate-600">{roleLabels[role]}</span>
+                <p className="mt-0.5 text-sm font-extrabold text-white">
+                  {userName} · <span className="font-semibold text-slate-400">{roleLabels[role]}</span>
                 </p>
               </div>
               <ul aria-label="Data classification" className="flex flex-wrap gap-1.5">
                 {SYNTHETIC_DATA_LABELS.map((label) => (
                   <li
-                    className="border border-amber-300 bg-amber-50 px-2 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-amber-900"
+                    className="border border-[#e6c55b]/40 bg-[#e6c55b]/[.08] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-[#f0dda0]"
                     key={label}
                   >
                     {label}
@@ -119,11 +125,11 @@ export function EduCommandHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 px-5 py-6 sm:px-8">
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 px-5 py-6 sm:px-8">
       <div className="max-w-3xl">
-        <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#9a7a1f]">{eyebrow}</p>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-[-.04em] sm:text-3xl">{title}</h1>
-        {description && <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>}
+        <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#e6c55b]">{eyebrow}</p>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-white sm:text-3xl">{title}</h1>
+        {description && <p className="mt-3 text-sm leading-6 text-slate-300">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -136,9 +142,9 @@ export function EduCommandHeader({
  */
 export function EduEmptyState({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-      <p className="text-sm font-extrabold text-slate-950">{title}</p>
-      <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">{detail}</p>
+    <div className="border border-dashed border-white/15 bg-white/[.02] px-6 py-12 text-center">
+      <p className="text-sm font-extrabold text-white">{title}</p>
+      <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">{detail}</p>
     </div>
   );
 }

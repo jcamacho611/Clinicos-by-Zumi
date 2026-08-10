@@ -28,13 +28,13 @@ export default async function EduScenariosPage() {
         title="Scenario library"
       />
       <div className="px-5 py-6 sm:px-8">
-        <p className="max-w-3xl border-l-2 border-amber-300 pl-4 text-[12px] leading-6 text-slate-600">{SYNTHETIC_DATA_NOTICE}</p>
+        <p className="max-w-3xl border-l-2 border-[#e6c55b]/40 pl-4 text-[12px] leading-6 text-slate-400">{SYNTHETIC_DATA_NOTICE}</p>
         <div className="mt-6">
           {scenarios.length ? (
-            <div className="overflow-x-auto border border-slate-200 bg-white">
+            <div className="overflow-x-auto border border-white/10 bg-white/[.03]">
               <table className="w-full min-w-[820px] text-left text-sm">
                 <caption className="sr-only">Scenario library</caption>
-                <thead className="bg-slate-50 text-[11px] uppercase tracking-[.1em] text-slate-600">
+                <thead className="bg-white/[.04] text-[11px] uppercase tracking-[.1em] text-slate-400">
                   <tr>
                     <th className="px-4 py-3 font-extrabold" scope="col">Scenario</th>
                     <th className="px-4 py-3 font-extrabold" scope="col">Setting</th>
@@ -47,17 +47,17 @@ export default async function EduScenariosPage() {
                 </thead>
                 <tbody>
                   {scenarios.map((scenario) => (
-                    <tr className="border-t border-slate-200" key={scenario.id}>
-                      <th className="px-4 py-3 font-bold text-slate-950" scope="row">
+                    <tr className="border-t border-white/10" key={scenario.id}>
+                      <th className="px-4 py-3 font-bold text-white" scope="row">
                         {scenario.title}
                         {scenario.aiGenerated && <span className="ml-2 text-[10px] font-bold uppercase tracking-[.1em] text-slate-500">AI draft</span>}
                       </th>
-                      <td className="px-4 py-3 text-slate-600">{scenario.setting.replace(/_/g, " ")}</td>
-                      <td className="px-4 py-3 text-slate-600">{scenario.difficulty}</td>
-                      <td className="px-4 py-3 text-[12px] text-slate-600">{scenario.simulationRoles.map((role) => role.replace(/_/g, " ")).join(", ") || "—"}</td>
-                      <td className="px-4 py-3 tabular-nums text-slate-600">{scenario.estimatedMinutes}</td>
-                      <td className="px-4 py-3 tabular-nums text-slate-600">v{scenario.version}</td>
-                      <td className="px-4 py-3 text-slate-600">{scenario.status.replace(/_/g, " ")}</td>
+                      <td className="px-4 py-3 text-slate-400">{scenario.setting.replace(/_/g, " ")}</td>
+                      <td className="px-4 py-3 text-slate-400">{scenario.difficulty}</td>
+                      <td className="px-4 py-3 text-[12px] text-slate-400">{scenario.simulationRoles.map((role) => role.replace(/_/g, " ")).join(", ") || "—"}</td>
+                      <td className="px-4 py-3 tabular-nums text-slate-400">{scenario.estimatedMinutes}</td>
+                      <td className="px-4 py-3 tabular-nums text-slate-400">v{scenario.version}</td>
+                      <td className="px-4 py-3 text-slate-400">{scenario.status.replace(/_/g, " ")}</td>
                     </tr>
                   ))}
                 </tbody>
