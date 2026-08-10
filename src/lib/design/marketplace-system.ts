@@ -49,9 +49,13 @@ export const marketplacePalette = {
 export const marketplaceSurfaces = {
   page: "min-h-screen bg-[#fbfbfc] text-[#0b1220]",
   card: "border border-[#e6e9ee] bg-white",
-  /** Lift on hover only — no shadow at rest, so a dense grid stays calm. */
+  /**
+   * Hover darkens the hairline and eases opacity. No shadow-pop: the design system
+   * is explicit that hairline borders do the work drop shadows used to, and that
+   * --shadow-card appears at most once per screen.
+   */
   cardInteractive:
-    "border border-[#e6e9ee] bg-white transition hover:border-[#cdd3dc] hover:shadow-[0_12px_32px_rgba(11,18,32,.08)] focus-within:border-[#174ea6]",
+    "border border-[#e6e9ee] bg-white transition-[border-color,opacity] duration-200 hover:border-[#0b1220]/40 focus-within:border-[#174ea6]",
   /** Sticky filter rail. Filters apply as you touch them; nothing is submitted. */
   filterBar: "sticky top-0 z-30 border-b border-[#e6e9ee] bg-white/90 backdrop-blur",
   chip: "min-h-[44px] border px-3.5 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#174ea6]",
