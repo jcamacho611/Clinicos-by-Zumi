@@ -33,7 +33,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-slate-500">
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Synthetic-data workspace</span>
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> 30-day free trial</span>
+              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Pay as your clinic grows</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> Human review gates</span>
               <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-600" /> {clinicOsDayOneRegistry.length} P0 domains · {canonicalCapabilityCount.toLocaleString()} capabilities</span>
             </div>
