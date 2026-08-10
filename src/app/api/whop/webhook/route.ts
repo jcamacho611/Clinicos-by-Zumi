@@ -1,8 +1,17 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
+import { applyWebhookToAccessPayment } from "@/lib/commerce/access-payment-service";
 import { whopWebhookSecret } from "@/lib/commerce/whop-client";
 import { applyWebhookToEntitlement, payloadHash, recordWebhookDelivery } from "@/lib/commerce/whop-entitlements";
 import { verifyWhopSignature, whopWebhookEnvelopeSchema } from "@/lib/commerce/whop-rules";
+
+/** Payment events settle a one-time marketplace purchase rather than a membership. */
+const paymentOutcomes: Record<string, "paid" | "refunded" | "failed"> = {
+  "payment.succeeded": "paid",
+  "payment.failed": "failed",
+  "refund.created": "refunded",
+  "dispute.created": "refunded",
+};
 
 /**
  * Whop webhook receiver.
@@ -76,9 +85,24 @@ export async function POST(request: Request) {
   if (delivery.duplicate) return noStore({ ok: true, duplicate: true }, 200);
 
   try {
+    // A one-time marketplace purchase settles an AccessPayment; a recurring access
+    // pass updates a WhopEntitlement. Payment events are tried against the purchase
+    // ledger first, and fall through to the membership path when nothing matches.
+    const paymentOutcome = paymentOutcomes[eventType];
+    if (paymentOutcome) {
+      const settled = await applyWebhookToAccessPayment({
+        externalPaymentReference: membershipId ?? envelope.id?.trim() ?? null,
+        buyerEmail: envelope.data?.email ?? null,
+        outcome: paymentOutcome,
+      });
+      if (settled.applied) {
+        return noStore({ ok: true, applied: true, scope: "access_payment", status: settled.status }, 200);
+      }
+    }
+
     const result = await applyWebhookToEntitlement({ envelope, eventType, webhookRecordId: delivery.id });
     if (!result.applied) return noStore({ ok: true, applied: false, reason: result.reason }, 202);
-    return noStore({ ok: true, applied: true, state: result.state, tierKey: result.tierKey }, 200);
+    return noStore({ ok: true, applied: true, scope: "entitlement", state: result.state, tierKey: result.tierKey }, 200);
   } catch {
     // 500 so Whop retries; the ledger row stays for reconciliation either way.
     return noStore({ error: "Entitlement update failed." }, 500);

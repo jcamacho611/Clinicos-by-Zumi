@@ -3,8 +3,39 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
+import { findGrantedAccessPayment } from "@/lib/commerce/access-payment-service";
+import { getAccessProduct } from "@/lib/commerce/access-product-catalog";
 import { findEntitlementForIdentity } from "@/lib/commerce/whop-entitlements";
 import type { EntitlementRecord } from "@/lib/commerce/whop-rules";
+
+/**
+ * Map a settled one-time marketplace purchase onto the same entitlement shape the
+ * access rules consume, so both the recurring pass and the one-time review fee are
+ * evaluated by one set of rules.
+ *
+ * A one-time review fee has no renewal date, so it carries no `validUntil`; it is
+ * revoked by refund or by an administrator rather than by expiry.
+ */
+const roleTargetTier: Record<string, string> = {
+  contractor: "grid_provider",
+  location_owner: "grid_location_partner",
+  seller: "grid_location_partner",
+  clinic: "clinic_operator",
+  advisory: "evaluator_pass",
+};
+
+function entitlementFromPayment(payment: { productKey: string; roleTarget: string; verifiedAt: Date | null } | null): EntitlementRecord | null {
+  if (!payment) return null;
+  const tierKey = roleTargetTier[payment.roleTarget];
+  if (!tierKey || !getAccessProduct(payment.productKey)) return null;
+  return {
+    tierKey,
+    state: "active",
+    validUntil: null,
+    revokedAt: null,
+    lastVerifiedAt: payment.verifiedAt,
+  };
+}
 import { type GridMarketplaceAction, evaluateGridMarketplaceAccess, summarizeGridMarketplaceAccess } from "@/lib/grid-access";
 import { providerReadyForGrid } from "@/lib/grid-rules";
 
@@ -40,15 +71,19 @@ export type GridAccessContext = {
 
 /** Read-only access context for rendering a workspace without performing an action. */
 export async function gridAccessContext(session: ClinicSession): Promise<GridAccessContext> {
-  const [entitlement, readiness] = await Promise.all([
+  const [entitlement, grantedPayment, readiness] = await Promise.all([
     findEntitlementForIdentity({ email: session.email, organizationId: session.organizationId }),
+    findGrantedAccessPayment({ email: session.email, organizationId: session.organizationId }),
     resolveProviderReadiness(session),
   ]);
 
-  const record = (entitlement as EntitlementRecord | null) ?? null;
+  // Either route into the marketplace counts: a recurring access pass, or a settled
+  // one-time review fee whose human review has completed. The pass wins when both
+  // exist, since it is the one that can expire and be revalidated.
+  const record = (entitlement as EntitlementRecord | null) ?? entitlementFromPayment(grantedPayment);
   return {
     entitlement: record,
-    tierKey: entitlement?.tierKey ?? null,
+    tierKey: record?.tierKey ?? null,
     providerReady: readiness.ready,
     summary: summarizeGridMarketplaceAccess({ entitlement: record, providerReady: readiness.ready }),
   };
