@@ -58,11 +58,11 @@ export async function buildCasePacketPdf(input: {
   const generatedAt = packet.generatedAt ? new Date(packet.generatedAt) : new Date();
   pdf.setTitle(`${room.case.caseLabel} packet - ${room.case.patientName}`);
   pdf.setAuthor(input.organizationName);
-  pdf.setSubject("ClinicOS manual case packet cover sheet");
-  pdf.setKeywords(["ClinicOS", "manual packet", `case:${room.case.id}`, `packet:${packet.id}`]);
+  pdf.setSubject("Klinikos manual case packet cover sheet");
+  pdf.setKeywords(["Klinikos", "manual packet", `case:${room.case.id}`, `packet:${packet.id}`]);
   pdf.setCreationDate(generatedAt);
 
-  line("CLINICOS MANUAL CASE PACKET", { font: bold, size: 8, color: rgb(0.04, 0.44, 0.48), gap: 16 });
+  line("KLINIKOS MANUAL CASE PACKET", { font: bold, size: 8, color: rgb(0.04, 0.44, 0.48), gap: 16 });
   line(`${room.case.caseLabel} | ${packet.type.replaceAll("_", " ")}`, { font: bold, size: 21, gap: 28 });
   line(`${input.organizationName} | Generated ${generatedAt.toISOString()}`, { size: 8, color: rgb(0.38, 0.42, 0.48), gap: 18 });
   divider();
@@ -100,12 +100,12 @@ export async function buildCasePacketPdf(input: {
 
   divider();
   line("MANUAL FALLBACK NOTICE", { font: bold, size: 10, color: rgb(0.72, 0.28, 0.08), gap: 17 });
-  line("This artifact is a manually generated cover sheet and checklist. ClinicOS did not electronically submit it to a carrier, attorney, payer, clearinghouse, or government system. Authorized staff must validate the destination, required forms, included records, consent, and delivery confirmation before external transmission.", { size: 8, color: rgb(0.36, 0.39, 0.44), gap: 11 });
+  line("This artifact is a manually generated cover sheet and checklist. Klinikos did not electronically submit it to a carrier, attorney, payer, clearinghouse, or government system. Authorized staff must validate the destination, required forms, included records, consent, and delivery confirmation before external transmission.", { size: 8, color: rgb(0.36, 0.39, 0.44), gap: 11 });
   line("Patient-level financial records are intentionally excluded because they have not been reviewed and attributed to this legal case.", { size: 8, color: rgb(0.36, 0.39, 0.44), gap: 11 });
 
   const pages = pdf.getPages();
   pages.forEach((current, index) => {
-    current.drawText(`ClinicOS | ${room.case.id} | ${packet.id} | Page ${index + 1} of ${pages.length}`, { x: 46, y: 24, size: 7, font: regular, color: rgb(0.5, 0.54, 0.59) });
+    current.drawText(`Klinikos | ${room.case.id} | ${packet.id} | Page ${index + 1} of ${pages.length}`, { x: 46, y: 24, size: 7, font: regular, color: rgb(0.5, 0.54, 0.59) });
   });
   return Buffer.from(await pdf.save({ useObjectStreams: false }));
 }
