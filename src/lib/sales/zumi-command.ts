@@ -12,54 +12,21 @@ import { demoOffers, type DemoOfferKey } from "@/lib/sales-demo-rules";
  * prediction — which is what lets the interface describe it honestly.
  */
 
-export const NO_PHI_NOTICE =
-  "Do not enter patient names, records, dates of birth, diagnoses, insurance identifiers, or any other protected health information. This analysis captures clinic operations and software context only.";
-
-export const HUMAN_REVIEW_NOTICE =
-  "Submitting a request or a payment does not activate production clinical use, approve PHI workflows, guarantee results, replace licensed judgment, or authorize clinical services. A human reviews every request.";
-
 /**
- * Public vocabulary rules.
- *
- * Enforced by a test rather than left to reviewer memory, because the wording is a
- * regulatory boundary as much as a brand choice: a page that says "HIPAA compliant"
- * makes a claim this product cannot support.
+ * Copy law lives in the design system so every surface shares one definition.
+ * Re-exported here because the sales flow was its first consumer and these are the
+ * import paths its call sites already use.
  */
-export const BANNED_PUBLIC_COPY = [
-  "start free",
-  "free trial",
-  "submit form",
-  "try our platform",
-  "hipaa compliant",
-  "certified ehr",
-  "guaranteed revenue",
-  "automatically approved",
-  "instant approval",
-  "instantly live",
-  "patient data accepted here",
-  "monetization os",
-] as const;
-
-export const APPROVED_PUBLIC_COPY = [
-  "Klinikos by Zumi",
-  "Clinic Operating Analysis",
-  "Private Workflow Review",
-  "Founding Clinic Qualification",
-  "AI Workflow Map",
-  "Human Review Required",
-  "No PHI",
-  "Built toward regulated healthcare deployment",
-  "Production activation requires review",
-  "Workflow signal",
-  "Operating map",
-  "Command center",
-] as const;
-
-/** Returns every banned phrase found, so a page can be corrected in one pass. */
-export function findBannedPublicCopy(text: string): string[] {
-  const haystack = text.toLowerCase();
-  return BANNED_PUBLIC_COPY.filter((phrase) => haystack.includes(phrase));
-}
+export {
+  APPROVED_PUBLIC_COPY,
+  BANNED_PUBLIC_COPY,
+  CLAIM_ONLY_TERMS,
+  findBannedPublicCopy,
+  findCopyViolations,
+  findUnqualifiedClaims,
+  HUMAN_REVIEW_NOTICE,
+  NO_PHI_NOTICE,
+} from "@/lib/design/command-system";
 
 // ---------------------------------------------------------------------------
 // Mission phases
