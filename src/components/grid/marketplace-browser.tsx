@@ -48,7 +48,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   const verification = presentVerification(listing.provider);
 
   return (
-    <li>
+    <li className="relative">
       <article className={`${marketplaceSurfaces.cardInteractive} h-full p-5`}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -267,9 +267,7 @@ export function MarketplaceBrowser({ listings }: { listings: MarketplaceListing[
         {results.length ? (
           <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {results.map((listing) => (
-              <div className="relative" key={listing.id}>
-                <ListingCard listing={listing} />
-              </div>
+              <ListingCard key={listing.id} listing={listing} />
             ))}
           </ul>
         ) : (
