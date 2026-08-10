@@ -1,8 +1,10 @@
 import "server-only";
 
 import { db } from "@/lib/db";
+import type { ClinicSession } from "@/lib/auth/types";
 import { mapPatientAggregate, type PatientAggregate } from "@/lib/repositories/patient-mapper";
 import type { Patient } from "@/lib/types";
+import type { PatientCreateInput } from "@/lib/patient-intake-rules";
 
 async function loadPatientAggregates(organizationId: string, patientId?: string): Promise<PatientAggregate[]> {
   const patientRows = await db.patient.findMany({
@@ -57,4 +59,64 @@ export async function listPatientsForOrganization(organizationId: string): Promi
 export async function findPatientForOrganization(patientId: string, organizationId: string): Promise<Patient | null> {
   const aggregate = (await loadPatientAggregates(organizationId, patientId))[0];
   return aggregate ? mapPatientAggregate(aggregate) : null;
+}
+
+async function nextMrn(organizationId: string) {
+  const prefix = `K-${new Date().getUTCFullYear()}-`;
+  const latest = await db.patient.findFirst({ where: { organizationId, mrn: { startsWith: prefix } }, orderBy: { mrn: "desc" }, select: { mrn: true } });
+  const previous = latest?.mrn.match(/(\d+)$/)?.[1];
+  return `${prefix}${String((previous ? Number(previous) : 0) + 1).padStart(5, "0")}`;
+}
+
+export async function createPatientForOrganization(session: ClinicSession, input: PatientCreateInput) {
+  return db.$transaction(async (tx) => {
+    const primaryLocation = await tx.location.findFirst({ where: { organizationId: session.organizationId, status: "active" }, orderBy: { createdAt: "asc" }, select: { id: true } });
+    let mrn = await nextMrn(session.organizationId);
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const exists = await tx.patient.findFirst({ where: { organizationId: session.organizationId, mrn }, select: { id: true } });
+      if (!exists) break;
+      mrn = `K-${new Date().getUTCFullYear()}-${String(Number(mrn.split("-").at(-1) ?? "0") + 1).padStart(5, "0")}`;
+    }
+    const duplicate = await tx.patient.findFirst({
+      where: {
+        organizationId: session.organizationId,
+        status: "active",
+        firstName: { equals: input.firstName, mode: "insensitive" },
+        lastName: { equals: input.lastName, mode: "insensitive" },
+        dateOfBirth: input.dateOfBirth,
+      },
+      select: { id: true, mrn: true },
+    });
+    if (duplicate) throw new Error(`POTENTIAL_DUPLICATE:${duplicate.id}`);
+
+    const created = await tx.patient.create({
+      data: {
+        organizationId: session.organizationId,
+        locationId: primaryLocation?.id ?? null,
+        mrn,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        dateOfBirth: input.dateOfBirth,
+        sexAtBirth: input.sexAtBirth || null,
+        phone: input.phone || null,
+        email: input.email || null,
+        preferredLanguage: input.preferredLanguage,
+        identityStatus: "unverified",
+        createdBy: session.userId,
+        updatedBy: session.userId,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: session.organizationId,
+        actorId: session.userId,
+        actorType: "user",
+        action: "patient.created",
+        resourceType: "patient",
+        resourceId: created.id,
+        metadata: { mrn: created.mrn, identityStatus: created.identityStatus },
+      },
+    });
+    return created;
+  });
 }
