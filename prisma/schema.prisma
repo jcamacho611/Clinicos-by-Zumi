@@ -63,45 +63,19 @@ enum MessageDirection {
 }
 
 model AccessGateAcceptance {
-  id              String                    @id @default(cuid())
+  id              String   @id @default(cuid())
   email           String
   documentKey     String
   documentVersion String
-  acceptedAt      DateTime                  @default(now())
-  verifiedEmailAt DateTime?
+  acceptedAt      DateTime @default(now())
   ipAddress       String?
   userAgent       String?
-  source          String                    @default("web-access-gate")
-  createdAt       DateTime                  @default(now())
-  verifications   AccessEmailVerification[]
+  source          String   @default("web-access-gate")
+  createdAt       DateTime @default(now())
 
   @@index([email, documentKey])
   @@index([acceptedAt])
-  @@index([verifiedEmailAt])
   @@map("access_gate_acceptances")
-}
-
-model AccessEmailVerification {
-  id                     String               @id @default(cuid())
-  email                  String
-  acceptanceId           String
-  documentVersion        String
-  tokenHash              String               @unique
-  status                 String               @default("pending")
-  expiresAt              DateTime
-  verifiedAt             DateTime?
-  requestedIpAddress     String?
-  requestedUserAgent     String?
-  verifiedIpAddress      String?
-  verifiedUserAgent      String?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  acceptance             AccessGateAcceptance @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
-
-  @@index([email, status])
-  @@index([acceptanceId])
-  @@index([expiresAt])
-  @@map("access_email_verifications")
 }
 
 model Organization {
@@ -519,8 +493,6 @@ model Patient {
   portalAccount       PortalAccount?
 
   @@unique([organizationId, mrn])
-  @@index([organizationId])
+  @@index([organizationId, lastName, firstName])
   @@map("patients")
 }
-
-// Remaining models unchanged from current repository schema.
