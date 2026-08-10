@@ -42,8 +42,12 @@ export const commandPalette = {
  */
 export const commandSurfaces = {
   shell: "min-h-screen bg-[#05090f] text-slate-100",
-  /** A single restrained Aegean wash. One per page, behind everything. */
-  aegeanField: "pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(23,78,166,.28),transparent_60%)]",
+  /**
+   * Flat ground. The design system permits no photographic imagery, illustration,
+   * or repeating texture, and the only texture allowed is the Zumi orb's own
+   * geometry — so the Aegean presence is a hairline horizon, not a gradient wash.
+   */
+  aegeanField: "pointer-events-none fixed inset-x-0 top-0 h-px bg-[#174ea6]/40",
   panel: "border border-white/10 bg-white/[.04] backdrop-blur-sm",
   panelRaised: "border border-white/10 bg-[#070d15]",
   panelAi: "border border-cyan-300/30 bg-cyan-400/[.06]",

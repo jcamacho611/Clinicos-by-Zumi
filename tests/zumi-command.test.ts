@@ -5,7 +5,10 @@ import {
   findCopyViolations,
   findUnqualifiedClaims,
   BANNED_PUBLIC_COPY,
+  auditPriceForAnswers,
   deriveOperatingMap,
+  preliminaryAuditScore,
+  preliminaryQualificationLabel,
   deriveSignalSummary,
   engagementOffers,
   findBannedPublicCopy,
@@ -201,5 +204,65 @@ describe("engagement offers", () => {
       expect(offer.whatHappens.length).toBeGreaterThan(20);
       expect(findBannedPublicCopy(`${offer.name} ${offer.bestFor} ${offer.whatHappens} ${offer.cta}`)).toEqual([]);
     }
+  });
+});
+
+describe("audit pricing and preliminary qualification", () => {
+  it("prices the paid Operational Audit from reported provider scale", () => {
+    expect(auditPriceForAnswers({ provider_scale: ["1"] })).toBe(750);
+    expect(auditPriceForAnswers({ provider_scale: ["2_5"] })).toBe(1250);
+    expect(auditPriceForAnswers({ provider_scale: ["6_15"] })).toBe(2500);
+    expect(auditPriceForAnswers({ provider_scale: ["16_30"] })).toBe(4000);
+    expect(auditPriceForAnswers({ provider_scale: ["30_plus"] })).toBe(5000);
+  });
+
+  it("falls to the lowest tier when scale was never answered", () => {
+    // Undercharging is the recoverable failure. Defaulting high would surprise
+    // someone with a price they never agreed to.
+    expect(auditPriceForAnswers({})).toBe(750);
+  });
+
+  it("scores a large fragmented clinic as a strong candidate", () => {
+    const score = preliminaryAuditScore({
+      provider_scale: ["6_15"],
+      location_scale: ["3_5"],
+      bottleneck: ["follow_ups", "billing_readiness", "referrals", "staff_accountability"],
+      software_spend: ["10k_plus"],
+      revenue_belief: ["denials", "lost_leads"],
+      current_system: ["many_systems"],
+      first_control: ["billing"],
+    });
+    expect(score).toBeGreaterThanOrEqual(70);
+    expect(preliminaryQualificationLabel(score)).toBe("STRONG AUDIT CANDIDATE");
+  });
+
+  it("does not score \"unsure\" as evidence of revenue leakage", () => {
+    const base = { provider_scale: ["1"], location_scale: ["1"], software_spend: ["under_2k"] };
+    expect(preliminaryAuditScore({ ...base, revenue_belief: ["unsure"] })).toBe(
+      preliminaryAuditScore({ ...base, revenue_belief: [] }),
+    );
+  });
+
+  it("never labels a score as qualified or approved", () => {
+    // Copy law forbids implying automatic approval. A person decides qualification.
+    for (const score of [0, 44, 45, 69, 70, 100]) {
+      const label = preliminaryQualificationLabel(score).toLowerCase();
+      expect(label).not.toContain("qualified");
+      expect(label).not.toContain("approved");
+    }
+  });
+
+  it("caps the score at 100", () => {
+    expect(
+      preliminaryAuditScore({
+        provider_scale: ["30_plus"],
+        location_scale: ["6_plus"],
+        bottleneck: ["a", "b", "c", "d", "e", "f", "g", "h"],
+        software_spend: ["10k_plus"],
+        revenue_belief: ["denials", "lost_leads", "unbilled", "no_shows"],
+        current_system: ["many_systems"],
+        first_control: ["billing"],
+      }),
+    ).toBe(100);
   });
 });
