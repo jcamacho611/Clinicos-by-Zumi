@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+type AccessState = "entry" | "verification-sent";
+
 export default function AccessPage() {
   const [email, setEmail] = useState("");
   const [accepted, setAccepted] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [state, setState] = useState<AccessState>("entry");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,42 +27,52 @@ export default function AccessPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase(), accepted: true }),
       });
-      const result = await response.json() as { error?: string; acceptedAt?: string; documentVersion?: string; acceptanceId?: string };
+      const result = await response.json() as { error?: string; documentVersion?: string };
       if (!response.ok) {
         setError(result.error ?? "We could not record your agreement. Please try again.");
         return;
       }
+
+      const verification = await fetch("/api/access/request-verification", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const verificationResult = await verification.json() as { error?: string };
+      if (!verification.ok) {
+        setError(verificationResult.error ?? "Agreement recorded, but we could not send the verification email.");
+        return;
+      }
+
       try {
         window.localStorage.setItem("klinikos-access-email", email.trim().toLowerCase());
         window.localStorage.setItem("klinikos-access-terms-version", result.documentVersion ?? "2026-08-10.1");
-        window.localStorage.setItem("klinikos-access-accepted-at", result.acceptedAt ?? new Date().toISOString());
-        if (result.acceptanceId) window.localStorage.setItem("klinikos-access-acceptance-id", result.acceptanceId);
       } catch {
-        // Server-side acceptance is authoritative; browser storage is only a convenience marker.
+        // Server-side records remain authoritative.
       }
-      setSubmitted(true);
+      setState("verification-sent");
     } catch {
-      setError("We could not record your agreement. Check your connection and try again.");
+      setError("We could not complete the access request. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (submitted) {
+  if (state === "verification-sent") {
     return (
       <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
         <div className="mx-auto flex min-h-screen max-w-3xl items-center px-5 py-14 sm:px-8">
           <section className="w-full border-y border-slate-200 bg-white py-14 sm:px-10">
             <div className="mx-auto max-w-xl px-5 sm:px-0">
-              <CheckCircle2 className="size-9 text-teal-700" />
-              <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[.18em] text-[#9a7a1f]">Agreement recorded</p>
-              <h1 className="mt-3 text-4xl font-extrabold tracking-[-.055em]">Welcome to Klinikos.</h1>
-              <p className="mt-5 text-sm leading-7 text-slate-600">Your evaluation access is subject to the current Klinikos Access, Confidentiality & Intellectual Property Terms. Your acceptance has been recorded for this evaluation request.</p>
+              <MailCheck className="size-9 text-teal-700" />
+              <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[.18em] text-[#9a7a1f]">Verification required</p>
+              <h1 className="mt-3 text-4xl font-extrabold tracking-[-.055em]">Check your work email.</h1>
+              <p className="mt-5 text-sm leading-7 text-slate-600">We recorded your agreement and sent a verification link to <strong className="text-slate-950">{email.trim().toLowerCase()}</strong>. Detailed Klinikos product access remains locked until that address is verified.</p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild variant="primary"><Link href="/">View Klinikos <ArrowRight className="size-4" /></Link></Button>
-                <Button asChild variant="secondary"><Link href="/sales">Request a Clinic Operating Analysis</Link></Button>
+                <Button asChild variant="secondary"><Link href="/">Return to public site</Link></Button>
                 <Button asChild variant="secondary"><Link href="/login">Sign in</Link></Button>
               </div>
+              <p className="mt-6 text-[11px] leading-5 text-slate-500">If you do not receive the email, return to this page and submit again. Verification links are short-lived and single-purpose.</p>
             </div>
           </section>
         </div>
@@ -82,14 +94,14 @@ export default function AccessPage() {
         </section>
 
         <section className="bg-white p-6 text-slate-950 shadow-[0_28px_90px_rgba(0,0,0,.35)] sm:p-8">
-          <div className="flex items-center gap-3 border-b border-slate-200 pb-5"><LockKeyhole className="size-5 text-[#9a7a1f]" /><div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#9a7a1f]">Evaluation access</p><h2 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">Enter with your work email.</h2></div></div>
+          <div className="flex items-center gap-3 border-b border-slate-200 pb-5"><LockKeyhole className="size-5 text-[#9a7a1f]" /><div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#9a7a1f]">Evaluation access</p><h2 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">Verify a work email to continue.</h2></div></div>
           <form className="mt-6" onSubmit={continueIntoKlinikos}>
             <label className="text-xs font-bold text-slate-700">Work email<Input autoComplete="email" className="mt-2 h-12" onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" required type="email" value={email} /></label>
             <label className="mt-5 flex cursor-pointer items-start gap-3 border border-slate-200 p-4 text-xs leading-6 text-slate-600"><input checked={accepted} className="mt-1 accent-slate-950" onChange={(event) => setAccepted(event.target.checked)} required type="checkbox" /><span><strong className="text-slate-950">I agree to the Klinikos Access, Confidentiality & Intellectual Property Terms</strong> and acknowledge the Privacy Notice. I understand access does not grant ownership, source-code rights, competitive-use rights or permission to reproduce proprietary Klinikos materials.</span></label>
             {error && <p className="mt-4 border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
-            <Button className="mt-5 w-full" disabled={!accepted || !email.trim() || submitting} size="lg" type="submit" variant="primary">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Recording agreement...</> : <>Enter Klinikos <ArrowRight className="size-4" /></>}</Button>
+            <Button className="mt-5 w-full" disabled={!accepted || !email.trim() || submitting} size="lg" type="submit" variant="primary">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Recording and sending verification...</> : <>Agree & verify email <ArrowRight className="size-4" /></>}</Button>
           </form>
-          <div className="mt-6 border-t border-slate-200 pt-5 text-[10px] leading-5 text-slate-500">Your acceptance is recorded server-side with the current agreement version and request metadata. Evaluation acceptance is separate from clinic, provider, GRID and production agreements, which require their own role-specific terms and operational approvals.</div>
+          <div className="mt-6 border-t border-slate-200 pt-5 text-[10px] leading-5 text-slate-500">Your acceptance is recorded server-side with the current agreement version and request metadata. A verified email is required before protected evaluation access is granted. Clinic, provider, GRID and production use require separate role-specific agreements and operational approvals.</div>
           <div className="mt-4 flex gap-4 text-[10px] font-bold"><Link className="text-slate-700 hover:text-slate-950" href="/legal/access-terms">Access terms</Link><Link className="text-slate-700 hover:text-slate-950" href="/legal/privacy">Privacy notice</Link></div>
         </section>
       </div>
