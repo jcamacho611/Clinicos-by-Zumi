@@ -1,72 +1,59 @@
 import Link from "next/link";
-import { ArrowRight, Check, LogIn, ShieldCheck, Stethoscope } from "lucide-react";
+import { ArrowRight, Check, Network, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { canonicalCapabilityCount, clinicOsDayOneRegistry } from "@/lib/feature-registry-canon";
 
+const domains = [
+  ["Clinical core", "Patients, encounters, documents and governed clinical workflows."],
+  ["Front desk", "Scheduling, intake, communications and operational handoffs."],
+  ["Revenue", "Eligibility, claims, follow-through and revenue recovery visibility."],
+  ["Network + GRID", "Referrals, provider relationships, capacity and service access."],
+];
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-slate-950">
-      <header className="border-b border-slate-200 bg-white/95">
-        <div className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
-          <Link className="flex items-center gap-3" href="/">
-            <BrandMark />
-            <div><p className="text-sm font-extrabold tracking-[-.03em]">Klinikos</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#9a7a1f]">The Clinic Operating System</p></div>
-          </Link>
-          <nav className="ml-auto hidden items-center gap-7 text-xs font-bold text-slate-600 md:flex">
-            <a href="#platform">Platform</a><Link href="/capabilities">Capabilities</Link><Link href="/grid/join">GRID</Link><a href="#safety">Safety</a><a href="#integrations">Connections</a>
-          </nav>
-          <Link className="ml-4 hidden text-xs font-extrabold text-slate-700 hover:text-slate-950 sm:block" href="/login">Sign in</Link>
-          <Button asChild className="ml-4" size="sm"><Link href="/access">Enter Klinikos <ArrowRight className="size-4" /></Link></Button>
+    <div className="min-h-screen overflow-hidden bg-[#f5f6f2] text-[#101713]">
+      <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f5f6f2]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-[1440px] items-center px-5 sm:px-8 lg:px-12">
+          <Link className="flex items-center gap-3" href="/"><BrandMark /><div><p className="text-sm font-black tracking-[-.04em]">KLINIKOS</p><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#607066]">Clinic operating intelligence</p></div></Link>
+          <nav className="ml-auto hidden items-center gap-8 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#4f5b53] md:flex"><a href="#system">System</a><Link href="/capabilities">Capabilities</Link><Link href="/grid/join">GRID</Link><a href="#safety">Safety</a></nav>
+          <Button asChild className="ml-5 rounded-full bg-[#101713] px-5 text-white hover:bg-black" size="sm"><Link href="/access">Enter Klinikos <ArrowRight className="size-4" /></Link></Button>
         </div>
       </header>
 
       <main>
-        <section className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[.92fr_1.08fr] lg:py-20">
-          <div>
-            <Badge className="mb-7 bg-white" tone="amber">Founding Clinic Implementation · $8,000</Badge>
-            <h1 className="max-w-[760px] text-balance text-5xl font-extrabold leading-[.98] tracking-[-.065em] sm:text-6xl lg:text-[76px]">One operating system for the entire clinic.</h1>
-            <p className="mt-7 max-w-2xl text-balance text-base font-medium leading-7 text-slate-600 sm:text-lg">Klinikos brings clinical care, front-desk operations, connected referrals, revenue follow-through, patient coordination and governed intelligence into one operating environment built for independent clinics.</p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="primary"><Link href="/sales">See if your clinic qualifies <ArrowRight className="size-4" /></Link></Button>
-              <Button asChild size="lg" variant="secondary"><Link href="/private-demo">Request a Clinic Operating Analysis</Link></Button>
-              <Button asChild size="lg" variant="secondary"><Link href="/login"><LogIn className="size-4" /> Sign in</Link></Button>
+        <section className="relative mx-auto min-h-[820px] max-w-[1440px] px-5 pb-20 pt-16 sm:px-8 lg:px-12 lg:pt-24">
+          <div className="absolute right-[-8%] top-12 h-[520px] w-[520px] rounded-full bg-[#c8f169]/25 blur-[110px]" />
+          <div className="absolute left-[35%] top-[32%] h-[360px] w-[360px] rounded-full bg-[#73d7d0]/15 blur-[120px]" />
+          <div className="relative grid items-center gap-16 lg:grid-cols-[1.02fr_.98fr]">
+            <div className="max-w-[760px]">
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[.16em]"><span className="h-2 w-2 rounded-full bg-[#5e8f29] shadow-[0_0_0_5px_rgba(200,241,105,.3)]" /> Founding clinic access is open</div>
+              <h1 className="text-balance text-[clamp(4rem,8vw,8.2rem)] font-black leading-[.82] tracking-[-.085em]">The clinic,<br/><span className="text-[#5f7928]">operating as one.</span></h1>
+              <p className="mt-9 max-w-2xl text-balance text-lg font-medium leading-8 text-[#566159] sm:text-xl">Klinikos unifies care, operations, revenue, referrals and governed intelligence into one command layer for independent clinics.</p>
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg" className="rounded-full bg-[#101713] px-7 text-white hover:bg-black"><Link href="/sales">Analyze my clinic <ArrowRight className="size-4" /></Link></Button><Button asChild size="lg" variant="secondary" className="rounded-full border-black/15 bg-white/60 px-7"><Link href="/private-demo">Explore the system</Link></Button></div>
+              <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-[11px] font-bold text-[#647067]"><span className="flex items-center gap-2"><Check className="size-3.5" /> Human-governed intelligence</span><span className="flex items-center gap-2"><Check className="size-3.5" /> {clinicOsDayOneRegistry.length} operating domains</span><span className="flex items-center gap-2"><Check className="size-3.5" /> {canonicalCapabilityCount.toLocaleString()} capabilities tracked</span></div>
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-slate-500">
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-700" /> Qualification before implementation</span>
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-700" /> Human review for clinical and revenue-sensitive actions</span>
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-700" /> Built toward HIPAA-regulated deployment</span>
-              <span className="flex items-center gap-1.5"><Check className="size-3.5 text-teal-700" /> {clinicOsDayOneRegistry.length} operating domains · {canonicalCapabilityCount.toLocaleString()} capabilities tracked</span>
-            </div>
-          </div>
 
-          <div className="mx-auto w-full max-w-[720px] border-y border-slate-300 bg-white py-3">
-            <div className="bg-[#0b1e3a] p-5 text-white sm:p-7">
-              <div className="flex items-center justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#d4af37]">Synthetic demonstration</p><h2 className="mt-1 text-xl font-extrabold tracking-[-.04em]">Clinic command center</h2></div><Stethoscope className="size-7 text-white" /></div>
-              <div className="mt-7 grid grid-cols-3 border-y border-white/15 py-5">
-                {[["18", "Visits today"], ["3", "Need review"], ["$8.4k", "Open claims"]].map(([value, label], index) => <div className={index > 0 ? "border-l border-white/15 pl-4" : ""} key={label}><p className="text-xl font-extrabold sm:text-2xl">{value}</p><p className="mt-1 text-[9px] font-bold text-slate-400 sm:text-[10px]">{label}</p></div>)}
+            <div className="relative mx-auto w-full max-w-[680px]">
+              <div className="absolute -inset-8 rounded-[48px] border border-black/[.05]" />
+              <div className="relative overflow-hidden rounded-[34px] border border-black/10 bg-[#101713] p-6 text-white shadow-[0_50px_120px_rgba(20,35,26,.22)] sm:p-8">
+                <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#c8f169]">Klinikos command layer</p><h2 className="mt-2 text-2xl font-black tracking-[-.05em]">Good morning, Brooklyn.</h2></div><div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10"><Sparkles className="size-5 text-[#c8f169]" /></div></div>
+                <div className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/10">{[["18","Visits"],["03","Review"],["$8.4k","Claims"]].map(([v,l])=><div className="bg-[#152019] p-5" key={l}><p className="text-2xl font-black tracking-[-.05em]">{v}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[.14em] text-white/45">{l}</p></div>)}</div>
+                <div className="mt-5 rounded-2xl bg-[#c8f169] p-5 text-[#101713]"><div className="flex items-center gap-3"><ShieldCheck className="size-5"/><div><p className="text-xs font-black uppercase tracking-[.08em]">Zumi found 3 items needing review</p><p className="mt-1 text-[11px] font-semibold text-black/60">Nothing clinical moves without the right human decision.</p></div><ArrowRight className="ml-auto size-4"/></div></div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-white/10 bg-white/[.04] p-5"><p className="text-[9px] font-bold uppercase tracking-[.16em] text-white/40">Next patient</p><p className="mt-3 text-sm font-black">Maya Thompson</p><p className="mt-1 text-[11px] text-white/50">Follow-up · 10:30 AM</p></div><div className="rounded-2xl border border-white/10 bg-white/[.04] p-5"><p className="text-[9px] font-bold uppercase tracking-[.16em] text-[#c8f169]">Network signal</p><p className="mt-3 text-sm font-black">2 referral loops closing</p><p className="mt-1 text-[11px] text-white/50">Across connected partners</p></div></div>
               </div>
-              <div className="mt-5 flex items-center gap-3 bg-white p-4 text-slate-900"><ShieldCheck className="size-5 text-rose-600" /><div><p className="text-xs font-extrabold">Human review queue</p><p className="text-[10px] text-slate-500">Clinical and risky actions remain held for licensed review.</p></div><span className="ml-auto text-[9px] font-extrabold uppercase tracking-[.12em] text-rose-600">Action needed</span></div>
-            </div>
-            <div className="grid gap-0 sm:grid-cols-2">
-              <div className="border-b border-slate-200 p-4 sm:border-b-0 sm:border-r"><p className="text-[10px] font-bold text-slate-400">NEXT APPOINTMENT</p><p className="mt-2 text-sm font-extrabold">Maya Thompson</p><p className="mt-1 text-xs text-slate-500">Diabetes follow-up · 10:30 AM</p></div>
-              <div className="p-4"><p className="text-[10px] font-bold text-teal-700">CARE QUALITY</p><p className="mt-2 text-sm font-extrabold">12 gaps closed</p><p className="mt-1 text-xs text-slate-500">Synthetic demonstration across two locations</p></div>
             </div>
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-white" id="platform">
-          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-3 sm:px-8">
-            {[["Clinical + operational core", "Patients, encounters, scheduling, front desk, documents, tasks and role-aware workflows in one system."], ["Network + GRID", "Closed-loop referrals, governed handoffs, capacity, provider relationships and a growing service marketplace."], ["Klinikos Intelligence", "Contextual summaries, detection, drafts and recommendations that stay labeled and human-reviewed where required."]].map(([title, body], index) => <div className="border-t border-slate-300 pt-5" key={title}><p className="text-xs font-extrabold text-[#9a7a1f]">0{index + 1}</p><h3 className="mt-3 text-lg font-extrabold tracking-[-.03em]">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p></div>)}
-          </div>
+        <section id="system" className="border-y border-black/10 bg-[#101713] text-white"><div className="mx-auto max-w-[1440px] px-5 py-24 sm:px-8 lg:px-12"><div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr]"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#c8f169]">One system. Four operating surfaces.</p><h2 className="mt-5 max-w-xl text-4xl font-black leading-[.95] tracking-[-.06em] sm:text-6xl">Less software.<br/>More clinic.</h2></div><div className="grid sm:grid-cols-2">{domains.map(([title,body],i)=><div className="border-t border-white/15 py-7 sm:p-7" key={title}><p className="text-[10px] font-black text-[#c8f169]">0{i+1}</p><h3 className="mt-5 text-xl font-black tracking-[-.04em]">{title}</h3><p className="mt-3 max-w-sm text-sm leading-6 text-white/55">{body}</p></div>)}</div></div></div></section>
+
+        <section id="safety" className="relative mx-auto max-w-[1440px] px-5 py-24 sm:px-8 lg:px-12"><div className="grid gap-12 border-b border-black/10 pb-24 lg:grid-cols-2"><div><div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#dce9a8]"><Stethoscope className="size-6" /></div><h2 className="mt-8 max-w-xl text-4xl font-black leading-[1] tracking-[-.055em] sm:text-5xl">Intelligence that knows where its authority ends.</h2></div><div className="flex items-end"><p className="max-w-xl text-base font-medium leading-8 text-[#59645c]">Zumi can surface context, detect operational gaps, prepare drafts and recommend next steps. Clinical judgment, sensitive revenue actions and regulated decisions stay governed by appropriately authorized people.</p></div></div>
+          <div className="grid gap-6 pt-16 md:grid-cols-3">{[[ShieldCheck,"Governed","Human review is visible, explicit and built into risky workflows."],[Network,"Connected","External systems connect through controlled gateways instead of becoming another silo."],[Sparkles,"Contextual","Intelligence appears where work happens, with source and status made clear."]].map(([Icon,title,body])=>{const I=Icon as typeof ShieldCheck;return <div className="rounded-[28px] border border-black/10 bg-white/60 p-7" key={String(title)}><I className="size-5"/><h3 className="mt-8 text-lg font-black">{String(title)}</h3><p className="mt-3 text-sm leading-6 text-[#667169]">{String(body)}</p></div>})}</div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8" id="safety">
-          <div className="border-y border-slate-300 py-10"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#9a7a1f]">Clinical safety by design</p><div className="mt-5 grid gap-8 lg:grid-cols-[1fr_.8fr]"><h2 className="text-balance text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">Automation handles operational work. Licensed professionals keep clinical judgment.</h2><p className="text-sm leading-7 text-slate-600">Emergency content is escalated. Lab, medication, coding, claim, record-release and credentialing actions remain subject to appropriate human review and authorization.</p></div></div>
-        </section>
-
-        <section className="border-t border-slate-200 bg-white" id="integrations"><div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-12 sm:px-8 lg:flex-row lg:items-center"><div><p className="text-xs font-extrabold text-[#9a7a1f]">CONNECT WHAT SHOULD REMAIN EXTERNAL</p><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">FHIR, SMART, HL7, eligibility, claims, remittance, laboratories, imaging, payments, communications, telemedicine and other vendor relationships connect through governed gateways with explicit status and fallback behavior.</p></div><Button asChild className="lg:ml-auto" variant="secondary"><Link href="/sales">Request a clinic operating analysis <ArrowRight className="size-4" /></Link></Button></div></section>
+        <section className="bg-[#c8f169]"><div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 py-16 sm:px-8 lg:flex-row lg:items-center lg:px-12"><div><p className="text-[10px] font-black uppercase tracking-[.2em]">Founding clinic implementation</p><h2 className="mt-3 text-3xl font-black tracking-[-.055em] sm:text-5xl">See what your clinic is losing between systems.</h2></div><Button asChild size="lg" className="rounded-full bg-[#101713] px-7 text-white lg:ml-auto"><Link href="/sales">Request operating analysis <ArrowRight className="size-4"/></Link></Button></div></section>
       </main>
     </div>
   );
