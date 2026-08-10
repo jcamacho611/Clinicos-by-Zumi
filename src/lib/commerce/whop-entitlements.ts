@@ -1,0 +1,354 @@
+import "server-only";
+
+import crypto from "node:crypto";
+import { db } from "@/lib/db";
+import type { AccessTier } from "@/lib/commerce/whop-catalog";
+import { planIdForTier, verifyWhopMembership } from "@/lib/commerce/whop-client";
+import {
+  type EntitlementRecord,
+  type WhopWebhookEnvelope,
+  coerceWhopTimestamp,
+  evaluateEntitlement,
+  isActionableWebhookEvent,
+  mapMembershipStatus,
+} from "@/lib/commerce/whop-rules";
+
+const CHECKOUT_INTENT_TTL_MS = 60 * 60 * 1000;
+
+export function payloadHash(rawBody: string) {
+  return crypto.createHash("sha256").update(rawBody, "utf8").digest("hex");
+}
+
+/**
+ * Record a webhook delivery before doing anything with it.
+ *
+ * The unique `eventId` makes redelivery idempotent: a repeated delivery returns
+ * `duplicate` and the caller acknowledges without re-applying the change. Rejected
+ * deliveries are stored too, so a stream of bad signatures is visible rather than
+ * silently dropped.
+ */
+export async function recordWebhookDelivery(input: {
+  eventId: string;
+  eventType: string;
+  membershipId: string | null;
+  signatureVerified: boolean;
+  rawBody: string;
+  payload: unknown;
+  processingStatus: "received" | "rejected" | "ignored";
+  failureReason?: string | null;
+}) {
+  try {
+    const record = await db.whopWebhookEvent.create({
+      data: {
+        eventId: input.eventId,
+        eventType: input.eventType,
+        membershipId: input.membershipId,
+        signatureVerified: input.signatureVerified,
+        payloadHash: payloadHash(input.rawBody),
+        processingStatus: input.processingStatus,
+        failureReason: input.failureReason ?? null,
+        payload: input.signatureVerified ? (input.payload as object) : undefined,
+      },
+      select: { id: true, processingStatus: true },
+    });
+    return { ok: true as const, id: record.id, duplicate: false as const };
+  } catch (error) {
+    if (typeof error === "object" && error && "code" in error && (error as { code?: string }).code === "P2002") {
+      return { ok: true as const, id: null, duplicate: true as const };
+    }
+    throw error;
+  }
+}
+
+async function markWebhookOutcome(webhookRecordId: string | null, processingStatus: "applied" | "ignored" | "failed", failureReason?: string) {
+  if (!webhookRecordId) return;
+  await db.whopWebhookEvent.update({
+    where: { id: webhookRecordId },
+    data: { processingStatus, processedAt: new Date(), failureReason: failureReason ?? null },
+  }).catch(() => undefined);
+}
+
+type ApplyResult =
+  | { applied: true; entitlementId: string; state: string; tierKey: string }
+  | { applied: false; reason: "not_actionable" | "no_membership" | "unmapped_plan" | "unverifiable" };
+
+/**
+ * Apply a signature-verified webhook to the entitlement ledger.
+ *
+ * The webhook payload decides *which* membership to look at; the membership's real
+ * state is then confirmed against the Whop API, so a payload that carries a status
+ * Whop does not actually report cannot mint an entitlement.
+ */
+export async function applyWebhookToEntitlement(input: {
+  envelope: WhopWebhookEnvelope;
+  eventType: string;
+  webhookRecordId: string | null;
+}): Promise<ApplyResult> {
+  if (!isActionableWebhookEvent(input.eventType)) {
+    await markWebhookOutcome(input.webhookRecordId, "ignored", "event type is not actionable");
+    return { applied: false, reason: "not_actionable" };
+  }
+
+  const membershipId = input.envelope.data?.id?.trim() || null;
+  if (!membershipId) {
+    await markWebhookOutcome(input.webhookRecordId, "ignored", "payload carried no membership id");
+    return { applied: false, reason: "no_membership" };
+  }
+
+  const verification = await verifyWhopMembership(membershipId);
+  if (!verification.ok) {
+    if (verification.reason === "unmapped_plan") {
+      await markWebhookOutcome(input.webhookRecordId, "ignored", "membership plan is not mapped to a Klinikos tier");
+      return { applied: false, reason: "unmapped_plan" };
+    }
+    // The adapter could not confirm the membership. Never grant on an unconfirmed
+    // payload; leave the delivery visible as failed so it can be replayed.
+    await markWebhookOutcome(input.webhookRecordId, "failed", `membership verification failed: ${verification.reason}`);
+    return { applied: false, reason: "unverifiable" };
+  }
+
+  const membership = verification.membership;
+  const tier = membership.tier as AccessTier;
+  const now = new Date();
+  const state = membership.entitlementState;
+  const isActive = state === "active";
+
+  const entitlement = await db.whopEntitlement.upsert({
+    where: { whopMembershipId: membership.membershipId },
+    create: {
+      email: membership.email ?? input.envelope.data?.email ?? "",
+      whopMembershipId: membership.membershipId,
+      whopUserId: membership.userId,
+      whopPlanId: membership.planId,
+      whopProductId: membership.productId,
+      tierKey: tier.key,
+      state,
+      membershipStatus: membership.membershipStatus,
+      validUntil: membership.validUntil,
+      grantedAt: isActive ? now : null,
+      revokedAt: state === "revoked" ? now : null,
+      lastVerifiedAt: now,
+      verificationSource: "webhook",
+      metadata: { eventType: input.eventType },
+    },
+    update: {
+      whopUserId: membership.userId,
+      whopPlanId: membership.planId,
+      whopProductId: membership.productId,
+      tierKey: tier.key,
+      state,
+      membershipStatus: membership.membershipStatus,
+      validUntil: membership.validUntil,
+      grantedAt: isActive ? now : undefined,
+      revokedAt: state === "revoked" ? now : null,
+      lastVerifiedAt: now,
+      verificationSource: "webhook",
+      ...(membership.email ? { email: membership.email } : {}),
+    },
+    select: { id: true, state: true, tierKey: true },
+  });
+
+  await markWebhookOutcome(input.webhookRecordId, "applied");
+  return { applied: true, entitlementId: entitlement.id, state: entitlement.state, tierKey: entitlement.tierKey };
+}
+
+const entitlementSelect = {
+  id: true,
+  email: true,
+  tierKey: true,
+  state: true,
+  membershipStatus: true,
+  validUntil: true,
+  revokedAt: true,
+  grantedAt: true,
+  lastVerifiedAt: true,
+  whopMembershipId: true,
+  organizationId: true,
+} as const;
+
+export type StoredEntitlement = {
+  id: string;
+  email: string;
+  tierKey: string;
+  state: string;
+  membershipStatus: string | null;
+  validUntil: Date | null;
+  revokedAt: Date | null;
+  grantedAt: Date | null;
+  lastVerifiedAt: Date | null;
+  whopMembershipId: string;
+  organizationId: string | null;
+};
+
+/**
+ * Return the entitlement for an email that currently grants the most access.
+ *
+ * Active grants sort ahead of inactive ones so a lapsed pass never shadows a
+ * current one when a buyer has purchased more than once.
+ */
+export async function findEntitlementForEmail(email: string, now = new Date()): Promise<StoredEntitlement | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+
+  const candidates = await db.whopEntitlement.findMany({
+    where: { email: normalized },
+    orderBy: { updatedAt: "desc" },
+    take: 25,
+    select: entitlementSelect,
+  });
+
+  const active = candidates.find((candidate) => evaluateEntitlement(candidate as EntitlementRecord, now).active);
+  return (active ?? candidates[0] ?? null) as StoredEntitlement | null;
+}
+
+/** Entitlement lookup for a signed-in staff or contractor account. */
+export async function findEntitlementForIdentity(input: { email: string; organizationId: string }, now = new Date()): Promise<StoredEntitlement | null> {
+  const direct = await findEntitlementForEmail(input.email, now);
+  if (direct && evaluateEntitlement(direct as EntitlementRecord, now).active) return direct;
+
+  // A clinic pass may have been purchased by an owner and claimed for the whole
+  // tenant. Organization-linked grants are honoured for members of that tenant only.
+  const organizationGrant = await db.whopEntitlement.findFirst({
+    where: { organizationId: input.organizationId, state: "active" },
+    orderBy: { updatedAt: "desc" },
+    select: entitlementSelect,
+  });
+
+  if (organizationGrant && evaluateEntitlement(organizationGrant as EntitlementRecord, now).active) {
+    return organizationGrant as StoredEntitlement;
+  }
+  return direct;
+}
+
+/** Bind an entitlement to the tenant that claimed it. One tenant per membership. */
+export async function claimEntitlementForOrganization(entitlementId: string, organizationId: string) {
+  return db.whopEntitlement.updateMany({
+    where: { id: entitlementId, organizationId: null },
+    data: { organizationId },
+  });
+}
+
+export async function createCheckoutIntent(input: {
+  email: string;
+  tier: AccessTier;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}) {
+  const planId = planIdForTier(input.tier);
+  if (!planId) return { ok: false as const, reason: "tier_not_purchasable" as const };
+
+  const state = crypto.randomBytes(32).toString("base64url");
+  const record = await db.whopCheckoutIntent.create({
+    data: {
+      state,
+      email: input.email.trim().toLowerCase(),
+      tierKey: input.tier.key,
+      whopPlanId: planId,
+      expiresAt: new Date(Date.now() + CHECKOUT_INTENT_TTL_MS),
+      ipAddress: input.ipAddress ?? null,
+      userAgent: input.userAgent ?? null,
+    },
+    select: { id: true, state: true, expiresAt: true, tierKey: true, whopPlanId: true },
+  });
+  return { ok: true as const, intent: record, planId };
+}
+
+type CheckoutReturnResult =
+  | { ok: true; tierKey: string; entitlementId: string; state: string; alreadyCompleted: boolean }
+  | { ok: false; reason: "unknown_state" | "expired" | "not_configured" | "unverified" | "tier_mismatch" | "membership_required" };
+
+/**
+ * Reconcile the checkout return leg.
+ *
+ * The browser supplies only an opaque state value and a membership id. Both the
+ * tier and the membership status come from the server-side lookup, so a buyer
+ * cannot return with someone else's membership or a more privileged tier.
+ */
+export async function completeCheckoutReturn(input: { state: string; membershipId?: string | null }): Promise<CheckoutReturnResult> {
+  const intent = await db.whopCheckoutIntent.findUnique({
+    where: { state: input.state },
+    select: { id: true, email: true, tierKey: true, whopPlanId: true, status: true, expiresAt: true, entitlementId: true },
+  });
+  if (!intent) return { ok: false, reason: "unknown_state" };
+
+  if (intent.status === "completed" && intent.entitlementId) {
+    const existing = await db.whopEntitlement.findUnique({ where: { id: intent.entitlementId }, select: entitlementSelect });
+    if (existing) return { ok: true, tierKey: existing.tierKey, entitlementId: existing.id, state: existing.state, alreadyCompleted: true };
+  }
+
+  if (intent.expiresAt <= new Date()) {
+    await db.whopCheckoutIntent.update({ where: { id: intent.id }, data: { status: "expired" } }).catch(() => undefined);
+    return { ok: false, reason: "expired" };
+  }
+
+  const membershipId = input.membershipId?.trim();
+  if (!membershipId) {
+    // Whop did not hand back a membership id. The webhook remains the authoritative
+    // path, so report that rather than guessing at a grant.
+    return { ok: false, reason: "membership_required" };
+  }
+
+  const verification = await verifyWhopMembership(membershipId);
+  if (!verification.ok) {
+    return { ok: false, reason: verification.reason === "not_configured" ? "not_configured" : "unverified" };
+  }
+
+  const membership = verification.membership;
+  if (membership.tier?.key !== intent.tierKey || membership.planId !== intent.whopPlanId) {
+    return { ok: false, reason: "tier_mismatch" };
+  }
+
+  const now = new Date();
+  const state = membership.entitlementState;
+  const isActive = state === "active";
+
+  const entitlement = await db.whopEntitlement.upsert({
+    where: { whopMembershipId: membership.membershipId },
+    create: {
+      email: membership.email ?? intent.email,
+      whopMembershipId: membership.membershipId,
+      whopUserId: membership.userId,
+      whopPlanId: membership.planId,
+      whopProductId: membership.productId,
+      tierKey: intent.tierKey,
+      state,
+      membershipStatus: membership.membershipStatus,
+      validUntil: membership.validUntil,
+      grantedAt: isActive ? now : null,
+      revokedAt: state === "revoked" ? now : null,
+      lastVerifiedAt: now,
+      verificationSource: "checkout_return",
+    },
+    update: {
+      state,
+      membershipStatus: membership.membershipStatus,
+      validUntil: membership.validUntil,
+      grantedAt: isActive ? now : undefined,
+      revokedAt: state === "revoked" ? now : null,
+      lastVerifiedAt: now,
+      verificationSource: "checkout_return",
+    },
+    select: { id: true, state: true, tierKey: true },
+  });
+
+  await db.whopCheckoutIntent.update({
+    where: { id: intent.id },
+    data: { status: "completed", completedAt: now, entitlementId: entitlement.id },
+  });
+
+  return { ok: true, tierKey: entitlement.tierKey, entitlementId: entitlement.id, state: entitlement.state, alreadyCompleted: false };
+}
+
+/** Has this email completed the access-terms clickwrap and verified its address? */
+export async function hasVerifiedAccessEmail(email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return false;
+  const acceptance = await db.accessGateAcceptance.findFirst({
+    where: { email: normalized, verifiedEmailAt: { not: null } },
+    orderBy: { acceptedAt: "desc" },
+    select: { id: true },
+  });
+  return Boolean(acceptance);
+}
+
+export { evaluateEntitlement, mapMembershipStatus, coerceWhopTimestamp };
