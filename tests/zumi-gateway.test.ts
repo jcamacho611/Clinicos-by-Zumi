@@ -16,6 +16,7 @@ import {
   zumiRecommendationSchema,
   type ZumiRecommendation,
 } from "@/features/zumi/schemas";
+import { entitlementsFromSubscriptions, subscriptionIsEntitling } from "@/features/zumi/entitlement-rules";
 import {
   containsLikelyIdentifiers,
   redactPayload,
@@ -347,5 +348,52 @@ describe("provider registry", () => {
 
   it("says redaction is not a substitute for a BAA", () => {
     expect(phiEgressPermitted(adapter(), {}).notice).toContain("Business Associate Agreement");
+  });
+});
+
+describe("entitlement resolution", () => {
+  const now = new Date("2026-08-10T12:00:00.000Z");
+  const row = (overrides: Partial<Parameters<typeof subscriptionIsEntitling>[0]> = {}) => ({
+    status: "active",
+    modules: ["grid"],
+    trialEndsAt: null,
+    currentPeriodEndsAt: null,
+    ...overrides,
+  });
+
+  it("grants the modules on an active subscription", () => {
+    expect(entitlementsFromSubscriptions([row({ modules: ["grid", "advanced_reports"] })], now)).toEqual([
+      "advanced_reports",
+      "grid",
+    ]);
+  });
+
+  it("ignores a status column that outlived its window", () => {
+    // A webhook that never advanced the status is the common failure here. Trusting
+    // the column alone would hand out paid capabilities indefinitely.
+    expect(
+      entitlementsFromSubscriptions([row({ currentPeriodEndsAt: new Date("2026-07-01T00:00:00.000Z") })], now),
+    ).toEqual([]);
+    expect(
+      entitlementsFromSubscriptions([row({ status: "trialing", trialEndsAt: new Date("2026-07-01T00:00:00.000Z") })], now),
+    ).toEqual([]);
+  });
+
+  it("keeps a live trial entitling", () => {
+    expect(
+      entitlementsFromSubscriptions([row({ status: "trialing", trialEndsAt: new Date("2026-09-01T00:00:00.000Z") })], now),
+    ).toEqual(["grid"]);
+  });
+
+  it("withholds paid capabilities from a clinic in dunning", () => {
+    // Losing AI capabilities is the lever. The workspace and its records are not.
+    expect(entitlementsFromSubscriptions([row({ status: "past_due" })], now)).toEqual([]);
+    expect(entitlementsFromSubscriptions([row({ status: "canceled" })], now)).toEqual([]);
+  });
+
+  it("unions modules across subscriptions without duplicating them", () => {
+    expect(
+      entitlementsFromSubscriptions([row({ modules: ["grid"] }), row({ modules: ["grid", "billing_readiness"] })], now),
+    ).toEqual(["billing_readiness", "grid"]);
   });
 });
