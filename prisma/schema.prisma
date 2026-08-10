@@ -4055,3 +4055,47 @@ model EducationCertificate {
   @@index([enrollmentId])
   @@map("education_certificates")
 }
+
+// ---------------------------------------------------------------------------
+// Zumi AI Gateway
+// ---------------------------------------------------------------------------
+
+/// One row per Zumi invocation, written whether the call was admitted or refused.
+///
+/// This is the metering and accountability record for AI in Klinikos. It stores what
+/// was asked for, who asked, which provider answered, what it cost, and whether the
+/// output was held for human review. It deliberately stores no prompt text and no
+/// model output: the operational question is "was this governed", not "what did it
+/// say", and a table of prompts is a table of the exact content the redaction layer
+/// exists to keep out of places it does not belong.
+model ZumiInvocation {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  userId              String?
+  capability          String
+  tier                String
+  /// admitted | denied | error
+  outcome             String
+  /// Populated when outcome is denied or error. Matches the policy denial reasons.
+  reason              String?
+  providerKey         String?
+  modelId             String?
+  promptVersion       String?
+  inputTokens         Int      @default(0)
+  outputTokens        Int      @default(0)
+  /// Integer micro-USD. Money is never stored as a float.
+  costMicroUsd        Int      @default(0)
+  durationMs          Int      @default(0)
+  /// Whether the produced output was held for a person to confirm.
+  humanReviewRequired Boolean  @default(true)
+  /// Whether the egress redactor removed or dropped anything on the way out.
+  redactionApplied    Boolean  @default(false)
+  /// Names of object keys dropped before egress. Names only, never values.
+  droppedKeys         String[] @default([])
+  auditLogId          String?
+  createdAt           DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, capability, createdAt])
+  @@map("zumi_invocations")
+}

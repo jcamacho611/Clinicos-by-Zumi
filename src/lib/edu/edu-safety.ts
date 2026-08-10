@@ -6,8 +6,12 @@
  * disclaimer that is retyped per page drifts, and a drifted disclaimer is the one
  * that ends up making a claim nobody intended.
  *
- * Pure module. No database, no network, no environment reads.
+ * No database, no network. Reads deployment configuration only through the Zumi
+ * gateway's status helper, so EDU and the rest of the product answer "is AI
+ * connected" from the same place.
  */
+
+import { zumiGatewayStatus } from "@/features/zumi/providers";
 
 /** Required on every scenario surface, in the interface and in every export. */
 export const SYNTHETIC_DATA_LABELS = [
@@ -122,17 +126,14 @@ export function evaluateEduAiRequest(input: { capability: string; gatewayAvailab
 /**
  * Whether the Klinikos AI Gateway is actually available.
  *
- * The gateway is not yet implemented, so this reports false in every environment.
- * It is a function rather than a constant so the call sites are already correct
- * when the gateway lands, and so the truthful "Pending Connection" state is what
- * surfaces render today.
+ * Delegates to the gateway's own registry rather than answering for it. EDU asked
+ * this question before the gateway existed and hardcoded false; now that the gateway
+ * is real, a second hardcoded answer here would be the thing that eventually
+ * disagrees with the truth. It still reports false in every environment today,
+ * because no provider is registered until an approved one is contracted.
  */
 export function eduAiGatewayStatus() {
-  return {
-    available: false,
-    mode: "pending_connection" as const,
-    detail: "The Klinikos AI Gateway is not implemented. EDU AI features are inert until it exists and an approved provider is contracted and configured.",
-  };
+  return zumiGatewayStatus();
 }
 
 /**
