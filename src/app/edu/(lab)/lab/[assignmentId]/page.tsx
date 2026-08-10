@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { EduCommandHeader, EduEmptyState } from "@/components/edu/edu-shell";
+import { LabConsole } from "@/components/edu/lab-console";
 import { db } from "@/lib/db";
 import { projectScenarioForStudent, eduScenarioPayloadSchema } from "@/lib/edu/edu-scenario-rules";
 import { SYNTHETIC_DATA_LABELS, SYNTHETIC_DATA_NOTICE } from "@/lib/edu/edu-safety";
@@ -29,6 +30,15 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
       })
     : null;
   if (!assignment) notFound();
+
+  // The student's own run, if they have started one. Scoped by their enrollment, so
+  // this can only ever be their submission.
+  const run = identity.enrollmentId
+    ? await db.educationSubmission.findUnique({
+        where: { assignmentId_enrollmentId: { assignmentId: assignment.id, enrollmentId: identity.enrollmentId } },
+        select: { id: true, status: true },
+      })
+    : null;
 
   const parsed = eduScenarioPayloadSchema.safeParse(assignment.scenario.payload);
   if (!parsed.success) {
@@ -88,6 +98,18 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
               <EduEmptyState detail="No tasks are routed to your seat in this scenario." title="Queue is empty" />
             )}
           </div>
+
+          {identity.enrollmentId ? (
+            <LabConsole
+              assignmentId={assignment.id}
+              initialRun={run ? { submissionId: run.id, status: run.status } : null}
+              tasks={view.tasks.map((task) => ({ key: task.key, title: task.title, queue: task.queue }))}
+            />
+          ) : (
+            <p className="mt-6 text-[12px] leading-5 text-slate-500">
+              You are viewing this scenario without an enrollment, so no run can be recorded.
+            </p>
+          )}
         </section>
 
         <aside aria-labelledby="brief-heading" className="border-l border-white/10 pl-6">
