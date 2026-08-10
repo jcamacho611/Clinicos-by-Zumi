@@ -21,7 +21,7 @@ export default function PrivateDemoPage() {
             <div className="flex flex-wrap items-center gap-2"><StatusPill status="Demo" /><StatusPill status="Manual fallback" /><StatusPill status="Human review required" /></div>
             <p className="mt-8 text-[10px] font-black uppercase tracking-[.24em] text-emerald-300">Private Workflow Demo & Cost Review</p>
             <h1 className="mt-5 max-w-5xl text-balance text-5xl font-black leading-[.94] tracking-[-.07em] sm:text-7xl lg:text-[88px]">See what is stuck before it costs you.</h1>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-slate-400 sm:text-lg">A clinic-specific, synthetic workflow review for owners who need to see what Clinicos can control before they consider a deeper evaluation.</p>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-slate-400 sm:text-lg">A clinic-specific, synthetic workflow review for owners who need to see what Klinikos can control before they consider a deeper evaluation.</p>
           </div>
           <div className="rounded-[30px] border border-white/10 bg-white/[.035] p-7 shadow-[0_35px_100px_rgba(0,0,0,.35)] sm:p-9">
             <div className="flex items-end justify-between gap-5"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-slate-500">Private review</p><p className="mt-2 text-6xl font-black tracking-[-.07em]">$500</p></div><Clock3 className="size-9 text-emerald-300" strokeWidth={1.3} /></div>
@@ -38,7 +38,7 @@ export default function PrivateDemoPage() {
         <CinematicReveal className="mt-20 grid gap-6 lg:grid-cols-2" delay={0.12}>
           <section className="rounded-[30px] border border-white/10 bg-white/[.025] p-7 sm:p-9">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">Included</p>
-            <div className="mt-6 space-y-4">{["Private workflow review", "Synthetic scenario prepared around selected pain points", "Controlled ClinicOS walkthrough", "Current software and operational cost discussion", "Draft recap with human review", "Recommendation for the next safe step"].map((item) => <div className="flex items-start gap-3 text-sm text-slate-300" key={item}><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-emerald-300/10 text-emerald-300"><Check className="size-3" /></span>{item}</div>)}</div>
+            <div className="mt-6 space-y-4">{["Private workflow review", "Synthetic scenario prepared around selected pain points", "Controlled Klinikos walkthrough", "Current software and operational cost discussion", "Draft recap with human review", "Recommendation for the next safe step"].map((item) => <div className="flex items-start gap-3 text-sm text-slate-300" key={item}><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-emerald-300/10 text-emerald-300"><Check className="size-3" /></span>{item}</div>)}</div>
           </section>
           <section className="rounded-[30px] border border-white/10 bg-white/[.025] p-7 sm:p-9">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-rose-300">Not included</p>
@@ -57,7 +57,7 @@ export default function PrivateDemoPage() {
 
       <section className="border-y border-white/[.08] bg-black/20" id="reserve">
         <div className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-          <div className="mb-10 max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[.22em] text-emerald-300">Reserve the review</p><h2 className="mt-4 text-4xl font-black tracking-[-.055em] sm:text-5xl">Give Clinicos the business problem. Keep patient data out.</h2></div>
+          <div className="mb-10 max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[.22em] text-emerald-300">Reserve the review</p><h2 className="mt-4 text-4xl font-black tracking-[-.055em] sm:text-5xl">Give Klinikos the business problem. Keep patient data out.</h2></div>
           <SalesIntakeForm />
         </div>
       </section>
