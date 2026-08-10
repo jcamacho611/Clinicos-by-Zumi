@@ -324,3 +324,62 @@ export function interviewProgress(answers: InterviewAnswers) {
   const answered = guidedQuestions.filter((question) => (answers[question.key]?.length ?? 0) > 0).length;
   return { answered, total: guidedQuestions.length, complete: answered === guidedQuestions.length };
 }
+
+// ---------------------------------------------------------------------------
+// Audit pricing and preliminary qualification
+// ---------------------------------------------------------------------------
+
+/**
+ * Price of the paid Operational Audit, derived from reported provider scale.
+ *
+ * Server-derivable from the answers rather than carried in the request. A buyer
+ * cannot name their own price, and an unanswered scale question falls to the lowest
+ * tier rather than the highest — the failure mode is undercharging, not surprising
+ * someone with a bill they did not agree to.
+ */
+export function auditPriceForAnswers(answers: InterviewAnswers) {
+  switch (answers.provider_scale?.[0]) {
+    case "1": return 750;
+    case "2_5": return 1250;
+    case "6_15": return 2500;
+    case "16_30": return 4000;
+    case "30_plus": return 5000;
+    default: return 750;
+  }
+}
+
+/**
+ * Preliminary audit-fit score, 0–100.
+ *
+ * Scored entirely from what the clinic reported about itself. It is a prioritisation
+ * signal for a human, never a qualification decision — which is why the label below
+ * never says "qualified".
+ */
+export function preliminaryAuditScore(answers: InterviewAnswers) {
+  const provider = answers.provider_scale?.[0];
+  const locations = answers.location_scale?.[0];
+  const spend = answers.software_spend?.[0];
+  const bottlenecks = answers.bottleneck ?? [];
+  const revenue = answers.revenue_belief ?? [];
+
+  let score = 0;
+  score += provider === "30_plus" || provider === "16_30" ? 20 : provider === "6_15" ? 18 : provider === "2_5" ? 15 : 8;
+  score += locations === "6_plus" || locations === "3_5" ? 15 : locations === "2" ? 10 : 4;
+  score += Math.min(20, bottlenecks.length * 4);
+  score += spend === "10k_plus" ? 15 : spend === "5k_10k" ? 13 : spend === "2k_5k" ? 9 : spend === "under_2k" ? 4 : 2;
+  // "Unsure" is not evidence of revenue leakage and does not score.
+  score += Math.min(15, revenue.filter((item) => item !== "unsure").length * 5);
+  score += answers.current_system?.[0] === "many_systems" ? 10 : 6;
+  score += answers.first_control?.length ? 5 : 0;
+  return Math.min(100, score);
+}
+
+/**
+ * The label shown for a score.
+ *
+ * Deliberately never says "qualified" or "approved". A person decides that, and the
+ * copy law forbids implying an automatic approval.
+ */
+export function preliminaryQualificationLabel(score: number) {
+  return score >= 70 ? "STRONG AUDIT CANDIDATE" : score >= 45 ? "SPECIALIST REVIEW RECOMMENDED" : "MORE QUALIFICATION NEEDED";
+}

@@ -1,16 +1,63 @@
 import "server-only";
 
 import crypto from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 
 const ACCESS_VERIFICATION_TTL_MS = 30 * 60 * 1000;
+const EVALUATION_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+
+type VerificationPayload = {
+  purpose: "evaluation-email";
+  email: string;
+  acceptanceId: string;
+  documentVersion: string;
+  exp: number;
+};
+
+type EvaluationPayload = {
+  purpose: "evaluation-session";
+  email: string;
+  exp: number;
+};
+
+type AcceptanceRow = {
+  id: string;
+  email: string;
+  documentVersion: string;
+  source: string;
+};
 
 function appUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL || "https://www.klinikos.io").replace(/\/$/, "");
 }
 
-function hashToken(value: string) {
-  return crypto.createHash("sha256").update(value).digest("hex");
+function secret() {
+  const value = process.env.AUTH_SECRET;
+  if (!value || value.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters.");
+  return value;
+}
+
+function signPayload(payload: VerificationPayload | EvaluationPayload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", secret()).update(body).digest("base64url");
+  return `${body}.${signature}`;
+}
+
+function readPayload<T extends VerificationPayload | EvaluationPayload>(token: string): T | null {
+  const [body, suppliedSignature] = token.split(".");
+  if (!body || !suppliedSignature) return null;
+  const expectedSignature = crypto.createHmac("sha256", secret()).update(body).digest("base64url");
+  const supplied = Buffer.from(suppliedSignature);
+  const expected = Buffer.from(expectedSignature);
+  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as T;
+    if (!payload.exp || payload.exp <= Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 export async function sendAccessVerificationEmail(input: {
@@ -20,78 +67,68 @@ export async function sendAccessVerificationEmail(input: {
   ipAddress?: string | null;
   userAgent?: string | null;
 }) {
-  const token = crypto.randomBytes(32).toString("base64url");
-  const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + ACCESS_VERIFICATION_TTL_MS);
-
-  const record = await db.accessEmailVerification.create({
-    data: {
-      email: input.email,
-      acceptanceId: input.acceptanceId,
-      documentVersion: input.documentVersion,
-      tokenHash,
-      expiresAt,
-      requestedIpAddress: input.ipAddress ?? null,
-      requestedUserAgent: input.userAgent ?? null,
-      status: "pending",
-    },
-    select: { id: true, expiresAt: true },
+  const token = signPayload({
+    purpose: "evaluation-email",
+    email: input.email,
+    acceptanceId: input.acceptanceId,
+    documentVersion: input.documentVersion,
+    exp: expiresAt.getTime(),
   });
-
   const verifyUrl = `${appUrl()}/access/verify?token=${encodeURIComponent(token)}`;
 
   if (!process.env.RESEND_API_KEY) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("RESEND_API_KEY is required for production access verification.");
-    }
-    console.info("Klinikos access verification URL", { email: input.email, verifyUrl, verificationId: record.id });
-    return { ...record, delivered: false };
+    if (process.env.NODE_ENV === "production") throw new Error("RESEND_API_KEY is required for production access verification.");
+    console.info("Klinikos access verification URL", { email: input.email, verifyUrl });
+    return { expiresAt, delivered: false };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
+    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
     body: JSON.stringify({
       from: process.env.ACCESS_EMAIL_FROM || "Klinikos Access <access@klinikos.io>",
       to: [input.email],
       subject: "Verify your Klinikos evaluation access",
-      html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#0b1e3a"><h2>Verify your Klinikos access</h2><p>Your agreement has been recorded. Verify this work email to continue into protected Klinikos evaluation materials.</p><p><a href="${verifyUrl}" style="display:inline-block;background:#0b1e3a;color:white;padding:12px 18px;text-decoration:none;border-radius:6px">Verify work email</a></p><p>This link expires in 30 minutes. If you did not request access, you can ignore this message.</p></div>`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#0b1e3a"><h2>Verify your Klinikos access</h2><p>Your agreement has been recorded. Verify this work email to continue into protected Klinikos evaluation materials.</p><p><a href="${verifyUrl}" style="display:inline-block;background:#0b1e3a;color:white;padding:12px 18px;text-decoration:none">Verify work email</a></p><p>This link expires in 30 minutes. If you did not request access, you can ignore this message.</p></div>`,
     }),
   });
   if (!response.ok) throw new Error(`Resend delivery failed with ${response.status}`);
-  return { ...record, delivered: true };
+  return { expiresAt, delivered: true };
 }
 
-export async function verifyAccessEmail(rawToken: string, metadata: { ipAddress?: string | null; userAgent?: string | null }) {
+export async function verifyAccessEmail(rawToken: string, _metadata: { ipAddress?: string | null; userAgent?: string | null }) {
   const token = rawToken.trim();
   if (!token) return { ok: false as const, reason: "missing" as const };
-  const tokenHash = hashToken(token);
-  const verification = await db.accessEmailVerification.findUnique({ where: { tokenHash } });
-  if (!verification) return { ok: false as const, reason: "invalid" as const };
-  if (verification.status === "verified") return { ok: true as const, email: verification.email, alreadyVerified: true };
-  if (verification.expiresAt <= new Date()) {
-    await db.accessEmailVerification.update({ where: { id: verification.id }, data: { status: "expired" } }).catch(() => undefined);
-    return { ok: false as const, reason: "expired" as const };
+  const payload = readPayload<VerificationPayload>(token);
+  if (!payload || payload.purpose !== "evaluation-email") return { ok: false as const, reason: "invalid" as const };
+
+  const rows = await db.$queryRaw<AcceptanceRow[]>(Prisma.sql`
+    SELECT "id", "email", "documentVersion", "source"
+    FROM "access_gate_acceptances"
+    WHERE "id" = ${payload.acceptanceId}
+    LIMIT 1
+  `);
+  const acceptance = rows[0];
+  if (!acceptance || acceptance.email !== payload.email || acceptance.documentVersion !== payload.documentVersion) {
+    return { ok: false as const, reason: "invalid" as const };
   }
 
-  const now = new Date();
-  await db.$transaction([
-    db.accessEmailVerification.update({
-      where: { id: verification.id },
-      data: {
-        status: "verified",
-        verifiedAt: now,
-        verifiedIpAddress: metadata.ipAddress ?? null,
-        verifiedUserAgent: metadata.userAgent ?? null,
-      },
-    }),
-    db.accessGateAcceptance.update({
-      where: { id: verification.acceptanceId },
-      data: { verifiedEmailAt: now },
-    }),
-  ]);
-  return { ok: true as const, email: verification.email, alreadyVerified: false };
+  if (acceptance.source !== "web-access-gate-verified") {
+    await db.$executeRaw(Prisma.sql`
+      UPDATE "access_gate_acceptances"
+      SET "source" = 'web-access-gate-verified'
+      WHERE "id" = ${acceptance.id}
+    `);
+  }
+
+  return { ok: true as const, email: payload.email, alreadyVerified: acceptance.source === "web-access-gate-verified" };
+}
+
+export function createEvaluationAccessToken(email: string) {
+  const expiresAt = new Date(Date.now() + EVALUATION_SESSION_TTL_MS);
+  return {
+    value: signPayload({ purpose: "evaluation-session", email, exp: expiresAt.getTime() }),
+    expiresAt,
+  };
 }
