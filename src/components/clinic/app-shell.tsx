@@ -42,8 +42,8 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
       <div className="flex h-[78px] items-center gap-3 border-b border-slate-200/80 px-5">
         <BrandMark />
         <div>
-          <p className="text-[15px] font-extrabold tracking-[-.03em] text-slate-950">ClinicOS</p>
-          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">by Zumi</p>
+          <p className="text-[15px] font-extrabold tracking-[-.03em] text-slate-950">Klinikos</p>
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-600">Clinic Workspace</p>
         </div>
       </div>
       <div className="px-3 pt-4">
@@ -74,7 +74,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
                     key={item.href}
                     onClick={onNavigate}
                   >
-                    <Icon className={cn("size-[17px]", active ? "text-teal-300" : "text-slate-400 group-hover:text-teal-600")} strokeWidth={1.8} />
+                    <Icon className={cn("size-[17px]", active ? "text-amber-300" : "text-slate-400 group-hover:text-teal-600")} strokeWidth={1.8} />
                     {item.label}
                     {item.href === "/escalations" && <span className="ml-auto grid size-5 place-items-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white">3</span>}
                   </Link>
@@ -86,7 +86,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
       </nav>
       <div className="border-t border-slate-200 p-3">
         <div className="flex items-center gap-3 rounded-xl p-2">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 text-xs font-extrabold text-white">{initials(session.name)}</span>
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-slate-950 to-amber-500 text-xs font-extrabold text-white">{initials(session.name)}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-slate-900">{session.name}</p>
             <p className="text-[10px] text-slate-500">{roleLabel(session.role)}</p>
@@ -128,7 +128,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
           </div>
           <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm md:flex">
             <Search className="size-4 text-slate-400" />
-            <input className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" placeholder="Search or ask ClinicOS..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
+            <input className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" placeholder="Search or ask Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
             <VoiceInputButton className="[&_button]:h-7 [&_button]:px-2 [&_button]:text-[10px]" onTranscript={setGlobalSearch} />
             <kbd className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">⌘ K</kbd>
           </div>

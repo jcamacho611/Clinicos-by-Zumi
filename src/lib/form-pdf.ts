@@ -66,11 +66,11 @@ export async function buildLockedFormPdf(input: {
 
   pdf.setTitle(`${input.templateName} - ${input.patientName}`);
   pdf.setAuthor(input.organizationName);
-  pdf.setSubject("ClinicOS locked form submission artifact");
-  pdf.setKeywords(["ClinicOS", "form", "locked", `submission:${input.submissionId}`]);
+  pdf.setSubject("Klinikos locked form submission artifact");
+  pdf.setKeywords(["Klinikos", "form", "locked", `submission:${input.submissionId}`]);
   pdf.setCreationDate(input.lockedAt);
 
-  line("CLINICOS LOCKED FORM ARTIFACT", { font: bold, size: 8, color: rgb(0.05, 0.45, 0.5), gap: 16 });
+  line("KLINIKOS LOCKED FORM ARTIFACT", { font: bold, size: 8, color: rgb(0.05, 0.45, 0.5), gap: 16 });
   line(input.templateName, { font: bold, size: 22, gap: 28 });
   line(`${input.organizationName} | Template version ${input.templateVersion}`, { size: 9, color: rgb(0.35, 0.39, 0.45), gap: 18 });
   divider();
@@ -98,11 +98,11 @@ export async function buildLockedFormPdf(input: {
   if (!input.signatures.length) line("No signature was required by this template version.");
 
   divider();
-  line("This PDF is a generated representation of a locked ClinicOS submission. Its source answers, template version, signatures, review decisions, checksum, and custody events remain the authoritative audit record.", { size: 8, color: rgb(0.42, 0.45, 0.5), gap: 11 });
+  line("This PDF is a generated representation of a locked Klinikos submission. Its source answers, template version, signatures, review decisions, checksum, and custody events remain the authoritative audit record.", { size: 8, color: rgb(0.42, 0.45, 0.5), gap: 11 });
 
   const pages = pdf.getPages();
   pages.forEach((current, index) => {
-    current.drawText(`ClinicOS | ${input.submissionId} | Page ${index + 1} of ${pages.length}`, { x: 46, y: 24, size: 7, font: regular, color: rgb(0.52, 0.55, 0.6) });
+    current.drawText(`Klinikos | ${input.submissionId} | Page ${index + 1} of ${pages.length}`, { x: 46, y: 24, size: 7, font: regular, color: rgb(0.52, 0.55, 0.6) });
   });
   return Buffer.from(await pdf.save({ useObjectStreams: false }));
 }

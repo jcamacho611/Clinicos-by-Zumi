@@ -35,7 +35,7 @@ export function LoginForm({ demoCredentials }: LoginFormProps) {
 
       window.location.assign(result.redirectTo ?? "/dashboard");
     } catch {
-      setError("Unable to reach ClinicOS. Check your connection and try again.");
+      setError("Unable to reach Klinikos. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +53,7 @@ export function LoginForm({ demoCredentials }: LoginFormProps) {
       </label>
       {error && <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
       <Button className="w-full" disabled={submitting} size="lg" type="submit" variant="primary">
-        {submitting ? <><LoaderCircle className="size-4 animate-spin" /> Signing in securely...</> : <>Continue to ClinicOS <ArrowRight className="size-4" /></>}
+        {submitting ? <><LoaderCircle className="size-4 animate-spin" /> Signing in securely...</> : <>Continue to Klinikos <ArrowRight className="size-4" /></>}
       </Button>
       {demoCredentials && <p className="text-center text-[10px] leading-5 text-slate-400">Development demo credentials are prefilled. Demo access is disabled automatically in production.</p>}
     </form>
