@@ -1,5 +1,7 @@
 import "server-only";
 
+import crypto from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
@@ -11,17 +13,28 @@ export const accessAcceptanceSchema = z.object({
   accepted: z.literal(true),
 });
 
-export async function recordAccessAcceptance(input: z.infer<typeof accessAcceptanceSchema>, metadata: { ipAddress?: string | null; userAgent?: string | null }) {
+type AcceptanceRecord = {
+  id: string;
+  acceptedAt: Date;
+  documentVersion: string;
+  email: string;
+};
+
+export async function recordAccessAcceptance(
+  input: z.infer<typeof accessAcceptanceSchema>,
+  metadata: { ipAddress?: string | null; userAgent?: string | null },
+) {
   const parsed = accessAcceptanceSchema.parse(input);
-  return db.accessGateAcceptance.create({
-    data: {
-      email: parsed.email,
-      documentKey: ACCESS_TERMS_KEY,
-      documentVersion: ACCESS_TERMS_VERSION,
-      ipAddress: metadata.ipAddress ?? null,
-      userAgent: metadata.userAgent ?? null,
-      source: "web-access-gate",
-    },
-    select: { id: true, acceptedAt: true, documentVersion: true, email: true },
-  });
+  const id = crypto.randomUUID();
+  const rows = await db.$queryRaw<AcceptanceRecord[]>(Prisma.sql`
+    INSERT INTO "access_gate_acceptances"
+      ("id", "email", "documentKey", "documentVersion", "ipAddress", "userAgent", "source")
+    VALUES
+      (${id}, ${parsed.email}, ${ACCESS_TERMS_KEY}, ${ACCESS_TERMS_VERSION}, ${metadata.ipAddress ?? null}, ${metadata.userAgent ?? null}, 'web-access-gate')
+    RETURNING "id", "acceptedAt", "documentVersion", "email"
+  `);
+
+  const acceptance = rows[0];
+  if (!acceptance) throw new Error("Access acceptance was not recorded.");
+  return acceptance;
 }

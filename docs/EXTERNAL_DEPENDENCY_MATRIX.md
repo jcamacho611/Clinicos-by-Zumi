@@ -13,7 +13,7 @@ This document is the operating inventory for external APIs, networks, vendors, c
 
 | Klinikos capability | Preferred provider / rail | Alternatives | Sandbox | PHI | BAA / contract gate | Customer can connect existing account | Who should bear variable cost | Current implementation status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AI Gateway / Copilot | OpenAI | Anthropic, Azure OpenAI, Google Gemini | Yes | Potentially | Required before PHI workloads | Yes, where provider supports a safe organization/project connection | Prefer customer-owned or priced into Klinikos Intelligence | Configurable |
+| AI Gateway / Copilot | OpenAI | Anthropic, Azure OpenAI, Google Gemini | Yes | Not permitted until BAA + deployment approval | Required before PHI workloads | Yes, where provider supports a safe organization/project connection | Prefer customer-owned or priced into Klinikos Intelligence | Adapter surface built, no adapter registered — see note below |
 | Secondary AI routing | Anthropic | OpenAI, Google, Azure | Yes | Potentially | Required before PHI workloads | Yes | Prefer customer-owned or priced into intelligence | Planned |
 | GRID map rendering | Google Maps Platform | Mapbox, Azure Maps | Yes | Avoid PHI in map payloads | Standard vendor/security review | Usually platform-owned for shared GRID experience | Klinikos COGS, recovered in subscription/GRID economics | Configurable |
 | GRID geocoding / Places | Google Places + Geocoding | Mapbox, HERE | Yes | Avoid PHI where possible | Standard vendor/security review | Usually platform-owned | Klinikos COGS, recovered in plan | Configurable |
@@ -44,6 +44,19 @@ This document is the operating inventory for external APIs, networks, vendors, c
 | Monitoring / observability | Vendor TBD | Sentry, Datadog, cloud-native tooling | N/A | Logs must avoid PHI | BAA if PHI could be present; prefer PHI-minimized telemetry | No | Klinikos infrastructure COGS | Planned |
 | Enterprise SSO | OIDC/SAML provider | Microsoft Entra ID, Google Workspace | Yes | Identity data | Security review | Yes | Clinic or enterprise plan | Planned |
 
+### Note: AI Gateway
+
+The gateway itself is built (`src/features/zumi/`, documented in `docs/ZUMI.md`): a
+provider adapter interface, a fail-closed registry, egress redaction, an admission
+policy, and a `ZumiInvocation` usage ledger. **No provider adapter is registered**, so
+`zumiGatewayStatus()` reports Pending Connection in every environment and every Zumi
+request is refused with 503.
+
+Registering one is gated on a contracted vendor. Sending PHI to one is separately
+gated on an executed BAA *and* an explicit deployment approval
+(`ZUMI_PHI_EGRESS_APPROVED`); redaction reduces exposure but does not substitute for
+either.
+
 ## Operating rules
 
 1. **Klinikos is the EHR and operating system.** Existing EHR connections are for migration, interoperability, transition, or unavoidable ecosystem access, not as the primary system of record.
@@ -60,7 +73,7 @@ This document is the operating inventory for external APIs, networks, vendors, c
 
 1. Central connector catalog and environment schema.
 2. Connector health/status service with no secret disclosure.
-3. AI Gateway provider abstraction and usage ledger.
+3. ~~AI Gateway provider abstraction and usage ledger.~~ Built — awaiting a contracted provider adapter.
 4. Google Maps/Places/Routes server/client boundary for GRID.
 5. Stedi sandbox adapter for eligibility/claims flows.
 6. Stripe test adapter and webhook verification.
