@@ -1,14 +1,6 @@
 import { z } from "zod";
 import { accessProductKeys, getAccessProduct } from "@/lib/commerce/access-product-catalog";
 
-/**
- * Deterministic rules for marketplace access payments.
- *
- * Pure functions only. The payment lifecycle, what each status implies for portal
- * access, and which transitions an administrator may record all live here so they
- * are testable without a database or a payment provider.
- */
-
 export const accessPaymentProviders = ["manual", "whop", "stripe"] as const;
 export type AccessPaymentProvider = (typeof accessPaymentProviders)[number];
 
@@ -30,13 +22,6 @@ export type PortalAccessStatus = (typeof portalAccessStatuses)[number];
 export const paidOnboardingStatuses = ["pending", "in_review", "completed", "canceled"] as const;
 export type PaidOnboardingStatus = (typeof paidOnboardingStatuses)[number];
 
-/**
- * Allowed payment status transitions.
- *
- * `created` is the state at checkout handoff. `pending_verification` is a buyer who
- * came back with a reference that no webhook has confirmed yet. Terminal money
- * states (`refunded`, `disputed`) do not return to paid without a new payment.
- */
 const paymentTransitions: Record<AccessPaymentStatus, readonly AccessPaymentStatus[]> = {
   created: ["pending_verification", "verified_paid", "failed", "held"],
   pending_verification: ["verified_paid", "failed", "held"],
@@ -54,17 +39,9 @@ export function canTransitionAccessPayment(from: string, to: string) {
   return Boolean(parsedFrom.success && parsedTo.success && paymentTransitions[parsedFrom.data].includes(parsedTo.data));
 }
 
-/**
- * Portal access implied by a payment status.
- *
- * Only a verified or reconciled payment can open a portal, and only for a product
- * that does not still owe a human review. Money moving back out (refund, dispute)
- * revokes access rather than leaving it stranded open.
- */
 export function derivePortalAccess(input: {
   status: string;
   productKey: string;
-  /** Set once a human has approved the underlying application or listing. */
   reviewApproved?: boolean;
 }): PortalAccessStatus {
   const product = getAccessProduct(input.productKey);
@@ -86,19 +63,11 @@ export function derivePortalAccess(input: {
   }
 }
 
-/** A payment grants portal access only when both gates are satisfied. */
 export function paymentGrantsAccess(input: { status: string; productKey: string; reviewApproved?: boolean; portalAccessStatus?: string }) {
   if (input.portalAccessStatus && input.portalAccessStatus !== "granted") return false;
   return derivePortalAccess(input) === "granted";
 }
 
-/**
- * Request body for starting a purchase.
- *
- * Deliberately excludes price and currency. The spec's original shape accepted
- * `amountCents` from the client, which would let a buyer set their own price; the
- * amount is resolved from the server catalog instead.
- */
 export const createAccessPaymentSchema = z.object({
   productKey: z.enum(accessProductKeys),
   buyerEmail: z.string().trim().toLowerCase().email().max(254),
@@ -130,17 +99,18 @@ export function verificationTargetStatus(action: AccessPaymentVerificationInput[
   return verificationTargets[action];
 }
 
-/** Buyer-submitted reference on the manual return path. */
+export const paidOnboardingReviewSchema = z.object({
+  paymentId: z.string().trim().min(1).max(64),
+  action: z.enum(["approve", "reject"]),
+  note: z.string().trim().min(8).max(800),
+});
+export type PaidOnboardingReviewInput = z.infer<typeof paidOnboardingReviewSchema>;
+
 export const accessPaymentReferenceSchema = z.object({
   buyerEmail: z.string().trim().toLowerCase().email().max(254),
   externalPaymentReference: z.string().trim().min(4).max(200),
 });
 
-/**
- * Whether an administrator recording a verification is claiming something the
- * system can actually stand behind. A manual verification always requires a
- * reference so an audit trail points at a real transaction.
- */
 export function manualVerificationRequiresReference(action: AccessPaymentVerificationInput["action"], provider: string) {
   return action === "verify" && provider !== "whop" && provider !== "stripe";
 }
