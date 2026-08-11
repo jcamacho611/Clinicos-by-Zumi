@@ -4232,3 +4232,152 @@ model ZumiInvocation {
   @@index([organizationId, capability, createdAt])
   @@map("zumi_invocations")
 }
+
+// ---------------------------------------------------------------------------
+// Klinikos Growth Engine
+//
+// The pre-payment half of the product: prospects, what they did, what that
+// implies, and who introduced them. Everything here describes a prospective
+// *buyer of software*. None of it is clinical, none of it is tenant-scoped to a
+// clinic organization, and no field is intended to hold protected health
+// information.
+// ---------------------------------------------------------------------------
+
+/// A prospective Klinikos customer.
+///
+/// Captured from public marketing surfaces, which are forbidden from soliciting
+/// PHI — so every field here describes a business: its name, its size, how to
+/// reach the person evaluating software for it.
+model GrowthProspect {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  contactName    String
+  clinicName     String
+  phone          String?
+  website        String?
+  clinicType     String
+  locationCount  String
+  providerCount  String
+  /// NEW | ENGAGED | PRICING_VIEWED | AUDIT_INTEREST | CHECKOUT_STARTED | PAID | ONBOARDING | ACTIVE | LOST
+  status         String   @default("NEW")
+  /// Derived from intent events. Recomputed on write, never supplied by a client.
+  score          Int      @default(0)
+  /// cold | warm | high | urgent
+  band           String   @default("cold")
+  interest       String   @default("overview")
+  referralCode   String?
+  /// Set once the prospect becomes a customer, linking growth to the tenant.
+  organizationId String?
+  /// Founder-authored notes about the sales conversation. Business context only;
+  /// this is an internal admin field and must never be used to record anything
+  /// about a patient.
+  internalNote   String?
+  unsubscribedAt DateTime?
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  events      GrowthIntentEvent[]
+  enrollments GrowthSequenceEnrollment[]
+
+  @@index([status, score])
+  @@index([band, lastActivityAt])
+  @@index([referralCode])
+  @@map("growth_prospects")
+}
+
+/// A single first-party buying-intent signal.
+///
+/// Recorded by Klinikos about its own pages. There is no third-party tracker and
+/// no cross-site identifier. `path` is site-relative so a query string cannot
+/// carry anything unintended into storage.
+model GrowthIntentEvent {
+  id         String   @id @default(cuid())
+  prospectId String?
+  /// First-party pseudonymous id for a visitor who has not identified themselves.
+  visitorId  String?
+  eventType  String
+  path       String?
+  subject    String?
+  occurredAt DateTime @default(now())
+
+  prospect GrowthProspect? @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@index([prospectId, occurredAt])
+  @@index([visitorId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@map("growth_intent_events")
+}
+
+/// A prospect's position in one automated follow-up sequence.
+///
+/// One row per prospect per sequence. Every sequence terminates, and
+/// `nextStepIndex` reaching the step count is what ends it.
+model GrowthSequenceEnrollment {
+  id            String    @id @default(cuid())
+  prospectId    String
+  /// overview | checkout_recovery | post_purchase
+  sequenceKey   String
+  nextStepIndex Int       @default(0)
+  enrolledAt    DateTime  @default(now())
+  lastSentAt    DateTime?
+  /// Unsubscribe is per prospect, mirrored here so a sender needs one read.
+  unsubscribed  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  prospect GrowthProspect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@unique([prospectId, sequenceKey])
+  @@index([sequenceKey, nextStepIndex])
+  @@map("growth_sequence_enrollments")
+}
+
+/// A referral partner who introduces clinics to Klinikos.
+model GrowthReferralPartner {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  organizationName String?
+  email            String
+  /// Commission rate in basis points. Integer, because this is money owed.
+  rateBasisPoints  Int      @default(1500)
+  /// pending | active | paused | terminated
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  attributions GrowthReferralAttribution[]
+
+  @@index([status])
+  @@map("growth_referral_partners")
+}
+
+/// First touch between a partner's referral link and a prospect.
+///
+/// First touch rather than last: last-touch attribution lets whichever channel a
+/// prospect happens to arrive through on the day they buy take credit for a sale
+/// the partner actually made.
+model GrowthReferralAttribution {
+  id            String    @id @default(cuid())
+  partnerId     String
+  prospectId    String?
+  visitorId     String?
+  firstTouchAt  DateTime  @default(now())
+  convertedAt   DateTime?
+  /// Sale amount in integer cents. Never a float.
+  saleAmountCents Int?
+  commissionCents Int?
+  /// pending | approved | paid | reversed
+  commissionStatus String  @default("pending")
+  saleSettled      Boolean @default(false)
+  refundWindowClosed Boolean @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  partner GrowthReferralPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([partnerId, prospectId])
+  @@index([partnerId, commissionStatus])
+  @@map("growth_referral_attributions")
+}

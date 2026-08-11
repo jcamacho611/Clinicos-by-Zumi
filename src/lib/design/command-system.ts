@@ -201,9 +201,31 @@ export const ELEMENT_ADMISSION_TEST = [
  * adding a page here is what brings it under enforcement.
  */
 export const GOVERNED_PUBLIC_SURFACES = [
+  "src/app/page.tsx",
   "src/app/sales/page.tsx",
   "src/app/start/page.tsx",
   "src/app/private-demo/page.tsx",
   "src/app/founding-clinic/page.tsx",
   "src/app/grid/join/page.tsx",
+  // Growth Engine surfaces. Every public marketing route belongs here — copy law is
+  // only enforced on what this list names, so an unlisted page is an unreviewed one.
+  "src/app/how-it-works/page.tsx",
+  "src/app/solutions/[segment]/page.tsx",
+  "src/app/zumi/page.tsx",
+  "src/app/pricing/page.tsx",
+  "src/app/demo/page.tsx",
+  "src/app/operational-audit/page.tsx",
+  "src/app/contact/page.tsx",
+  "src/app/referral/[code]/page.tsx",
+  // Content modules those pages render. A claim moved out of a page into a data file
+  // would otherwise escape the check entirely.
+  "src/lib/growth/demonstration.ts",
+  "src/lib/growth/segments.ts",
+  "src/lib/growth/pricing.ts",
+  "src/lib/growth/audit-checkout.ts",
+  "src/components/growth/marketing-shell.tsx",
+  "src/components/growth/zumi-demonstration.tsx",
+  "src/components/growth/guided-tour.tsx",
+  "src/components/growth/lead-capture-form.tsx",
+  "src/components/growth/audit-checkout.tsx",
 ] as const;
