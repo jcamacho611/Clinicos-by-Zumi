@@ -101,3 +101,60 @@ export function workspaceChoices(roles: readonly KlinikosRoleKey[]): WorkspaceRo
   }
   return choices;
 }
+
+const INTENT_PATTERNS: Array<{ workspace: KlinikosWorkspaceKey; patterns: RegExp[]; reason: string }> = [
+  {
+    workspace: "grid",
+    patterns: [/\bshift\b/i, /\bjob\b/i, /\bwork\b/i, /\bcontract(or|ing)?\b/i, /\broom\b/i, /\bchair\b/i, /\bspace\b/i, /\bopportunit(y|ies)\b/i],
+    reason: "intent matched Grid opportunity or capacity language",
+  },
+  {
+    workspace: "education",
+    patterns: [/\bstudent\b/i, /\bclass\b/i, /\bcourse\b/i, /\blearn\b/i, /\btraining\b/i, /\beducat(or|ion)\b/i, /\bteach\b/i],
+    reason: "intent matched education language",
+  },
+  {
+    workspace: "patient",
+    patterns: [/\bappointment\b/i, /\bdoctor\b/i, /\bprovider\b/i, /\bcare\b/i, /\bpatient\b/i, /\brecords?\b/i, /\bresults?\b/i],
+    reason: "intent matched patient navigation language",
+  },
+  {
+    workspace: "network",
+    patterns: [/\bnetwork\b/i, /\bmultiple clinics?\b/i, /\ball locations?\b/i, /\benterprise\b/i],
+    reason: "intent matched network administration language",
+  },
+  {
+    workspace: "provider",
+    patterns: [/\bmy patients?\b/i, /\bchart\b/i, /\bnote\b/i, /\bencounter\b/i, /\bclinical\b/i, /\bresults queue\b/i],
+    reason: "intent matched provider workflow language",
+  },
+  {
+    workspace: "partner",
+    patterns: [/\bpartner\b/i, /\blisting\b/i, /\bfacility\b/i, /\bservice provider\b/i],
+    reason: "intent matched partner language",
+  },
+  {
+    workspace: "clinic",
+    patterns: [/\bclinic\b/i, /\brevenue\b/i, /\bstaff\b/i, /\bschedule\b/i, /\bbilling\b/i, /\bclaims?\b/i, /\bfront desk\b/i, /\boperations?\b/i],
+    reason: "intent matched clinic operations language",
+  },
+];
+
+/**
+ * Classify intent only among workspaces the authenticated identity is already allowed
+ * to access. Natural language can suggest a destination; it can never grant one.
+ */
+export function routeIntent(intent: string, roles: readonly KlinikosRoleKey[]): WorkspaceRoute {
+  const permitted = workspaceChoices(roles);
+  const permittedByKey = new Map(permitted.map((choice) => [choice.workspace, choice]));
+
+  for (const group of INTENT_PATTERNS) {
+    if (!permittedByKey.has(group.workspace)) continue;
+    if (group.patterns.some((pattern) => pattern.test(intent))) {
+      const base = permittedByKey.get(group.workspace)!;
+      return { ...base, reason: group.reason };
+    }
+  }
+
+  return permitted[0] ?? routeForIdentity({ roles });
+}
