@@ -84,6 +84,9 @@ export async function runFollowUpSweep(organizationId: string, now = new Date())
 
     for (const action of prepareActions(risk, patientName, clinicName)) {
       const state = initialActionState(action, canDeliver);
+      // A policy that blocks this action kind outright. Nothing records it, so the
+      // owner is not shown work Klinikos has been told not to do.
+      if (!state) continue;
       const applied = await upsertAction({ organizationId, risk, action, state });
       if (applied === "executed") result.actionsExecuted += 1;
       else if (applied === "awaiting_confirmation" || applied === "prepared") result.actionsAwaitingYou += 1;

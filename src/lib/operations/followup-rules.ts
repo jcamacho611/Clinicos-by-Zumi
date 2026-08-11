@@ -244,16 +244,96 @@ export function prepareActions(risk: DetectedRisk, patientName: string, clinicNa
   }
 }
 
+// ---------------------------------------------------------------------------
+// How much Klinikos is permitted to do unattended
+// ---------------------------------------------------------------------------
+
 /**
- * The state a prepared action should be recorded in.
+ * The vocabulary a clinic will eventually configure its automation with.
+ *
+ * Named now, before there is a settings screen, because the alternative is that the
+ * concept arrives later as a boolean bolted onto whichever call site needed it first.
+ * Today every clinic runs on {@link DEFAULT_AUTOMATION_POLICY} and there is no way to
+ * change it — no UI, no column, no request field. What exists is the shape.
+ */
+export const automationLevels = ["auto_allowed", "confirm_required", "human_required", "blocked"] as const;
+export type AutomationLevel = (typeof automationLevels)[number];
+
+export const automationLevelLabels: Record<AutomationLevel, string> = {
+  auto_allowed: "Klinikos does this on its own",
+  confirm_required: "Klinikos prepares it, you confirm",
+  human_required: "A person does this",
+  blocked: "Klinikos does not do this",
+};
+
+/** Ascending supervision. Used to compare two levels, never persisted. */
+const STRICTNESS: Record<AutomationLevel, number> = {
+  auto_allowed: 0,
+  confirm_required: 1,
+  human_required: 2,
+  blocked: 3,
+};
+
+/**
+ * The most permissive level each action kind may ever be set to.
+ *
+ * This is the part that must not be configurable. A future settings screen can make
+ * Klinikos more cautious; it cannot make it send patient messages unattended, because
+ * a message that should not have gone out cannot be recalled by changing the setting
+ * back. Written as a ceiling rather than enforced at the UI so the guarantee survives
+ * whatever calls this next.
+ */
+const AUTOMATION_CEILING: Record<ActionKind, AutomationLevel> = {
+  internal_task: "auto_allowed",
+  patient_message: "confirm_required",
+};
+
+/** What every clinic runs on today. Identical to the ceiling — nothing is relaxed. */
+export const DEFAULT_AUTOMATION_POLICY: Record<ActionKind, AutomationLevel> = { ...AUTOMATION_CEILING };
+
+export type AutomationPolicy = Partial<Record<ActionKind, AutomationLevel>>;
+
+/**
+ * The level actually in force for an action kind.
+ *
+ * A configured level is honoured only when it is at least as supervised as the
+ * ceiling. A configuration that tried to loosen one is not an error to report to a
+ * clinic — it is silently clamped, because the safe answer is available and refusing
+ * the whole sweep over a bad setting would help nobody.
+ */
+export function resolveAutomationLevel(kind: ActionKind, policy: AutomationPolicy = {}): AutomationLevel {
+  const configured = policy[kind] ?? DEFAULT_AUTOMATION_POLICY[kind];
+  const ceiling = AUTOMATION_CEILING[kind];
+  return STRICTNESS[configured] >= STRICTNESS[ceiling] ? configured : ceiling;
+}
+
+/**
+ * The state a prepared action should be recorded in, or `null` if it should not be
+ * recorded at all.
  *
  * A message never reads as "Sent" unless a connected channel actually accepted it.
  * With no communications connection the honest state is `awaiting_connection`, and
  * that is what the owner sees.
+ *
+ * `null` is only reachable through a `blocked` policy, which nothing can currently
+ * set. It exists so that when something can, the sweep skips the action rather than
+ * inventing a state for it.
  */
-export function initialActionState(action: PreparedAction, communicationsConnected: boolean): ActionState {
-  if (action.autoExecutable) return "executed";
-  return communicationsConnected ? "awaiting_confirmation" : "awaiting_connection";
+export function initialActionState(
+  action: PreparedAction,
+  communicationsConnected: boolean,
+  policy: AutomationPolicy = {},
+): ActionState | null {
+  const level = resolveAutomationLevel(action.kind, policy);
+  if (level === "blocked") return null;
+
+  if (level === "auto_allowed" && action.autoExecutable) return "executed";
+
+  // Anything that leaves the building waits for a person *and* a channel. The channel
+  // half is what keeps "Klinikos handled it" from ever being a claim about a message
+  // nothing could deliver.
+  if (action.kind === "patient_message" && !communicationsConnected) return "awaiting_connection";
+  return "awaiting_confirmation";
 }
 
 /** Grouping for the owner's action stream. */

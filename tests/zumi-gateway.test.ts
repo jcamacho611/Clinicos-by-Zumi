@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   admitZumiRequest,
   requiresHumanReviewForTier,
@@ -30,9 +30,11 @@ import {
   registerProvider,
   resetProviderRegistry,
   selectProvider,
+  providerStatus,
   zumiGatewayStatus,
   type ProviderAdapter,
 } from "@/features/zumi/providers";
+import { anthropicAdapter, MODEL_ENV_VAR } from "@/features/zumi/adapters/anthropic";
 
 /**
  * These tests exist because every claim Klinikos makes about Zumi is a claim about
@@ -348,6 +350,63 @@ describe("provider registry", () => {
 
   it("says redaction is not a substitute for a BAA", () => {
     expect(phiEgressPermitted(adapter(), {}).notice).toContain("Business Associate Agreement");
+  });
+});
+
+describe("the Anthropic adapter's model configuration", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const request = { system: "s", prompt: "p", maxOutputTokens: 64, timeoutMs: 1000 };
+
+  it("treats the model identifier as configuration, not as something to assume", () => {
+    // A model name baked into source goes stale. When it does, the failure lands on a
+    // clinic as a vendor 404 mid-request instead of on an operator at deploy time.
+    expect(anthropicAdapter.requiredEnv).toContain(MODEL_ENV_VAR);
+  });
+
+  it("reports Pending Connection when a key is present but no model is named", () => {
+    const status = providerStatus(anthropicAdapter, { ANTHROPIC_API_KEY: "sk-test" });
+    expect(status.state).toBe("NOT_CONFIGURED");
+    expect(status.missingEnv).toEqual([MODEL_ENV_VAR]);
+    expect(status.detail).toContain(MODEL_ENV_VAR);
+  });
+
+  it("becomes usable once both the key and the model are configured", () => {
+    const status = providerStatus(anthropicAdapter, { ANTHROPIC_API_KEY: "sk-test", [MODEL_ENV_VAR]: "some-model" });
+    expect(status.state).toBe("CONFIGURED");
+    expect(status.missingEnv).toEqual([]);
+  });
+
+  it("reports the model it would actually call rather than one frozen at module load", () => {
+    vi.stubEnv(MODEL_ENV_VAR, "chosen-by-the-operator");
+    expect(anthropicAdapter.modelId).toBe("chosen-by-the-operator");
+  });
+
+  it("refuses to call the vendor at all when no model is configured", async () => {
+    // Belt and braces behind the registry: no request is sent with an absent or
+    // guessed model, so the network is never asked to resolve the ambiguity.
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-test");
+    vi.stubEnv(MODEL_ENV_VAR, "");
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    await expect(anthropicAdapter.invoke(request)).rejects.toThrow(MODEL_ENV_VAR);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it("refuses to call the vendor without credentials", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv(MODEL_ENV_VAR, "some-model");
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    await expect(anthropicAdapter.invoke(request)).rejects.toThrow(/credentials/i);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it("does not claim a BAA it does not have", () => {
+    expect(anthropicAdapter.baaOnFile).toBe(false);
+    expect(phiEgressPermitted(anthropicAdapter, { ZUMI_PHI_EGRESS_APPROVED: "1" }).permitted).toBe(false);
   });
 });
 

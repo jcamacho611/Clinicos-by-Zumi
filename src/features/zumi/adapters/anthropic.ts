@@ -1,6 +1,12 @@
 import "server-only";
 
-import { registerProvider, type ProviderAdapter, type ProviderRequest, type ProviderResult } from "@/features/zumi/providers";
+import {
+  registerProvider,
+  type ProviderAdapter,
+  type ProviderRequest,
+  type ProviderResult,
+  type ZumiEnv,
+} from "@/features/zumi/providers";
 
 /**
  * The first Zumi model provider adapter.
@@ -23,30 +29,51 @@ const API_URL = "https://api.anthropic.com/v1/messages";
 const API_VERSION = "2023-06-01";
 
 /**
+ * The model this adapter calls.
+ *
+ * **There is no default.** Model identifiers are versioned vendor strings that go stale
+ * — a name that was current when this file was written is not guaranteed to exist in
+ * the API environment a deployment actually points at, and a hard-coded one fails at
+ * runtime with a vendor 404 that surfaces to a clinic as a broken feature. Requiring
+ * the operator to name the model they have approved makes the failure happen at
+ * configuration time, where it is visible and fixable.
+ *
+ * `ZUMI_ANTHROPIC_MODEL` is listed in `requiredEnv`, so an unset value makes the
+ * registry report NOT_CONFIGURED and Zumi says "Pending Connection" — the same honest
+ * refusal it gives for a missing key.
+ */
+export const MODEL_ENV_VAR = "ZUMI_ANTHROPIC_MODEL";
+const MODEL_NOT_CONFIGURED = "(not configured)";
+
+function configuredModel(env: ZumiEnv = process.env): string | null {
+  const value = env[MODEL_ENV_VAR]?.trim();
+  return value && value.length > 0 ? value : null;
+}
+
+/**
  * Cost per million tokens, in micro-USD.
  *
  * Held here rather than computed from a live price list so the usage ledger records a
  * number even when nothing can be fetched. It is an estimate and the ledger column is
  * named accordingly — a cost figure that silently drifts from the invoice is worse
  * than one that is openly approximate.
+ *
+ * Because the model is operator-chosen, the rate has to be operator-stated too: a rate
+ * frozen for one model would quietly misprice every other one. The fallbacks below are
+ * a mid-tier list price, used only so the ledger records something rather than zero.
  */
-const INPUT_MICRO_USD_PER_MILLION = 3_000_000;
-const OUTPUT_MICRO_USD_PER_MILLION = 15_000_000;
+const FALLBACK_INPUT_MICRO_USD_PER_MILLION = 3_000_000;
+const FALLBACK_OUTPUT_MICRO_USD_PER_MILLION = 15_000_000;
 
-function estimateCostMicroUsd(inputTokens: number, outputTokens: number) {
-  const input = Math.round((inputTokens / 1_000_000) * INPUT_MICRO_USD_PER_MILLION);
-  const output = Math.round((outputTokens / 1_000_000) * OUTPUT_MICRO_USD_PER_MILLION);
-  return input + output;
+function rate(name: string, fallback: number, env: ZumiEnv = process.env) {
+  const parsed = Number.parseInt(env[name]?.trim() ?? "", 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
-/**
- * The model this adapter calls.
- *
- * Overridable so a deployment can move to a cheaper or newer model without a code
- * change — model choice is an operational decision, not an architectural one.
- */
-function modelId(env: NodeJS.ProcessEnv = process.env) {
-  return env.ZUMI_ANTHROPIC_MODEL?.trim() || "claude-sonnet-4-5";
+function estimateCostMicroUsd(inputTokens: number, outputTokens: number, env: ZumiEnv = process.env) {
+  const inputRate = rate("ZUMI_ANTHROPIC_INPUT_MICRO_USD_PER_MTOK", FALLBACK_INPUT_MICRO_USD_PER_MILLION, env);
+  const outputRate = rate("ZUMI_ANTHROPIC_OUTPUT_MICRO_USD_PER_MTOK", FALLBACK_OUTPUT_MICRO_USD_PER_MILLION, env);
+  return Math.round((inputTokens / 1_000_000) * inputRate) + Math.round((outputTokens / 1_000_000) * outputRate);
 }
 
 type AnthropicResponse = {
@@ -61,7 +88,10 @@ async function invoke(request: ProviderRequest): Promise<ProviderResult> {
   // this makes a direct call impossible to get wrong too.
   if (!key) throw new Error("Anthropic adapter invoked without credentials.");
 
-  const model = modelId();
+  const model = configuredModel();
+  // Fails here rather than sending a request with `model: undefined` and letting the
+  // vendor decide what that means.
+  if (!model) throw new Error(`Anthropic adapter invoked without ${MODEL_ENV_VAR}.`);
 
   const response = await fetch(API_URL, {
     method: "POST",
@@ -107,8 +137,13 @@ async function invoke(request: ProviderRequest): Promise<ProviderResult> {
 export const anthropicAdapter: ProviderAdapter = {
   key: "anthropic",
   label: "Anthropic",
-  modelId: modelId(),
-  requiredEnv: ["ANTHROPIC_API_KEY"],
+  // A getter, not a value: the environment is read when status is reported rather than
+  // frozen at module load, so a status page never shows a model the process would not
+  // actually call.
+  get modelId() {
+    return configuredModel() ?? MODEL_NOT_CONFIGURED;
+  },
+  requiredEnv: ["ANTHROPIC_API_KEY", MODEL_ENV_VAR],
   // No BAA is executed for this deployment. Until one is, and until the deployment is
   // separately approved, the gateway refuses to send PHI here.
   baaOnFile: false,

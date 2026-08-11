@@ -34,6 +34,15 @@ import {
 type Steps = Partial<Record<ProvisioningStep, StepState>>;
 
 export type ProvisionInput = {
+  /**
+   * Which purchase ledger the reference belongs to.
+   *
+   * Only `whop_membership` has a caller today. One-time marketplace products settle as
+   * `access_payment`, and every one of them is gated on a human review that payment
+   * does not complete — so settling one grants the reviewed thing, not a workspace.
+   * The variant exists because the idempotency key must distinguish the two ledgers'
+   * references, which can collide otherwise.
+   */
   source: "whop_membership" | "access_payment";
   /** The payment's own identifier. Membership id, or payment reference. */
   reference: string;

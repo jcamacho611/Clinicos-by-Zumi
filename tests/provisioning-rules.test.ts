@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   MAPPED_PLAN_KEYS,
@@ -12,6 +14,13 @@ import {
 } from "@/lib/provisioning/provisioning-rules";
 import { accessTierKeys } from "@/lib/commerce/whop-catalog";
 import { zumiCapabilities } from "@/features/zumi/schemas";
+
+function routeFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory() ? routeFiles(path) : entry.name === "route.ts" ? [path] : [];
+  });
+}
 
 /**
  * Provisioning is where "someone paid" becomes "their clinic can use it". These tests
@@ -169,5 +178,36 @@ describe("idempotency", () => {
     expect(provisioningKey({ source: "whop_membership", reference: "abc" })).not.toBe(
       provisioningKey({ source: "access_payment", reference: "abc" }),
     );
+  });
+});
+
+describe("the payment boundary", () => {
+  const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+  it("provisions only from the signature-verified webhook", () => {
+    // A browser redirect is not payment proof. Whoever lands on a success page did not
+    // necessarily pay, and anyone can visit it — so nothing reachable from a browser is
+    // allowed to call provisioning.
+    const callers = routeFiles(join(process.cwd(), "src/app"))
+      .filter((path) => readFileSync(path, "utf8").includes("provisionFromPayment"))
+      .map((path) => path.replace(process.cwd(), ""));
+    expect(callers).toEqual(["/src/app/api/whop/webhook/route.ts"]);
+  });
+
+  it("verifies the signature before it parses or acts on the body", () => {
+    // Call sites, not imports — hence the trailing parenthesis on each.
+    const webhook = source("src/app/api/whop/webhook/route.ts");
+    const verified = webhook.indexOf("verifyWhopSignature(");
+    const parsed = webhook.indexOf("whopWebhookEnvelopeSchema.safeParse(");
+    const provisioned = webhook.indexOf("provisionFromPayment(");
+    expect(verified).toBeGreaterThan(-1);
+    expect(parsed).toBeGreaterThan(verified);
+    expect(provisioned).toBeGreaterThan(parsed);
+  });
+
+  it("refuses every delivery when no webhook secret is configured", () => {
+    // Fail-closed, not fail-open. Without a secret an unauthenticated caller could
+    // otherwise instruct Klinikos to grant paid access.
+    expect(source("src/app/api/whop/webhook/route.ts")).toContain("Webhook verification is not configured.");
   });
 });

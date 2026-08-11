@@ -6,8 +6,8 @@ import { ZumiAssistantOrb } from "@/components/command/zumi-command-shell";
 import {
   actionStateLabels,
   actionStreamLabels,
-  actionStreams,
   COMMUNICATIONS_BLOCKED_NOTICE,
+  streamForState,
   type ActionStream,
 } from "@/lib/operations/followup-rules";
 import type { CommandCenterData, ActionItem } from "@/lib/operations/command-center";
@@ -49,12 +49,16 @@ export function CommandCenter({ data, userName }: { data: CommandCenterData; use
       const nextState = payload?.data?.state as ActionItem["state"];
       // Move the item to the stream its new state belongs to rather than reloading —
       // the owner keeps their place in the queue.
+      //
+      // The mapping comes from `streamForState`, the same function the server groups
+      // with. Re-deriving it here would let the page disagree with itself the moment a
+      // state is added, and the disagreement would look like a bug in the queue.
       setItems((current) => {
         const remaining = Object.fromEntries(
           Object.entries(current).map(([key, list]) => [key, list.filter((entry) => entry.id !== action.id)]),
         ) as typeof current;
         const moved: ActionItem = { ...action, state: nextState, decidable: false };
-        const target: ActionStream = nextState === "executed" ? "handled" : nextState === "awaiting_connection" ? "blocked" : "completed";
+        const target: ActionStream = streamForState(nextState);
         return { ...remaining, [target]: [moved, ...remaining[target]] };
       });
 

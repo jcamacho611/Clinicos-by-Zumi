@@ -61,15 +61,19 @@ export const connectorCatalog: readonly ConnectorDefinition[] = [
     env: ["OPENAI_API_KEY"], handlesPhi: false, baaRequired: true, customerConnectable: true,
     gates: NO_GATES,
     externalGate: "Contracted account and, before any PHI workload, an executed BAA.",
-    notes: "Primary provider candidate behind the Zumi AI Gateway. No adapter is registered, so Zumi reports Pending Connection.",
+    notes: "Provider candidate behind the Zumi AI Gateway. No OpenAI adapter is written, so a key alone would not make Zumi speak to it.",
   },
   {
     id: "anthropic", name: "Anthropic", gateway: "ai", integration: "server_only",
     ownership: "klinikos_owned", economics: "A_platform",
-    env: ["ANTHROPIC_API_KEY"], handlesPhi: false, baaRequired: true, customerConnectable: true,
+    // The model identifier is required configuration, not an optional tuning knob: the
+    // adapter has no built-in default. Listing it here keeps this catalog's readiness
+    // answer identical to the gateway's instead of reporting connected while Zumi
+    // still says Pending Connection.
+    env: ["ANTHROPIC_API_KEY", "ZUMI_ANTHROPIC_MODEL"], handlesPhi: false, baaRequired: true, customerConnectable: true,
     gates: NO_GATES,
     externalGate: "Contracted account and, before any PHI workload, an executed BAA.",
-    notes: "Secondary provider candidate for routed workloads.",
+    notes: "The only provider with an adapter behind the Zumi AI Gateway. No BAA is declared for it, so PHI is refused regardless of credentials.",
   },
   {
     id: "google-ai", name: "Google Gemini / Vertex AI", gateway: "ai", integration: "server_only",

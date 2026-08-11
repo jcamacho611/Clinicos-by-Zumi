@@ -1,9 +1,19 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  actionKinds,
+  actionStateLabels,
+  actionStates,
+  actionStreams,
+  automationLevelLabels,
+  automationLevels,
+  DEFAULT_AUTOMATION_POLICY,
   detectRisks,
   detectRisksAcross,
   initialActionState,
   prepareActions,
+  resolveAutomationLevel,
   riskExplanations,
   riskKinds,
   streamForState,
@@ -95,6 +105,30 @@ describe("risk detection", () => {
     expect(risks[0].appointmentId).toBe("b");
   });
 
+  it("has an opinion about every status the schema can store", () => {
+    // Read from the schema rather than restated here, so a status added to the enum
+    // fails this test instead of silently falling through to "treat it as open" — which
+    // is how a cancelled visit would end up being chased.
+    const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
+    const block = schema.match(/enum AppointmentStatus \{([^}]+)\}/);
+    expect(block).toBeTruthy();
+    const statuses = (block?.[1] ?? "").split("\n").map((entry) => entry.trim()).filter(Boolean);
+    expect(statuses.length).toBeGreaterThan(5);
+
+    // An open appointment missing its paperwork must raise work; a closed one must not.
+    // Every status has to land on one side or the other deliberately.
+    //
+    // NO_SHOW is checked in the past because that is the only time it can occur — a
+    // visit cannot have been missed before its start time.
+    const open = ["REQUESTED", "PENDING_CONFIRMATION", "CONFIRMED"];
+    for (const status of statuses) {
+      const startsAt = status === "NO_SHOW" ? inHours(-48) : inHours(24);
+      const raised = detectRisks(appointment({ status, startsAt, formsComplete: false }), NOW).length > 0;
+      const expected = open.includes(status) || status === "NO_SHOW";
+      expect({ status, raised }).toEqual({ status, raised: expected });
+    }
+  });
+
   it("explains every risk kind in an owner's words", () => {
     for (const kind of riskKinds) {
       expect({ kind, explained: (riskExplanations[kind] ?? "").length > 30 }).toEqual({ kind, explained: true });
@@ -147,6 +181,60 @@ describe("what Klinikos does about it", () => {
     expect(streamForState("awaiting_confirmation")).toBe("awaiting_you");
     expect(streamForState("awaiting_connection")).toBe("blocked");
     expect(streamForState("dismissed")).toBe("completed");
+  });
+
+  it("gives every state a stream and every stream a label", () => {
+    // The owner's queue is built by grouping on this. A state with no stream would
+    // silently vanish from the page rather than fail loudly.
+    for (const state of actionStates) {
+      expect({ state, stream: actionStreams.includes(streamForState(state)) }).toEqual({ state, stream: true });
+      expect({ state, labelled: (actionStateLabels[state] ?? "").length > 0 }).toEqual({ state, labelled: true });
+    }
+  });
+});
+
+describe("how much Klinikos may do unattended", () => {
+  const risk = detectRisks(appointment({ status: "PENDING_CONFIRMATION" }), NOW)[0];
+  const [task, message] = prepareActions(risk, "Dana Reyes", "Harbor Aesthetics");
+
+  it("runs every clinic on the same defaults today", () => {
+    expect(DEFAULT_AUTOMATION_POLICY).toEqual({ internal_task: "auto_allowed", patient_message: "confirm_required" });
+    for (const kind of actionKinds) {
+      expect({ kind, level: resolveAutomationLevel(kind) }).toEqual({ kind, level: DEFAULT_AUTOMATION_POLICY[kind] });
+    }
+  });
+
+  it("refuses to let any policy make patient messaging unattended", () => {
+    // The ceiling, not the settings screen, is what guarantees this. A message sent in
+    // error cannot be recalled by changing the setting back.
+    expect(resolveAutomationLevel("patient_message", { patient_message: "auto_allowed" })).toBe("confirm_required");
+    expect(initialActionState(message, true, { patient_message: "auto_allowed" })).toBe("awaiting_confirmation");
+    expect(initialActionState(message, false, { patient_message: "auto_allowed" })).toBe("awaiting_connection");
+  });
+
+  it("lets a policy add supervision, never remove it", () => {
+    expect(resolveAutomationLevel("internal_task", { internal_task: "human_required" })).toBe("human_required");
+    expect(resolveAutomationLevel("patient_message", { patient_message: "blocked" })).toBe("blocked");
+    expect(initialActionState(task, false, { internal_task: "human_required" })).toBe("awaiting_confirmation");
+  });
+
+  it("records nothing at all for a blocked action kind", () => {
+    // Not a state — an absence. Showing an owner an item Klinikos has been told not to
+    // do would be work they cannot action.
+    expect(initialActionState(message, true, { patient_message: "blocked" })).toBeNull();
+  });
+
+  it("leaves today's behaviour exactly as it was", () => {
+    expect(initialActionState(task, false)).toBe("executed");
+    expect(initialActionState(task, false, DEFAULT_AUTOMATION_POLICY)).toBe("executed");
+    expect(initialActionState(message, true, DEFAULT_AUTOMATION_POLICY)).toBe("awaiting_confirmation");
+    expect(initialActionState(message, false, DEFAULT_AUTOMATION_POLICY)).toBe("awaiting_connection");
+  });
+
+  it("names every level in an owner's words", () => {
+    for (const level of automationLevels) {
+      expect({ level, labelled: (automationLevelLabels[level] ?? "").length > 10 }).toEqual({ level, labelled: true });
+    }
   });
 });
 

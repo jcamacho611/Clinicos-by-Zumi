@@ -50,9 +50,20 @@ export default function OperationalAuditPage() {
       </section>
 
       <MarketingSection eyebrow="What you receive" id="audit-deliverables" title="Nine deliverables, not a conversation.">
+        {/*
+          The grid's own background paints the hairline between cells. With an odd
+          number of deliverables the final row is half empty, and that background shows
+          through as a grey block on the page that takes payment. The last item spans
+          the row instead.
+        */}
         <ol className="mt-10 grid gap-px bg-white/10 sm:grid-cols-2">
           {auditDeliverables.map((item, index) => (
-            <li className="flex gap-4 bg-[#05090f] p-5" key={item}>
+            <li
+              className={`flex gap-4 bg-[#05090f] p-5${
+                index === auditDeliverables.length - 1 && auditDeliverables.length % 2 === 1 ? " sm:col-span-2" : ""
+              }`}
+              key={item}
+            >
               <span className="text-sm font-extrabold tabular-nums text-[#e6c55b]">{String(index + 1).padStart(2, "0")}</span>
               <span className="text-[13px] leading-6 text-slate-200">{item}</span>
             </li>
