@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { accessPaymentVerificationSchema } from "@/lib/commerce/access-payment-rules";
-import { listAccessPayments, verifyAccessPayment } from "@/lib/commerce/access-payment-service";
-
-/**
- * Administrator verification of marketplace access payments.
- *
- * Requires the sales-manage permission, an explicit action, and a human note.
- * Portal access is derived from the resulting payment status and the product's
- * review requirement, never set directly by the caller.
- */
+import { listAccessPayments, reviewPaidOnboarding, verifyAccessPayment } from "@/lib/commerce/access-payment-service";
 
 export const dynamic = "force-dynamic";
+
+const reviewSchema = z.object({
+  paymentId: z.string().trim().min(1).max(64),
+  reviewDecision: z.enum(["approve", "reject"]),
+  note: z.string().trim().min(8).max(800),
+});
 
 export async function GET(request: Request) {
   const session = await getClinicSession();
@@ -37,9 +36,26 @@ export async function POST(request: Request) {
   if (denied) return denied;
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "Payment storage is unavailable." }, { status: 503 });
 
-  const parsed = accessPaymentVerificationSchema.safeParse(await request.json().catch(() => null));
+  const body = await request.json().catch(() => null);
+  const reviewParsed = reviewSchema.safeParse(body);
+  if (reviewParsed.success) {
+    const reviewed = await reviewPaidOnboarding(session, {
+      paymentId: reviewParsed.data.paymentId,
+      decision: reviewParsed.data.reviewDecision,
+      note: reviewParsed.data.note,
+    });
+    if (!reviewed.ok) {
+      return NextResponse.json(
+        { error: reviewed.reason === "not_found" ? "Paid onboarding not found." : "Payment is not settled.", reason: reviewed.reason },
+        { status: reviewed.reason === "not_found" ? 404 : 409 },
+      );
+    }
+    return NextResponse.json({ ok: true, data: reviewed.payment, reviewApproved: reviewed.approved }, { headers: { "Cache-Control": "private, no-store" } });
+  }
+
+  const parsed = accessPaymentVerificationSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Supply a payment, an action, and a note of at least 8 characters." }, { status: 400 });
+    return NextResponse.json({ error: "Supply a payment action or review decision with a note of at least 8 characters." }, { status: 400 });
   }
 
   const result = await verifyAccessPayment(session, parsed.data);
