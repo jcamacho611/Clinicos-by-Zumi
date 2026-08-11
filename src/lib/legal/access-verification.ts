@@ -26,6 +26,7 @@ type AcceptanceRow = {
   email: string;
   documentVersion: string;
   source: string;
+  verifiedEmailAt: Date | null;
 };
 
 function appUrl() {
@@ -104,7 +105,7 @@ export async function verifyAccessEmail(rawToken: string, _metadata: { ipAddress
   if (!payload || payload.purpose !== "evaluation-email") return { ok: false as const, reason: "invalid" as const };
 
   const rows = await db.$queryRaw<AcceptanceRow[]>(Prisma.sql`
-    SELECT "id", "email", "documentVersion", "source"
+    SELECT "id", "email", "documentVersion", "source", "verifiedEmailAt"
     FROM "access_gate_acceptances"
     WHERE "id" = ${payload.acceptanceId}
     LIMIT 1
@@ -114,15 +115,16 @@ export async function verifyAccessEmail(rawToken: string, _metadata: { ipAddress
     return { ok: false as const, reason: "invalid" as const };
   }
 
-  if (acceptance.source !== "web-access-gate-verified") {
+  const alreadyVerified = Boolean(acceptance.verifiedEmailAt);
+  if (!alreadyVerified) {
     await db.$executeRaw(Prisma.sql`
       UPDATE "access_gate_acceptances"
-      SET "source" = 'web-access-gate-verified'
-      WHERE "id" = ${acceptance.id}
+      SET "source" = 'web-access-gate-verified', "verifiedEmailAt" = NOW()
+      WHERE "id" = ${acceptance.id} AND "verifiedEmailAt" IS NULL
     `);
   }
 
-  return { ok: true as const, email: payload.email, alreadyVerified: acceptance.source === "web-access-gate-verified" };
+  return { ok: true as const, email: payload.email, alreadyVerified };
 }
 
 export function createEvaluationAccessToken(email: string) {
