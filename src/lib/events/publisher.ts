@@ -1,40 +1,41 @@
 import "server-only";
 
 import { db } from "@/lib/db";
-import type { KlinikosDomainEvent } from "@/lib/events/types";
+import type { KlinikosEvent } from "@/lib/events/types";
 
-export type PublishEventInput<TPayload extends Record<string, unknown>> = Omit<KlinikosDomainEvent<TPayload>, "id" | "occurredAt"> & {
+export type PublishEventInput<TPayload extends Record<string, unknown>> = Omit<KlinikosEvent<TPayload>, "id" | "occurredAt" | "minimumNecessary"> & {
   id?: string;
-  occurredAt?: Date;
+  occurredAt?: string;
 };
 
-/**
- * Persist a Klinikos domain event and its intended deliveries in one database transaction.
- *
- * This is the durable outbox boundary. Callers publish facts; asynchronous workers
- * can deliver them later without coupling Clinic, Grid, Education, Finance, or other
- * domains directly to one another.
- */
 export async function publishDomainEvent<TPayload extends Record<string, unknown>>(input: PublishEventInput<TPayload>) {
   return db.$transaction(async (tx) => {
     const event = await tx.domainEvent.create({
       data: {
         id: input.id,
-        eventType: input.eventType,
-        sourceDomain: input.sourceDomain,
-        sourceId: input.sourceId,
+        eventType: input.type,
+        sourceDomain: input.domain,
+        sourceId: input.subjectId ?? input.producer,
         organizationId: input.organizationId ?? null,
         actorIdentityId: input.actorIdentityId ?? null,
-        subjectIdentityId: input.subjectIdentityId ?? null,
+        subjectIdentityId: input.subjectType === "identity" ? input.subjectId ?? null : null,
         containsPhi: input.containsPhi,
-        purpose: input.purpose,
-        payload: input.payload,
-        occurredAt: input.occurredAt ?? new Date(),
+        purpose: input.producer,
+        payload: {
+          ...input.payload,
+          producer: input.producer,
+          subjectType: input.subjectType ?? null,
+          subjectId: input.subjectId ?? null,
+          correlationId: input.correlationId ?? null,
+          causationId: input.causationId ?? null,
+          minimumNecessary: true,
+        },
+        occurredAt: input.occurredAt ? new Date(input.occurredAt) : new Date(),
       },
     });
 
     const subscriptions = await tx.eventSubscription.findMany({
-      where: { eventType: input.eventType, status: "active" },
+      where: { eventType: input.type, status: "active" },
     });
 
     if (subscriptions.length > 0) {
