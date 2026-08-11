@@ -84,7 +84,9 @@ export async function loadCommandCenter(organizationId: string, now = new Date()
       actionKind: action.actionKind,
       state,
       detectedAt: action.detectedAt,
-      decidable: !action.decidedAt && (state === "awaiting_confirmation" || state === "prepared" || state === "awaiting_connection"),
+      // An action the owner has already approved is not decidable again, even though it
+      // is not finished — Klinikos owes them a send, not another decision.
+      decidable: !action.decidedAt && !action.approvedAt && (state === "awaiting_confirmation" || state === "prepared" || state === "awaiting_connection"),
     };
     streams[streamForState(state)].push(item);
   }

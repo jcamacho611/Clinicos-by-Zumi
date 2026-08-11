@@ -76,6 +76,9 @@ export async function runFollowUpSweep(organizationId: string, now = new Date())
   }));
   const risks = detectRisksAcross(snapshots, now);
   await reconcileResolvedRisks(organizationId, risks);
+  // Held messages go out here, not only when a new risk appears — a clinic that just
+  // connected a provider has approved work waiting and no new risk to trigger it.
+  await retryApprovedDeliveries(organizationId);
 
   if (risks.length === 0) return { risksDetected: 0, actionsExecuted: 0, actionsAwaitingYou: 0, actionsBlocked: 0 };
 
@@ -220,6 +223,13 @@ async function upsertAction(input: {
   }
 }
 
+/**
+ * States a patient message may still be sent from.
+ *
+ * `sending` is absent on purpose: an in-flight attempt must not be claimed twice.
+ */
+const SENDABLE_STATES = ["prepared", "awaiting_confirmation", "awaiting_connection", "awaiting_delivery", "failed"] as const;
+
 export async function decideAction(input: {
   organizationId: string;
   actionId: string;
@@ -228,16 +238,16 @@ export async function decideAction(input: {
 }) {
   const action = await db.operationalAction.findFirst({
     where: { id: input.actionId, organizationId: input.organizationId },
-    select: { id: true, state: true, actionKind: true, title: true, body: true, patientId: true },
+    select: { id: true, state: true, actionKind: true, title: true, body: true, patientId: true, deliveredAt: true },
   });
   if (!action) return { ok: false as const, reason: "not_found" as const };
 
-  const decidedAt = new Date();
+  const now = new Date();
 
   if (input.decision === "dismiss") {
     await db.operationalAction.update({
       where: { id: action.id },
-      data: { state: "dismissed", decidedByUserId: input.userId, decidedAt },
+      data: { state: "dismissed", decidedByUserId: input.userId, decidedAt: now },
     });
     return { ok: true as const, state: "dismissed" as const };
   }
@@ -246,22 +256,56 @@ export async function decideAction(input: {
   if (action.actionKind !== "patient_message") {
     await db.operationalAction.update({
       where: { id: action.id },
-      data: { state: "executed", decidedByUserId: input.userId, decidedAt },
+      data: { state: "executed", approvedByUserId: input.userId, approvedAt: now, decidedByUserId: input.userId, decidedAt: now },
     });
     return { ok: true as const, state: "executed" as const };
   }
 
-  // Everything below is the point of this function. Confirming a patient message is an
-  // instruction to send it, not the sending. `executed` is written only after a
-  // provider accepts the message and returns a reference we can store.
-  const recipient = await patientRecipient(input.organizationId, action.patientId);
+  // Already sent. A retried confirmation — a lost response, a double click — must not
+  // put a second copy of the same message in front of a patient.
+  if (action.deliveredAt) return { ok: true as const, state: "executed" as const, alreadySent: true };
+
+  return sendApprovedMessage({ ...input, action, approvedAt: now });
+}
+
+/**
+ * Claim an approved message and attempt to deliver it.
+ *
+ * The claim is a conditional `updateMany`: it succeeds only for a row still in a
+ * sendable state, so two concurrent confirmations produce one send and the loser reads
+ * the stored result. Nothing external happens before the claim wins.
+ */
+async function sendApprovedMessage(input: {
+  organizationId: string;
+  userId: string;
+  approvedAt: Date;
+  action: { id: string; title: string; body: string; patientId: string };
+}) {
+  const claim = await db.operationalAction.updateMany({
+    where: {
+      id: input.action.id,
+      organizationId: input.organizationId,
+      deliveredAt: null,
+      state: { in: [...SENDABLE_STATES] },
+    },
+    data: { state: "sending", approvedByUserId: input.userId, approvedAt: input.approvedAt },
+  });
+
+  if (claim.count === 0) {
+    const current = await db.operationalAction.findUnique({ where: { id: input.action.id }, select: { state: true } });
+    return { ok: true as const, state: (current?.state ?? "sending") as ActionState, alreadyClaimed: true };
+  }
+
+  const recipient = await patientRecipient(input.organizationId, input.action.patientId);
   if (!recipient) {
+    // A missing address is not a transient failure. Retrying cannot fix it, so this is
+    // terminal and a person has to supply the address.
     await db.operationalAction.update({
-      where: { id: action.id },
+      where: { id: input.action.id },
       data: {
         state: "failed",
         decidedByUserId: input.userId,
-        decidedAt,
+        decidedAt: new Date(),
         deliveryFailure: "No contact address is on file for this patient.",
       },
     });
@@ -271,17 +315,17 @@ export async function decideAction(input: {
   const outcome = await deliverOutbound({
     channel: PATIENT_MESSAGE_CHANNEL,
     to: recipient,
-    subject: action.title,
-    body: action.body,
+    subject: input.action.title,
+    body: input.action.body,
   });
 
   if (outcome.ok) {
     await db.operationalAction.update({
-      where: { id: action.id },
+      where: { id: input.action.id },
       data: {
         state: "executed",
         decidedByUserId: input.userId,
-        decidedAt,
+        decidedAt: new Date(),
         deliveryProvider: outcome.provider,
         deliveryReference: outcome.providerReference,
         deliveredAt: new Date(),
@@ -291,16 +335,17 @@ export async function decideAction(input: {
     return { ok: true as const, state: "executed" as const };
   }
 
-  // The approval is kept either way — the owner should not have to decide twice
-  // because a provider was unreachable. Only the state differs, and it says which of
-  // the three different problems this is.
+  // The approval survives; the completion does not. `decidedAt` stays null so the retry
+  // sweep picks this up when the provider recovers — which is what the owner was
+  // promised when they were told it would send as soon as a channel connected.
   const state = deliveryFailureState(outcome.reason);
+  const terminal = outcome.reason === "invalid_recipient";
   await db.operationalAction.update({
-    where: { id: action.id },
+    where: { id: input.action.id },
     data: {
       state,
-      decidedByUserId: input.userId,
-      decidedAt,
+      decidedByUserId: terminal ? input.userId : null,
+      decidedAt: terminal ? new Date() : null,
       deliveryFailure: outcome.detail,
       deliveryProvider: null,
       deliveryReference: null,
@@ -311,11 +356,51 @@ export async function decideAction(input: {
 }
 
 /**
+ * Re-attempt messages a person already approved that have not yet been delivered.
+ *
+ * Run as part of the sweep, so a clinic that connects a provider sees its held messages
+ * go out on the next dashboard load without anyone re-approving anything. Bounded, and
+ * it only ever touches rows carrying an approval — automation never sends a message no
+ * person said yes to.
+ */
+async function retryApprovedDeliveries(organizationId: string) {
+  const pending = await db.operationalAction.findMany({
+    where: {
+      organizationId,
+      actionKind: "patient_message",
+      approvedAt: { not: null },
+      deliveredAt: null,
+      decidedAt: null,
+      state: { in: ["awaiting_connection", "awaiting_delivery", "failed"] },
+    },
+    select: { id: true, title: true, body: true, patientId: true, approvedByUserId: true },
+    take: 100,
+  });
+  if (pending.length === 0) return 0;
+
+  // Ask once rather than per message: if nothing can deliver, none of them can.
+  if (!communicationsConnected()) return 0;
+
+  let sent = 0;
+  for (const action of pending) {
+    const result = await sendApprovedMessage({
+      organizationId,
+      userId: action.approvedByUserId ?? "",
+      approvedAt: new Date(),
+      action,
+    });
+    if (result.state === "executed") sent += 1;
+  }
+  return sent;
+}
+
+/**
  * Which honest state a failed delivery lands in.
  *
- * `failed` is reserved for an attempt that actually reached a provider, because that
- * is the only one worth retrying. The other two are configuration facts, and telling
- * an owner to "retry" them would be advice they cannot act on.
+ * `failed` is reserved for an attempt that actually reached a provider, because that is
+ * the only one worth retrying against the same provider. The other two are
+ * configuration facts, and telling an owner to "retry" them would be advice they cannot
+ * act on.
  */
 function deliveryFailureState(reason: "no_connector" | "no_sender" | "provider_error" | "invalid_recipient"): ActionState {
   if (reason === "no_connector") return "awaiting_connection";
@@ -339,7 +424,7 @@ export async function listActions(organizationId: string, limit = 60) {
     take: limit,
     select: {
       id: true, riskKind: true, actionKind: true, state: true, title: true, body: true,
-      appointmentId: true, patientId: true, detectedAt: true, decidedAt: true, taskId: true,
+      appointmentId: true, patientId: true, detectedAt: true, decidedAt: true, approvedAt: true, taskId: true,
     },
   });
 }

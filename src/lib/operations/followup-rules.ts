@@ -146,6 +146,7 @@ export const actionStates = [
   "awaiting_confirmation",
   "awaiting_connection",
   "awaiting_delivery",
+  "sending",
   "dismissed",
   "resolved_by_source",
   "failed",
@@ -158,6 +159,7 @@ export const actionStateLabels: Record<ActionState, string> = {
   awaiting_confirmation: "Needs your confirmation",
   awaiting_connection: "Awaiting communications connection",
   awaiting_delivery: "Approved, waiting to send",
+  sending: "Sending",
   dismissed: "Dismissed",
   resolved_by_source: "No longer needed",
   failed: "Could not be sent",
@@ -356,7 +358,8 @@ export function streamForState(state: ActionState): ActionStream {
     case "executed": return "handled";
     case "awaiting_confirmation": return "awaiting_you";
     case "awaiting_connection":
-    case "awaiting_delivery": return "blocked";
+    case "awaiting_delivery":
+    case "sending": return "blocked";
     case "prepared": return "awaiting_you";
     case "dismissed":
     // Not "dismissed": nobody decided this was unnecessary, the reason for it went

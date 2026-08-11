@@ -4448,7 +4448,7 @@ model OperationalAction {
   actionKind     String
   appointmentId  String
   patientId      String
-  /// prepared | executed | awaiting_confirmation | awaiting_connection | awaiting_delivery | dismissed | resolved_by_source | failed
+  /// prepared | executed | awaiting_confirmation | awaiting_connection | awaiting_delivery | sending | dismissed | resolved_by_source | failed
   state          String    @default("prepared")
   title          String
   /// Drafted content. For a patient message this is what would be sent, and it is
@@ -4456,7 +4456,14 @@ model OperationalAction {
   body           String
   /// Task created when the action executed inside Klinikos.
   taskId         String?
-  /// Set when a person confirmed or dismissed it. Automation never fills this in.
+  /// Set when a person approved this action. Deliberately separate from `decidedAt`:
+  /// approving a message is an instruction to send it, and a send that has not yet
+  /// succeeded is not finished. Keeping them apart is what lets a failed delivery be
+  /// retried without asking the owner to approve the same message twice.
+  approvedByUserId String?
+  approvedAt       DateTime?
+  /// Set when the action reached a terminal outcome — sent, dismissed, resolved, or
+  /// failed in a way retrying cannot fix. Automation never fills in `decidedByUserId`.
   decidedByUserId String?
   decidedAt      DateTime?
   /// Evidence that a provider accepted this message. `executed` is only writable for a
@@ -4476,5 +4483,7 @@ model OperationalAction {
   @@index([organizationId, riskKind])
   /// Looked up when a provider reports back on a message it accepted.
   @@index([deliveryReference])
+  /// Drives the retry sweep: approved, not yet delivered.
+  @@index([organizationId, approvedAt, deliveredAt])
   @@map("operational_actions")
 }

@@ -32,6 +32,17 @@ services:
         sync: false
       - key: WHOP_WEBHOOK_SECRET
         sync: false
+      # Recurring access passes. `whopAdapterStatus` needs at least one of these before
+      # /entry can start a subscription checkout; without them a Render deployment
+      # reports Pending Connection no matter what other Whop credentials are set.
+      - key: WHOP_PLAN_EVALUATOR_PASS
+        sync: false
+      - key: WHOP_PLAN_CLINIC_OPERATOR
+        sync: false
+      - key: WHOP_PLAN_GRID_PROVIDER
+        sync: false
+      - key: WHOP_PLAN_GRID_LOCATION_PARTNER
+        sync: false
       - key: WHOP_PRODUCTS_CLINIC_WORKFLOW_REVIEW
         sync: false
       - key: WHOP_PRODUCTS_FOUNDING_CLINIC_SEAT

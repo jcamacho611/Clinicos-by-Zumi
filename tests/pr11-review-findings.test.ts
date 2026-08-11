@@ -439,3 +439,115 @@ describe("migrations added by these fixes stay safe", () => {
     for (const check of checks) expect(check).toContain("NOT VALID");
   });
 });
+
+describe("second review round", () => {
+  const source2 = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+  describe("a paid GRID buyer can use what their pass grants", () => {
+    it("gives the contractor role the grid permission its listings need", () => {
+      // The pass grants `grid`; the routes were gated on `network`, so a paid GRID
+      // buyer hit 403 before the entitlement check was ever reached.
+      const rbac = source2("src/lib/auth/rbac.ts");
+      expect(rbac).toContain('contractor: { grid: ["read", "create", "update"] }');
+    });
+
+    it("gates GRID marketplace writes on grid, not on the clinical network resource", () => {
+      // `network` is grants, break-glass, and shared patients. A marketplace listing
+      // has no business sharing a permission key with clinical record access.
+      for (const path of [
+        "src/app/api/grid/services/route.ts",
+        "src/app/api/grid/locations/route.ts",
+        "src/app/api/grid/requests/route.ts",
+      ]) {
+        const route = source2(path);
+        expect({ path, network: route.includes('enforceApiPermission(session, "network"') }).toEqual({ path, network: false });
+        expect({ path, grid: route.includes('enforceApiPermission(session, "grid"') }).toEqual({ path, grid: true });
+      }
+    });
+
+    it("does not widen the contractor beyond GRID", () => {
+      const rbac = source2("src/lib/auth/rbac.ts");
+      const line = rbac.split("\n").find((entry) => entry.trim().startsWith("contractor: {")) ?? "";
+      expect(line).not.toContain("network:");
+      expect(line).not.toContain("patients:");
+      expect(line).not.toContain("credentialing:");
+    });
+  });
+
+  describe("an approved message stays retryable until it is sent", () => {
+    const service = source2("src/lib/operations/followup-service.ts");
+
+    it("records approval separately from completion", () => {
+      // `decidedAt` is what both the command centre and the sweep read as finished.
+      // Writing it on a message that had not been sent made it permanently unsendable.
+      expect(service).toContain("approvedByUserId");
+      expect(service).toContain("approvedAt");
+    });
+
+    it("leaves an unsuccessful delivery undecided so it can be retried", () => {
+      expect(service).toContain("const terminal = outcome.reason === \"invalid_recipient\"");
+      expect(service).toContain("decidedAt: terminal ? new Date() : null");
+    });
+
+    it("re-attempts approved messages as part of the sweep", () => {
+      expect(service).toContain("async function retryApprovedDeliveries");
+      expect(service).toContain("await retryApprovedDeliveries(organizationId)");
+      // Runs before the no-risk early return: a clinic that just connected a provider
+      // has held messages and no new risk to trigger them.
+      expect(service.indexOf("await retryApprovedDeliveries")).toBeLessThan(service.indexOf("if (risks.length === 0) return"));
+    });
+
+    it("only ever retries messages a person approved", () => {
+      expect(service).toContain("approvedAt: { not: null }");
+    });
+
+    it("stops offering a decision on something already approved", () => {
+      const centre = source2("src/lib/operations/command-center.ts");
+      expect(centre).toContain("!action.decidedAt && !action.approvedAt");
+    });
+  });
+
+  describe("a repeated confirmation cannot send the message twice", () => {
+    const service = source2("src/lib/operations/followup-service.ts");
+
+    it("returns the stored result for an already-delivered action", () => {
+      expect(service).toContain("if (action.deliveredAt) return { ok: true as const, state: \"executed\" as const, alreadySent: true }");
+    });
+
+    it("claims the row conditionally before anything external happens", () => {
+      const claim = service.indexOf("db.operationalAction.updateMany({");
+      const deliver = service.indexOf("await deliverOutbound(", claim);
+      expect(claim).toBeGreaterThan(-1);
+      expect(deliver).toBeGreaterThan(claim);
+      expect(service).toContain("if (claim.count === 0)");
+    });
+
+    it("excludes an in-flight send from the claimable states", () => {
+      // Two concurrent confirmations must produce one send, not two.
+      const states = service.match(/const SENDABLE_STATES = \[([^\]]*)\]/)?.[1] ?? "";
+      expect(states).not.toContain("sending");
+      expect(states).toContain("awaiting_connection");
+    });
+  });
+
+  describe("the Render blueprint can actually reach connected", () => {
+    it("declares the recurring plan ids paid entry requires", () => {
+      const blueprint = source2("render.yaml");
+      for (const key of [
+        "WHOP_PLAN_EVALUATOR_PASS",
+        "WHOP_PLAN_CLINIC_OPERATOR",
+        "WHOP_PLAN_GRID_PROVIDER",
+        "WHOP_PLAN_GRID_LOCATION_PARTNER",
+      ]) {
+        expect({ key, declared: blueprint.includes(key) }).toEqual({ key, declared: true });
+      }
+    });
+
+    it("never commits a value for any of them", () => {
+      const blueprint = source2("render.yaml");
+      for (const line of blueprint.split("\n")) {
+        if (line.includes("WHOP_")) expect(line).not.toContain("value:");
+      }
+    });
+  });
+});

@@ -8,7 +8,7 @@ import { createGridLocation } from "@/lib/repositories/grid-repository";
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "manage", { request });
+  const denied = await enforceApiPermission(session, "grid", "create", { request });
   if (denied) return denied;
   const marketplaceDenied = await enforceGridMarketplaceAccess(session, "list_location");
   if (marketplaceDenied) return marketplaceDenied;
