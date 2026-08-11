@@ -145,18 +145,22 @@ export const actionStates = [
   "executed",
   "awaiting_confirmation",
   "awaiting_connection",
+  "awaiting_delivery",
   "dismissed",
+  "resolved_by_source",
   "failed",
 ] as const;
 export type ActionState = (typeof actionStates)[number];
 
 export const actionStateLabels: Record<ActionState, string> = {
   prepared: "Prepared",
-  executed: "Done",
+  executed: "Sent",
   awaiting_confirmation: "Needs your confirmation",
   awaiting_connection: "Awaiting communications connection",
+  awaiting_delivery: "Approved, waiting to send",
   dismissed: "Dismissed",
-  failed: "Failed",
+  resolved_by_source: "No longer needed",
+  failed: "Could not be sent",
 };
 
 export type PreparedAction = {
@@ -351,9 +355,14 @@ export function streamForState(state: ActionState): ActionStream {
   switch (state) {
     case "executed": return "handled";
     case "awaiting_confirmation": return "awaiting_you";
-    case "awaiting_connection": return "blocked";
+    case "awaiting_connection":
+    case "awaiting_delivery": return "blocked";
     case "prepared": return "awaiting_you";
     case "dismissed":
+    // Not "dismissed": nobody decided this was unnecessary, the reason for it went
+    // away. Keeping them distinct is what lets an owner tell "I judged this" from
+    // "the clinic sorted itself out".
+    case "resolved_by_source":
     case "failed": return "completed";
   }
 }

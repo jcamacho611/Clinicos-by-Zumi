@@ -4,6 +4,12 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { connectorReadiness, connectorsByGateway } from "@/lib/connectors/catalog";
 import {
+  deliverOutbound,
+  outboundChannelStatus,
+  type OutboundChannel,
+  type OutboundEnv,
+} from "@/lib/communications/outbound";
+import {
   detectRisksAcross,
   initialActionState,
   prepareActions,
@@ -15,7 +21,35 @@ import {
 const LOOKAHEAD_HOURS = 168;
 const LOOKBACK_HOURS = 336;
 
-export function communicationsConnected() {
+/**
+ * The channel a patient message goes out on.
+ *
+ * Email, because it is the one channel with a sending implementation. SMS is the more
+ * natural fit and appears in the connector catalog, but no Klinikos code sends one, so
+ * routing patient messages there would guarantee they never arrive.
+ */
+const PATIENT_MESSAGE_CHANNEL: OutboundChannel = "email";
+
+/**
+ * Whether Klinikos could actually deliver a patient message right now.
+ *
+ * Asked of the outbound port, not of the connector catalog. Catalog readiness answers
+ * "are credentials present", which is a different and weaker question than "is there
+ * code that sends" — treating the two as the same is what let an approved message be
+ * recorded as done while the patient received nothing.
+ */
+export function communicationsConnected(env: OutboundEnv = process.env) {
+  return outboundChannelStatus(PATIENT_MESSAGE_CHANNEL, env).deliverable;
+}
+
+/**
+ * Whether any communications connector is configured at all.
+ *
+ * Kept separate from deliverability so the owner can be told which of the two is
+ * missing: a clinic with no provider needs to connect one, while a clinic with a
+ * provider Klinikos cannot yet send through needs to hear that instead.
+ */
+export function communicationsConfigured() {
   return connectorsByGateway("communication").some((connector) => connectorReadiness(connector).productionUsable);
 }
 
@@ -41,7 +75,7 @@ export async function runFollowUpSweep(organizationId: string, now = new Date())
     status: String(appointment.status),
   }));
   const risks = detectRisksAcross(snapshots, now);
-  await reconcileResolvedRisks(organizationId, appointments.map((appointment) => appointment.id), risks);
+  await reconcileResolvedRisks(organizationId, risks);
 
   if (risks.length === 0) return { risksDetected: 0, actionsExecuted: 0, actionsAwaitingYou: 0, actionsBlocked: 0 };
 
@@ -75,23 +109,48 @@ export async function runFollowUpSweep(organizationId: string, now = new Date())
   return result;
 }
 
-async function reconcileResolvedRisks(organizationId: string, appointmentIds: string[], currentRisks: DetectedRisk[]) {
-  if (appointmentIds.length === 0) return;
+/**
+ * Close out work whose reason has gone away.
+ *
+ * Detection alone is only half a loop. When an appointment is confirmed, its paperwork
+ * arrives, or its coverage is checked, the action Klinikos raised is no longer work —
+ * and an owner who keeps seeing it learns to ignore the queue.
+ *
+ * Deliberately driven from the **actions**, not from the appointments in this sweep's
+ * window. An appointment that has aged past the lookback is not in the query at all,
+ * so a window-driven reconciliation could never close its actions and a stale no-show
+ * recovery would inflate the at-risk count forever.
+ *
+ * Two things are never touched: an action a person already decided (their judgement is
+ * not automation's to revoke) and the audit history (rows are resolved, never deleted).
+ */
+async function reconcileResolvedRisks(organizationId: string, currentRisks: DetectedRisk[]) {
   const activeKeys = new Set(currentRisks.map((risk) => `${risk.appointmentId}:${risk.kind}`));
-  const stale = await db.operationalAction.findMany({
-    where: { organizationId, appointmentId: { in: appointmentIds }, decidedAt: null },
+
+  const open = await db.operationalAction.findMany({
+    where: { organizationId, decidedAt: null },
     select: { id: true, appointmentId: true, riskKind: true, taskId: true },
+    take: 1_000,
   });
+  if (open.length === 0) return;
+
+  const stale = open.filter((action) => !activeKeys.has(`${action.appointmentId}:${action.riskKind}`));
+  if (stale.length === 0) return;
 
   for (const action of stale) {
-    if (activeKeys.has(`${action.appointmentId}:${action.riskKind}`)) continue;
     await db.$transaction(async (tx) => {
-      await tx.operationalAction.update({
-        where: { id: action.id },
-        data: { state: "dismissed", decidedAt: new Date() },
+      // Guarded on `decidedAt: null` inside the transaction as well: a person may have
+      // confirmed this between the read above and now, and their decision wins.
+      const closed = await tx.operationalAction.updateMany({
+        where: { id: action.id, decidedAt: null },
+        data: { state: "resolved_by_source", decidedAt: new Date() },
       });
+      if (closed.count === 0) return;
       if (action.taskId) {
-        await tx.task.updateMany({ where: { id: action.taskId, organizationId, status: "open" }, data: { status: "completed" } });
+        await tx.task.updateMany({
+          where: { id: action.taskId, organizationId, status: "open" },
+          data: { status: "completed" },
+        });
       }
     });
   }
@@ -169,32 +228,108 @@ export async function decideAction(input: {
 }) {
   const action = await db.operationalAction.findFirst({
     where: { id: input.actionId, organizationId: input.organizationId },
-    select: { id: true, state: true, actionKind: true },
+    select: { id: true, state: true, actionKind: true, title: true, body: true, patientId: true },
   });
   if (!action) return { ok: false as const, reason: "not_found" as const };
+
+  const decidedAt = new Date();
 
   if (input.decision === "dismiss") {
     await db.operationalAction.update({
       where: { id: action.id },
-      data: { state: "dismissed", decidedByUserId: input.userId, decidedAt: new Date() },
+      data: { state: "dismissed", decidedByUserId: input.userId, decidedAt },
     });
     return { ok: true as const, state: "dismissed" as const };
   }
 
-  if (action.actionKind === "patient_message") {
-    const nextState: ActionState = communicationsConnected() ? "prepared" : "awaiting_connection";
+  // Internal work is performed by Klinikos itself, so confirming it is the operation.
+  if (action.actionKind !== "patient_message") {
     await db.operationalAction.update({
       where: { id: action.id },
-      data: { state: nextState, decidedByUserId: input.userId, decidedAt: new Date() },
+      data: { state: "executed", decidedByUserId: input.userId, decidedAt },
     });
-    return { ok: true as const, state: nextState };
+    return { ok: true as const, state: "executed" as const };
   }
 
+  // Everything below is the point of this function. Confirming a patient message is an
+  // instruction to send it, not the sending. `executed` is written only after a
+  // provider accepts the message and returns a reference we can store.
+  const recipient = await patientRecipient(input.organizationId, action.patientId);
+  if (!recipient) {
+    await db.operationalAction.update({
+      where: { id: action.id },
+      data: {
+        state: "failed",
+        decidedByUserId: input.userId,
+        decidedAt,
+        deliveryFailure: "No contact address is on file for this patient.",
+      },
+    });
+    return { ok: true as const, state: "failed" as const, detail: "No contact address is on file for this patient." };
+  }
+
+  const outcome = await deliverOutbound({
+    channel: PATIENT_MESSAGE_CHANNEL,
+    to: recipient,
+    subject: action.title,
+    body: action.body,
+  });
+
+  if (outcome.ok) {
+    await db.operationalAction.update({
+      where: { id: action.id },
+      data: {
+        state: "executed",
+        decidedByUserId: input.userId,
+        decidedAt,
+        deliveryProvider: outcome.provider,
+        deliveryReference: outcome.providerReference,
+        deliveredAt: new Date(),
+        deliveryFailure: null,
+      },
+    });
+    return { ok: true as const, state: "executed" as const };
+  }
+
+  // The approval is kept either way — the owner should not have to decide twice
+  // because a provider was unreachable. Only the state differs, and it says which of
+  // the three different problems this is.
+  const state = deliveryFailureState(outcome.reason);
   await db.operationalAction.update({
     where: { id: action.id },
-    data: { state: "executed", decidedByUserId: input.userId, decidedAt: new Date() },
+    data: {
+      state,
+      decidedByUserId: input.userId,
+      decidedAt,
+      deliveryFailure: outcome.detail,
+      deliveryProvider: null,
+      deliveryReference: null,
+      deliveredAt: null,
+    },
   });
-  return { ok: true as const, state: "executed" as const };
+  return { ok: true as const, state, detail: outcome.detail };
+}
+
+/**
+ * Which honest state a failed delivery lands in.
+ *
+ * `failed` is reserved for an attempt that actually reached a provider, because that
+ * is the only one worth retrying. The other two are configuration facts, and telling
+ * an owner to "retry" them would be advice they cannot act on.
+ */
+function deliveryFailureState(reason: "no_connector" | "no_sender" | "provider_error" | "invalid_recipient"): ActionState {
+  if (reason === "no_connector") return "awaiting_connection";
+  if (reason === "no_sender") return "awaiting_delivery";
+  return "failed";
+}
+
+/** The address a patient message would go to, scoped to the tenant that owns them. */
+async function patientRecipient(organizationId: string, patientId: string) {
+  const patient = await db.patient.findFirst({
+    where: { id: patientId, organizationId },
+    select: { email: true },
+  });
+  return patient?.email?.trim() || null;
 }
 
 export async function listActions(organizationId: string, limit = 60) {

@@ -2,7 +2,9 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { createAccountActivationToken } from "@/lib/auth/account-activation";
+import { deliverOutbound } from "@/lib/communications/outbound";
 import {
+  buyerRoleForModules,
   planProvisioning,
   provisioningKey,
   stepCompletableByPayment,
@@ -100,9 +102,12 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       steps.organization = "complete";
     }
 
+    // Every module-bearing purchase gets an identity attached to the tenant it just
+    // paid for. Without this the buyer owns a subscription inside an organization they
+    // cannot authenticate into, and creating a workspace later would make a second one.
     let activation: ProvisionResult["activation"] = null;
-    if (organizationId && plan.modules.includes("clinic_workspace")) {
-      const user = await attachBuyerToOrganization(email, organizationId);
+    if (organizationId && plan.modules.length > 0) {
+      const user = await attachBuyerToOrganization(email, organizationId, buyerRoleForModules(plan.modules));
       if (!user.authCredential) {
         activation = { ...(await createAccountActivationToken({ email, userId: user.id, organizationId })), userId: user.id };
       }
@@ -177,7 +182,15 @@ function deriveStatus(steps: Steps): "complete" | "partial" {
   return unfinished.length === 0 ? "complete" : "partial";
 }
 
-async function attachBuyerToOrganization(email: string, organizationId: string) {
+/**
+ * Bind the buyer's identity to the tenant their payment created.
+ *
+ * Idempotent by the user's email, which is unique: a webhook redelivery finds the same
+ * row rather than making a second buyer. An email that already belongs to another
+ * organization is an error rather than a silent re-parent — moving someone between
+ * tenants is not something a payment webhook should be able to do.
+ */
+async function attachBuyerToOrganization(email: string, organizationId: string, roleKey: "clinic_owner" | "contractor") {
   const existing = await db.user.findUnique({
     where: { email },
     include: { authCredential: { select: { id: true } } },
@@ -190,12 +203,50 @@ async function attachBuyerToOrganization(email: string, organizationId: string) 
     data: {
       organizationId,
       email,
-      name: email.split("@")[0] || "Clinic owner",
-      roleKey: "clinic_owner",
+      name: email.split("@")[0] || "Klinikos member",
+      roleKey,
       status: "active",
     },
     include: { authCredential: { select: { id: true } } },
   });
+}
+
+/**
+ * Get the activation link to the buyer.
+ *
+ * Routed through the outbound port, so the result is what a provider actually said. If
+ * no email provider is configured the link is *not* reported as sent: the run records
+ * that it is undelivered, and an operator can reissue it. A buyer who never receives
+ * this cannot sign in, so silently losing it is the failure this function exists to
+ * make visible.
+ */
+export async function deliverActivation(input: { email: string; token: string; provisioningKey: string }) {
+  const link = `${(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "")}/activate?token=${encodeURIComponent(input.token)}`;
+  const outcome = await deliverOutbound({
+    channel: "email",
+    to: input.email,
+    subject: "Set your Klinikos password",
+    body: [
+      "Your Klinikos access is ready.",
+      "",
+      "Choose a password to finish setting up your account:",
+      link,
+      "",
+      "This link expires in 24 hours. If it has expired, ask Klinikos to send a new one.",
+    ].join("\n"),
+  });
+
+  await db.provisioningRun
+    .update({
+      where: { provisioningKey: input.provisioningKey },
+      data: {
+        activationDeliveredAt: outcome.ok ? new Date() : null,
+        activationDeliveryFailure: outcome.ok ? null : outcome.detail,
+      },
+    })
+    .catch(() => undefined);
+
+  return outcome;
 }
 
 async function createOrganization(email: string, clinicName?: string) {

@@ -244,6 +244,13 @@ model Organization {
   clinicType                 String
   status                     String                      @default("active")
   demoMode                   Boolean                     @default(true)
+  /// What the owner told Klinikos during guided setup. Stored because these answers
+  /// drive migration planning and scale-aware defaults, and because completing
+  /// onboarding clears `demoMode` — after which the page cannot be revisited, so an
+  /// answer that was not persisted here is an answer the owner can never give again.
+  providerCount              String?
+  locationCount              String?
+  currentSystem              String?
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @updatedAt
   locations                  Location[]
@@ -4408,6 +4415,11 @@ model ProvisioningRun {
   /// What still stands between this customer and full use. Shown to them verbatim.
   outstanding    String[] @default([])
   failureReason  String?
+  /// Whether the buyer's activation link actually reached them. Null means it did not:
+  /// the account exists but nobody can sign in to it yet, which is an operator's
+  /// problem to see rather than a silent dead end for the customer.
+  activationDeliveredAt     DateTime?
+  activationDeliveryFailure String?
   attempts       Int      @default(0)
   startedAt      DateTime @default(now())
   completedAt    DateTime?
@@ -4436,7 +4448,7 @@ model OperationalAction {
   actionKind     String
   appointmentId  String
   patientId      String
-  /// prepared | executed | awaiting_confirmation | awaiting_connection | dismissed | failed
+  /// prepared | executed | awaiting_confirmation | awaiting_connection | awaiting_delivery | dismissed | resolved_by_source | failed
   state          String    @default("prepared")
   title          String
   /// Drafted content. For a patient message this is what would be sent, and it is
@@ -4447,6 +4459,14 @@ model OperationalAction {
   /// Set when a person confirmed or dismissed it. Automation never fills this in.
   decidedByUserId String?
   decidedAt      DateTime?
+  /// Evidence that a provider accepted this message. `executed` is only writable for a
+  /// patient message when this is set, which is what stops "Sent" from being a claim
+  /// about a database row rather than about a message that left Klinikos.
+  deliveryProvider  String?
+  deliveryReference String?
+  deliveredAt       DateTime?
+  /// Why the last delivery attempt did not succeed. Read by an operator, not a patient.
+  deliveryFailure   String?
   detectedAt     DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -4454,5 +4474,7 @@ model OperationalAction {
   @@unique([appointmentId, riskKind, actionKind])
   @@index([organizationId, state, detectedAt])
   @@index([organizationId, riskKind])
+  /// Looked up when a provider reports back on a message it accepted.
+  @@index([deliveryReference])
   @@map("operational_actions")
 }

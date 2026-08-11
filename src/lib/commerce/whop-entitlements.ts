@@ -65,6 +65,15 @@ export async function recordWebhookDelivery(input: {
   }
 }
 
+/**
+ * Record where a delivery got to.
+ *
+ * `applied` is terminal — a redelivery of a terminal event is acknowledged without
+ * being reprocessed. Everything else is retryable, which is why entitlement
+ * application deliberately does *not* write `applied` itself: a purchase is not
+ * finished until it is also provisioned, and marking it terminal in between is what
+ * stranded buyers with an entitlement and no organization.
+ */
 async function markWebhookOutcome(webhookRecordId: string | null, processingStatus: "applied" | "ignored" | "failed", failureReason?: string) {
   if (!webhookRecordId) return;
   await db.whopWebhookEvent.update({
@@ -144,7 +153,8 @@ export async function applyWebhookToEntitlement(input: {
     select: { id: true, state: true, tierKey: true },
   });
 
-  await markWebhookOutcome(input.webhookRecordId, "applied");
+  // Deliberately not marked terminal here. The caller owns that, because the caller
+  // knows whether the rest of the purchase completed.
   return { applied: true, entitlementId: entitlement.id, state: entitlement.state, tierKey: entitlement.tierKey };
 }
 
@@ -314,3 +324,19 @@ export async function hasVerifiedAccessEmail(email: string) {
 }
 
 export { evaluateEntitlement, mapMembershipStatus, coerceWhopTimestamp };
+
+/**
+ * Mark a delivery finished. Only the handler that completed every step calls this.
+ */
+export async function markWebhookProcessed(webhookRecordId: string | null) {
+  return markWebhookOutcome(webhookRecordId, "applied");
+}
+
+/**
+ * Mark a delivery incomplete so the next redelivery is reprocessed rather than
+ * acknowledged. Pairs with a 5xx response: the provider retries, and this is what
+ * makes the retry do something.
+ */
+export async function markWebhookIncomplete(webhookRecordId: string | null, reason: string) {
+  return markWebhookOutcome(webhookRecordId, "failed", reason);
+}

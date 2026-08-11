@@ -145,6 +145,17 @@ export type ProvisioningPlan = {
  * post-purchase screen can tell the truth in one read rather than showing a spinner
  * over work that will never finish on its own.
  */
+/**
+ * The role a buyer holds in the organization their purchase creates.
+ *
+ * A GRID contractor is not the owner of a clinic, and giving them that role because it
+ * was the only one the code knew about would hand a marketplace participant the
+ * permissions of a practice owner.
+ */
+export function buyerRoleForModules(modules: readonly string[]): "clinic_owner" | "contractor" {
+  return modules.includes("clinic_workspace") ? "clinic_owner" : "contractor";
+}
+
 export function planProvisioning(input: {
   /** Whop tier, when the purchase came through the access-pass path. */
   tierKey?: string;
@@ -160,15 +171,23 @@ export function planProvisioning(input: {
   // out the product the evaluation is meant to lead to.
   const workspaceBearing = modules.length > 0 && modules.includes("clinic_workspace");
 
+  // Anything that grants a module needs somewhere for the buyer to sign in to, because
+  // every Klinikos account is scoped to a tenant. A GRID pass grants only `grid`, but
+  // its buyer still has to authenticate — treating "no clinic workspace" as "no
+  // account" is what left paid GRID buyers with nothing to log in to.
+  const accountBearing = modules.length > 0;
+
   const steps: { step: ProvisioningStep; state: StepState; detail: string }[] = [
     {
       step: "organization",
-      state: !workspaceBearing ? "not_applicable" : input.hasOrganization ? "complete" : "pending",
-      detail: !workspaceBearing
-        ? "This purchase does not include a clinic workspace."
+      state: !accountBearing ? "not_applicable" : input.hasOrganization ? "complete" : "pending",
+      detail: !accountBearing
+        ? "This purchase does not include a Klinikos account."
         : input.hasOrganization
-          ? "Linked to your existing clinic."
-          : "A clinic workspace is created on payment.",
+          ? "Linked to your existing organization."
+          : workspaceBearing
+            ? "A clinic workspace is created on payment."
+            : "A Klinikos account is created on payment so you can sign in to GRID.",
     },
     {
       step: "subscription",

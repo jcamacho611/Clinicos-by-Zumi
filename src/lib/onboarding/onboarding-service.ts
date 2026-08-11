@@ -12,7 +12,10 @@ import type { KnownContext, OnboardingAnswers } from "@/lib/onboarding/onboardin
  */
 export async function loadKnownContext(organizationId: string, email: string): Promise<KnownContext> {
   const [organization, prospect] = await Promise.all([
-    db.organization.findUnique({ where: { id: organizationId }, select: { name: true, clinicType: true } }),
+    db.organization.findUnique({
+      where: { id: organizationId },
+      select: { name: true, clinicType: true, providerCount: true, locationCount: true, currentSystem: true },
+    }),
     db.growthProspect.findUnique({
       where: { email: email.trim().toLowerCase() },
       select: { clinicName: true, clinicType: true, locationCount: true, providerCount: true, contactName: true },
@@ -26,14 +29,18 @@ export async function loadKnownContext(organizationId: string, email: string): P
   if (prospect?.clinicName) sources.clinicName = "enquiry";
   else if (organization?.name) sources.clinicName = "organization";
 
+  // Answers already recorded on the organization count as known too — a re-run of
+  // setup should not re-ask what the owner answered the first time.
   if (prospect?.locationCount) sources.locationCount = "enquiry";
+  else if (organization?.locationCount) sources.locationCount = "organization";
   if (prospect?.providerCount) sources.providerCount = "enquiry";
+  else if (organization?.providerCount) sources.providerCount = "organization";
 
   return {
     clinicName,
     clinicType: prospect?.clinicType ?? organization?.clinicType ?? null,
-    locationCount: prospect?.locationCount ?? null,
-    providerCount: prospect?.providerCount ?? null,
+    locationCount: prospect?.locationCount ?? organization?.locationCount ?? null,
+    providerCount: prospect?.providerCount ?? organization?.providerCount ?? null,
     contactName: prospect?.contactName ?? null,
     sources,
   };
@@ -50,9 +57,21 @@ export async function loadKnownContext(organizationId: string, email: string): P
  * moment that stops being true.
  */
 export async function applyOnboarding(organizationId: string, answers: OnboardingAnswers) {
-  const data: { name?: string; clinicType?: string; demoMode?: boolean } = { demoMode: false };
+  const data: {
+    name?: string;
+    clinicType?: string;
+    demoMode?: boolean;
+    providerCount?: string;
+    locationCount?: string;
+    currentSystem?: string;
+  } = { demoMode: false };
   if (answers.clinicName) data.name = answers.clinicName;
   if (answers.specialty) data.clinicType = answers.specialty;
+  // Every answer the owner gave is kept. Clearing `demoMode` below closes this page for
+  // good, so an answer dropped here is one they have no way to supply again.
+  if (answers.providerCount) data.providerCount = answers.providerCount;
+  if (answers.locationCount) data.locationCount = answers.locationCount;
+  if (answers.currentSystem) data.currentSystem = answers.currentSystem;
 
   await db.organization.update({ where: { id: organizationId }, data });
 
