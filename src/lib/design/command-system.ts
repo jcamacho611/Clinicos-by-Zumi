@@ -218,6 +218,8 @@ export const GOVERNED_PUBLIC_SURFACES = [
   "src/app/contact/page.tsx",
   "src/app/referral/[code]/page.tsx",
   "src/app/welcome/page.tsx",
+  "src/components/clinic/command-center.tsx",
+  "src/lib/operations/followup-rules.ts",
   // Content modules those pages render. A claim moved out of a page into a data file
   // would otherwise escape the check entirely.
   "src/lib/growth/demonstration.ts",

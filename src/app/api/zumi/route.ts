@@ -6,6 +6,7 @@ import { invokeZumi } from "@/features/zumi/gateway";
 import { resolveOrganizationEntitlements } from "@/features/zumi/entitlements";
 import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/features/zumi/schemas";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
+import { ensureProvidersRegistered } from "@/features/zumi/adapters";
 
 /**
  * The only HTTP entry point to Zumi.
@@ -43,6 +44,7 @@ export async function GET() {
     return NextResponse.json({ error: "Access denied." }, { status: 403, headers: NO_STORE });
   }
 
+  ensureProvidersRegistered();
   const status = zumiGatewayStatus();
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
 

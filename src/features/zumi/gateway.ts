@@ -16,6 +16,7 @@ import {
   type ZumiResponse,
 } from "@/features/zumi/schemas";
 import { phiEgressPermitted, selectProvider, type ProviderAdapter } from "@/features/zumi/providers";
+import { ensureProvidersRegistered } from "@/features/zumi/adapters";
 
 /**
  * The Zumi AI Gateway.
@@ -229,6 +230,9 @@ async function invokeWithTimeout(adapter: ProviderAdapter, prompt: string, timeo
 
 export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResult> {
   const startedAt = Date.now();
+  // Registration is not activation. With no credentials the registry still reports
+  // NOT_CONFIGURED and the policy below still refuses with 503.
+  ensureProvidersRegistered();
   const selection = selectProvider();
 
   const decision = admitZumiRequest({

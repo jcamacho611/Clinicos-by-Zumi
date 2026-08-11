@@ -4419,3 +4419,40 @@ model ProvisioningRun {
   @@index([status, updatedAt])
   @@map("provisioning_runs")
 }
+
+/// An action Klinikos prepared or performed in response to a detected operational
+/// risk.
+///
+/// This is the record behind the owner's action stream: what was handled
+/// automatically, what is waiting on a person, and what is blocked outside Klinikos.
+/// One row per (risk, action kind) per appointment, so a repeated detection sweep
+/// updates rather than duplicates.
+model OperationalAction {
+  id             String    @id @default(cuid())
+  organizationId String
+  /// unconfirmed | missing_forms | insurance_unverified | no_show_recovery
+  riskKind       String
+  /// internal_task | patient_message
+  actionKind     String
+  appointmentId  String
+  patientId      String
+  /// prepared | executed | awaiting_confirmation | awaiting_connection | dismissed | failed
+  state          String    @default("prepared")
+  title          String
+  /// Drafted content. For a patient message this is what would be sent, and it is
+  /// never described as sent unless a connected channel accepted it.
+  body           String
+  /// Task created when the action executed inside Klinikos.
+  taskId         String?
+  /// Set when a person confirmed or dismissed it. Automation never fills this in.
+  decidedByUserId String?
+  decidedAt      DateTime?
+  detectedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([appointmentId, riskKind, actionKind])
+  @@index([organizationId, state, detectedAt])
+  @@index([organizationId, riskKind])
+  @@map("operational_actions")
+}
