@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/lib/db";
+import { createAccountActivationToken } from "@/lib/auth/account-activation";
 import {
   planProvisioning,
   provisioningKey,
@@ -9,42 +10,10 @@ import {
   type StepState,
 } from "@/lib/provisioning/provisioning-rules";
 
-/**
- * Payment-driven provisioning.
- *
- * Turns a *verified* payment into a usable clinic: an organization, a subscription
- * carrying the purchased modules, and an onboarding run. Called only from the webhook
- * path, never from a browser redirect.
- *
- * The four properties the constitution requires of this path:
- *
- *   - **Idempotent.** Keyed on the payment's own identity, so Whop's redelivery —
- *     which is the normal case, not the exception — resolves to the same row.
- *   - **Retry-safe.** Step state is stored per step, so a run that fails halfway
- *     resumes rather than repeating work.
- *   - **Auditable.** Every run and every step transition is a durable record.
- *   - **Tenant-scoped.** Every write names the organization it belongs to.
- *
- * What it will not do: complete a step payment cannot complete. Connections and
- * regulated review are left blocked with the reason attached, because a clinic told
- * its lab connection is "active" when nobody has signed anything is a clinic that has
- * been lied to.
- */
-
 type Steps = Partial<Record<ProvisioningStep, StepState>>;
 
 export type ProvisionInput = {
-  /**
-   * Which purchase ledger the reference belongs to.
-   *
-   * Only `whop_membership` has a caller today. One-time marketplace products settle as
-   * `access_payment`, and every one of them is gated on a human review that payment
-   * does not complete — so settling one grants the reviewed thing, not a workspace.
-   * The variant exists because the idempotency key must distinguish the two ledgers'
-   * references, which can collide otherwise.
-   */
   source: "whop_membership" | "access_payment";
-  /** The payment's own identifier. Membership id, or payment reference. */
   reference: string;
   email: string;
   tierKey?: string;
@@ -58,15 +27,16 @@ export type ProvisionResult = {
   organizationId: string | null;
   modules: string[];
   outstanding: string[];
-  /** True when this call did nothing because the purchase was already provisioned. */
   alreadyProvisioned: boolean;
+  activation?: { userId: string; token: string; expiresAt: Date } | null;
 };
 
 export async function provisionFromPayment(input: ProvisionInput): Promise<ProvisionResult> {
   const key = provisioningKey({ source: input.source, reference: input.reference });
   const email = input.email.trim().toLowerCase();
 
-  const existingOrganizationId = await findOrganizationForEmail(email);
+  const existingUser = await db.user.findUnique({ where: { email }, select: { id: true, organizationId: true } });
+  const existingOrganizationId = existingUser?.organizationId ?? null;
   const plan = planProvisioning({
     tierKey: input.tierKey,
     planKey: input.planKey,
@@ -75,8 +45,6 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
 
   const initialSteps: Steps = Object.fromEntries(plan.steps.map((entry) => [entry.step, entry.state]));
 
-  // Claim the run. `create` on a unique key is the lock: a concurrent redelivery
-  // loses the race and reads the existing row instead of provisioning in parallel.
   let run = await db.provisioningRun.findUnique({ where: { provisioningKey: key } });
   if (!run) {
     try {
@@ -101,10 +69,14 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
   }
 
   if (!run) {
-    return { provisioningKey: key, status: "failed", organizationId: null, modules: [], outstanding: [], alreadyProvisioned: false };
+    return { provisioningKey: key, status: "failed", organizationId: null, modules: [], outstanding: [], alreadyProvisioned: false, activation: null };
   }
 
   if (run.status === "complete") {
+    const user = await db.user.findUnique({ where: { email }, select: { id: true, organizationId: true, authCredential: { select: { id: true } } } });
+    const activation = user && !user.authCredential
+      ? { ...(await createAccountActivationToken({ email, userId: user.id, organizationId: user.organizationId })), userId: user.id }
+      : null;
     return {
       provisioningKey: key,
       status: "complete",
@@ -112,6 +84,7 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       modules: run.modules,
       outstanding: run.outstanding,
       alreadyProvisioned: true,
+      activation,
     };
   }
 
@@ -127,14 +100,20 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       steps.organization = "complete";
     }
 
+    let activation: ProvisionResult["activation"] = null;
+    if (organizationId && plan.modules.includes("clinic_workspace")) {
+      const user = await attachBuyerToOrganization(email, organizationId);
+      if (!user.authCredential) {
+        activation = { ...(await createAccountActivationToken({ email, userId: user.id, organizationId })), userId: user.id };
+      }
+    }
+
     if (needsWork(steps.subscription) && organizationId) {
       subscriptionId = await upsertSubscription(organizationId, input.planKey ?? input.tierKey ?? "klinikos", [...plan.modules]);
       steps.subscription = "complete";
     }
 
     if (needsWork(steps.entitlements) && organizationId) {
-      // Modules live on the subscription, so this step is the assertion that they
-      // landed rather than a second write. Verifying is cheap; assuming is not.
       const stored = await db.clinicSubscription.findFirst({
         where: { organizationId, status: { in: ["active", "trialing"] } },
         select: { modules: true },
@@ -142,16 +121,10 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       steps.entitlements = stored && plan.modules.every((module) => stored.modules.includes(module)) ? "complete" : "blocked";
     }
 
-    if (needsWork(steps.onboarding) && organizationId) {
-      steps.onboarding = "complete";
-    }
+    if (needsWork(steps.onboarding) && organizationId) steps.onboarding = "complete";
 
-    // Link the entitlement row to the organization it now belongs to, so the two
-    // halves of the system agree on who this customer is.
     if (input.source === "whop_membership" && organizationId) {
-      await db.whopEntitlement
-        .updateMany({ where: { whopMembershipId: input.reference, organizationId: null }, data: { organizationId } })
-        .catch(() => undefined);
+      await db.whopEntitlement.updateMany({ where: { whopMembershipId: input.reference, organizationId: null }, data: { organizationId } }).catch(() => undefined);
     }
 
     const status = deriveStatus(steps);
@@ -174,23 +147,21 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       modules: [...plan.modules],
       outstanding: [...plan.outstanding],
       alreadyProvisioned: false,
+      activation,
     };
   } catch (error) {
-    // The run row keeps its per-step state, so the retry resumes rather than restarts.
-    await db.provisioningRun
-      .update({
-        where: { id: run.id },
-        data: {
-          organizationId,
-          subscriptionId,
-          steps,
-          status: "failed",
-          failureReason: error instanceof Error ? error.message.slice(0, 300) : "unknown error",
-        },
-      })
-      .catch(() => undefined);
+    await db.provisioningRun.update({
+      where: { id: run.id },
+      data: {
+        organizationId,
+        subscriptionId,
+        steps,
+        status: "failed",
+        failureReason: error instanceof Error ? error.message.slice(0, 300) : "unknown error",
+      },
+    }).catch(() => undefined);
 
-    return { provisioningKey: key, status: "failed", organizationId, modules: [...plan.modules], outstanding: [...plan.outstanding], alreadyProvisioned: false };
+    return { provisioningKey: key, status: "failed", organizationId, modules: [...plan.modules], outstanding: [...plan.outstanding], alreadyProvisioned: false, activation: null };
   }
 }
 
@@ -198,13 +169,6 @@ function needsWork(state: StepState | undefined) {
   return state === "pending" || state === "in_progress";
 }
 
-/**
- * A run is complete when every step that payment *can* finish has finished.
- *
- * Blocked steps do not prevent completion — they are the steps waiting on a person or
- * on the clinic's own accounts, and holding the run open forever would mean no
- * purchase ever reads as provisioned.
- */
 function deriveStatus(steps: Steps): "complete" | "partial" {
   const unfinished = Object.entries(steps).filter(([step, state]) => {
     if (!stepCompletableByPayment(step as ProvisioningStep)) return false;
@@ -213,22 +177,30 @@ function deriveStatus(steps: Steps): "complete" | "partial" {
   return unfinished.length === 0 ? "complete" : "partial";
 }
 
-async function findOrganizationForEmail(email: string) {
-  const user = await db.user.findFirst({ where: { email }, select: { organizationId: true } });
-  return user?.organizationId ?? null;
+async function attachBuyerToOrganization(email: string, organizationId: string) {
+  const existing = await db.user.findUnique({
+    where: { email },
+    include: { authCredential: { select: { id: true } } },
+  });
+  if (existing) {
+    if (existing.organizationId !== organizationId) throw new Error("Buyer identity is already attached to another organization.");
+    return existing;
+  }
+  return db.user.create({
+    data: {
+      organizationId,
+      email,
+      name: email.split("@")[0] || "Clinic owner",
+      roleKey: "clinic_owner",
+      status: "active",
+    },
+    include: { authCredential: { select: { id: true } } },
+  });
 }
 
-/**
- * Create the clinic workspace.
- *
- * `demoMode` stays true. A brand-new organization has not signed anything, has no
- * connections, and is not approved for PHI, so it starts in the state that says so
- * rather than presenting itself as a production clinical system.
- */
 async function createOrganization(email: string, clinicName?: string) {
   const name = clinicName?.trim() || `${email.split("@")[0]} Clinic`;
   const slug = await uniqueSlug(name);
-
   const organization = await db.organization.create({
     data: { name, slug, clinicType: "independent_clinic", status: "active", demoMode: true },
     select: { id: true },
@@ -246,12 +218,6 @@ async function uniqueSlug(name: string) {
   return `${base}-${Date.now().toString(36)}`;
 }
 
-/**
- * Record the subscription carrying the purchased modules.
- *
- * Upserted rather than inserted: a clinic that upgrades has one subscription with
- * more modules, not two subscriptions racing to answer the same entitlement question.
- */
 async function upsertSubscription(organizationId: string, planKey: string, modules: string[]) {
   const existing = await db.clinicSubscription.findFirst({
     where: { organizationId },
@@ -260,7 +226,6 @@ async function upsertSubscription(organizationId: string, planKey: string, modul
   });
 
   if (existing) {
-    // Union rather than replace. A clinic holding two purchases keeps both.
     const merged = [...new Set([...existing.modules, ...modules])];
     await db.clinicSubscription.update({
       where: { id: existing.id },
@@ -276,14 +241,12 @@ async function upsertSubscription(organizationId: string, planKey: string, modul
   return created.id;
 }
 
-/** The provisioning state a customer should be shown after paying. */
 export async function provisioningStatusForEmail(email: string) {
   const run = await db.provisioningRun.findFirst({
     where: { email: email.trim().toLowerCase() },
     orderBy: { createdAt: "desc" },
   });
   if (!run) return null;
-
   return {
     status: run.status,
     steps: run.steps as Steps,
