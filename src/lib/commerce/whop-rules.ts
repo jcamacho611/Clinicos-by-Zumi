@@ -118,6 +118,80 @@ export function verifyWhopSignature(input: {
 }
 
 /**
+ * Standard Webhooks verification.
+ *
+ * This is the protocol Whop actually sends: `webhook-id`, `webhook-timestamp`, and
+ * `webhook-signature`, where the signature is base64 over `{id}.{timestamp}.{body}` and
+ * the secret is base64 after a `whsec_` prefix. The older hex scheme above signs a
+ * different string with a differently-encoded key, so a deployment that only understood
+ * that one rejected every genuine delivery with a 401 — the purchase path was closed and
+ * the failure looked like an attack rather than a mismatch.
+ *
+ * Both schemes are supported deliberately. Neither is weakened: each still requires a
+ * valid HMAC over the exact raw body, and each still enforces the timestamp tolerance
+ * that makes a captured delivery unreplayable.
+ */
+export function verifyStandardWebhookSignature(input: {
+  rawBody: string;
+  webhookId: string | null | undefined;
+  webhookTimestamp: string | null | undefined;
+  webhookSignature: string | null | undefined;
+  secret: string | null | undefined;
+  toleranceSeconds?: number;
+  now?: Date;
+}) {
+  const secret = input.secret?.trim();
+  const id = input.webhookId?.trim();
+  const timestamp = input.webhookTimestamp?.trim();
+  const header = input.webhookSignature?.trim();
+  if (!secret) return { ok: false as const, reason: "not_configured" as const };
+  if (!id || !timestamp || !header) return { ok: false as const, reason: "missing" as const };
+
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || seconds <= 0) return { ok: false as const, reason: "malformed" as const };
+
+  const tolerance = input.toleranceSeconds ?? WHOP_SIGNATURE_TOLERANCE_SECONDS;
+  const nowSeconds = Math.floor((input.now?.getTime() ?? Date.now()) / 1000);
+  if (Math.abs(nowSeconds - Math.trunc(seconds)) > tolerance) return { ok: false as const, reason: "stale" as const };
+
+  // The header carries one or more space-separated `v1,<base64>` entries so a secret can
+  // be rotated without dropping deliveries signed by the previous one.
+  const candidates = header
+    .split(" ")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => (entry.startsWith("v1,") ? entry.slice(3) : entry))
+    .filter(Boolean);
+  if (candidates.length === 0) return { ok: false as const, reason: "malformed" as const };
+
+  // `whsec_` prefixes a base64 key. Without stripping and decoding it, every signature
+  // is computed against the wrong key and nothing ever matches.
+  const rawSecret = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+  let key: Buffer;
+  try {
+    key = Buffer.from(rawSecret, "base64");
+    if (key.length === 0) key = Buffer.from(rawSecret, "utf8");
+  } catch {
+    key = Buffer.from(rawSecret, "utf8");
+  }
+
+  const expected = crypto
+    .createHmac("sha256", key)
+    .update(`${id}.${timestamp}.${input.rawBody}`, "utf8")
+    .digest();
+
+  const matched = candidates.some((candidate) => {
+    const provided = Buffer.from(candidate, "base64");
+    if (provided.length !== expected.length || provided.length === 0) return false;
+    return crypto.timingSafeEqual(provided, expected);
+  });
+
+  return matched
+    ? { ok: true as const, timestamp: Math.trunc(seconds) }
+    : { ok: false as const, reason: "mismatch" as const };
+}
+
+/**
  * Map a Whop membership status onto a Klinikos entitlement state.
  *
  * `past_due` maps to `grace` rather than `active`: the buyer keeps read access while

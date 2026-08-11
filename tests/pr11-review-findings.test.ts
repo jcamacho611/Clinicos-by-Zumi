@@ -551,3 +551,111 @@ describe("second review round", () => {
     });
   });
 });
+
+describe("third review round", () => {
+  const source3 = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+  describe("real Whop deliveries verify", () => {
+    const rules = source3("src/lib/commerce/whop-rules.ts");
+    const route = source3("src/app/api/whop/webhook/route.ts");
+
+    it("reads the Standard Webhooks headers Whop actually sends", () => {
+      // Reading only `x-whop-signature` rejected every genuine delivery with a 401, so
+      // no purchase was ever provisioned and no cancellation was ever applied.
+      for (const header of ["webhook-id", "webhook-timestamp", "webhook-signature"]) {
+        expect({ header, read: route.includes(`request.headers.get("${header}")`) }).toEqual({ header, read: true });
+      }
+    });
+
+    it("signs the id, timestamp, and body, not the body alone", () => {
+      expect(rules).toContain("`${id}.${timestamp}.${input.rawBody}`");
+    });
+
+    it("decodes the whsec_ secret rather than using it as raw text", () => {
+      expect(rules).toContain('secret.startsWith("whsec_")');
+      expect(rules).toContain('Buffer.from(rawSecret, "base64")');
+    });
+
+    it("keeps replay protection on the new path", () => {
+      const fn = rules.slice(rules.indexOf("export function verifyStandardWebhookSignature"));
+      expect(fn).toContain('reason: "stale"');
+      expect(fn).toContain("toleranceSeconds");
+    });
+
+    it("compares signatures in constant time and accepts a rotated secret", () => {
+      const fn = rules.slice(rules.indexOf("export function verifyStandardWebhookSignature"));
+      expect(fn).toContain("crypto.timingSafeEqual");
+      expect(fn).toContain('header\n    .split(" ")');
+    });
+
+    it("still supports the legacy scheme rather than dropping it", () => {
+      expect(route).toContain("verifyWhopSignature(");
+      expect(route).toContain("verifyStandardWebhookSignature(");
+    });
+
+    it("keys idempotency on the provider's own delivery id", () => {
+      expect(route).toContain("standardHeaders.webhookId?.trim()");
+    });
+  });
+
+  describe("a cancelled membership loses its capabilities", () => {
+    const service = source3("src/lib/provisioning/provisioning-service.ts");
+    const route = source3("src/app/api/whop/webhook/route.ts");
+
+    it("withdraws the provisioned subscription on revocation", () => {
+      // The entitlement row said revoked while the subscription capabilities are read
+      // from stayed active with no end date, so a cancelled buyer kept everything.
+      expect(service).toContain("export async function revokeProvisionedAccess");
+      expect(route).toContain("revokeProvisionedAccess({");
+    });
+
+    it("is reached for both revoked and grace states", () => {
+      expect(route).toContain('result.state === "revoked" || result.state === "grace"');
+    });
+
+    it("sets a definite end date so a stale status cannot grant forever", () => {
+      expect(service).toContain('currentPeriodEndsAt: input.state === "revoked" ? new Date() : undefined');
+    });
+
+    it("never deletes the clinic's organization, users, or records", () => {
+      const fn = service.slice(service.indexOf("export async function revokeProvisionedAccess"));
+      expect(fn).not.toContain("delete");
+      expect(fn).not.toContain("deleteMany");
+    });
+  });
+
+  describe("an undelivered activation stays retryable", () => {
+    const route = source3("src/app/api/whop/webhook/route.ts");
+
+    it("does not mark the delivery terminal when activation could not be sent", () => {
+      // Without this, a buyer whose activation email failed had no credential, no
+      // resend, and a webhook that would never be retried.
+      expect(route).toContain('markWebhookIncomplete(delivery.id, "activation_undelivered")');
+    });
+
+    it("answers with a 5xx so the provider retries", () => {
+      expect(route).toMatch(/activation link could not be delivered[\s\S]{0,200}500/);
+    });
+
+    it("re-mints the token on retry for an account with no credential", () => {
+      const service = source3("src/lib/provisioning/provisioning-service.ts");
+      const completed = service.slice(service.indexOf('if (run.status === "complete")'));
+      expect(completed.slice(0, 600)).toContain("!user.authCredential");
+    });
+  });
+
+  describe("an expired pass does not shadow a valid payment", () => {
+    const guard = source3("src/lib/commerce/grid-access-guard.ts");
+
+    it("prefers a granted payment over an inactive entitlement", () => {
+      // `??` chose any stored entitlement, including a revoked one, so an approved
+      // review payment was denied on the strength of a dead pass.
+      expect(guard).toContain('pass?.state === "active" ? pass : (entitlementFromPayment(grantedPayment) ?? pass)');
+      expect(guard).not.toContain("(entitlement as EntitlementRecord | null) ?? entitlementFromPayment(grantedPayment)");
+    });
+
+    it("still lets an active pass win", () => {
+      expect(guard).toContain('pass?.state === "active" ? pass');
+    });
+  });
+});

@@ -308,3 +308,49 @@ export async function provisioningStatusForEmail(email: string) {
     completedAt: run.completedAt,
   };
 }
+
+
+/**
+ * Withdraw the capabilities a purchase granted, when the purchase stops being valid.
+ *
+ * Provisioning had only one direction. A membership that went invalid revoked the
+ * `WhopEntitlement` while the `ClinicSubscription` it created stayed active with no end
+ * date — and entitlements are resolved from the subscription, so a cancelled buyer kept
+ * every paid capability indefinitely.
+ *
+ * What this does **not** do is delete anything. The organization, its users, and its
+ * records survive; only the paid modules stop. Losing access to capabilities is the
+ * lever a lapsed subscription pulls. Losing a clinic's data is not.
+ */
+export async function revokeProvisionedAccess(input: {
+  source: "whop_membership" | "access_payment";
+  reference: string;
+  /** `revoked` ends access now; `grace` keeps it while billing is retried. */
+  state: "revoked" | "grace";
+}) {
+  const key = provisioningKey({ source: input.source, reference: input.reference });
+  const run = await db.provisioningRun.findUnique({
+    where: { provisioningKey: key },
+    select: { organizationId: true, subscriptionId: true },
+  });
+  if (!run?.organizationId) return { ok: false as const, reason: "not_provisioned" as const };
+
+  // Grace is a billing state, not a revocation. `entitlementsFromSubscriptions` already
+  // withholds paid capabilities from a `past_due` subscription, so marking the status is
+  // the whole change — there is nothing to strip.
+  const status = input.state === "grace" ? "past_due" : "canceled";
+
+  const updated = await db.clinicSubscription.updateMany({
+    where: run.subscriptionId
+      ? { id: run.subscriptionId }
+      : { organizationId: run.organizationId, status: { in: ["active", "trialing", "past_due"] } },
+    data: {
+      status,
+      // A definite end date is what stops a stale `status` column from granting
+      // capabilities forever if a later webhook never arrives.
+      currentPeriodEndsAt: input.state === "revoked" ? new Date() : undefined,
+    },
+  });
+
+  return { ok: true as const, organizationId: run.organizationId, subscriptionsUpdated: updated.count, status };
+}

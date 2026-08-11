@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import crypto, { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { getAccessTier, purchasableTiers, resolveTierForPlan, tierCapabilities } from "@/lib/commerce/whop-catalog";
 import {
@@ -9,6 +9,7 @@ import {
   isActionableWebhookEvent,
   mapMembershipStatus,
   parseWhopSignatureHeader,
+  verifyStandardWebhookSignature,
   verifyWhopSignature,
   whopSignatureDigest,
   whopWebhookEnvelopeSchema,
@@ -199,5 +200,80 @@ describe("checkout intent input", () => {
   it("normalises the email so entitlements bind to one canonical address", () => {
     const parsed = checkoutIntentSchema.parse({ tierKey: "evaluator_pass", email: "  Buyer@Example.Test ", acceptedTerms: true });
     expect(parsed.email).toBe("buyer@example.test");
+  });
+});
+
+describe("Standard Webhooks verification", () => {
+  const secret = "whsec_" + Buffer.from("klinikos-test-signing-key-0123456789").toString("base64");
+  const body = JSON.stringify({ action: "membership.went_valid", data: { id: "mem_1", email: "buyer@example.test" } });
+  const id = "msg_2xY9testdelivery";
+
+  function sign(input: { id: string; timestamp: string; body: string; secret?: string }) {
+    const raw = (input.secret ?? secret).replace(/^whsec_/, "");
+    const key = Buffer.from(raw, "base64");
+    return "v1," + createHmac("sha256", key).update(`${input.id}.${input.timestamp}.${input.body}`, "utf8").digest("base64");
+  }
+
+  const now = new Date("2026-08-11T23:00:00.000Z");
+  const timestamp = String(Math.floor(now.getTime() / 1000));
+
+  it("accepts a genuine Whop-shaped delivery", () => {
+    // The whole point: before this, a correctly signed production delivery was rejected
+    // with a 401 and no purchase could be provisioned.
+    const result = verifyStandardWebhookSignature({
+      rawBody: body, webhookId: id, webhookTimestamp: timestamp,
+      webhookSignature: sign({ id, timestamp, body }), secret, now,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects a body altered after signing", () => {
+    const result = verifyStandardWebhookSignature({
+      rawBody: body.replace("buyer@example.test", "attacker@example.test"),
+      webhookId: id, webhookTimestamp: timestamp,
+      webhookSignature: sign({ id, timestamp, body }), secret, now,
+    });
+    expect(result).toMatchObject({ ok: false, reason: "mismatch" });
+  });
+
+  it("rejects a signature made with a different secret", () => {
+    const other = "whsec_" + Buffer.from("a-completely-different-signing-key!!").toString("base64");
+    const result = verifyStandardWebhookSignature({
+      rawBody: body, webhookId: id, webhookTimestamp: timestamp,
+      webhookSignature: sign({ id, timestamp, body, secret: other }), secret, now,
+    });
+    expect(result).toMatchObject({ ok: false, reason: "mismatch" });
+  });
+
+  it("rejects a replayed delivery outside the tolerance", () => {
+    const stale = String(Math.floor(now.getTime() / 1000) - 4000);
+    const result = verifyStandardWebhookSignature({
+      rawBody: body, webhookId: id, webhookTimestamp: stale,
+      webhookSignature: sign({ id, timestamp: stale, body }), secret, now,
+    });
+    expect(result).toMatchObject({ ok: false, reason: "stale" });
+  });
+
+  it("rejects a signature bound to a different delivery id", () => {
+    // The id is inside the signed string, so a signature cannot be lifted onto another
+    // delivery even within the timestamp window.
+    const result = verifyStandardWebhookSignature({
+      rawBody: body, webhookId: "msg_someotherdelivery", webhookTimestamp: timestamp,
+      webhookSignature: sign({ id, timestamp, body }), secret, now,
+    });
+    expect(result).toMatchObject({ ok: false, reason: "mismatch" });
+  });
+
+  it("accepts a rotated secret while the old one is still live", () => {
+    const rotated = "whsec_" + Buffer.from("the-newly-rotated-signing-key-000000").toString("base64");
+    const header = `${sign({ id, timestamp, body, secret: rotated })} ${sign({ id, timestamp, body })}`;
+    expect(verifyStandardWebhookSignature({ rawBody: body, webhookId: id, webhookTimestamp: timestamp, webhookSignature: header, secret, now }).ok).toBe(true);
+  });
+
+  it("fails closed on missing headers and on no secret", () => {
+    expect(verifyStandardWebhookSignature({ rawBody: body, webhookId: null, webhookTimestamp: timestamp, webhookSignature: sign({ id, timestamp, body }), secret, now }))
+      .toMatchObject({ ok: false, reason: "missing" });
+    expect(verifyStandardWebhookSignature({ rawBody: body, webhookId: id, webhookTimestamp: timestamp, webhookSignature: sign({ id, timestamp, body }), secret: "", now }))
+      .toMatchObject({ ok: false, reason: "not_configured" });
   });
 });

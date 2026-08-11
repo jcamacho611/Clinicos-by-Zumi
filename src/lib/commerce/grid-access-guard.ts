@@ -78,9 +78,14 @@ export async function gridAccessContext(session: ClinicSession): Promise<GridAcc
   ]);
 
   // Either route into the marketplace counts: a recurring access pass, or a settled
-  // one-time review fee whose human review has completed. The pass wins when both
-  // exist, since it is the one that can expire and be revalidated.
-  const record = (entitlement as EntitlementRecord | null) ?? entitlementFromPayment(grantedPayment);
+  // one-time review fee whose human review has completed.
+  //
+  // Only an *active* pass takes precedence. `??` preferred any stored entitlement,
+  // including a revoked or expired one — so a buyer whose old pass lapsed was denied on
+  // the dead pass even though their approved payment was valid. An inactive pass is not
+  // access, and it should not shadow access that exists.
+  const pass = entitlement as EntitlementRecord | null;
+  const record = pass?.state === "active" ? pass : (entitlementFromPayment(grantedPayment) ?? pass);
   return {
     entitlement: record,
     tierKey: record?.tierKey ?? null,

@@ -9,8 +9,8 @@ import {
   payloadHash,
   recordWebhookDelivery,
 } from "@/lib/commerce/whop-entitlements";
-import { verifyWhopSignature, whopWebhookEnvelopeSchema } from "@/lib/commerce/whop-rules";
-import { deliverActivation, provisionFromPayment } from "@/lib/provisioning/provisioning-service";
+import { verifyStandardWebhookSignature, verifyWhopSignature, whopWebhookEnvelopeSchema } from "@/lib/commerce/whop-rules";
+import { deliverActivation, provisionFromPayment, revokeProvisionedAccess } from "@/lib/provisioning/provisioning-service";
 
 const paymentOutcomes: Record<string, "paid" | "refunded" | "failed"> = {
   "payment.succeeded": "paid",
@@ -34,12 +34,23 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
   if (rawBody.length > 512_000) return noStore({ error: "Payload too large." }, 413);
 
-  const verification = verifyWhopSignature({
-    rawBody,
-    header: request.headers.get("x-whop-signature"),
-    secret,
-    allowUntimestamped: process.env.WHOP_WEBHOOK_ALLOW_UNTIMESTAMPED === "true",
-  });
+  // Whop signs with Standard Webhooks headers. The legacy `x-whop-signature` path is
+  // kept because a deployment may still be configured for it, but the modern scheme is
+  // tried first — reading only the legacy header rejected every genuine delivery.
+  const standardHeaders = {
+    webhookId: request.headers.get("webhook-id"),
+    webhookTimestamp: request.headers.get("webhook-timestamp"),
+    webhookSignature: request.headers.get("webhook-signature"),
+  };
+
+  const verification = standardHeaders.webhookSignature
+    ? verifyStandardWebhookSignature({ rawBody, ...standardHeaders, secret })
+    : verifyWhopSignature({
+        rawBody,
+        header: request.headers.get("x-whop-signature"),
+        secret,
+        allowUntimestamped: process.env.WHOP_WEBHOOK_ALLOW_UNTIMESTAMPED === "true",
+      });
 
   if (!verification.ok) {
     await recordWebhookDelivery({
@@ -61,7 +72,12 @@ export async function POST(request: Request) {
   const envelope = parsed.data;
   const eventType = envelope.action ?? envelope.event ?? "unknown";
   const membershipId = envelope.data?.id?.trim() || null;
-  const eventId = envelope.id?.trim() || `${eventType}_${crypto.createHash("sha256").update(rawBody).digest("hex").slice(0, 48)}`;
+  // Prefer the provider's own delivery id — it is what a redelivery repeats, which is
+  // exactly what idempotency has to key on.
+  const eventId =
+    standardHeaders.webhookId?.trim() ||
+    envelope.id?.trim() ||
+    `${eventType}_${crypto.createHash("sha256").update(rawBody).digest("hex").slice(0, 48)}`;
 
   const delivery = await recordWebhookDelivery({
     eventId,
@@ -99,6 +115,16 @@ export async function POST(request: Request) {
     // The two halves are independently idempotent — the entitlement upsert keys on the
     // membership, provisioning keys on the same reference — so a retry re-runs both
     // safely rather than duplicating either.
+    // Provisioning runs in both directions. A membership that went invalid has to
+    // withdraw the subscription it created, or the buyer keeps every paid capability
+    // after cancelling — the entitlement row says revoked while the subscription the
+    // capabilities are actually read from says active.
+    if ((result.state === "revoked" || result.state === "grace") && membershipId) {
+      await revokeProvisionedAccess({ source: "whop_membership", reference: membershipId, state: result.state }).catch(() => null);
+      await markWebhookProcessed(delivery.id);
+      return noStore({ ok: true, applied: true, scope: "entitlement", state: result.state, tierKey: result.tierKey, provisioning: { status: "revoked" } }, 200);
+    }
+
     if (result.state === "active" && membershipId && envelope.data?.email) {
       const provisioning = await provisionFromPayment({
         source: "whop_membership",
@@ -115,12 +141,30 @@ export async function POST(request: Request) {
       // The buyer cannot sign in until this reaches them. A delivery failure does not
       // fail the webhook — the purchase is provisioned and re-sending is cheap — but it
       // is recorded against the run rather than discarded.
+      // The buyer cannot sign in until this reaches them, so an undelivered activation
+      // is not a finished delivery. Leaving it non-terminal means the provider's next
+      // redelivery re-attempts the send — `provisionFromPayment` re-mints the token for
+      // an account that still has no credential, so the retry is meaningful rather than
+      // a no-op. An operator can also reissue it from the recorded failure.
       if (provisioning.activation && provisioning.organizationId) {
-        await deliverActivation({
+        const delivered = await deliverActivation({
           email: envelope.data.email,
           token: provisioning.activation.token,
           provisioningKey: provisioning.provisioningKey,
-        }).catch(() => undefined);
+        }).catch(() => null);
+
+        if (!delivered?.ok) {
+          await markWebhookIncomplete(delivery.id, "activation_undelivered");
+          return noStore(
+            {
+              ok: false,
+              error: "Provisioned, but the activation link could not be delivered.",
+              retry: true,
+              provisioning: { status: provisioning.status, activationIssued: true, activationDelivered: false },
+            },
+            500,
+          );
+        }
       }
 
       await markWebhookProcessed(delivery.id);
