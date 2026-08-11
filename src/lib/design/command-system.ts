@@ -217,12 +217,14 @@ export const GOVERNED_PUBLIC_SURFACES = [
   "src/app/operational-audit/page.tsx",
   "src/app/contact/page.tsx",
   "src/app/referral/[code]/page.tsx",
+  "src/app/welcome/page.tsx",
   // Content modules those pages render. A claim moved out of a page into a data file
   // would otherwise escape the check entirely.
   "src/lib/growth/demonstration.ts",
   "src/lib/growth/segments.ts",
   "src/lib/growth/pricing.ts",
   "src/lib/growth/audit-checkout.ts",
+  "src/lib/provisioning/provisioning-rules.ts",
   "src/components/growth/marketing-shell.tsx",
   "src/components/growth/zumi-demonstration.tsx",
   "src/components/growth/guided-tour.tsx",

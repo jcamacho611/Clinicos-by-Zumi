@@ -4,6 +4,7 @@ import { applyWebhookToAccessPayment } from "@/lib/commerce/access-payment-servi
 import { whopWebhookSecret } from "@/lib/commerce/whop-client";
 import { applyWebhookToEntitlement, payloadHash, recordWebhookDelivery } from "@/lib/commerce/whop-entitlements";
 import { verifyWhopSignature, whopWebhookEnvelopeSchema } from "@/lib/commerce/whop-rules";
+import { provisionFromPayment } from "@/lib/provisioning/provisioning-service";
 
 /** Payment events settle a one-time marketplace purchase rather than a membership. */
 const paymentOutcomes: Record<string, "paid" | "refunded" | "failed"> = {
@@ -102,7 +103,36 @@ export async function POST(request: Request) {
 
     const result = await applyWebhookToEntitlement({ envelope, eventType, webhookRecordId: delivery.id });
     if (!result.applied) return noStore({ ok: true, applied: false, reason: result.reason }, 202);
-    return noStore({ ok: true, applied: true, scope: "entitlement", state: result.state, tierKey: result.tierKey }, 200);
+
+    // Provisioning runs only from a signature-verified webhook that actually granted
+    // an entitlement. It is idempotent on the membership id, so Whop's redelivery —
+    // which is the normal case — provisions nothing twice.
+    //
+    // A provisioning failure does not fail the webhook. The entitlement is already
+    // recorded and correct; re-running the whole delivery to retry a workspace
+    // creation would risk re-applying the entitlement instead. The run row keeps its
+    // per-step state for a retry that resumes where it stopped.
+    let provisioning: { status: string; organizationId: string | null } | null = null;
+    if (result.state === "active" && membershipId && envelope.data?.email) {
+      provisioning = await provisionFromPayment({
+        source: "whop_membership",
+        reference: membershipId,
+        email: envelope.data.email,
+        tierKey: result.tierKey ?? undefined,
+      }).catch(() => null);
+    }
+
+    return noStore(
+      {
+        ok: true,
+        applied: true,
+        scope: "entitlement",
+        state: result.state,
+        tierKey: result.tierKey,
+        provisioning: provisioning ? { status: provisioning.status } : null,
+      },
+      200,
+    );
   } catch {
     // 500 so Whop retries; the ledger row stays for reconciliation either way.
     return noStore({ error: "Entitlement update failed." }, 500);

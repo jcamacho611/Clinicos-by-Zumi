@@ -4,7 +4,7 @@ The point of this document is that no other document, page, or demo has to be
 trusted. If something here is labelled BUILT and it does not work, that is a defect in
 this file as much as in the code.
 
-Last verified: 2026-08-10, on branch `feature/klinikos-edu-foundation`.
+Last verified: 2026-08-11, on branch `claude/whop-portal-grid-marketplace-wdw811`.
 
 ## Status vocabulary
 
@@ -18,17 +18,13 @@ Last verified: 2026-08-10, on branch `feature/klinikos-edu-foundation`.
 
 ## A note on branches
 
-Work is currently split across three open pull requests against `main`, and `main`
-itself does not build — its Prisma schema was truncated from 155 models to 17.
+PRs #7, #8 and #9 are merged. `main` builds: the Prisma schema is restored and carries
+183 models, and the quality workflow (type-check, lint, tests, production build) runs on
+every pull request.
 
-| PR | Branch | Contains |
-| --- | --- | --- |
-| #8 | `fix/prisma-schema-restore` | The schema repair alone. **Merge first; it unblocks everything.** |
-| #7 | `feature/zumi-command-experience` | Design law, `/sales`, `/start`, `/founding-clinic`, the Whop/access payment layer |
-| #9 | `feature/klinikos-edu-foundation` | EDU, GRID marketplace discovery, the design system, the Zumi gateway |
-
-**This document describes PR #9's branch.** Anything living only on PR #7 is marked
-*(PR #7)* and has not been verified here.
+Active work continues on `claude/whop-portal-grid-marketplace-wdw811`, which carries the
+paid-access layer, the connector architecture, the Growth Engine, and payment-driven
+provisioning on top of `main`.
 
 ## Zumi — the AI layer
 
@@ -91,10 +87,14 @@ Spec: `docs/KLINIKOS_EDU_PRODUCT_SPEC.md`.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Access payment intent, server-controlled pricing | **BUILT** *(PR #7)* | The schema deliberately excludes `amountCents` — the original shape would have let a buyer set their own price. |
-| Whop signature verification and entitlement evaluation | **BUILT** *(PR #7)* | Fails closed on an unverified signature. |
-| GoDaddy paylink checkout wiring | **NOT BUILT** | The link exists; it is not wired as the Operational Audit checkout. |
-| Whop production credentials | **BLOCKED** | |
+| Whop webhook: signature verification, append-only ledger, idempotent redelivery | **BUILT** | Fails closed with no secret configured. Rejected deliveries are recorded without the unauthenticated payload. |
+| Access payment intent, server-controlled pricing | **BUILT** | The schema deliberately excludes `amountCents` — the original shape would have let a buyer set their own price. |
+| Entitlement evaluation | **BUILT** | Revoked, expired, and grace states are distinct; an expired window does not entitle whatever the status column says. |
+| Payment-driven provisioning | **BUILT** | Verified webhook → organization → subscription → modules → onboarding. Idempotent on the payment's own identity, per-step state so a failed run resumes, and connections plus regulated review are left blocked with the reason attached rather than faked complete. |
+| Post-purchase status (`/welcome`) | **BUILT** | Reads from the signed-in session, never a query string. Shows blocked steps as blocked. |
+| Operational Audit checkout | **BUILT** | Wired to the payment link, details captured before checkout opens. Opening the page is never treated as payment. |
+| Automatic audit payment confirmation | **NOT BUILT** | The paylink has no webhook back to Klinikos, so audit payments are reconciled by a person. |
+| Whop production credentials | **BLOCKED** | No `WHOP_WEBHOOK_SECRET`, so the webhook rejects everything and nothing provisions. |
 | Stripe | **ADAPTER READY** | Keys declared in `.env.example`; nothing connected. |
 
 ## Platform surfaces
@@ -109,6 +109,29 @@ Spec: `docs/KLINIKOS_EDU_PRODUCT_SPEC.md`.
 | Design law (surface classification, motion budget, copy law) | **BUILT** — enforced by test over governed public surfaces |
 | Command Center, Inbox, Follow-up engine, Revenue Recovery, Operating Map, Owner Brief, Command Palette, Notifications, Automations, Feature flags | **NOT BUILT** |
 | Migrating existing surfaces onto `DsSurface` + DS primitives | **PARTIALLY BUILT** — new surfaces only |
+
+## Growth Engine — the pre-payment half
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Public conversion site | **BUILT** | `/`, `/how-it-works`, three `/solutions/*`, `/zumi`, `/demo`, `/pricing`, `/operational-audit`, `/contact`, `/referral/:code`, `/welcome`. All registered under copy law. |
+| Zumi demonstration and guided tour | **BUILT** | Scripted, fixed content. No input field, no AI-gateway call, no account created. |
+| First-party intent tracking | **BUILT** | Closed event enum, prospect resolved from a cookie rather than the request body. No third-party tracker or pixel. |
+| Lead capture | **BUILT** | No free-text field anywhere in the schema, so the form cannot carry PHI. Phone optional. |
+| Lead scoring and bands | **BUILT** | Each event type counts once; return visits score; an abandoned checkout is never penalised. Priority list capped at twelve. |
+| Follow-up sequences | **BUILT (rules)** | Lifecycle, timing, supersession, and unsubscribe are implemented and tested. **No sender is wired** — see below. |
+| Sending follow-up email | **ADAPTER READY** | Needs Resend (or an approved vendor) with a verified sending domain. Nothing sends today. |
+| Referral attribution and commission | **BUILT (rules)** | First-touch, 90-day window, integer basis points floored, unpayable until settled. Partner admin surfaces are **NOT BUILT**. |
+| Founder acquisition dashboard | **BUILT** | Gated on `sales:manage`. Pipeline is a stated floor, not a forecast. |
+| Public endpoint rate limiting | **PARTIALLY BUILT** | Per-process and in-memory. Under horizontal scale the effective limit multiplies by instance count and resets on deploy. A shared store is required before it is a security control. |
+
+## Connector architecture
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Five-axis classification (gateway, integration, ownership, economics, readiness) | **BUILT** | Nine independent readiness gates; an unspecified gate is false. |
+| Connector catalog | **BUILT** | Every connector carries its concrete external gate. |
+| Any connector actually live | **BLOCKED** | All nine gates are false on every connector, and a test asserts none reports production- or PHI-usable. |
 
 ## Claims this product does not make
 

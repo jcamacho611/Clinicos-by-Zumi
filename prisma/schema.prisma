@@ -4381,3 +4381,41 @@ model GrowthReferralAttribution {
   @@index([partnerId, commissionStatus])
   @@map("growth_referral_attributions")
 }
+
+/// One row per purchase that has been provisioned, keyed by the payment's own
+/// identity so a webhook redelivery resolves to the same row and provisions nothing
+/// twice.
+///
+/// Step state is stored per step rather than as one overall status, so a run that
+/// fails halfway resumes from where it stopped instead of repeating work that is not
+/// safely repeatable.
+model ProvisioningRun {
+  id             String   @id @default(cuid())
+  /// `${source}:${reference}` — derived, never generated. This is the idempotency key.
+  provisioningKey String  @unique
+  source         String
+  reference      String
+  email          String
+  tierKey        String?
+  planKey        String?
+  organizationId String?
+  subscriptionId String?
+  /// pending | partial | complete | failed
+  status         String   @default("pending")
+  /// Per-step state: { organization: "complete", connections: "blocked", ... }
+  steps          Json
+  modules        String[] @default([])
+  /// What still stands between this customer and full use. Shown to them verbatim.
+  outstanding    String[] @default([])
+  failureReason  String?
+  attempts       Int      @default(0)
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([email, status])
+  @@index([organizationId])
+  @@index([status, updatedAt])
+  @@map("provisioning_runs")
+}
