@@ -107,14 +107,6 @@ export async function POST(request: Request) {
     const result = await applyWebhookToEntitlement({ envelope, eventType, webhookRecordId: delivery.id });
     if (!result.applied) return noStore({ ok: true, applied: false, reason: result.reason }, 202);
 
-    // Provisioning is part of the delivery, not a best-effort afterthought. An
-    // entitlement that was applied while provisioning failed leaves a paying buyer with
-    // no organization, and returning 200 there would tell Whop the work is finished
-    // and stop the only retry that could repair it.
-    //
-    // The two halves are independently idempotent — the entitlement upsert keys on the
-    // membership, provisioning keys on the same reference — so a retry re-runs both
-    // safely rather than duplicating either.
     // Provisioning runs in both directions. A membership that went invalid has to
     // withdraw the subscription it created, or the buyer keeps every paid capability
     // after cancelling — the entitlement row says revoked while the subscription the
@@ -125,6 +117,11 @@ export async function POST(request: Request) {
       return noStore({ ok: true, applied: true, scope: "entitlement", state: result.state, tierKey: result.tierKey, provisioning: { status: "revoked" } }, 200);
     }
 
+    // Provisioning is part of the delivery, not a best-effort afterthought. An
+    // entitlement applied while provisioning failed leaves a paying buyer with no
+    // organization, and answering 200 there would tell Whop the work is finished and
+    // stop the only retry that could repair it. Both halves are independently
+    // idempotent, so a retry re-runs them safely rather than duplicating either.
     if (result.state === "active" && membershipId && envelope.data?.email) {
       const provisioning = await provisionFromPayment({
         source: "whop_membership",
@@ -138,9 +135,6 @@ export async function POST(request: Request) {
         return noStore({ error: "Provisioning did not complete.", retry: true }, 500);
       }
 
-      // The buyer cannot sign in until this reaches them. A delivery failure does not
-      // fail the webhook — the purchase is provisioned and re-sending is cheap — but it
-      // is recorded against the run rather than discarded.
       // The buyer cannot sign in until this reaches them, so an undelivered activation
       // is not a finished delivery. Leaving it non-terminal means the provider's next
       // redelivery re-attempts the send — `provisionFromPayment` re-mints the token for
