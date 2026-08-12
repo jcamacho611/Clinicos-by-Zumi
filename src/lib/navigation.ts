@@ -50,6 +50,7 @@ export const navigation = [
       { href: "/claim-readiness", label: "Claim readiness", icon: "Calculator", description: "See what needs attention before claim submission." },
       { href: "/insurance", label: "Insurance", icon: "ShieldCheck", description: "Track eligibility and authorization workflows." },
       { href: "/cases", label: "No-fault / workers’ comp", icon: "BriefcaseMedical", description: "Coordinate injury cases, documents, and follow-up." },
+      { href: "/injury-episodes", label: "Injury episode", icon: "BriefcaseMedical", description: "Keep one injury episode, its evidence, and its next steps together." },
       { href: "/crm", label: "Revenue recovery", icon: "CircleDollarSign", description: "Turn missed opportunities into owned next actions." },
       { href: "/quality", label: "Quality & HEDIS", icon: "ChartNoAxesCombined", description: "Track care gaps and quality work." },
       { href: "/luxe-medi", label: "Luxe Medi", icon: "Sparkles", description: "Run med-spa leads, services, packages, and follow-up." },
@@ -74,6 +75,7 @@ export const navigation = [
   {
     label: "Organization",
     items: [
+      { href: "/owner/founding-program", label: "Founding clinic program", icon: "BriefcaseMedical", description: "Review your clinic’s evaluation and implementation pathway." },
       { href: "/portal-admin", label: "Patient portal", icon: "MonitorSmartphone", description: "Manage the patient-facing portal experience." },
       { href: "/access-controls", label: "Access & sharing", icon: "LockKeyhole", description: "Manage consent-bound record access and sharing." },
       { href: "/identity-resolution", label: "Patient matching", icon: "Fingerprint", description: "Review potential duplicate or matching identities." },
