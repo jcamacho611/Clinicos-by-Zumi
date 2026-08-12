@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { canTransitionGridDemand, canTransitionGridOffer, gridOfferSchema, savedGridDemandSchema } from "@/lib/grid/transaction-flow";
+import {
+  canTransitionGridDemand,
+  canTransitionGridOffer,
+  gridOfferDecisionSchema,
+  gridOfferSchema,
+  savedGridDemandSchema,
+} from "@/lib/grid/transaction-flow";
 
 describe("Grid transaction flow", () => {
   it("allows demand to move from open to matched to offered to reserved", () => {
@@ -18,8 +24,9 @@ describe("Grid transaction flow", () => {
     }
   });
 
-  it("does not allow an accepted offer to mutate", () => {
+  it("does not mutate accepted or superseded countered offers", () => {
     expect(canTransitionGridOffer("accepted", "withdrawn")).toBe(false);
+    expect(canTransitionGridOffer("countered", "accepted")).toBe(false);
   });
 
   it("validates universal saved demand", () => {
@@ -35,10 +42,11 @@ describe("Grid transaction flow", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts an offer against a generic Grid resource reference", () => {
+  it("accepts a synthetic generic resource offer only when its counterparty is identified", () => {
     const start = new Date(Date.now() + 86_400_000);
     const result = gridOfferSchema.safeParse({
       demandId: "demand-1",
+      recipientOrganizationId: "organization-2",
       resourceKind: "equipment",
       resourceReference: "synthetic-equipment-listing-1",
       offeredStartAt: start.toISOString(),
@@ -48,6 +56,19 @@ describe("Grid transaction flow", () => {
       expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a generic resource offer without a recipient organization", () => {
+    const result = gridOfferSchema.safeParse({
+      demandId: "demand-1",
+      resourceKind: "equipment",
+      resourceReference: "synthetic-equipment-listing-1",
+      offeredStartAt: new Date(Date.now() + 86_400_000).toISOString(),
+      grossAmountCents: 75_000,
+      note: "Synthetic equipment-capacity offer for review.",
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects an offer with an end before its start", () => {
@@ -90,5 +111,20 @@ describe("Grid transaction flow", () => {
       expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     });
     expect(result.success).toBe(false);
+  });
+
+  it("requires new immutable terms for a counteroffer", () => {
+    expect(gridOfferDecisionSchema.safeParse({ targetStatus: "countered", note: "Need different terms." }).success).toBe(false);
+    expect(gridOfferDecisionSchema.safeParse({
+      targetStatus: "countered",
+      note: "Need different terms.",
+      counterOffer: {
+        offeredStartAt: new Date(Date.now() + 86_400_000).toISOString(),
+        grossAmountCents: 60_000,
+        depositAmountCents: 10_000,
+        note: "Counter at the revised amount.",
+        expiresAt: new Date(Date.now() + 7_200_000).toISOString(),
+      },
+    }).success).toBe(true);
   });
 });
