@@ -24,6 +24,12 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   "remote-monitoring": { all: [["remote_monitoring", "read"]] },
   inventory: { all: [["inventory", "read"]] },
   grid: { any: [["grid", "read"], ["network", "read"], ["credentialing", "read"]] },
+  /**
+   * EDU is its own enrollment/institution authorization domain. This rule grants only
+   * discovery of the EDU entry point from the clinic shell; `resolveEduIdentity` and
+   * EDU institution/cohort filters remain authoritative for all EDU data access.
+   */
+  edu: {},
   network: { all: [["network", "read"]] },
   referrals: { all: [["referrals", "read"]] },
   "access-controls": { all: [["network", "read"]] },
