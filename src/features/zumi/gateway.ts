@@ -14,7 +14,6 @@ import {
 import {
   phiEgressPermitted,
   selectProvider,
-  type ProviderAdapter,
   type ZumiExternalSource,
 } from "@/features/zumi/providers";
 import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
@@ -37,6 +36,7 @@ import {
   trustedOrchestrationInstruction,
   type ZumiTrustedOrchestration,
 } from "@/features/zumi/trusted-orchestration";
+import { runZumiCognition, type ZumiCognitionTrace } from "@/features/zumi/cognition-loop";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1_200;
@@ -75,6 +75,7 @@ export type ZumiSuccess = {
     reasons: string[];
     webUsed: boolean;
   };
+  cognition: ZumiCognitionTrace;
   orchestration: ZumiOrchestrationPlan;
   trustedOrchestration: ZumiTrustedOrchestration;
 };
@@ -151,6 +152,7 @@ function buildPrompt(request: ZumiRequest, canonicalContext: string, memoryConte
   redactionApplied: boolean;
   droppedKeys: string[];
   questionRedacted: boolean;
+  redactedQuestion: string;
 } | null {
   const question = redactText(request.question);
   const context = request.context === undefined ? null : redactPayload(request.context);
@@ -161,9 +163,6 @@ function buildPrompt(request: ZumiRequest, canonicalContext: string, memoryConte
     serializedContext ? `Authorized operational context (JSON): ${serializedContext}` : "Authorized operational context: none supplied.",
   ].join("\n\n");
 
-  // Validate redaction before adding repository-owned canonical context and explicitly
-  // approved memory. Otherwise legitimate examples in controlled product documents
-  // could block the turn, while actual user identifiers still fail closed.
   if (containsLikelyIdentifiers(privateBase)) return null;
 
   const prompt = [
@@ -181,6 +180,7 @@ function buildPrompt(request: ZumiRequest, canonicalContext: string, memoryConte
     redactionApplied: question.redactedAny || Boolean(context?.redactedAny),
     droppedKeys: context?.droppedKeys ?? [],
     questionRedacted: question.redactedAny,
+    redactedQuestion: question.text,
   };
 }
 
@@ -219,8 +219,8 @@ function toolBudget(depth: ZumiResearchDepth) {
 
 function timeoutFor(depth: ZumiResearchDepth, requested?: number) {
   if (requested) return requested;
-  if (depth === "deep") return 60_000;
-  if (depth === "research") return 45_000;
+  if (depth === "deep") return 45_000;
+  if (depth === "research") return 35_000;
   return DEFAULT_TIMEOUT_MS;
 }
 
@@ -229,36 +229,6 @@ function outputBudgetFor(depth: ZumiResearchDepth, requested?: number) {
   if (depth === "deep") return 3_000;
   if (depth === "research") return 2_000;
   return DEFAULT_MAX_OUTPUT_TOKENS;
-}
-
-async function invokeWithTimeout(input: {
-  adapter: ProviderAdapter;
-  request: ZumiRequest;
-  prompt: string;
-  system: string;
-  depth: ZumiResearchDepth;
-  webResearch: boolean;
-}) {
-  const controller = new AbortController();
-  const timeoutMs = timeoutFor(input.depth, input.request.timeoutMs);
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await input.adapter.invoke({
-      system: input.system,
-      prompt: input.prompt,
-      maxOutputTokens: outputBudgetFor(input.depth, input.request.maxOutputTokens),
-      timeoutMs,
-      signal: controller.signal,
-      previousResponseId: input.request.previousResponseId,
-      allowWebSearch: input.webResearch,
-      allowKnowledgeSearch: input.request.allowKnowledgeSearch ?? true,
-      allowCodeInterpreter: input.request.allowCodeInterpreter ?? input.depth !== "direct",
-      allowedDomains: input.request.allowedDomains,
-      maxToolCalls: toolBudget(input.depth),
-    });
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResult> {
@@ -394,7 +364,22 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   ].join("\n\n");
 
   try {
-    const result = await invokeWithTimeout({ adapter: selection.adapter, request, prompt: built.prompt, system, depth: complexity.depth, webResearch });
+    const cognition = await runZumiCognition({
+      adapter: selection.adapter,
+      depth: complexity.depth,
+      redactedQuestion: built.redactedQuestion,
+      system,
+      prompt: built.prompt,
+      previousResponseId: request.previousResponseId,
+      allowWebSearch: webResearch,
+      allowKnowledgeSearch: request.allowKnowledgeSearch ?? true,
+      allowCodeInterpreter: request.allowCodeInterpreter ?? complexity.depth !== "direct",
+      allowedDomains: request.allowedDomains,
+      maxToolCalls: toolBudget(complexity.depth),
+      maxOutputTokens: outputBudgetFor(complexity.depth, request.maxOutputTokens),
+      timeoutMs: timeoutFor(complexity.depth, request.timeoutMs),
+    });
+    const result = cognition.result;
     const { recommendations } = parseRecommendations(result.text);
     const durationMs = Date.now() - startedAt;
     const sources = result.sources ?? [];
@@ -414,6 +399,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
         webResearch,
         sourceCount: sources.length,
         toolsUsed,
+        cognition: cognition.trace,
         injectionPatternDetected: injection.detected,
         accessibility: {
           responseLength: accessibility.responseLength,
@@ -460,6 +446,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       },
       continuation: result.responseId ? { responseId: result.responseId, sources, toolsUsed } : null,
       research: { depth: complexity.depth, reasons: complexity.reasons, webUsed: webResearch && toolsUsed.includes("web_search") },
+      cognition: cognition.trace,
       orchestration,
       trustedOrchestration,
     };
