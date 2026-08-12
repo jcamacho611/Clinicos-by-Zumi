@@ -101,7 +101,7 @@ export function GridResourceOwnerConsole({ resources }: { resources: OwnedResour
     }
     const capacity = Math.max(1, Math.round(Number(form.capacity || "1")));
     const priceCents = form.pricingModel === "quote" ? null : Math.round(Number(form.price || "0") * 100);
-    if (form.pricingModel !== "quote" && (!Number.isFinite(priceCents) || priceCents < 0)) {
+    if (form.pricingModel !== "quote" && (priceCents == null || !Number.isFinite(priceCents) || priceCents < 0)) {
       setMessage({ good: false, text: "Enter a valid price or choose Request quote." });
       return;
     }
