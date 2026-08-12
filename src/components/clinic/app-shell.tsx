@@ -32,10 +32,15 @@ function initials(name: string) {
   return name.split(/\s+/).map((part) => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 }
 
+function isVisibleDestination(role: ClinicSession["role"], href: string) {
+  if (href === "/edu") return true;
+  return canAccessWorkspace(role, href.slice(1));
+}
+
 function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: ClinicSession }) {
   const pathname = usePathname();
   const visibleNavigation = navigation
-    .map((group) => ({ ...group, items: group.items.filter((item) => canAccessWorkspace(session.role, item.href.slice(1))) }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => isVisibleDestination(session.role, item.href)) }))
     .filter((group) => group.items.length > 0);
 
   return (
@@ -53,13 +58,13 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
           <span className="grid size-8 place-items-center bg-[#1677a8] text-xs font-black text-white">{initials(session.organizationName)}</span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs font-bold text-white">{session.organizationName}</span>
-            <span className="block text-[10px] text-white/45">Authenticated clinic</span>
+            <span className="block text-[10px] text-white/45">Clinic workspace</span>
           </span>
           <ChevronDown className="size-4 text-white/35" />
         </button>
       </div>
 
-      <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-6">
+      <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-6" aria-label="Klinikos workspace navigation">
         {visibleNavigation.map((group) => (
           <div className="mt-5 first:mt-2" key={group.label}>
             <p className="px-3 pb-1.5 text-[9px] font-extrabold uppercase tracking-[.2em] text-white/32">{group.label}</p>
@@ -78,6 +83,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
                     href={item.href}
                     key={item.href}
                     onClick={onNavigate}
+                    title={item.description}
                   >
                     <Icon className={cn("size-[17px]", active ? "text-[#43d9ff]" : "text-white/36 group-hover:text-[#43d9ff]")} strokeWidth={1.8} />
                     {item.label}
@@ -137,7 +143,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
 
           <div className="ml-auto hidden w-full max-w-[460px] items-center gap-2 border border-[#0b1e3a]/14 bg-[#faf9f5] px-3 py-1.5 md:flex">
             <Search className="size-4 text-[#0b1e3a]/40" />
-            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#0b1e3a] outline-none placeholder:text-[#0b1e3a]/35" placeholder="Search or ask Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
+            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#0b1e3a] outline-none placeholder:text-[#0b1e3a]/35" placeholder="Search Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
             <VoiceInputButton className="[&_button]:h-7 [&_button]:px-2 [&_button]:text-[10px]" onTranscript={setGlobalSearch} />
             <kbd className="border border-[#0b1e3a]/12 bg-[#f1f0eb] px-1.5 py-0.5 text-[9px] font-bold text-[#0b1e3a]/45">⌘ K</kbd>
           </div>
