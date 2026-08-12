@@ -24,7 +24,7 @@ export const trustedPathEventRules: Readonly<Record<string, readonly TrustedPath
   "edu.competency.approved": [{ pathId: "become-grid-ready", nodeId: "competency" }],
   "referral.reviewed": [{ pathId: "fix-referral-leakage", nodeId: "diagnose" }],
   "task.assigned": [{ pathId: "fix-referral-leakage", nodeId: "ownership" }],
-  "patient.followup.completed": [{ pathId: "fix-referral-leakage", nodeId: "followup" }],
+  "patient.navigation.reviewed": [{ pathId: "fix-referral-leakage", nodeId: "followup" }],
   "network.destination.confirmed": [{ pathId: "fix-referral-leakage", nodeId: "network" }],
   "referral.closed": [{ pathId: "fix-referral-leakage", nodeId: "closure" }],
 };

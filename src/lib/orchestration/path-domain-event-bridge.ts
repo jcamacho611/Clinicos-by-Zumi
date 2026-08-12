@@ -6,17 +6,72 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
 import { getKlinikosPath } from "@/lib/paths/catalog";
 import { trustedRulesForEvent } from "@/lib/orchestration/path-domain-event-rules";
-import { advancePathSnapshot } from "@/lib/orchestration/path-engine";
-import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
+import { advancePathSnapshot, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 
+type ActivePathRow = {
+  id: string;
+  pathId: string;
+  goal: string;
+  status: PersistedPathSnapshot["status"];
+  currentNodeId: string | null;
+  completedNodeIds: unknown;
+  blockedNodeIds: unknown;
+  blockers: unknown;
+};
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function toSnapshot(row: ActivePathRow): PersistedPathSnapshot {
+  return {
+    instanceId: row.id,
+    pathId: row.pathId,
+    goal: row.goal,
+    status: row.status,
+    currentNodeId: row.currentNodeId,
+    completedNodeIds: asStringArray(row.completedNodeIds),
+    blockedNodeIds: asStringArray(row.blockedNodeIds),
+    blockers: asStringArray(row.blockers),
+  };
+}
+
+async function listActivePathsForActor(session: ClinicSession, actorId: string) {
+  const rows = await db.$queryRaw<ActivePathRow[]>(Prisma.sql`
+    SELECT "id", "pathId", "goal", "status", "currentNodeId", "completedNodeIds", "blockedNodeIds", "blockers"
+    FROM "KlinikosPathInstance"
+    WHERE "actorId" = ${actorId}
+      AND "organizationId" = ${session.organizationId}
+      AND "status" IN ('active','blocked','paused')
+    ORDER BY "lastActivityAt" DESC
+    LIMIT 12
+  `);
+  return rows.map(toSnapshot);
+}
+
+/**
+ * Advance a Path from a server-trusted domain transition.
+ *
+ * `targetActorId` is intentionally internal-only. API callers never supply it
+ * directly. It exists for legitimate cross-actor workflows such as an instructor
+ * releasing a student's competency or a credentialing administrator verifying a
+ * provider. Organization scope remains fixed to the acting session.
+ */
 export async function recordTrustedPathDomainEvent(
   session: ClinicSession,
-  input: { eventType: string; sourceType: string; sourceId?: string | null; metadata?: Record<string, unknown> },
+  input: {
+    eventType: string;
+    sourceType: string;
+    sourceId?: string | null;
+    targetActorId?: string | null;
+    metadata?: Record<string, unknown>;
+  },
 ) {
   const rules = trustedRulesForEvent(input.eventType);
   if (!rules.length) return [];
 
-  const active = await listActivePathSnapshots(session);
+  const targetActorId = input.targetActorId ?? session.userId;
+  const active = await listActivePathsForActor(session, targetActorId);
   const advanced: string[] = [];
 
   for (const snapshot of active) {
@@ -34,6 +89,8 @@ export async function recordTrustedPathDomainEvent(
       sourceType: input.sourceType,
       sourceId: input.sourceId ?? null,
       domainEventType: input.eventType,
+      performedByActorId: session.userId,
+      targetActorId,
       ...(input.metadata ?? {}),
     });
 
@@ -48,7 +105,7 @@ export async function recordTrustedPathDomainEvent(
           "completedAt" = CASE WHEN ${next.status} = 'completed' THEN CURRENT_TIMESTAMP ELSE "completedAt" END,
           "updatedAt" = CURRENT_TIMESTAMP
       WHERE "id" = ${snapshot.instanceId}
-        AND "actorId" = ${session.userId}
+        AND "actorId" = ${targetActorId}
         AND "organizationId" = ${session.organizationId}
         AND "currentNodeId" = ${rule.nodeId}
         AND "status" IN ('active','blocked','paused')
@@ -80,6 +137,7 @@ export async function recordTrustedPathDomainEvent(
           domainEventType: input.eventType,
           sourceType: input.sourceType,
           sourceId: input.sourceId ?? null,
+          targetActorId,
           containsPhi: false,
         },
       },

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { competencyAdvancesReadiness, competencyAreaAllowed, competencyDeterminationSchema } from "@/lib/edu/competency-determination";
 import { canEdu, canFinalizeCompetency } from "@/lib/edu/edu-roles";
 import { eduInstitutionFilter, resolveEduIdentity } from "@/lib/edu/edu-session";
 import {
@@ -12,16 +13,17 @@ import {
   validateGrade,
   type SubmissionStatus,
 } from "@/lib/edu/edu-submission-rules";
+import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-event-bridge";
 
 /**
  * Assessor write path.
  *
- * Recording a grade, releasing it, and reopening a submission. Kept in a separate
- * route from the student path so that no handler a student can reach is capable of
- * writing to a grade, whatever it is asked to do.
+ * Recording a grade, releasing it, reopening a submission, and explicitly recording
+ * a human competency determination. Student-reachable handlers cannot write any of
+ * these records.
  *
- * A person records every grade. `aiSuggested` is provenance and nothing else — there
- * is no field in this request that produces a grade without `gradedByUserId`.
+ * A person records every grade and every competency determination. `aiSuggested`
+ * remains provenance only and never creates a grade or competency by itself.
  */
 
 const NO_STORE = { "Cache-Control": "private, no-store" } as const;
@@ -34,6 +36,7 @@ const bodySchema = z.discriminatedUnion("action", [
     submissionId: z.string().trim().min(1).max(64),
     reason: z.string().trim().min(3).max(400),
   }),
+  z.object({ action: z.literal("competency"), submissionId: z.string().trim().min(1).max(64) }).merge(competencyDeterminationSchema),
 ]);
 
 function deny(message: string, status: 400 | 403 | 404 | 409, problems?: string[]) {
@@ -59,14 +62,13 @@ export async function POST(request: Request) {
       id: true,
       status: true,
       enrollmentId: true,
+      enrollment: { select: { userId: true } },
       assignment: { select: { id: true, cohortId: true, rubricId: true } },
       grade: { select: { id: true, releasedToStudent: true } },
     },
   });
   if (!submission) return deny("Submission not found.", 404);
 
-  // An assistant or instructor assesses their own cohorts. An admin reads
-  // institution-wide, which `eduCohortFilter` expresses as an empty narrowing.
   if (identity.role !== "edu_admin" && !identity.cohortIds.includes(submission.assignment.cohortId)) {
     return deny("This submission belongs to a cohort you do not teach.", 403);
   }
@@ -100,9 +102,76 @@ export async function POST(request: Request) {
     return NextResponse.json({ data: { status: decision.nextStatus } }, { headers: NO_STORE });
   }
 
+  if (body.action === "competency") {
+    if (!canFinalizeCompetency(identity.role)) {
+      return deny("Only an instructor or EDU administrator may finalise a competency determination.", 403);
+    }
+    if (!submission.grade?.releasedToStudent) {
+      return deny("Release the assessed work before using it as competency evidence.", 409);
+    }
+    if (!submission.assignment.rubricId) {
+      return deny("This submission has no rubric-linked competency evidence.", 409);
+    }
+
+    const rubricCriteria = await db.educationRubricCriterion.findMany({
+      where: { rubricId: submission.assignment.rubricId },
+      select: { competencyArea: true },
+    });
+    if (!competencyAreaAllowed({ competencyArea: body.competencyArea, rubricAreas: rubricCriteria.map((criterion) => criterion.competencyArea) })) {
+      return deny("That competency area is not part of this submission's rubric.", 400);
+    }
+
+    const determinedAt = new Date();
+    const competency = await db.educationCompetency.upsert({
+      where: {
+        enrollmentId_competencyArea: {
+          enrollmentId: submission.enrollmentId,
+          competencyArea: body.competencyArea,
+        },
+      },
+      create: {
+        institutionId: identity.institutionId ?? "",
+        enrollmentId: submission.enrollmentId,
+        competencyArea: body.competencyArea,
+        status: body.determination,
+        determinedByUserId: session.userId,
+        determinedAt,
+        evidenceSummary: body.evidenceSummary,
+      },
+      update: {
+        status: body.determination,
+        determinedByUserId: session.userId,
+        determinedAt,
+        evidenceSummary: body.evidenceSummary,
+      },
+    });
+
+    await db.educationScenarioEvent.create({
+      data: {
+        institutionId: identity.institutionId ?? "",
+        assignmentId: submission.assignment.id,
+        submissionId: submission.id,
+        actorUserId: session.userId,
+        eventType: "competency.determined",
+        summary: `${body.competencyArea}: ${body.determination}`,
+        detail: { competencyId: competency.id, competencyArea: body.competencyArea, determination: body.determination },
+      },
+    });
+
+    if (submission.enrollment.userId && competencyAdvancesReadiness(body.determination)) {
+      await recordTrustedPathDomainEvent(session, {
+        eventType: "edu.competency.approved",
+        sourceType: "education_competency",
+        sourceId: competency.id,
+        targetActorId: submission.enrollment.userId,
+        metadata: { competencyArea: body.competencyArea, determination: body.determination },
+      });
+    }
+
+    return NextResponse.json({ data: competency }, { headers: NO_STORE });
+  }
+
   if (body.action === "release") {
-    // Releasing is a separate act from grading so an instructor can grade a whole
-    // cohort and release it at once, rather than trickling results out as they type.
     if (!submission.grade) return deny("There is no assessment to release.", 409);
     if (!canFinalizeCompetency(identity.role)) {
       return deny("An assistant may record an assessment but not release it to a student.", 403);
@@ -125,6 +194,17 @@ export async function POST(request: Request) {
       }),
       db.educationSubmission.update({ where: { id: submission.id }, data: { status: decision.nextStatus } }),
     ]);
+
+    if (submission.enrollment.userId) {
+      await recordTrustedPathDomainEvent(session, {
+        eventType: "edu.learning.completed",
+        sourceType: "education_submission",
+        sourceId: submission.id,
+        targetActorId: submission.enrollment.userId,
+        metadata: { releasedAt: releasedAt.toISOString() },
+      });
+    }
+
     return NextResponse.json({ data: { status: decision.nextStatus, releasedAt } }, { headers: NO_STORE });
   }
 
@@ -137,7 +217,6 @@ export async function POST(request: Request) {
   });
   if (!decision.allowed) return deny(decision.message, decision.reason === "invalid_transition" ? 409 : 403);
 
-  // A released grade is not silently overwritten. The student has already seen it.
   if (submission.grade?.releasedToStudent) {
     return deny("This assessment has been released to the student. Reopen the submission to reassess it.", 409);
   }
@@ -165,25 +244,35 @@ export async function POST(request: Request) {
     pointsPossible,
     criterionScores: body.criterionScores,
     feedback: body.feedback,
-    // The acting user, from the session. There is no request field for this.
     gradedByUserId: session.userId,
     gradedAt: new Date(),
     aiSuggested: body.aiSuggested,
   };
 
   const release = body.release && canFinalizeCompetency(identity.role);
+  const releasedAt = release ? new Date() : null;
 
   await db.$transaction([
     db.educationGrade.upsert({
       where: { submissionId: submission.id },
-      create: { submissionId: submission.id, ...gradeData, releasedToStudent: release, releasedAt: release ? new Date() : null },
-      update: { ...gradeData, releasedToStudent: release, releasedAt: release ? new Date() : null },
+      create: { submissionId: submission.id, ...gradeData, releasedToStudent: release, releasedAt },
+      update: { ...gradeData, releasedToStudent: release, releasedAt },
     }),
     db.educationSubmission.update({
       where: { id: submission.id },
       data: { status: release ? "returned" : decision.nextStatus },
     }),
   ]);
+
+  if (release && submission.enrollment.userId) {
+    await recordTrustedPathDomainEvent(session, {
+      eventType: "edu.learning.completed",
+      sourceType: "education_submission",
+      sourceId: submission.id,
+      targetActorId: submission.enrollment.userId,
+      metadata: { releasedAt: releasedAt?.toISOString() ?? null },
+    });
+  }
 
   return NextResponse.json(
     {
@@ -192,8 +281,6 @@ export async function POST(request: Request) {
         pointsAwarded: body.pointsAwarded,
         pointsPossible,
         released: release,
-        // An assistant's release request is honoured as far as their role allows and
-        // reported honestly rather than silently ignored.
         releaseWithheld: body.release && !release,
       },
     },

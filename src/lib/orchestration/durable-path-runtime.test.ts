@@ -52,10 +52,17 @@ describe("durable Klinikos Path runtime", () => {
     expect(trustedRulesForEvent("grid.fulfillment.fulfilled")).toContainEqual({ pathId: "fill-staffing-need", nodeId: "confirm" });
   });
 
+  it("maps the learner path from released learning through human competency and verified readiness", () => {
+    expect(trustedRulesForEvent("edu.learning.completed")).toContainEqual({ pathId: "become-grid-ready", nodeId: "learning" });
+    expect(trustedRulesForEvent("edu.competency.approved")).toContainEqual({ pathId: "become-grid-ready", nodeId: "competency" });
+    expect(trustedRulesForEvent("provider.credentials.reviewed")).toContainEqual({ pathId: "become-grid-ready", nodeId: "readiness" });
+    expect(trustedRulesForEvent("grid.offer.accepted")).toContainEqual({ pathId: "become-grid-ready", nodeId: "grid" });
+  });
+
   it("maps referral closure only after the earlier governed referral milestones", () => {
     expect(trustedRulesForEvent("referral.reviewed")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "diagnose" });
     expect(trustedRulesForEvent("task.assigned")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "ownership" });
-    expect(trustedRulesForEvent("patient.followup.completed")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "followup" });
+    expect(trustedRulesForEvent("patient.navigation.reviewed")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "followup" });
     expect(trustedRulesForEvent("network.destination.confirmed")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "network" });
     expect(trustedRulesForEvent("referral.closed")).toContainEqual({ pathId: "fix-referral-leakage", nodeId: "closure" });
   });

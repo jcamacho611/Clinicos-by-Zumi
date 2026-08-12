@@ -7,8 +7,6 @@ import { transitionReferral } from "@/lib/repositories/referral-repository";
 
 const pathEventByAction: Partial<Record<string, string>> = {
   mark_ready: "referral.reviewed",
-  send: "task.assigned",
-  record_patient_outreach: "patient.followup.completed",
   accept: "network.destination.confirmed",
   close: "referral.closed",
 };
