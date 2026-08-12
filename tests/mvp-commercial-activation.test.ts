@@ -10,6 +10,17 @@ function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
 }
 
+function publicPageFiles(root = path.join(process.cwd(), "src", "app")): string[] {
+  return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "api" || entry.name === "(platform)") return [];
+      return publicPageFiles(absolute);
+    }
+    return entry.name === "page.tsx" ? [absolute] : [];
+  });
+}
+
 describe("Klinikos MVP commercial activation", () => {
   it("keeps public clinic plan prices server-owned and aligned with approved pricing", () => {
     expect(getCommercialProduct("clinic_core")?.priceCents).toBe(clinicPlans.core.monthlyPriceCents);
@@ -65,5 +76,13 @@ describe("Klinikos MVP commercial activation", () => {
   it("treats legacy master-brand phrases as public copy violations", () => {
     expect(findBannedPublicCopy("Klinikos by Zumi")).toContain("klinikos by zumi");
     expect(findBannedPublicCopy("Clinicos OS")).toContain("clinicos os");
+  });
+
+  it("keeps banned commercial and legacy-brand language out of every public App Router page", () => {
+    const violations = publicPageFiles().flatMap((absolute) => {
+      const relative = path.relative(process.cwd(), absolute).replaceAll(path.sep, "/");
+      return findBannedPublicCopy(fs.readFileSync(absolute, "utf8")).map((phrase) => `${relative}: ${phrase}`);
+    });
+    expect(violations).toEqual([]);
   });
 });
