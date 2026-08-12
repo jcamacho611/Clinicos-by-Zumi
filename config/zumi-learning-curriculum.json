@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "tracks": [
+    {
+      "key": "healthcare_foundations",
+      "level": "foundation",
+      "topics": [
+        {
+          "topic": "US healthcare privacy and HIPAA operational requirements for software systems",
+          "freshnessDays": 30,
+          "allowedDomains": ["hhs.gov"]
+        },
+        {
+          "topic": "NIST cybersecurity guidance relevant to healthcare software, identity, zero trust, incident response, and risk management",
+          "freshnessDays": 45,
+          "allowedDomains": ["nist.gov"]
+        },
+        {
+          "topic": "CMS interoperability and patient access requirements affecting clinics and healthcare software",
+          "freshnessDays": 30,
+          "allowedDomains": ["cms.gov"]
+        },
+        {
+          "topic": "ONC health IT interoperability, information blocking, USCDI, and health information exchange requirements",
+          "freshnessDays": 30,
+          "allowedDomains": ["healthit.gov"]
+        },
+        {
+          "topic": "FHIR architecture, resources, APIs, terminology, security, and implementation guidance",
+          "freshnessDays": 60,
+          "allowedDomains": ["hl7.org"]
+        },
+        {
+          "topic": "NPI and NPPES provider identity, enumeration, taxonomy, and public provider data",
+          "freshnessDays": 45,
+          "allowedDomains": ["cms.gov"]
+        }
+      ]
+    },
+    {
+      "key": "revenue_cycle",
+      "level": "intermediate",
+      "topics": [
+        {
+          "topic": "US healthcare eligibility inquiry and response workflows including HIPAA 270 and 271 transactions",
+          "freshnessDays": 45,
+          "allowedDomains": ["cms.gov"]
+        },
+        {
+          "topic": "US healthcare professional claims lifecycle including claim creation, submission, acknowledgments, denials, and remittance",
+          "freshnessDays": 30,
+          "allowedDomains": ["cms.gov"]
+        },
+        {
+          "topic": "Electronic remittance advice and payment reconciliation in US healthcare",
+          "freshnessDays": 45,
+          "allowedDomains": ["cms.gov"]
+        },
+        {
+          "topic": "Medicare provider enrollment, billing, and administrative operating guidance relevant to clinics",
+          "freshnessDays": 30,
+          "allowedDomains": ["cms.gov"]
+        }
+      ]
+    },
+    {
+      "key": "clinical_operations",
+      "level": "intermediate",
+      "topics": [
+        {
+          "topic": "Closed-loop referral workflows and care coordination patterns supported by public US health IT guidance",
+          "freshnessDays": 45,
+          "allowedDomains": ["healthit.gov", "ahrq.gov"]
+        },
+        {
+          "topic": "Laboratory interoperability concepts, LOINC terminology, result exchange, and operational safety",
+          "freshnessDays": 60,
+          "allowedDomains": ["loinc.org", "healthit.gov"]
+        },
+        {
+          "topic": "Medical imaging interoperability concepts including DICOM, imaging orders, reports, and exchange",
+          "freshnessDays": 60,
+          "allowedDomains": ["dicomstandard.org", "healthit.gov"]
+        },
+        {
+          "topic": "Patient safety, human factors, workflow design, and healthcare operational reliability",
+          "freshnessDays": 60,
+          "allowedDomains": ["ahrq.gov"]
+        }
+      ]
+    },
+    {
+      "key": "platform_engineering",
+      "level": "advanced",
+      "topics": [
+        {
+          "topic": "OWASP application security guidance for modern web applications and APIs",
+          "freshnessDays": 45,
+          "allowedDomains": ["owasp.org"]
+        },
+        {
+          "topic": "OAuth 2.0 and OpenID Connect security architecture for multi-tenant healthcare applications",
+          "freshnessDays": 60,
+          "allowedDomains": ["rfc-editor.org", "openid.net"]
+        },
+        {
+          "topic": "Cloud-native reliability, observability, retry, idempotency, queue, and event-driven architecture patterns",
+          "freshnessDays": 45,
+          "allowedDomains": ["aws.amazon.com", "cloud.google.com", "learn.microsoft.com"]
+        },
+        {
+          "topic": "PostgreSQL data integrity, indexing, transaction isolation, row-level security, and scaling patterns",
+          "freshnessDays": 60,
+          "allowedDomains": ["postgresql.org"]
+        }
+      ]
+    },
+    {
+      "key": "healthcare_economy",
+      "level": "advanced",
+      "topics": [
+        {
+          "topic": "US healthcare workforce shortage, access, capacity, and provider supply data",
+          "freshnessDays": 30,
+          "allowedDomains": ["hrsa.gov", "bls.gov"]
+        },
+        {
+          "topic": "Public healthcare spending, utilization, market, and provider organization trends in the United States",
+          "freshnessDays": 30,
+          "allowedDomains": ["cms.gov", "ahrq.gov", "census.gov"]
+        }
+      ]
+    }
+  ]
+}
