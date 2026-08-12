@@ -67,6 +67,19 @@ describe("Klinikos MVP commercial activation", () => {
     expect(source).toContain("productionAccessActivated: false");
   });
 
+  it("requires exact-value GoDaddy paylinks for Core, Growth, and Scale instead of falling back to the audit link", () => {
+    const source = read("src/lib/commercial/payment-connectors/godaddy.ts");
+    const env = read(".env.example");
+    expect(source).toContain('clinic_core: "KLINIKOS_GODADDY_CORE_PAYLINK"');
+    expect(source).toContain('clinic_growth: "KLINIKOS_GODADDY_GROWTH_PAYLINK"');
+    expect(source).toContain('clinic_scale: "KLINIKOS_GODADDY_SCALE_PAYLINK"');
+    expect(source).toContain('if (product.key === "operational_audit") return KLINIKOS_GODADDY_PAYLINK || null;');
+    expect(source).toContain("const variable = clinicPlanPaylinkEnv[product.key]");
+    expect(env).toContain('KLINIKOS_GODADDY_CORE_PAYLINK=""');
+    expect(env).toContain('KLINIKOS_GODADDY_GROWTH_PAYLINK=""');
+    expect(env).toContain('KLINIKOS_GODADDY_SCALE_PAYLINK=""');
+  });
+
   it("redirects the old capability encyclopedia into the plain-English product explanation", () => {
     const source = read("src/app/capabilities/page.tsx");
     expect(source).toContain('permanentRedirect("/how-it-works")');
