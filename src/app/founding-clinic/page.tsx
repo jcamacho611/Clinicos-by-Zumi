@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Crown, Handshake, Layers3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FoundingOfferCards } from "@/components/command/founding-offer-cards";
-import { KLINIKOS_GODADDY_PAYLINK, clinicSubscriptionPlanning } from "@/lib/commercial/klinikos-commercial";
+import { clinicSubscriptionPlanning } from "@/lib/commercial/klinikos-commercial";
 import {
   MissionPhaseProgress,
   ZumiBriefingPanel,
@@ -74,16 +74,17 @@ export default function FoundingClinicPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <div className="border border-white/10 bg-white/[.04] p-6">
-            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]">Pay now</p>
-            <h2 className="mt-3 text-xl font-extrabold text-white">GoDaddy checkout is available now.</h2>
-            <p className="mt-3 text-[12px] leading-6 text-slate-400">Use the existing Klinikos payment rail for an approved review, evaluation, or founding payment. The payment record is still reconciled against the selected offer before access or implementation state changes.</p>
-            <a className="mt-5 inline-flex min-h-[44px] items-center gap-2 bg-[#e6c55b] px-5 text-xs font-extrabold text-[#071019]" href={KLINIKOS_GODADDY_PAYLINK} rel="noreferrer" target="_blank">Open secure checkout <ArrowRight className="size-4" /></a>
+            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]">Payment rail</p>
+            <h2 className="mt-3 text-xl font-extrabold text-white">GoDaddy checkout is available after qualification.</h2>
+            <p className="mt-3 text-[12px] leading-6 text-slate-400">Klinikos first captures the clinic, buyer, selected engagement, and expected amount. The server then creates an auditable commercial checkout intent before the official GoDaddy payment rail opens. Opening checkout is never treated as proof of payment.</p>
+            <Link className="mt-5 inline-flex min-h-[44px] items-center gap-2 bg-[#e6c55b] px-5 text-xs font-extrabold text-[#071019]" href="/sales">Start qualification <ArrowRight className="size-4" /></Link>
           </div>
 
           <div className="border border-white/10 bg-white/[.04] p-6">
             <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Ongoing software</p>
             <h2 className="mt-3 text-xl font-extrabold text-white">Subscription pricing is separate from setup.</h2>
             <p className="mt-3 text-[12px] leading-6 text-slate-400">{clinicSubscriptionPlanning.note}</p>
+            <Link className="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-cyan-200" href="/pricing">View current clinic pricing <ArrowRight className="size-4" /></Link>
           </div>
         </div>
 

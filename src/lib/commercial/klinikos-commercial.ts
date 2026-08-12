@@ -7,28 +7,87 @@ export const klinikosCommercialContact = {
 export const clinicCommercialOffers = {
   privateWorkflowReview: {
     key: "private_workflow_demo",
-    name: "Private Workflow Review",
+    name: "Clinic Operating Analysis",
     priceCents: 50_000,
     priceLabel: "$500",
     billing: "one_time",
-    creditForward: "Credited toward the Founding Clinic Evaluation when the clinic proceeds.",
+    creditForward: "100% credited toward an Implementation Blueprint or qualifying implementation when the clinic proceeds within 30 days.",
   },
   foundingEvaluation: {
     key: "founding_clinic_evaluation",
-    name: "Founding Clinic Evaluation",
+    name: "Implementation Blueprint",
     priceCents: 150_000,
     priceLabel: "$1,500",
     billing: "one_time",
-    creditForward: "Credited toward the Founding Clinic Program when the clinic proceeds.",
+    creditForward: "100% credited toward a qualifying Klinikos implementation when the clinic proceeds within 30 days.",
   },
   foundingImplementation: {
     key: "founding_clinic_program",
     name: "Founding Clinic Implementation",
     priceCents: 800_000,
-    priceLabel: "$8,000",
+    priceLabel: "from $8,000",
     billing: "one_time",
-    creditForward: "Prior eligible review and evaluation fees are credited after human review.",
+    creditForward: "Eligible analysis and blueprint fees are credited after human review.",
   },
+} as const;
+
+export const clinicPlans = {
+  core: {
+    key: "clinic_core",
+    name: "Klinikos Core",
+    monthlyPriceCents: 99_500,
+    monthlyPriceLabel: "$995/mo",
+    annualPriceCents: 1_014_900,
+    annualPriceLabel: "$10,149/yr",
+    annualSavingsLabel: "15% annual commitment savings",
+    implementationPriceLabel: "from $8,000",
+    idealFor: "Independent and small clinics that want one operating system for the daily work.",
+    includes: ["Core operations workspace", "Scheduling and front desk", "Tasks and follow-up", "Forms and documents", "Baseline Zumi intelligence", "Owner operating view"],
+  },
+  growth: {
+    key: "clinic_growth",
+    name: "Klinikos Growth",
+    monthlyPriceCents: 199_500,
+    monthlyPriceLabel: "$1,995/mo",
+    annualPriceCents: 2_034_900,
+    annualPriceLabel: "$20,349/yr",
+    annualSavingsLabel: "15% annual commitment savings",
+    implementationPriceLabel: "from $12,500",
+    idealFor: "Growing clinics that need revenue, network, automation, and deeper operating intelligence.",
+    includes: ["Everything in Core", "Revenue work queues", "Referral and Network workflows", "Advanced automations", "Expanded Zumi allowance", "Priority implementation support"],
+  },
+  scale: {
+    key: "clinic_scale",
+    name: "Klinikos Scale",
+    monthlyPriceCents: 399_500,
+    monthlyPriceLabel: "$3,995/mo",
+    annualPriceCents: 4_074_900,
+    annualPriceLabel: "$40,749/yr",
+    annualSavingsLabel: "15% annual commitment savings",
+    implementationPriceLabel: "from $20,000",
+    idealFor: "Multi-provider or multi-location organizations coordinating larger teams and higher operating volume.",
+    includes: ["Everything in Growth", "Multi-location controls", "Expanded reporting", "Higher included usage allowances", "Advanced integration planning", "Named operating review"],
+  },
+  enterprise: {
+    key: "clinic_enterprise",
+    name: "Klinikos Enterprise",
+    monthlyPriceCents: null,
+    monthlyPriceLabel: "Custom",
+    annualPriceCents: null,
+    annualPriceLabel: "Custom",
+    annualSavingsLabel: "Contracted commercial terms",
+    implementationPriceLabel: "from $30,000",
+    idealFor: "Large groups, networks, institutions, and organizations requiring custom integrations, governance, or deployment terms.",
+    includes: ["Custom scope and capacity", "Enterprise integration program", "Governance and security review", "Custom Grid/Network configuration", "Contracted usage economics", "Executive operating support"],
+  },
+} as const;
+
+export const commercialAddOns = {
+  intelligencePlus: { name: "Zumi Intelligence Plus", priceLabel: "from $350/mo", rule: "Included allowance first; customer-funded usage thereafter." },
+  revenueOS: { name: "Revenue OS", priceLabel: "from $750/mo", setupLabel: "from $2,500 setup" },
+  network: { name: "Network", priceLabel: "from $300/mo", setupLabel: "from $1,000 setup" },
+  premiumConnections: { name: "Premium connections", priceLabel: "Quoted by connection", rule: "Setup, recurring connector, and pass-through vendor costs may be separate." },
+  usagePacks: { name: "Usage packs", priceLabel: "Prepaid", rule: "Used only after included allowance is exhausted and before any unapproved overage." },
 } as const;
 
 export const customerFundedCommercialPrinciples = {
@@ -43,27 +102,36 @@ export const customerFundedCommercialPrinciples = {
 } as const;
 
 export const clinicSubscriptionPlanning = {
-  status: "planning" as const,
-  note: "Ongoing software access is priced separately from evaluation and implementation. Final subscription terms depend on approved clinic scope, modules, locations, usage, and connected services.",
-  commercialModel: "customer_funded_usage" as const,
+  status: "approved_pricing_v1" as const,
+  note: "Public anchors are intentionally simple. Final contract scope may vary by locations, providers, volume, regulated workflows, integrations, migration, and customer-funded external usage.",
+  commercialModel: "subscription_plus_implementation_plus_customer_funded_usage" as const,
   implementationReference: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md",
 };
 
 export const gridCommercialModel = {
   professional: {
     label: "Grid Professional",
-    pricing: "Profile access can be offered separately from transaction fees. Regulated work remains gated by verification.",
+    freeLabel: "$0 basic profile",
+    proLabel: "$39/mo Pro",
+    transactionLabel: "10% standard completed-transaction platform fee",
+    pricing: "Keep supply acquisition friction low: basic verified profiles can join free. Pro adds visibility, analytics, advanced availability, alerts, and matching tools. Completed paid activity uses a server-owned resource-class fee policy; 10% is the launch midpoint, not a universal legal rule.",
   },
   facility: {
     label: "Grid Facility",
-    pricing: "Space and capacity hosts can be monetized through listing access, booking fees, or transaction fees according to the resource class.",
+    freeLabel: "$0 to join",
+    proLabel: "$99/mo Facility Pro",
+    transactionLabel: "10% standard completed-booking platform fee",
+    pricing: "Facilities can list eligible capacity with low entry friction. Facility Pro adds expanded inventory, analytics, priority matching, and operating tools. Completed bookings remain subject to resource-specific server-owned economics.",
   },
   seller: {
     label: "Grid Seller",
-    pricing: "Products, equipment, services, education, and partner capacity can use class-specific listing, transaction, or fulfillment fees.",
+    freeLabel: "$0 to join",
+    proLabel: "$49/mo Seller Pro",
+    transactionLabel: "10% standard completed-transaction platform fee",
+    pricing: "Eligible sellers can enter the network without a mandatory subscription. Seller Pro adds expanded listings, analytics, visibility, and fulfillment tools. Regulated categories remain policy-gated regardless of payment.",
   },
   platform: {
     label: "Klinikos fee",
-    pricing: "Platform fees are server-owned and transaction-specific. Do not hardcode one universal percentage.",
+    pricing: "Launch around a 10% completed-transaction midpoint where legally and economically appropriate, while preserving server-owned class-specific fees, minimum fees, processor-cost recovery, refunds, disputes, and negotiated enterprise economics. Never let payment bypass eligibility or healthcare fee-splitting rules.",
   },
 } as const;
