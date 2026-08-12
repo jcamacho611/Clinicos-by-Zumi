@@ -85,24 +85,67 @@ export async function createAccessPayment(input: {
   return { ok: true, payment, checkoutUrl, product };
 }
 
-export async function attachPaymentReference(input: { buyerEmail: string; externalPaymentReference: string }) {
+/** How many buyer-submitted references are kept per payment. Newest first. */
+const MAX_REFERENCE_CLAIMS = 5;
+
+export type ReferenceClaim = { reference: string; at: string };
+
+export function referenceClaimsFrom(metadata: unknown): ReferenceClaim[] {
+  const claims = (metadata as { referenceClaims?: unknown } | null)?.referenceClaims;
+  if (!Array.isArray(claims)) return [];
+  return claims.filter((claim): claim is ReferenceClaim =>
+    Boolean(claim && typeof claim === "object" && typeof (claim as ReferenceClaim).reference === "string"),
+  );
+}
+
+/**
+ * Record a reference a buyer says belongs to their purchase.
+ *
+ * This endpoint is public and identifies the buyer by email alone, which is not
+ * ownership. It therefore writes nothing authoritative: the claim is filed as evidence
+ * for the operator who reviews the payment, and neither `status` nor
+ * `externalPaymentReference` moves.
+ *
+ * It used to do both, and each caused its own defect. Setting
+ * `externalPaymentReference` meant the next webhook matched the payment *by reference*
+ * and skipped the product and amount corroboration entirely — so attaching the
+ * reference of a cheap purchase to a stranger's open $8,000 payment let the cheap
+ * purchase's genuine webhook settle the expensive row. Moving the status to
+ * `pending_verification` meant anyone who knew an email could strand a purchase: the
+ * real buyer could no longer correct it here, and the genuine webhook arrived to a
+ * reference conflict.
+ *
+ * A buyer-submitted reference is now only ever a suggestion a person evaluates, which
+ * is what it always was in fact.
+ */
+export async function recordReferenceClaim(input: { buyerEmail: string; externalPaymentReference: string }) {
   const payment = await db.accessPayment.findFirst({
-    where: { buyerEmail: input.buyerEmail.trim().toLowerCase(), status: { in: ["created", "failed"] } },
+    where: {
+      buyerEmail: input.buyerEmail.trim().toLowerCase(),
+      // Settled payments need nothing from the buyer, and offering to take a claim for
+      // one would invite noise on rows that are already decided.
+      status: { in: ["created", "pending_verification", "failed", "held"] },
+    },
     orderBy: { createdAt: "desc" },
-    select: { id: true, status: true },
+    select: { id: true, status: true, metadata: true },
   });
   if (!payment) return { ok: false as const, reason: "no_open_payment" as const };
 
-  if (!canTransitionAccessPayment(payment.status, "pending_verification")) {
-    return { ok: false as const, reason: "invalid_transition" as const };
-  }
+  const reference = input.externalPaymentReference.trim();
+  const existing = referenceClaimsFrom(payment.metadata).filter((claim) => claim.reference !== reference);
+  const claims = [{ reference, at: new Date().toISOString() }, ...existing].slice(0, MAX_REFERENCE_CLAIMS);
 
   const updated = await db.accessPayment.update({
     where: { id: payment.id },
-    data: { status: "pending_verification", externalPaymentReference: input.externalPaymentReference.trim() },
+    data: {
+      metadata: {
+        ...((payment.metadata as Record<string, unknown> | null) ?? {}),
+        referenceClaims: claims,
+      },
+    },
     select: paymentSelect,
   });
-  return { ok: true as const, payment: updated };
+  return { ok: true as const, payment: updated, claims };
 }
 
 type VerifyResult =
@@ -368,7 +411,7 @@ export function isPlatformOperator(session: ClinicSession, env: Record<string, s
  * check rather than a wrong one.
  */
 export async function listAccessPayments(session: ClinicSession, filter?: { status?: string; roleTarget?: string }) {
-  return db.accessPayment.findMany({
+  const rows = await db.accessPayment.findMany({
     where: {
       ...(isPlatformOperator(session) ? {} : { organizationId: session.organizationId }),
       ...(filter?.status ? { status: filter.status } : {}),
@@ -376,8 +419,13 @@ export async function listAccessPayments(session: ClinicSession, filter?: { stat
     },
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 200,
-    select: { ...paymentSelect, onboarding: { select: { id: true, status: true, reviewApproved: true } } },
+    select: { ...paymentSelect, metadata: true, onboarding: { select: { id: true, status: true, reviewApproved: true } } },
   });
+
+  // Buyer-submitted references are lifted out of metadata rather than left in it. They
+  // are the reason the buyer contacted us, and evidence a reviewer cannot see is the
+  // same as evidence that was never recorded.
+  return rows.map(({ metadata, ...row }) => ({ ...row, referenceClaims: referenceClaimsFrom(metadata) }));
 }
 
 export async function findGrantedAccessPayment(input: { email: string; organizationId: string }) {

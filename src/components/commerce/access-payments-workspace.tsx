@@ -16,6 +16,12 @@ export type AccessPaymentRow = {
   status: string;
   portalAccessStatus: string;
   externalPaymentReference: string | null;
+  /**
+   * References the buyer submitted through the public form. Claims, not facts — the
+   * form knows the buyer only by the email they typed, so a person confirms one against
+   * the payment provider before it becomes the payment's reference.
+   */
+  referenceClaims?: { reference: string; at: string }[];
   verifiedAt: string | null;
   createdAt: string;
   onboarding: { id: string; status: string; reviewApproved: boolean } | null;
@@ -144,6 +150,23 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
                     <div className="grid w-64 gap-2">
                       <Input onChange={(event) => setNote(event.target.value)} placeholder="Decision note (required)" value={note} />
                       <Input onChange={(event) => setReference(event.target.value)} placeholder="Provider reference" value={reference} />
+                      {(row.referenceClaims?.length ?? 0) > 0 ? (
+                        <div className="grid gap-1">
+                          <p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">
+                            Submitted by the buyer — confirm before use
+                          </p>
+                          {row.referenceClaims!.map((claim) => (
+                            <button
+                              className="truncate rounded border border-slate-200 px-2 py-1 text-left text-[11px] font-mono text-slate-700 hover:bg-slate-50"
+                              key={`${claim.reference}-${claim.at}`}
+                              onClick={() => setReference(claim.reference)}
+                              type="button"
+                            >
+                              {claim.reference}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="flex flex-wrap gap-1.5">
                         {actions.map((action) => (
                           <Button

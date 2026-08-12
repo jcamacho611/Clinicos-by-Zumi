@@ -26,6 +26,7 @@ import { admitZumiRequest, type ZumiAdmissionInput } from "@/features/zumi/polic
 import { phiEgressPermitted, zumiGatewayStatus, registerProvider, resetProviderRegistry, type ProviderAdapter } from "@/features/zumi/providers";
 import { anthropicAdapter } from "@/features/zumi/adapters/anthropic";
 import { patientMessageDeliverability } from "@/lib/operations/followup-service";
+import { referenceClaimsFrom } from "@/lib/commerce/access-payment-service";
 import { connectorCatalog, connectorReadiness, getConnector } from "@/lib/connectors/catalog";
 import { readinessGates } from "@/lib/connectors/taxonomy";
 
@@ -1274,5 +1275,67 @@ describe("a refund reverses the purchase it is actually a refund of", () => {
     expect(body).toContain("reversal_unmatched");
     expect(body).toContain("500");
     expect(body).toContain("retry: true");
+  });
+});
+
+describe("a reference a buyer typed is a claim, not a binding", () => {
+  // Two reviewed defects with one cause: a public, email-only endpoint wrote into
+  // authoritative fields. Setting externalPaymentReference let the next webhook match
+  // by reference and skip corroboration entirely — so the reference of a cheap purchase
+  // attached to a stranger's open $8,000 payment settled the expensive row. Moving the
+  // status to pending_verification let anyone who knew an email strand a purchase.
+  const service = () => source("src/lib/commerce/access-payment-service.ts");
+  const claimFn = () => {
+    const body = service();
+    const start = body.indexOf("export async function recordReferenceClaim");
+    return body.slice(start, body.indexOf("\ntype VerifyResult", start));
+  };
+
+  it("writes neither the payment's reference nor its status", () => {
+    // Scoped to what the update actually writes — the parameter is still named
+    // externalPaymentReference, it just no longer lands in the column.
+    const fn = claimFn();
+    const write = fn.slice(fn.indexOf("data: {"), fn.indexOf("select: paymentSelect"));
+    expect(write).toContain("referenceClaims");
+    expect(write).not.toContain("externalPaymentReference");
+    expect(write).not.toContain("status");
+  });
+
+  it("no longer exposes the function that bound them", () => {
+    expect(service()).not.toContain("export async function attachPaymentReference");
+    expect(source("src/app/api/commerce/payments/reference/route.ts")).not.toContain("attachPaymentReference");
+  });
+
+  it("leaves the payment settleable by a genuine webhook", () => {
+    // The stranding harm in one property: the row stays in a status a real webhook can
+    // still settle, and carries no reference to conflict with.
+    expect(candidateStatusesFor("verified_paid")).toContain("created");
+  });
+
+  it("keeps the claims a reviewer can actually see", () => {
+    const list = service().slice(service().indexOf("export async function listAccessPayments"));
+    expect(list).toContain("referenceClaimsFrom(metadata)");
+    const workspace = source("src/components/commerce/access-payments-workspace.tsx");
+    expect(workspace).toContain("referenceClaims");
+    expect(workspace).toContain("Submitted by the buyer");
+  });
+
+  it("reads claims defensively, because metadata is untyped JSON", () => {
+    expect(referenceClaimsFrom(null)).toEqual([]);
+    expect(referenceClaimsFrom({})).toEqual([]);
+    expect(referenceClaimsFrom({ referenceClaims: "not-an-array" })).toEqual([]);
+    expect(referenceClaimsFrom({ referenceClaims: [{ reference: "pay_1", at: "2026-01-01" }, null, 7] })).toEqual([
+      { reference: "pay_1", at: "2026-01-01" },
+    ]);
+  });
+
+  it("caps how many claims one payment accumulates", () => {
+    expect(claimFn()).toContain("MAX_REFERENCE_CLAIMS");
+    expect(service()).toContain("const MAX_REFERENCE_CLAIMS = 5");
+  });
+
+  it("preserves metadata written by other paths when appending a claim", () => {
+    // buyerNote lives in the same column. Replacing the object wholesale would erase it.
+    expect(claimFn()).toContain("...((payment.metadata as Record<string, unknown> | null) ?? {})");
   });
 });

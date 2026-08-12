@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import { checkPaidEntryRateLimit, recordPaidEntryAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { accessPaymentReferenceSchema } from "@/lib/commerce/access-payment-rules";
-import { attachPaymentReference } from "@/lib/commerce/access-payment-service";
+import { recordReferenceClaim } from "@/lib/commerce/access-payment-service";
 
 /**
  * Buyer-submitted payment reference for the manual return path.
  *
- * Used when a provider webhook is not configured or has not arrived. Submitting a
- * reference never marks a payment as paid: it moves the record to
- * `pending_verification` for a human to confirm.
+ * Used when a provider webhook is not configured or has not arrived. This endpoint is
+ * public and knows the buyer only by the email they typed, so what it records is a
+ * claim, not a fact: the reference is filed against the payment for the operator who
+ * reviews it, and nothing about the payment's own state changes. Submitting a reference
+ * has never made a payment paid, and now it cannot make one un-correctable either.
  */
 
 export const dynamic = "force-dynamic";
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
   const parsed = accessPaymentReferenceSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter the email you purchased with and your payment reference." }, { status: 400 });
 
-  const result = await attachPaymentReference(parsed.data);
+  const result = await recordReferenceClaim(parsed.data);
   if (!result.ok) {
     // Deliberately identical wording for both cases: this endpoint is public, and a
     // distinct "no payment for that email" response would confirm who has purchased.
