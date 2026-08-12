@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { KlinikosHomepage } from "@/components/marketing/klinikos-homepage";
+import { PublicPathwayBar } from "@/components/marketing/public-pathway-bar";
 
 export const metadata: Metadata = {
   title: "Klinikos by Zumi | Clinic continuity, made visible",
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
-  return <KlinikosHomepage />;
+  return (
+    <>
+      <PublicPathwayBar />
+      <KlinikosHomepage />
+    </>
+  );
 }
