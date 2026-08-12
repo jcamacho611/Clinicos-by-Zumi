@@ -16,7 +16,10 @@ import { sealStepUpProof, verifyStepUpProof } from "@/lib/security/step-up-token
 import { klinikosSecurityHeaders } from "@/lib/security/headers";
 import { buildZumiMasterInstruction } from "@/features/zumi/master-directive";
 
-const processEnv = (values: Record<string, string | undefined> = {}): NodeJS.ProcessEnv => ({ ...values });
+const processEnv = (values: Record<string, string | undefined> = {}): NodeJS.ProcessEnv => ({
+  NODE_ENV: "test",
+  ...values,
+});
 
 const session = (overrides: Partial<ClinicSession> = {}): ClinicSession => ({
   sessionId: "session_1",
@@ -163,7 +166,8 @@ describe("abuse and browser hardening", () => {
     expect(checkZumiProcessRateLimit("u1", 1_000).allowed).toBe(true);
     expect(checkZumiProcessRateLimit("u1", 1_001).allowed).toBe(true);
     expect(checkZumiProcessRateLimit("u1", 1_002).allowed).toBe(false);
-    process.env.ZUMI_RATE_LIMIT_MAX_REQUESTS = previousMax;
+    if (previousMax === undefined) delete process.env.ZUMI_RATE_LIMIT_MAX_REQUESTS;
+    else process.env.ZUMI_RATE_LIMIT_MAX_REQUESTS = previousMax;
   });
 
   it("sets clickjacking, MIME, CSP and production transport protections", () => {
