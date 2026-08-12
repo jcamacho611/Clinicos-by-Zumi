@@ -101,7 +101,15 @@ export async function sendAccessVerificationEmail(input: {
   return { expiresAt, delivered: true };
 }
 
-export async function verifyAccessEmail(rawToken: string, _metadata: { ipAddress?: string | null; userAgent?: string | null }) {
+/**
+ * Verify an access email from its token.
+ *
+ * This used to accept the caller's request metadata — IP and user agent — and discard
+ * it. Accepting context that is never recorded reads as provenance being captured when
+ * none is, so the parameter is gone. When verification writes an audit row, the metadata
+ * comes back with somewhere to go.
+ */
+export async function verifyAccessEmail(rawToken: string) {
   const token = rawToken.trim();
   if (!token) return { ok: false as const, reason: "missing" as const };
   const payload = readPayload<VerificationPayload>(token);

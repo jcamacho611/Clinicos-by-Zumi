@@ -11,7 +11,7 @@ import { AppointmentStatusControl } from "@/components/clinic/appointment-status
 import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
 import { tasks } from "@/lib/clinic-data";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
-import { PageIntro, Person, SectionCard, StatCard, StatusBadge, TextAction } from "@/components/clinic/workspace-kit";
+import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 export function FrontDeskWorkspace({ appointments }: { appointments: Appointment[] }) {
   const activeArrivals = appointments.filter((appointment) => !["Completed", "Cancelled", "No Show", "Rescheduled"].includes(appointment.status));

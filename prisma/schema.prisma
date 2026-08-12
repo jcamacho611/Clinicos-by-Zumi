@@ -82,21 +82,21 @@ model AccessGateAcceptance {
 }
 
 model AccessEmailVerification {
-  id                     String               @id @default(cuid())
-  email                  String
-  acceptanceId           String
-  documentVersion        String
-  tokenHash              String               @unique
-  status                 String               @default("pending")
-  expiresAt              DateTime
-  verifiedAt             DateTime?
-  requestedIpAddress     String?
-  requestedUserAgent     String?
-  verifiedIpAddress      String?
-  verifiedUserAgent      String?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  acceptance             AccessGateAcceptance @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
+  id                 String               @id @default(cuid())
+  email              String
+  acceptanceId       String
+  documentVersion    String
+  tokenHash          String               @unique
+  status             String               @default("pending")
+  expiresAt          DateTime
+  verifiedAt         DateTime?
+  requestedIpAddress String?
+  requestedUserAgent String?
+  verifiedIpAddress  String?
+  verifiedUserAgent  String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  acceptance         AccessGateAcceptance @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
 
   @@index([email, status])
   @@index([acceptanceId])
@@ -303,6 +303,9 @@ model Organization {
   gridRequestsReceived       GridRequest[]               @relation("GridRequestDestination")
   gridRequestEvents          GridRequestEvent[]
   gridPayouts                GridPayout[]
+
+  gridParticipantsSponsored GridParticipant[] @relation("GridParticipantSponsor")
+  gridParticipantsAsSubject GridParticipant[] @relation("GridParticipantSubject")
 
   @@map("organizations")
 }
@@ -552,6 +555,8 @@ model Provider {
   gridServiceListings            GridServiceListing[]
   gridRequests                   GridRequest[]
   gridPayouts                    GridPayout[]
+
+  gridParticipations GridParticipant[]
 
   @@index([organizationId, status, verificationStatus])
   @@index([providerType, verificationStatus])
@@ -3199,6 +3204,8 @@ model Facility {
   capacityListings   CapacityListing[]
   providerPrivileges ProviderFacilityPrivilege[]
 
+  gridParticipations GridParticipant[]
+
   @@index([organizationId, type, status])
   @@map("facilities")
 }
@@ -3833,22 +3840,22 @@ model FeatureRegistryCapability {
 // ---------------------------------------------------------------------------
 
 model EducationInstitution {
-  id             String                @id @default(cuid())
-  name           String
-  slug           String                @unique
-  institutionType String               @default("college")
-  contactEmail   String?
-  status         String                @default("active")
+  id              String                @id @default(cuid())
+  name            String
+  slug            String                @unique
+  institutionType String                @default("college")
+  contactEmail    String?
+  status          String                @default("active")
   /// Optional host Klinikos tenant. Intentionally not a relation: an institution is
   /// its own isolation root and must not inherit clinical tenant scope.
-  organizationId String?
-  settings       Json?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  programs       EducationProgram[]
-  courses        EducationCourse[]
-  scenarios      EducationScenario[]
-  enrollments    EducationEnrollment[]
+  organizationId  String?
+  settings        Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  programs        EducationProgram[]
+  courses         EducationCourse[]
+  scenarios       EducationScenario[]
+  enrollments     EducationEnrollment[]
 
   @@index([status])
   @@map("education_institutions")
@@ -3921,28 +3928,28 @@ model EducationCohort {
 }
 
 model EducationEnrollment {
-  id                  String                    @id @default(cuid())
-  institutionId       String
-  cohortId            String
+  id                 String                    @id @default(cuid())
+  institutionId      String
+  cohortId           String
   /// Klinikos account when the student has one. Rosters may be email-only.
-  userId              String?
-  studentEmail        String
-  studentDisplayName  String
-  platformRole        String                    @default("edu_student")
+  userId             String?
+  studentEmail       String
+  studentDisplayName String
+  platformRole       String                    @default("edu_student")
   /// Clinic seat this student occupies in simulations. Grants nothing outside them.
-  simulationRole      String?
-  status              String                    @default("invited")
-  invitedAt           DateTime                  @default(now())
-  acceptedAt          DateTime?
-  completedAt         DateTime?
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  institution         EducationInstitution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  cohort              EducationCohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  submissions         EducationSubmission[]
-  competencies        EducationCompetency[]
-  certificates        EducationCertificate[]
-  instructorNotes     EducationInstructorNote[]
+  simulationRole     String?
+  status             String                    @default("invited")
+  invitedAt          DateTime                  @default(now())
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  institution        EducationInstitution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  cohort             EducationCohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  submissions        EducationSubmission[]
+  competencies       EducationCompetency[]
+  certificates       EducationCertificate[]
+  instructorNotes    EducationInstructorNote[]
 
   @@unique([cohortId, studentEmail])
   @@index([institutionId, status])
@@ -3989,24 +3996,24 @@ model EducationScenario {
 }
 
 model EducationScenarioAssignment {
-  id             String                  @id @default(cuid())
-  institutionId  String
-  cohortId       String
-  scenarioId     String
-  rubricId       String?
-  title          String
-  instructions   String?
-  status         String                  @default("assigned")
+  id               String                   @id @default(cuid())
+  institutionId    String
+  cohortId         String
+  scenarioId       String
+  rubricId         String?
+  title            String
+  instructions     String?
+  status           String                   @default("assigned")
   assignedByUserId String?
-  opensAt        DateTime?
-  dueAt          DateTime?
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
-  cohort         EducationCohort         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  scenario       EducationScenario       @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
-  rubric         EducationRubric?        @relation(fields: [rubricId], references: [id], onDelete: SetNull)
-  submissions    EducationSubmission[]
-  events         EducationScenarioEvent[]
+  opensAt          DateTime?
+  dueAt            DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  cohort           EducationCohort          @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  scenario         EducationScenario        @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  rubric           EducationRubric?         @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  submissions      EducationSubmission[]
+  events           EducationScenarioEvent[]
 
   @@unique([cohortId, scenarioId])
   @@index([institutionId, status])
@@ -4059,38 +4066,38 @@ model EducationRubric {
 }
 
 model EducationRubricCriterion {
-  id              String          @id @default(cuid())
-  rubricId        String
-  label           String
-  description     String?
-  competencyArea  String?
-  maxPoints       Int
-  orderIndex      Int             @default(0)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  rubric          EducationRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  id             String          @id @default(cuid())
+  rubricId       String
+  label          String
+  description    String?
+  competencyArea String?
+  maxPoints      Int
+  orderIndex     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  rubric         EducationRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
 
   @@index([rubricId, orderIndex])
   @@map("education_rubric_criteria")
 }
 
 model EducationSubmission {
-  id             String                      @id @default(cuid())
-  institutionId  String
-  assignmentId   String
-  enrollmentId   String
-  simulationRole String?
-  status         String                      @default("not_started")
-  startedAt      DateTime?
-  submittedAt    DateTime?
-  reflection     String?
-  createdAt      DateTime                    @default(now())
-  updatedAt      DateTime                    @updatedAt
-  assignment     EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  enrollment     EducationEnrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  evidence       EducationEvidence[]
-  events         EducationScenarioEvent[]
-  grade          EducationGrade?
+  id              String                      @id @default(cuid())
+  institutionId   String
+  assignmentId    String
+  enrollmentId    String
+  simulationRole  String?
+  status          String                      @default("not_started")
+  startedAt       DateTime?
+  submittedAt     DateTime?
+  reflection      String?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  assignment      EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  enrollment      EducationEnrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  evidence        EducationEvidence[]
+  events          EducationScenarioEvent[]
+  grade           EducationGrade?
   instructorNotes EducationInstructorNote[]
 
   @@unique([assignmentId, enrollmentId])
@@ -4099,62 +4106,62 @@ model EducationSubmission {
 }
 
 model EducationEvidence {
-  id           String              @id @default(cuid())
+  id            String              @id @default(cuid())
   institutionId String
-  submissionId String
-  evidenceType String
-  label        String
-  body         String?
+  submissionId  String
+  evidenceType  String
+  label         String
+  body          String?
   /// Uploaded student files reuse the governed document custody path rather than a
   /// second, weaker upload route. Null when the evidence is inline text.
-  documentId   String?
-  metadata     Json?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  submission   EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  documentId    String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  submission    EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([submissionId, createdAt])
   @@map("education_evidence")
 }
 
 model EducationGrade {
-  id               String              @id @default(cuid())
-  institutionId    String
-  submissionId     String              @unique
-  rubricId         String?
-  pointsAwarded    Int
-  pointsPossible   Int
-  criterionScores  Json?
-  feedback         String?
+  id                String              @id @default(cuid())
+  institutionId     String
+  submissionId      String              @unique
+  rubricId          String?
+  pointsAwarded     Int
+  pointsPossible    Int
+  criterionScores   Json?
+  feedback          String?
   /// The human who recorded the grade. AI may suggest; only a person grades.
-  gradedByUserId   String
-  gradedAt         DateTime            @default(now())
+  gradedByUserId    String
+  gradedAt          DateTime            @default(now())
   /// Populated when an AI draft informed the grade, for provenance only.
-  aiSuggested      Boolean             @default(false)
-  releasedToStudent Boolean            @default(false)
-  releasedAt       DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  submission       EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  rubric           EducationRubric?    @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  aiSuggested       Boolean             @default(false)
+  releasedToStudent Boolean             @default(false)
+  releasedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  submission        EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  rubric            EducationRubric?    @relation(fields: [rubricId], references: [id], onDelete: SetNull)
 
   @@index([institutionId, gradedAt])
   @@map("education_grades")
 }
 
 model EducationInstructorNote {
-  id             String               @id @default(cuid())
-  institutionId  String
-  enrollmentId   String?
-  submissionId   String?
-  authorUserId   String
-  body           String
+  id               String               @id @default(cuid())
+  institutionId    String
+  enrollmentId     String?
+  submissionId     String?
+  authorUserId     String
+  body             String
   /// Instructor-only notes are never returned on a student-facing response.
-  visibleToStudent Boolean            @default(false)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  enrollment     EducationEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  submission     EducationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  visibleToStudent Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  enrollment       EducationEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  submission       EducationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([enrollmentId, createdAt])
   @@index([submissionId, createdAt])
@@ -4162,18 +4169,18 @@ model EducationInstructorNote {
 }
 
 model EducationCompetency {
-  id                String              @id @default(cuid())
-  institutionId     String
-  enrollmentId      String
-  competencyArea    String
-  status            String              @default("not_assessed")
+  id                 String              @id @default(cuid())
+  institutionId      String
+  enrollmentId       String
+  competencyArea     String
+  status             String              @default("not_assessed")
   /// Only an instructor or admin may finalise a competency determination.
   determinedByUserId String?
-  determinedAt      DateTime?
-  evidenceSummary   String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  enrollment        EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  determinedAt       DateTime?
+  evidenceSummary    String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  enrollment         EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 
   @@unique([enrollmentId, competencyArea])
   @@index([institutionId, status])
@@ -4262,8 +4269,8 @@ model ZumiInvocation {
 /// PHI — so every field here describes a business: its name, its size, how to
 /// reach the person evaluating software for it.
 model GrowthProspect {
-  id             String   @id @default(cuid())
-  email          String   @unique
+  id             String    @id @default(cuid())
+  email          String    @unique
   contactName    String
   clinicName     String
   phone          String?
@@ -4272,12 +4279,12 @@ model GrowthProspect {
   locationCount  String
   providerCount  String
   /// NEW | ENGAGED | PRICING_VIEWED | AUDIT_INTEREST | CHECKOUT_STARTED | PAID | ONBOARDING | ACTIVE | LOST
-  status         String   @default("NEW")
+  status         String    @default("NEW")
   /// Derived from intent events. Recomputed on write, never supplied by a client.
-  score          Int      @default(0)
+  score          Int       @default(0)
   /// cold | warm | high | urgent
-  band           String   @default("cold")
-  interest       String   @default("overview")
+  band           String    @default("cold")
+  interest       String    @default("overview")
   referralCode   String?
   /// Set once the prospect becomes a customer, linking growth to the tenant.
   organizationId String?
@@ -4286,9 +4293,9 @@ model GrowthProspect {
   /// about a patient.
   internalNote   String?
   unsubscribedAt DateTime?
-  lastActivityAt DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  lastActivityAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   events      GrowthIntentEvent[]
   enrollments GrowthSequenceEnrollment[]
@@ -4372,21 +4379,21 @@ model GrowthReferralPartner {
 /// prospect happens to arrive through on the day they buy take credit for a sale
 /// the partner actually made.
 model GrowthReferralAttribution {
-  id            String    @id @default(cuid())
-  partnerId     String
-  prospectId    String?
-  visitorId     String?
-  firstTouchAt  DateTime  @default(now())
-  convertedAt   DateTime?
+  id                 String    @id @default(cuid())
+  partnerId          String
+  prospectId         String?
+  visitorId          String?
+  firstTouchAt       DateTime  @default(now())
+  convertedAt        DateTime?
   /// Sale amount in integer cents. Never a float.
-  saleAmountCents Int?
-  commissionCents Int?
+  saleAmountCents    Int?
+  commissionCents    Int?
   /// pending | approved | paid | reversed
-  commissionStatus String  @default("pending")
-  saleSettled      Boolean @default(false)
-  refundWindowClosed Boolean @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  commissionStatus   String    @default("pending")
+  saleSettled        Boolean   @default(false)
+  refundWindowClosed Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   partner GrowthReferralPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 
@@ -4403,24 +4410,24 @@ model GrowthReferralAttribution {
 /// fails halfway resumes from where it stopped instead of repeating work that is not
 /// safely repeatable.
 model ProvisioningRun {
-  id             String   @id @default(cuid())
+  id                        String    @id @default(cuid())
   /// `${source}:${reference}` — derived, never generated. This is the idempotency key.
-  provisioningKey String  @unique
-  source         String
-  reference      String
-  email          String
-  tierKey        String?
-  planKey        String?
-  organizationId String?
-  subscriptionId String?
+  provisioningKey           String    @unique
+  source                    String
+  reference                 String
+  email                     String
+  tierKey                   String?
+  planKey                   String?
+  organizationId            String?
+  subscriptionId            String?
   /// pending | partial | complete | failed
-  status         String   @default("pending")
+  status                    String    @default("pending")
   /// Per-step state: { organization: "complete", connections: "blocked", ... }
-  steps          Json
-  modules        String[] @default([])
+  steps                     Json
+  modules                   String[]  @default([])
   /// What still stands between this customer and full use. Shown to them verbatim.
-  outstanding    String[] @default([])
-  failureReason  String?
+  outstanding               String[]  @default([])
+  failureReason             String?
   /// Whether the buyer's activation link actually reached them. Null means it did not:
   /// the account exists but nobody can sign in to it yet, which is an operator's
   /// problem to see rather than a silent dead end for the customer.
@@ -4431,13 +4438,13 @@ model ProvisioningRun {
   /// each created an organization, and the loser wrote its orphan tenant onto this row.
   /// A claim older than the timeout is treated as abandoned so a dead process cannot
   /// strand a purchase permanently.
-  claimedAt      DateTime?
-  claimedBy      String?
-  attempts       Int      @default(0)
-  startedAt      DateTime @default(now())
-  completedAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  claimedAt                 DateTime?
+  claimedBy                 String?
+  attempts                  Int       @default(0)
+  startedAt                 DateTime  @default(now())
+  completedAt               DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   @@index([email, status])
   /// Scans for reclaimable runs.
@@ -4455,32 +4462,32 @@ model ProvisioningRun {
 /// One row per (risk, action kind) per appointment, so a repeated detection sweep
 /// updates rather than duplicates.
 model OperationalAction {
-  id             String    @id @default(cuid())
-  organizationId String
+  id                String    @id @default(cuid())
+  organizationId    String
   /// unconfirmed | missing_forms | insurance_unverified | no_show_recovery
-  riskKind       String
+  riskKind          String
   /// internal_task | patient_message
-  actionKind     String
-  appointmentId  String
-  patientId      String
+  actionKind        String
+  appointmentId     String
+  patientId         String
   /// prepared | executed | awaiting_confirmation | awaiting_connection | awaiting_delivery | sending | dismissed | resolved_by_source | failed
-  state          String    @default("prepared")
-  title          String
+  state             String    @default("prepared")
+  title             String
   /// Drafted content. For a patient message this is what would be sent, and it is
   /// never described as sent unless a connected channel accepted it.
-  body           String
+  body              String
   /// Task created when the action executed inside Klinikos.
-  taskId         String?
+  taskId            String?
   /// Set when a person approved this action. Deliberately separate from `decidedAt`:
   /// approving a message is an instruction to send it, and a send that has not yet
   /// succeeded is not finished. Keeping them apart is what lets a failed delivery be
   /// retried without asking the owner to approve the same message twice.
-  approvedByUserId String?
-  approvedAt       DateTime?
+  approvedByUserId  String?
+  approvedAt        DateTime?
   /// Set when the action reached a terminal outcome — sent, dismissed, resolved, or
   /// failed in a way retrying cannot fix. Automation never fills in `decidedByUserId`.
-  decidedByUserId String?
-  decidedAt      DateTime?
+  decidedByUserId   String?
+  decidedAt         DateTime?
   /// Evidence that a provider accepted this message. `executed` is only writable for a
   /// patient message when this is set, which is what stops "Sent" from being a claim
   /// about a database row rather than about a message that left Klinikos.
@@ -4489,9 +4496,9 @@ model OperationalAction {
   deliveredAt       DateTime?
   /// Why the last delivery attempt did not succeed. Read by an operator, not a patient.
   deliveryFailure   String?
-  detectedAt     DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  detectedAt        DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@unique([appointmentId, riskKind, actionKind])
   @@index([organizationId, state, detectedAt])
@@ -4501,4 +4508,49 @@ model OperationalAction {
   /// Drives the retry sweep: approved, not yet delivered.
   @@index([organizationId, approvedAt, deliveredAt])
   @@map("operational_actions")
+}
+
+/// A participant in the Grid marketplace.
+///
+/// The boundary abstraction between Grid and the wider identity model. Grid
+/// participation is otherwise a `Provider` row — a person inside exactly one
+/// organization — which inherits the constraint that `User.organizationId` is a required
+/// scalar. A clinician working with two clinics would need two accounts, and an
+/// organization or facility cannot participate as itself at all.
+///
+/// `userId` is deliberately NOT unique: one human may hold several participations, each
+/// under a different sponsor. That is the property multi-party composition needs and the
+/// one the identity schema cannot express today.
+model GridParticipant {
+  id                    String    @id @default(cuid())
+  /// person | organization | facility
+  kind                  String
+  /// The human behind a person participation, when one is known. Not unique.
+  userId                String?
+  providerId            String?
+  subjectOrganizationId String?
+  facilityId            String?
+  /// The organization accountable for this participation. Tenant scope for Grid queries.
+  sponsorOrganizationId String
+  displayName           String
+  status                String    @default("created")
+  statusReason          String?
+  verifiedAt            DateTime?
+  verifiedBy            String?
+  suspendedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  sponsorOrganization Organization  @relation("GridParticipantSponsor", fields: [sponsorOrganizationId], references: [id], onDelete: Cascade)
+  subjectOrganization Organization? @relation("GridParticipantSubject", fields: [subjectOrganizationId], references: [id], onDelete: Cascade)
+  provider            Provider?     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  facility            Facility?     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, sponsorOrganizationId], map: "grid_participants_person_sponsor_key")
+  @@unique([subjectOrganizationId, sponsorOrganizationId], map: "grid_participants_org_sponsor_key")
+  @@unique([facilityId, sponsorOrganizationId], map: "grid_participants_facility_sponsor_key")
+  @@index([sponsorOrganizationId, status])
+  @@index([userId])
+  @@index([kind])
+  @@map("grid_participants")
 }

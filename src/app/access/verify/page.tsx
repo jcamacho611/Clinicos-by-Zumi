@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { CircleAlert, MailCheck, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Button } from "@/components/ui/button";
@@ -28,17 +27,13 @@ const failureCopy: Record<Exclude<VerifyOutcome, { ok: true }>["reason"], { titl
 
 export default async function AccessVerifyPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
-  const requestHeaders = await headers();
 
   let outcome: VerifyOutcome;
   if (!process.env.DATABASE_URL) {
     outcome = { ok: false, reason: "unavailable" };
   } else {
     try {
-      const result = await verifyAccessEmail(token ?? "", {
-        ipAddress: requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip"),
-        userAgent: requestHeaders.get("user-agent"),
-      });
+      const result = await verifyAccessEmail(token ?? "");
       outcome = result.ok
         ? { ok: true, email: result.email, alreadyVerified: result.alreadyVerified }
         : { ok: false, reason: result.reason };
