@@ -3,6 +3,7 @@ import { z } from "zod";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
+import { resolvePathGuidance } from "@/lib/orchestration/path-guidance-engine";
 import {
   createPathInstance,
   listActivePathSnapshots,
@@ -35,7 +36,11 @@ export async function POST(request: Request) {
 
   try {
     const input = createPathSchema.parse(await request.json());
-    return NextResponse.json({ data: await createPathInstance(session, input) }, { status: 201 });
+    const snapshot = await createPathInstance(session, input);
+    return NextResponse.json(
+      { data: snapshot, guidance: resolvePathGuidance(session, snapshot) },
+      { status: 201 },
+    );
   } catch (error) {
     return networkAccessErrorResponse(error);
   }

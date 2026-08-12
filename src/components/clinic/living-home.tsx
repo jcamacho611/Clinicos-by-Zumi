@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BriefcaseBusiness, GraduationCap, HeartPulse, Search, Sparkles, Stethoscope } from "lucide-react";
+import { PathNextAction, type PathGuidanceView } from "@/components/clinic/path-next-action";
 import { PathRail } from "@/components/clinic/path-rail";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
@@ -18,12 +19,15 @@ const doorwayActions = [
 export function LivingHome({
   firstName,
   initialPaths,
+  initialGuidance,
 }: {
   firstName: string;
   initialPaths: PersistedPathSnapshot[];
+  initialGuidance: PathGuidanceView[];
 }) {
   const [intent, setIntent] = useState("");
   const [paths, setPaths] = useState(initialPaths);
+  const [guidance, setGuidance] = useState(initialGuidance);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(initialPaths[0]?.instanceId ?? null);
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -31,6 +35,10 @@ export function LivingHome({
   const activeSnapshot = useMemo(
     () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
     [paths, selectedInstanceId],
+  );
+  const activeGuidance = useMemo(
+    () => guidance.find((item) => item.instanceId === activeSnapshot?.instanceId) ?? null,
+    [guidance, activeSnapshot?.instanceId],
   );
   const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
   const activeRuntime = activeSnapshot
@@ -58,14 +66,17 @@ export function LivingHome({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ pathId, goal: intent }),
       });
-      const payload = await response.json() as { data?: PersistedPathSnapshot; error?: string };
+      const payload = await response.json() as { data?: PersistedPathSnapshot; guidance?: PathGuidanceView | null; error?: string };
       if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start this Path.");
 
       setPaths((current) => [payload.data!, ...current.filter((path) => path.instanceId !== payload.data!.instanceId)]);
+      if (payload.guidance) {
+        setGuidance((current) => [payload.guidance!, ...current.filter((item) => item.instanceId !== payload.guidance!.instanceId)]);
+      }
       setSelectedInstanceId(payload.data.instanceId);
       setIntent("");
       setState("idle");
-      setMessage("Path started. Klinikos will keep your progress here.");
+      setMessage("Path started. Klinikos resolved the next governed action from your current context.");
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Klinikos could not start this Path.");
@@ -79,7 +90,7 @@ export function LivingHome({
           <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#1677a8]"><Sparkles className="size-3.5" /> Klinikos</div>
           <h1 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.055em] text-[#0b1e3a] sm:text-5xl lg:text-6xl">{activeSnapshot ? `Good morning, ${firstName}.` : "What needs to happen?"}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#0b1e3a]/58">
-            {activeSnapshot ? "Continue exactly where you left off. Your goal, progress, and next action are persisted across sessions." : "Tell Klinikos the outcome you want. The interface will assemble the relevant workflow across care, Grid, learning, and operations."}
+            {activeSnapshot ? "Continue exactly where you left off. Klinikos now resolves the next safe action, review requirement, or blocker from the live Path state." : "Tell Klinikos the outcome you want. The interface will assemble the relevant workflow across care, Grid, learning, and operations."}
           </p>
         </div>
 
@@ -113,6 +124,7 @@ export function LivingHome({
               <Link className="inline-flex items-center gap-2 text-xs font-extrabold text-[#1677a8]" href={`/paths/${activeDefinition.id}`}>Open Path <ArrowUpRight className="size-3.5" /></Link>
             </div>
             <div className="pt-7"><PathRail nodes={railNodes} /></div>
+            {activeGuidance ? <PathNextAction guidance={activeGuidance} /> : null}
             {paths.length > 1 ? (
               <div className="mt-6 flex flex-wrap gap-2 border-t border-[#0b1e3a]/8 pt-5">
                 {paths.map((path) => {
