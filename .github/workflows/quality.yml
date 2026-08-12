@@ -55,19 +55,36 @@ jobs:
       # cannot apply to an empty database fails here rather than in production.
       - name: Apply migrations to a fresh database
         run: npx prisma migrate deploy
-      # Applying cleanly is necessary but not sufficient: the schema those migrations
-      # build still has to carry the product. This runs MVP Journey 9 against the
-      # database CI just created — real repositories, real writes, restart included — so
-      # deployability stays a tested property rather than an assumption.
-      - name: Verify a fresh deployment works
-        run: npm run journey -- scripts/mvp/fresh-deploy-journey.ts
-        env:
-          AUTH_SECRET: ci-verification-only-secret-not-a-real-secret
       - name: Type check
         run: npm run type-check
       - name: Lint
         run: npm run lint
       - name: Test
         run: npm test
+      - name: Verify MVP journeys against PostgreSQL
+        run: npm run test:mvp
       - name: Production build
         run: npm run build
+      - name: Production startup smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3000 npm start > /tmp/klinikos-start.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/klinikos-health.json; then
+              curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3000/
+              cat /tmp/klinikos-health.json
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Klinikos production server failed to become healthy."
+          cat /tmp/klinikos-start.log
+          exit 1

@@ -3,7 +3,7 @@ services:
     name: zumi
     runtime: node
     plan: free
-    buildCommand: npm ci
+    buildCommand: npm ci --include=dev --ignore-scripts && npm run render:build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeployTrigger: commit

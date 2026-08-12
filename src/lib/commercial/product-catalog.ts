@@ -1,5 +1,12 @@
+import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
+
 export const commercialProductKeys = [
   "operational_audit",
+  "clinic_core",
+  "clinic_growth",
+  "clinic_scale",
+  // Legacy internal alias retained only so previously recorded commercial evidence
+  // remains readable. New clinic purchases use the named public plans above.
   "clinic_operator",
   "grid_professional",
   "grid_facility",
@@ -11,22 +18,33 @@ export type CommercialProduct = {
   key: CommercialProductKey;
   label: string;
   audience: "clinic" | "professional" | "facility";
+  billing: "one_time" | "monthly" | "custom";
+  priceCents: number | null;
+  publicPurchasable: boolean;
   modules: readonly string[];
   whopPlanEnvVars: readonly string[];
   /**
    * Variable-cost allowances are deliberately configured outside source code.
-   * This avoids inventing public pricing or silently spending vendor money before
-   * a commercial package has been approved.
+   * This avoids silently spending vendor money before a commercial package has
+   * actually funded the corresponding usage bucket.
    */
   allowanceEnv: Partial<Record<"ai" | "voice" | "sms" | "email" | "maps" | "document_processing" | "storage" | "integrations", string>>;
   postPurchaseBoundary: string;
 };
+
+const clinicBoundary =
+  "Payment can activate the purchased software entitlement, but production PHI, clinical, connector, credential, integration, and human-review gates remain independent.";
 
 export const commercialProducts: readonly CommercialProduct[] = [
   {
     key: "operational_audit",
     label: "Klinikos Operational Audit",
     audience: "clinic",
+    billing: "one_time",
+    // Operational Audit pricing is derived from the server-side qualification rules,
+    // so there is intentionally no single catalog price here.
+    priceCents: null,
+    publicPurchasable: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -34,9 +52,75 @@ export const commercialProducts: readonly CommercialProduct[] = [
       "Payment purchases the audit engagement only. It does not activate production software, PHI workflows, clinical authority, Grid eligibility, or any regulated capability.",
   },
   {
-    key: "clinic_operator",
-    label: "Klinikos Clinic Operator",
+    key: "clinic_core",
+    label: clinicPlans.core.name,
     audience: "clinic",
+    billing: "monthly",
+    priceCents: clinicPlans.core.monthlyPriceCents,
+    publicPurchasable: true,
+    modules: ["advanced_reports"],
+    whopPlanEnvVars: [],
+    allowanceEnv: {
+      ai: "KLINIKOS_ALLOWANCE_CORE_AI_CENTS",
+      voice: "KLINIKOS_ALLOWANCE_CORE_VOICE_CENTS",
+      sms: "KLINIKOS_ALLOWANCE_CORE_SMS_CENTS",
+      email: "KLINIKOS_ALLOWANCE_CORE_EMAIL_CENTS",
+      maps: "KLINIKOS_ALLOWANCE_CORE_MAPS_CENTS",
+      document_processing: "KLINIKOS_ALLOWANCE_CORE_DOCUMENTS_CENTS",
+      storage: "KLINIKOS_ALLOWANCE_CORE_STORAGE_CENTS",
+      integrations: "KLINIKOS_ALLOWANCE_CORE_INTEGRATIONS_CENTS",
+    },
+    postPurchaseBoundary: clinicBoundary,
+  },
+  {
+    key: "clinic_growth",
+    label: clinicPlans.growth.name,
+    audience: "clinic",
+    billing: "monthly",
+    priceCents: clinicPlans.growth.monthlyPriceCents,
+    publicPurchasable: true,
+    modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
+    whopPlanEnvVars: [],
+    allowanceEnv: {
+      ai: "KLINIKOS_ALLOWANCE_GROWTH_AI_CENTS",
+      voice: "KLINIKOS_ALLOWANCE_GROWTH_VOICE_CENTS",
+      sms: "KLINIKOS_ALLOWANCE_GROWTH_SMS_CENTS",
+      email: "KLINIKOS_ALLOWANCE_GROWTH_EMAIL_CENTS",
+      maps: "KLINIKOS_ALLOWANCE_GROWTH_MAPS_CENTS",
+      document_processing: "KLINIKOS_ALLOWANCE_GROWTH_DOCUMENTS_CENTS",
+      storage: "KLINIKOS_ALLOWANCE_GROWTH_STORAGE_CENTS",
+      integrations: "KLINIKOS_ALLOWANCE_GROWTH_INTEGRATIONS_CENTS",
+    },
+    postPurchaseBoundary: clinicBoundary,
+  },
+  {
+    key: "clinic_scale",
+    label: clinicPlans.scale.name,
+    audience: "clinic",
+    billing: "monthly",
+    priceCents: clinicPlans.scale.monthlyPriceCents,
+    publicPurchasable: true,
+    modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
+    whopPlanEnvVars: [],
+    allowanceEnv: {
+      ai: "KLINIKOS_ALLOWANCE_SCALE_AI_CENTS",
+      voice: "KLINIKOS_ALLOWANCE_SCALE_VOICE_CENTS",
+      sms: "KLINIKOS_ALLOWANCE_SCALE_SMS_CENTS",
+      email: "KLINIKOS_ALLOWANCE_SCALE_EMAIL_CENTS",
+      maps: "KLINIKOS_ALLOWANCE_SCALE_MAPS_CENTS",
+      document_processing: "KLINIKOS_ALLOWANCE_SCALE_DOCUMENTS_CENTS",
+      storage: "KLINIKOS_ALLOWANCE_SCALE_STORAGE_CENTS",
+      integrations: "KLINIKOS_ALLOWANCE_SCALE_INTEGRATIONS_CENTS",
+    },
+    postPurchaseBoundary: clinicBoundary,
+  },
+  {
+    key: "clinic_operator",
+    label: "Klinikos Clinic Operator (legacy)",
+    audience: "clinic",
+    billing: "custom",
+    priceCents: null,
+    publicPurchasable: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: ["WHOP_PLAN_CLINIC_OPERATOR"],
     allowanceEnv: {
@@ -49,16 +133,16 @@ export const commercialProducts: readonly CommercialProduct[] = [
       storage: "KLINIKOS_ALLOWANCE_CLINIC_STORAGE_CENTS",
       integrations: "KLINIKOS_ALLOWANCE_CLINIC_INTEGRATIONS_CENTS",
     },
-    postPurchaseBoundary:
-      "Payment can activate the purchased software entitlement, but production PHI, clinical, connector, credential, and integration gates remain independent.",
+    postPurchaseBoundary: clinicBoundary,
   },
   {
     key: "grid_professional",
     label: "Klinikos Grid Professional",
     audience: "professional",
+    billing: "monthly",
+    priceCents: 3_900,
+    publicPurchasable: false,
     modules: ["grid"],
-    // Keep the older env name as a compatibility fallback so existing secrets do
-    // not need to be renamed during this consolidation release.
     whopPlanEnvVars: ["WHOP_PLAN_GRID_PROFESSIONAL", "WHOP_PLAN_GRID_PROVIDER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_PROFESSIONAL_MAPS_CENTS" },
     postPurchaseBoundary:
@@ -68,6 +152,9 @@ export const commercialProducts: readonly CommercialProduct[] = [
     key: "grid_facility",
     label: "Klinikos Grid Facility",
     audience: "facility",
+    billing: "monthly",
+    priceCents: 9_900,
+    publicPurchasable: false,
     modules: ["grid"],
     whopPlanEnvVars: ["WHOP_PLAN_GRID_FACILITY", "WHOP_PLAN_GRID_LOCATION_PARTNER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_FACILITY_MAPS_CENTS" },
