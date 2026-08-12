@@ -39,7 +39,7 @@ export function resolvePathRuntime(input: {
       id: node.id,
       label: node.label,
       href: node.href ?? null,
-      capabilityKey: null,
+      capabilityKey: node.capabilityKey ?? null,
       state,
       completedAt: null,
       blockers: state === "blocked" ? snapshot?.blockers ?? [] : [],
