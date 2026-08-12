@@ -1,203 +1,201 @@
-# Zumi — the governed AI layer
+# Zumi — governed operating intelligence
 
-Zumi is the operational intelligence layer inside Klinikos. This document describes
-what it is permitted to do, what it is structurally prevented from doing, and how the
-code enforces the difference.
+Zumi is the operational intelligence layer inside Klinikos. It observes authorized
+operational state, explains what needs attention, and prepares bounded work. It is not
+a clinician, medical authority, payment authority, credentialing authority, or a way
+around tenant scope, RBAC, entitlements, privacy, or human review.
 
-Everything below is implemented. Where something is not, it says so.
+This document is an implementation record. Status words mean exactly:
 
-## What Zumi is
+- **IMPLEMENTED** — enforced in the current codebase.
+- **PARTIAL** — a real slice exists but the full agent capability does not.
+- **BLOCKED** — code intentionally cannot proceed until an external/compliance gate is satisfied.
+- **PLANNED** — not implemented yet.
 
-Zumi observes clinic operations and raises work: what is overdue, what is unassigned,
-what is missing, what is waiting, what looks anomalous, what is an opportunity, what
-needs review, what is expiring. It summarizes, correlates, prioritizes, and explains.
+## Constitutional boundaries — IMPLEMENTED
 
-## What Zumi is not
+`src/features/zumi/schemas.ts` enumerates capabilities that Zumi is never allowed to
+perform autonomously:
 
-Zumi does not practise medicine and does not act on a clinic's behalf in any matter
-where being wrong is not recoverable.
+- `diagnose`
+- `prescribe`
+- `interpret_result_as_final`
+- `decide_treatment`
+- `guarantee_coverage`
+- `release_records_autonomously`
+- `submit_claim_autonomously`
+- `approve_credential_autonomously`
+- `authorize_care`
 
-Nine capabilities are prohibited outright:
+`src/features/zumi/policy.ts` refuses prohibited requests before provider availability,
+entitlements, or any other recoverable condition. There is no role, payment, feature
+flag, or provider configuration that unlocks them.
 
-| Prohibited | |
-| --- | --- |
-| `diagnose` | `release_records_autonomously` |
-| `prescribe` | `submit_claim_autonomously` |
-| `interpret_result_as_final` | `approve_credential_autonomously` |
-| `decide_treatment` | `authorize_care` |
-| `guarantee_coverage` | |
+## Admission sequence — IMPLEMENTED
 
-These are enumerated in `src/features/zumi/schemas.ts` as `ZUMI_PROHIBITED` and
-refused by `admitZumiRequest` **before any other check runs** — before the capability
-catalog, before permissions, before entitlements, before the provider is consulted.
+Every Zumi request is admitted in this order:
 
-The ordering is deliberate. If availability were checked first, a prohibited request
-in an unconfigured deployment would be refused with "Zumi is not connected", which
-reads as a temporary outage and invites a retry once configuration lands. It is not a
-configuration question, so it is not answered after a configuration check.
+1. prohibition
+2. declared capability
+3. tenant
+4. permission
+5. entitlement
+6. provider availability
 
-There is no entitlement, no role, and no configuration flag that unlocks any of them.
+The browser cannot name the organization, role, entitlement, or review posture for
+`POST /api/zumi`. Those are resolved server-side from the authenticated session and
+server-owned subscription state.
 
-## The admission sequence
+Zumi never widens what a role can already do.
 
-`src/features/zumi/policy.ts` is the single decision point. It is pure and
-synchronous, so every branch is testable without a database, a session, or a provider.
-
-1. **Prohibition** — the list above.
-2. **Catalog** — eighteen declared capabilities in `zumiCapabilities`. A capability
-   that is not declared cannot be invoked. Adding an AI surface means declaring it,
-   which forces its risk tier, entitlement, and permission to be decided deliberately
-   rather than inherited by accident.
-3. **Tenant** — the organization named on the request must match the session's. The
-   HTTP route does not accept an organization id at all; it passes the session's.
-4. **Permission** — a universal `ai:read` baseline, then the capability's own
-   requirement. Requirements are typed against the product's `ClinicResource` /
-   `ClinicAction` vocabulary, so a capability that asks for a permission that does not
-   exist is a compile error rather than a check that silently passes.
-5. **Entitlement** — what the clinic bought. Denials here are **402**, not 403: they
-   are payment-resolvable, not forbidden.
-6. **Availability** — whether a provider is actually connected. **503.**
-
-Zumi never widens what a role can already do. A user who cannot update a document
-cannot have Zumi write draft metadata onto one for them.
-
-## Risk tiers and human review
+## Risk and human review — IMPLEMENTED
 
 | Tier | Meaning | Human review |
 | --- | --- | --- |
-| LOW | Reads and explains state the user can already see | Not required |
-| MEDIUM | Produces a draft or a suggestion | **Required** |
-| HIGH | Prepares a proposal for a person to authorize | **Required** |
+| LOW | Read/explain authorized operational state | Not inherently required |
+| MEDIUM | Draft/suggest | Required |
+| HIGH | Prepare a consequential proposal | Required |
 
-`requiresHumanReview` is derived from the tier by `requiresHumanReviewForTier`. It is
-never accepted from the caller.
+HIGH capabilities are proposal capabilities. The model does not gain execution
+permission because it generated a valid answer.
 
-Every HIGH-tier capability is named `propose_*`. That naming is the contract: Zumi
-prepares these, a person performs them. A test asserts it, so a HIGH-tier capability
-that was going to *do* something cannot be added without the assertion failing.
+## Grounded recommendation contract — IMPLEMENTED
 
-## The governed output contract
+A governed recommendation carries evidence/provenance and must satisfy the typed
+contract in `src/features/zumi/schemas.ts`. Invalid model output is dropped rather than
+quietly repaired into something that looks trustworthy.
 
-Every meaningful Zumi recommendation carries source, reason, evidence, owner, review
-posture, and a suggested action. `validateRecommendation` rejects:
+The output contract rejects, among other things:
 
-- a recommendation with no evidence — that is an assertion, not a recommendation;
-- a MEDIUM or HIGH capability whose output does not require human review;
-- an urgent signal that does not say what to do;
-- a recommendation naming a capability that does not exist.
+- recommendations with no evidence;
+- unknown capabilities;
+- MEDIUM/HIGH output that incorrectly claims no human review is needed;
+- urgent signals with no suggested next action.
 
-Model output that fails the contract is **dropped, not repaired**. A recommendation
-with invented evidence is worse than no recommendation, and quietly patching one would
-hide that the model failed to follow the contract.
+Confidence is represented with a level plus an explicit basis, not a bare probability.
 
-Confidence is never a bare number. It is `{ level, basis }` — an unexplained
-confidence score is worse than none.
+## Egress redaction — IMPLEMENTED
 
-## Egress and redaction
+`src/features/zumi/redaction.ts` scrubs identifier-shaped content and drops sensitive
+free-text fields before model egress. The final prompt is checked again and the call is
+abandoned if likely identifiers remain. Model prose is scrubbed again on return.
 
-`src/features/zumi/redaction.ts` runs before anything leaves for a model provider.
+**Redaction is not authorization to process PHI.**
 
-- Identifier shapes are scrubbed from free text: SSN, email, phone, date of birth,
-  MRN, member/policy id, NPI, card-length digit runs.
-- Object **keys** that announce sensitive content are dropped entirely rather than
-  pattern-matched — a free-text `note`, `diagnosis`, or `narrative` cannot be reliably
-  scrubbed, so it does not leave. Key names are preserved elsewhere because keys are
-  schema and values are content.
-- After building the prompt, `containsLikelyIdentifiers` re-checks it. If anything
-  identifier-shaped survived, **the request is abandoned rather than sent**. Failing
-  closed costs an answer; failing open costs a disclosure.
-- Model prose is scrubbed again on the way back. A provider echoing an identifier out
-  of its own context window is a real path back in.
+`phiEgressPermitted` currently requires both:
 
-**Redaction is not a BAA.** `REDACTION_LIMITATION_NOTICE` says so in the code, and
-`phiEgressPermitted` requires two independent conditions before PHI may reach a
-provider: the adapter declares a signed Business Associate Agreement, **and** the
-deployment sets `ZUMI_PHI_EGRESS_APPROVED=1`. Neither alone is enough. The default is
-no.
+1. the selected adapter declares its required Business Associate Agreement is on file;
+2. the deployment explicitly sets `ZUMI_PHI_EGRESS_APPROVED=1`.
 
-## Providers
+The self-hosted adapter intentionally declares `baaOnFile: false` today. This is
+conservative by design: operating the hardware ourselves does not by itself prove the
+storage, network, logging, access-control, backup, incident-response, and legal posture
+is approved for protected health information. A future provider-assurance refactor can
+model first-party infrastructure directly, but it must not weaken the present default.
 
-`src/features/zumi/providers.ts` is the only place a model SDK may live. Nothing else
-in the codebase is permitted to hold one, because scattered calls make redaction
-before egress and an audit record after impossible to guarantee.
+## Provider boundary — IMPLEMENTED
 
-| State | Meaning |
-| --- | --- |
-| `NOT_CONFIGURED` | Registered, credentials absent. Reports Pending Connection. |
-| `CONFIGURED` | Credentials present, not yet exercised in this process. |
-| `HEALTHY` / `DEGRADED` | Reserved for live health reporting. |
-| `ERROR` | Unusable. |
-| `DISABLED` | `ZUMI_DISABLED` is set for this deployment. |
+`src/features/zumi/providers.ts` is the governed provider registry. Direct model calls
+from UI code are not permitted.
 
-Behaviour that matters:
+Provider behavior that is enforced:
 
-- A blank-string credential counts as absent.
-- `ZUMI_PROVIDER` names an adapter explicitly. If it names one that is not
-  registered, selection **errors** — it never silently substitutes another.
-- `ZUMI_DISABLED` is a deployment kill switch that stops all AI egress without a
-  redeploy. It overrides present credentials.
-- There is no canned-response fallback. A deployment with no provider answers
-  "Pending Connection", not a fabricated result that would make a demo look live.
+- blank required configuration is absent;
+- `ZUMI_PROVIDER` is explicit and never silently substituted;
+- `ZUMI_DISABLED` is a deployment kill switch;
+- an unconfigured deployment reports **Pending Connection** instead of fabricating a result;
+- provider failures are surfaced as governed failures, not fake success;
+- audit/metering records provider, model, token usage, cost field, duration, outcome,
+  redaction posture, and human-review posture without persisting prompt/model text.
 
-### Current status: **ADAPTER READY — no provider registered**
+### Self-hosted Zumi inference — IMPLEMENTED FOUNDATION
 
-No provider adapter is registered in this repository. `zumiGatewayStatus()` therefore
-reports `available: false` in every environment today, and every Zumi request is
-refused with 503. That is the honest state, and it is what the EDU surfaces render.
+`src/features/zumi/adapters/self-hosted.ts` provides the first built-in production
+adapter. It targets a Klinikos-operated OpenAI-compatible
+`POST /v1/chat/completions` endpoint using native `fetch`, so the application does not
+need a vendor SDK.
 
-Registering a provider requires a contracted, approved vendor — see
-`docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+Configuration:
 
-## Audit and metering
+- `ZUMI_PROVIDER=self_hosted`
+- `ZUMI_SELF_HOSTED_BASE_URL`
+- `ZUMI_SELF_HOSTED_MODEL`
+- optional `ZUMI_SELF_HOSTED_API_KEY` for an authenticated internal inference service
+- `ZUMI_DISABLED` remains the global kill switch
 
-`ZumiInvocation` records every invocation, **including refusals**: capability, tier,
-outcome, reason, provider, model, tokens, cost in integer micro-USD, duration, whether
-human review was required, whether redaction fired, and which keys were dropped
-(names only, never values). A matching `AuditLog` row is written with
-`action: "zumi.<outcome>"`.
+The underlying serving engine can change without changing the Klinikos gateway as long
+as the internal endpoint preserves the adapter contract.
 
-The table deliberately stores **no prompt text and no model output**. The operational
-question it answers is "was this governed", not "what did it say", and a table of
-prompts is a table of exactly the content the redaction layer exists to keep out of
-places it does not belong.
+The adapter records `costMicroUsd: 0` because that field represents external
+per-invocation model charges. Self-hosted compute is still real infrastructure cost and
+must be metered separately rather than pretending it is free.
 
-A metering write that fails is logged and does not turn a successful, governed answer
-into an error for the operator.
+External model companies remain optional future adapters, not the canonical Zumi brain.
 
-## HTTP surface
+## External connector integrity — IMPLEMENTED FOUNDATION
 
-`POST /api/zumi` is the only HTTP entry point. Its request body accepts a capability,
-a question, and structured context — and deliberately **cannot** name an organization,
-a role, an entitlement, or a review posture. All four are resolved server-side from
-the signed session.
+`src/lib/connectors/taxonomy.ts`, `catalog.ts`, and `status.ts` separate five independent
+questions for every external dependency:
 
-`GET /api/zumi` returns gateway status and the capability catalog with per-capability
-entitlement flags. The catalog is descriptive, not a grant: a capability listed there
-is still subject to every check when it is actually invoked.
+1. which server gateway owns it;
+2. how it is wired;
+3. whose account/authorization owns it;
+4. who bears its variable cost and when;
+5. which readiness gates have actually passed.
 
-Entitlements resolve from `ClinicSubscription.modules` via
-`entitlementsFromSubscriptions`, which does not trust the status column on its own —
-an expired trial or billing period does not entitle whatever the column still says. A
-database read failure resolves to no entitlements, failing in the recoverable
-direction.
+Readiness has nine independent gates: configuration, sandbox readiness, contract,
+BAA, security review, enrollment, production credentials, explicit PHI approval, and
+production-live status.
 
-## What is not built
+**Configuration is not approval.** A working key cannot promote a connector to
+production or PHI use. Runtime status returns missing environment-variable names only,
+never credential values. Browser credentials are limited to the separately restricted
+Google Maps rendering exception; PHI-bearing connectors have no public credential path.
 
-- **No provider adapter.** Blocked on a contracted vendor and, for any PHI workload, a
-  BAA.
-- **No streaming.** Responses are single-shot.
-- **No retry policy.** A provider failure is reported, not retried; retrying an
-  un-idempotent governed call needs a design decision, not a default.
-- **`HEALTHY` / `DEGRADED` are declared but never assigned** — live health probing is
-  not implemented, so a configured provider reports `CONFIGURED` until it is used.
-- **No prompt-level evaluation harness.** The contract is enforced structurally on
-  output; the quality of reasoning is not yet measured.
+## Tenant isolation — IMPLEMENTED + STRUCTURALLY TESTED
 
-## Tests
+Authenticated API routes derive organization and human actor identity from the session.
+`tests/tenant-isolation.test.ts` scans the route surface so a new authenticated handler
+cannot quietly start accepting tenant identifiers or decision-maker identities from a
+request body. EDU institution/cohort filters also fail closed when scope cannot be
+resolved.
 
-`tests/zumi-gateway.test.ts` — 41 assertions covering the prohibition list and its
-ordering, the catalog invariants, tenant and permission and entitlement denials, the
-recommendation contract, redaction including the key-dropping and re-check behaviour,
-provider selection and the kill switch, PHI egress, and entitlement resolution.
+## Audit and metering — IMPLEMENTED
 
-A prohibition nobody tests is a paragraph.
+`ZumiInvocation` records admitted, denied, and failed invocation metadata without
+storing prompt text or model output. A corresponding audit event is written for the
+operational history. The purpose is to prove governance and usage, not to create a
+shadow database of model conversations containing sensitive content.
+
+## Current capability status
+
+| Layer | Status | Notes |
+| --- | --- | --- |
+| Constitutional prohibitions | IMPLEMENTED | Absolute, tested |
+| Tenant/RBAC/entitlement admission | IMPLEMENTED | Server-owned |
+| Redaction and PHI fail-closed policy | IMPLEMENTED | Self-hosting does not bypass it |
+| Provider-neutral governed gateway | IMPLEMENTED | Current request shape is single-turn |
+| Self-hosted inference adapter | IMPLEMENTED | OpenAI-compatible internal endpoint |
+| Connector readiness taxonomy | IMPLEMENTED | Nine independent gates |
+| Invocation audit/metering | IMPLEMENTED | No prompt/output persistence |
+| Typed multi-turn provider messages | PLANNED | Current provider request is single-turn |
+| Central typed Zumi tool registry | PLANNED | Required before agentic tool use |
+| Bounded multi-turn agent runtime | PLANNED | No autonomous loop yet |
+| Read-only Klinikos operational tools | PLANNED | Repository data exists; Zumi tools do not yet |
+| Persisted action proposals/approvals | PLANNED | Existing product approvals are not yet one Zumi action framework |
+| Consequential action verification | PLANNED | Must read back authoritative state after writes |
+| Proactive event-driven Zumi follow-through | PLANNED | Deterministic product workflows exist separately |
+| Prompt-level evaluation harness | PLANNED | Structural tests exist; reasoning quality evals do not |
+| Model specialization/fine-tuning | PLANNED | Only after datasets/evals are mature |
+| PHI use by self-hosted model | BLOCKED | Requires explicit first-party infrastructure assurance design/review |
+
+## Next engineering dependency
+
+The next safe dependency is not “give the model more power.” It is a provider-neutral
+multi-turn contract plus a central typed tool registry. Only after tools independently
+enforce tenant, RBAC, entitlement, policy, validation, provenance, and side-effect
+classification should the bounded `ZumiAgentRuntime` be allowed to call them.
+
+A prohibition nobody tests is a paragraph. A capability nobody can verify is a demo.
+Zumi should earn execution authority one reversible, source-backed action class at a
+time.
