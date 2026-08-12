@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "postinstall": "prisma generate && next build",
-    "start": "node scripts/render-start.mjs",
+    "render:build": "node scripts/render-build.mjs",
+    "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
