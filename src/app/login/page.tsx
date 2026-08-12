@@ -8,7 +8,8 @@ import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } 
 import { getClinicSession } from "@/lib/auth/session";
 
 export default async function LoginPage() {
-  if (await getClinicSession()) redirect("/dashboard");
+  const session = await getClinicSession();
+  if (session) redirect(session.role === "contractor" ? "/grid/opportunities" : "/dashboard");
 
   const demoCredentials = isDemoAuthEnabled()
     ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD }
