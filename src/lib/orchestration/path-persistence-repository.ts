@@ -5,6 +5,8 @@ import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
 import { getKlinikosPath } from "@/lib/paths/catalog";
+import { evaluateCapabilityPolicy } from "@/lib/orchestration/capability-engine";
+import type { ActorContext } from "@/lib/orchestration/contracts";
 import {
   advancePathSnapshot,
   resolvePathRuntime,
@@ -45,6 +47,23 @@ function toSnapshot(row: PathRow): PersistedPathSnapshot {
     completedNodeIds: asStringArray(row.completedNodeIds),
     blockedNodeIds: asStringArray(row.blockedNodeIds),
     blockers: asStringArray(row.blockers),
+  };
+}
+
+function actorContextFromSession(session: ClinicSession): ActorContext {
+  const aliases = session.role === "clinic_owner"
+    ? ["clinic_owner", "owner"]
+    : session.role === "administrator"
+      ? ["administrator", "admin"]
+      : [session.role];
+  return {
+    actorId: session.userId,
+    actorKind: "user",
+    userId: session.userId,
+    organizationId: session.organizationId,
+    contextKind: "clinic",
+    roleKeys: aliases,
+    permissionKeys: [],
   };
 }
 
@@ -179,6 +198,18 @@ export async function advancePathInstance(
   const node = definition?.nodes.find((item) => item.id === input.completedNodeId);
   if (!definition || !node) throw new NetworkAccessError("Path step not found.", 404);
 
+  if (node.capabilityKey) {
+    const decision = evaluateCapabilityPolicy({
+      context: actorContextFromSession(session),
+      capabilityKey: node.capabilityKey,
+      connectedConnectorIds: [],
+    });
+    if (decision.state !== "allowed") {
+      const reason = decision.reasons[0] ?? "This step requires a governed review before completion.";
+      throw new NetworkAccessError(reason, 409);
+    }
+  }
+
   const next = advancePathSnapshot({ snapshot, completedNodeId: input.completedNodeId });
   const completedNodeIds = JSON.stringify(next.completedNodeIds);
   const blockedNodeIds = JSON.stringify(next.blockedNodeIds);
@@ -210,7 +241,7 @@ export async function advancePathInstance(
     actorId: session.userId,
     eventType: next.status === "completed" ? "path.completed" : "path.node_completed",
     nodeId: input.completedNodeId,
-    payload: { pathId: snapshot.pathId, nextNodeId: next.currentNodeId },
+    payload: { pathId: snapshot.pathId, nextNodeId: next.currentNodeId, capabilityKey: node.capabilityKey ?? null },
   });
 
   await db.auditLog.create({
@@ -221,7 +252,7 @@ export async function advancePathInstance(
       action: next.status === "completed" ? "path.completed" : "path.node_completed",
       resourceType: "klinikos_path",
       resourceId: snapshot.instanceId,
-      metadata: { pathId: snapshot.pathId, nodeId: input.completedNodeId, nextNodeId: next.currentNodeId, containsPhi: false },
+      metadata: { pathId: snapshot.pathId, nodeId: input.completedNodeId, nextNodeId: next.currentNodeId, capabilityKey: node.capabilityKey ?? null, containsPhi: false },
     },
   });
 
