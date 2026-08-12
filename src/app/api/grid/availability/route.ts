@@ -3,6 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/rbac";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
+import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-event-bridge";
 import { createGridAvailability } from "@/lib/repositories/grid-repository";
 
 export async function POST(request: Request) {
@@ -13,7 +14,14 @@ export async function POST(request: Request) {
     : await enforceApiPermission(session, "grid", "update", { request });
   if (denied) return denied;
   try {
-    return NextResponse.json({ data: await createGridAvailability(session, await request.json()) }, { status: 201 });
+    const created = await createGridAvailability(session, await request.json());
+    await recordTrustedPathDomainEvent(session, {
+      eventType: "grid.availability.updated",
+      sourceType: "grid_availability",
+      sourceId: created.id,
+      metadata: { providerId: created.providerId, status: created.status },
+    });
+    return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
