@@ -21,10 +21,15 @@ export function resolvePathRuntime(input: {
   if (!definition) return null;
 
   const snapshot = input.snapshot ?? null;
-  const completed = new Set(snapshot?.completedNodeIds ?? []);
-  const blocked = new Set(snapshot?.blockedNodeIds ?? []);
+  const baselineCompleted = snapshot ? [] : definition.nodes.filter((node) => node.state === "complete").map((node) => node.id);
+  const baselineBlocked = snapshot ? [] : definition.nodes.filter((node) => node.state === "blocked").map((node) => node.id);
+  const completed = new Set([...(snapshot?.completedNodeIds ?? []), ...baselineCompleted]);
+  const blocked = new Set([...(snapshot?.blockedNodeIds ?? []), ...baselineBlocked]);
   let currentNodeId = snapshot?.currentNodeId ?? null;
 
+  if (!currentNodeId && !snapshot) {
+    currentNodeId = definition.nodes.find((node) => node.state === "current" && !completed.has(node.id) && !blocked.has(node.id))?.id ?? null;
+  }
   if (!currentNodeId) {
     currentNodeId = definition.nodes.find((node) => !completed.has(node.id) && !blocked.has(node.id))?.id ?? null;
   }
@@ -65,6 +70,25 @@ export function resolvePathRuntime(input: {
     nodes,
     blockers: snapshot?.blockers ?? [],
     nextActionIds: currentNodeId ? [`path:${definition.id}:${currentNodeId}`] : [],
+  };
+}
+
+export function baselineSnapshotForPath(input: {
+  instanceId: string;
+  pathId: string;
+  goal: string;
+}): PersistedPathSnapshot | null {
+  const runtime = resolvePathRuntime({ pathId: input.pathId, goal: input.goal });
+  if (!runtime) return null;
+  return {
+    instanceId: input.instanceId,
+    pathId: input.pathId,
+    goal: input.goal,
+    status: runtime.status,
+    completedNodeIds: runtime.nodes.filter((node) => node.state === "complete").map((node) => node.id),
+    blockedNodeIds: runtime.nodes.filter((node) => node.state === "blocked").map((node) => node.id),
+    currentNodeId: runtime.currentNodeId ?? null,
+    blockers: runtime.blockers,
   };
 }
 
