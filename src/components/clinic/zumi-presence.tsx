@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Brain, Command, MessageCircle, Search, Send, Settings2, ShieldCheck, Sparkles, Volume2, VolumeX, X } from "lucide-react";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
@@ -18,6 +18,13 @@ type Orchestration = {
   candidateTools?: Array<{ key: string; label: string; readiness: string; risk: string }>;
   steps?: Array<{ phase: string; label: string; requiresApproval: boolean }>;
 };
+type TrustedOrchestration = {
+  available?: boolean;
+  path?: { pathId: string; title: string; status: string; progress: number; blockers: string[] } | null;
+  nextActions?: Array<{ id: string; title: string; reason: string; capabilityKey: string | null; href: string | null; state: string; priority: number; blockers: string[] }>;
+  blockers?: Array<{ code: string; title: string; explanation: string; owner: string; canResolveNow: boolean }>;
+  warnings?: string[];
+};
 
 type ZumiApiResponse = {
   data?: {
@@ -27,6 +34,7 @@ type ZumiApiResponse = {
     toolsUsed?: string[];
     research?: { depth?: string; webUsed?: boolean };
     orchestration?: Orchestration;
+    trustedOrchestration?: TrustedOrchestration;
   };
   error?: string;
 };
@@ -63,6 +71,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
   const [sources, setSources] = useState<Source[]>([]);
   const [toolsUsed, setToolsUsed] = useState<string[]>([]);
   const [orchestration, setOrchestration] = useState<Orchestration | null>(null);
+  const [trustedOrchestration, setTrustedOrchestration] = useState<TrustedOrchestration | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voiceTurn, setVoiceTurn] = useState(false);
@@ -77,8 +86,20 @@ export function ZumiPresence({ userName }: { userName: string }) {
       }
       if (event.key === "Escape") setOpen(false);
     }
+    function onToggle() {
+      setOpen((value) => !value);
+    }
+    function onOpen() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("zumi:toggle", onToggle);
+    window.addEventListener("zumi:open", onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("zumi:toggle", onToggle);
+      window.removeEventListener("zumi:open", onOpen);
+    };
   }, []);
 
   useEffect(() => {
@@ -109,7 +130,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
           knowledgeSearch: true,
           codeInterpreter: mode === "research" || mode === "command" ? true : undefined,
           presence: {
-            surface: "platform",
+            surface: pathname.startsWith("/grid") ? "grid" : "platform",
             mode,
             autonomy,
             pathname,
@@ -140,6 +161,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
       setSources(payload.data.sources ?? []);
       setToolsUsed(payload.data.toolsUsed ?? []);
       setOrchestration(payload.data.orchestration ?? null);
+      setTrustedOrchestration(payload.data.trustedOrchestration ?? null);
       if (speechOutput) speak(answer);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Zumi could not answer this turn.");
@@ -169,9 +191,13 @@ export function ZumiPresence({ userName }: { userName: string }) {
     }
   }
 
+  const trustedActions = trustedOrchestration?.nextActions ?? [];
+  const trustedBlockers = trustedOrchestration?.blockers ?? [];
+
   return (
     <>
       <button
+        aria-controls="zumi-presence-panel"
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label={open ? "Close Zumi" : "Open Zumi. Keyboard shortcut Control or Command J"}
@@ -188,6 +214,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
           aria-label="Zumi assistant"
           aria-modal="false"
           className="fixed inset-x-3 bottom-20 z-40 flex max-h-[min(760px,calc(100vh-7rem))] flex-col overflow-hidden rounded-2xl border border-[#0b1e3a]/15 bg-[#faf9f5] shadow-[0_30px_90px_rgba(11,30,58,.32)] sm:left-auto sm:right-5 sm:w-[460px]"
+          id="zumi-presence-panel"
           role="dialog"
         >
           <header className="flex items-center gap-3 border-b border-[#0b1e3a]/10 bg-[#0b1e3a] px-4 py-3 text-white">
@@ -235,7 +262,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
             {messages.length === 0 && (
               <div className="rounded-xl border border-[#1677a8]/15 bg-[#1677a8]/5 p-4">
                 <p className="text-sm font-bold text-[#0b1e3a]">What do you need?</p>
-                <p className="mt-1 text-[11px] leading-5 text-[#0b1e3a]/60">Talk naturally. I can use the current Klinikos page as context, research when permitted, plan across tools, and tell you what is actually connected before suggesting an action.</p>
+                <p className="mt-1 text-[11px] leading-5 text-[#0b1e3a]/60">Talk naturally. I can use the current Klinikos page as context, research when permitted, plan across tools, and compare those ideas with trusted Klinikos paths and blockers before suggesting what comes next.</p>
                 <p className="mt-3 text-[9px] font-bold uppercase tracking-[.12em] text-[#1677a8]">Ctrl/Cmd + J summons me anywhere</p>
               </div>
             )}
@@ -244,8 +271,17 @@ export function ZumiPresence({ userName }: { userName: string }) {
                 <p className="whitespace-pre-wrap">{message.text}</p>
               </div>
             ))}
-            {loading && <div className="max-w-[92%] rounded-2xl border border-[#43d9ff]/20 bg-white px-3.5 py-2.5 text-[11px] text-[#0b1e3a]/55"><span className="mr-2 inline-block size-1.5 rounded-full bg-[#1677a8] motion-safe:animate-pulse" />Thinking, retrieving, and checking what tools are actually available…</div>}
+            {loading && <div className="max-w-[92%] rounded-2xl border border-[#43d9ff]/20 bg-white px-3.5 py-2.5 text-[11px] text-[#0b1e3a]/55"><span className="mr-2 inline-block size-1.5 rounded-full bg-[#1677a8] motion-safe:animate-pulse" />Thinking, retrieving, and checking trusted next-action state…</div>}
             {error && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-[11px] text-rose-800">{error}</div>}
+
+            {(trustedActions.length > 0 || trustedBlockers.length > 0) && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-[10px] text-[#0b1e3a]">
+                <p className="flex items-center gap-1.5 font-extrabold"><ShieldCheck className="size-3.5 text-emerald-700" /> Trusted Klinikos path</p>
+                {trustedOrchestration?.path && <p className="mt-1 text-[#0b1e3a]/65">{trustedOrchestration.path.title} · {trustedOrchestration.path.status} · {Math.round(trustedOrchestration.path.progress * 100)}%</p>}
+                {trustedActions.length > 0 && <ul className="mt-2 space-y-1.5">{trustedActions.slice(0, 5).map((action) => <li className="rounded-lg border border-emerald-200/70 bg-white/80 p-2" key={action.id}><div className="flex items-start justify-between gap-2"><span className="font-bold">{action.title}</span><span className="shrink-0 rounded bg-[#0b1e3a]/6 px-1.5 py-0.5 text-[8px] font-extrabold uppercase">{action.state.replaceAll("_", " ")}</span></div><p className="mt-0.5 text-[#0b1e3a]/55">{action.reason}</p>{action.href && action.state !== "blocked" && <a className="mt-1 inline-block font-bold text-[#0f658f] underline" href={action.href}>Open path</a>}</li>)}</ul>}
+                {trustedBlockers.length > 0 && <ul className="mt-2 space-y-1 text-amber-800">{trustedBlockers.slice(0, 5).map((blocker) => <li key={blocker.code}><strong>{blocker.title}:</strong> {blocker.explanation}</li>)}</ul>}
+              </div>
+            )}
 
             {(toolsUsed.length > 0 || sources.length > 0 || orchestration?.candidateTools?.length) && (
               <details className="rounded-xl border border-[#0b1e3a]/10 bg-[#f1f0eb] p-3 text-[10px] text-[#0b1e3a]/65">
