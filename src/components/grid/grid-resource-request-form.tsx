@@ -63,7 +63,7 @@ export function GridResourceRequestForm({ resource, demands }: { resource: Appro
     setBusy(true);
     setMessage(null);
     try {
-      await responseData(await fetch("/api/grid/offers", {
+      await responseData(await fetch("/api/grid/universal-offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -80,7 +80,7 @@ export function GridResourceRequestForm({ resource, demands }: { resource: Appro
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         }),
       }));
-      setMessage({ good: true, text: "Offer sent to the resource owner. Grid will re-check policy and capacity again before acceptance and reservation." });
+      setMessage({ good: true, text: "Offer sent to the resource owner. Grid verified the current resource policy and availability before sending, and will check again before acceptance and reservation." });
       router.push("/grid/resources/offers");
       router.refresh();
     } catch (error) {
