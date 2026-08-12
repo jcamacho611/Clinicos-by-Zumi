@@ -10,15 +10,15 @@ import {
 } from "@/components/command/zumi-command-shell";
 
 export const metadata = {
-  title: "Founding Clinic Qualification — Klinikos by Zumi",
+  title: "Founding Clinic Qualification | Klinikos",
   description:
-    "The founding pathway evaluates operational fit before implementation. Klinikos maps the real workflow first, then scope and production gates are reviewed before launch.",
+    "Evaluate how Klinikos fits your clinic, what should be connected, and what payment, security, integration, and production gates must be satisfied before launch.",
 };
 
 const pathway = [
-  { icon: Layers3, title: "Evaluate", body: "Map the workflow, software burden, staffing gaps, and operating cost before anything is committed." },
-  { icon: Handshake, title: "Agree", body: "Define the approved scope, ownership, production gates, integrations, and manual fallbacks in writing." },
-  { icon: Crown, title: "Build", body: "Launch reviewed operating slices with priority onboarding and a clear path from demo to production readiness." },
+  { icon: Layers3, title: "Evaluate", body: "Map the workflow, software burden, staffing gaps, operating costs, and implementation fit before anything is committed." },
+  { icon: Handshake, title: "Agree", body: "Define approved scope, ownership, production gates, integrations, included usage, and fallback paths in writing." },
+  { icon: Crown, title: "Build", body: "Activate reviewed operating slices after the required commercial, security, integration, and production checks are satisfied." },
 ] as const;
 
 export default function FoundingClinicPage() {
@@ -33,8 +33,8 @@ export default function FoundingClinicPage() {
               Help shape the operating layer independent clinics deserve.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Small clinics should have big-system control without big-system cost. The founding pathway shows what Klinikos can take on,
-              what still depends on external rails, and what an approved launch would actually require.
+              The founding pathway shows what Klinikos can take on, what still depends on external connections, what customer funding covers,
+              and what an approved production launch actually requires. Zumi helps organize the operating picture inside Klinikos.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary">
@@ -74,22 +74,23 @@ export default function FoundingClinicPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <div className="border border-white/10 bg-white/[.04] p-6">
-            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]">Pay now</p>
-            <h2 className="mt-3 text-xl font-extrabold text-white">GoDaddy checkout is available now.</h2>
-            <p className="mt-3 text-[12px] leading-6 text-slate-400">Use the existing Klinikos payment rail for an approved review, evaluation, or founding payment. The payment record is still reconciled against the selected offer before access or implementation state changes.</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]">Current checkout</p>
+            <h2 className="mt-3 text-xl font-extrabold text-white">Approved one-time payments can use the current GoDaddy checkout.</h2>
+            <p className="mt-3 text-[12px] leading-6 text-slate-400">A payment is evidence of funds received, not permission to bypass product, credential, clinical, privacy, or production gates. Klinikos reconciles the payment against the approved offer before access or implementation state changes.</p>
             <a className="mt-5 inline-flex min-h-[44px] items-center gap-2 bg-[#e6c55b] px-5 text-xs font-extrabold text-[#071019]" href={KLINIKOS_GODADDY_PAYLINK} rel="noreferrer" target="_blank">Open secure checkout <ArrowRight className="size-4" /></a>
           </div>
 
           <div className="border border-white/10 bg-white/[.04] p-6">
             <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Ongoing software</p>
-            <h2 className="mt-3 text-xl font-extrabold text-white">Subscription pricing is separate from setup.</h2>
+            <h2 className="mt-3 text-xl font-extrabold text-white">Subscription access and variable usage are separate from setup.</h2>
             <p className="mt-3 text-[12px] leading-6 text-slate-400">{clinicSubscriptionPlanning.note}</p>
+            <p className="mt-3 text-[12px] leading-6 text-slate-500">Variable-cost services such as Zumi model usage, messaging, voice, maps, document processing, and external integrations are admitted only when the organization&apos;s paid entitlement and customer-backed usage funding both allow them.</p>
           </div>
         </div>
 
         <div className="mt-10 grid gap-5 border-t border-white/10 pt-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
           <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Production boundary</p><h2 className="mt-3 text-2xl font-extrabold tracking-[-.04em] text-white">Clear gates, not repeated fine print.</h2></div>
-          <p className="text-[12px] leading-6 text-slate-400">Qualification and founding fees do not by themselves activate production PHI, certify compliance, guarantee integrations, or authorize clinical deployment. Those decisions depend on approved scope, security controls, contracts, vendor connections, and production-readiness review. The current public qualification flow is for operational and software context only.</p>
+          <p className="text-[12px] leading-6 text-slate-400">Qualification and founding fees do not by themselves activate production PHI, certify compliance, guarantee integrations, or authorize clinical deployment. Those decisions depend on approved scope, security controls, contracts, vendor connections, customer-funded entitlements, and production-readiness review. The current public qualification flow is for operational and software context only.</p>
         </div>
       </section>
     </ZumiCommandShell>
