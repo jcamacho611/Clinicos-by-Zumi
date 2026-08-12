@@ -11,6 +11,9 @@ type DemandBoardRow = {
   kind: string;
   title: string;
   category: string;
+  serviceName: string | null;
+  locationType: string | null;
+  requiresClinicalEligibility: boolean;
   status: string;
   visibility: string;
   requestedStartAt: Date | null;
@@ -23,6 +26,7 @@ type DemandBoardRow = {
 
 type OfferBoardRow = {
   id: string;
+  ownerOrganizationId: string;
   demandId: string;
   demandTitle: string;
   senderOrganizationId: string | null;
@@ -31,6 +35,9 @@ type OfferBoardRow = {
   recipientName: string | null;
   status: string;
   version: number;
+  providerId: string | null;
+  serviceListingId: string | null;
+  locationId: string | null;
   grossAmountCents: number;
   depositAmountCents: number;
   locationPayableCents: number;
@@ -43,6 +50,7 @@ type OfferBoardRow = {
 
 type ReservationBoardRow = {
   id: string;
+  ownerOrganizationId: string;
   demandId: string;
   demandTitle: string;
   offerId: string;
@@ -88,18 +96,18 @@ export async function getGridTransactionBoard(session: ClinicSession) {
 
   const [demands, offers, reservations, obligations] = await Promise.all([
     db.$queryRaw<DemandBoardRow[]>(Prisma.sql`
-      SELECT "id", "kind", "title", "category", "status", "visibility", "requestedStartAt", "requestedEndAt",
-             "city", "state", "maxPriceCents", "updatedAt"
+      SELECT "id", "kind", "title", "category", "serviceName", "locationType", "requiresClinicalEligibility",
+             "status", "visibility", "requestedStartAt", "requestedEndAt", "city", "state", "maxPriceCents", "updatedAt"
       FROM "GridDemandRecord"
       WHERE "organizationId" = ${session.organizationId}
       ORDER BY "updatedAt" DESC
       LIMIT 100
     `),
     db.$queryRaw<OfferBoardRow[]>(Prisma.sql`
-      SELECT o."id", o."demandId", d."title" AS "demandTitle", o."senderOrganizationId", o."recipientOrganizationId",
-             sender."name" AS "senderName", recipient."name" AS "recipientName", o."status", o."version",
-             o."grossAmountCents", o."depositAmountCents", o."locationPayableCents", o."offeredStartAt", o."offeredEndAt",
-             o."expiresAt", o."note", o."updatedAt"
+      SELECT o."id", o."organizationId" AS "ownerOrganizationId", o."demandId", d."title" AS "demandTitle",
+             o."senderOrganizationId", o."recipientOrganizationId", sender."name" AS "senderName", recipient."name" AS "recipientName",
+             o."status", o."version", o."providerId", o."serviceListingId", o."locationId", o."grossAmountCents",
+             o."depositAmountCents", o."locationPayableCents", o."offeredStartAt", o."offeredEndAt", o."expiresAt", o."note", o."updatedAt"
       FROM "GridOfferRecord" o
       JOIN "GridDemandRecord" d ON d."id" = o."demandId"
       LEFT JOIN "Organization" sender ON sender."id" = o."senderOrganizationId"
@@ -111,7 +119,7 @@ export async function getGridTransactionBoard(session: ClinicSession) {
       LIMIT 150
     `),
     db.$queryRaw<ReservationBoardRow[]>(Prisma.sql`
-      SELECT r."id", r."demandId", d."title" AS "demandTitle", r."offerId",
+      SELECT r."id", r."organizationId" AS "ownerOrganizationId", r."demandId", d."title" AS "demandTitle", r."offerId",
              o."senderOrganizationId", o."recipientOrganizationId", r."status", r."paymentStatus", r."fulfillmentStatus",
              r."grossAmountCents", r."depositAmountCents", r."locationPayableCents", r."reservedStartAt", r."reservedEndAt",
              r."paymentReference", r."updatedAt"
