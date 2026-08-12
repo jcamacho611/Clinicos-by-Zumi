@@ -4,12 +4,24 @@ import { navigation } from "@/lib/navigation";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicRole } from "@/lib/auth/rbac";
 
+type LaunchItem = {
+  href: string;
+  label: string;
+  description: string;
+};
+
+type LaunchGroup = {
+  label: string;
+  items: readonly LaunchItem[];
+};
+
 function canOpen(role: ClinicRole, href: string) {
   if (href === "/edu") return true;
   return canAccessWorkspace(role, href.slice(1));
 }
 
-const gridTools = [
+const gridTools: readonly LaunchItem[] = [
+  { href: "/grid/workspace", label: "Grid workspace", description: "Open your Grid overview, active needs, offers, and transaction flow." },
   { href: "/grid/browse", label: "Browse Grid", description: "Search published people, services, spaces, products, equipment, organizations, and capacity." },
   { href: "/grid/providers", label: "Grid providers", description: "Review participating professionals and provider capacity." },
   { href: "/grid/services", label: "Grid services", description: "Review services available through the exchange." },
@@ -22,21 +34,23 @@ const gridTools = [
   { href: "/grid/founding-network", label: "Founding network", description: "See the founding Grid network and participation path." },
 ] as const;
 
-const networkTools = [
+const networkTools: readonly LaunchItem[] = [
   { href: "/network/directory", label: "Network directory", description: "Find organizations and relationships in the connected-care network." },
   { href: "/network/map", label: "Network map", description: "See connected-care relationships spatially." },
   { href: "/network/handoffs", label: "Network handoffs", description: "Track care handoffs that need ownership and closure." },
 ] as const;
 
 export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
-  const groups = navigation
+  const groups: LaunchGroup[] = navigation
     .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => item.href !== "/dashboard" && canOpen(role, item.href)),
+      label: group.label,
+      items: group.items
+        .filter((item) => item.href !== "/dashboard" && canOpen(role, item.href))
+        .map(({ href, label, description }) => ({ href, label, description })),
     }))
     .filter((group) => group.items.length > 0);
 
-  const detailedGroups = [
+  const detailedGroups: LaunchGroup[] = [
     ...groups,
     ...(canOpen(role, "/grid") ? [{ label: "Grid tools", items: gridTools }] : []),
     ...(canOpen(role, "/network") ? [{ label: "Network views", items: networkTools }] : []),
