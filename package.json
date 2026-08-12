@@ -14,6 +14,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
     "db:push": "prisma db push",
+    "journey": "tsx --tsconfig tsconfig.journeys.json",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts"
   },
