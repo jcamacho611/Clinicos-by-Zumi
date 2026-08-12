@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 };
 
 const pathways = [
-  { title: "Clinic", detail: "Run daily operations, patient workflows, follow-up, referrals, results, tasks, and revenue continuity.", href: "/login", action: "Enter Klinikos", icon: BriefcaseMedical },
-  { title: "Grid", detail: "Find or offer healthcare work, services, capacity, space, and other eligible resources.", href: "/grid", action: "Explore Grid", icon: Grid3X3 },
-  { title: "Education", detail: "Learn, practice, build verified skills, and move from education toward healthcare opportunity.", href: "/edu", action: "Explore Education", icon: GraduationCap },
-  { title: "Private demo", detail: "See how Klinikos maps operational gaps using a synthetic, no-PHI demonstration.", href: "/private-demo", action: "See the demo", icon: Sparkles },
-  { title: "Founding clinics", detail: "Explore the evaluation and early implementation pathway for clinics building with Klinikos.", href: "/founding-clinic", action: "View the program", icon: BookOpen },
+  { title: "Clinic OS", detail: "Run daily operations, patient workflows, follow-up, referrals, results, tasks, and revenue continuity.", href: "/start", action: "Run a clinic", icon: BriefcaseMedical },
+  { title: "Grid", detail: "Find or offer healthcare work, services, capacity, rooms, equipment, organizations, and other reviewed resources.", href: "/grid", action: "Explore Grid", icon: Grid3X3 },
+  { title: "Klinikos EDU", detail: "Learn through courses and scenarios, build readiness, and connect education to future healthcare opportunity.", href: "/edu", action: "Explore EDU", icon: GraduationCap },
+  { title: "Clinic Operating Analysis", detail: "Map operational gaps with a synthetic, no-PHI review and continue into the exact next step you select.", href: "/private-demo", action: "Start the analysis", icon: Sparkles },
+  { title: "Founding clinics", detail: "Explore the evaluation and implementation pathway for clinics that want Klinikos configured around their real operations.", href: "/founding-clinic", action: "View the program", icon: BookOpen },
 ] as const;
 
 export default function LandingPage() {
@@ -28,27 +28,35 @@ export default function LandingPage() {
         <KlinikosHomepage />
       </div>
 
-      <section aria-labelledby="pathways-title" className="relative z-20 border-t border-white/10 bg-[#070b13] px-5 py-20 text-white sm:px-8 lg:px-12">
+      <section aria-labelledby="pathways-title" className="relative z-20 border-t border-white/10 bg-[#070b13] px-5 py-28 text-white sm:px-8 lg:px-12 lg:py-36">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200/70">Explore Klinikos</p>
-            <h2 id="pathways-title" className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Direct access when you already know where you want to go.</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/60 sm:text-lg">The Living Gateway is the default doorway. These direct paths remain available for experienced users and people who prefer traditional navigation.</p>
+            <h2 id="pathways-title" className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">Different doors. One healthcare operating ecosystem.</h2>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/55 sm:text-lg">Start with the part that matters to you. The deeper system stays available without forcing every person to see every capability at once.</p>
           </div>
 
-          <div className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-16 grid gap-x-12 gap-y-14 md:grid-cols-2">
             {pathways.map(({ title, detail, href, action, icon: Icon }) => (
-              <Link key={title} href={href} className="group flex min-h-52 flex-col justify-between rounded-3xl border border-white/10 bg-white/[0.035] p-6 transition hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
-                <div><div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-cyan-100"><Icon className="size-5" aria-hidden="true" /></div><h3 className="mt-6 text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-white/55">{detail}</p></div>
-                <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-white/80 transition group-hover:text-white">{action} <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden="true" /></span>
+              <Link key={title} href={href} className="group border-t border-white/12 pt-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+                <div className="flex items-start gap-5">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-cyan-100"><Icon className="size-5" aria-hidden="true" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xl font-semibold">{title}</span>
+                    <span className="mt-4 block max-w-xl text-sm leading-7 text-white/52">{detail}</span>
+                    <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white/78 transition group-hover:text-white">{action} <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden="true" /></span>
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-sm text-white/55">
+          <div className="mt-20 flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-white/10 pt-8 text-sm text-white/50">
+            <Link className="font-semibold text-white/75 hover:text-white" href="/access">Get verified free access</Link>
             <Link className="inline-flex items-center gap-2 hover:text-white" href="/login"><LogIn className="size-4" /> Sign in</Link>
+            <Link className="hover:text-white" href="/pricing">Pricing</Link>
             <Link className="hover:text-white" href="/about">About Klinikos</Link>
-            <span>Complex infrastructure stays behind the experience. The path in front of you stays simple.</span>
+            <span>Complex infrastructure stays behind the experience.</span>
           </div>
         </div>
       </section>
