@@ -3,22 +3,11 @@
  *
  * This module is design law, not a suggestion. Every authenticated and public
  * Klinikos surface renders its ground, panels, and accents from these tokens, and
- * a test asserts the public surfaces obey the copy rules below.
- *
- * The reason it lives in code rather than a style guide: a palette written in a
- * document drifts the moment two people build two pages. A palette imported by both
- * pages cannot.
+ * tests assert the public surfaces obey the copy rules below.
  *
  * Pure module. No database, no network.
  */
 
-/**
- * Palette.
- *
- * Graphite/navy ground, Aegean blue structure, cyan reserved for the Zumi intelligence layer,
- * gold used sparingly for human-review and value moments, rose for boundaries the
- * operator must not cross. Cyan is never decorative — if it glows, Zumi is involved.
- */
 export const commandPalette = {
   ground: "#05090f",
   groundRaised: "#070d15",
@@ -52,6 +41,13 @@ export const commandSurfaces = {
   meta: "text-[11px] leading-5 text-slate-400",
 } as const;
 
+/**
+ * Customer-facing vocabulary that may never return.
+ *
+ * Klinikos is the product/platform. Zumi is the operating intelligence inside
+ * Klinikos. Legacy repo/database identifiers may remain internally until a safe
+ * migration is warranted, but they must not leak into product copy.
+ */
 export const BANNED_PUBLIC_COPY = [
   "start free",
   "free trial",
@@ -61,6 +57,10 @@ export const BANNED_PUBLIC_COPY = [
   "instant approval",
   "instantly live",
   "monetization os",
+  "klinikos by zumi",
+  "clinicos by zumi",
+  "clinicos os",
+  "clinicos-by-zumi",
 ] as const;
 
 export const CLAIM_ONLY_TERMS = [
@@ -112,10 +112,11 @@ export function findCopyViolations(text: string): string[] {
 export const APPROVED_PUBLIC_COPY = [
   "Klinikos",
   "Zumi",
+  "Zumi operating intelligence",
+  "Zumi is the operating intelligence inside Klinikos",
   "Clinic Operating Analysis",
   "Private Workflow Review",
   "Founding Clinic Qualification",
-  "AI Workflow Map",
   "Human Review Required",
   "No PHI",
   "Built toward regulated healthcare deployment",
@@ -123,6 +124,7 @@ export const APPROVED_PUBLIC_COPY = [
   "Workflow signal",
   "Operating map",
   "Command center",
+  "Klinikos Grid",
 ] as const;
 
 export function findBannedPublicCopy(text: string): string[] {
@@ -137,7 +139,7 @@ export const HUMAN_REVIEW_NOTICE =
   "Submitting a request or a payment does not activate production clinical use, approve PHI workflows, guarantee results, replace licensed judgment, or authorize clinical services. A human reviews every request.";
 
 export const PLATFORM_BOUNDARY_NOTICE =
-  "Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is an embedded intelligence and orchestration layer inside Klinikos, not the product name. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review.";
+  "Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is the operating intelligence inside Klinikos. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review.";
 
 export const ELEMENT_ADMISSION_TEST = [
   "Would a clinic owner understand why this is here?",
@@ -149,10 +151,22 @@ export const ELEMENT_ADMISSION_TEST = [
   "Does it look worthy of a high-ticket clinic operating system?",
 ] as const;
 
+/**
+ * Highest-value surfaces receive both vocabulary and regulatory-claim checks. A
+ * separate recursive test guards all App Router pages from legacy brand language.
+ */
 export const GOVERNED_PUBLIC_SURFACES = [
+  "src/app/page.tsx",
+  "src/app/about/page.tsx",
   "src/app/sales/page.tsx",
   "src/app/start/page.tsx",
   "src/app/private-demo/page.tsx",
   "src/app/founding-clinic/page.tsx",
+  "src/app/demo/page.tsx",
+  "src/app/grid/page.tsx",
+  "src/app/grid/browse/page.tsx",
   "src/app/grid/join/page.tsx",
+  "src/app/grid/pricing/page.tsx",
+  "src/app/edu/page.tsx",
+  "src/app/portal/login/page.tsx",
 ] as const;
