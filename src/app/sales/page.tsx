@@ -5,17 +5,16 @@ import { ZumiCommandShell, ZumiBriefingPanel, MissionPhaseProgress } from "@/com
 import { ZumiInterview } from "@/components/command/zumi-interview";
 
 /**
- * Clinic Operating Analysis — the Zumi command experience.
+ * Clinic Operating Analysis — a guided Klinikos experience led by Zumi.
  *
- * Replaces the previous full-page intake form. The interaction model is the change:
  * Zumi asks one operational question at a time and builds a live operating map,
  * rather than presenting a wall of fields for the operator to fill in.
  */
 
 export const metadata = {
-  title: "Clinic Operating Analysis — Klinikos by Zumi",
+  title: "Clinic Operating Analysis | Klinikos",
   description:
-    "Zumi maps where your clinic loses control — follow-ups, paperwork, referrals, results, billing readiness, staff ownership and revenue signals — then prepares a private workflow review for human approval.",
+    "Use Klinikos to map where clinic work loses continuity. Zumi guides the analysis and prepares findings for human review.",
 };
 
 export default function ClinicOperatingAnalysisPage() {
@@ -30,12 +29,11 @@ export default function ClinicOperatingAnalysisPage() {
               className="mt-4 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
               id="mission-brief-heading"
             >
-              Your clinic does not need another dashboard. It needs an operating system.
+              Your clinic does not need another dashboard. It needs continuity.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Klinikos by Zumi maps the work your clinic is losing track of — follow-ups, paperwork, referrals, results, billing
-              readiness, staff tasks, med spa leads and revenue opportunities — then prepares a private workflow review for human
-              approval.
+              Klinikos maps the work your clinic is losing track of — follow-ups, paperwork, referrals, results, billing readiness,
+              staff tasks, med spa leads and revenue opportunities. Zumi guides the analysis and prepares the operating picture for human review.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary">
