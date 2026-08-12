@@ -3,11 +3,12 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, BriefcaseMedical, GraduationCap, Grid3X3, LogIn, Sparkles } from "lucide-react";
 import { GridLaunchDock } from "@/components/marketing/grid-launch-dock";
 import { KlinikosHomepage } from "@/components/marketing/klinikos-homepage";
+import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
 
 export const metadata: Metadata = {
-  title: "Klinikos | Clinic continuity, made visible",
+  title: "Klinikos | Healthcare, organized around what needs to happen",
   description:
-    "Klinikos connects clinic operations, healthcare opportunities, education pathways, and the work between existing systems into one clear experience. Zumi is the operating intelligence inside Klinikos.",
+    "Start with the outcome. Klinikos organizes clinic operations, healthcare opportunities, learning, care pathways, and the work between existing systems into one clear experience.",
 };
 
 const pathways = [
@@ -21,14 +22,18 @@ const pathways = [
 export default function LandingPage() {
   return (
     <>
-      <KlinikosHomepage />
+      <PublicLivingGateway />
+
+      <div id="klinikos-story">
+        <KlinikosHomepage />
+      </div>
 
       <section aria-labelledby="pathways-title" className="relative z-20 border-t border-white/10 bg-[#070b13] px-5 py-20 text-white sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200/70">One Klinikos</p>
-            <h2 id="pathways-title" className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Start with what you need.</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/60 sm:text-lg">You should never have to know how Klinikos is built to know where to go. Choose your path and the system takes you to the right experience.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200/70">Explore Klinikos</p>
+            <h2 id="pathways-title" className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Direct access when you already know where you want to go.</h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/60 sm:text-lg">The Living Gateway is the default doorway. These direct paths remain available for experienced users and people who prefer traditional navigation.</p>
           </div>
 
           <div className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
