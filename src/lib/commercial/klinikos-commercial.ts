@@ -31,9 +31,22 @@ export const clinicCommercialOffers = {
   },
 } as const;
 
+export const customerFundedCommercialPrinciples = {
+  activation: "Production paid capability activates only after qualifying customer payment is confirmed.",
+  variableCost: "Variable vendor/API spend must be backed by included allowance, prepaid customer funds, or explicitly authorized bounded overage before execution.",
+  noBlankCheck: "A saved payment method is not authorization for unlimited post-paid vendor usage.",
+  demo: "Unpaid/demo access must remain explicitly synthetic and cost-capped unless a separately funded commercial agreement says otherwise.",
+  governance: "Payment never overrides Klinikos RBAC, tenant isolation, safety, clinical, privacy, credentialing, claims, or record-release policy.",
+  metering: "Usage is metered server-side by organization, capability, provider/vendor, cost bucket, and billing period.",
+  providerIndependence: "Commercial entitlements and allowances are product concepts; provider/vendor selection remains replaceable infrastructure.",
+  migration: "Klinikos should use pay-per-use providers while customer volume is low, then migrate suitable workloads to customer-funded owned/self-hosted infrastructure when measured economics justify it.",
+} as const;
+
 export const clinicSubscriptionPlanning = {
   status: "planning" as const,
   note: "Ongoing software access is priced separately from evaluation and implementation. Final subscription terms depend on approved clinic scope, modules, locations, usage, and connected services.",
+  commercialModel: "customer_funded_usage" as const,
+  implementationReference: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md",
 };
 
 export const gridCommercialModel = {
