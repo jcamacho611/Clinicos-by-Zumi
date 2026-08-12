@@ -18,7 +18,7 @@ export const gridDisputeStatuses = [
   "resolved_requester",
   "resolved_counterparty",
   "split_resolution",
-  "refunded",
+  "refund_recommended",
   "escalated",
   "closed",
 ] as const;
@@ -72,12 +72,12 @@ export const gridSafetyIncidentTransitionSchema = z.object({
 
 const disputeTransitions: Record<GridDisputeStatus, readonly GridDisputeStatus[]> = {
   open: ["under_review", "info_required", "escalated", "closed"],
-  under_review: ["info_required", "resolved_requester", "resolved_counterparty", "split_resolution", "refunded", "escalated", "closed"],
+  under_review: ["info_required", "resolved_requester", "resolved_counterparty", "split_resolution", "refund_recommended", "escalated", "closed"],
   info_required: ["under_review", "escalated", "closed"],
   resolved_requester: ["closed"],
   resolved_counterparty: ["closed"],
   split_resolution: ["closed"],
-  refunded: ["closed"],
+  refund_recommended: ["closed"],
   escalated: ["under_review", "closed"],
   closed: [],
 };
