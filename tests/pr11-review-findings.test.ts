@@ -21,6 +21,9 @@ import { whopEventAmountMinorUnits } from "@/lib/commerce/whop-rules";
 import { admitZumiRequest, type ZumiAdmissionInput } from "@/features/zumi/policy";
 import { phiEgressPermitted, zumiGatewayStatus, registerProvider, resetProviderRegistry, type ProviderAdapter } from "@/features/zumi/providers";
 import { anthropicAdapter } from "@/features/zumi/adapters/anthropic";
+import { patientMessageDeliverability } from "@/lib/operations/followup-service";
+import { connectorCatalog, connectorReadiness, getConnector } from "@/lib/connectors/catalog";
+import { readinessGates } from "@/lib/connectors/taxonomy";
 
 /**
  * One test per reviewed defect on PR #11.
@@ -62,6 +65,7 @@ describe("a patient message is only 'sent' when a provider accepted it", () => {
     const accepting: OutboundAdapter = {
       channel: "sms",
       provider: "test-provider",
+      connectorId: "twilio",
       configured: () => true,
       send: async () => ({ ok: true, providerReference: "prov_123", provider: "test-provider" }),
     };
@@ -75,6 +79,7 @@ describe("a patient message is only 'sent' when a provider accepted it", () => {
     registerOutboundAdapter({
       channel: "sms",
       provider: "test-provider",
+      connectorId: "twilio",
       configured: () => true,
       send: async () => ({ ok: false, reason: "provider_error", detail: "The provider returned 500." }),
     });
@@ -86,6 +91,7 @@ describe("a patient message is only 'sent' when a provider accepted it", () => {
     registerOutboundAdapter({
       channel: "sms",
       provider: "test-provider",
+      connectorId: "twilio",
       configured: () => true,
       send: async () => {
         throw new Error("socket hang up");
@@ -102,6 +108,7 @@ describe("a patient message is only 'sent' when a provider accepted it", () => {
     registerOutboundAdapter({
       channel: "sms",
       provider: "test-provider",
+      connectorId: "twilio",
       configured: () => true,
       send: async () => ({ ok: false, reason: "provider_error", detail: "accepted without a reference" }),
     });
@@ -1096,5 +1103,88 @@ describe("no clinic content reaches a model provider that is not approved to rec
     const policy = source("src/features/zumi/policy.ts");
     expect(policy).toContain("phiEgressPermitted: boolean;");
     expect(policy).not.toContain("phiEgressPermitted?: boolean");
+  });
+});
+
+describe("PHI approval is asked about the rail the message actually takes", () => {
+  // The reviewed defect: the gate asked whether *any* communication connector was
+  // approved for PHI. Approving Twilio would therefore unblock patient messages that
+  // still leave over Resend, whose catalog entry declares handlesPhi: false.
+  afterEach(() => {
+    resetOutboundAdapters();
+  });
+
+  const send = async () => ({ ok: true as const, providerReference: "ref_1", provider: "test" });
+
+  it("refuses when the sending adapter's own connector is not approved", () => {
+    resetOutboundAdapters();
+    registerOutboundAdapter({ channel: "email", provider: "resend", connectorId: "resend", configured: () => true, send });
+    const result = patientMessageDeliverability({ RESEND_API_KEY: "re_test" });
+    expect(result.deliverable).toBe(false);
+    expect(result).toMatchObject({ reason: "phi_not_approved" });
+  });
+
+  it("names the rail that is blocking rather than the gateway", () => {
+    resetOutboundAdapters();
+    registerOutboundAdapter({ channel: "email", provider: "resend", connectorId: "resend", configured: () => true, send });
+    const result = patientMessageDeliverability({ RESEND_API_KEY: "re_test" });
+    expect(result.deliverable).toBe(false);
+    expect(result.deliverable === false && result.detail).toContain("Resend");
+  });
+
+  it("is not unblocked by approving a different connector in the same gateway", () => {
+    // This is the test that separates the fix from the defect. Twilio is the only
+    // communication connector the catalog marks handlesPhi, so approving it is exactly
+    // what made the old gateway-wide some() return true — while every patient message
+    // still left over Resend, which declares handlesPhi: false.
+    const twilio = getConnector("twilio")!;
+    expect(twilio.handlesPhi).toBe(true);
+    expect(getConnector("resend")?.handlesPhi).toBe(false);
+
+    // A fresh object rather than a mutation: several catalog entries share one empty
+    // gates literal, so mutating in place would approve unrelated connectors too.
+    const original = twilio.gates;
+    (twilio as { gates: Record<string, boolean> }).gates = Object.fromEntries(
+      readinessGates.map((gate) => [gate, true]),
+    );
+    try {
+      expect(connectorReadiness(twilio).phiUsable).toBe(true);
+      resetOutboundAdapters();
+      registerOutboundAdapter({ channel: "email", provider: "resend", connectorId: "resend", configured: () => true, send });
+      expect(patientMessageDeliverability({ RESEND_API_KEY: "re_test" })).toMatchObject({
+        deliverable: false,
+        reason: "phi_not_approved",
+      });
+    } finally {
+      (twilio as { gates: typeof original }).gates = original;
+    }
+  });
+
+  it("refuses a rail the catalog does not describe at all", () => {
+    resetOutboundAdapters();
+    registerOutboundAdapter({ channel: "email", provider: "mystery", connectorId: "not-in-catalog", configured: () => true, send });
+    expect(patientMessageDeliverability({})).toMatchObject({ deliverable: false, reason: "phi_not_approved" });
+  });
+
+  it("still reports a missing connector as missing rather than as unapproved", () => {
+    resetOutboundAdapters();
+    registerOutboundAdapter({ channel: "email", provider: "resend", connectorId: "resend", configured: () => false, send });
+    expect(patientMessageDeliverability({})).toMatchObject({ deliverable: false, reason: "no_connector" });
+  });
+
+  it("makes every outbound adapter name a connector, so the question can always be asked", () => {
+    const outbound = source("src/lib/communications/outbound.ts");
+    expect(outbound).toContain("connectorId: string;");
+    expect(outbound).toContain('connectorId: "resend"');
+    // Required, not optional: an adapter added later cannot omit it and be assessed as
+    // approved by default.
+    expect(outbound).not.toContain("connectorId?:");
+  });
+
+  it("keeps no communication connector PHI-usable in a default deployment", () => {
+    const approved = connectorCatalog.filter(
+      (connector) => connector.gateway === "communication" && connectorReadiness(connector).phiUsable,
+    );
+    expect(approved).toEqual([]);
   });
 });

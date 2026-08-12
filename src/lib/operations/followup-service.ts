@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { connectorReadiness, connectorsByGateway } from "@/lib/connectors/catalog";
+import { connectorReadiness, connectorsByGateway, getConnector } from "@/lib/connectors/catalog";
 import {
   deliverOutbound,
   outboundChannelStatus,
@@ -54,19 +54,27 @@ export function communicationsConnected(env: OutboundEnv = process.env) {
  * and says clinical email stays blocked until approved. Sending on credential presence
  * alone would disclose PHI through a rail nobody signed a BAA for — the same mistake as
  * Law 11 on the AI side, in a different gateway.
+ *
+ * The approval is read from the connector this channel's adapter actually sends
+ * through, not from the communication gateway as a whole. Asking the gateway was a bug
+ * waiting on a second connector: the day Twilio is approved for PHI, a gateway-wide
+ * `some()` would start returning true while every patient message still left over
+ * Resend, which declares `handlesPhi: false`. The approval has to be about the rail the
+ * message takes.
  */
 export function patientMessageDeliverability(env: OutboundEnv = process.env) {
   const channel = outboundChannelStatus(PATIENT_MESSAGE_CHANNEL, env);
   if (!channel.deliverable) return { deliverable: false as const, reason: channel.reason, detail: channel.detail };
 
-  const phiApproved = connectorsByGateway("communication").some(
-    (connector) => connector.handlesPhi && connectorReadiness(connector).phiUsable,
-  );
+  const connector = getConnector(channel.connectorId);
+  // An adapter naming a connector the catalog does not describe cannot be assessed, and
+  // an unassessable rail is not an approved one.
+  const phiApproved = Boolean(connector && connector.handlesPhi && connectorReadiness(connector).phiUsable);
   if (!phiApproved) {
     return {
       deliverable: false as const,
       reason: "phi_not_approved" as const,
-      detail: "A messaging provider is configured, but none is approved to carry protected health information. Patient messages stay prepared until one is.",
+      detail: `${connector?.name ?? channel.provider} carries ${PATIENT_MESSAGE_CHANNEL} for this deployment and is not approved to carry protected health information. Patient messages stay prepared until it is.`,
     };
   }
 

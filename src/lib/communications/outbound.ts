@@ -47,6 +47,16 @@ export type OutboundEnv = Record<string, string | undefined>;
 export type OutboundAdapter = {
   channel: OutboundChannel;
   provider: string;
+  /**
+   * The connector catalog entry this adapter actually sends through.
+   *
+   * Required, because compliance questions are asked about the rail a message will
+   * take, and only the adapter knows which rail that is. A gateway-wide answer — "some
+   * communication connector is approved for PHI" — is not an answer about this one:
+   * Twilio being approved would say nothing about Resend, which is what would carry
+   * the message.
+   */
+  connectorId: string;
   configured: (env: OutboundEnv) => boolean;
   send: (message: OutboundMessage, env: OutboundEnv) => Promise<OutboundResult>;
 };
@@ -79,6 +89,7 @@ export function resetOutboundAdapters() {
 const resendEmailAdapter: OutboundAdapter = {
   channel: "email",
   provider: "resend",
+  connectorId: "resend",
   configured: (env) => Boolean(env.RESEND_API_KEY?.trim()),
   send: async (message, env) => {
     if (!message.to.includes("@")) {
@@ -133,7 +144,9 @@ export function outboundChannelStatus(channel: OutboundChannel, env: OutboundEnv
   if (!adapter.configured(env)) {
     return { deliverable: false as const, reason: "no_connector" as const, detail: `No ${channel} provider is configured for this deployment.` };
   }
-  return { deliverable: true as const, provider: adapter.provider };
+  // The connector id travels with the answer so a caller asking a compliance question
+  // asks it about this adapter rather than about the gateway it belongs to.
+  return { deliverable: true as const, provider: adapter.provider, connectorId: adapter.connectorId };
 }
 
 /** Attempt a real send. Never throws — the failure is the answer. */
