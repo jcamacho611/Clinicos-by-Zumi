@@ -25,6 +25,7 @@ export type NormalizedCommercialWebhook = {
   verificationMethod: "webhook_signature" | "api_verification";
   processorVerified: true;
   productKey: string | null;
+  organizationId: string | null;
   email: string | null;
   externalCustomerId: string | null;
   externalSubscriptionId: string | null;
