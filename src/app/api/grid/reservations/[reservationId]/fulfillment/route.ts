@@ -3,6 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { transitionGridFulfillment } from "@/lib/grid/fulfillment-repository";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
+import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-event-bridge";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ reservationId: string }> }) {
   const session = await getClinicSession();
@@ -12,7 +13,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ re
 
   try {
     const { reservationId } = await params;
-    return NextResponse.json({ data: await transitionGridFulfillment(session, reservationId, await request.json()) });
+    const body = await request.json() as { targetStatus?: string };
+    const updated = await transitionGridFulfillment(session, reservationId, body);
+    if (body.targetStatus === "fulfilled") {
+      await recordTrustedPathDomainEvent(session, {
+        eventType: "grid.fulfillment.fulfilled",
+        sourceType: "grid_reservation",
+        sourceId: reservationId,
+        metadata: { status: updated.status, fulfillmentStatus: updated.fulfillmentStatus },
+      });
+    }
+    return NextResponse.json({ data: updated });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
