@@ -250,6 +250,15 @@ export const whopWebhookEnvelopeSchema = z.object({
     subtotal: z.union([z.number(), z.string()]).nullish(),
     amount: z.union([z.number(), z.string()]).nullish(),
     currency: z.string().trim().max(12).nullish(),
+    // On a refund or dispute, `data.id` identifies the refund or dispute itself. The
+    // payment being reversed is named by one of these instead. Several spellings are
+    // accepted because the field differs across Whop's event shapes, and reading the
+    // wrong one is exactly how a refund failed to find the purchase it reverses.
+    payment_id: nullableString,
+    original_payment_id: nullableString,
+    receipt_id: nullableString,
+    charge_id: nullableString,
+    payment: z.object({ id: nullableString }).passthrough().nullish(),
     renewal_period_end: z.union([z.number(), z.string()]).nullish(),
     expires_at: z.union([z.number(), z.string()]).nullish(),
     metadata: z.record(z.string(), z.unknown()).nullish(),
@@ -345,6 +354,47 @@ export function whopEventAmountMinorUnits(data: {
     const parsed = typeof candidate === "number" ? candidate : Number.parseFloat(candidate);
     if (!Number.isFinite(parsed) || parsed <= 0) continue;
     return Math.round(parsed * 100);
+  }
+  return null;
+}
+
+/**
+ * Event types that reverse a completed purchase rather than complete one.
+ *
+ * Named here rather than inferred from the outcome, because the two need different
+ * handling before an outcome is even known: a reversal identifies its payment by a
+ * different field, and it looks for a payment in a settled state rather than an open
+ * one.
+ */
+export const whopReversalEvents = ["refund.created", "dispute.created"] as const;
+
+export function whopEventIsReversal(eventType: string) {
+  return (whopReversalEvents as readonly string[]).includes(eventType);
+}
+
+/**
+ * The reference of the payment a reversal event is reversing, or null.
+ *
+ * Deliberately never falls back to `data.id`. On a refund that value is the refund
+ * object's own id, and storing it as the payment reference was the defect: the direct
+ * lookup then missed, the buyer's `verified_paid` row was never reversed, and their
+ * portal access stayed granted after the money went back.
+ *
+ * Returning null is a real answer. It means this delivery cannot say which purchase to
+ * reverse, and the caller must treat that as unfinished work rather than as nothing to
+ * do.
+ */
+export function whopOriginalPaymentReference(data: {
+  payment_id?: string | null;
+  original_payment_id?: string | null;
+  receipt_id?: string | null;
+  charge_id?: string | null;
+  payment?: { id?: string | null } | null;
+}): string | null {
+  const candidates = [data.payment_id, data.original_payment_id, data.receipt_id, data.charge_id, data.payment?.id];
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (trimmed) return trimmed;
   }
   return null;
 }

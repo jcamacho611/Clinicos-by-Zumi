@@ -149,6 +149,15 @@ export function corroborateEmailMatch(input: {
   payment: { productKey: string; amountCents: number };
   amountMinorUnits: number | null;
   providerProductId: string | null;
+  /**
+   * Whether this event reverses the payment rather than completing it.
+   *
+   * A refund may legitimately be partial, so a smaller amount is not evidence of a
+   * different purchase the way it is on a settlement. It still cannot *confirm*
+   * anything — only an exact match does that — and an amount larger than the original
+   * is still positive evidence that this is some other purchase.
+   */
+  reversal?: boolean;
   env?: Record<string, string | undefined>;
 }): { ok: true } | { ok: false; reason: "amount_mismatch" | "product_mismatch" | "unverified_product" } {
   const expectedProductId = configuredProviderProductId(input.payment.productKey, input.env);
@@ -156,8 +165,11 @@ export function corroborateEmailMatch(input: {
   if (input.providerProductId && expectedProductId && input.providerProductId !== expectedProductId) {
     return { ok: false, reason: "product_mismatch" };
   }
-  if (input.amountMinorUnits !== null && input.amountMinorUnits !== input.payment.amountCents) {
-    return { ok: false, reason: "amount_mismatch" };
+  if (input.amountMinorUnits !== null) {
+    const contradicted = input.reversal
+      ? input.amountMinorUnits > input.payment.amountCents
+      : input.amountMinorUnits !== input.payment.amountCents;
+    if (contradicted) return { ok: false, reason: "amount_mismatch" };
   }
 
   const productConfirmed = Boolean(input.providerProductId && expectedProductId && input.providerProductId === expectedProductId);
@@ -177,4 +189,16 @@ export function corroborateEmailMatch(input: {
  */
 export function configuredProviderProductId(productKey: string, env: Record<string, string | undefined> = process.env) {
   return env[`WHOP_PRODUCT_ID_${productKey.toUpperCase()}`]?.trim() || null;
+}
+
+/**
+ * The statuses a payment may be in for this outcome to apply to it.
+ *
+ * Derived from the transition table rather than listed, because the two directions need
+ * opposite sets and a hardcoded list gets one of them wrong. It did: the email fallback
+ * searched only open payments, so a refund could never find the `verified_paid` row it
+ * needed to reverse and a refunded buyer kept portal access.
+ */
+export function candidateStatusesFor(targetStatus: AccessPaymentStatus): AccessPaymentStatus[] {
+  return accessPaymentStatuses.filter((status) => canTransitionAccessPayment(status, targetStatus));
 }

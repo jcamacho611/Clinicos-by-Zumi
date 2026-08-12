@@ -16,8 +16,12 @@ import {
   streamForState,
 } from "@/lib/operations/followup-rules";
 import { buyerRoleForModules, planProvisioning } from "@/lib/provisioning/provisioning-rules";
-import { corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
-import { whopEventAmountMinorUnits } from "@/lib/commerce/whop-rules";
+import { candidateStatusesFor, corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
+import {
+  whopEventAmountMinorUnits,
+  whopEventIsReversal,
+  whopOriginalPaymentReference,
+} from "@/lib/commerce/whop-rules";
 import { admitZumiRequest, type ZumiAdmissionInput } from "@/features/zumi/policy";
 import { phiEgressPermitted, zumiGatewayStatus, registerProvider, resetProviderRegistry, type ProviderAdapter } from "@/features/zumi/providers";
 import { anthropicAdapter } from "@/features/zumi/adapters/anthropic";
@@ -1186,5 +1190,89 @@ describe("PHI approval is asked about the rail the message actually takes", () =
       (connector) => connector.gateway === "communication" && connectorReadiness(connector).phiUsable,
     );
     expect(approved).toEqual([]);
+  });
+});
+
+describe("a refund reverses the purchase it is actually a refund of", () => {
+  // The reviewed defect: for refund.created and dispute.created, data.id is the refund
+  // or dispute object, not the payment. It was passed as the payment reference, so the
+  // direct lookup missed; the email fallback then searched only open payments and never
+  // the verified_paid row that needed reversing. A refunded buyer kept portal access.
+  const founding = { productKey: "founding_clinic_seat", amountCents: 800_000 };
+
+  it("never reads the refund object's own id as the payment reference", () => {
+    // The whole defect in one assertion: this extractor is given the refund envelope and
+    // must not hand back `re_...`.
+    // An envelope carrying only the refund's own id yields nothing, which is the point:
+    // there is no fallback that would turn `re_...` into a payment reference.
+    expect(whopOriginalPaymentReference({})).toBeNull();
+    const route = source("src/app/api/whop/webhook/route.ts");
+    const ternary = route.slice(route.indexOf("const paymentReference = reversal"));
+    const reversalBranch = ternary.slice(ternary.indexOf("?"), ternary.indexOf("\n        :"));
+    expect(reversalBranch).toContain("whopOriginalPaymentReference(envelope.data ?? {})");
+    expect(reversalBranch).not.toContain("membershipId");
+    expect(reversalBranch).not.toContain("envelope.id");
+  });
+
+  it("reads the original payment from whichever field the event uses", () => {
+    expect(whopOriginalPaymentReference({ payment_id: "pay_1" })).toBe("pay_1");
+    expect(whopOriginalPaymentReference({ original_payment_id: "pay_2" })).toBe("pay_2");
+    expect(whopOriginalPaymentReference({ receipt_id: "rcpt_3" })).toBe("rcpt_3");
+    expect(whopOriginalPaymentReference({ charge_id: "ch_4" })).toBe("ch_4");
+    expect(whopOriginalPaymentReference({ payment: { id: "pay_5" } })).toBe("pay_5");
+  });
+
+  it("ignores blank references rather than storing whitespace", () => {
+    expect(whopOriginalPaymentReference({ payment_id: "   ", receipt_id: "rcpt_1" })).toBe("rcpt_1");
+  });
+
+  it("classifies both refunds and disputes as reversals", () => {
+    expect(whopEventIsReversal("refund.created")).toBe(true);
+    expect(whopEventIsReversal("dispute.created")).toBe(true);
+    expect(whopEventIsReversal("payment.succeeded")).toBe(false);
+  });
+
+  it("looks for a settled payment when reversing and an open one when settling", () => {
+    // Derived from the transition table, so the two directions cannot drift apart.
+    expect(candidateStatusesFor("refunded")).toContain("verified_paid");
+    expect(candidateStatusesFor("refunded")).not.toContain("created");
+    expect(candidateStatusesFor("verified_paid")).toEqual(["created", "pending_verification", "held"]);
+  });
+
+  it("accepts a partial refund without treating the smaller amount as a mismatch", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 800_000, providerProductId: null, reversal: true }),
+    ).toEqual({ ok: true });
+    // Partial: neither confirms nor contradicts, so it falls through to the same
+    // "nothing corroborated this" refusal rather than being called a mismatch.
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 50_000, providerProductId: null, reversal: true }),
+    ).toEqual({ ok: false, reason: "unverified_product" });
+  });
+
+  it("still refuses a refund larger than the payment it claims to reverse", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 900_000, providerProductId: null, reversal: true }),
+    ).toEqual({ ok: false, reason: "amount_mismatch" });
+  });
+
+  it("keeps a smaller amount a mismatch on the settlement path", () => {
+    // The partial-refund allowance must not leak into settlement, where an unrelated
+    // cheaper purchase is exactly what the amount check is for.
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 50_000, providerProductId: null }),
+    ).toEqual({ ok: false, reason: "amount_mismatch" });
+  });
+
+  it("does not answer a reversal it could not match as though nothing was owed", () => {
+    // Money went back and access may still be granted. The delivery stays non-terminal
+    // with a stated reason instead of falling through to a 202 nobody looks at.
+    const route = source("src/app/api/whop/webhook/route.ts");
+    const branch = route.slice(route.indexOf("if (reversal) {"));
+    const body = branch.slice(0, branch.indexOf("\n      }"));
+    expect(body).toContain("markWebhookIncomplete");
+    expect(body).toContain("reversal_unmatched");
+    expect(body).toContain("500");
+    expect(body).toContain("retry: true");
   });
 });

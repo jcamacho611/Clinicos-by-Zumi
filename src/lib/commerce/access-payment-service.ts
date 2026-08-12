@@ -9,6 +9,7 @@ import {
 } from "@/lib/commerce/access-product-catalog";
 import {
   type AccessPaymentVerificationInput,
+  candidateStatusesFor,
   canTransitionAccessPayment,
   corroborateEmailMatch,
   derivePortalAccess,
@@ -259,6 +260,8 @@ export async function applyWebhookToAccessPayment(input: {
 }) {
   const reference = input.externalPaymentReference?.trim() || null;
   const email = input.buyerEmail?.trim().toLowerCase() || null;
+  const targetStatus = input.outcome === "paid" ? "verified_paid" : input.outcome === "refunded" ? "refunded" : "failed";
+  const reversal = input.outcome === "refunded";
 
   let payment = reference
     ? await db.accessPayment.findFirst({
@@ -277,7 +280,11 @@ export async function applyWebhookToAccessPayment(input: {
     const candidates = await db.accessPayment.findMany({
       where: {
         buyerEmail: email,
-        status: { in: ["created", "pending_verification", "held"] },
+        // Derived from the transition table rather than listed, because the two
+        // directions need opposite sets and a hardcoded list gets one of them wrong.
+        // A settlement looks for an open payment; a refund looks for a settled one, and
+        // searching only open rows is why a refunded buyer kept portal access.
+        status: { in: candidateStatusesFor(targetStatus) },
       },
       orderBy: { createdAt: "desc" },
       take: 2,
@@ -296,6 +303,7 @@ export async function applyWebhookToAccessPayment(input: {
       payment,
       amountMinorUnits: input.amountMinorUnits ?? null,
       providerProductId: input.providerProductId ?? null,
+      reversal,
     });
     if (!corroboration.ok) return { applied: false as const, reason: corroboration.reason };
   }
@@ -303,7 +311,6 @@ export async function applyWebhookToAccessPayment(input: {
     return { applied: false as const, reason: "reference_conflict" as const };
   }
 
-  const targetStatus = input.outcome === "paid" ? "verified_paid" : input.outcome === "refunded" ? "refunded" : "failed";
   if (!canTransitionAccessPayment(payment.status, targetStatus)) {
     return { applied: false as const, reason: "invalid_transition" as const };
   }

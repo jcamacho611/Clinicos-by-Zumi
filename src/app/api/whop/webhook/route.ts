@@ -13,6 +13,8 @@ import {
   verifyStandardWebhookSignature,
   verifyWhopSignature,
   whopEventAmountMinorUnits,
+  whopEventIsReversal,
+  whopOriginalPaymentReference,
   whopWebhookEnvelopeSchema,
 } from "@/lib/commerce/whop-rules";
 import { deliverActivation, provisionFromPayment, revokeProvisionedAccess } from "@/lib/provisioning/provisioning-service";
@@ -99,10 +101,20 @@ export async function POST(request: Request) {
   try {
     const paymentOutcome = paymentOutcomes[eventType];
     if (paymentOutcome) {
+      // On a reversal, `data.id` is the refund or dispute object — not the payment being
+      // reversed. Passing it as the payment reference meant the lookup missed and the
+      // buyer's settled row was never refunded, so their portal access survived the
+      // money going back. There is deliberately no fallback to `data.id` here: a
+      // reversal that cannot name its payment is unfinished work, not a match.
+      const reversal = whopEventIsReversal(eventType);
+      const paymentReference = reversal
+        ? whopOriginalPaymentReference(envelope.data ?? {})
+        : membershipId ?? envelope.id?.trim() ?? null;
+
       // The envelope carries what was actually bought. Passing only the reference and
       // email is what let an unrelated purchase settle an open invoice.
       const settled = await applyWebhookToAccessPayment({
-        externalPaymentReference: membershipId ?? envelope.id?.trim() ?? null,
+        externalPaymentReference: paymentReference,
         buyerEmail: envelope.data?.email ?? null,
         outcome: paymentOutcome,
         amountMinorUnits: whopEventAmountMinorUnits(envelope.data ?? {}),
@@ -110,6 +122,15 @@ export async function POST(request: Request) {
       });
       if (settled.applied) {
         return noStore({ ok: true, applied: true, scope: "access_payment", status: settled.status }, 200);
+      }
+
+      // A reversal that found nothing must not fall through to membership handling,
+      // where it would be answered 202 and forgotten. Money went back and access may
+      // still be granted, so the delivery stays non-terminal with a stated reason: a
+      // redelivery re-attempts it, and an operator can see the ones that never match.
+      if (reversal) {
+        await markWebhookIncomplete(delivery.id, `reversal_unmatched:${settled.reason}`);
+        return noStore({ ok: false, applied: false, scope: "access_payment", reason: settled.reason, retry: true }, 500);
       }
     }
 
