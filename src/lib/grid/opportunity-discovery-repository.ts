@@ -95,7 +95,10 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
 
   if (resource.status !== "active" || resource.reviewStatus !== "approved") return null;
   if (!resourceKinds[demand.kind]?.includes(resource.resourceType)) return null;
-  if (!["public", "network"].includes(resource.visibility) && resource.organizationId !== demand.organizationId) return null;
+
+  const sameOrganization = resource.organizationId === demand.organizationId;
+  const purposeBoundMatch = resource.visibility === "matched_only";
+  if (!sameOrganization && resource.visibility !== "public" && !purposeBoundMatch) return null;
   if (demand.state && resource.state && demand.state.toLowerCase() !== resource.state.toLowerCase()) return null;
   if (demand.maxPriceCents != null && resource.priceCents != null && resource.priceCents > demand.maxPriceCents) return null;
   if (resource.capacity < demand.quantity) return null;
@@ -103,6 +106,10 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
   const capacityClass = ["healthcare_space", "equipment_capacity", "education_capacity", "referral_capacity"].includes(resource.policyClass);
   if (capacityClass && !overlaps(demand, slots)) return null;
 
+  if (purposeBoundMatch && !sameOrganization) {
+    score += 5;
+    reasons.push("This resource is match-only and is being disclosed only because it fits this authenticated saved need.");
+  }
   if (demand.city && resource.city && demand.city.toLowerCase() === resource.city.toLowerCase()) {
     score += 15;
     reasons.push("Same city as the saved need.");
