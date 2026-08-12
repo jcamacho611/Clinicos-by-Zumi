@@ -1,4 +1,5 @@
 export const commercialProductKeys = [
+  "operational_audit",
   "clinic_operator",
   "grid_professional",
   "grid_facility",
@@ -22,6 +23,16 @@ export type CommercialProduct = {
 };
 
 export const commercialProducts: readonly CommercialProduct[] = [
+  {
+    key: "operational_audit",
+    label: "Klinikos Operational Audit",
+    audience: "clinic",
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary:
+      "Payment purchases the audit engagement only. It does not activate production software, PHI workflows, clinical authority, Grid eligibility, or any regulated capability.",
+  },
   {
     key: "clinic_operator",
     label: "Klinikos Clinic Operator",
