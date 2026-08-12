@@ -10,45 +10,44 @@ import {
 } from "@/components/command/zumi-command-shell";
 
 /**
- * Entry point, under command law.
+ * Klinikos entry router.
  *
- * A router rather than a form: it establishes what Klinikos is, what the analysis
- * will do, and sends the operator into the guided flow. No fields are collected
- * here, because nothing useful can be asked before Zumi has framed the mission.
+ * It establishes what the user needs, then routes them into the right experience.
+ * No fields are collected here and no payment or clinical state changes here.
  */
 
 export const metadata = {
-  title: "Start — Klinikos by Zumi",
+  title: "Start | Klinikos",
   description:
-    "Begin the Klinikos Clinic Operating Analysis. Zumi maps where your clinic loses control and prepares a private workflow review for human approval.",
+    "Choose the Klinikos path that fits your goal. Zumi guides the operating analysis inside Klinikos and keeps consequential decisions with people.",
 };
 
 const entryPaths = [
   {
     icon: Radar,
-    eyebrow: "Most operators start here",
+    eyebrow: "For clinic operators",
     title: "Clinic Operating Analysis",
-    body: "Answer a short sequence of operational questions. Zumi builds your operating map and identifies where work is getting lost.",
+    body: "Answer a short sequence of operational questions. Zumi builds your operating map and shows where work may be losing continuity.",
     href: "/sales",
     cta: "Start the analysis",
     primary: true,
   },
   {
     icon: Compass,
-    eyebrow: "Already decided",
+    eyebrow: "For clinics ready to evaluate",
     title: "Founding Clinic Qualification",
-    body: "For operators seriously considering Klinikos as their clinic command layer and ready to be evaluated for the founding pathway.",
+    body: "Review whether Klinikos fits your clinic, what would be included, what still depends on external connections, and what production readiness requires.",
     href: "/founding-clinic",
     cta: "View qualification",
     primary: false,
   },
   {
     icon: ShieldCheck,
-    eyebrow: "Independent clinicians",
-    title: "Klinikos GRID",
-    body: "For nurses, injectors, and location partners joining the governed provider network. Credentials are verified by a human before activation.",
-    href: "/grid/join",
-    cta: "Join GRID",
+    eyebrow: "Healthcare opportunity network",
+    title: "Klinikos Grid",
+    body: "Find or offer eligible healthcare work, services, space, capacity, education, and other permitted resources. Regulated participation remains policy- and human-gated.",
+    href: "/grid",
+    cta: "Explore Grid",
     primary: false,
   },
 ] as const;
@@ -60,22 +59,21 @@ export default function StartPage() {
         <div className="mx-auto grid max-w-[1500px] gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:py-24">
           <div>
             <MissionPhaseProgress current="brief" />
-            <p className="mt-8 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Command center entry</p>
+            <p className="mt-8 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Choose your Klinikos path</p>
             <h1
               className="mt-4 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
               id="start-heading"
             >
-              Tell Zumi how the clinic actually runs.
+              Start with what you need.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Klinikos by Zumi maps the work your clinic is losing track of, then prepares a private workflow review for human approval.
-              Nothing is activated, purchased, or committed from this page.
+              Klinikos routes you into the right experience. Zumi is the operating intelligence inside Klinikos, helping organize information and prepare the next step without replacing human review.
             </p>
           </div>
 
           <ZumiBriefingPanel active>
-            Pick the path that matches where you are. If you are not sure, start with the Clinic Operating Analysis — it takes a few
-            minutes and produces your operating map. Do not enter patient names, records, diagnoses, or PHI anywhere in Klinikos intake.
+            Pick the path that matches your goal. If you are not sure, start with the Clinic Operating Analysis. Do not enter patient names,
+            records, diagnoses, or PHI anywhere in the public qualification flow.
           </ZumiBriefingPanel>
         </div>
       </section>
