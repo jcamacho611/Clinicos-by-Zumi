@@ -13,6 +13,10 @@ import { type EntitlementRecord, evaluateEntitlement } from "@/lib/commerce/whop
 export const gridMarketplaceActions = [
   "browse",
   "publish_listing",
+  // Publishing availability is how a provider offers capacity to the marketplace — the
+  // same economic act as publishing a listing. It was the one ordinary marketplace write
+  // with no paid-access guard, so a contractor could offer capacity without a pass.
+  "publish_availability",
   "send_request",
   "receive_request",
   "list_location",
@@ -23,6 +27,9 @@ export type GridMarketplaceAction = (typeof gridMarketplaceActions)[number];
 
 const requiredCapability: Record<GridMarketplaceAction, AccessCapability> = {
   browse: "grid_browse",
+  // Offering capacity and offering a service are the same economic act, so they share
+  // an entitlement rather than inventing a second one nothing grants.
+  publish_availability: "grid_publish_listing",
   publish_listing: "grid_publish_listing",
   send_request: "grid_send_request",
   receive_request: "grid_receive_request",
@@ -34,7 +41,16 @@ const requiredCapability: Record<GridMarketplaceAction, AccessCapability> = {
  * Actions that put a provider in front of real work. These stay blocked until a
  * human has verified licensure and malpractice coverage, regardless of payment.
  */
-const credentialGatedActions: readonly GridMarketplaceAction[] = ["publish_listing", "receive_request", "receive_payout"];
+const credentialGatedActions: readonly GridMarketplaceAction[] = [
+  "publish_listing",
+  // Offering yourself as available for work is putting yourself in front of real work,
+  // so it waits for human verification exactly as publishing a listing does. The
+  // repository already downgrades unverified availability to draft; this refuses it at
+  // the boundary instead of relying on that downstream correction.
+  "publish_availability",
+  "receive_request",
+  "receive_payout",
+];
 
 export const gridAccessDenialReasons = [
   "no_entitlement",

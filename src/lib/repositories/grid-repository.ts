@@ -630,13 +630,18 @@ export async function transitionGridProvider(session: ClinicSession, providerId:
 }
 
 export async function createGridServiceListing(session: ClinicSession, rawInput: unknown) {
-  requirePermission(session, "network", "create");
+  // A marketplace listing is a GRID act, not a clinical-network one. Gating it on
+  // `network` meant a paid contractor cleared the route guard and was then refused
+  // here, one layer down, by a permission their pass does not and should not include.
+  requirePermission(session, "grid", "create");
   const input = gridServiceListingSchema.parse(rawInput);
   return db.$transaction(async (tx) => {
     await requireSyntheticOrganization(session.organizationId, tx);
     const provider = await tx.provider.findFirst({ where: { id: input.providerId, organizationId: session.organizationId, status: "active" }, include: { credentials: true } });
     if (!provider) throw new NetworkAccessError("Provider not found for this organization.", 404);
-    const canActivate = can(session.role, "network", "manage") && providerReadyForGrid(provider);
+    // Activation stays administrative — a contractor may list, not approve. `grid:manage`
+    // is held by owners and administrators and deliberately not by `contractor`.
+    const canActivate = can(session.role, "grid", "manage") && providerReadyForGrid(provider);
     if (input.status === "active" && !canActivate) throw new NetworkAccessError("Only a network administrator can activate a service after provider verification.", 409);
     const listing = await tx.gridServiceListing.create({ data: { ...input, organizationId: session.organizationId, status: input.status, createdBy: session.userId, approvedBy: input.status === "active" ? session.userId : null, approvedAt: input.status === "active" ? new Date() : null } });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "grid.service_listing_created", resourceType: "grid_service_listing", resourceId: listing.id, metadata: { providerId: provider.id, status: listing.status, humanReviewRequired: listing.status !== "active" } } });
@@ -645,13 +650,16 @@ export async function createGridServiceListing(session: ClinicSession, rawInput:
 }
 
 export async function createGridAvailability(session: ClinicSession, rawInput: unknown) {
-  if (!can(session.role, "network", "create") && !can(session.role, "grid", "update")) throw new NetworkAccessError("Grid availability access is not permitted for this role.", 403);
+  if (!can(session.role, "grid", "create") && !can(session.role, "grid", "update")) throw new NetworkAccessError("Grid availability access is not permitted for this role.", 403);
   const input = gridAvailabilitySchema.parse(rawInput);
   return db.$transaction(async (tx) => {
     await requireSyntheticOrganization(session.organizationId, tx);
     const provider = await tx.provider.findFirst({ where: { id: input.providerId, organizationId: session.organizationId, status: "active" }, include: { credentials: true } });
     if (!provider) throw new NetworkAccessError("Provider not found for this organization.", 404);
-    if (can(session.role, "grid", "update") && !can(session.role, "network", "create") && provider.userId !== session.userId) throw new NetworkAccessError("Contractors may only publish their own availability.", 403);
+    // Anyone without organization-wide GRID administration may only publish for
+    // themselves. This is the rule that keeps a marketplace participant from listing
+    // availability on another provider's behalf.
+    if (!can(session.role, "grid", "manage") && provider.userId !== session.userId) throw new NetworkAccessError("Contractors may only publish their own availability.", 403);
     if (provider.userId && session.role === "provider" && provider.userId !== session.userId) throw new NetworkAccessError("Providers may only publish their own availability.", 403);
     if (input.locationId) {
       const location = await tx.location.findFirst({ where: { id: input.locationId, status: "active", OR: [{ organizationId: session.organizationId }, { marketplaceVisible: true }] }, select: { id: true } });
@@ -666,7 +674,9 @@ export async function createGridAvailability(session: ClinicSession, rawInput: u
 }
 
 export async function createGridLocation(session: ClinicSession, rawInput: unknown) {
-  requirePermission(session, "network", "manage");
+  // A location partner's pass buys exactly this. `grid:create`, not `network:manage`,
+  // which is clinical-network administration a marketplace participant never holds.
+  requirePermission(session, "grid", "create");
   const input = gridLocationSchema.parse(rawInput);
   return db.$transaction(async (tx) => {
     await requireSyntheticOrganization(session.organizationId, tx);

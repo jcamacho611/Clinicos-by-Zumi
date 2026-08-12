@@ -659,3 +659,48 @@ describe("third review round", () => {
     });
   });
 });
+
+describe("fourth review round — GRID authorization", () => {
+  const src = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+  it("guards every ordinary marketplace write with the paid-access gate", () => {
+    // Availability was the one write that reached the repository without a pass, so a
+    // contractor with a revoked or absent pass could still offer capacity.
+    for (const path of [
+      "src/app/api/grid/availability/route.ts",
+      "src/app/api/grid/services/route.ts",
+      "src/app/api/grid/locations/route.ts",
+      "src/app/api/grid/requests/route.ts",
+    ]) {
+      expect({ path, guarded: src(path).includes("enforceGridMarketplaceAccess") }).toEqual({ path, guarded: true });
+    }
+  });
+
+  it("credential-gates offering capacity, not only offering a service", () => {
+    const access = src("src/lib/grid-access.ts");
+    const gated = access.slice(access.indexOf("credentialGatedActions"));
+    expect(gated).toContain('"publish_availability"');
+    expect(gated).toContain('"publish_listing"');
+  });
+
+  it("gates GRID repository writes on grid, never on the clinical network", () => {
+    // The route fix alone was not enough: the repository refused the same callers one
+    // layer down, so a paid contractor still received 403.
+    const repo = src("src/lib/repositories/grid-repository.ts");
+    for (const fn of ["createGridServiceListing", "createGridLocation", "createGridAvailability"]) {
+      const body = repo.slice(repo.indexOf(`export async function ${fn}`), repo.indexOf(`export async function ${fn}`) + 900);
+      expect({ fn, network: /can\(session\.role, "network"|requirePermission\(session, "network"/.test(body) })
+        .toEqual({ fn, network: false });
+    }
+  });
+
+  it("keeps activation administrative rather than opening it to contractors", () => {
+    const repo = src("src/lib/repositories/grid-repository.ts");
+    expect(repo).toContain('can(session.role, "grid", "manage") && providerReadyForGrid(provider)');
+  });
+
+  it("does not let a contractor publish availability for another provider", () => {
+    const repo = src("src/lib/repositories/grid-repository.ts");
+    expect(repo).toContain('!can(session.role, "grid", "manage") && provider.userId !== session.userId');
+  });
+});
