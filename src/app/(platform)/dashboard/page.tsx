@@ -4,6 +4,7 @@ import { PathSignals } from "@/components/clinic/path-signals";
 import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";
 import { requireClinicSession } from "@/lib/auth/session";
+import { resolvePathGuidanceList } from "@/lib/orchestration/path-guidance-engine";
 import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
 import { listRecentPathSignals } from "@/lib/orchestration/path-signal-repository";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
@@ -16,6 +17,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listActivePathSnapshots(session),
     listRecentPathSignals(session),
   ]);
+  const pathGuidance = resolvePathGuidanceList(session, activePaths);
   const query = await searchParams;
   const seededDemo = session.organizationId === "org-bfm" || session.organizationId === "org-luxe";
   const firstName = session.name.split(/\s+/)[0] || "there";
@@ -23,7 +25,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-14">
       <div>
-        <LivingHome firstName={firstName} initialPaths={activePaths} />
+        <LivingHome firstName={firstName} initialPaths={activePaths} initialGuidance={pathGuidance} />
         <PathSignals signals={recentPathSignals} />
       </div>
       <section aria-labelledby="operations-heading" className="space-y-5">
