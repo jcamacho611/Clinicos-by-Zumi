@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, MapPin, ShieldCheck, UserRound, WalletCards } from "lucide-react";
+import { ArrowRight, CheckCircle2, Crosshair, LoaderCircle, MapPin, ShieldCheck, UserRound, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -65,6 +65,9 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("NY");
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
+  const [locating, setLocating] = useState(false);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [capacity, setCapacity] = useState("1");
@@ -82,6 +85,27 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
     { title: "What can it be used for?", icon: ShieldCheck },
     { title: "What do you want for it?", icon: WalletCards },
   ] as const;
+
+  function useCurrentLocation() {
+    setError(null);
+    if (!navigator.geolocation) {
+      setError("This browser does not provide location access. You can continue with city and state only.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude.toFixed(6));
+        setLongitude(position.coords.longitude.toFixed(6));
+        setLocating(false);
+      },
+      () => {
+        setError("Grid could not read this device location. You can continue with city and state only.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    );
+  }
 
   if (result) {
     return <div className="border border-emerald-200 bg-white p-7 shadow-[0_24px_70px_rgba(5,150,105,.08)]">
@@ -124,6 +148,9 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
     try {
       const numericCapacity = Math.max(1, Math.round(Number(capacity)));
       const priceCents = pricingModel === "quote" ? null : dollarsToCents(rate);
+      const parsedLatitude = latitude ? Number(latitude) : null;
+      const parsedLongitude = longitude ? Number(longitude) : null;
+      const coordinatesValid = parsedLatitude != null && parsedLongitude != null && Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude);
       const response = await fetch("/api/grid/enroll/participant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,6 +170,8 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
             city,
             state,
             timezone: "America/New_York",
+            latitude: coordinatesValid ? parsedLatitude : null,
+            longitude: coordinatesValid ? parsedLongitude : null,
             pricingModel,
             priceCents,
             capacity: numericCapacity,
@@ -178,7 +207,7 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
       <label className={label}>Listing name<Input value={name} onChange={(event) => setName(event.target.value)} placeholder={copy.listingPlaceholder} /></label>
     </div>}
 
-    {step === 1 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>City<Input value={city} onChange={(event) => setCity(event.target.value)} /></label><label className={label}>State<Input value={state} maxLength={2} onChange={(event) => setState(event.target.value.toUpperCase())} /></label></div>}
+    {step === 1 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>City<Input value={city} onChange={(event) => setCity(event.target.value)} /></label><label className={label}>State<Input value={state} maxLength={2} onChange={(event) => setState(event.target.value.toUpperCase())} /></label><div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-extrabold text-slate-800">Map position</p><p className="mt-1 text-[10px] leading-5 text-slate-500">Optional. Use the device only if you are physically at the listed capacity. Otherwise Grid keeps city/state without inventing a pin.</p></div><Button type="button" variant="secondary" size="sm" disabled={locating} onClick={useCurrentLocation}>{locating ? <LoaderCircle className="size-4 animate-spin" /> : <Crosshair className="size-4" />}Use current location</Button></div>{latitude && longitude && <p className="mt-3 text-[10px] font-bold text-emerald-700">Coordinates captured: {latitude}, {longitude}</p>}</div></div>}
 
     {step === 2 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>Available from<Input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label><label className={label}>Available until<Input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label><label className={label}>Simultaneous capacity<Input min={1} type="number" value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label></div>}
 
