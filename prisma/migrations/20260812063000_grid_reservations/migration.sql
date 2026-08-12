@@ -40,7 +40,7 @@ ON "GridReservationRecord"("reservedStartAt");
 
 ALTER TABLE "GridReservationRecord"
 ADD CONSTRAINT "GridReservationRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridReservationRecord"
 ADD CONSTRAINT "GridReservationRecord_demandId_fkey"
@@ -52,12 +52,12 @@ FOREIGN KEY ("offerId") REFERENCES "GridOfferRecord"("id") ON DELETE CASCADE ON 
 
 ALTER TABLE "GridReservationRecord"
 ADD CONSTRAINT "GridReservationRecord_providerId_fkey"
-FOREIGN KEY ("providerId") REFERENCES "Provider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("providerId") REFERENCES "providers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "GridReservationRecord"
 ADD CONSTRAINT "GridReservationRecord_serviceListingId_fkey"
-FOREIGN KEY ("serviceListingId") REFERENCES "GridServiceListing"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("serviceListingId") REFERENCES "grid_service_listings"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "GridReservationRecord"
 ADD CONSTRAINT "GridReservationRecord_locationId_fkey"
-FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("locationId") REFERENCES "locations"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -24,7 +24,7 @@ ON "GridDisputeRecord"("openedByOrganizationId", "updatedAt");
 
 ALTER TABLE "GridDisputeRecord"
 ADD CONSTRAINT "GridDisputeRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridDisputeRecord"
 ADD CONSTRAINT "GridDisputeRecord_reservationId_fkey"
@@ -32,7 +32,7 @@ FOREIGN KEY ("reservationId") REFERENCES "GridReservationRecord"("id") ON DELETE
 
 ALTER TABLE "GridDisputeRecord"
 ADD CONSTRAINT "GridDisputeRecord_openedByOrganizationId_fkey"
-FOREIGN KEY ("openedByOrganizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("openedByOrganizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE "GridDisputeEventRecord" (
     "id" TEXT NOT NULL,
@@ -54,7 +54,7 @@ ON "GridDisputeEventRecord"("disputeId", "createdAt");
 
 ALTER TABLE "GridDisputeEventRecord"
 ADD CONSTRAINT "GridDisputeEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridDisputeEventRecord"
 ADD CONSTRAINT "GridDisputeEventRecord_disputeId_fkey"
@@ -90,7 +90,7 @@ ON "GridSafetyIncidentRecord"("reportedByOrganizationId", "updatedAt");
 
 ALTER TABLE "GridSafetyIncidentRecord"
 ADD CONSTRAINT "GridSafetyIncidentRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridSafetyIncidentRecord"
 ADD CONSTRAINT "GridSafetyIncidentRecord_reservationId_fkey"
@@ -98,7 +98,7 @@ FOREIGN KEY ("reservationId") REFERENCES "GridReservationRecord"("id") ON DELETE
 
 ALTER TABLE "GridSafetyIncidentRecord"
 ADD CONSTRAINT "GridSafetyIncidentRecord_reportedByOrganizationId_fkey"
-FOREIGN KEY ("reportedByOrganizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("reportedByOrganizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE "GridSafetyIncidentEventRecord" (
     "id" TEXT NOT NULL,
@@ -120,7 +120,7 @@ ON "GridSafetyIncidentEventRecord"("incidentId", "createdAt");
 
 ALTER TABLE "GridSafetyIncidentEventRecord"
 ADD CONSTRAINT "GridSafetyIncidentEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridSafetyIncidentEventRecord"
 ADD CONSTRAINT "GridSafetyIncidentEventRecord_incidentId_fkey"

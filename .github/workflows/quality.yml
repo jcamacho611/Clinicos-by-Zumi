@@ -18,6 +18,25 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
+    # A real Postgres so migrations can be applied to an empty database on every run.
+    # Without this the deploy path was never exercised: nine migrations referenced Prisma
+    # model names instead of their mapped table names and could not apply anywhere, and
+    # CI stayed green throughout because it never ran them.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: klinikos_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -32,6 +51,10 @@ jobs:
         run: npm run db:generate
       - name: Validate Prisma schema
         run: npm run db:validate
+      # The gate that makes a broken deploy path impossible to miss. A migration that
+      # cannot apply to an empty database fails here rather than in production.
+      - name: Apply migrations to a fresh database
+        run: npx prisma migrate deploy
       - name: Type check
         run: npm run type-check
       - name: Lint

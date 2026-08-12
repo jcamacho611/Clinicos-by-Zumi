@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "commercial_checkout_intents" (
   CONSTRAINT "commercial_checkout_intents_amount_check"
     CHECK ("amountCents" IS NULL OR "amountCents" >= 0),
   CONSTRAINT "commercial_checkout_intents_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS "commercial_checkout_intents_org_status_idx"
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS "commercial_payment_events" (
   CONSTRAINT "commercial_payment_events_amount_check"
     CHECK ("amountCents" IS NULL OR "amountCents" >= 0),
   CONSTRAINT "commercial_payment_events_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS "commercial_payment_events_org_received_idx"
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS "commercial_funding_accounts" (
   CONSTRAINT "commercial_funding_accounts_overage_check"
     CHECK ("authorizedOverageConsumedCents" + "authorizedOverageReservedCents" <= "authorizedOverageLimitCents"),
   CONSTRAINT "commercial_funding_accounts_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "commercial_usage_allowances" (
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS "commercial_usage_allowances" (
   CONSTRAINT "commercial_usage_allowances_period_check"
     CHECK ("periodEndsAt" > "periodStartsAt"),
   CONSTRAINT "commercial_usage_allowances_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS "commercial_usage_allowances_org_period_idx"
@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "commercial_usage_reservations" (
   CONSTRAINT "commercial_usage_reservations_allocation_check"
     CHECK ("includedReservedCents" + "prepaidReservedCents" + "overageReservedCents" = "estimatedCostCents"),
   CONSTRAINT "commercial_usage_reservations_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS "commercial_usage_reservations_org_status_idx"
@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS "commercial_usage_entries" (
   CONSTRAINT "commercial_usage_entries_reservation_fkey"
     FOREIGN KEY ("reservationId") REFERENCES "commercial_usage_reservations"("id") ON DELETE RESTRICT,
   CONSTRAINT "commercial_usage_entries_org_fkey"
-    FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE
+    FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS "commercial_usage_entries_org_bucket_idx"

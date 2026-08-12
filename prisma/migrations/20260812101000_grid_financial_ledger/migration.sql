@@ -53,7 +53,7 @@ ON "GridFinancialObligationRecord"("reservationId", "obligationType", COALESCE("
 
 ALTER TABLE "GridFinancialObligationRecord"
 ADD CONSTRAINT "GridFinancialObligationRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridFinancialObligationRecord"
 ADD CONSTRAINT "GridFinancialObligationRecord_reservationId_fkey"
@@ -80,7 +80,7 @@ ON "GridSettlementEventRecord"("obligationId", "createdAt");
 
 ALTER TABLE "GridSettlementEventRecord"
 ADD CONSTRAINT "GridSettlementEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridSettlementEventRecord"
 ADD CONSTRAINT "GridSettlementEventRecord_obligationId_fkey"

@@ -39,7 +39,7 @@ ON "GridResourceRecord"("state", "city");
 
 ALTER TABLE "GridResourceRecord"
 ADD CONSTRAINT "GridResourceRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE "GridResourceAvailabilityRecord" (
     "id" TEXT NOT NULL,
@@ -81,7 +81,7 @@ ON "GridResourceReviewEventRecord"("resourceId", "createdAt");
 
 ALTER TABLE "GridResourceReviewEventRecord"
 ADD CONSTRAINT "GridResourceReviewEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridResourceReviewEventRecord"
 ADD CONSTRAINT "GridResourceReviewEventRecord_resourceId_fkey"
