@@ -9,6 +9,8 @@ export * from "@/lib/orchestration/event-engine";
 export * from "@/lib/orchestration/notification-engine";
 export * from "@/lib/orchestration/graph-engine";
 export * from "@/lib/orchestration/matching-engine";
+export * from "@/lib/orchestration/grid-demand-engine";
+export * from "@/lib/orchestration/grid-composition-engine";
 export * from "@/lib/orchestration/transaction-engine";
 export * from "@/lib/orchestration/financial-engine";
 export * from "@/lib/orchestration/human-review-engine";
