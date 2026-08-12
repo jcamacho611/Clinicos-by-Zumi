@@ -42,11 +42,9 @@ function collectText(output: unknown) {
 function collectSources(output: unknown): ZumiExternalSource[] {
   if (!Array.isArray(output)) return [];
   const byUrl = new Map<string, ZumiExternalSource>();
-
   for (const item of output) {
     if (!item || typeof item !== "object") continue;
     const record = item as { type?: unknown; action?: unknown; content?: unknown };
-
     if (record.type === "web_search_call" && record.action && typeof record.action === "object") {
       const sources = (record.action as { sources?: unknown }).sources;
       if (Array.isArray(sources)) {
@@ -57,7 +55,6 @@ function collectSources(output: unknown): ZumiExternalSource[] {
         }
       }
     }
-
     if (record.type === "message" && Array.isArray(record.content)) {
       for (const part of record.content) {
         if (!part || typeof part !== "object") continue;
@@ -67,16 +64,27 @@ function collectSources(output: unknown): ZumiExternalSource[] {
           if (!annotation || typeof annotation !== "object") continue;
           const typed = annotation as { type?: unknown; url?: unknown; title?: unknown };
           if (typed.type !== "url_citation" || typeof typed.url !== "string") continue;
-          byUrl.set(typed.url, {
-            url: typed.url,
-            title: typeof typed.title === "string" ? typed.title : null,
-          });
+          byUrl.set(typed.url, { url: typed.url, title: typeof typed.title === "string" ? typed.title : null });
         }
       }
     }
   }
-
   return [...byUrl.values()];
+}
+
+function collectToolsUsed(output: unknown) {
+  if (!Array.isArray(output)) return [];
+  const used = new Set<string>();
+  for (const item of output) {
+    if (!item || typeof item !== "object") continue;
+    const type = (item as { type?: unknown }).type;
+    if (type === "web_search_call") used.add("web");
+    if (type === "file_search_call") used.add("knowledge");
+    if (type === "code_interpreter_call") used.add("compute");
+    if (type === "mcp_call" || type === "mcp_list_tools") used.add("mcp");
+    if (type === "function_call") used.add("functions");
+  }
+  return [...used];
 }
 
 function toolsFor(request: ProviderRequest, env: ZumiEnv) {
@@ -86,7 +94,6 @@ function toolsFor(request: ProviderRequest, env: ZumiEnv) {
   if (request.allowKnowledgeSearch && vectorStoreId) {
     tools.push({ type: "file_search", vector_store_ids: [vectorStoreId] });
   }
-
   if (request.allowWebSearch) {
     const domains = request.allowedDomains?.map((domain) => domain.trim()).filter(Boolean) ?? [];
     tools.push({
@@ -95,7 +102,19 @@ function toolsFor(request: ProviderRequest, env: ZumiEnv) {
       search_context_size: env.ZUMI_WEB_SEARCH_CONTEXT_SIZE ?? "medium",
     });
   }
-
+  if (request.allowCodeInterpreter) {
+    tools.push({ type: "code_interpreter", container: { type: "auto" } });
+  }
+  for (const server of request.mcpServers ?? []) {
+    tools.push({
+      type: "mcp",
+      server_label: server.label,
+      ...(server.serverUrl ? { server_url: server.serverUrl } : {}),
+      ...(server.connectorId ? { connector_id: server.connectorId } : {}),
+      require_approval: server.requireApproval ? "always" : "never",
+      ...(server.allowedTools?.length ? { allowed_tools: server.allowedTools } : {}),
+    });
+  }
   return tools;
 }
 
@@ -114,7 +133,6 @@ export function createOpenAIProvider(env: ZumiEnv = process.env): ProviderAdapte
     async invoke(request): Promise<ProviderResult> {
       const apiKey = process.env.OPENAI_API_KEY?.trim();
       if (!apiKey) throw new Error("OPENAI_API_KEY is not configured.");
-
       const runtimeEnv: ZumiEnv = process.env;
       const tools = toolsFor(request, runtimeEnv);
       const payload: Record<string, unknown> = {
@@ -127,20 +145,16 @@ export function createOpenAIProvider(env: ZumiEnv = process.env): ProviderAdapte
         ...(tools.length > 0 ? {
           tools,
           tool_choice: "auto",
-          max_tool_calls: Math.max(1, Math.min(envInt(runtimeEnv, "ZUMI_MAX_TOOL_CALLS", 4), 8)),
+          max_tool_calls: Math.max(1, Math.min(envInt(runtimeEnv, "ZUMI_MAX_TOOL_CALLS", 8), 32)),
         } : {}),
       };
 
       const response = await fetch(`${OPENAI_BASE_URL}/responses`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         signal: request.signal,
       });
-
       if (!response.ok) {
         const requestId = response.headers.get("x-request-id");
         throw new Error(`OpenAI Responses request failed (${response.status}${requestId ? `, ${requestId}` : ""}).`);
@@ -158,7 +172,8 @@ export function createOpenAIProvider(env: ZumiEnv = process.env): ProviderAdapte
       if (!text) throw new Error("OpenAI returned no text output.");
 
       const sources = collectSources(data.output);
-      const webSearchCalls = Array.isArray(data.output)
+      const toolsUsed = collectToolsUsed(data.output);
+      const webSearchCalls = toolsUsed.includes("web") && Array.isArray(data.output)
         ? data.output.filter((item) => item && typeof item === "object" && (item as { type?: unknown }).type === "web_search_call").length
         : 0;
       const webSearchCost = webSearchCalls * envInt(runtimeEnv, "ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL");
@@ -171,6 +186,7 @@ export function createOpenAIProvider(env: ZumiEnv = process.env): ProviderAdapte
         modelId: data.model ?? modelId,
         responseId: data.id ?? null,
         sources,
+        toolsUsed,
       };
     },
   };
