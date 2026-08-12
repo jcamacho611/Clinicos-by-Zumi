@@ -32,6 +32,11 @@ import {
   type ZumiPresence,
 } from "@/features/zumi/presence";
 import { orchestrationInstruction, planZumiOrchestration, type ZumiOrchestrationPlan } from "@/features/zumi/orchestrator";
+import {
+  resolveTrustedZumiOrchestration,
+  trustedOrchestrationInstruction,
+  type ZumiTrustedOrchestration,
+} from "@/features/zumi/trusted-orchestration";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1_200;
@@ -71,6 +76,7 @@ export type ZumiSuccess = {
     webUsed: boolean;
   };
   orchestration: ZumiOrchestrationPlan;
+  trustedOrchestration: ZumiTrustedOrchestration;
 };
 export type ZumiGatewayResult = ZumiSuccess | ZumiFailure;
 
@@ -265,7 +271,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   const presence = request.presence ?? zumiPresenceSchema.parse({});
   const accessibility = request.accessibility ?? zumiAccessibilitySchema.parse({});
   const orchestration = planZumiOrchestration({ question: request.question, presence });
-  const [canonicalContext, memoryContext] = await Promise.all([
+  const [canonicalContext, memoryContext, trustedOrchestration] = await Promise.all([
     retrieveCanonicalContext({
       question: request.question,
       domains: contextPlan.domains,
@@ -274,6 +280,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       maxSections: conversationPolicy.profile === "founder" ? 16 : 6,
     }),
     retrieveZumiMemoryContext(request.session, request.question),
+    resolveTrustedZumiOrchestration({ session: request.session, question: request.question, presence }),
   ]);
 
   const decision = admitZumiRequest({
@@ -295,6 +302,9 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     canonicalSources: canonicalContext.sources,
     memoryIds: memoryContext.memoryIds,
     orchestrationTools: orchestration.candidateTools.map((tool) => `${tool.key}:${tool.readiness}`),
+    trustedPathId: trustedOrchestration.path?.pathId ?? null,
+    trustedNextActions: trustedOrchestration.nextActions.map((action) => ({ id: action.id, state: action.state, capabilityKey: action.capabilityKey })),
+    trustedBlockerCodes: trustedOrchestration.blockers.map((blocker) => blocker.code),
   };
 
   if (!decision.allowed) {
@@ -356,7 +366,9 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     };
   }
 
-  const requestedWebResearch = request.allowWebResearch ?? presence.mode === "research" || contextPlan.usePublicWeb || complexity.depth !== "direct";
+  const requestedWebResearch =
+    request.allowWebResearch ??
+    (presence.mode === "research" || contextPlan.usePublicWeb || complexity.depth !== "direct");
   const webResearch = Boolean(
     conversationPolicy.publicResearchAllowed &&
     requestedWebResearch &&
@@ -368,6 +380,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     buildZumiMasterInstruction({ policy: conversationPolicy, contextPlan }),
     presenceInstruction({ presence, accessibility }),
     orchestrationInstruction(orchestration),
+    trustedOrchestrationInstruction(trustedOrchestration),
     securityInstructionForTools(),
     `Research depth for this turn: ${complexity.depth}. Reasons: ${complexity.reasons.join(", ") || "simple_direct_question"}.`,
     `Canonical repository sources selected: ${canonicalContext.sources.join(", ") || "none"}${canonicalContext.truncated ? " (context limit reached)" : ""}.`,
@@ -448,6 +461,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       continuation: result.responseId ? { responseId: result.responseId, sources, toolsUsed } : null,
       research: { depth: complexity.depth, reasons: complexity.reasons, webUsed: webResearch && toolsUsed.includes("web_search") },
       orchestration,
+      trustedOrchestration,
     };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
