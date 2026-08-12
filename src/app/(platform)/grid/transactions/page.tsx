@@ -24,7 +24,7 @@ export default async function GridTransactionsPage() {
           <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-[-.065em] text-white sm:text-5xl lg:text-6xl">From “I need something” to economic truth.</h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-white/50">Create demand, discover eligible supply, negotiate an offer, hold capacity, reconcile required payment evidence, record fulfillment, and see what is actually owed. Nothing skips a state.</p>
         </div>
-        <div className="flex flex-wrap gap-2"><Link className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.05] px-4 py-3 text-xs font-extrabold text-white/70" href="/grid/workspace"><ArrowLeft className="size-4" />Grid workspace</Link><Link className="inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 py-3 text-xs font-extrabold text-slate-950" href="/grid/browse"><Map className="size-4" />Open live Grid</Link></div>
+        <div className="flex flex-wrap gap-2"><Link className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.05] px-4 py-3 text-xs font-extrabold text-white/70" href="/grid/opportunities"><ArrowLeft className="size-4" />Grid opportunities</Link><Link className="inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 py-3 text-xs font-extrabold text-slate-950" href="/grid/browse"><Map className="size-4" />Open live Grid</Link></div>
       </div>
     </section>
 
