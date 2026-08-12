@@ -2,6 +2,7 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { createAccountActivationToken } from "@/lib/auth/account-activation";
+import { canonicalAppUrl, canonicalAppUrlIsPublic } from "@/lib/app-url";
 import { deliverOutbound } from "@/lib/communications/outbound";
 import {
   buyerRoleForModules,
@@ -221,7 +222,23 @@ async function attachBuyerToOrganization(email: string, organizationId: string, 
  * make visible.
  */
 export async function deliverActivation(input: { email: string; token: string; provisioningKey: string }) {
-  const link = `${(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "")}/activate?token=${encodeURIComponent(input.token)}`;
+  // A link with no host is not a link. Refusing here means the run records the problem
+  // as an undelivered activation an operator can see and reissue, rather than the email
+  // provider accepting a message whose only useful content is unusable.
+  if (!canonicalAppUrlIsPublic()) {
+    await db.provisioningRun
+      .update({
+        where: { provisioningKey: input.provisioningKey },
+        data: {
+          activationDeliveredAt: null,
+          activationDeliveryFailure: "No public application URL is configured, so the activation link would not resolve.",
+        },
+      })
+      .catch(() => undefined);
+    return { ok: false as const, reason: "provider_error" as const, detail: "No public application URL is configured." };
+  }
+
+  const link = `${canonicalAppUrl()}/activate?token=${encodeURIComponent(input.token)}`;
   const outcome = await deliverOutbound({
     channel: "email",
     to: input.email,

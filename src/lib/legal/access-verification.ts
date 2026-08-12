@@ -2,6 +2,7 @@ import "server-only";
 
 import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
+import { canonicalAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 
 const ACCESS_VERIFICATION_TTL_MS = 30 * 60 * 1000;
@@ -30,7 +31,9 @@ type AcceptanceRow = {
 };
 
 function appUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || "https://www.klinikos.io").replace(/\/$/, "");
+  // Was hard-coded to the production domain, which sends every preview deployment's
+  // verification link to production instead of to itself.
+  return canonicalAppUrl();
 }
 
 function secret() {

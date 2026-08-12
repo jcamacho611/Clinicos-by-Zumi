@@ -1,5 +1,6 @@
 import "server-only";
 
+import { canonicalAppUrl } from "@/lib/app-url";
 import { accessTierCatalog, type AccessTier, purchasableTiers, resolveTierForPlan } from "@/lib/commerce/whop-catalog";
 import { coerceWhopTimestamp, mapMembershipStatus } from "@/lib/commerce/whop-rules";
 
@@ -64,8 +65,11 @@ export function buildWhopCheckoutUrl(planId: string, state: string, env: NodeJS.
   const base = (env.WHOP_CHECKOUT_BASE?.trim() || DEFAULT_CHECKOUT_BASE).replace(/\/$/, "");
   const url = new URL(`${base}/checkout/${encodeURIComponent(planId)}`);
   url.searchParams.set("state", state);
-  const appUrl = (env.NEXT_PUBLIC_APP_URL?.trim() || "").replace(/\/$/, "");
-  if (appUrl) url.searchParams.set("redirect_url", `${appUrl}/entry/return?state=${encodeURIComponent(state)}`);
+  // Always set. Dropping `redirect_url` left the buyer on Whop and skipped the return
+  // leg that verifies the purchase server-side — losing the only place a browser return
+  // gets checked against the provider.
+  const appUrl = canonicalAppUrl(env);
+  url.searchParams.set("redirect_url", `${appUrl}/entry/return?state=${encodeURIComponent(state)}`);
   return url.toString();
 }
 

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -767,5 +767,58 @@ describe("sixth review round — PHI cannot leave on an unapproved rail", () => 
     const catalog = readFileSync(join(process.cwd(), "src/lib/connectors/catalog.ts"), "utf8");
     const resend = catalog.slice(catalog.indexOf('id: "resend"'), catalog.indexOf('id: "resend"') + 500);
     expect(resend).toContain("handlesPhi: false");
+  });
+});
+
+describe("seventh review round — links that resolve", () => {
+  const src = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+  it("ships every legal document it links buyers to", () => {
+    // A buyer clicking through to mandatory terms immediately before paying was getting
+    // a 404. This scans the link rather than asserting one path, so a future link to an
+    // unwritten document fails here instead of in front of a buyer.
+    const entry = src("src/app/entry/page.tsx");
+    const linked = [...entry.matchAll(/href="(\/legal\/[a-z-]+)"/g)].map((m) => m[1]);
+    expect(linked.length).toBeGreaterThan(0);
+    for (const href of linked) {
+      const page = join(process.cwd(), "src/app", href, "page.tsx");
+      expect({ href, exists: existsSync(page) }).toEqual({ href, exists: true });
+    }
+  });
+
+  it("states the GRID agreement's status rather than inventing one", () => {
+    // Drafting marketplace terms is counsel's work. A fabricated agreement on a legal
+    // route would be worse than the 404 it replaced.
+    const page = src("src/app/legal/grid/page.tsx");
+    expect(page).toContain("has not been published");
+    expect(page).toContain("not a commercial agreement");
+  });
+
+  it("resolves the canonical app URL from one place, with the platform fallback", () => {
+    // Two builders produced unusable links when NEXT_PUBLIC_APP_URL was unset: an
+    // activation link with no host, and a checkout with no redirect_url.
+    const helper = src("src/lib/app-url.ts");
+    expect(helper).toContain("env.RENDER_EXTERNAL_URL");
+    for (const path of [
+      "src/lib/commerce/whop-client.ts",
+      "src/lib/provisioning/provisioning-service.ts",
+      "src/lib/legal/access-verification.ts",
+    ]) {
+      expect({ path, uses: src(path).includes("canonicalAppUrl") }).toEqual({ path, uses: true });
+    }
+  });
+
+  it("always sends a checkout redirect back to the return leg", () => {
+    // Dropping redirect_url skipped the only server-side verification of a browser
+    // return, leaving the buyer on the provider's page.
+    const client = src("src/lib/commerce/whop-client.ts");
+    expect(client).toContain('url.searchParams.set("redirect_url"');
+    expect(client).not.toMatch(/if \(appUrl\) url\.searchParams\.set\("redirect_url"/);
+  });
+
+  it("refuses to send an activation link that cannot be opened", () => {
+    const service = src("src/lib/provisioning/provisioning-service.ts");
+    expect(service).toContain("if (!canonicalAppUrlIsPublic())");
+    expect(service).toContain("would not resolve");
   });
 });
