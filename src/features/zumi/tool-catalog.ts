@@ -11,7 +11,7 @@ export type ZumiToolDescriptor = {
   risk: ZumiToolRisk;
   sendsDataExternally: boolean;
   publicResearchTool?: boolean;
-  implementation: "internal" | "provider" | "connector" | "roadmap";
+  implementation: "internal" | "provider" | "connector" | "available_to_wire" | "roadmap";
   requiredEnvAny?: readonly string[];
   requiresExplicitApprovalForWrite?: boolean;
 };
@@ -29,7 +29,7 @@ export const zumiToolCatalog = [
   { key: "file_search", family: "knowledge", label: "File and document search", description: "Retrieve information from approved files and knowledge stores.", actions: ["read"], risk: "MEDIUM", sendsDataExternally: true, implementation: "provider", requiredEnvAny: ["ZUMI_OPENAI_VECTOR_STORE_ID"] },
   { key: "code_interpreter", family: "compute", label: "Computation and code", description: "Calculate, transform, analyze, simulate, or execute bounded code when it improves accuracy.", actions: ["compute"], risk: "MEDIUM", sendsDataExternally: true, implementation: "provider", requiredEnvAny: ["OPENAI_API_KEY"] },
   { key: "clinic_records", family: "operations", label: "Clinic operations", description: "Read authorized clinic work queues, scheduling, tasks, operational signals, and workflow state.", actions: ["read", "draft"], risk: "HIGH", sendsDataExternally: false, implementation: "internal" },
-  { key: "patient_records", family: "clinical", label: "Patient context", description: "Use minimum-necessary patient information through approved tenant-scoped loaders only.", actions: ["read", "draft"], risk: "CRITICAL", sendsDataExternally: false, implementation: "available_to_wire" as never },
+  { key: "patient_records", family: "clinical", label: "Patient context", description: "Use minimum-necessary patient information through approved tenant-scoped loaders only.", actions: ["read", "draft"], risk: "CRITICAL", sendsDataExternally: false, implementation: "available_to_wire" },
   { key: "grid", family: "marketplace", label: "Klinikos Grid", description: "Find, compare, match, request, reserve, and coordinate healthcare people, places, products, equipment, services, education, and capacity.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: false, implementation: "internal", requiresExplicitApprovalForWrite: true },
   { key: "calendar", family: "productivity", label: "Calendar", description: "Inspect availability, propose meetings, and create or update events through an approved calendar connector.", actions: ["read", "draft", "write"], risk: "MEDIUM", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GOOGLE_CALENDAR_CONNECTED", "MICROSOFT_CALENDAR_CONNECTED"], requiresExplicitApprovalForWrite: true },
   { key: "email", family: "communications", label: "Email", description: "Read authorized mail context, draft messages, and send only with approved connector permissions.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GMAIL_CONNECTED", "OUTLOOK_CONNECTED", "RESEND_API_KEY"], requiresExplicitApprovalForWrite: true },
@@ -48,7 +48,7 @@ export const zumiToolCatalog = [
   { key: "security", family: "security", label: "Security intelligence", description: "Inspect authorized audit/security signals, explain risk, and prepare remediation while respecting step-up and approval gates.", actions: ["read", "draft"], risk: "CRITICAL", sendsDataExternally: false, implementation: "internal" },
   { key: "analytics", family: "analytics", label: "Analytics", description: "Analyze authorized operational, financial, marketplace, growth, and quality data.", actions: ["read", "compute"], risk: "MEDIUM", sendsDataExternally: false, implementation: "internal" },
   { key: "github", family: "engineering", label: "GitHub", description: "Inspect repositories, code, issues, pull requests, CI, and prepare engineering changes through approved development tooling.", actions: ["read", "draft", "write", "execute"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GITHUB_CONNECTED"], requiresExplicitApprovalForWrite: true },
-  { key: "database", family: "engineering", label: "Database", description: "Inspect or change authorized structured data through typed database tools; never accept model-generated arbitrary production SQL as authorization.", actions: ["read", "compute", "write"], risk: "CRITICAL", sendsDataExternally: false, implementation: "available_to_wire" as never, requiresExplicitApprovalForWrite: true },
+  { key: "database", family: "engineering", label: "Database", description: "Inspect or change authorized structured data through typed database tools; never accept model-generated arbitrary production SQL as authorization.", actions: ["read", "compute", "write"], risk: "CRITICAL", sendsDataExternally: false, implementation: "available_to_wire", requiresExplicitApprovalForWrite: true },
   { key: "browser", family: "computer_use", label: "Browser and web tasks", description: "Navigate approved websites and perform bounded browser actions when a browser-control adapter is available.", actions: ["read", "draft", "write", "execute"], risk: "HIGH", sendsDataExternally: true, implementation: "roadmap", requiresExplicitApprovalForWrite: true },
   { key: "vision", family: "multimodal", label: "Vision", description: "Interpret approved images, screenshots, diagrams, and visual context while preserving source and privacy boundaries.", actions: ["read"], risk: "MEDIUM", sendsDataExternally: true, implementation: "provider", requiredEnvAny: ["OPENAI_API_KEY", "GOOGLE_AI_API_KEY", "ANTHROPIC_API_KEY"] },
   { key: "device_presence", family: "ambient", label: "Device presence", description: "Receive approved device/surface context for hands-free and ambient assistance without covert monitoring.", actions: ["read"], risk: "HIGH", sendsDataExternally: false, implementation: "roadmap" },
@@ -64,9 +64,10 @@ export function resolveZumiToolReadiness(
 ): ZumiToolReadiness {
   if (tool.implementation === "roadmap") return "roadmap";
   if (tool.implementation === "internal") return "active";
+  if (tool.implementation === "available_to_wire") return "available_to_wire";
   if (tool.implementation === "provider") return anyConfigured(env, tool.requiredEnvAny) ? "provider_capability" : "pending_connection";
   if (tool.implementation === "connector") return anyConfigured(env, tool.requiredEnvAny) ? "configured" : "pending_connection";
-  return "available_to_wire";
+  return "pending_connection";
 }
 
 export function resolvedZumiToolCatalog(env: Record<string, string | undefined> = process.env) {
