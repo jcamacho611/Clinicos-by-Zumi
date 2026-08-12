@@ -5,10 +5,10 @@ import { BrandMark } from "@/components/clinic/brand-mark";
 import { publicCompanyStory } from "@/lib/brand/public-company-story";
 
 export const metadata: Metadata = {
-  title: "Our Mission | Klinikos by Zumi",
+  title: "Our Mission | Klinikos",
   description: "Why Klinikos exists, the principles behind the system, and the anonymous founder background guiding the build.",
   openGraph: {
-    title: "Our Mission | Klinikos by Zumi",
+    title: "Our Mission | Klinikos",
     description: publicCompanyStory.mission.headline,
     type: "website",
   },
@@ -112,7 +112,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 px-5 py-8 sm:px-8"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-4 text-[10px] font-extrabold uppercase tracking-[.14em] text-white/35"><span>Klinikos by Zumi</span><span className="text-white/15">•</span><span>Clinic operating intelligence</span><span className="text-white/15">•</span><Link className="ml-auto hover:text-white" href="/grid">Grid</Link><Link className="hover:text-white" href="/legal/privacy">Privacy</Link></div></footer>
+      <footer className="border-t border-white/10 px-5 py-8 sm:px-8"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-4 text-[10px] font-extrabold uppercase tracking-[.14em] text-white/35"><span>Klinikos</span><span className="text-white/15">•</span><span>Clinic operating intelligence</span><span className="text-white/15">•</span><Link className="ml-auto hover:text-white" href="/grid">Grid</Link><Link className="hover:text-white" href="/legal/privacy">Privacy</Link></div></footer>
     </main>
   );
 }
