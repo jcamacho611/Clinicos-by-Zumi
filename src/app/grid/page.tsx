@@ -22,14 +22,14 @@ const buyLanes = [
 ] as const;
 
 const sellLanes = [
-  ["I want work", "Publish your availability, radius, work types, and opportunity preferences.", "/grid/join"],
-  ["I have space", "List rooms, chairs, clinic capacity, and the times they are available.", "/grid/join/location"],
-  ["I sell products or supplies", "Create seller inventory for permitted healthcare products and supplies.", "/grid/join/seller?type=product"],
-  ["I have equipment", "List rentable or available equipment and capacity with the right use restrictions.", "/grid/join/seller?type=equipment"],
-  ["I provide a service", "Offer healthcare business or professional services through Grid.", "/grid/join/seller?type=service"],
-  ["I represent an organization", "Publish your clinic, facility, lab, imaging, specialty, or partner capacity.", "/grid/join/location?type=organization"],
-  ["I have education capacity", "Offer preceptorship, placements, training seats, or learning capacity.", "/grid/join/seller?type=education"],
-  ["I have referral capacity", "Make eligible referral, consultation, diagnostic, or partner capacity discoverable.", "/grid/join/seller?type=referral"],
+  ["I want work", "Publish your availability, radius, work types, and opportunity preferences through the current universal participant profile.", "/grid/join"],
+  ["I have space", "Start with the working Grid enrollment profile so your location and capacity can be captured for review.", "/grid/join"],
+  ["I sell products or supplies", "Start one Grid participant profile. Specialized seller inventory opens only when the applicable listing path is available.", "/grid/join"],
+  ["I have equipment", "Start one Grid participant profile and capture the resource you want to make available.", "/grid/join"],
+  ["I provide a service", "Start one Grid participant profile for your healthcare business or professional service.", "/grid/join"],
+  ["I represent an organization", "Start one Grid participant profile for your clinic, facility, lab, imaging, specialty, or partner capacity.", "/grid/join"],
+  ["I have education capacity", "Start one Grid participant profile for preceptorship, placement, training, or learning capacity.", "/grid/join"],
+  ["I have referral capacity", "Start one Grid participant profile so eligible referral and consultation capacity can be prepared for review.", "/grid/join"],
 ] as const;
 
 export default function GridGatewayPage() {
