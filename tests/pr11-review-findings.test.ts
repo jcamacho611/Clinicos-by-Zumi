@@ -704,3 +704,33 @@ describe("fourth review round — GRID authorization", () => {
     expect(repo).toContain('!can(session.role, "grid", "manage") && provider.userId !== session.userId');
   });
 });
+
+describe("fifth review round — cross-tenant exposure", () => {
+  const svc = () => readFileSync(join(process.cwd(), "src/lib/commerce/access-payment-service.ts"), "utf8");
+
+  it("scopes the marketplace payment queue to the acting tenant", () => {
+    // This query had no organizationId at all, which is why the repository-wide
+    // isolation scan missed it: there was no wrong tenant column to catch, there was
+    // none. Every clinic owner holds sales:manage, so every clinic owner could read
+    // every buyer's email and payment reference.
+    expect(svc()).toContain("export async function listAccessPayments(session: ClinicSession");
+    expect(svc()).toContain("isPlatformOperator(session) ? {} : { organizationId: session.organizationId }");
+  });
+
+  it("refuses to act on another tenant's payment", () => {
+    const body = svc();
+    for (const fn of ["verifyAccessPayment", "reviewPaidOnboarding"]) {
+      const start = body.indexOf(`export async function ${fn}`);
+      const scope = body.slice(start, start + 700);
+      expect({ fn, scoped: scope.includes("isPlatformOperator(session)") }).toEqual({ fn, scoped: true });
+      expect({ fn, unscopedUnique: /findUnique\(\{\s*where: \{ id: input\.paymentId \},/.test(scope) })
+        .toEqual({ fn, unscopedUnique: false });
+    }
+  });
+
+  it("grants platform scope to nobody until it is explicitly configured", () => {
+    // Fail closed: an unset platform organization means no one sees across tenants,
+    // rather than everyone doing so.
+    expect(svc()).toContain("if (!platformOrganizationId) return false");
+  });
+});

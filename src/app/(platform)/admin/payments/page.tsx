@@ -17,7 +17,7 @@ export default async function AccessPaymentsAdminPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "sales", "manage")) redirect("/dashboard");
 
-  const rows = process.env.DATABASE_URL ? await listAccessPayments() : [];
+  const rows = process.env.DATABASE_URL ? await listAccessPayments(session) : [];
   const serialized = JSON.parse(JSON.stringify(rows)) as AccessPaymentRow[];
   return <AccessPaymentsWorkspace initialRows={serialized} />;
 }

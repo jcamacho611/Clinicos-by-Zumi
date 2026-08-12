@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "Payment storage is unavailable." }, { status: 503 });
 
   const url = new URL(request.url);
-  const payments = await listAccessPayments({
+  const payments = await listAccessPayments(session, {
     status: url.searchParams.get("status") ?? undefined,
     roleTarget: url.searchParams.get("roleTarget") ?? undefined,
   });

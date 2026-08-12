@@ -108,8 +108,10 @@ type VerifyResult =
   | { ok: false; reason: "not_found" | "invalid_transition" | "reference_required" };
 
 export async function verifyAccessPayment(session: ClinicSession, input: AccessPaymentVerificationInput): Promise<VerifyResult> {
-  const payment = await db.accessPayment.findUnique({
-    where: { id: input.paymentId },
+  // A payment belonging to another tenant is not found. Without this scope, a clinic
+  // owner holding `sales:manage` could settle, refund, or hold a stranger's purchase.
+  const payment = await db.accessPayment.findFirst({
+    where: { id: input.paymentId, ...(isPlatformOperator(session) ? {} : { organizationId: session.organizationId }) },
     select: { ...paymentSelect, onboarding: { select: { id: true, reviewApproved: true } } },
   });
   if (!payment) return { ok: false, reason: "not_found" };
@@ -185,8 +187,12 @@ export async function reviewPaidOnboarding(session: ClinicSession, input: {
   decision: "approve" | "reject";
   note: string;
 }) {
-  const payment = await db.accessPayment.findUnique({
-    where: { id: input.paymentId },
+  // Scoped like every other read: a payment belonging to another tenant is simply not
+  // found, and the caller cannot tell the difference between that and one that does not
+  // exist. Platform operators see the whole queue; nobody else reviews a stranger's
+  // purchase.
+  const payment = await db.accessPayment.findFirst({
+    where: { id: input.paymentId, ...(isPlatformOperator(session) ? {} : { organizationId: session.organizationId }) },
     select: {
       ...paymentSelect,
       onboarding: { select: { id: true, status: true, reviewApproved: true } },
@@ -309,9 +315,32 @@ export async function applyWebhookToAccessPayment(input: {
   return { applied: true as const, paymentId: payment.id, status: targetStatus, portalAccessStatus };
 }
 
-export async function listAccessPayments(filter?: { status?: string; roleTarget?: string }) {
+/**
+ * Whether this session may see the whole marketplace queue rather than its own.
+ *
+ * Klinikos has no platform-operator role yet, so this is expressed as one explicitly
+ * configured organization. Unset means nobody has platform scope — which is the right
+ * default, because the alternative was every tenant owner reading every buyer's email
+ * and payment reference through a clinic-scoped `sales:manage` permission.
+ */
+export function isPlatformOperator(session: ClinicSession, env: Record<string, string | undefined> = process.env) {
+  const platformOrganizationId = env.KLINIKOS_PLATFORM_ORG_ID?.trim();
+  if (!platformOrganizationId) return false;
+  return session.organizationId === platformOrganizationId;
+}
+
+/**
+ * The access payments this session is entitled to see.
+ *
+ * Scoped to the acting tenant unless they are the platform operator. This query has no
+ * natural tenant column to get wrong — it simply had none at all, which is why the
+ * repository-wide isolation scan did not catch it: there was no `organizationId` to
+ * check rather than a wrong one.
+ */
+export async function listAccessPayments(session: ClinicSession, filter?: { status?: string; roleTarget?: string }) {
   return db.accessPayment.findMany({
     where: {
+      ...(isPlatformOperator(session) ? {} : { organizationId: session.organizationId }),
       ...(filter?.status ? { status: filter.status } : {}),
       ...(filter?.roleTarget ? { roleTarget: filter.roleTarget } : {}),
     },
