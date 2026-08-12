@@ -49,6 +49,8 @@ type ReservationRow = {
   updatedAt: Date;
 };
 
+type DemandReservationRow = { status: string; quantity: number };
+
 function requirePermission(session: ClinicSession) {
   if (!can(session.role, "grid", "create") && !can(session.role, "network", "create")) {
     throw new NetworkAccessError("Grid reservation access is not permitted for this role.", 403);
@@ -112,6 +114,18 @@ export async function createUniversalReservationFromAcceptedOffer(session: Clini
     `);
     if (existing[0]) return serialize(existing[0]);
 
+    const demands = await tx.$queryRaw<DemandReservationRow[]>(Prisma.sql`
+      SELECT "status", "quantity" FROM "GridDemandRecord"
+      WHERE "id" = ${offer.demandId} AND "organizationId" = ${session.organizationId}
+      FOR UPDATE
+    `);
+    const demand = demands[0];
+    const demandStatus = demand?.status;
+    if (!demandStatus || !canTransitionGridDemand(demandStatus, "reserved")) {
+      throw new NetworkAccessError(`Grid demand in ${demandStatus ?? "unknown"} state cannot be reserved.`, 409);
+    }
+    const requestedUnits = Math.max(1, demand.quantity);
+
     const end = offer.offeredEndAt ?? new Date(offer.offeredStartAt.getTime() + 60 * 60 * 1000);
     const lockKey = `grid:resource:${offer.resourceKind}:${offer.resourceReference}`;
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`);
@@ -127,28 +141,23 @@ export async function createUniversalReservationFromAcceptedOffer(session: Clini
       ? Math.max(...resource.matchingAvailability.map((slot) => slot.capacity))
       : resource.capacity;
     const effectiveCapacity = Math.max(1, Math.min(resource.capacity, slotCapacity));
-
-    const overlaps = await tx.$queryRaw<Array<{ count: number }>>(Prisma.sql`
-      SELECT COUNT(*)::int AS "count"
-      FROM "GridReservationRecord"
-      WHERE "resourceKind" = ${offer.resourceKind}
-        AND "resourceReference" = ${offer.resourceReference}
-        AND "status" IN ('pending', 'held', 'consumed')
-        AND "reservedStartAt" < ${end}
-        AND COALESCE("reservedEndAt", "reservedStartAt" + INTERVAL '1 hour') > ${offer.offeredStartAt}
-    `);
-    if ((overlaps[0]?.count ?? 0) >= effectiveCapacity) {
-      throw new NetworkAccessError("This Grid resource has no remaining capacity during the requested window.", 409);
+    if (requestedUnits > effectiveCapacity) {
+      throw new NetworkAccessError(`This Grid demand requests ${requestedUnits} units but only ${effectiveCapacity} units are available in the selected capacity window.`, 409);
     }
 
-    const demands = await tx.$queryRaw<Array<{ status: string }>>(Prisma.sql`
-      SELECT "status" FROM "GridDemandRecord"
-      WHERE "id" = ${offer.demandId} AND "organizationId" = ${session.organizationId}
-      FOR UPDATE
+    const overlaps = await tx.$queryRaw<Array<{ units: number }>>(Prisma.sql`
+      SELECT COALESCE(SUM(d."quantity"), 0)::int AS "units"
+      FROM "GridReservationRecord" r
+      JOIN "GridDemandRecord" d ON d."id" = r."demandId"
+      WHERE r."resourceKind" = ${offer.resourceKind}
+        AND r."resourceReference" = ${offer.resourceReference}
+        AND r."status" IN ('pending', 'held', 'consumed')
+        AND r."reservedStartAt" < ${end}
+        AND COALESCE(r."reservedEndAt", r."reservedStartAt" + INTERVAL '1 hour') > ${offer.offeredStartAt}
     `);
-    const demandStatus = demands[0]?.status;
-    if (!demandStatus || !canTransitionGridDemand(demandStatus, "reserved")) {
-      throw new NetworkAccessError(`Grid demand in ${demandStatus ?? "unknown"} state cannot be reserved.`, 409);
+    const occupiedUnitsBefore = overlaps[0]?.units ?? 0;
+    if (occupiedUnitsBefore + requestedUnits > effectiveCapacity) {
+      throw new NetworkAccessError("This Grid resource does not have enough remaining capacity for the requested quantity during that window.", 409);
     }
 
     const requiresDeposit = offer.depositAmountCents > 0;
@@ -182,7 +191,9 @@ export async function createUniversalReservationFromAcceptedOffer(session: Clini
       resourceType: resource.resourceType,
       policyClass: resource.policyClass,
       effectiveCapacity,
-      occupiedBeforeReservation: overlaps[0]?.count ?? 0,
+      requestedUnits,
+      occupiedUnitsBefore,
+      remainingUnitsAfter: effectiveCapacity - occupiedUnitsBefore - requestedUnits,
       reservationStatus,
       paymentStatus,
     });
@@ -209,7 +220,9 @@ export async function createUniversalReservationFromAcceptedOffer(session: Clini
           gridResourceType: resource.resourceType,
           policyClass: resource.policyClass,
           effectiveCapacity,
-          occupiedBeforeReservation: overlaps[0]?.count ?? 0,
+          requestedUnits,
+          occupiedUnitsBefore,
+          remainingUnitsAfter: effectiveCapacity - occupiedUnitsBefore - requestedUnits,
           status: reservationStatus,
           paymentStatus,
           syntheticDemo: true,
