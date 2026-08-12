@@ -9,6 +9,26 @@ export const clinicCheckoutRequestSchema = z.object({
   productKey: z.enum(clinicPurchasablePlanKeys),
 });
 
+export const clinicActivationDraftFieldsSchema = z.object({
+  ownerName: z.string().trim().max(120).default(""),
+  clinicType: z.string().trim().max(100).default(""),
+  locationName: z.string().trim().max(120).default(""),
+  city: z.string().trim().max(100).default(""),
+  state: z.string().trim().max(2).transform((value) => value.toUpperCase()).default(""),
+  timezone: z.string().trim().max(80).default("America/New_York"),
+  teamSize: z.string().trim().max(50).default("1-5"),
+  primaryGoal: z.string().trim().max(500).default(""),
+  currentSystems: z.string().trim().max(1200).default(""),
+  migrationExpectation: z.enum(["not_now", "manual_import", "assisted_import", "needs_review"]).default("needs_review"),
+  communicationsState: z.enum(["not_connected", "manual_fallback", "existing_vendor", "needs_review"]).default("needs_review"),
+});
+
+export const clinicActivationDraftSchema = clinicActivationDraftFieldsSchema.extend({
+  token: z.string().trim().min(20).max(4096),
+});
+
+export type ClinicActivationDraft = z.infer<typeof clinicActivationDraftFieldsSchema>;
+
 export const clinicActivationSchema = z.object({
   token: z.string().trim().min(20).max(4096),
   ownerName: z.string().trim().min(2).max(120),
