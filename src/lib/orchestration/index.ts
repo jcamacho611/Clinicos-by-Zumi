@@ -16,3 +16,7 @@ export * from "@/lib/orchestration/connector-entitlement-engine";
 export * from "@/lib/orchestration/workflow-engine";
 export * from "@/lib/orchestration/search-engine";
 export * from "@/lib/orchestration/telemetry-engine";
+export * from "@/lib/orchestration/zumi-orchestration-engine";
+export * from "@/lib/orchestration/reliability-engine";
+export * from "@/lib/orchestration/engine-registry";
+export * from "@/lib/orchestration/orchestrator";
