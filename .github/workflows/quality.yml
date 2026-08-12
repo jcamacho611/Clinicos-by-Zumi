@@ -88,3 +88,72 @@ jobs:
           echo "Klinikos production server failed to become healthy."
           cat /tmp/klinikos-start.log
           exit 1
+
+  # The deployment contract, run exactly as the production host runs it.
+  #
+  # `verify` builds with the repository's own scripts and a developer-shaped install, so
+  # it cannot see defects that only appear under the host's conditions. Two already
+  # reached production that way: NODE_ENV=production prunes devDependencies, which
+  # removed tailwindcss and @tailwindcss/postcss and broke the PostCSS plugin
+  # resolution; and the canonical command passes --ignore-scripts, which skips every
+  # dependency install script as well as this repository's own postinstall.
+  #
+  # This job therefore hardcodes the canonical Render commands rather than reusing the
+  # npm scripts around them. If the deployment contract in render.yaml changes, change it
+  # here too — the duplication is the point, because this is the thing being verified.
+  deploy-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
+      NEXT_PUBLIC_APP_URL: https://klinikos.io
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: klinikos_deploy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+      # Render's Build Command, verbatim.
+      - name: Install exactly as the production host installs
+        run: npm ci --include=dev --ignore-scripts
+      - name: Build exactly as the production host builds
+        run: npm run render:build
+      # Render's Start Command, verbatim. A build that cannot start is not a deploy.
+      - name: Start exactly as the production host starts
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3000 npm start > /tmp/deploy-start.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/deploy-health.json; then
+              curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3000/
+              cat /tmp/deploy-health.json
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "The production deployment contract produced a build that never became healthy."
+          cat /tmp/deploy-start.log
+          exit 1
