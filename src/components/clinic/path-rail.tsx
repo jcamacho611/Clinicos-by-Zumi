@@ -6,12 +6,12 @@ const stateLabel: Record<KlinikosPathNode["state"], string> = {
   complete: "Completed",
   current: "Next",
   upcoming: "Upcoming",
-  blocked: "Blocked",
+  blocked: "Needs attention",
 };
 
 export function PathRail({ nodes }: { nodes: KlinikosPathNode[] }) {
   return (
-    <ol className="space-y-0" aria-label="Path progress">
+    <ol className="space-y-0" aria-label="Progress details">
       {nodes.map((node, index) => {
         const isLast = index === nodes.length - 1;
         const markerClass = node.state === "complete"
