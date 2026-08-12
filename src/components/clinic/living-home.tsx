@@ -55,7 +55,7 @@ export function LivingHome({
     const resolved = resolveIntentDeterministically(intent);
     const pathId = resolved.candidatePathIds[0] ?? null;
     if (!pathId) {
-      setMessage(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can create a Path.");
+      setMessage(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can help with that.");
       return;
     }
 
@@ -67,7 +67,7 @@ export function LivingHome({
         body: JSON.stringify({ pathId, goal: intent }),
       });
       const payload = await response.json() as { data?: PersistedPathSnapshot; guidance?: PathGuidanceView | null; error?: string };
-      if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start this Path.");
+      if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start that yet.");
 
       setPaths((current) => [payload.data!, ...current.filter((path) => path.instanceId !== payload.data!.instanceId)]);
       if (payload.guidance) {
@@ -76,10 +76,10 @@ export function LivingHome({
       setSelectedInstanceId(payload.data.instanceId);
       setIntent("");
       setState("idle");
-      setMessage("Path started. Klinikos resolved the next governed action from your current context.");
+      setMessage("You're set. Here's the safest next step.");
     } catch (error) {
       setState("error");
-      setMessage(error instanceof Error ? error.message : "Klinikos could not start this Path.");
+      setMessage(error instanceof Error ? error.message : "Klinikos could not start that yet.");
     }
   }
 
@@ -90,7 +90,7 @@ export function LivingHome({
           <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#1677a8]"><Sparkles className="size-3.5" /> Klinikos</div>
           <h1 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.055em] text-[#0b1e3a] sm:text-5xl lg:text-6xl">{activeSnapshot ? `Good morning, ${firstName}.` : "What needs to happen?"}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#0b1e3a]/58">
-            {activeSnapshot ? "Continue exactly where you left off. Klinikos now resolves the next safe action, review requirement, or blocker from the live Path state." : "Tell Klinikos the outcome you want. The interface will assemble the relevant workflow across care, Grid, learning, and operations."}
+            {activeSnapshot ? "Pick up exactly where you left off. Your goal, progress, next step, and anything blocking it stay together here." : "Tell Klinikos the outcome you want. We'll bring together the right care, work, learning, or operational steps without making you hunt through the system."}
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export function LivingHome({
               placeholder="I need an injector Saturday..."
               value={intent}
             />
-            <button disabled={state === "saving" || intent.trim().length < 2} className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1e3a] text-white transition hover:bg-[#12315a] disabled:cursor-not-allowed disabled:opacity-40" type="submit" aria-label="Create a Klinikos Path">
+            <button disabled={state === "saving" || intent.trim().length < 2} className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1e3a] text-white transition hover:bg-[#12315a] disabled:cursor-not-allowed disabled:opacity-40" type="submit" aria-label="Show me the next step">
               <ArrowRight className="size-4" />
             </button>
           </div>
@@ -116,12 +116,12 @@ export function LivingHome({
           <div className="mx-auto mt-10 max-w-3xl rounded-[24px] border border-[#0b1e3a]/10 bg-white/90 p-5 shadow-[0_18px_50px_rgba(11,30,58,.06)] sm:p-7">
             <div className="flex flex-col gap-4 border-b border-[#0b1e3a]/8 pb-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#1677a8]">Continue</p>
+                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#1677a8]">In progress</p>
                 <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]">{activeDefinition.title}</h2>
                 <p className="mt-2 max-w-xl text-xs leading-6 text-[#0b1e3a]/56">{activeSnapshot.goal}</p>
                 <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/38">{Math.round(activeRuntime.progress * 100)}% complete</p>
               </div>
-              <Link className="inline-flex items-center gap-2 text-xs font-extrabold text-[#1677a8]" href={`/paths/${activeDefinition.id}`}>Open Path <ArrowUpRight className="size-3.5" /></Link>
+              <Link className="inline-flex items-center gap-2 text-xs font-extrabold text-[#1677a8]" href={`/paths/${activeDefinition.id}`}>Continue <ArrowUpRight className="size-3.5" /></Link>
             </div>
             <div className="pt-7"><PathRail nodes={railNodes} /></div>
             {activeGuidance ? <PathNextAction guidance={activeGuidance} /> : null}
@@ -155,7 +155,7 @@ export function LivingHome({
         )}
 
         <div className="mt-12 flex justify-center">
-          <a className="inline-flex items-center gap-2 text-xs font-extrabold text-[#0b1e3a]/58 transition hover:text-[#1677a8]" href="#explore-klinikos">Explore Klinikos <ArrowRight className="size-3.5" /></a>
+          <a className="inline-flex items-center gap-2 text-xs font-extrabold text-[#0b1e3a]/58 transition hover:text-[#1677a8]" href="#explore-klinikos">Explore more <ArrowRight className="size-3.5" /></a>
         </div>
       </div>
     </section>
