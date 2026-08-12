@@ -61,6 +61,7 @@ export async function verifyGridResourceForTransaction(
   const quantity = Math.max(1, input.quantity ?? 1);
   if (resource.capacity < quantity) throw new NetworkAccessError("The selected Grid resource does not have enough declared capacity.", 409);
 
+  let transactionCapacity = resource.capacity;
   if (availabilityRequired.has(resource.policyClass)) {
     const end = input.endsAt ?? new Date(input.startsAt.getTime() + 60 * 60 * 1000);
     const slots = await client.$queryRaw<Array<{ id: string; capacity: number }>>(Prisma.sql`
@@ -77,6 +78,7 @@ export async function verifyGridResourceForTransaction(
     if (!slots[0]) {
       throw new NetworkAccessError("The selected Grid resource no longer has approved availability for the offered time window.", 409);
     }
+    transactionCapacity = Math.min(resource.capacity, slots[0].capacity);
   }
 
   return {
@@ -85,6 +87,7 @@ export async function verifyGridResourceForTransaction(
     resourceType: resource.resourceType,
     policyClass: resource.policyClass,
     capacity: resource.capacity,
+    transactionCapacity,
     reviewStatus: resource.reviewStatus,
   };
 }
