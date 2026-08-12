@@ -4,8 +4,9 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BriefcaseBusiness, GraduationCap, HeartPulse, Search, Sparkles, Stethoscope } from "lucide-react";
 import { PathRail } from "@/components/clinic/path-rail";
-import { findKlinikosPathFromIntent, getKlinikosPath } from "@/lib/paths/catalog";
-import type { ClinicRole } from "@/lib/auth/rbac";
+import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
+import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
+import { getKlinikosPath } from "@/lib/paths/catalog";
 
 const doorwayActions = [
   { label: "RUN CARE", description: "Operate or grow a clinic", href: "/front-desk", icon: Stethoscope },
@@ -14,22 +15,61 @@ const doorwayActions = [
   { label: "GET CARE", description: "Find and manage healthcare", href: "/portal", icon: HeartPulse },
 ] as const;
 
-const roleResumePath: Partial<Record<ClinicRole, string>> = {
-  clinic_owner: "fix-referral-leakage",
-  administrator: "fix-referral-leakage",
-  provider: "find-extra-work",
-  clinical_staff: "fix-referral-leakage",
-};
-
-export function LivingHome({ role, firstName }: { role: ClinicRole; firstName: string }) {
+export function LivingHome({
+  firstName,
+  initialPaths,
+}: {
+  firstName: string;
+  initialPaths: PersistedPathSnapshot[];
+}) {
   const [intent, setIntent] = useState("");
-  const [activePathId, setActivePathId] = useState<string | null>(roleResumePath[role] ?? null);
-  const activePath = useMemo(() => activePathId ? getKlinikosPath(activePathId) : null, [activePathId]);
+  const [paths, setPaths] = useState(initialPaths);
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(initialPaths[0]?.instanceId ?? null);
+  const [state, setState] = useState<"idle" | "saving" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
 
-  function submitIntent(event: FormEvent<HTMLFormElement>) {
+  const activeSnapshot = useMemo(
+    () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
+    [paths, selectedInstanceId],
+  );
+  const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
+  const activeRuntime = activeSnapshot
+    ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
+    : null;
+  const railNodes = activeDefinition?.nodes.map((node) => ({
+    ...node,
+    state: activeRuntime?.nodes.find((runtimeNode) => runtimeNode.id === node.id)?.state ?? node.state,
+  })) ?? [];
+
+  async function submitIntent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const match = findKlinikosPathFromIntent(intent);
-    setActivePathId(match?.id ?? null);
+    setMessage(null);
+    const resolved = resolveIntentDeterministically(intent);
+    const pathId = resolved.candidatePathIds[0] ?? null;
+    if (!pathId) {
+      setMessage(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can create a Path.");
+      return;
+    }
+
+    setState("saving");
+    try {
+      const response = await fetch("/api/paths", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ pathId, goal: intent }),
+      });
+      const payload = await response.json() as { data?: PersistedPathSnapshot; error?: string };
+      if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start this Path.");
+
+      setPaths((current) => [payload.data!, ...current.filter((path) => path.instanceId !== payload.data!.instanceId)]);
+      setSelectedInstanceId(payload.data.instanceId);
+      setIntent("");
+      setState("idle");
+      setMessage("Path started. Klinikos will keep your progress here.");
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Klinikos could not start this Path.");
+    }
   }
 
   return (
@@ -37,9 +77,9 @@ export function LivingHome({ role, firstName }: { role: ClinicRole; firstName: s
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#1677a8]"><Sparkles className="size-3.5" /> Klinikos</div>
-          <h1 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.055em] text-[#0b1e3a] sm:text-5xl lg:text-6xl">{activePath ? `Good morning, ${firstName}.` : "What needs to happen?"}</h1>
+          <h1 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.055em] text-[#0b1e3a] sm:text-5xl lg:text-6xl">{activeSnapshot ? `Good morning, ${firstName}.` : "What needs to happen?"}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#0b1e3a]/58">
-            {activePath ? "Klinikos keeps your goal, progress, and next action together so you can keep moving without hunting through modules." : "Tell Klinikos the outcome you want. The interface will assemble the relevant workflow across care, Grid, learning, and operations."}
+            {activeSnapshot ? "Continue exactly where you left off. Your goal, progress, and next action are persisted across sessions." : "Tell Klinikos the outcome you want. The interface will assemble the relevant workflow across care, Grid, learning, and operations."}
           </p>
         </div>
 
@@ -50,28 +90,42 @@ export function LivingHome({ role, firstName }: { role: ClinicRole; firstName: s
             <input
               className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm font-semibold text-[#0b1e3a] outline-none placeholder:text-[#0b1e3a]/32"
               id="klinikos-intent"
-              onChange={(event) => setIntent(event.target.value)}
+              onChange={(event) => { setIntent(event.target.value); if (state === "error") setState("idle"); }}
               placeholder="I need an injector Saturday..."
               value={intent}
             />
-            <button className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1e3a] text-white transition hover:bg-[#12315a]" type="submit" aria-label="Create a Klinikos Path">
+            <button disabled={state === "saving" || intent.trim().length < 2} className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1e3a] text-white transition hover:bg-[#12315a] disabled:cursor-not-allowed disabled:opacity-40" type="submit" aria-label="Create a Klinikos Path">
               <ArrowRight className="size-4" />
             </button>
           </div>
-          {intent && !activePath ? <p className="mt-3 text-center text-[11px] text-[#0b1e3a]/48">No guided Path matched that wording yet. Use Explore Klinikos below while more intents are added.</p> : null}
+          {message ? <p className={`mt-3 text-center text-[11px] ${state === "error" ? "text-rose-700" : "text-[#0b1e3a]/52"}`} aria-live="polite">{message}</p> : null}
         </form>
 
-        {activePath ? (
+        {activeDefinition && activeRuntime && activeSnapshot ? (
           <div className="mx-auto mt-10 max-w-3xl rounded-[24px] border border-[#0b1e3a]/10 bg-white/90 p-5 shadow-[0_18px_50px_rgba(11,30,58,.06)] sm:p-7">
             <div className="flex flex-col gap-4 border-b border-[#0b1e3a]/8 pb-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#1677a8]">Your Path</p>
-                <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]">{activePath.title}</h2>
-                <p className="mt-2 max-w-xl text-xs leading-6 text-[#0b1e3a]/56">{activePath.summary}</p>
+                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#1677a8]">Continue</p>
+                <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]">{activeDefinition.title}</h2>
+                <p className="mt-2 max-w-xl text-xs leading-6 text-[#0b1e3a]/56">{activeSnapshot.goal}</p>
+                <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/38">{Math.round(activeRuntime.progress * 100)}% complete</p>
               </div>
-              <Link className="inline-flex items-center gap-2 text-xs font-extrabold text-[#1677a8]" href={`/paths/${activePath.id}`}>Open Path <ArrowUpRight className="size-3.5" /></Link>
+              <Link className="inline-flex items-center gap-2 text-xs font-extrabold text-[#1677a8]" href={`/paths/${activeDefinition.id}`}>Open Path <ArrowUpRight className="size-3.5" /></Link>
             </div>
-            <div className="pt-7"><PathRail nodes={activePath.nodes} /></div>
+            <div className="pt-7"><PathRail nodes={railNodes} /></div>
+            {paths.length > 1 ? (
+              <div className="mt-6 flex flex-wrap gap-2 border-t border-[#0b1e3a]/8 pt-5">
+                {paths.map((path) => {
+                  const definition = getKlinikosPath(path.pathId);
+                  if (!definition) return null;
+                  return (
+                    <button key={path.instanceId} type="button" onClick={() => setSelectedInstanceId(path.instanceId)} className={`rounded-full border px-3 py-2 text-[10px] font-extrabold ${path.instanceId === activeSnapshot.instanceId ? "border-[#1677a8] bg-[#edf6fb] text-[#1677a8]" : "border-[#0b1e3a]/10 text-[#0b1e3a]/55"}`}>
+                      {definition.title}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="mx-auto mt-12 grid max-w-4xl gap-x-8 gap-y-7 sm:grid-cols-2">
