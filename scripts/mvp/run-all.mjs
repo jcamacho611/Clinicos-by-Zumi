@@ -5,13 +5,20 @@ const root = process.cwd();
 const tsxCli = join(root, "node_modules", "tsx", "dist", "cli.mjs");
 const stubRoot = join(root, "scripts", "mvp", "node-stubs");
 const nodePath = [stubRoot, process.env.NODE_PATH].filter(Boolean).join(delimiter);
+
+// Fresh deploy runs first because it explicitly proves an empty migrated database.
+// Every subsequent journey owns and cleans up its own test data.
 const journeys = [
+  "fresh-deploy-journey.ts",
   "commercial-journey.mts",
   "activation-journey.mts",
   "operations-journey.mts",
   "grid-journey.mts",
   "grid-trust-journey.mts",
+  "zumi-journey.ts",
   "tenant-isolation-journey.mts",
+  "role-routing-journey.ts",
+  "failure-recovery-journey.ts",
 ];
 
 for (const journey of journeys) {
