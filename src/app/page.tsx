@@ -5,9 +5,9 @@ import { GridLaunchDock } from "@/components/marketing/grid-launch-dock";
 import { KlinikosHomepage } from "@/components/marketing/klinikos-homepage";
 
 export const metadata: Metadata = {
-  title: "Klinikos by Zumi | Clinic continuity, made visible",
+  title: "Klinikos | Clinic continuity, made visible",
   description:
-    "Klinikos connects clinic operations, healthcare opportunities, education pathways, and the work between existing systems into one clear experience.",
+    "Klinikos connects clinic operations, healthcare opportunities, education pathways, and the work between existing systems into one clear experience. Zumi is the operating intelligence inside Klinikos.",
 };
 
 const pathways = [
