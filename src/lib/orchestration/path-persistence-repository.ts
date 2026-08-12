@@ -9,7 +9,7 @@ import { evaluateCapabilityPolicy } from "@/lib/orchestration/capability-engine"
 import type { ActorContext } from "@/lib/orchestration/contracts";
 import {
   advancePathSnapshot,
-  resolvePathRuntime,
+  baselineSnapshotForPath,
   type PersistedPathSnapshot,
 } from "@/lib/orchestration/path-engine";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
@@ -136,19 +136,21 @@ export async function createPathInstance(
 
   const instanceId = randomUUID();
   const goal = input.goal?.trim() || definition.summary;
-  const runtime = resolvePathRuntime({ pathId: definition.id, goal });
-  if (!runtime) throw new NetworkAccessError("Klinikos Path could not be resolved.", 500);
+  const baseline = baselineSnapshotForPath({ instanceId, pathId: definition.id, goal });
+  if (!baseline) throw new NetworkAccessError("Klinikos Path could not be resolved.", 500);
 
   const context = JSON.stringify(input.context ?? {});
-  const empty = JSON.stringify([]);
+  const completedNodeIds = JSON.stringify(baseline.completedNodeIds);
+  const blockedNodeIds = JSON.stringify(baseline.blockedNodeIds);
+  const blockers = JSON.stringify(baseline.blockers);
   const rows = await db.$queryRaw<PathRow[]>(Prisma.sql`
     INSERT INTO "KlinikosPathInstance" (
       "id", "organizationId", "actorId", "pathId", "goal", "status", "currentNodeId",
       "completedNodeIds", "blockedNodeIds", "blockers", "context",
       "startedAt", "lastActivityAt", "createdAt", "updatedAt"
     ) VALUES (
-      ${instanceId}, ${session.organizationId}, ${session.userId}, ${definition.id}, ${goal}, 'active', ${runtime.currentNodeId},
-      CAST(${empty} AS JSONB), CAST(${empty} AS JSONB), CAST(${empty} AS JSONB), CAST(${context} AS JSONB),
+      ${instanceId}, ${session.organizationId}, ${session.userId}, ${definition.id}, ${goal}, ${baseline.status}, ${baseline.currentNodeId ?? null},
+      CAST(${completedNodeIds} AS JSONB), CAST(${blockedNodeIds} AS JSONB), CAST(${blockers} AS JSONB), CAST(${context} AS JSONB),
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )
     RETURNING *
@@ -162,8 +164,8 @@ export async function createPathInstance(
     organizationId: session.organizationId,
     actorId: session.userId,
     eventType: "path.started",
-    nodeId: runtime.currentNodeId,
-    payload: { pathId: definition.id, goal },
+    nodeId: baseline.currentNodeId,
+    payload: { pathId: definition.id, goal, baselineCompletedNodeIds: baseline.completedNodeIds },
   });
 
   await db.auditLog.create({
@@ -174,7 +176,7 @@ export async function createPathInstance(
       action: "path.started",
       resourceType: "klinikos_path",
       resourceId: instanceId,
-      metadata: { pathId: definition.id, currentNodeId: runtime.currentNodeId, containsPhi: false },
+      metadata: { pathId: definition.id, currentNodeId: baseline.currentNodeId, baselineCompletedNodeIds: baseline.completedNodeIds, containsPhi: false },
     },
   });
 
@@ -211,18 +213,18 @@ export async function advancePathInstance(
   }
 
   const next = advancePathSnapshot({ snapshot, completedNodeId: input.completedNodeId });
-  const completedNodeIds = JSON.stringify(next.completedNodeIds);
-  const blockedNodeIds = JSON.stringify(next.blockedNodeIds);
-  const blockers = JSON.stringify(next.blockers);
+  const nextCompletedNodeIds = JSON.stringify(next.completedNodeIds);
+  const nextBlockedNodeIds = JSON.stringify(next.blockedNodeIds);
+  const nextBlockers = JSON.stringify(next.blockers);
   const completedAt = next.status === "completed" ? new Date() : null;
 
   const rows = await db.$queryRaw<PathRow[]>(Prisma.sql`
     UPDATE "KlinikosPathInstance"
     SET "status" = ${next.status},
         "currentNodeId" = ${next.currentNodeId ?? null},
-        "completedNodeIds" = CAST(${completedNodeIds} AS JSONB),
-        "blockedNodeIds" = CAST(${blockedNodeIds} AS JSONB),
-        "blockers" = CAST(${blockers} AS JSONB),
+        "completedNodeIds" = CAST(${nextCompletedNodeIds} AS JSONB),
+        "blockedNodeIds" = CAST(${nextBlockedNodeIds} AS JSONB),
+        "blockers" = CAST(${nextBlockers} AS JSONB),
         "lastActivityAt" = CURRENT_TIMESTAMP,
         "completedAt" = ${completedAt},
         "updatedAt" = CURRENT_TIMESTAMP
