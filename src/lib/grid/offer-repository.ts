@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { providerReadyForGrid } from "@/lib/grid-rules";
+import { verifyGridResourceForTransaction } from "@/lib/grid/resource-transaction-policy";
 import {
   canTransitionGridDemand,
   canTransitionGridOffer,
@@ -44,6 +45,7 @@ type OfferRow = {
 };
 
 function requirePermission(session: ClinicSession, action: "read" | "create" | "update") {
+  if (session.role === "contractor") return;
   if (!can(session.role, "network", action) && !can(session.role, "grid", action)) {
     throw new NetworkAccessError("Grid offer access is not permitted for this role.", 403);
   }
@@ -97,6 +99,12 @@ async function verifySupply(
   allowedLocationOrganizationIds: string[],
 ) {
   let primaryOwnerOrganizationId: string | null = null;
+  const registerOwner = (organizationId: string) => {
+    if (primaryOwnerOrganizationId && primaryOwnerOrganizationId !== organizationId) {
+      throw new NetworkAccessError("This offer combines resources owned by different organizations. Use the multi-party composition/agreement pathway before sending it.", 409);
+    }
+    primaryOwnerOrganizationId = organizationId;
+  };
 
   if (input.providerId && input.serviceListingId) {
     const service = await client.gridServiceListing.findFirst({
@@ -106,7 +114,7 @@ async function verifySupply(
     if (!service || !providerReadyForGrid(service.provider)) {
       throw new NetworkAccessError("The selected provider/service is no longer eligible for this Grid offer.", 409);
     }
-    primaryOwnerOrganizationId = service.organizationId;
+    registerOwner(service.organizationId);
   }
 
   if (input.locationId) {
@@ -122,7 +130,21 @@ async function verifySupply(
       select: { id: true, organizationId: true },
     });
     if (!location) throw new NetworkAccessError("The selected Grid location is unavailable.", 409);
-    if (!primaryOwnerOrganizationId) primaryOwnerOrganizationId = location.organizationId;
+    registerOwner(location.organizationId);
+  }
+
+  if (input.resourceReference || input.resourceKind) {
+    if (!input.resourceReference || !input.resourceKind) {
+      throw new NetworkAccessError("Generic Grid resource kind and reference must be supplied together.", 400);
+    }
+    const resource = await verifyGridResourceForTransaction(client, {
+      resourceId: input.resourceReference,
+      resourceKind: input.resourceKind,
+      startsAt: new Date(input.offeredStartAt),
+      endsAt: input.offeredEndAt ? new Date(input.offeredEndAt) : null,
+      requesterOrganizationIds: allowedLocationOrganizationIds,
+    });
+    registerOwner(resource.organizationId);
   }
 
   if (input.recipientOrganizationId) await validateOrganization(client, input.recipientOrganizationId);
@@ -261,7 +283,7 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
           locationPayableCents: input.locationPayableCents,
           status: "sent",
           syntheticDemo: true,
-          manualPolicyReviewRequired: Boolean(input.resourceReference),
+          universalResourceVerified: Boolean(input.resourceReference),
         },
       },
     });
@@ -303,13 +325,14 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
       .filter((value): value is string => Boolean(value));
 
     if (decision.targetStatus === "accepted") {
-      if (offer.resourceReference) throw new NetworkAccessError("This resource class still requires a connected policy verifier before acceptance.", 409);
       const revalidation = gridOfferSchema.parse({
         demandId: offer.demandId,
         providerId: offer.providerId,
         serviceListingId: offer.serviceListingId,
         recipientOrganizationId: offer.recipientOrganizationId,
         locationId: offer.locationId,
+        resourceKind: offer.resourceKind,
+        resourceReference: offer.resourceReference,
         offeredStartAt: offer.offeredStartAt.toISOString(),
         offeredEndAt: offer.offeredEndAt?.toISOString() ?? null,
         grossAmountCents: offer.grossAmountCents,
