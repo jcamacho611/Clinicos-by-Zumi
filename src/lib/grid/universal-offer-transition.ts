@@ -76,6 +76,9 @@ export async function transitionGridOfferWithUniversalResources(
     if (offer.recipientOrganizationId !== session.organizationId) {
       throw new NetworkAccessError("Only the current offer recipient can accept it.", 403);
     }
+    if (!offer.resourceReference || !offer.resourceKind) {
+      throw new NetworkAccessError("This Grid offer does not contain a complete universal resource reference.", 409);
+    }
     if (offer.expiresAt.getTime() <= Date.now()) throw new NetworkAccessError("This Grid offer has expired and cannot be accepted.", 409);
     if (!canTransitionGridOffer(offer.status, "accepted")) {
       throw new NetworkAccessError(`Grid offer cannot move from ${offer.status} to accepted.`, 409);
