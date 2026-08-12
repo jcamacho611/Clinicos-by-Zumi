@@ -227,6 +227,39 @@ async function upsertAction(input: {
       `);
     }
 
+    // The loop creates staff work and prepares patient-facing messages without anyone
+    // asking it to. Article 8 requires a sensitive action to be attributable, and until
+    // this existed the entire automation left no trace: a clinic could find a task
+    // addressed to a patient with no record of what produced it or on what basis.
+    //
+    // Written inside the same transaction as the action, so an action cannot exist
+    // without the record explaining it. `actorType: "system"` marks it as machine-
+    // originated, which keeps it distinguishable from a decision a person made — the
+    // distinction the constitution insists on.
+    await tx.auditLog.create({
+      data: {
+        organizationId: input.organizationId,
+        actorId: null,
+        actorType: "system",
+        action: `operations.action_${input.state}`,
+        resourceType: "operational_action",
+        resourceId: id,
+        patientId: input.risk.patientId,
+        metadata: {
+          riskKind: input.risk.kind,
+          actionKind: input.action.kind,
+          appointmentId: input.risk.appointmentId,
+          state: input.state,
+          urgency: input.risk.urgency,
+          humanDecision: false,
+          // Why this state and not another: with no approved rail a patient message is
+          // held rather than sent, and recording that here is what lets a reviewer see
+          // the difference between "we chose not to" and "we could not".
+          deliverable: input.action.kind === "patient_message" ? communicationsConnected() : null,
+        },
+      },
+    });
+
     return input.state;
   });
 }
