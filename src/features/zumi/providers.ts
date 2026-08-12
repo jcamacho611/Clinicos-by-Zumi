@@ -2,26 +2,19 @@
  * Zumi model provider registry.
  *
  * Every model call in Klinikos goes through one adapter surface. Nothing else in the
- * codebase is permitted to hold a provider SDK, because scattered calls make the two
- * things that actually matter here — redaction before egress, and an audit record
- * after — impossible to guarantee.
+ * codebase is permitted to call a model provider directly, because scattered calls
+ * make the two things that actually matter here — redaction before egress, and an
+ * audit record after — impossible to guarantee.
  *
- * The registry reports honestly. A provider with no credentials is NOT_CONFIGURED,
- * not "ready". There is no fallback to a canned response that would let a demo look
- * live while nothing is connected.
- *
- * Pure module: reads environment, never calls the network. The adapter that would
- * make the call is supplied at registration time.
+ * The registry reports honestly. A provider with no credentials/configuration is
+ * NOT_CONFIGURED, not "ready". There is no fallback to a canned response that would
+ * let a demo look live while nothing is connected.
  */
 
+import { createSelfHostedZumiAdapter, selfHostedZumiRequested } from "@/features/zumi/adapters/self-hosted";
 import { REDACTION_LIMITATION_NOTICE } from "@/features/zumi/redaction";
 
-/**
- * The slice of the environment this module reads.
- *
- * Narrower than `NodeJS.ProcessEnv` on purpose: these functions need a string map and
- * nothing more, which keeps the test seam honest instead of casting fixtures.
- */
+/** The narrow environment shape used by the provider boundary and tests. */
 export type ZumiEnv = Record<string, string | undefined>;
 
 export const providerHealthStates = [
@@ -68,8 +61,9 @@ export type ProviderAdapter = {
   requiredEnv: readonly string[];
   /**
    * Whether a Business Associate Agreement is on file for this provider in this
-   * deployment. Declared per adapter and defaulted to false — a provider is not
-   * PHI-eligible because someone assumed it was.
+   * deployment. This stays false for self-hosted inference until the broader PHI
+   * deployment assurance model is deliberately generalized; ownership alone is not
+   * approval to process PHI.
    */
   baaOnFile: boolean;
   invoke: (request: ProviderRequest) => Promise<ProviderResult>;
@@ -93,9 +87,21 @@ export function registerProvider(adapter: ProviderAdapter) {
   return adapter;
 }
 
-/** Test seam. Production code registers at module load and never clears. */
+/** Test seam. Runtime selection may re-register environment-backed built-ins. */
 export function resetProviderRegistry() {
   registry.clear();
+}
+
+/**
+ * Register built-in providers only when the deployment explicitly asks for them or
+ * begins configuring them. This preserves the honest "no providers" state in a blank
+ * environment while making `self_hosted` a first-class production option without an
+ * application-level bootstrap side effect.
+ */
+function ensureEnvironmentProvidersRegistered(env: ZumiEnv) {
+  if (selfHostedZumiRequested(env) && !registry.has("self_hosted")) {
+    registerProvider(createSelfHostedZumiAdapter(env));
+  }
 }
 
 function missingEnvFor(adapter: ProviderAdapter, env: ZumiEnv) {
@@ -105,12 +111,7 @@ function missingEnvFor(adapter: ProviderAdapter, env: ZumiEnv) {
   });
 }
 
-/**
- * `ZUMI_DISABLED=1` is a deployment-level kill switch.
- *
- * It exists so an operator can stop all AI egress without a redeploy, which is the
- * first thing anyone asks for after an incident.
- */
+/** `ZUMI_DISABLED=1` is a deployment-level kill switch. */
 function killSwitchEngaged(env: ZumiEnv) {
   const value = env.ZUMI_DISABLED;
   return value === "1" || value?.toLowerCase() === "true";
@@ -133,10 +134,11 @@ export function providerStatus(adapter: ProviderAdapter, env: ZumiEnv = process.
     };
   }
 
-  return { ...base, state: "CONFIGURED", missingEnv: [], detail: "Credentials present. Not yet exercised in this process." };
+  return { ...base, state: "CONFIGURED", missingEnv: [], detail: "Configuration present. Not yet exercised in this process." };
 }
 
 export function listProviderStatus(env: ZumiEnv = process.env): ProviderStatus[] {
+  ensureEnvironmentProvidersRegistered(env);
   return [...registry.values()].map((adapter) => providerStatus(adapter, env));
 }
 
@@ -150,13 +152,14 @@ export function listProviderStatus(env: ZumiEnv = process.env): ProviderStatus[]
 export function selectProvider(env: ZumiEnv = process.env):
   | { ok: true; adapter: ProviderAdapter; status: ProviderStatus }
   | { ok: false; reason: "no_providers" | "disabled" | "not_configured" | "unknown_provider"; detail: string; statuses: ProviderStatus[] } {
+  ensureEnvironmentProvidersRegistered(env);
   const statuses = listProviderStatus(env);
 
   if (registry.size === 0) {
     return {
       ok: false,
       reason: "no_providers",
-      detail: "No Zumi model provider is registered. AI features are inert until an approved provider is contracted and configured.",
+      detail: "No Zumi model provider is registered. AI features are inert until an approved inference deployment is configured.",
       statuses,
     };
   }
@@ -195,7 +198,7 @@ export function selectProvider(env: ZumiEnv = process.env):
  *
  * Two independent conditions, both required: the adapter declares a signed BAA, and
  * the deployment is explicitly flagged as approved for it. Neither alone is enough,
- * and the default answer is no.
+ * and the default answer is no. Self-hosting deliberately does not bypass this rule.
  */
 export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = process.env) {
   const approved = env.ZUMI_PHI_EGRESS_APPROVED === "1";
@@ -205,12 +208,7 @@ export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = proc
   };
 }
 
-/**
- * Status for surfaces that need to tell a user why Zumi is quiet.
- *
- * Deliberately shaped like `eduAiGatewayStatus()` so EDU can adopt it without either
- * side inventing a second vocabulary for the same fact.
- */
+/** Status for surfaces that need to tell a user why Zumi is quiet. */
 export function zumiGatewayStatus(env: ZumiEnv = process.env) {
   const selection = selectProvider(env);
   if (selection.ok) {
