@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarClock,
+  CirclePlus,
   Map,
   Radar,
   ShieldCheck,
@@ -19,7 +20,7 @@ import { getGridTransactionBoard } from "@/lib/grid/transaction-board-repository
 
 export const metadata: Metadata = {
   title: "Grid Opportunities — Klinikos",
-  description: "One place to see Klinikos Grid work, resources, offers, bookings, and earnings.",
+  description: "One place to see Klinikos Grid needs, resources, offers, bookings, and earnings.",
 };
 
 function money(cents: number) {
@@ -51,12 +52,14 @@ export default async function GridOpportunitiesPage() {
   const primary = clinicalProfessional
     ? [
         { icon: BriefcaseBusiness, title: "Find work", body: "See eligible work and provider opportunities available through Grid.", href: "/grid/workspace" },
+        { icon: CirclePlus, title: "Post a need", body: "Need space, equipment, business support, education capacity, or another Grid resource? Save demand and match it.", href: "/grid/needs/new" },
         { icon: CalendarClock, title: "Set availability", body: "Tell Grid when, where, and how far you want to work.", href: "/grid/availability" },
         { icon: BadgeDollarSign, title: "Track earnings", body: "See current transaction and payout state without treating estimates as paid money.", href: "/grid/transactions" },
       ]
     : [
-        { icon: Boxes, title: "Manage what you have", body: "Create resources, capacity, services, equipment, or permitted supply and send them through review.", href: "/grid/resources" },
-        { icon: Radar, title: "Review opportunities", body: "See needs, offers, reservations, fulfillment, and financial obligations involving your organization.", href: "/grid/transactions" },
+        { icon: CirclePlus, title: "I need something", body: "Create structured demand and let Grid find current reviewed candidates.", href: "/grid/needs/new" },
+        { icon: Boxes, title: "I have something", body: "Create resources, capacity, services, equipment, or permitted supply and send them through review.", href: "/grid/resources" },
+        { icon: Radar, title: "Transactions", body: "See offers, reservations, fulfillment, and financial obligations involving your organization.", href: "/grid/transactions" },
         { icon: Map, title: "Explore the market", body: "Browse reviewed public Grid supply and available provider capacity.", href: "/grid/browse" },
       ];
 
@@ -68,7 +71,7 @@ export default async function GridOpportunitiesPage() {
           <div className="flex flex-wrap items-center gap-2 text-[9px] font-extrabold uppercase tracking-[.14em]"><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-cyan-100">Klinikos Grid</span><span className="rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-white/55">{label(participantKind)}</span></div>
           <p className="mt-7 text-[10px] font-black uppercase tracking-[.22em] text-cyan-200">{organization?.name ?? session.organizationName}</p>
           <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-[-.065em] text-white sm:text-5xl lg:text-6xl">What needs to happen next?</h1>
-          <p className="mt-5 max-w-3xl text-sm leading-7 text-white/50">Grid brings your supply, demand, offers, bookings, review state, fulfillment, and economic truth into one place. Eligibility and policy remain server-owned.</p>
+          <p className="mt-5 max-w-3xl text-sm leading-7 text-white/50">Grid brings supply, demand, discovery, offers, reservations, review state, fulfillment, and economic truth into one place. Eligibility and policy remain server-owned.</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2">
           {[
@@ -81,8 +84,13 @@ export default async function GridOpportunitiesPage() {
       </div>
     </section>
 
-    <section className="mt-5 grid gap-3 md:grid-cols-3">
+    <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       {primary.map((item) => <Link className="group rounded-[1.5rem] border border-white/10 bg-white/[.035] p-5 transition hover:bg-white/[.055]" href={item.href} key={item.title}><div className="flex items-start justify-between gap-4"><item.icon className="size-5 text-cyan-200" /><ArrowRight className="size-4 text-white/25 transition group-hover:translate-x-1 group-hover:text-cyan-200" /></div><h2 className="mt-6 text-lg font-extrabold text-white">{item.title}</h2><p className="mt-2 text-xs leading-6 text-white/45">{item.body}</p></Link>)}
+    </section>
+
+    <section className="mt-5 rounded-[1.6rem] border border-white/10 bg-white/[.03] p-5 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-cyan-200">My demand</p><h2 className="mt-2 text-2xl font-black text-white">Needs & current search state</h2></div><Link className="inline-flex items-center gap-2 text-xs font-extrabold text-cyan-200" href="/grid/needs/new"><CirclePlus className="size-4" />Post a need</Link></div>
+      {board.demands.length ? <div className="mt-5 grid gap-3 lg:grid-cols-2">{board.demands.slice(0, 8).map((demand) => <article className="rounded-2xl border border-white/10 bg-black/20 p-4" key={demand.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex flex-wrap gap-1.5"><span className="rounded-full border border-white/10 px-2 py-1 text-[9px] font-black uppercase tracking-[.12em] text-white/45">{demand.kind}</span><span className="rounded-full border border-cyan-300/15 bg-cyan-300/[.05] px-2 py-1 text-[9px] font-black uppercase tracking-[.12em] text-cyan-100">{demand.status}</span></div><h3 className="mt-3 text-sm font-extrabold text-white">{demand.title}</h3><p className="mt-1 text-[10px] text-white/35">{[demand.city, demand.state].filter(Boolean).join(", ") || "Flexible location"}{demand.requestedStartAt ? ` · ${new Date(demand.requestedStartAt).toLocaleString()}` : ""}</p></div>{["open", "matched"].includes(demand.status) ? <Link className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-cyan-200" href={`/grid/needs/${demand.id}/matches`}>Find candidates <ArrowRight className="size-3.5" /></Link> : <Link className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-cyan-200" href="/grid/transactions">Track transaction <ArrowRight className="size-3.5" /></Link>}</div></article>)}</div> : <div className="mt-5 rounded-2xl border border-dashed border-white/15 p-5"><Radar className="size-5 text-cyan-200" /><p className="mt-3 text-sm font-extrabold text-white">No saved needs yet.</p><p className="mt-2 text-xs leading-6 text-white/45">Tell Grid what outcome you need, then discovery can search reviewed supply.</p></div>}
     </section>
 
     {!clinicalProfessional && <section className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_.9fr]">
