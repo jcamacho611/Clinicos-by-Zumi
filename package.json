@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
+    "test:mvp": "tsx scripts/mvp/commercial-journey.mts && tsx scripts/mvp/activation-journey.mts && tsx scripts/mvp/operations-journey.mts && tsx scripts/mvp/grid-journey.mts && tsx scripts/mvp/grid-trust-journey.mts && tsx scripts/mvp/tenant-isolation-journey.mts",
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
