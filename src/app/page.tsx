@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { KlinikosHomepage } from "@/components/marketing/klinikos-homepage";
+import { GridLaunchDock } from "@/components/marketing/grid-launch-dock";
 
 export const metadata: Metadata = {
   title: "Klinikos | Clinic continuity, made visible",
@@ -8,5 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
-  return <KlinikosHomepage />;
+  return <>
+    <KlinikosHomepage />
+    <GridLaunchDock />
+  </>;
 }
