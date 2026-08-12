@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ re
         eventType: "grid.fulfillment.fulfilled",
         sourceType: "grid_reservation",
         sourceId: reservationId,
-        metadata: { status: updated.status, fulfillmentStatus: updated.fulfillmentStatus },
+        metadata: { reservationStatus: updated.reservationStatus, fulfillmentStatus: updated.fulfillmentStatus },
       });
     }
     return NextResponse.json({ data: updated });
