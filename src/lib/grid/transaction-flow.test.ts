@@ -22,7 +22,7 @@ describe("Grid transaction flow", () => {
     expect(canTransitionGridOffer("accepted", "withdrawn")).toBe(false);
   });
 
-  it("validates saved demand", () => {
+  it("validates universal saved demand", () => {
     const result = savedGridDemandSchema.safeParse({
       kind: "service",
       title: "Need a medical billing contractor",
@@ -35,18 +35,59 @@ describe("Grid transaction flow", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts an offer against a generic Grid resource reference", () => {
+    const start = new Date(Date.now() + 86_400_000);
+    const result = gridOfferSchema.safeParse({
+      demandId: "demand-1",
+      resourceKind: "equipment",
+      resourceReference: "synthetic-equipment-listing-1",
+      offeredStartAt: start.toISOString(),
+      grossAmountCents: 75_000,
+      depositAmountCents: 15_000,
+      note: "Synthetic equipment-capacity offer for review.",
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects an offer with an end before its start", () => {
     const start = new Date(Date.now() + 86_400_000);
     const end = new Date(start.getTime() - 60_000);
     const result = gridOfferSchema.safeParse({
       demandId: "demand-1",
       providerId: "provider-1",
+      serviceListingId: "service-1",
       offeredStartAt: start.toISOString(),
       offeredEndAt: end.toISOString(),
       grossAmountCents: 50_000,
       depositAmountCents: 10_000,
       note: "Offer for requested service window.",
-      expiresAt: new Date(start.getTime() - 3_600_000).toISOString(),
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a deposit larger than the offer", () => {
+    const result = gridOfferSchema.safeParse({
+      demandId: "demand-1",
+      locationId: "location-1",
+      offeredStartAt: new Date(Date.now() + 86_400_000).toISOString(),
+      grossAmountCents: 10_000,
+      depositAmountCents: 20_000,
+      note: "Room-capacity offer with an invalid deposit.",
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires provider and service listing to be selected together", () => {
+    const result = gridOfferSchema.safeParse({
+      demandId: "demand-1",
+      providerId: "provider-1",
+      offeredStartAt: new Date(Date.now() + 86_400_000).toISOString(),
+      grossAmountCents: 25_000,
+      note: "Incomplete clinician offer.",
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     });
     expect(result.success).toBe(false);
   });
