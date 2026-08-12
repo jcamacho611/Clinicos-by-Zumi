@@ -72,11 +72,15 @@ function isExecutable(readiness: ZumiToolReadiness) {
   return readiness === "active" || readiness === "configured" || readiness === "provider_capability";
 }
 
+function hasAction(tool: { actions: readonly ZumiToolAction[] }, action: ZumiToolAction) {
+  return tool.actions.includes(action);
+}
+
 function requiresApproval(tool: { actions: readonly ZumiToolAction[]; risk: string; requiresExplicitApprovalForWrite?: boolean }) {
   return Boolean(
     tool.requiresExplicitApprovalForWrite ||
-    tool.actions.includes("write") ||
-    tool.actions.includes("execute") ||
+    hasAction(tool, "write") ||
+    hasAction(tool, "execute") ||
     tool.risk === "CRITICAL",
   );
 }
@@ -94,8 +98,8 @@ export function planZumiOrchestration(input: {
 
   const retrievalTools = tools.filter((tool) => ["knowledge", "memory", "operations", "documents", "marketplace", "clinical", "trust", "security"].includes(tool.family));
   const researchTools = tools.filter((tool) => tool.family === "research" || tool.key === "file_search");
-  const computeTools = tools.filter((tool) => tool.actions.includes("compute"));
-  const prepareTools = tools.filter((tool) => tool.actions.includes("draft") || tool.actions.includes("write") || tool.actions.includes("execute"));
+  const computeTools = tools.filter((tool) => hasAction(tool, "compute"));
+  const prepareTools = tools.filter((tool) => hasAction(tool, "draft") || hasAction(tool, "write") || hasAction(tool, "execute"));
 
   const steps: ZumiPlanStep[] = [
     { phase: "understand", label: "Resolve the user's real goal, context, constraints, and risk level.", toolKeys: [], executableNow: true, requiresApproval: false },
