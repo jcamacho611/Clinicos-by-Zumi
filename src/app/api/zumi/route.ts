@@ -11,9 +11,13 @@ import { createOpenAIResponsesAdapter, openAIResponsesRequested } from "@/featur
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
+import { resolvedZumiToolCatalog } from "@/features/zumi/tool-catalog";
+import { zumiAccessibilitySchema, zumiPresenceSchema } from "@/features/zumi/presence";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
+
+export const maxDuration = 120;
 
 const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 const MAX_ZUMI_BODY_BYTES = 64 * 1024;
@@ -31,6 +35,8 @@ const requestSchema = z.object({
   knowledgeSearch: z.boolean().default(true),
   codeInterpreter: z.boolean().optional(),
   allowedDomains: z.array(domainSchema).max(20).optional(),
+  presence: zumiPresenceSchema.optional(),
+  accessibility: zumiAccessibilitySchema.optional(),
 });
 
 async function boundedJson(request: Request) {
@@ -56,11 +62,34 @@ export async function GET() {
   const status = zumiGatewayStatus();
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
   const conversationPolicy = resolveAuthenticatedConversationPolicy(session);
+  const tools = resolvedZumiToolCatalog().map((tool) => ({
+    key: tool.key,
+    family: tool.family,
+    label: tool.label,
+    description: tool.description,
+    actions: tool.actions,
+    risk: tool.risk,
+    readiness: tool.readiness,
+    sendsDataExternally: tool.sendsDataExternally,
+    requiresExplicitApprovalForWrite: Boolean(tool.requiresExplicitApprovalForWrite),
+  }));
 
   return NextResponse.json({
     data: {
       status,
       orbStates: zumiOrbStates,
+      presence: {
+        supported: true,
+        summonEverywhereInAuthenticatedPlatform: true,
+        keyboardShortcut: "Ctrl/Cmd+J",
+        browserVoiceInput: true,
+        browserSpeechOutput: true,
+        interactionModes: ["conversation", "research", "command", "briefing"],
+        autonomyModes: ["answer_only", "suggest_actions", "prepare_actions"],
+        durablePreferenceMemory: true,
+        multimodalContract: true,
+        trustedPathEngine: true,
+      },
       conversation: {
         supported: true,
         profile: conversationPolicy.profile,
@@ -68,6 +97,8 @@ export async function GET() {
         automaticResearch: true,
         publicWebSeparatedFromPrivateContext: true,
         founderModeIsNotAuthorizationBypass: true,
+        deterministicOrchestrationOutranksModelSuggestions: true,
+        deepCognition: "bounded_plan_investigate_critic_repair",
       },
       capabilities: zumiCapabilities.map((capability) => ({
         key: capability.key,
@@ -77,6 +108,7 @@ export async function GET() {
         entitled: capability.requiresEntitlement === null || entitlements.includes(capability.requiresEntitlement),
         requiresEntitlement: capability.requiresEntitlement,
       })),
+      toolGraph: tools,
     },
   }, { headers: NO_STORE });
 }
@@ -168,6 +200,8 @@ export async function POST(request: Request) {
 
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
   const capability = parsed.data.webResearch === true ? "public_research" : parsed.data.capability;
+  const presence = zumiPresenceSchema.parse(parsed.data.presence ?? {});
+  const accessibility = zumiAccessibilitySchema.parse(parsed.data.accessibility ?? {});
   const result = await invokeZumi({
     session,
     capability,
@@ -180,6 +214,8 @@ export async function POST(request: Request) {
     allowKnowledgeSearch: parsed.data.knowledgeSearch,
     allowCodeInterpreter: parsed.data.codeInterpreter,
     allowedDomains: parsed.data.allowedDomains,
+    presence,
+    accessibility,
   });
 
   if (!result.allowed) {
@@ -201,6 +237,11 @@ export async function POST(request: Request) {
       sources: result.continuation?.sources ?? [],
       toolsUsed: result.continuation?.toolsUsed ?? [],
       research: result.research,
+      cognition: result.cognition,
+      orchestration: result.orchestration,
+      trustedOrchestration: result.trustedOrchestration,
+      presence,
+      accessibility,
       rateLimitRemaining: limit.remaining,
     },
   }, { headers: NO_STORE });
