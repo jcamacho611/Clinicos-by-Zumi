@@ -86,6 +86,7 @@ export async function GET() {
         autonomyModes: ["answer_only", "suggest_actions", "prepare_actions"],
         durablePreferenceMemory: true,
         multimodalContract: true,
+        trustedPathEngine: true,
       },
       conversation: {
         supported: true,
@@ -94,6 +95,7 @@ export async function GET() {
         automaticResearch: true,
         publicWebSeparatedFromPrivateContext: true,
         founderModeIsNotAuthorizationBypass: true,
+        deterministicOrchestrationOutranksModelSuggestions: true,
       },
       capabilities: zumiCapabilities.map((capability) => ({
         key: capability.key,
@@ -233,6 +235,7 @@ export async function POST(request: Request) {
       toolsUsed: result.continuation?.toolsUsed ?? [],
       research: result.research,
       orchestration: result.orchestration,
+      trustedOrchestration: result.trustedOrchestration,
       presence,
       accessibility,
       rateLimitRemaining: limit.remaining,
