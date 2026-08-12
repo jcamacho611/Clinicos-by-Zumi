@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
+import { createExternalGridResourceForSession } from "@/lib/grid/external-participant-enrollment";
 import { createGridResource, listOwnGridResources } from "@/lib/grid/resource-repository";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 
@@ -20,10 +21,17 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "grid", "create", { request });
-  if (denied) return denied;
 
   try {
+    if (session.role === "contractor") {
+      return NextResponse.json(
+        { data: await createExternalGridResourceForSession(session, await request.json()) },
+        { status: 201 },
+      );
+    }
+
+    const denied = await enforceApiPermission(session, "grid", "create", { request });
+    if (denied) return denied;
     return NextResponse.json({ data: await createGridResource(session, await request.json()) }, { status: 201 });
   } catch (error) {
     return networkAccessErrorResponse(error);
