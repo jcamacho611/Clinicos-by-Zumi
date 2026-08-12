@@ -1,59 +1,226 @@
 import "server-only";
 
+import {
+  evaluateConnectorReadiness,
+  type EconomicClass,
+  type Gateway,
+  type IntegrationClass,
+  type OwnershipClass,
+  type ReadinessGates,
+} from "@/lib/connectors/taxonomy";
+
 export type ConnectorCategory = "ai" | "healthcare" | "services";
 export type ConnectorStatus = "planned" | "configurable" | "sandbox-ready" | "live";
 
+/**
+ * Canonical external-dependency record.
+ *
+ * `status` is retained as an implementation label for existing surfaces. It is NOT an
+ * authorization decision. Production and PHI authorization come only from the
+ * independent readiness gates evaluated below.
+ */
 export type ConnectorDefinition = {
   id: string;
   name: string;
   category: ConnectorCategory;
+  status: ConnectorStatus;
+  gateway: Gateway;
+  integration: IntegrationClass;
+  ownership: OwnershipClass;
+  economics: EconomicClass;
+  /** Server-side variables. Never serialized with values. */
   env: string[];
+  /** Narrow browser exception for separately restricted public credentials. */
+  publicEnv?: string[];
   handlesPhi: boolean;
   baaRequired: boolean;
   customerConnectable: boolean;
-  status: ConnectorStatus;
+  gates: ReadinessGates;
+  externalGate: string;
   notes: string;
 };
 
-export const connectorCatalog: ConnectorDefinition[] = [
-  { id: "openai", name: "OpenAI", category: "ai", env: ["OPENAI_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "configurable", notes: "Primary AI provider candidate behind the Klinikos AI Gateway. Do not send PHI until production approval and required agreements are complete." },
-  { id: "anthropic", name: "Anthropic", category: "ai", env: ["ANTHROPIC_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Secondary AI provider candidate for routed workloads." },
-  { id: "google-ai", name: "Google Gemini / Vertex AI", category: "ai", env: ["GOOGLE_AI_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Optional provider for future model routing." },
+const NO_GATES: ReadinessGates = {};
 
-  { id: "google-maps-js", name: "Google Maps JavaScript API", category: "services", env: ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "GRID map rendering. Browser key must be origin restricted to approved Klinikos domains and limited to required APIs." },
-  { id: "google-places", name: "Google Places API", category: "services", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "Provider/location autocomplete, place details, nearby discovery, and normalized place IDs for GRID." },
-  { id: "google-geocoding", name: "Google Geocoding API", category: "services", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "Address to latitude/longitude and reverse geocoding for provider, clinic-chair, partner-location, and service-area records." },
-  { id: "google-routes", name: "Google Routes API", category: "services", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "Travel time, distance, route computation, and provider-to-location matching for GRID." },
-  { id: "google-route-matrix", name: "Google Route Matrix", category: "services", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "Bulk origin/destination distance and travel-time ranking for provider and location matching." },
-  { id: "google-address-validation", name: "Google Address Validation API", category: "services", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "planned", notes: "Optional address normalization and deliverability validation for provider and partner-location onboarding." },
+type ConnectorInput = Omit<ConnectorDefinition, "category" | "status"> & {
+  category?: ConnectorCategory;
+  status?: ConnectorStatus;
+};
 
-  { id: "stripe", name: "Stripe Payments", category: "services", env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"], handlesPhi: false, baaRequired: false, customerConnectable: true, status: "configurable", notes: "Customer payments and booking charges. Keep PHI out of processor metadata." },
-  { id: "stripe-connect", name: "Stripe Connect", category: "services", env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_CONNECT_CLIENT_ID"], handlesPhi: false, baaRequired: false, customerConnectable: true, status: "configurable", notes: "GRID contractor/provider payouts, onboarding, connected accounts, transfer accounting, and platform fee support. Production use requires completed platform onboarding and supported account configuration." },
+function categoryForGateway(gateway: Gateway): ConnectorCategory {
+  if (gateway === "ai") return "ai";
+  if (["healthcare_transaction", "clinical_network", "credentialing"].includes(gateway)) return "healthcare";
+  return "services";
+}
 
-  { id: "twilio", name: "Twilio Messaging / Voice", category: "services", env: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "configurable", notes: "GRID booking notifications, callback workflows, SMS, and voice. PHI use requires approved configuration and agreements." },
-  { id: "twilio-verify", name: "Twilio Verify", category: "services", env: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_VERIFY_SERVICE_SID"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "planned", notes: "Optional phone verification for provider/contractor account activation and high-risk account changes." },
-  { id: "resend", name: "Resend", category: "services", env: ["RESEND_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, status: "configurable", notes: "Transactional email candidate. Treat PHI email as blocked until vendor/compliance approval." },
+function connector(input: ConnectorInput): ConnectorDefinition {
+  return {
+    ...input,
+    category: input.category ?? categoryForGateway(input.gateway),
+    status: input.status ?? "planned",
+  };
+}
 
-  { id: "stedi", name: "Stedi", category: "healthcare", env: ["STEDI_API_KEY", "STEDI_MODE"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "sandbox-ready", notes: "Eligibility, claims, claim status, ERA, payer and X12 adapter candidate. Default to sandbox until production enrollment/BAA verification." },
-  { id: "nppes", name: "CMS NPPES", category: "healthcare", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "configurable", notes: "Public NPI and taxonomy lookup for provider identity and credential profile enrichment." },
-  { id: "cms-blue-button", name: "CMS Blue Button", category: "healthcare", env: ["CMS_BLUE_BUTTON_CLIENT_ID", "CMS_BLUE_BUTTON_CLIENT_SECRET", "CMS_BLUE_BUTTON_MODE"], handlesPhi: true, baaRequired: false, customerConnectable: true, status: "planned", notes: "Patient-authorized Medicare claims connection where applicable. Keep sandbox and production modes explicit." },
+/**
+ * No connector below is declared production-live or PHI-approved. Environment
+ * variables are configuration, not evidence that contracts, security review,
+ * enrollment, BAAs, or production approval happened.
+ */
+export const connectorCatalog: readonly ConnectorDefinition[] = [
+  connector({
+    id: "self_hosted",
+    name: "Klinikos Self-Hosted Zumi Inference",
+    gateway: "ai",
+    integration: "server_only",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: ["ZUMI_SELF_HOSTED_BASE_URL", "ZUMI_SELF_HOSTED_MODEL"],
+    handlesPhi: true,
+    baaRequired: false,
+    customerConnectable: false,
+    gates: NO_GATES,
+    status: "configurable",
+    externalGate: "Deploy and security-review the Klinikos-controlled inference service; explicitly approve its data/logging/network posture before production or PHI use.",
+    notes: "Preferred Zumi engine. Ownership removes per-message model-vendor dependence but does not automatically approve PHI. Optional internal bearer authentication uses ZUMI_SELF_HOSTED_API_KEY.",
+  }),
+  connector({
+    id: "openai",
+    name: "OpenAI",
+    gateway: "ai",
+    integration: "server_only",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: ["OPENAI_API_KEY"],
+    handlesPhi: true,
+    baaRequired: true,
+    customerConnectable: true,
+    gates: NO_GATES,
+    externalGate: "Approved contract/security posture and, before PHI, an executed BAA plus explicit PHI approval.",
+    notes: "Optional future provider adapter only. No OpenAI adapter is registered by the current Zumi runtime.",
+  }),
+  connector({
+    id: "anthropic",
+    name: "Anthropic",
+    gateway: "ai",
+    integration: "server_only",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: ["ANTHROPIC_API_KEY"],
+    handlesPhi: true,
+    baaRequired: true,
+    customerConnectable: true,
+    gates: NO_GATES,
+    externalGate: "Approved contract/security posture and, before PHI, an executed BAA plus explicit PHI approval.",
+    notes: "Optional future provider adapter only. It is not the canonical Zumi brain and is not registered by default.",
+  }),
+  connector({
+    id: "google-ai",
+    name: "Google Gemini / Vertex AI",
+    gateway: "ai",
+    integration: "server_only",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: ["GOOGLE_AI_API_KEY"],
+    handlesPhi: true,
+    baaRequired: true,
+    customerConnectable: true,
+    gates: NO_GATES,
+    externalGate: "Approved contract/security posture and, before PHI, applicable BAA/terms plus explicit PHI approval.",
+    notes: "Optional future provider adapter only; no direct browser model calls are permitted.",
+  }),
 
-  { id: "daily", name: "Daily", category: "services", env: ["DAILY_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, status: "planned", notes: "Telemedicine video adapter candidate; production PHI use requires approved HIPAA configuration and BAA." },
-  { id: "erx", name: "E-Prescribing Network", category: "healthcare", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Vendor selection and certification/commercial requirements pending." },
-  { id: "labs", name: "Laboratory Interfaces", category: "healthcare", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Quest, Labcorp, BioReference and/or intermediary adapters. Contracts and credentials required." },
-  { id: "imaging", name: "Imaging / Radiology Interfaces", category: "healthcare", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "HL7/FHIR/PACS vendor adapters with manual fallback until connected." },
-  { id: "credentialing", name: "Credential Verification", category: "healthcare", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Provider license, malpractice, sanctions, certification, and credential verification sources still require vendor selection and contracts. Upload alone never authorizes clinical work." },
-  { id: "state-license", name: "State Professional License Sources", category: "healthcare", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "planned", notes: "State-by-state nursing/medical license verification varies by board and jurisdiction; GRID must support adapters plus human review where no reliable API exists." },
-  { id: "oig-leie", name: "HHS OIG LEIE", category: "healthcare", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "planned", notes: "Exclusion screening source for credential-review workflows. Human review remains required before activation." },
-  { id: "sam-exclusions", name: "SAM.gov Exclusions", category: "healthcare", env: ["SAM_GOV_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, status: "planned", notes: "Federal exclusion/debarment screening input for GRID credential review; never used as sole activation authority." },
+  connector({
+    id: "google-maps-js",
+    name: "Google Maps JavaScript API",
+    gateway: "location",
+    integration: "browser_and_server",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: [],
+    publicEnv: ["NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"],
+    handlesPhi: false,
+    baaRequired: false,
+    customerConnectable: false,
+    gates: NO_GATES,
+    status: "configurable",
+    externalGate: "Google Cloud billing account with the browser key restricted to approved klinikos.io origins and only required browser APIs.",
+    notes: "The only public credential class in the catalog. Server APIs use a separate non-public key.",
+  }),
+  connector({ id: "google-places", name: "Google Places API", gateway: "location", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Google Cloud billing with the server key restricted by API and deployment network.", notes: "Autocomplete, place details, and normalized place IDs for Grid." }),
+  connector({ id: "google-geocoding", name: "Google Geocoding API", gateway: "location", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Google Cloud billing with the server key restricted by API and deployment network.", notes: "Address normalization and coordinates for Grid resources and service areas." }),
+  connector({ id: "google-routes", name: "Google Routes API", gateway: "location", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Google Cloud billing with the server key restricted by API and deployment network.", notes: "Travel time and distance for deterministic Grid ranking." }),
+  connector({ id: "google-route-matrix", name: "Google Route Matrix", gateway: "location", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Google Cloud billing with the server key restricted by API and deployment network.", notes: "Bulk travel-time ranking for Grid matching." }),
+  connector({ id: "google-address-validation", name: "Google Address Validation API", gateway: "location", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["GOOGLE_MAPS_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, externalGate: "Enable only if address validation is needed and the server key is API/network restricted.", notes: "Optional normalized address validation for onboarding and marketplace records." }),
 
-  { id: "storage", name: "Secure Object Storage", category: "services", env: ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, status: "planned", notes: "Credential documents, agreements, and evidence should use encrypted private object storage with signed expiring URLs, tenant ownership, audit, retention, and approved BAA where PHI is possible." },
-  { id: "esign", name: "Electronic Signature Provider", category: "services", env: ["ESIGN_PROVIDER", "ESIGN_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: true, status: "planned", notes: "Contractor agreements, chair-rental agreements, consent/acknowledgment, and partner contracts. Vendor selection pending." },
-  { id: "background-check", name: "Background Check Provider", category: "services", env: ["BACKGROUND_CHECK_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: true, status: "planned", notes: "Optional screening workflow for participating organizations when legally appropriate. Must require consent, role-based access, adverse-action compliance where applicable, and human decision making." },
+  connector({
+    id: "stripe",
+    name: "Stripe Payments",
+    gateway: "payment",
+    integration: "webhook_driven",
+    ownership: "klinikos_owned",
+    economics: "A_platform",
+    env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+    handlesPhi: false,
+    baaRequired: false,
+    customerConnectable: true,
+    gates: NO_GATES,
+    status: "configurable",
+    externalGate: "Verified Stripe business account plus a registered, signature-verified webhook endpoint.",
+    notes: "Payment/entitlement truth must come from verified server events, never a browser redirect. Keep PHI out of processor metadata.",
+  }),
+  connector({ id: "stripe-connect", name: "Stripe Connect", gateway: "payment", integration: "oauth_authorized", ownership: "clinic_owned", economics: "C_activate_after_sale", env: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_CONNECT_CLIENT_ID"], handlesPhi: false, baaRequired: false, customerConnectable: true, gates: NO_GATES, status: "configurable", externalGate: "Platform onboarding approval and supported connected-account configuration for marketplace payouts.", notes: "Grid settlement rail. Connection and payout status are server-owned, never inferred from a return URL." }),
+
+  connector({ id: "twilio", name: "Twilio Messaging / Voice", gateway: "communication", integration: "webhook_driven", ownership: "clinic_owned", economics: "B_customer_owned", env: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, status: "configurable", externalGate: "Clinic/platform Twilio relationship, executed BAA, security review, and HIPAA-eligible configuration before clinical messaging.", notes: "Klinikos owns workflow; Twilio is a replaceable delivery rail." }),
+  connector({ id: "twilio-verify", name: "Twilio Verify", gateway: "communication", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_VERIFY_SERVICE_SID"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, externalGate: "Provision an approved Verify service for account-verification traffic only.", notes: "Identity/contact verification, not clinical content." }),
+  connector({ id: "resend", name: "Resend", gateway: "communication", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["RESEND_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Verified sending domain; any PHI-bearing email additionally requires approved terms/BAA and explicit PHI approval.", notes: "Non-PHI lifecycle mail may be a separate use. Clinical content remains blocked until PHI gates pass." }),
+
+  connector({ id: "stedi", name: "Stedi", gateway: "healthcare_transaction", integration: "regulated_network", ownership: "clinic_owned", economics: "B_customer_owned", env: ["STEDI_API_KEY", "STEDI_MODE"], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, status: "sandbox-ready", externalGate: "Executed BAA, production account, payer enrollment/testing, and explicit production approval.", notes: "Eligibility, claims, claim status, ERA, payer and X12 rail. Sandbox mode is never production evidence." }),
+  connector({ id: "cms-blue-button", name: "CMS Blue Button", gateway: "healthcare_transaction", integration: "oauth_authorized", ownership: "patient_authorized", economics: "B_customer_owned", env: ["CMS_BLUE_BUTTON_CLIENT_ID", "CMS_BLUE_BUTTON_CLIENT_SECRET", "CMS_BLUE_BUTTON_MODE"], handlesPhi: true, baaRequired: false, customerConnectable: true, gates: NO_GATES, externalGate: "CMS production application approval and patient-authorized OAuth grant.", notes: "The patient authorizes access. A clinic cannot grant this on the patient's behalf." }),
+
+  connector({ id: "nppes", name: "CMS NPPES", gateway: "credentialing", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, status: "configurable", externalGate: "Public source; remaining gate is tested adapter/reliability review.", notes: "NPI/taxonomy enrichment informs human credential review and never activates a provider." }),
+  connector({ id: "labs", name: "Laboratory Interfaces", gateway: "clinical_network", integration: "regulated_network", ownership: "clinic_owned", economics: "B_customer_owned", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, externalGate: "Per-lab agreement, BAA as applicable, interface credentials, enrollment, and certification/testing.", notes: "Quest/Labcorp/BioReference or intermediary adapters belong behind one clinical-network gateway." }),
+  connector({ id: "imaging", name: "Imaging / Radiology Interfaces", gateway: "clinical_network", integration: "regulated_network", ownership: "clinic_owned", economics: "B_customer_owned", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, externalGate: "Facility/intermediary agreement plus approved HL7/FHIR/PACS interface and security testing.", notes: "Manual documented fallback remains honest until a production interface is approved." }),
+  connector({ id: "erx", name: "E-Prescribing Network", gateway: "clinical_network", integration: "regulated_network", ownership: "regulated_network", economics: "C_activate_after_sale", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, externalGate: "Certified vendor/network participation, identity proofing/EPCS requirements, contracts, enrollment, and certification testing.", notes: "A regulated network, categorically not an ordinary API-key integration." }),
+
+  connector({ id: "state-license", name: "State Professional License Sources", gateway: "credentialing", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, externalGate: "Per-board source access and human verification path where no reliable API exists.", notes: "Source result is evidence, never credential approval authority." }),
+  connector({ id: "oig-leie", name: "HHS OIG LEIE", gateway: "credentialing", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: [], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, externalGate: "Public dataset ingestion/matching implementation and validation.", notes: "Exclusion-screening evidence for human review." }),
+  connector({ id: "sam-exclusions", name: "SAM.gov Exclusions", gateway: "credentialing", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["SAM_GOV_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: false, gates: NO_GATES, externalGate: "SAM.gov API access plus validated matching/review workflow.", notes: "Never sole provider activation authority." }),
+  connector({ id: "credentialing", name: "Credential Verification", gateway: "credentialing", integration: "server_only", ownership: "clinic_owned", economics: "C_activate_after_sale", env: [], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, externalGate: "Select/contract approved primary-source verification services and define human adjudication workflow.", notes: "License, malpractice, sanctions, certification inputs. Upload alone never authorizes work." }),
+  connector({ id: "background-check", name: "Background Check Provider", gateway: "credentialing", integration: "server_only", ownership: "klinikos_owned", economics: "C_activate_after_sale", env: ["BACKGROUND_CHECK_API_KEY"], handlesPhi: false, baaRequired: false, customerConnectable: true, gates: NO_GATES, externalGate: "Vendor selection plus legally reviewed consent/adverse-action workflow where applicable.", notes: "Human decision required. Variable expense should follow a funded customer need." }),
+
+  connector({ id: "storage", name: "Secure Object Storage", gateway: "document", integration: "server_only", ownership: "klinikos_owned", economics: "A_platform", env: ["OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, gates: NO_GATES, externalGate: "Approved private object-storage deployment, encryption/access review, retention policy, and BAA where required.", notes: "Private buckets, signed expiring access, tenant ownership and audit." }),
+  connector({ id: "esign", name: "Electronic Signature Provider", gateway: "document", integration: "webhook_driven", ownership: "klinikos_owned", economics: "C_activate_after_sale", env: ["ESIGN_PROVIDER", "ESIGN_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: true, gates: NO_GATES, externalGate: "Approved vendor/contract; PHI-bearing documents require full PHI gates. Completion must be verified server-side.", notes: "Agreements and consents stay behind the document gateway." }),
+  connector({ id: "daily", name: "Daily", gateway: "telehealth", integration: "server_only", ownership: "klinikos_owned", economics: "C_activate_after_sale", env: ["DAILY_API_KEY"], handlesPhi: true, baaRequired: true, customerConnectable: false, gates: NO_GATES, externalGate: "HIPAA-eligible account, executed BAA, security review, production configuration and explicit PHI approval.", notes: "Media transport only; visit authority remains in Klinikos." }),
 ];
 
+export function getConnector(id: string) {
+  return connectorCatalog.find((item) => item.id === id);
+}
+
+export function connectorsByGateway(gateway: Gateway) {
+  return connectorCatalog.filter((item) => item.gateway === gateway);
+}
+
+export function connectorsByEconomicClass(economics: EconomicClass) {
+  return connectorCatalog.filter((item) => item.economics === economics);
+}
+
+export function connectorReadiness(definition: ConnectorDefinition) {
+  return evaluateConnectorReadiness({
+    gates: definition.gates,
+    handlesPhi: definition.handlesPhi,
+    baaRequired: definition.baaRequired,
+  });
+}
+
+export function customerConnectableConnectors() {
+  return connectorCatalog.filter((item) => item.customerConnectable);
+}
+
+/** Backward-compatible configuration summary. Presence never means approved. */
 export function connectorConfigStatus(definition: ConnectorDefinition) {
-  const configured = definition.env.length === 0 || definition.env.every((name) => Boolean(process.env[name]));
+  const required = [...definition.env, ...(definition.publicEnv ?? [])];
+  const configured = required.length === 0 || required.every((name) => Boolean(process.env[name]?.trim()));
   return {
     id: definition.id,
     name: definition.name,
@@ -70,7 +237,7 @@ export function connectorStatusSummary() {
   const connectors = connectorCatalog.map(connectorConfigStatus);
   return {
     total: connectors.length,
-    configured: connectors.filter((connector) => connector.configured).length,
+    configured: connectors.filter((item) => item.configured).length,
     connectors,
   };
 }
