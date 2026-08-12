@@ -22,14 +22,14 @@ const buyLanes = [
 ] as const;
 
 const sellLanes = [
-  ["I want work", "Publish your availability, radius, work types, and opportunity preferences.", "/grid/join"],
-  ["I have space", "List rooms, chairs, clinic capacity, and the times they are available.", "/grid/join/location"],
-  ["I sell products or supplies", "Create seller inventory for permitted healthcare products and supplies.", "/grid/join/seller?type=product"],
-  ["I have equipment", "List rentable or available equipment and capacity with the right use restrictions.", "/grid/join/seller?type=equipment"],
-  ["I provide a service", "Offer healthcare business or professional services through Grid.", "/grid/join/seller?type=service"],
-  ["I represent an organization", "Publish your clinic, facility, lab, imaging, specialty, or partner capacity.", "/grid/join/location?type=organization"],
-  ["I have education capacity", "Offer preceptorship, placements, training seats, or learning capacity.", "/grid/join/seller?type=education"],
-  ["I have referral capacity", "Make eligible referral, consultation, diagnostic, or partner capacity discoverable.", "/grid/join/seller?type=referral"],
+  ["I want work", "Publish your availability, radius, work types, and opportunity preferences through the current universal participant profile.", "/grid/join"],
+  ["I have space", "Start with the working Grid enrollment profile so your location and capacity can be captured for review.", "/grid/join"],
+  ["I sell products or supplies", "Start one Grid participant profile. Specialized seller inventory opens only when the applicable listing path is available.", "/grid/join"],
+  ["I have equipment", "Start one Grid participant profile and capture the resource you want to make available.", "/grid/join"],
+  ["I provide a service", "Start one Grid participant profile for your healthcare business or professional service.", "/grid/join"],
+  ["I represent an organization", "Start one Grid participant profile for your clinic, facility, lab, imaging, specialty, or partner capacity.", "/grid/join"],
+  ["I have education capacity", "Start one Grid participant profile for preceptorship, placement, training, or learning capacity.", "/grid/join"],
+  ["I have referral capacity", "Start one Grid participant profile so eligible referral and consultation capacity can be prepared for review.", "/grid/join"],
 ] as const;
 
 export default function GridGatewayPage() {
@@ -49,7 +49,7 @@ export default function GridGatewayPage() {
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#174ea6]">Klinikos Grid</p>
           <div className="mt-5 grid gap-10 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
             <div><h1 className="max-w-5xl text-balance text-5xl font-black leading-[.94] tracking-[-.065em] sm:text-7xl lg:text-[88px]">What are you here to get done?</h1><p className="mt-7 max-w-3xl text-base leading-8 text-[#5b6675] sm:text-lg">Grid is the exchange layer for healthcare people, work, spaces, products, equipment, services, organizations, education, and capacity. Choose the outcome. Grid sorts the rest.</p></div>
-            <div className="border border-[#dfe3e8] bg-[#fbfcfd] p-6 sm:p-7"><div className="flex items-center gap-3"><Search className="size-5 text-[#174ea6]" /><p className="text-sm font-extrabold">Need something specific?</p></div><p className="mt-3 text-[13px] leading-6 text-[#5b6675]">Browse the live map and all published inventory now, or choose a lane below so the experience is pre-sorted around your goal.</p><div className="mt-5 flex flex-wrap gap-2"><Link className="inline-flex min-h-[44px] items-center gap-2 bg-[#174ea6] px-5 text-xs font-extrabold text-white hover:bg-[#0f3f8f]" href="/grid/browse">Open live Grid <ArrowRight className="size-4" /></Link><Link className="inline-flex min-h-[44px] items-center border border-[#d7dce3] px-5 text-xs font-extrabold text-[#0b1220]" href="/grid/pricing">See pricing</Link></div></div>
+            <div className="border border-[#dfe3e8] bg-[#fbfcfd] p-6 sm:p-7"><div className="flex items-center gap-3"><Search className="size-5 text-[#174ea6]" /><p className="text-sm font-extrabold">Need something specific?</p></div><p className="mt-3 text-[13px] leading-6 text-[#5b6675]">Browse published Grid listings now, or choose a lane below so the experience is pre-sorted around your goal.</p><div className="mt-5 flex flex-wrap gap-2"><Link className="inline-flex min-h-[44px] items-center gap-2 bg-[#174ea6] px-5 text-xs font-extrabold text-white hover:bg-[#0f3f8f]" href="/grid/browse">Browse Grid <ArrowRight className="size-4" /></Link><Link className="inline-flex min-h-[44px] items-center border border-[#d7dce3] px-5 text-xs font-extrabold text-[#0b1220]" href="/grid/pricing">See pricing</Link></div></div>
           </div>
         </div>
       </section>
