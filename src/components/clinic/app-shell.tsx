@@ -151,7 +151,15 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
 
           <div className="hidden items-center gap-2 sm:flex">
             <span className="inline-flex items-center gap-1.5 border border-[#1677a8]/25 bg-[#1677a8]/8 px-3 py-1.5 text-[10px] font-bold text-[#0f658f]"><span className="size-1.5 bg-[#1677a8]" /> Human-governed</span>
-            <Button className="border-[#0b1e3a]/15 bg-transparent text-[#0b1e3a]" size="icon" variant="secondary" aria-label="Open command menu" title="Open Zumi with Ctrl or Command J"><Command className="size-4" /></Button>
+            <Button
+              aria-label="Open Zumi"
+              className="border-[#0b1e3a]/15 bg-transparent text-[#0b1e3a]"
+              onClick={() => window.dispatchEvent(new Event("zumi:toggle"))}
+              size="icon"
+              title="Open Zumi with Ctrl or Command J"
+              type="button"
+              variant="secondary"
+            ><Command className="size-4" /></Button>
             <Button className="relative border-[#0b1e3a]/15 bg-transparent text-[#0b1e3a]" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
           </div>
         </header>
