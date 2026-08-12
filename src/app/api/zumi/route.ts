@@ -12,6 +12,8 @@ import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conv
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
+import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
+import { recordSecurityEvent } from "@/lib/security/events";
 
 const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 const MAX_ZUMI_BODY_BYTES = 64 * 1024;
@@ -23,20 +25,13 @@ const domainSchema = z.string().trim().min(3).max(200).regex(/^[a-z0-9.-]+$/i);
 const requestSchema = z.object({
   capability: z.string().trim().min(2).max(80).default("conversation"),
   question: z.string().trim().min(3).max(8_000),
-  /** Structured context supplied by an authorized product surface. The gateway redacts before egress. */
   context: z.record(z.string(), z.unknown()).optional(),
   conversationToken: z.string().trim().max(4_000).optional(),
-  /** Undefined means Zumi may decide automatically from the question/context boundary. */
   webResearch: z.boolean().optional(),
   knowledgeSearch: z.boolean().default(true),
   codeInterpreter: z.boolean().optional(),
   allowedDomains: z.array(domainSchema).max(20).optional(),
 });
-
-function rateLimitKey(request: Request, userId: string) {
-  const metadata = requestMetadata(request);
-  return `${userId}:${metadata.ipAddress ?? "unknown"}`;
-}
 
 async function boundedJson(request: Request) {
   const declared = Number.parseInt(request.headers.get("content-length") ?? "", 10);
@@ -93,8 +88,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Access denied." }, { status: 403, headers: NO_STORE });
   }
 
-  const limit = checkZumiProcessRateLimit(rateLimitKey(request, session.userId));
+  const metadata = requestMetadata(request);
+  const sessionSignals = await deriveSessionRiskSignals(session, request);
+  if (sessionSignals.newIp || sessionSignals.newUserAgent) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "session.drift_observed",
+      risk: "MEDIUM",
+      resourceType: "auth_session",
+      resourceId: session.sessionId,
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: sessionSignals,
+    });
+  }
+
+  const limit = checkZumiProcessRateLimit(`${session.userId}:${metadata.ipAddress ?? "unknown"}`);
   if (!limit.allowed) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.rate_limited",
+      risk: "MEDIUM",
+      resourceType: "ai",
+      resourceId: "zumi",
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: { retryAfterSeconds: limit.retryAfterSeconds },
+    });
     return NextResponse.json(
       { error: "Too many Zumi requests. Try again shortly." },
       { status: 429, headers: { ...NO_STORE, "Retry-After": String(limit.retryAfterSeconds) } },
@@ -103,6 +125,17 @@ export async function POST(request: Request) {
 
   const body = await boundedJson(request);
   if (body.tooLarge) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.oversized_request",
+      risk: "MEDIUM",
+      resourceType: "ai",
+      resourceId: "zumi",
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: { maxBytes: MAX_ZUMI_BODY_BYTES },
+    });
     return NextResponse.json({ error: "Zumi request is too large." }, { status: 413, headers: NO_STORE });
   }
 
@@ -117,6 +150,16 @@ export async function POST(request: Request) {
     : null;
 
   if (parsed.data.conversationToken && !previous) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.invalid_continuation_token",
+      risk: "MEDIUM",
+      resourceType: "ai_conversation",
+      resourceId: "continuation",
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    });
     return NextResponse.json(
       { error: "Conversation token is invalid, expired, or belongs to another account." },
       { status: 400, headers: NO_STORE },
