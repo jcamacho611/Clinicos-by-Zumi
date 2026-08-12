@@ -87,7 +87,7 @@ export function GridTransactionCommand({ board }: { board: GridTransactionBoard 
   });
 
   const obligationsByReservation = useMemo(() => {
-    const map = new Map<string, GridTransactionBoard["obligations"]>();
+    const map = new globalThis.Map<string, GridTransactionBoard["obligations"]>();
     for (const line of board.obligations) map.set(line.reservationId, [...(map.get(line.reservationId) ?? []), line]);
     return map;
   }, [board.obligations]);
