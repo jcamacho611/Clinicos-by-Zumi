@@ -7,7 +7,7 @@ import { networkAccessErrorResponse } from "@/lib/network-access-http";
 export async function GET(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "read", { request });
+  const denied = await enforceApiPermission(session, "grid", "read", { request });
   if (denied) return denied;
 
   try {
@@ -20,10 +20,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "create", { request });
-  if (denied) return denied;
 
   try {
+    if (session.role !== "contractor") {
+      const denied = await enforceApiPermission(session, "grid", "create", { request });
+      if (denied) return denied;
+    }
     return NextResponse.json({ data: await createSavedGridDemand(session, await request.json()) }, { status: 201 });
   } catch (error) {
     return networkAccessErrorResponse(error);
