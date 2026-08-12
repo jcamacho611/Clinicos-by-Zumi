@@ -95,7 +95,11 @@ async function takeResourceLocks(client: Prisma.TransactionClient, offer: Accept
     offer.resourceReference ? `grid:resource:${offer.resourceKind ?? "generic"}:${offer.resourceReference}` : null,
   ].filter((value): value is string => Boolean(value));
 
-  for (const key of keys.sort()) await client.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`);
+  // $executeRaw, not $queryRaw. pg_advisory_xact_lock returns void, and Prisma cannot
+  // deserialize a void column — $queryRaw threw before the lock could do any good, which
+  // meant no reservation could be created at all. The lock's value is the side effect,
+  // never the returned row.
+  for (const key of keys.sort()) await client.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`);
 }
 
 async function assertUniversalReservationAvailable(
