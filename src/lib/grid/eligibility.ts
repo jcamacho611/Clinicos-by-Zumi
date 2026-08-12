@@ -451,3 +451,41 @@ export const gridEligibilityRequestSchema = z.object({
   startsAt: z.string().datetime({ offset: true }).optional().nullable(),
   endsAt: z.string().datetime({ offset: true }).optional().nullable(),
 });
+
+// ---------------------------------------------------------------------------
+// Mapping the marketplace onto activities
+// ---------------------------------------------------------------------------
+
+/**
+ * The activity a free-text service category describes, or null.
+ *
+ * A bridge, not a permanent design. Listings carry a declared `activityKey`; this is
+ * what fills it in when one is created from a category and what backfilled the existing
+ * rows. Null is deliberate and is refused downstream: a marketplace that matches work it
+ * cannot describe has stopped checking, and silently defaulting an unrecognised category
+ * to the least restrictive activity is exactly how an unqualified match ships.
+ */
+export function gridActivityForCategory(category: string, serviceName = ""): GridActivityKey | null {
+  const text = `${category} ${serviceName}`.toLowerCase();
+  if (/inject|botox|filler|tox\b/.test(text)) return "perform_aesthetic_injection";
+  if (/supervis/.test(text)) return "supervise_aesthetic_injection";
+  if (/medical direction/.test(text)) return "provide_medical_direction";
+  if (/precept|placement/.test(text)) return "precept_student";
+  if (/iv therapy|infusion|nurse/.test(text)) return "perform_rn_service";
+  return null;
+}
+
+/**
+ * The jurisdiction a Grid request happens in.
+ *
+ * A location's state when the work is at one, the requester's declared jurisdiction when
+ * it is not — mobile, at-home and virtual work has a jurisdiction no location row can
+ * supply. Null when neither is known, and null is refused rather than assumed: a licence
+ * cannot be matched against an unknown jurisdiction.
+ */
+export function gridRequestJurisdiction(input: {
+  serviceJurisdiction?: string | null;
+  location?: { state?: string | null } | null;
+}): string | null {
+  return normalizeJurisdiction(input.serviceJurisdiction) ?? normalizeJurisdiction(input.location?.state) ?? null;
+}

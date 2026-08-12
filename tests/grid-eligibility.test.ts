@@ -6,9 +6,12 @@ import {
   evaluateGridEligibility,
   getGridActivity,
   gridActivityCatalog,
+  gridActivityForCategory,
+  gridRequestJurisdiction,
   type GridEligibilityCredential,
   type GridEligibilityParticipant,
 } from "@/lib/grid/eligibility";
+import { gridPaymentConditionSatisfied } from "@/lib/grid-rules";
 
 /**
  * The critical Grid tests, as the build directive states them.
@@ -351,5 +354,127 @@ describe("listing what a participant may take on", () => {
     expect(eligible).toContain("perform_rn_service");
     expect(eligible).not.toContain("provide_medical_direction");
     expect(eligible).not.toContain("perform_np_service");
+  });
+});
+
+describe("enforcement is server-side, at every consequential boundary", () => {
+  const repo = () => readFileSync(join(process.cwd(), "src/lib/repositories/grid-repository.ts"), "utf8");
+
+  it("refuses at the offer, not only in the UI", () => {
+    const create = repo().slice(repo().indexOf("export async function createGridRequest"));
+    expect(create.slice(0, create.indexOf("export async function transitionGridRequest"))).toContain("enforceGridEligibility({");
+  });
+
+  it("re-decides eligibility at acceptance, credential check and confirmation", () => {
+    // A stale pass is evidence, not authorization: a licence can lapse or be revoked
+    // between the offer and the booking.
+    const body = repo();
+    expect(body).toContain('["credential_check", "accepted", "confirmed"].includes(input.targetStatus)');
+    expect(body.match(/enforceGridEligibility\(\{/g)?.length).toBe(2);
+  });
+
+  it("no longer relies on the binary readiness check at those gates", () => {
+    const transition = repo().slice(repo().indexOf("export async function transitionGridRequest"));
+    expect(transition).not.toContain("providerReadyForGrid");
+  });
+
+  it("calls one shared engine rather than restating the rules per route", () => {
+    const body = repo();
+    expect(body.match(/evaluateGridEligibility\(/g)?.length).toBe(1);
+    expect(body).toContain("function enforceGridEligibility(");
+  });
+
+  it("cannot be bypassed by request input", () => {
+    // Nothing a caller sends names an activity, a credential, or an eligibility result.
+    const rules = readFileSync(join(process.cwd(), "src/lib/grid-rules.ts"), "utf8");
+    const schema = rules.slice(rules.indexOf("export const gridRequestSchema"), rules.indexOf("export const gridRequestTransitionSchema"));
+    // No accepted field names an activity, a credential, or an eligibility result.
+    for (const key of ["eligible:", "eligibility:", "activityKey:", "credentials:", "providerReady:"]) {
+      expect(schema).not.toContain(key);
+    }
+    const transitionSchema = rules.slice(rules.indexOf("export const gridRequestTransitionSchema"));
+    const fields = transitionSchema.slice(0, transitionSchema.indexOf("})"));
+    for (const key of ["eligible:", "eligibility:", "activityKey:"]) {
+      expect(fields).not.toContain(key);
+    }
+  });
+
+  it("records the basis it relied on, on the event and the audit log", () => {
+    const body = repo();
+    expect(body.match(/eligibilityBasis/g)?.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("refuses a listing that never declared what activity it is", () => {
+    expect(repo()).toContain("does not declare which Grid activity it is");
+  });
+});
+
+describe("the payment condition is verified before a booking is confirmed", () => {
+  const listing = { requiresDeposit: false };
+  const depositListing = { requiresDeposit: true };
+
+  it("refuses an unverified payment condition", () => {
+    const result = gridPaymentConditionSatisfied({ listing, paymentStatus: "not_started", depositStatus: "not_required" });
+    expect(result.ok).toBe(false);
+  });
+
+  it("refuses a failed payment condition", () => {
+    expect(gridPaymentConditionSatisfied({ listing, paymentStatus: "failed", depositStatus: "not_required" }).ok).toBe(false);
+  });
+
+  it.each(["not_required", "authorized", "recorded", "waived"])("accepts %s", (paymentStatus) => {
+    expect(gridPaymentConditionSatisfied({ listing, paymentStatus, depositStatus: "not_required" }).ok).toBe(true);
+  });
+
+  it("binds deposit and payment independently", () => {
+    // A settled payment does not excuse a missing deposit on a listing that requires one.
+    expect(gridPaymentConditionSatisfied({ listing: depositListing, paymentStatus: "recorded", depositStatus: "pending" }).ok).toBe(false);
+    expect(gridPaymentConditionSatisfied({ listing: depositListing, paymentStatus: "recorded", depositStatus: "waived" }).ok).toBe(true);
+  });
+
+  it("is enforced at confirmation in the transactional path", () => {
+    const repo = readFileSync(join(process.cwd(), "src/lib/repositories/grid-repository.ts"), "utf8");
+    const confirm = repo.slice(repo.indexOf('if (input.targetStatus === "confirmed") {'));
+    expect(confirm.slice(0, confirm.indexOf("\n    }"))).toContain("gridPaymentConditionSatisfied({");
+  });
+
+  it("does not claim a processor authorized anything", () => {
+    // Klinikos moves no money for Grid. "Verified" means a person recorded it.
+    const rules = readFileSync(join(process.cwd(), "src/lib/grid-rules.ts"), "utf8");
+    expect(rules).toContain("Klinikos does not move money for Grid");
+    const block = rules.slice(rules.indexOf("export const gridPaymentStatuses"));
+    expect(block.slice(0, 400)).not.toContain("captured");
+  });
+});
+
+describe("mapping the marketplace onto activities", () => {
+  it("maps the categories the marketplace actually uses", () => {
+    expect(gridActivityForCategory("Injectables")).toBe("perform_aesthetic_injection");
+    expect(gridActivityForCategory("Nurse Injector")).toBe("perform_aesthetic_injection");
+    expect(gridActivityForCategory("IV Therapy")).toBe("perform_rn_service");
+    expect(gridActivityForCategory("Medical Direction")).toBe("provide_medical_direction");
+    expect(gridActivityForCategory("Clinical Placement")).toBe("precept_student");
+  });
+
+  it("returns null for a category it cannot classify", () => {
+    // Refused downstream. Defaulting an unrecognised category to the least restrictive
+    // activity is how an unqualified match ships.
+    expect(gridActivityForCategory("Consultation")).toBeNull();
+    expect(gridActivityForCategory("")).toBeNull();
+  });
+});
+
+describe("jurisdiction comes from the record, never from a guess", () => {
+  it("prefers the declared service jurisdiction", () => {
+    expect(gridRequestJurisdiction({ serviceJurisdiction: "tx", location: { state: "NY" } })).toBe("TX");
+  });
+
+  it("falls back to the location's state", () => {
+    expect(gridRequestJurisdiction({ serviceJurisdiction: null, location: { state: "ny" } })).toBe("NY");
+  });
+
+  it("returns null when neither is known", () => {
+    expect(gridRequestJurisdiction({ serviceJurisdiction: null, location: null })).toBeNull();
+    expect(gridRequestJurisdiction({})).toBeNull();
   });
 });

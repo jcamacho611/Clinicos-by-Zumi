@@ -4,7 +4,12 @@ import { Prisma, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
-import { eligibleGridActivities } from "@/lib/grid/eligibility";
+import {
+  eligibleGridActivities,
+  evaluateGridEligibility,
+  gridActivityForCategory,
+  gridRequestJurisdiction,
+} from "@/lib/grid/eligibility";
 import { db } from "@/lib/db";
 import {
   canTransitionGridProvider,
@@ -16,6 +21,7 @@ import {
   gridCredentialReviewSchema,
   gridLocationSchema,
   gridMalpracticeReviewSchema,
+  gridPaymentConditionSatisfied,
   gridPayoutTransitionSchema,
   gridProviderProfileSchema,
   gridProviderTransitionSchema,
@@ -95,6 +101,75 @@ function eligibilityByJurisdiction(
       failures: entry.decision.eligible ? [] : entry.decision.failures,
     })),
   }));
+}
+
+/**
+ * Refuse a Grid step whose participant is not eligible for the work.
+ *
+ * One helper used at every gate — the offer, the credential check, and the booking —
+ * because an eligibility rule enforced at one of three doors is not enforced. The public
+ * product page says deterministic Grid rules decide eligibility and that a model can
+ * never override an eligibility failure; this is where that becomes true rather than
+ * stated.
+ *
+ * The refusal carries every failing condition, so a coordinator is told the whole list
+ * once. The basis of a *pass* is returned rather than discarded, so the booking that
+ * follows can record which credential it relied on. A decision that cites nothing cannot
+ * be re-examined later, and Grid decisions are exactly the ones somebody will need to
+ * re-examine.
+ */
+function enforceGridEligibility(input: {
+  listing: { activityKey: string | null; category: string; serviceName: string };
+  provider: {
+    providerType: string;
+    verificationStatus: string;
+    malpracticeVerificationStatus: string;
+    malpracticeExpiration: Date | null;
+    credentials: { type: string; state: string | null; expiresAt: Date | null; status: string; verificationStatus: string }[];
+    facilityPrivileges?: { facilityId: string; status: string; expiresAt: Date | null }[];
+  };
+  jurisdiction: string | null;
+  facilityId: string | null;
+  startsAt: Date;
+  endsAt: Date | null;
+  step: string;
+}) {
+  // A listing that never declared what it is cannot be checked. Refusing is the safe
+  // direction and the message names the fix, rather than defaulting to the least
+  // restrictive activity and matching work nobody assessed.
+  const activity = input.listing.activityKey ?? gridActivityForCategory(input.listing.category, input.listing.serviceName);
+  if (!activity) {
+    throw new NetworkAccessError(
+      `This listing does not declare which Grid activity it is, so eligibility cannot be decided for it. Set the activity on "${input.listing.serviceName}" before ${input.step}.`,
+      409,
+    );
+  }
+
+  const decision = evaluateGridEligibility({
+    participant: {
+      verificationStatus: input.provider.verificationStatus,
+      providerType: input.provider.providerType,
+      malpracticeVerificationStatus: input.provider.malpracticeVerificationStatus,
+      malpracticeExpiration: input.provider.malpracticeExpiration,
+    },
+    credentials: input.provider.credentials,
+    privileges: input.provider.facilityPrivileges ?? [],
+    activity,
+    jurisdiction: input.jurisdiction,
+    facilityId: input.facilityId,
+    at: input.startsAt,
+    // Checked across the whole engagement, not only its first day. A licence current at
+    // booking that lapses midway makes the later half unlicensed work.
+    through: input.endsAt,
+  });
+
+  if (!decision.eligible) {
+    throw new NetworkAccessError(
+      `Not eligible for ${input.step}: ${decision.failures.map((failure) => failure.detail).join(" ")}`,
+      409,
+    );
+  }
+  return decision.basis;
 }
 
 export async function listGridWorkspace(session: ClinicSession) {
@@ -748,16 +823,36 @@ export async function createGridRequest(session: ClinicSession, rawInput: unknow
   const input = gridRequestSchema.parse(rawInput);
   return db.$transaction(async (tx) => {
     await requireSyntheticOrganization(session.organizationId, tx);
-    const service = await tx.gridServiceListing.findFirst({ where: { id: input.serviceListingId, status: "active", providerId: input.providerId }, include: { provider: { include: { credentials: true } } } });
-    if (!service || !providerReadyForGrid(service.provider)) throw new NetworkAccessError("The selected provider/service is not currently eligible for Grid requests.", 409);
+    const service = await tx.gridServiceListing.findFirst({
+      where: { id: input.serviceListingId, status: "active", providerId: input.providerId },
+      include: { provider: { include: { credentials: true, facilityPrivileges: true } } },
+    });
+    if (!service) throw new NetworkAccessError("The selected provider/service is not currently eligible for Grid requests.", 409);
     if (input.patientId) {
       const patient = await tx.patient.findFirst({ where: { id: input.patientId, organizationId: session.organizationId, status: "active" }, select: { id: true } });
       if (!patient) throw new NetworkAccessError("Synthetic demo patient not found for this organization.", 404);
     }
+    let location: { id: string; state: string | null; facilities: { id: string }[] } | null = null;
     if (input.locationId) {
-      const location = await tx.location.findFirst({ where: { id: input.locationId, status: "active", OR: [{ organizationId: session.organizationId }, { marketplaceVisible: true }] }, select: { id: true } });
+      location = await tx.location.findFirst({
+        where: { id: input.locationId, status: "active", OR: [{ organizationId: session.organizationId }, { marketplaceVisible: true }] },
+        select: { id: true, state: true, facilities: { select: { id: true }, take: 1 } },
+      });
       if (!location) throw new NetworkAccessError("The selected Grid location is unavailable.", 404);
     }
+
+    // The offer gate. Sending a request to a provider who cannot lawfully do the work
+    // wastes both sides' time and puts an ineligible match in front of a coordinator as
+    // though it were a real option.
+    const eligibilityBasis = enforceGridEligibility({
+      listing: service,
+      provider: service.provider,
+      jurisdiction: gridRequestJurisdiction({ serviceJurisdiction: input.serviceJurisdiction, location }),
+      facilityId: location?.facilities[0]?.id ?? null,
+      startsAt: new Date(input.requestedStartAt),
+      endsAt: dateOrNull(input.requestedEndAt),
+      step: "sending this request",
+    });
     const requiredConsent = service.requiresConsent;
     const consentStatus = requiredConsent ? input.consentStatus : "not_required";
     const depositStatus = service.requiresDeposit ? "manual_link_required" : "not_required";
@@ -780,6 +875,7 @@ export async function createGridRequest(session: ClinicSession, rawInput: unknow
         requestedStartAt: new Date(input.requestedStartAt),
         requestedEndAt: dateOrNull(input.requestedEndAt),
         locationType: input.locationType,
+        serviceJurisdiction: eligibilityBasis.jurisdiction,
         safetyFlags,
         requiredDocuments: input.requiredDocuments,
         requiredConsent,
@@ -788,7 +884,7 @@ export async function createGridRequest(session: ClinicSession, rawInput: unknow
         paymentStatus: "not_started",
         status: "requested",
         notes: input.notes,
-        events: { create: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "request_created", fromStatus: "draft", toStatus: "requested", note: input.notes, metadata: { syntheticDemo: true, noChartShared: true, humanReviewRequired: true } } },
+        events: { create: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "request_created", fromStatus: "draft", toStatus: "requested", note: input.notes, metadata: { syntheticDemo: true, noChartShared: true, humanReviewRequired: true, eligibilityBasis: JSON.parse(JSON.stringify(eligibilityBasis)) } } },
       },
     });
     await Promise.all([
@@ -807,7 +903,11 @@ export async function transitionGridRequest(session: ClinicSession, requestId: s
   return db.$transaction(async (tx) => {
     const request = await tx.gridRequest.findFirst({
       where: { id: requestId, OR: [{ organizationId: session.organizationId }, { destinationOrganizationId: session.organizationId }] },
-      include: { provider: { include: { credentials: true } }, serviceListing: true },
+      include: {
+        provider: { include: { credentials: true, facilityPrivileges: true } },
+        serviceListing: true,
+        location: { select: { state: true, facilities: { select: { id: true }, take: 1 } } },
+      },
     });
     if (!request) throw new NetworkAccessError("Grid request not found for this organization.", 404);
     const origin = request.organizationId === session.organizationId;
@@ -822,13 +922,34 @@ export async function transitionGridRequest(session: ClinicSession, requestId: s
 
     const nextConsentStatus = input.consentStatus ?? request.consentStatus;
     const nextDepositStatus = input.depositStatus ?? request.depositStatus;
-    if (input.targetStatus === "credential_check" && !providerReadyForGrid(request.provider)) {
-      throw new NetworkAccessError("Credential review cannot clear while provider credentials or malpractice coverage are not current.", 409);
+    const nextPaymentStatus = input.paymentStatus ?? request.paymentStatus;
+    // Eligibility is re-decided at each gate rather than trusted from the last one.
+    // A licence can lapse, be revoked, or be suspended between the offer and the
+    // booking, and a request that carried an eligibility stamp from last week would
+    // confirm work the provider is no longer permitted to do.
+    let eligibilityBasis: ReturnType<typeof enforceGridEligibility> | null = null;
+    if (["credential_check", "accepted", "confirmed"].includes(input.targetStatus)) {
+      eligibilityBasis = enforceGridEligibility({
+        listing: request.serviceListing,
+        provider: request.provider,
+        jurisdiction: gridRequestJurisdiction({ serviceJurisdiction: request.serviceJurisdiction, location: request.location }),
+        facilityId: request.location?.facilities[0]?.id ?? null,
+        startsAt: request.counterStartAt ?? request.requestedStartAt,
+        endsAt: request.requestedEndAt,
+        step: input.targetStatus === "confirmed" ? "confirming this booking" : "this step",
+      });
     }
     if (input.targetStatus === "confirmed") {
-      if (!providerReadyForGrid(request.provider)) throw new NetworkAccessError("Provider credentials must remain current before confirmation.", 409);
       if (request.requiredConsent && nextConsentStatus !== "confirmed") throw new NetworkAccessError("Required consent must be confirmed before scheduling.", 409);
-      if (request.serviceListing.requiresDeposit && !["recorded", "waived"].includes(nextDepositStatus)) throw new NetworkAccessError("A reviewed deposit record or waiver is required before confirmation.", 409);
+      // The public product page says the payment condition is verified before a booking
+      // is confirmed. Nothing read paymentStatus — it was written once at creation and
+      // never looked at again — so the claim was untrue until this gate existed.
+      const payment = gridPaymentConditionSatisfied({
+        listing: request.serviceListing,
+        paymentStatus: nextPaymentStatus,
+        depositStatus: nextDepositStatus,
+      });
+      if (!payment.ok) throw new NetworkAccessError(payment.reason, 409);
     }
 
     const now = new Date();
@@ -838,13 +959,14 @@ export async function transitionGridRequest(session: ClinicSession, requestId: s
         status: input.targetStatus,
         consentStatus: nextConsentStatus,
         depositStatus: nextDepositStatus,
+        paymentStatus: nextPaymentStatus,
         counterStartAt: input.targetStatus === "countered" ? dateOrNull(input.counterStartAt) : request.counterStartAt,
         reviewedBy: destination ? session.userId : request.reviewedBy,
         reviewedAt: destination ? now : request.reviewedAt,
         confirmedAt: input.targetStatus === "confirmed" ? now : request.confirmedAt,
         completedAt: input.targetStatus === "completed" ? now : request.completedAt,
         cancelledAt: input.targetStatus === "cancelled" ? now : request.cancelledAt,
-        events: { create: { organizationId: request.organizationId, actorId: session.userId, actorType: "user", action: "status_changed", fromStatus: request.status, toStatus: input.targetStatus, note: input.note, metadata: { consentStatus: nextConsentStatus, depositStatus: nextDepositStatus, humanDecision: true } } },
+        events: { create: { organizationId: request.organizationId, actorId: session.userId, actorType: "user", action: "status_changed", fromStatus: request.status, toStatus: input.targetStatus, note: input.note, metadata: { consentStatus: nextConsentStatus, depositStatus: nextDepositStatus, paymentStatus: nextPaymentStatus, humanDecision: true, eligibilityBasis: eligibilityBasis ? JSON.parse(JSON.stringify(eligibilityBasis)) : null } } },
       },
     });
     if (["cancelled", "declined"].includes(input.targetStatus)) {
@@ -854,7 +976,7 @@ export async function transitionGridRequest(session: ClinicSession, requestId: s
       await tx.escalation.create({ data: { organizationId: destination ? request.destinationOrganizationId : request.organizationId, patientId: request.patientId, sourceType: "grid_request", sourceId: request.id, category: "grid_human_review", riskLevel: RiskLevel.NEEDS_STAFF, requiresHumanReview: true, assignedTeam: "grid_operations", status: "open" } });
     }
     await Promise.all([
-      tx.auditLog.create({ data: { organizationId: request.organizationId, actorId: session.userId, actorType: "user", action: "grid.request_status_changed", resourceType: "grid_request", resourceId: request.id, patientId: request.patientId, changes: { status: { from: request.status, to: input.targetStatus } }, metadata: { note: input.note, humanDecision: true, actingOrganizationId: session.organizationId } } }),
+      tx.auditLog.create({ data: { organizationId: request.organizationId, actorId: session.userId, actorType: "user", action: "grid.request_status_changed", resourceType: "grid_request", resourceId: request.id, patientId: request.patientId, changes: { status: { from: request.status, to: input.targetStatus } }, metadata: { note: input.note, humanDecision: true, actingOrganizationId: session.organizationId, eligibilityBasis: eligibilityBasis ? JSON.parse(JSON.stringify(eligibilityBasis)) : null } } }),
       request.destinationOrganizationId === request.organizationId ? Promise.resolve() : tx.auditLog.create({ data: { organizationId: request.destinationOrganizationId, actorId: session.userId, actorType: "network_user", action: "grid.request_status_changed", resourceType: "grid_request", resourceId: request.id, changes: { status: { from: request.status, to: input.targetStatus } }, metadata: { note: input.note, humanDecision: true, actingOrganizationId: session.organizationId } } }),
     ]);
     return updated;

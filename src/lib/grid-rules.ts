@@ -35,6 +35,57 @@ export const gridLocationTypes = ["clinic_location", "rental_room", "chair_renta
 export const gridContractorProviderTypes = ["Nurse Injector", "Registered Nurse", "Nurse Practitioner", "Physician Assistant"] as const;
 export const gridPayoutStatuses = ["estimated", "approved", "paid", "hold", "void"] as const;
 
+/**
+ * The payment condition on a Grid request.
+ *
+ * Klinikos does not move money for Grid — payouts are recorded manually and carry no
+ * processor transfer. "Verified" therefore means a person recorded that the condition is
+ * satisfied, against an audit trail, and the vocabulary says so rather than implying an
+ * authorization that no processor produced.
+ */
+export const gridPaymentStatuses = [
+  "not_required",
+  "not_started",
+  "authorized",
+  "recorded",
+  "waived",
+  "failed",
+] as const;
+export type GridPaymentStatus = (typeof gridPaymentStatuses)[number];
+
+/** Payment conditions that permit a booking to be confirmed. */
+const SETTLED_PAYMENT_STATUSES: readonly string[] = ["not_required", "authorized", "recorded", "waived"];
+
+/**
+ * Whether the payment condition for this booking is satisfied.
+ *
+ * The public product page says the payment condition is verified before a booking is
+ * confirmed. Nothing read `paymentStatus` — it was written once at creation and never
+ * looked at again — so the claim was untrue. This is what makes it true.
+ *
+ * Deposit and payment are separate conditions and both bind: a listing requiring a
+ * deposit needs the deposit recorded or waived *and* the payment condition settled.
+ */
+export function gridPaymentConditionSatisfied(input: {
+  listing: { requiresDeposit: boolean };
+  paymentStatus: string;
+  depositStatus: string;
+}): { ok: true } | { ok: false; reason: string } {
+  if (input.listing.requiresDeposit && !["recorded", "waived"].includes(input.depositStatus)) {
+    return { ok: false, reason: "A reviewed deposit record or waiver is required before confirmation." };
+  }
+  if (input.paymentStatus === "failed") {
+    return { ok: false, reason: "The recorded payment condition for this booking failed and has not been resolved." };
+  }
+  if (!SETTLED_PAYMENT_STATUSES.includes(input.paymentStatus)) {
+    return {
+      ok: false,
+      reason: "The payment condition for this booking has not been verified. Record it as authorized, recorded, or waived before confirming.",
+    };
+  }
+  return { ok: true };
+}
+
 const optionalUrl = z.union([z.literal(""), z.string().url()]).optional().nullable();
 const optionalDateTime = z.string().datetime({ offset: true }).optional().nullable();
 
@@ -198,6 +249,13 @@ export const gridRequestSchema = z.object({
   requestedStartAt: z.string().datetime({ offset: true }),
   requestedEndAt: optionalDateTime,
   locationType: z.enum(gridLocationTypes),
+  /**
+   * Where the work happens, when no Klinikos location supplies it.
+   *
+   * Mobile, at-home and virtual work has a jurisdiction the location table cannot answer
+   * for, and eligibility refuses an unknown one rather than assuming it matches.
+   */
+  serviceJurisdiction: z.string().trim().length(2).toUpperCase().optional().nullable(),
   safetyFlags: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
   requiredDocuments: z.array(z.string().trim().min(1).max(160)).max(30).default([]),
   consentStatus: z.enum(["not_required", "pending", "confirmed", "blocked"]).default("pending"),
@@ -209,6 +267,7 @@ export const gridRequestTransitionSchema = z.object({
   note: z.string().trim().min(12).max(1000),
   consentStatus: z.enum(["not_required", "pending", "confirmed", "blocked"]).optional(),
   depositStatus: z.enum(["not_required", "not_started", "manual_link_required", "pending", "recorded", "waived", "refunded"]).optional(),
+  paymentStatus: z.enum(gridPaymentStatuses).optional(),
   counterStartAt: optionalDateTime,
 });
 

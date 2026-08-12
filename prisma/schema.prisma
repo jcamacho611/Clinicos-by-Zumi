@@ -822,6 +822,9 @@ model GridServiceListing {
   providerId            String
   serviceName           String
   category              String
+  /// Declared Grid activity this listing is, from the eligibility catalog. Null means
+  /// undeclared, which is refused at the eligibility gate rather than guessed.
+  activityKey           String?
   description           String
   priceLowCents         Int
   priceHighCents        Int
@@ -843,6 +846,7 @@ model GridServiceListing {
 
   @@index([organizationId, status, category])
   @@index([providerId, status])
+  @@index([activityKey])
   @@map("grid_service_listings")
 }
 
@@ -861,6 +865,8 @@ model GridRequest {
   requestedEndAt            DateTime?
   counterStartAt            DateTime?
   locationType              String
+  /// Two-letter jurisdiction where the work happens, when no Location supplies it.
+  serviceJurisdiction       String?
   safetyFlags               String[]           @default([])
   requiredDocuments         String[]           @default([])
   requiredConsent           Boolean            @default(true)
