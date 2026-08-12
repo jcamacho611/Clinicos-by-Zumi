@@ -16,7 +16,8 @@ import {
   streamForState,
 } from "@/lib/operations/followup-rules";
 import { buyerRoleForModules, planProvisioning } from "@/lib/provisioning/provisioning-rules";
-import { derivePortalAccess } from "@/lib/commerce/access-payment-rules";
+import { corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
+import { whopEventAmountMinorUnits } from "@/lib/commerce/whop-rules";
 
 /**
  * One test per reviewed defect on PR #11.
@@ -325,7 +326,8 @@ describe("payment webhooks match the payment they belong to", () => {
 
   it("refuses an ambiguous email-only match instead of guessing", () => {
     expect(service).toContain("take: 2");
-    expect(service).toContain("if (candidates.length === 1) payment = candidates[0]");
+    expect(service).toContain("if (candidates.length === 1) {");
+    expect(service).toContain("payment = candidates[0];");
   });
 
   it("binds the reference on match and refuses to rebind it afterwards", () => {
@@ -898,5 +900,103 @@ describe("eighth review round — one purchase provisions once", () => {
     expect(sql).toContain("ADD COLUMN IF NOT EXISTS");
     expect(/DROP\s+(TABLE|COLUMN)|TRUNCATE|DELETE FROM/i.test(sql)).toBe(false);
     expect(/ADD COLUMN[^;]*NOT NULL/i.test(sql)).toBe(false);
+  });
+});
+
+describe("a signed payment event only settles the purchase it is actually for", () => {
+  // The reviewed defect: when a buyer had exactly one open payment, any signed Whop
+  // event carrying their email settled it. A buyer holding an open $8,000 Founding
+  // Clinic invoice could buy a $99 product on the same account and have the $8,000
+  // record marked verified_paid.
+  const founding = { productKey: "founding_clinic_seat", amountCents: 800_000 };
+  const env = { WHOP_PRODUCT_ID_FOUNDING_CLINIC_SEAT: "prod_founding" };
+
+  it("refuses the cheap unrelated purchase that named the defect", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 9_900, providerProductId: null, env }),
+    ).toEqual({ ok: false, reason: "amount_mismatch" });
+  });
+
+  it("settles when the amount the provider reports is the amount owed", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: 800_000, providerProductId: null, env }),
+    ).toEqual({ ok: true });
+  });
+
+  it("settles on a matching provider product id even when the event reports no amount", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: null, providerProductId: "prod_founding", env }),
+    ).toEqual({ ok: true });
+  });
+
+  it("refuses a different product even when the amount happens to agree", () => {
+    // Disagreement outranks agreement: a mismatch is positive evidence of a different
+    // purchase, and two products can legitimately cost the same.
+    expect(
+      corroborateEmailMatch({
+        payment: founding,
+        amountMinorUnits: 800_000,
+        providerProductId: "prod_something_else",
+        env,
+      }),
+    ).toEqual({ ok: false, reason: "product_mismatch" });
+  });
+
+  it("refuses a wrong amount even when the product id agrees", () => {
+    expect(
+      corroborateEmailMatch({
+        payment: founding,
+        amountMinorUnits: 9_900,
+        providerProductId: "prod_founding",
+        env,
+      }),
+    ).toEqual({ ok: false, reason: "amount_mismatch" });
+  });
+
+  it("refuses when the event corroborates nothing at all", () => {
+    // Silence is not agreement. The payment stays open for an operator to settle, which
+    // is a delay rather than the wrong invoice being marked paid.
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: null, providerProductId: null, env }),
+    ).toEqual({ ok: false, reason: "unverified_product" });
+  });
+
+  it("ignores a product id the deployment has not mapped rather than trusting it", () => {
+    expect(
+      corroborateEmailMatch({ payment: founding, amountMinorUnits: null, providerProductId: "prod_founding", env: {} }),
+    ).toEqual({ ok: false, reason: "unverified_product" });
+  });
+
+  it("reads the settled amount as integer minor units from the event", () => {
+    expect(whopEventAmountMinorUnits({ final_amount: 8000 })).toBe(800_000);
+    expect(whopEventAmountMinorUnits({ subtotal: "99.00" })).toBe(9_900);
+    expect(whopEventAmountMinorUnits({})).toBeNull();
+    expect(whopEventAmountMinorUnits({ final_amount: 0, amount: 99 })).toBe(9_900);
+  });
+
+  it("only corroborates on the email path, so a referenced event still settles normally", () => {
+    const service = source("src/lib/commerce/access-payment-service.ts");
+    const guard = service.indexOf("if (matchedByEmail) {");
+    expect(guard).toBeGreaterThan(-1);
+    expect(service.slice(guard, service.indexOf("corroborateEmailMatch({", guard))).not.toContain("}");
+  });
+
+  it("refuses before writing anything", () => {
+    const service = source("src/lib/commerce/access-payment-service.ts");
+    const fn = service.slice(service.indexOf("export async function applyWebhookToAccessPayment"));
+    expect(fn.indexOf("corroborateEmailMatch({")).toBeLessThan(fn.indexOf("await db.$transaction"));
+  });
+
+  it("passes the provider's amount and product id from the webhook route", () => {
+    const route = source("src/app/api/whop/webhook/route.ts");
+    expect(route).toContain("amountMinorUnits: whopEventAmountMinorUnits(envelope.data ?? {})");
+    expect(route).toContain("providerProductId: envelope.data?.product_id ?? null");
+  });
+
+  it("documents the product id variables without committing a value", () => {
+    const example = source(".env.example");
+    for (const key of ["CLINIC_WORKFLOW_REVIEW", "FOUNDING_CLINIC_SEAT", "AI_CONSULTING_CALL"]) {
+      expect(example).toContain(`WHOP_PRODUCT_ID_${key}=""`);
+    }
   });
 });

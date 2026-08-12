@@ -10,6 +10,7 @@ import {
 import {
   type AccessPaymentVerificationInput,
   canTransitionAccessPayment,
+  corroborateEmailMatch,
   derivePortalAccess,
   manualVerificationRequiresReference,
   verificationTargetStatus,
@@ -251,6 +252,10 @@ export async function applyWebhookToAccessPayment(input: {
   externalPaymentReference: string | null;
   buyerEmail: string | null;
   outcome: "paid" | "refunded" | "failed";
+  /** Minor units the provider says were settled, when the event reports one. */
+  amountMinorUnits?: number | null;
+  /** The provider's product identifier, when the event reports one. */
+  providerProductId?: string | null;
 }) {
   const reference = input.externalPaymentReference?.trim() || null;
   const email = input.buyerEmail?.trim().toLowerCase() || null;
@@ -262,6 +267,12 @@ export async function applyWebhookToAccessPayment(input: {
       })
     : null;
 
+  // Matching on email alone is the weak path, and it is only reachable because a newly
+  // created payment has no provider reference yet. It must therefore corroborate *what*
+  // was bought before settling anything: an address is not a purchase. Without this, a
+  // buyer holding one open $8,000 invoice who bought something cheap on the same account
+  // had the expensive record marked paid.
+  let matchedByEmail = false;
   if (!payment && email) {
     const candidates = await db.accessPayment.findMany({
       where: {
@@ -272,10 +283,22 @@ export async function applyWebhookToAccessPayment(input: {
       take: 2,
       select: { ...paymentSelect, onboarding: { select: { reviewApproved: true } } },
     });
-    if (candidates.length === 1) payment = candidates[0];
+    if (candidates.length === 1) {
+      payment = candidates[0];
+      matchedByEmail = true;
+    }
   }
 
   if (!payment) return { applied: false as const, reason: "no_matching_payment" as const };
+
+  if (matchedByEmail) {
+    const corroboration = corroborateEmailMatch({
+      payment,
+      amountMinorUnits: input.amountMinorUnits ?? null,
+      providerProductId: input.providerProductId ?? null,
+    });
+    if (!corroboration.ok) return { applied: false as const, reason: corroboration.reason };
+  }
   if (reference && payment.externalPaymentReference && payment.externalPaymentReference !== reference) {
     return { applied: false as const, reason: "reference_conflict" as const };
   }

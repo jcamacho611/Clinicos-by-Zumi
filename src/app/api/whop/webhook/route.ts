@@ -9,7 +9,12 @@ import {
   payloadHash,
   recordWebhookDelivery,
 } from "@/lib/commerce/whop-entitlements";
-import { verifyStandardWebhookSignature, verifyWhopSignature, whopWebhookEnvelopeSchema } from "@/lib/commerce/whop-rules";
+import {
+  verifyStandardWebhookSignature,
+  verifyWhopSignature,
+  whopEventAmountMinorUnits,
+  whopWebhookEnvelopeSchema,
+} from "@/lib/commerce/whop-rules";
 import { deliverActivation, provisionFromPayment, revokeProvisionedAccess } from "@/lib/provisioning/provisioning-service";
 
 const paymentOutcomes: Record<string, "paid" | "refunded" | "failed"> = {
@@ -94,10 +99,14 @@ export async function POST(request: Request) {
   try {
     const paymentOutcome = paymentOutcomes[eventType];
     if (paymentOutcome) {
+      // The envelope carries what was actually bought. Passing only the reference and
+      // email is what let an unrelated purchase settle an open invoice.
       const settled = await applyWebhookToAccessPayment({
         externalPaymentReference: membershipId ?? envelope.id?.trim() ?? null,
         buyerEmail: envelope.data?.email ?? null,
         outcome: paymentOutcome,
+        amountMinorUnits: whopEventAmountMinorUnits(envelope.data ?? {}),
+        providerProductId: envelope.data?.product_id ?? null,
       });
       if (settled.applied) {
         return noStore({ ok: true, applied: true, scope: "access_payment", status: settled.status }, 200);

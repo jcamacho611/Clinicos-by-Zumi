@@ -10,6 +10,7 @@ import {
   mapMembershipStatus,
   parseWhopSignatureHeader,
   verifyStandardWebhookSignature,
+  whopEventAmountMinorUnits,
   verifyWhopSignature,
   whopSignatureDigest,
   whopWebhookEnvelopeSchema,
@@ -275,5 +276,29 @@ describe("Standard Webhooks verification", () => {
       .toMatchObject({ ok: false, reason: "missing" });
     expect(verifyStandardWebhookSignature({ rawBody: body, webhookId: id, webhookTimestamp: timestamp, webhookSignature: sign({ id, timestamp, body }), secret: "", now }))
       .toMatchObject({ ok: false, reason: "not_configured" });
+  });
+});
+
+describe("reading the settled amount from a payment event", () => {
+  it("converts major units to minor units", () => {
+    // Whop states 8000 for $8,000; the ledger stores 800000.
+    expect(whopEventAmountMinorUnits({ final_amount: 8000 })).toBe(800_000);
+    expect(whopEventAmountMinorUnits({ subtotal: "199.00" })).toBe(19_900);
+  });
+
+  it("prefers the settled amount over the subtotal", () => {
+    expect(whopEventAmountMinorUnits({ final_amount: 750, subtotal: 800 })).toBe(75_000);
+  });
+
+  it("reports absence rather than zero", () => {
+    // A zero would silently agree with nothing and defeat the corroboration it feeds.
+    expect(whopEventAmountMinorUnits({})).toBeNull();
+    expect(whopEventAmountMinorUnits({ amount: 0 })).toBeNull();
+    expect(whopEventAmountMinorUnits({ amount: "not-a-number" })).toBeNull();
+    expect(whopEventAmountMinorUnits({ final_amount: null, subtotal: undefined })).toBeNull();
+  });
+
+  it("falls through an unreadable field to the next one", () => {
+    expect(whopEventAmountMinorUnits({ final_amount: "", subtotal: 500 })).toBe(50_000);
   });
 });

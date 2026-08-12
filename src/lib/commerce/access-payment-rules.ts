@@ -129,3 +129,52 @@ export function summarizeAccessPayment(input: {
     doesNotInclude: [...(product?.doesNotInclude ?? [])],
   };
 }
+
+/**
+ * Whether an email-matched event is really about this payment.
+ *
+ * The event has to agree with the record on something other than the buyer's address.
+ * Two independent signals, and either one is sufficient:
+ *
+ *   - **Amount.** The strongest available without new configuration. An unrelated
+ *     cheaper purchase does not report the price of the invoice it would settle.
+ *   - **Provider product id.** Only usable where a deployment has mapped its Whop
+ *     product ids; unmapped products simply do not contribute.
+ *
+ * Disagreement always refuses, even if the other signal agrees — a mismatch is positive
+ * evidence that this is a different purchase. Silence on both refuses too: settling the
+ * only open invoice because nothing contradicted it is the guess this exists to stop.
+ */
+export function corroborateEmailMatch(input: {
+  payment: { productKey: string; amountCents: number };
+  amountMinorUnits: number | null;
+  providerProductId: string | null;
+  env?: Record<string, string | undefined>;
+}): { ok: true } | { ok: false; reason: "amount_mismatch" | "product_mismatch" | "unverified_product" } {
+  const expectedProductId = configuredProviderProductId(input.payment.productKey, input.env);
+
+  if (input.providerProductId && expectedProductId && input.providerProductId !== expectedProductId) {
+    return { ok: false, reason: "product_mismatch" };
+  }
+  if (input.amountMinorUnits !== null && input.amountMinorUnits !== input.payment.amountCents) {
+    return { ok: false, reason: "amount_mismatch" };
+  }
+
+  const productConfirmed = Boolean(input.providerProductId && expectedProductId && input.providerProductId === expectedProductId);
+  const amountConfirmed = input.amountMinorUnits !== null && input.amountMinorUnits === input.payment.amountCents;
+  if (productConfirmed || amountConfirmed) return { ok: true };
+
+  // Nothing corroborated it. The payment stays open and an operator settles it from the
+  // review queue, which is a delay rather than the wrong invoice being marked paid.
+  return { ok: false, reason: "unverified_product" };
+}
+
+/**
+ * The provider product id mapped to a Klinikos product, if the deployment has set one.
+ *
+ * Optional by design: it hardens matching where configured and contributes nothing where
+ * not, so adding it never breaks a deployment that has not.
+ */
+export function configuredProviderProductId(productKey: string, env: Record<string, string | undefined> = process.env) {
+  return env[`WHOP_PRODUCT_ID_${productKey.toUpperCase()}`]?.trim() || null;
+}

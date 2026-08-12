@@ -243,6 +243,13 @@ export const whopWebhookEnvelopeSchema = z.object({
     product_id: nullableString,
     user_id: nullableString,
     email: z.string().trim().toLowerCase().email().max(254).nullish(),
+    // Whop names the settled amount differently across payment event shapes. All are
+    // optional: the corroboration step treats an absent amount as "cannot confirm"
+    // rather than as agreement.
+    final_amount: z.union([z.number(), z.string()]).nullish(),
+    subtotal: z.union([z.number(), z.string()]).nullish(),
+    amount: z.union([z.number(), z.string()]).nullish(),
+    currency: z.string().trim().max(12).nullish(),
     renewal_period_end: z.union([z.number(), z.string()]).nullish(),
     expires_at: z.union([z.number(), z.string()]).nullish(),
     metadata: z.record(z.string(), z.unknown()).nullish(),
@@ -320,3 +327,24 @@ export const checkoutReturnSchema = z.object({
 
 /** Tier keys re-exported so API routes validate against one source of truth. */
 export type { AccessTierKey };
+
+/**
+ * The settled amount a payment event reports, in minor units, or null if it reports none.
+ *
+ * Whop states amounts in major units — 8000 for $8,000 — so this converts. A value that
+ * cannot be read as a finite positive number is treated as absent rather than as zero:
+ * a zero would silently agree with nothing and defeat the check that calls this.
+ */
+export function whopEventAmountMinorUnits(data: {
+  final_amount?: number | string | null;
+  subtotal?: number | string | null;
+  amount?: number | string | null;
+}): number | null {
+  for (const candidate of [data.final_amount, data.subtotal, data.amount]) {
+    if (candidate === null || candidate === undefined) continue;
+    const parsed = typeof candidate === "number" ? candidate : Number.parseFloat(candidate);
+    if (!Number.isFinite(parsed) || parsed <= 0) continue;
+    return Math.round(parsed * 100);
+  }
+  return null;
+}
