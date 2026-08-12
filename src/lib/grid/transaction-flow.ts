@@ -9,13 +9,8 @@ export const savedGridDemandSchema = gridDemandSchema.extend({
   visibility: z.enum(["private", "matched_only", "network", "public"]).default("matched_only"),
 });
 
-export const gridOfferSchema = z.object({
-  demandId: z.string().min(1),
-  providerId: z.string().min(1).optional().nullable(),
-  serviceListingId: z.string().min(1).optional().nullable(),
+const offerTermsSchema = z.object({
   locationId: z.string().min(1).optional().nullable(),
-  resourceKind: z.string().trim().min(2).max(80).optional().nullable(),
-  resourceReference: z.string().trim().min(1).max(200).optional().nullable(),
   offeredStartAt: z.string().datetime({ offset: true }),
   offeredEndAt: z.string().datetime({ offset: true }).optional().nullable(),
   grossAmountCents: z.number().int().min(0).max(100_000_000),
@@ -32,6 +27,15 @@ export const gridOfferSchema = z.object({
   if (new Date(value.expiresAt).getTime() <= Date.now()) {
     ctx.addIssue({ code: "custom", path: ["expiresAt"], message: "Offer expiration must be in the future." });
   }
+});
+
+export const gridOfferSchema = z.object({
+  demandId: z.string().min(1),
+  providerId: z.string().min(1).optional().nullable(),
+  serviceListingId: z.string().min(1).optional().nullable(),
+  resourceKind: z.string().trim().min(2).max(80).optional().nullable(),
+  resourceReference: z.string().trim().min(1).max(200).optional().nullable(),
+}).and(offerTermsSchema).superRefine((value, ctx) => {
   if (Boolean(value.providerId) !== Boolean(value.serviceListingId)) {
     ctx.addIssue({ code: "custom", path: ["serviceListingId"], message: "Provider and service listing must be selected together." });
   }
@@ -43,8 +47,22 @@ export const gridOfferSchema = z.object({
   }
 });
 
+export const gridOfferDecisionSchema = z.object({
+  targetStatus: z.enum(["accepted", "countered", "declined", "withdrawn"]),
+  note: z.string().trim().min(3).max(1_000),
+  counterOffer: offerTermsSchema.optional(),
+}).superRefine((value, ctx) => {
+  if (value.targetStatus === "countered" && !value.counterOffer) {
+    ctx.addIssue({ code: "custom", path: ["counterOffer"], message: "Counteroffer terms are required." });
+  }
+  if (value.targetStatus !== "countered" && value.counterOffer) {
+    ctx.addIssue({ code: "custom", path: ["counterOffer"], message: "Counteroffer terms are only valid for a counter decision." });
+  }
+});
+
 export type SavedGridDemand = z.infer<typeof savedGridDemandSchema>;
 export type GridOfferInput = z.infer<typeof gridOfferSchema>;
+export type GridOfferDecision = z.infer<typeof gridOfferDecisionSchema>;
 
 const demandTransitions: Record<(typeof gridDemandStatuses)[number], readonly (typeof gridDemandStatuses)[number][]> = {
   draft: ["open", "cancelled"],
@@ -61,7 +79,7 @@ const offerTransitions: Record<(typeof gridOfferStatuses)[number], readonly (typ
   draft: ["sent", "withdrawn"],
   sent: ["accepted", "countered", "declined", "expired", "withdrawn"],
   accepted: [],
-  countered: ["accepted", "declined", "expired", "withdrawn"],
+  countered: [],
   declined: [],
   expired: [],
   withdrawn: [],
