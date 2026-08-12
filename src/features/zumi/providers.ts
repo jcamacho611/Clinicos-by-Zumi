@@ -34,6 +34,11 @@ export function providerIsUsable(state: ProviderHealthState) {
   return USABLE.includes(state);
 }
 
+export type ZumiExternalSource = {
+  url: string;
+  title?: string | null;
+};
+
 export type ProviderRequest = {
   /** Already redacted. The adapter must not be the first thing to see raw text. */
   system: string;
@@ -41,6 +46,15 @@ export type ProviderRequest = {
   maxOutputTokens: number;
   timeoutMs: number;
   signal?: AbortSignal;
+  /** Optional provider-native conversation continuity. */
+  previousResponseId?: string | null;
+  /** Optional capabilities. An adapter that does not support one simply ignores it. */
+  allowWebSearch?: boolean;
+  allowKnowledgeSearch?: boolean;
+  allowCodeInterpreter?: boolean;
+  allowedDomains?: readonly string[];
+  /** Hard ceiling supplied by the gateway. Provider adapters must never widen it. */
+  maxToolCalls?: number;
 };
 
 export type ProviderResult = {
@@ -50,6 +64,12 @@ export type ProviderResult = {
   /** Integer micro-USD. Money is never a float in this codebase. */
   costMicroUsd: number;
   modelId: string;
+  /** Provider-native response identifier for continuation when supported. */
+  responseId?: string | null;
+  /** Public sources actually used by a research-capable provider. */
+  sources?: ZumiExternalSource[];
+  /** Tool types actually invoked, for audit/cost/strategy telemetry. */
+  toolsUsed?: string[];
 };
 
 export type ProviderAdapter = {
