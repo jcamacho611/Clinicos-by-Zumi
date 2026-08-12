@@ -2,32 +2,23 @@ import Link from "next/link";
 import { ArrowRight, Crown, Handshake, Layers3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FoundingOfferCards } from "@/components/command/founding-offer-cards";
+import { KLINIKOS_GODADDY_PAYLINK, clinicSubscriptionPlanning } from "@/lib/commercial/klinikos-commercial";
 import {
-  HumanReviewBanner,
   MissionPhaseProgress,
-  NoPHINotice,
   ZumiBriefingPanel,
   ZumiCommandShell,
 } from "@/components/command/zumi-command-shell";
 
-/**
- * Founding Clinic Qualification, under command law.
- *
- * The previous page put a full intake form directly on the marketing surface. The
- * qualification now runs through the Zumi operating analysis, and this page states
- * the pathway and the boundary rather than collecting fields inline.
- */
-
 export const metadata = {
   title: "Founding Clinic Qualification — Klinikos by Zumi",
   description:
-    "The founding pathway evaluates operational fit before any implementation commitment. Klinikos maps the real workflow first, and a human reviews every request.",
+    "The founding pathway evaluates operational fit before implementation. Klinikos maps the real workflow first, then scope and production gates are reviewed before launch.",
 };
 
 const pathway = [
-  { icon: Layers3, title: "Evaluate", body: "Map the real workflow and cost structure before anything is committed." },
-  { icon: Handshake, title: "Agree", body: "Define scope, gates, ownership, and manual fallbacks in writing." },
-  { icon: Crown, title: "Build", body: "Move through reviewed slices with preferred onboarding." },
+  { icon: Layers3, title: "Evaluate", body: "Map the workflow, software burden, staffing gaps, and operating cost before anything is committed." },
+  { icon: Handshake, title: "Agree", body: "Define the approved scope, ownership, production gates, integrations, and manual fallbacks in writing." },
+  { icon: Crown, title: "Build", body: "Launch reviewed operating slices with priority onboarding and a clear path from demo to production readiness." },
 ] as const;
 
 export default function FoundingClinicPage() {
@@ -38,29 +29,26 @@ export default function FoundingClinicPage() {
           <div>
             <MissionPhaseProgress current="offer" />
             <p className="mt-8 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Founding Clinic Qualification</p>
-            <h1
-              className="mt-4 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
-              id="founding-heading"
-            >
+            <h1 className="mt-4 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl" id="founding-heading">
               Help shape the operating layer independent clinics deserve.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Small clinics should have big-system control without big-system cost. The founding pathway evaluates operational fit
-              before any implementation commitment, and every step ends in a human decision.
+              Small clinics should have big-system control without big-system cost. The founding pathway shows what Klinikos can take on,
+              what still depends on external rails, and what an approved launch would actually require.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary">
                 <Link href="/sales">Start Clinic Operating Analysis <ArrowRight aria-hidden="true" className="size-4" /></Link>
               </Button>
-              <Button asChild className="border border-white/20 bg-transparent text-slate-200 hover:text-white" size="lg" variant="secondary">
-                <Link href="#pathway">See the pathway</Link>
+              <Button asChild className="border border-cyan-300/25 bg-transparent text-cyan-200 hover:text-white" size="lg" variant="secondary">
+                <Link href="/grid/browse">Explore Klinikos Grid</Link>
               </Button>
             </div>
           </div>
 
           <ZumiBriefingPanel active>
-            Founding qualification starts with your operating map, not a contract. I organise what you tell me about how the clinic
-            runs, then a human reviews whether Klinikos is actually a fit. Do not enter patient names, records, diagnoses, or PHI.
+            Founding qualification starts with your operating map, not a contract. I organize the operational picture, surface the gaps,
+            and prepare the next decision for review. Keep patient names, records, diagnoses, and PHI out of this qualification flow.
           </ZumiBriefingPanel>
         </div>
       </section>
@@ -83,16 +71,26 @@ export default function FoundingClinicPage() {
 
       <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8">
         <FoundingOfferCards ctaHref="/sales" />
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <NoPHINotice />
-          <HumanReviewBanner />
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <div className="border border-white/10 bg-white/[.04] p-6">
+            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]">Pay now</p>
+            <h2 className="mt-3 text-xl font-extrabold text-white">GoDaddy checkout is available now.</h2>
+            <p className="mt-3 text-[12px] leading-6 text-slate-400">Use the existing Klinikos payment rail for an approved review, evaluation, or founding payment. The payment record is still reconciled against the selected offer before access or implementation state changes.</p>
+            <a className="mt-5 inline-flex min-h-[44px] items-center gap-2 bg-[#e6c55b] px-5 text-xs font-extrabold text-[#071019]" href={KLINIKOS_GODADDY_PAYLINK} rel="noreferrer" target="_blank">Open secure checkout <ArrowRight className="size-4" /></a>
+          </div>
+
+          <div className="border border-white/10 bg-white/[.04] p-6">
+            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Ongoing software</p>
+            <h2 className="mt-3 text-xl font-extrabold text-white">Subscription pricing is separate from setup.</h2>
+            <p className="mt-3 text-[12px] leading-6 text-slate-400">{clinicSubscriptionPlanning.note}</p>
+          </div>
         </div>
-        <p className="mt-8 max-w-4xl border-t border-white/10 pt-6 text-[11px] leading-6 text-slate-400">
-          Target future pricing is around $500 per month after launch, depending on approved scope and usage. That is a target for
-          planning, not a binding quote. A founding contribution does not activate production PHI use, certify compliance, guarantee
-          integrations, or authorize clinical deployment. Scope, security, contracts, vendor connections, and production readiness each
-          require separate human review.
-        </p>
+
+        <div className="mt-10 grid gap-5 border-t border-white/10 pt-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Production boundary</p><h2 className="mt-3 text-2xl font-extrabold tracking-[-.04em] text-white">Clear gates, not repeated fine print.</h2></div>
+          <p className="text-[12px] leading-6 text-slate-400">Qualification and founding fees do not by themselves activate production PHI, certify compliance, guarantee integrations, or authorize clinical deployment. Those decisions depend on approved scope, security controls, contracts, vendor connections, and production-readiness review. The current public qualification flow is for operational and software context only.</p>
+        </div>
       </section>
     </ZumiCommandShell>
   );
