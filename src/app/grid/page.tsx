@@ -38,7 +38,8 @@ export default function GridGatewayPage() {
       <header className="border-b border-[#e6e9ee] bg-white">
         <div className="mx-auto flex min-h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
           <Link className="flex items-center gap-3" href="/"><BrandMark /><span><span className="block text-sm font-extrabold tracking-[-.03em]">Klinikos Grid</span><span className="block text-[9px] font-extrabold uppercase tracking-[.18em] text-[#174ea6]">Universal healthcare exchange</span></span></Link>
-          <Link className="ml-auto text-xs font-bold text-[#5b6675] hover:text-[#0b1220]" href="/grid/browse">Browse everything</Link>
+          <Link className="ml-auto hidden text-xs font-bold text-[#5b6675] hover:text-[#0b1220] sm:block" href="/grid/pricing">Pricing</Link>
+          <Link className="text-xs font-bold text-[#5b6675] hover:text-[#0b1220]" href="/grid/browse">Browse everything</Link>
           <Link className="ml-3 inline-flex min-h-[44px] items-center bg-[#0b1220] px-4 text-xs font-bold text-white hover:bg-[#174ea6]" href="/login">Sign in</Link>
         </div>
       </header>
@@ -48,7 +49,7 @@ export default function GridGatewayPage() {
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#174ea6]">Klinikos Grid</p>
           <div className="mt-5 grid gap-10 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
             <div><h1 className="max-w-5xl text-balance text-5xl font-black leading-[.94] tracking-[-.065em] sm:text-7xl lg:text-[88px]">What are you here to get done?</h1><p className="mt-7 max-w-3xl text-base leading-8 text-[#5b6675] sm:text-lg">Grid is the exchange layer for healthcare people, work, spaces, products, equipment, services, organizations, education, and capacity. Choose the outcome. Grid sorts the rest.</p></div>
-            <div className="border border-[#dfe3e8] bg-[#fbfcfd] p-6 sm:p-7"><div className="flex items-center gap-3"><Search className="size-5 text-[#174ea6]" /><p className="text-sm font-extrabold">Need something specific?</p></div><p className="mt-3 text-[13px] leading-6 text-[#5b6675]">Browse the live map and all published inventory now, or choose a lane below so the experience is pre-sorted around your goal.</p><Link className="mt-5 inline-flex min-h-[44px] items-center gap-2 bg-[#174ea6] px-5 text-xs font-extrabold text-white hover:bg-[#0f3f8f]" href="/grid/browse">Open live Grid <ArrowRight className="size-4" /></Link></div>
+            <div className="border border-[#dfe3e8] bg-[#fbfcfd] p-6 sm:p-7"><div className="flex items-center gap-3"><Search className="size-5 text-[#174ea6]" /><p className="text-sm font-extrabold">Need something specific?</p></div><p className="mt-3 text-[13px] leading-6 text-[#5b6675]">Browse the live map and all published inventory now, or choose a lane below so the experience is pre-sorted around your goal.</p><div className="mt-5 flex flex-wrap gap-2"><Link className="inline-flex min-h-[44px] items-center gap-2 bg-[#174ea6] px-5 text-xs font-extrabold text-white hover:bg-[#0f3f8f]" href="/grid/browse">Open live Grid <ArrowRight className="size-4" /></Link><Link className="inline-flex min-h-[44px] items-center border border-[#d7dce3] px-5 text-xs font-extrabold text-[#0b1220]" href="/grid/pricing">See pricing</Link></div></div>
           </div>
         </div>
       </section>
