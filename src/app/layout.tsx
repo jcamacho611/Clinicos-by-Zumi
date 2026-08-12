@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/manrope";
-import { KlinikosAtmosphereController, klinikosAtmosphereBootstrap } from "@/components/design/klinikos-atmosphere";
+import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
 
 const siteUrl = "https://klinikos.io";
