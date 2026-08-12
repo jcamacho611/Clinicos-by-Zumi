@@ -15,6 +15,18 @@ const LEGACY_PUBLIC_PHRASES = [
   "clinicos os",
 ] as const;
 
+const BANNED_PUBLIC_PHRASES = [
+  "start free",
+  "free trial",
+  "submit form",
+  "try our platform",
+  "automatically approved",
+  "instant approval",
+  "instantly live",
+  "monetization os",
+  ...LEGACY_PUBLIC_PHRASES,
+] as const;
+
 function walk(root: string, predicate: (path: string) => boolean): string[] {
   if (!existsSync(root)) return [];
   const output: string[] = [];
@@ -35,13 +47,13 @@ function stringLiterals(source: string): string[] {
   return literals;
 }
 
-function legacyHits(path: string) {
+function copyHits(path: string) {
   const source = readFileSync(path, "utf8");
   const literals = stringLiterals(source);
   const hits: string[] = [];
   for (const literal of literals) {
     const lower = literal.toLowerCase();
-    for (const phrase of LEGACY_PUBLIC_PHRASES) {
+    for (const phrase of BANNED_PUBLIC_PHRASES) {
       if (lower.includes(phrase)) hits.push(phrase);
     }
     if (/\bclinicos\b/i.test(literal)) hits.push("clinicos");
@@ -49,20 +61,20 @@ function legacyHits(path: string) {
   return [...new Set(hits)];
 }
 
-describe("Klinikos public brand hierarchy", () => {
-  it("keeps every App Router page free of legacy customer-facing branding", () => {
+describe("Klinikos public brand and copy hierarchy", () => {
+  it("keeps every App Router page free of legacy branding and banned public jargon", () => {
     const pages = walk(APP_ROOT, (path) => path.endsWith("page.tsx"));
     expect(pages.length).toBeGreaterThan(20);
     const violations = pages
-      .map((path) => ({ path: path.slice(process.cwd().length + 1), hits: legacyHits(path) }))
+      .map((path) => ({ path: path.slice(process.cwd().length + 1), hits: copyHits(path) }))
       .filter((entry) => entry.hits.length > 0);
     expect(violations).toEqual([]);
   });
 
-  it("keeps shared marketing and command components on the same brand hierarchy", () => {
+  it("keeps shared marketing and command components on the same copy law", () => {
     const components = USER_FACING_COMPONENT_ROOTS.flatMap((root) => walk(root, (path) => path.endsWith(".tsx")));
     const violations = components
-      .map((path) => ({ path: path.slice(process.cwd().length + 1), hits: legacyHits(path) }))
+      .map((path) => ({ path: path.slice(process.cwd().length + 1), hits: copyHits(path) }))
       .filter((entry) => entry.hits.length > 0);
     expect(violations).toEqual([]);
   });
