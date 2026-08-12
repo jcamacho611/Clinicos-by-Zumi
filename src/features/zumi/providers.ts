@@ -23,33 +23,37 @@ export type ZumiExternalSource = {
   title?: string | null;
 };
 
+export type ZumiMcpServer = {
+  label: string;
+  serverUrl?: string;
+  connectorId?: string;
+  requireApproval: boolean;
+  allowedTools?: readonly string[];
+};
+
 export type ProviderRequest = {
   system: string;
   prompt: string;
   maxOutputTokens: number;
   timeoutMs: number;
   signal?: AbortSignal;
-  /** Provider-hosted prior turn. Must be wrapped in a Klinikos-signed conversation token before it reaches this layer. */
   previousResponseId?: string | null;
-  /** Public-web research only. The gateway must block PHI-shaped content before setting this true. */
   allowWebSearch?: boolean;
-  /** Search the configured long-term Zumi knowledge store when available. */
   allowKnowledgeSearch?: boolean;
-  /** Optional domain boundary for research. Empty means provider default web coverage. */
+  allowCodeInterpreter?: boolean;
   allowedDomains?: readonly string[];
+  mcpServers?: readonly ZumiMcpServer[];
 };
 
 export type ProviderResult = {
   text: string;
   inputTokens: number;
   outputTokens: number;
-  /** Integer micro-USD. Money is never a float in this codebase. */
   costMicroUsd: number;
   modelId: string;
-  /** Provider response identifier used only through a signed Klinikos conversation handle. */
   responseId?: string | null;
-  /** External public sources used during research, when the adapter can surface them. */
   sources?: ZumiExternalSource[];
+  toolsUsed?: string[];
 };
 
 export type ProviderAdapter = {
@@ -96,11 +100,9 @@ function killSwitchEngaged(env: ZumiEnv) {
 
 export function providerStatus(adapter: ProviderAdapter, env: ZumiEnv = process.env): ProviderStatus {
   const base = { key: adapter.key, label: adapter.label, modelId: adapter.modelId, baaOnFile: adapter.baaOnFile };
-
   if (killSwitchEngaged(env)) {
     return { ...base, state: "DISABLED", missingEnv: [], detail: "Zumi is disabled for this deployment (ZUMI_DISABLED)." };
   }
-
   const missingEnv = missingEnvFor(adapter, env);
   if (missingEnv.length > 0) {
     return {
@@ -110,7 +112,6 @@ export function providerStatus(adapter: ProviderAdapter, env: ZumiEnv = process.
       detail: `Pending connection. Missing configuration: ${missingEnv.join(", ")}.`,
     };
   }
-
   return { ...base, state: "CONFIGURED", missingEnv: [], detail: "Credentials present. Not yet exercised in this process." };
 }
 
@@ -122,29 +123,17 @@ export function selectProvider(env: ZumiEnv = process.env):
   | { ok: true; adapter: ProviderAdapter; status: ProviderStatus }
   | { ok: false; reason: "no_providers" | "disabled" | "not_configured" | "unknown_provider"; detail: string; statuses: ProviderStatus[] } {
   const statuses = listProviderStatus(env);
-
   if (registry.size === 0) {
-    return {
-      ok: false,
-      reason: "no_providers",
-      detail: "No Zumi model provider is registered. AI features are inert until an approved provider is contracted and configured.",
-      statuses,
-    };
+    return { ok: false, reason: "no_providers", detail: "No Zumi model provider is registered. AI features are inert until an approved provider is contracted and configured.", statuses };
   }
-  if (killSwitchEngaged(env)) {
-    return { ok: false, reason: "disabled", detail: "Zumi is disabled for this deployment (ZUMI_DISABLED).", statuses };
-  }
+  if (killSwitchEngaged(env)) return { ok: false, reason: "disabled", detail: "Zumi is disabled for this deployment (ZUMI_DISABLED).", statuses };
 
   const named = env.ZUMI_PROVIDER?.trim();
   if (named) {
     const adapter = registry.get(named);
-    if (!adapter) {
-      return { ok: false, reason: "unknown_provider", detail: `ZUMI_PROVIDER names "${named}", which is not registered.`, statuses };
-    }
+    if (!adapter) return { ok: false, reason: "unknown_provider", detail: `ZUMI_PROVIDER names "${named}", which is not registered.`, statuses };
     const status = providerStatus(adapter, env);
-    if (!providerIsUsable(status.state)) {
-      return { ok: false, reason: "not_configured", detail: status.detail, statuses };
-    }
+    if (!providerIsUsable(status.state)) return { ok: false, reason: "not_configured", detail: status.detail, statuses };
     return { ok: true, adapter, status };
   }
 
@@ -152,21 +141,12 @@ export function selectProvider(env: ZumiEnv = process.env):
     const status = providerStatus(adapter, env);
     if (providerIsUsable(status.state)) return { ok: true, adapter, status };
   }
-
-  return {
-    ok: false,
-    reason: "not_configured",
-    detail: "Every registered provider is missing configuration. Zumi reports Pending Connection rather than answering.",
-    statuses,
-  };
+  return { ok: false, reason: "not_configured", detail: "Every registered provider is missing configuration. Zumi reports Pending Connection rather than answering.", statuses };
 }
 
 export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = process.env) {
   const approved = env.ZUMI_PHI_EGRESS_APPROVED === "1";
-  return {
-    permitted: adapter.baaOnFile && approved,
-    notice: REDACTION_LIMITATION_NOTICE,
-  };
+  return { permitted: adapter.baaOnFile && approved, notice: REDACTION_LIMITATION_NOTICE };
 }
 
 export function zumiGatewayStatus(env: ZumiEnv = process.env) {
@@ -179,10 +159,5 @@ export function zumiGatewayStatus(env: ZumiEnv = process.env) {
       detail: `Zumi is connected to ${selection.adapter.label}. Output remains governed: every recommendation cites evidence and higher-risk capabilities require human review.`,
     };
   }
-  return {
-    available: false as const,
-    mode: "pending_connection" as const,
-    provider: null,
-    detail: selection.detail,
-  };
+  return { available: false as const, mode: "pending_connection" as const, provider: null, detail: selection.detail };
 }
