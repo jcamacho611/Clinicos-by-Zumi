@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version-file: .node-version
           cache: npm
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -129,7 +129,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version-file: .node-version
           cache: npm
       # Render's Build Command, verbatim.
       - name: Install exactly as the production host installs
