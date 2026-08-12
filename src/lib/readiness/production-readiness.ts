@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { connectorIntegritySummary } from "@/lib/connectors/status";
-import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
+import { goDaddyClinicPlanCheckoutStatus, goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 
 export const productionReadinessStates = ["READY", "DEGRADED", "MANUAL_FALLBACK", "PENDING_CONNECTION", "BLOCKED", "NOT_CONFIGURED"] as const;
@@ -92,8 +92,10 @@ function backupReadiness() {
 
 function paymentsReadiness() {
   const status = goDaddyPaymentConnector.status();
+  const planStatus = goDaddyClinicPlanCheckoutStatus();
   if (!status.checkoutConfigured) return item("payments", "Payments", "NOT_CONFIGURED", "No current checkout rail is configured.", "Configure the approved payment connector.");
-  if (!status.processorVerification) return item("payments", "Payments", "MANUAL_FALLBACK", "GoDaddy checkout is available, but processor verification is not connected. Klinikos requires explicit staff reconciliation before paid access changes.", "Use the Commercial Activation desk until authoritative processor verification is connected.");
+  if (!planStatus.allConfigured) return item("payments", "Payments", "DEGRADED", `GoDaddy checkout exists, but only ${planStatus.configuredPlanKeys.length} of 3 clinic subscription paylinks are configured. The $500 audit paylink is never reused for a subscription plan.`, `Configure: ${planStatus.missing.join(", ")}`);
+  if (!status.processorVerification) return item("payments", "Payments", "MANUAL_FALLBACK", "Exact-value Core, Growth, and Scale checkout links are configured, but processor verification is not connected. Klinikos requires explicit staff reconciliation before paid access changes.", "Use the Commercial Activation desk until authoritative processor verification is connected.");
   return item("payments", "Payments", "READY", "Checkout and authoritative processor verification are available.");
 }
 
@@ -123,7 +125,7 @@ export async function buildProductionReadiness() {
     connectorGroupStatus(["lab", "payer", "clearinghouse", "eligibility", "telemedicine", "imaging", "erx"], "External integrations"),
   ];
   const blockers = items.filter((entry) => entry.state === "BLOCKED").length;
-  const notConfigured = items.filter((entry) => ["NOT_CONFIGURED", "PENDING_CONNECTION"].includes(entry.state)).length;
+  const notConfigured = items.filter((entry) => ["NOT_CONFIGURED", "PENDING_CONNECTION", "DEGRADED"].includes(entry.state)).length;
   return {
     generatedAt: new Date().toISOString(),
     productionPatientDataApproved: false,
