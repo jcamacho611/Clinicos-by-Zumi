@@ -1,22 +1,9 @@
 import { z } from "zod";
 import type { ClinicAction, ClinicResource } from "@/lib/auth/rbac";
 
-/**
- * Zumi governed output contract.
- *
- * Every meaningful Zumi recommendation carries SOURCE, REASON, STATUS, OWNER,
- * REQUIRED REVIEW, ACTION and an AUDIT reference. That is not decoration: a
- * recommendation a clinic cannot trace back to its evidence is one they cannot act
- * on, and one nobody can be held to.
- *
- * Pure module. No database, no network, no provider SDK.
- */
-
-/** Where a fact came from. Applies to any displayed fact, not only AI output. */
 export const provenanceSources = ["USER", "IMPORT", "INTEGRATION", "SYSTEM", "ZUMI", "WORKFLOW", "GRID", "PAYMENT_PROVIDER"] as const;
 export type ProvenanceSource = (typeof provenanceSources)[number];
 
-/** Operating signal vocabulary, shared across every surface that raises work. */
 export const signalTypes = ["OVERDUE", "UNASSIGNED", "MISSING", "WAITING", "ANOMALY", "OPPORTUNITY", "REVIEW_REQUIRED", "EXPIRING"] as const;
 export type SignalType = (typeof signalTypes)[number];
 
@@ -26,53 +13,26 @@ export type SignalSeverity = (typeof signalSeverities)[number];
 export const zumiOrbStates = ["dormant", "observing", "mapping", "analyzing", "signal", "resolved"] as const;
 export type ZumiOrbState = (typeof zumiOrbStates)[number];
 
-/**
- * Risk tiers.
- *
- * The tier decides what governance a capability must pass, not how impressive it
- * looks. HIGH-risk actions can never be executed by Zumi — they may only be
- * *proposed* for a human with the right permission to authorize.
- */
 export const riskTiers = ["LOW", "MEDIUM", "HIGH"] as const;
 export type RiskTier = (typeof riskTiers)[number];
 
-/**
- * A permission requirement expressed in the product's own RBAC vocabulary.
- *
- * Not a free-text string: a capability that asks for `"documents.review"` when no
- * such action exists reads as enforced and enforces nothing. Typing it against
- * `ClinicResource`/`ClinicAction` makes an unenforceable requirement a compile error.
- */
 export type ZumiPermissionRequirement = { resource: ClinicResource; action: ClinicAction };
 
 export type ZumiCapability = {
   key: string;
   label: string;
   tier: RiskTier;
-  /** Plain description of what the capability produces. */
   produces: string;
-  /** Entitlement required, or null when included at every access level. */
   requiresEntitlement: string | null;
-  /** Permission the acting user must hold beyond the universal `ai:read` baseline. */
   requiresPermission: ZumiPermissionRequirement | null;
 };
 
-/**
- * The permission every Zumi call requires, regardless of capability.
- *
- * A role with no AI access at all (`contractor`, today) is refused before the
- * capability catalog is consulted.
- */
 export const ZUMI_BASELINE_PERMISSION: ZumiPermissionRequirement = { resource: "ai", action: "read" };
 
-/**
- * The capability catalog.
- *
- * A capability that is not listed here cannot be invoked. New AI surfaces are added
- * by declaring them, which forces the tier, entitlement, and permission decision to
- * be made deliberately rather than inherited by accident.
- */
 export const zumiCapabilities: readonly ZumiCapability[] = [
+  { key: "conversation", label: "Klinikos Intelligence conversation", tier: "LOW", produces: "A natural-language answer that can continue across turns", requiresEntitlement: null, requiresPermission: null },
+  { key: "public_research", label: "Public web research", tier: "LOW", produces: "A source-backed answer from permitted public web research", requiresEntitlement: null, requiresPermission: null },
+  { key: "knowledge_retrieval", label: "Knowledge retrieval", tier: "LOW", produces: "An answer grounded in retained Zumi knowledge capsules", requiresEntitlement: null, requiresPermission: null },
   { key: "operational_summary", label: "Summarize operational state", tier: "LOW", produces: "A narrative summary of open work", requiresEntitlement: null, requiresPermission: null },
   { key: "morning_briefing", label: "Morning briefing", tier: "LOW", produces: "A source-backed briefing for the day", requiresEntitlement: null, requiresPermission: null },
   { key: "shift_handoff", label: "Shift handoff", tier: "LOW", produces: "A handoff summary of outstanding work", requiresEntitlement: null, requiresPermission: null },
@@ -88,7 +48,6 @@ export const zumiCapabilities: readonly ZumiCapability[] = [
   { key: "billing_readiness_explanation", label: "Explain billing readiness", tier: "MEDIUM", produces: "What is missing before an encounter can bill", requiresEntitlement: "billing_readiness", requiresPermission: null },
   { key: "grid_match_explanation", label: "Explain a GRID match", tier: "MEDIUM", produces: "Why a provider or location matched", requiresEntitlement: "grid", requiresPermission: null },
   { key: "owner_brief", label: "Owner brief", tier: "MEDIUM", produces: "A source-backed periodic owner report", requiresEntitlement: "advanced_reports", requiresPermission: null },
-  // HIGH tier: proposal only. Zumi never performs these; it prepares them for a human.
   { key: "propose_credential_decision", label: "Propose a credential decision", tier: "HIGH", produces: "A draft recommendation for a human credential reviewer", requiresEntitlement: "grid", requiresPermission: { resource: "grid", action: "manage" } },
   { key: "propose_record_release", label: "Propose a record release", tier: "HIGH", produces: "A draft release package for human approval", requiresEntitlement: null, requiresPermission: { resource: "documents", action: "manage" } },
   { key: "propose_claim_action", label: "Propose a claim action", tier: "HIGH", produces: "A draft claim action for human authorization", requiresEntitlement: "billing_readiness", requiresPermission: { resource: "billing", action: "update" } },
@@ -98,12 +57,6 @@ export function getZumiCapability(key: string) {
   return zumiCapabilities.find((capability) => capability.key === key);
 }
 
-/**
- * Capabilities Zumi must never have, at any tier, under any entitlement.
- *
- * Enumerated so the prohibition is testable. These are not "not yet built" — they
- * are outside what an AI in this product may do.
- */
 export const ZUMI_PROHIBITED = [
   "diagnose",
   "prescribe",
@@ -120,7 +73,6 @@ export function isProhibitedZumiCapability(key: string) {
   return (ZUMI_PROHIBITED as readonly string[]).includes(key);
 }
 
-/** A single piece of evidence behind a recommendation. */
 export const zumiEvidenceSchema = z.object({
   source: z.enum(provenanceSources),
   entityType: z.string().trim().min(1).max(80),
@@ -128,16 +80,8 @@ export const zumiEvidenceSchema = z.object({
   fact: z.string().trim().min(3).max(400),
   observedAt: z.string().datetime({ offset: true }).nullable().default(null),
 });
-
 export type ZumiEvidence = z.infer<typeof zumiEvidenceSchema>;
 
-/**
- * The governed recommendation.
- *
- * `requiresHumanReview` has no default and no optionality on purpose — a caller
- * constructing a recommendation must state the review posture explicitly rather
- * than inheriting a permissive one.
- */
 export const zumiRecommendationSchema = z.object({
   capability: z.string().trim().min(2).max(80),
   summary: z.string().trim().min(3).max(600),
@@ -148,16 +92,13 @@ export const zumiRecommendationSchema = z.object({
   suggestedAction: z.string().trim().min(3).max(400).nullable().default(null),
   ownerUserId: z.string().trim().max(64).nullable().default(null),
   requiresHumanReview: z.boolean(),
-  /** Never a bare number: an unexplained confidence score is worse than none. */
   confidence: z.object({
     level: z.enum(["low", "moderate", "high"]),
     basis: z.string().trim().min(3).max(300),
   }).nullable().default(null),
 });
-
 export type ZumiRecommendation = z.infer<typeof zumiRecommendationSchema>;
 
-/** The full envelope returned to a caller. */
 export const zumiResponseSchema = z.object({
   capability: z.string(),
   organizationId: z.string(),
@@ -170,40 +111,22 @@ export const zumiResponseSchema = z.object({
   usage: z.object({ inputTokens: z.number().int().min(0), outputTokens: z.number().int().min(0), costMicroUsd: z.number().int().min(0) }),
   auditLogId: z.string().nullable(),
 });
-
 export type ZumiResponse = z.infer<typeof zumiResponseSchema>;
 
-/**
- * A recommendation is only presentable when its evidence actually supports it.
- *
- * Two rules, both learned the hard way in this product: a recommendation with no
- * evidence is an assertion, and a HIGH-tier capability that does not require human
- * review is a bug regardless of what the caller passed.
- */
 export function validateRecommendation(recommendation: ZumiRecommendation): string[] {
   const problems: string[] = [];
   const capability = getZumiCapability(recommendation.capability);
-
   if (!capability) {
     problems.push(`Unknown capability "${recommendation.capability}".`);
     return problems;
   }
-  if (!recommendation.evidence.length) {
-    problems.push("A recommendation must cite at least one piece of evidence.");
-  }
-  if (capability.tier === "HIGH" && !recommendation.requiresHumanReview) {
-    problems.push("A HIGH-risk capability must require human review.");
-  }
-  if (capability.tier === "MEDIUM" && !recommendation.requiresHumanReview) {
-    problems.push("A MEDIUM-risk capability produces a suggestion and must require human review.");
-  }
-  if (recommendation.severity === "URGENT" && !recommendation.suggestedAction) {
-    problems.push("An urgent signal must state a suggested next action.");
-  }
+  if (!recommendation.evidence.length) problems.push("A recommendation must cite at least one piece of evidence.");
+  if (capability.tier === "HIGH" && !recommendation.requiresHumanReview) problems.push("A HIGH-risk capability must require human review.");
+  if (capability.tier === "MEDIUM" && !recommendation.requiresHumanReview) problems.push("A MEDIUM-risk capability produces a suggestion and must require human review.");
+  if (recommendation.severity === "URGENT" && !recommendation.suggestedAction) problems.push("An urgent signal must state a suggested next action.");
   return problems;
 }
 
-/** Orb state for a stage of work, so the signature tracks what Zumi is doing. */
 export function orbStateForStage(stage: "idle" | "gathering" | "correlating" | "reasoning" | "flagged" | "closed"): ZumiOrbState {
   switch (stage) {
     case "gathering": return "observing";
