@@ -1,50 +1,55 @@
 import Link from "next/link";
-import { ArrowLeft, BriefcaseBusiness, Building2, MapPinned, Network, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, GraduationCap, HeartHandshake, MapPinned, PackageSearch, ShieldCheck, Sparkles, Stethoscope, Wrench } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { ContractorEnrollmentForm } from "@/components/clinic/grid/contractor-enrollment-form";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
   title: "Join Klinikos Grid",
-  description: "Join the Klinikos Grid as an independent professional, provider, location partner, or service participant.",
+  description: "Join the Klinikos Grid as a professional, space owner, organization, seller, equipment owner, service provider, education partner, or referral partner.",
 };
 
-const paths = [
-  [BriefcaseBusiness, "Independent work", "Professionals can publish availability and prepare for eligible opportunities."],
-  [Network, "Provider network", "Clinical participants can submit credentials and malpractice evidence for human review."],
-  [Building2, "Space & capacity", "Locations can participate through rooms, chairs, clinics, and partner capacity."],
+const enrollmentPaths = [
+  { icon: BriefcaseBusiness, title: "Professional / contractor", body: "Nurses, providers, clinicians, and other professionals seeking eligible work or service opportunities.", href: "#professional" },
+  { icon: Building2, title: "Space owner", body: "Rooms, chairs, offices, procedure space, training space, lab or imaging capacity.", href: "/grid/join/location" },
+  { icon: Stethoscope, title: "Healthcare organization", body: "Clinics, facilities, labs, imaging, specialty partners, and organization-level capacity.", href: "/grid/join/location?type=organization" },
+  { icon: PackageSearch, title: "Products & supplies", body: "Permitted non-prescription supplies and operational inventory.", href: "/grid/join/seller?type=product" },
+  { icon: Wrench, title: "Equipment owner", body: "Rentable or bookable equipment and operational capacity.", href: "/grid/join/seller?type=equipment" },
+  { icon: Sparkles, title: "Business service", body: "Billing, credentialing, recruiting, consulting, cybersecurity, IT, and other healthcare support.", href: "/grid/join/seller?type=service" },
+  { icon: GraduationCap, title: "Education partner", body: "Preceptorships, placements, training seats, simulation, and learning capacity.", href: "/grid/join/seller?type=education" },
+  { icon: HeartHandshake, title: "Referral partner", body: "Governed consultation, specialty, diagnostic, and partner capacity.", href: "/grid/join/seller?type=referral" },
 ] as const;
 
 export default function GridContractorJoinPage() {
   return (
     <main className="min-h-screen bg-[#f5f7f5]">
       <header className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
-        <Link className="flex items-center gap-3" href="/">
+        <Link className="flex items-center gap-3" href="/grid">
           <BrandMark />
           <div><p className="text-sm font-extrabold text-slate-950">Klinikos Grid</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-amber-600">Healthcare opportunity network</p></div>
         </Link>
-        <div className="ml-auto flex items-center gap-4"><Link className="hidden text-xs font-bold text-slate-600 hover:text-slate-950 sm:block" href="/grid/browse">Browse Grid</Link><Link className="flex items-center gap-2 text-xs font-bold text-slate-600" href="/"><ArrowLeft className="size-4" /> Klinikos</Link></div>
+        <div className="ml-auto flex items-center gap-4"><Link className="hidden text-xs font-bold text-slate-600 hover:text-slate-950 sm:block" href="/grid/browse">Browse Grid</Link><Link className="flex items-center gap-2 text-xs font-bold text-slate-600" href="/grid"><ArrowLeft className="size-4" /> Grid</Link></div>
       </header>
 
       <section className="border-y border-slate-200 bg-[#081923] text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[.82fr_1.18fr] lg:items-end">
-          <div>
-            <Badge className="bg-white/10 text-teal-200 ring-white/15"><MapPinned className="mr-1.5 size-3" /> I have something</Badge>
-            <h1 className="mt-6 text-5xl font-black leading-[.96] tracking-[-.065em] sm:text-6xl">Tell Grid what you can offer.</h1>
-            <p className="mt-6 max-w-2xl text-sm leading-7 text-slate-300">Start with your professional profile and availability. Klinikos uses the information you provide to prepare the participant record the current Grid engine understands. Regulated work remains gated by the required human review.</p>
-          </div>
-          <div className="grid gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-3">
-            {paths.map(([Icon,title,body])=><div className="bg-white/[.06] p-5" key={title}><Icon className="size-5 text-teal-300"/><p className="mt-4 text-sm font-extrabold">{title}</p><p className="mt-2 text-xs leading-5 text-slate-300">{body}</p></div>)}
+        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:py-20">
+          <Badge className="bg-white/10 text-teal-200 ring-white/15"><MapPinned className="mr-1.5 size-3" /> I have something</Badge>
+          <h1 className="mt-6 max-w-5xl text-5xl font-black leading-[.96] tracking-[-.065em] sm:text-7xl">What are you bringing to Grid?</h1>
+          <p className="mt-6 max-w-3xl text-sm leading-7 text-slate-300">Choose the participant type that matches what you actually have. Each path writes into the same Grid exchange, while policy and review change by resource class.</p>
+
+          <div className="mt-10 grid gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+            {enrollmentPaths.map(({ icon: Icon, title, body, href }) => <Link className="group bg-white/[.055] p-5 transition hover:bg-white/[.09]" href={href} key={title}><div className="flex items-start justify-between gap-3"><Icon className="size-5 text-teal-300"/><ArrowRight className="size-4 text-white/30 transition group-hover:translate-x-1 group-hover:text-teal-300"/></div><p className="mt-5 text-sm font-extrabold">{title}</p><p className="mt-2 text-xs leading-5 text-slate-300">{body}</p></Link>)}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.62fr_1.38fr]">
+      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.62fr_1.38fr]" id="professional">
         <aside className="lg:sticky lg:top-8 lg:self-start">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Current enrollment path</p>
-          <h2 className="mt-3 text-3xl font-black tracking-[-.05em] text-slate-950">One profile for the details Grid needs first.</h2>
-          <ul className="mt-6 space-y-3 text-sm leading-6 text-slate-600">{["Identity and service profile", "License, certification, and malpractice evidence where applicable", "Mobile, clinic-chair, and partner-location preferences", "Recurring availability and travel radius", "Human verification before regulated activation", "Booking choices and payout estimates where available"].map((item) => <li className="flex gap-3" key={item}><span className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-500" />{item}</li>)}</ul>
-          <div className="mt-6 grid gap-3"><p className="rounded-2xl bg-amber-50 p-4 text-[11px] leading-6 text-amber-900"><ShieldCheck className="mb-2 size-4"/>Demo safety: do not enter real patient information. Credential evidence remains subject to the current review and production-security boundaries.</p><p className="rounded-2xl bg-white p-4 text-[11px] leading-6 text-slate-600 ring-1 ring-slate-200"><Sparkles className="mb-2 size-4 text-teal-700"/>Grid is expanding beyond the current contractor/provider enrollment form. Space, service, and other participant paths should converge on the same universal profile and opportunity engine.</p></div>
+          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Professional enrollment</p>
+          <h2 className="mt-3 text-3xl font-black tracking-[-.05em] text-slate-950">For people whose work depends on professional eligibility.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">Clinical and regulated professional work stays on the existing credential-aware enrollment path. The account is not proof that the person is eligible for every opportunity.</p>
+          <ul className="mt-6 space-y-3 text-sm leading-6 text-slate-600">{["Identity and professional profile", "License, certification, and malpractice evidence where applicable", "Mobile, clinic-chair, and partner-location preferences", "Recurring availability and travel radius", "Human verification before regulated activation", "Opportunity, booking, and payout state after eligibility"].map((item) => <li className="flex gap-3" key={item}><span className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-500" />{item}</li>)}</ul>
+          <p className="mt-6 rounded-2xl bg-amber-50 p-4 text-[11px] leading-6 text-amber-900"><ShieldCheck className="mb-2 size-4"/>Do not enter patient information. Professional enrollment and resource publication are different things, and neither one bypasses opportunity-specific eligibility.</p>
         </aside>
         <ContractorEnrollmentForm />
       </section>
