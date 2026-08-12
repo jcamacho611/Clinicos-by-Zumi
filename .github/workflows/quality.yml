@@ -61,5 +61,7 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm test
+      - name: Verify MVP journeys against PostgreSQL
+        run: npm run test:mvp
       - name: Production build
         run: npm run build
