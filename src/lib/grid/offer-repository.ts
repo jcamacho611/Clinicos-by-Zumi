@@ -15,13 +15,8 @@ import {
 } from "@/lib/grid/transaction-flow";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
-type DemandStateRow = {
-  id: string;
-  status: string;
-  kind: string;
-};
-
-type GridOfferRow = {
+type DemandRow = { id: string; status: string; kind: string };
+type OfferRow = {
   id: string;
   organizationId: string;
   demandId: string;
@@ -47,7 +42,7 @@ type GridOfferRow = {
   updatedAt: Date;
 };
 
-function requireGridPermission(session: ClinicSession, action: "read" | "create" | "update") {
+function requirePermission(session: ClinicSession, action: "read" | "create" | "update") {
   if (!can(session.role, "network", action) && !can(session.role, "grid", action)) {
     throw new NetworkAccessError("Grid offer access is not permitted for this role.", 403);
   }
@@ -62,7 +57,7 @@ async function requireSyntheticOrganization(organizationId: string) {
   if (!organization.demoMode) throw new NetworkAccessError("Grid offers require production review before live regulated transactions can be used.", 409);
 }
 
-function serializeOffer(row: GridOfferRow) {
+function serialize(row: OfferRow) {
   return {
     ...row,
     offeredStartAt: row.offeredStartAt.toISOString(),
@@ -74,20 +69,19 @@ function serializeOffer(row: GridOfferRow) {
 }
 
 export async function listGridOffers(session: ClinicSession) {
-  requireGridPermission(session, "read");
-  const rows = await db.$queryRaw<GridOfferRow[]>(Prisma.sql`
-    SELECT *
-    FROM "GridOfferRecord"
+  requirePermission(session, "read");
+  const rows = await db.$queryRaw<OfferRow[]>(Prisma.sql`
+    SELECT * FROM "GridOfferRecord"
     WHERE "organizationId" = ${session.organizationId}
        OR "senderOrganizationId" = ${session.organizationId}
        OR "recipientOrganizationId" = ${session.organizationId}
     ORDER BY "updatedAt" DESC
     LIMIT 100
   `);
-  return rows.map(serializeOffer);
+  return rows.map(serialize);
 }
 
-async function validateCounterpartyOrganization(client: Prisma.TransactionClient, organizationId: string) {
+async function validateOrganization(client: Prisma.TransactionClient, organizationId: string) {
   const organization = await client.organization.findFirst({
     where: { id: organizationId, status: "active", demoMode: true },
     select: { id: true },
@@ -96,8 +90,12 @@ async function validateCounterpartyOrganization(client: Prisma.TransactionClient
   return organization.id;
 }
 
-async function validateSelectedSupply(client: Prisma.TransactionClient, session: ClinicSession, input: GridOfferInput) {
-  let derivedRecipientOrganizationId: string | null = null;
+async function verifySupply(
+  client: Prisma.TransactionClient,
+  input: GridOfferInput,
+  allowedLocationOrganizationIds: string[],
+) {
+  let primaryOwnerOrganizationId: string | null = null;
 
   if (input.providerId && input.serviceListingId) {
     const service = await client.gridServiceListing.findFirst({
@@ -107,7 +105,7 @@ async function validateSelectedSupply(client: Prisma.TransactionClient, session:
     if (!service || !providerReadyForGrid(service.provider)) {
       throw new NetworkAccessError("The selected provider/service is no longer eligible for this Grid offer.", 409);
     }
-    derivedRecipientOrganizationId = service.organizationId;
+    primaryOwnerOrganizationId = service.organizationId;
   }
 
   if (input.locationId) {
@@ -115,70 +113,75 @@ async function validateSelectedSupply(client: Prisma.TransactionClient, session:
       where: {
         id: input.locationId,
         status: "active",
-        OR: [{ organizationId: session.organizationId }, { marketplaceVisible: true }],
+        OR: [
+          { marketplaceVisible: true },
+          ...allowedLocationOrganizationIds.map((organizationId) => ({ organizationId })),
+        ],
       },
       select: { id: true, organizationId: true },
     });
     if (!location) throw new NetworkAccessError("The selected Grid location is unavailable.", 409);
-    if (!derivedRecipientOrganizationId) derivedRecipientOrganizationId = location.organizationId;
+    if (!primaryOwnerOrganizationId) primaryOwnerOrganizationId = location.organizationId;
   }
 
-  if (input.recipientOrganizationId) {
-    const explicitRecipient = await validateCounterpartyOrganization(client, input.recipientOrganizationId);
-    if (derivedRecipientOrganizationId && explicitRecipient !== derivedRecipientOrganizationId) {
-      throw new NetworkAccessError("The selected recipient does not own the primary Grid resource in this offer.", 409);
-    }
-    derivedRecipientOrganizationId = explicitRecipient;
-  }
-
-  if (!derivedRecipientOrganizationId) {
-    throw new NetworkAccessError("A verified recipient organization is required before a Grid offer can be sent.", 409);
-  }
-
-  return derivedRecipientOrganizationId;
+  if (input.recipientOrganizationId) await validateOrganization(client, input.recipientOrganizationId);
+  return primaryOwnerOrganizationId;
 }
 
-async function appendOfferEvent(
+async function appendEvent(
   client: Prisma.TransactionClient,
-  input: { organizationId: string; offerId: string; actorId: string; action: string; fromStatus?: string | null; toStatus?: string | null; note?: string | null; metadata?: Record<string, unknown> },
+  input: {
+    organizationId: string;
+    offerId: string;
+    actorId: string;
+    action: string;
+    fromStatus?: string | null;
+    toStatus?: string | null;
+    note?: string | null;
+    metadata?: Record<string, unknown>;
+  },
 ) {
-  const metadata = input.metadata ? JSON.stringify(input.metadata) : null;
+  const metadata = JSON.stringify(input.metadata ?? {});
   await client.$executeRaw(Prisma.sql`
     INSERT INTO "GridOfferEventRecord" (
       "id", "organizationId", "offerId", "actorId", "action", "fromStatus", "toStatus", "note", "metadata", "createdAt"
     ) VALUES (
       ${randomUUID()}, ${input.organizationId}, ${input.offerId}, ${input.actorId}, ${input.action},
       ${input.fromStatus ?? null}, ${input.toStatus ?? null}, ${input.note ?? null},
-      ${metadata ? Prisma.sql`CAST(${metadata} AS JSONB)` : null}, CURRENT_TIMESTAMP
+      CAST(${metadata} AS JSONB), CURRENT_TIMESTAMP
     )
   `);
 }
 
 export async function createGridOffer(session: ClinicSession, rawInput: unknown) {
-  requireGridPermission(session, "create");
+  requirePermission(session, "create");
   await requireSyntheticOrganization(session.organizationId);
   const input = gridOfferSchema.parse(rawInput);
 
   return db.$transaction(async (tx) => {
-    const demandRows = await tx.$queryRaw<DemandStateRow[]>(Prisma.sql`
-      SELECT "id", "status", "kind"
-      FROM "GridDemandRecord"
+    const demands = await tx.$queryRaw<DemandRow[]>(Prisma.sql`
+      SELECT "id", "status", "kind" FROM "GridDemandRecord"
       WHERE "id" = ${input.demandId} AND "organizationId" = ${session.organizationId}
       FOR UPDATE
     `);
-    const demand = demandRows[0];
+    const demand = demands[0];
     if (!demand) throw new NetworkAccessError("Saved Grid demand not found.", 404);
     if (!["open", "matched"].includes(demand.status)) {
       throw new NetworkAccessError(`Grid demand in ${demand.status} state cannot receive a new offer.`, 409);
     }
 
-    const recipientOrganizationId = await validateSelectedSupply(tx, session, input);
+    const primaryOwner = await verifySupply(tx, input, [session.organizationId]);
+    let recipientOrganizationId = input.recipientOrganizationId ?? primaryOwner;
+    if (!recipientOrganizationId) throw new NetworkAccessError("A verified recipient organization is required before a Grid offer can be sent.", 409);
+    recipientOrganizationId = await validateOrganization(tx, recipientOrganizationId);
+    if (input.recipientOrganizationId && primaryOwner && input.recipientOrganizationId !== primaryOwner) {
+      throw new NetworkAccessError("The selected recipient does not own the primary Grid resource in this offer.", 409);
+    }
 
     if (demand.status === "open") {
       if (!canTransitionGridDemand("open", "matched")) throw new NetworkAccessError("Grid demand cannot enter matched state.", 409);
       await tx.$executeRaw(Prisma.sql`
-        UPDATE "GridDemandRecord"
-        SET "status" = 'matched', "updatedAt" = CURRENT_TIMESTAMP
+        UPDATE "GridDemandRecord" SET "status" = 'matched', "updatedAt" = CURRENT_TIMESTAMP
         WHERE "id" = ${demand.id} AND "organizationId" = ${session.organizationId}
       `);
       await tx.auditLog.create({
@@ -193,11 +196,10 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
         },
       });
     }
-
     if (!canTransitionGridDemand("matched", "offered")) throw new NetworkAccessError("Grid demand cannot enter offered state.", 409);
 
     const id = randomUUID();
-    const rows = await tx.$queryRaw<GridOfferRow[]>(Prisma.sql`
+    const rows = await tx.$queryRaw<OfferRow[]>(Prisma.sql`
       INSERT INTO "GridOfferRecord" (
         "id", "organizationId", "demandId", "createdBy", "destinationOrganizationId",
         "senderOrganizationId", "recipientOrganizationId", "parentOfferId", "version",
@@ -211,8 +213,7 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
         ${input.resourceKind ?? null}, ${input.resourceReference ?? null}, ${new Date(input.offeredStartAt)},
         ${input.offeredEndAt ? new Date(input.offeredEndAt) : null}, ${input.grossAmountCents},
         ${input.depositAmountCents}, ${input.note}, 'sent', ${new Date(input.expiresAt)}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-      )
-      RETURNING *
+      ) RETURNING *
     `);
     const created = rows[0];
     if (!created) throw new NetworkAccessError("Grid offer could not be created.", 500);
@@ -227,66 +228,50 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
       WHERE "id" = ${demand.id} AND "organizationId" = ${session.organizationId}
     `);
 
-    await appendOfferEvent(tx, {
+    await appendEvent(tx, {
       organizationId: session.organizationId,
       offerId: id,
       actorId: session.userId,
       action: "grid.offer.sent",
-      fromStatus: null,
       toStatus: "sent",
       note: input.note,
       metadata: { demandId: demand.id, senderOrganizationId: session.organizationId, recipientOrganizationId, version: 1 },
     });
-
-    await Promise.all([
-      tx.auditLog.create({
-        data: {
-          organizationId: session.organizationId,
-          actorId: session.userId,
-          actorType: "user",
-          action: "grid.offer_created",
-          resourceType: "grid_offer",
-          resourceId: id,
-          metadata: {
-            demandId: demand.id,
-            demandKind: demand.kind,
-            senderOrganizationId: session.organizationId,
-            recipientOrganizationId,
-            providerId: input.providerId ?? null,
-            serviceListingId: input.serviceListingId ?? null,
-            locationId: input.locationId ?? null,
-            resourceKind: input.resourceKind ?? null,
-            resourceReference: input.resourceReference ?? null,
-            status: "sent",
-            syntheticDemo: true,
-            manualPolicyReviewRequired: Boolean(input.resourceReference),
-          },
+    await tx.auditLog.create({
+      data: {
+        organizationId: session.organizationId,
+        actorId: session.userId,
+        actorType: "user",
+        action: "grid.offer_created",
+        resourceType: "grid_offer",
+        resourceId: id,
+        metadata: {
+          demandId: demand.id,
+          demandKind: demand.kind,
+          senderOrganizationId: session.organizationId,
+          recipientOrganizationId,
+          providerId: input.providerId ?? null,
+          serviceListingId: input.serviceListingId ?? null,
+          locationId: input.locationId ?? null,
+          resourceKind: input.resourceKind ?? null,
+          resourceReference: input.resourceReference ?? null,
+          status: "sent",
+          syntheticDemo: true,
+          manualPolicyReviewRequired: Boolean(input.resourceReference),
         },
-      }),
-      tx.auditLog.create({
-        data: {
-          organizationId: session.organizationId,
-          actorId: session.userId,
-          actorType: "user",
-          action: "grid.demand_offered",
-          resourceType: "grid_demand",
-          resourceId: demand.id,
-          metadata: { fromStatus: "matched", toStatus: "offered", offerId: id },
-        },
-      }),
-    ]);
-
-    return serializeOffer(created);
+      },
+    });
+    return serialize(created);
   });
 }
 
 export async function transitionGridOffer(session: ClinicSession, offerId: string, rawInput: unknown) {
-  requireGridPermission(session, "update");
+  requirePermission(session, "update");
   await requireSyntheticOrganization(session.organizationId);
   const decision = gridOfferDecisionSchema.parse(rawInput);
 
   return db.$transaction(async (tx) => {
-    const rows = await tx.$queryRaw<GridOfferRow[]>(Prisma.sql`
+    const rows = await tx.$queryRaw<OfferRow[]>(Prisma.sql`
       SELECT * FROM "GridOfferRecord"
       WHERE "id" = ${offerId}
         AND (
@@ -305,25 +290,22 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
 
     const isSender = offer.senderOrganizationId === session.organizationId;
     const isRecipient = offer.recipientOrganizationId === session.organizationId;
-    if (decision.targetStatus === "withdrawn" && !isSender) {
-      throw new NetworkAccessError("Only the current offer sender can withdraw it.", 403);
-    }
+    if (decision.targetStatus === "withdrawn" && !isSender) throw new NetworkAccessError("Only the current offer sender can withdraw it.", 403);
     if (["accepted", "declined", "countered"].includes(decision.targetStatus) && !isRecipient) {
       throw new NetworkAccessError("Only the current offer recipient can make this decision.", 403);
     }
 
+    const allowedLocationOrganizations = [offer.organizationId, offer.senderOrganizationId, offer.recipientOrganizationId]
+      .filter((value): value is string => Boolean(value));
+
     if (decision.targetStatus === "accepted") {
-      if (offer.resourceReference) {
-        throw new NetworkAccessError("This resource class still requires a connected policy verifier before acceptance.", 409);
-      }
-      const revalidationInput = gridOfferSchema.parse({
+      if (offer.resourceReference) throw new NetworkAccessError("This resource class still requires a connected policy verifier before acceptance.", 409);
+      const revalidation = gridOfferSchema.parse({
         demandId: offer.demandId,
         providerId: offer.providerId,
         serviceListingId: offer.serviceListingId,
         recipientOrganizationId: offer.recipientOrganizationId,
         locationId: offer.locationId,
-        resourceKind: offer.resourceKind,
-        resourceReference: offer.resourceReference,
         offeredStartAt: offer.offeredStartAt.toISOString(),
         offeredEndAt: offer.offeredEndAt?.toISOString() ?? null,
         grossAmountCents: offer.grossAmountCents,
@@ -331,7 +313,16 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
         note: offer.note,
         expiresAt: offer.expiresAt.toISOString(),
       });
-      await validateSelectedSupply(tx, session, revalidationInput);
+      await verifySupply(tx, revalidation, allowedLocationOrganizations);
+      await tx.$queryRaw(Prisma.sql`
+        SELECT "id" FROM "GridDemandRecord" WHERE "id" = ${offer.demandId} FOR UPDATE
+      `);
+      const accepted = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+        SELECT "id" FROM "GridOfferRecord"
+        WHERE "demandId" = ${offer.demandId} AND "status" = 'accepted' AND "id" <> ${offer.id}
+        LIMIT 1
+      `);
+      if (accepted.length) throw new NetworkAccessError("This Grid demand already has an accepted offer.", 409);
     }
 
     if (decision.targetStatus === "countered" && decision.counterOffer) {
@@ -344,16 +335,13 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
         resourceReference: offer.resourceReference,
         ...decision.counterOffer,
       });
-      await validateSelectedSupply(tx, session, counterInput);
-
+      await verifySupply(tx, counterInput, allowedLocationOrganizations);
       await tx.$executeRaw(Prisma.sql`
-        UPDATE "GridOfferRecord"
-        SET "status" = 'countered', "updatedAt" = CURRENT_TIMESTAMP
-        WHERE "id" = ${offer.id}
+        UPDATE "GridOfferRecord" SET "status" = 'countered', "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = ${offer.id}
       `);
 
       const counterId = randomUUID();
-      const counterRows = await tx.$queryRaw<GridOfferRow[]>(Prisma.sql`
+      const counterRows = await tx.$queryRaw<OfferRow[]>(Prisma.sql`
         INSERT INTO "GridOfferRecord" (
           "id", "organizationId", "demandId", "createdBy", "destinationOrganizationId",
           "senderOrganizationId", "recipientOrganizationId", "parentOfferId", "version",
@@ -372,8 +360,7 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
       `);
       const counter = counterRows[0];
       if (!counter) throw new NetworkAccessError("Counteroffer could not be created.", 500);
-
-      await appendOfferEvent(tx, {
+      await appendEvent(tx, {
         organizationId: offer.organizationId,
         offerId: offer.id,
         actorId: session.userId,
@@ -383,12 +370,11 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
         note: decision.note,
         metadata: { counterOfferId: counterId },
       });
-      await appendOfferEvent(tx, {
+      await appendEvent(tx, {
         organizationId: offer.organizationId,
         offerId: counterId,
         actorId: session.userId,
         action: "grid.offer.sent",
-        fromStatus: null,
         toStatus: "sent",
         note: decision.counterOffer.note,
         metadata: { parentOfferId: offer.id, version: offer.version + 1 },
@@ -404,42 +390,37 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
           metadata: { counterOfferId: counterId, fromStatus: offer.status, toStatus: "countered", version: offer.version + 1 },
         },
       });
-      return serializeOffer(counter);
+      return serialize(counter);
     }
 
-    const updatedRows = await tx.$queryRaw<GridOfferRow[]>(Prisma.sql`
-      UPDATE "GridOfferRecord"
-      SET "status" = ${decision.targetStatus}, "updatedAt" = CURRENT_TIMESTAMP
-      WHERE "id" = ${offer.id}
-      RETURNING *
+    const updatedRows = await tx.$queryRaw<OfferRow[]>(Prisma.sql`
+      UPDATE "GridOfferRecord" SET "status" = ${decision.targetStatus}, "updatedAt" = CURRENT_TIMESTAMP
+      WHERE "id" = ${offer.id} RETURNING *
     `);
     const updated = updatedRows[0];
     if (!updated) throw new NetworkAccessError("Grid offer decision could not be recorded.", 500);
 
     if (decision.targetStatus === "accepted") {
       await tx.$executeRaw(Prisma.sql`
-        UPDATE "GridDemandRecord"
-        SET "acceptedOfferId" = ${offer.id}, "updatedAt" = CURRENT_TIMESTAMP
+        UPDATE "GridDemandRecord" SET "acceptedOfferId" = ${offer.id}, "updatedAt" = CURRENT_TIMESTAMP
         WHERE "id" = ${offer.demandId} AND "organizationId" = ${offer.organizationId}
       `);
     }
 
     if (["declined", "withdrawn"].includes(decision.targetStatus)) {
-      const activeRows = await tx.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
-        SELECT COUNT(*)::bigint AS "count"
-        FROM "GridOfferRecord"
+      const activeRows = await tx.$queryRaw<Array<{ count: number }>>(Prisma.sql`
+        SELECT COUNT(*)::int AS "count" FROM "GridOfferRecord"
         WHERE "demandId" = ${offer.demandId} AND "id" <> ${offer.id} AND "status" = 'sent'
       `);
-      if ((activeRows[0]?.count ?? 0n) === 0n && canTransitionGridDemand("offered", "matched")) {
+      if ((activeRows[0]?.count ?? 0) === 0 && canTransitionGridDemand("offered", "matched")) {
         await tx.$executeRaw(Prisma.sql`
-          UPDATE "GridDemandRecord"
-          SET "status" = 'matched', "acceptedOfferId" = null, "updatedAt" = CURRENT_TIMESTAMP
+          UPDATE "GridDemandRecord" SET "status" = 'matched', "acceptedOfferId" = null, "updatedAt" = CURRENT_TIMESTAMP
           WHERE "id" = ${offer.demandId} AND "organizationId" = ${offer.organizationId} AND "status" = 'offered'
         `);
       }
     }
 
-    await appendOfferEvent(tx, {
+    await appendEvent(tx, {
       organizationId: offer.organizationId,
       offerId: offer.id,
       actorId: session.userId,
@@ -459,7 +440,6 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
         metadata: { fromStatus: offer.status, toStatus: decision.targetStatus, demandId: offer.demandId, version: offer.version },
       },
     });
-
-    return serializeOffer(updated);
+    return serialize(updated);
   });
 }
