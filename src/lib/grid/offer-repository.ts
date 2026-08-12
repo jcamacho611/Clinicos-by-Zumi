@@ -35,6 +35,7 @@ type OfferRow = {
   offeredEndAt: Date | null;
   grossAmountCents: number;
   depositAmountCents: number;
+  locationPayableCents: number;
   note: string;
   status: string;
   expiresAt: Date;
@@ -204,7 +205,7 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
         "id", "organizationId", "demandId", "createdBy", "destinationOrganizationId",
         "senderOrganizationId", "recipientOrganizationId", "parentOfferId", "version",
         "providerId", "serviceListingId", "locationId", "resourceKind", "resourceReference",
-        "offeredStartAt", "offeredEndAt", "grossAmountCents", "depositAmountCents", "note",
+        "offeredStartAt", "offeredEndAt", "grossAmountCents", "depositAmountCents", "locationPayableCents", "note",
         "status", "expiresAt", "createdAt", "updatedAt"
       ) VALUES (
         ${id}, ${session.organizationId}, ${demand.id}, ${session.userId}, ${recipientOrganizationId},
@@ -212,7 +213,7 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
         ${input.providerId ?? null}, ${input.serviceListingId ?? null}, ${input.locationId ?? null},
         ${input.resourceKind ?? null}, ${input.resourceReference ?? null}, ${new Date(input.offeredStartAt)},
         ${input.offeredEndAt ? new Date(input.offeredEndAt) : null}, ${input.grossAmountCents},
-        ${input.depositAmountCents}, ${input.note}, 'sent', ${new Date(input.expiresAt)}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        ${input.depositAmountCents}, ${input.locationPayableCents}, ${input.note}, 'sent', ${new Date(input.expiresAt)}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
       ) RETURNING *
     `);
     const created = rows[0];
@@ -255,6 +256,9 @@ export async function createGridOffer(session: ClinicSession, rawInput: unknown)
           locationId: input.locationId ?? null,
           resourceKind: input.resourceKind ?? null,
           resourceReference: input.resourceReference ?? null,
+          grossAmountCents: input.grossAmountCents,
+          depositAmountCents: input.depositAmountCents,
+          locationPayableCents: input.locationPayableCents,
           status: "sent",
           syntheticDemo: true,
           manualPolicyReviewRequired: Boolean(input.resourceReference),
@@ -310,6 +314,7 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
         offeredEndAt: offer.offeredEndAt?.toISOString() ?? null,
         grossAmountCents: offer.grossAmountCents,
         depositAmountCents: offer.depositAmountCents,
+        locationPayableCents: offer.locationPayableCents,
         note: offer.note,
         expiresAt: offer.expiresAt.toISOString(),
       });
@@ -346,7 +351,7 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
           "id", "organizationId", "demandId", "createdBy", "destinationOrganizationId",
           "senderOrganizationId", "recipientOrganizationId", "parentOfferId", "version",
           "providerId", "serviceListingId", "locationId", "resourceKind", "resourceReference",
-          "offeredStartAt", "offeredEndAt", "grossAmountCents", "depositAmountCents", "note",
+          "offeredStartAt", "offeredEndAt", "grossAmountCents", "depositAmountCents", "locationPayableCents", "note",
           "status", "expiresAt", "createdAt", "updatedAt"
         ) VALUES (
           ${counterId}, ${offer.organizationId}, ${offer.demandId}, ${session.userId}, ${offer.senderOrganizationId},
@@ -354,8 +359,8 @@ export async function transitionGridOffer(session: ClinicSession, offerId: strin
           ${offer.providerId}, ${offer.serviceListingId}, ${decision.counterOffer.locationId ?? offer.locationId},
           ${offer.resourceKind}, ${offer.resourceReference}, ${new Date(decision.counterOffer.offeredStartAt)},
           ${decision.counterOffer.offeredEndAt ? new Date(decision.counterOffer.offeredEndAt) : null},
-          ${decision.counterOffer.grossAmountCents}, ${decision.counterOffer.depositAmountCents}, ${decision.counterOffer.note},
-          'sent', ${new Date(decision.counterOffer.expiresAt)}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+          ${decision.counterOffer.grossAmountCents}, ${decision.counterOffer.depositAmountCents}, ${decision.counterOffer.locationPayableCents},
+          ${decision.counterOffer.note}, 'sent', ${new Date(decision.counterOffer.expiresAt)}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         ) RETURNING *
       `);
       const counter = counterRows[0];

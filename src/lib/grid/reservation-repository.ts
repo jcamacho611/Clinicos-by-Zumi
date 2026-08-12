@@ -22,6 +22,7 @@ type AcceptedOfferRow = {
   offeredEndAt: Date | null;
   grossAmountCents: number;
   depositAmountCents: number;
+  locationPayableCents: number;
   status: string;
 };
 
@@ -40,6 +41,7 @@ type ReservationRow = {
   reservedEndAt: Date | null;
   grossAmountCents: number;
   depositAmountCents: number;
+  locationPayableCents: number;
   paymentStatus: string;
   status: string;
   fulfillmentStatus: string;
@@ -91,9 +93,7 @@ async function takeResourceLocks(client: Prisma.TransactionClient, offer: Accept
     offer.resourceReference ? `grid:resource:${offer.resourceKind ?? "generic"}:${offer.resourceReference}` : null,
   ].filter((value): value is string => Boolean(value));
 
-  for (const key of keys.sort()) {
-    await client.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`);
-  }
+  for (const key of keys.sort()) await client.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`);
 }
 
 async function assertUniversalReservationAvailable(client: Prisma.TransactionClient, offer: AcceptedOfferRow) {
@@ -124,14 +124,7 @@ async function assertUniversalReservationAvailable(client: Prisma.TransactionCli
         status: { in: ["accepted", "provider_review", "location_review", "credential_check", "pending_deposit", "confirmed"] },
         OR: overlapTargets,
         requestedStartAt: { lt: end },
-        AND: [
-          {
-            OR: [
-              { requestedEndAt: { gt: start } },
-              { requestedEndAt: null, requestedStartAt: { gt: new Date(start.getTime() - 60 * 60 * 1000) } },
-            ],
-          },
-        ],
+        AND: [{ OR: [{ requestedEndAt: { gt: start } }, { requestedEndAt: null, requestedStartAt: { gt: new Date(start.getTime() - 60 * 60 * 1000) } }] }],
       },
       select: { id: true },
     });
@@ -147,7 +140,7 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
     const offers = await tx.$queryRaw<AcceptedOfferRow[]>(Prisma.sql`
       SELECT "id", "organizationId", "demandId", "providerId", "serviceListingId", "locationId",
              "resourceKind", "resourceReference", "offeredStartAt", "offeredEndAt",
-             "grossAmountCents", "depositAmountCents", "status"
+             "grossAmountCents", "depositAmountCents", "locationPayableCents", "status"
       FROM "GridOfferRecord"
       WHERE "id" = ${offerId} AND "organizationId" = ${session.organizationId}
       FOR UPDATE
@@ -184,21 +177,20 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
       INSERT INTO "GridReservationRecord" (
         "id", "organizationId", "demandId", "offerId", "createdBy", "providerId", "serviceListingId",
         "locationId", "resourceKind", "resourceReference", "reservedStartAt", "reservedEndAt",
-        "grossAmountCents", "depositAmountCents", "paymentStatus", "status", "fulfillmentStatus",
+        "grossAmountCents", "depositAmountCents", "locationPayableCents", "paymentStatus", "status", "fulfillmentStatus",
         "createdAt", "updatedAt"
       ) VALUES (
         ${reservationId}, ${session.organizationId}, ${offer.demandId}, ${offer.id}, ${session.userId},
         ${offer.providerId}, ${offer.serviceListingId}, ${offer.locationId}, ${offer.resourceKind}, ${offer.resourceReference},
         ${offer.offeredStartAt}, ${offer.offeredEndAt}, ${offer.grossAmountCents}, ${offer.depositAmountCents},
-        ${paymentStatus}, ${reservationStatus}, 'not_started', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        ${offer.locationPayableCents}, ${paymentStatus}, ${reservationStatus}, 'not_started', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
       ) RETURNING *
     `);
     const reservation = rows[0];
     if (!reservation) throw new NetworkAccessError("Grid reservation could not be created.", 500);
 
     await tx.$executeRaw(Prisma.sql`
-      UPDATE "GridDemandRecord"
-      SET "status" = 'reserved', "updatedAt" = CURRENT_TIMESTAMP
+      UPDATE "GridDemandRecord" SET "status" = 'reserved', "updatedAt" = CURRENT_TIMESTAMP
       WHERE "id" = ${offer.demandId} AND "organizationId" = ${session.organizationId}
     `);
 
@@ -217,6 +209,7 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
             status: reservationStatus,
             paymentStatus,
             depositAmountCents: offer.depositAmountCents,
+            locationPayableCents: offer.locationPayableCents,
             syntheticDemo: true,
           },
         },
@@ -227,7 +220,7 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
         ) VALUES (
           ${randomUUID()}, ${session.organizationId}, ${offer.id}, ${session.userId}, 'grid.offer.reservation_created',
           'accepted', 'accepted', 'Accepted offer converted into a Grid reservation hold.',
-          CAST(${JSON.stringify({ reservationId, reservationStatus, paymentStatus })} AS JSONB), CURRENT_TIMESTAMP
+          CAST(${JSON.stringify({ reservationId, reservationStatus, paymentStatus, locationPayableCents: offer.locationPayableCents })} AS JSONB), CURRENT_TIMESTAMP
         )
       `),
     ]);
