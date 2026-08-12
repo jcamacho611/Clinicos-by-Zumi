@@ -10,6 +10,8 @@
  * authority, credential verification, placement, or a booking.
  */
 
+import type { PlanKey } from "@/lib/growth/pricing";
+
 export const marketplaceRoleTargets = ["clinic", "contractor", "location_owner", "seller", "advisory"] as const;
 
 export type MarketplaceRoleTarget = (typeof marketplaceRoleTargets)[number];
@@ -43,6 +45,13 @@ export type AccessProduct = {
    * stands between payment and access.
    */
   requiresHumanReview: boolean;
+  /**
+   * Optional software plan that must actually be provisioned before this product may
+   * report portal access as granted. Review/application products intentionally leave
+   * this null: approving a credential/application review does not create a clinic
+   * software subscription.
+   */
+  provisionPlanKey: PlanKey | null;
 };
 
 export const accessProductCatalog: readonly AccessProduct[] = [
@@ -57,6 +66,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["Scheduled workflow review session", "Written cost and workflow findings", "Founding Clinic program consideration"],
     doesNotInclude: ["Ongoing software subscription", "A guaranteed Founding Clinic seat", "Any production or clinical deployment"],
     requiresHumanReview: true,
+    provisionPlanKey: null,
   },
   {
     key: "founding_clinic_seat",
@@ -69,6 +79,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["Priority implementation scheduling", "Onboarding and staff training", "Direct implementation contact"],
     doesNotInclude: ["Automatic qualification", "A certified or HIPAA-compliant production system", "Any clinical or billing guarantee"],
     requiresHumanReview: true,
+    provisionPlanKey: "klinikos",
   },
   {
     key: "contractor_application_review",
@@ -81,6 +92,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["Human review of your submitted profile", "Credential and malpractice evidence intake", "A recorded review decision"],
     doesNotInclude: ["Approval of your credentials", "Placement, bookings, or guaranteed work", "Any earnings guarantee"],
     requiresHumanReview: true,
+    provisionPlanKey: null,
   },
   {
     key: "room_listing_review",
@@ -93,6 +105,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["Human review of your listing", "Facility and allowed-service intake", "A recorded review decision"],
     doesNotInclude: ["Automatic listing publication", "Bookings or occupancy guarantees", "Verification of your facility authority or insurance"],
     requiresHumanReview: true,
+    provisionPlanKey: null,
   },
   {
     key: "seller_listing_review",
@@ -105,6 +118,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["Human review of your listing", "Product and service intake", "A recorded review decision"],
     doesNotInclude: ["Automatic listing publication", "Distribution, fulfilment, or sales guarantees", "Any regulatory clearance for the listed item"],
     requiresHumanReview: true,
+    provisionPlanKey: null,
   },
   {
     key: "ai_consulting_call",
@@ -117,6 +131,7 @@ export const accessProductCatalog: readonly AccessProduct[] = [
     includes: ["60-minute scheduled session", "Written follow-up summary"],
     doesNotInclude: ["Software access or a portal seat", "Implementation work", "Any clinical or compliance advice"],
     requiresHumanReview: false,
+    provisionPlanKey: null,
   },
 ];
 

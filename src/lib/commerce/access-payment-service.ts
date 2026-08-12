@@ -25,8 +25,10 @@ import {
  * modules, so no workspace is owed.
  */
 export type ProvisionedAccessOutcome =
-  | { attempted: boolean; ok: true; organizationId?: string | null; modules?: string[] }
-  | { attempted: true; ok: false; reason: string };
+  | { attempted: boolean; ok: true; organizationId?: string | null; provisioning?: ProvisionRun }
+  | { attempted: true; ok: false; reason: string; provisioning?: ProvisionRun };
+
+type ProvisionRun = Awaited<ReturnType<typeof provisionFromPayment>>;
 
 export type AccessPaymentRecord = {
   id: string;
@@ -124,7 +126,7 @@ export function referenceClaimsFrom(metadata: unknown): ReferenceClaim[] {
  * purchase's genuine webhook settle the expensive row. Moving the status to
  * `pending_verification` meant anyone who knew an email could strand a purchase: the
  * real buyer could no longer correct it here, and the genuine webhook arrived to a
- * reference conflict.
+ * `reference_conflict`.
  *
  * A buyer-submitted reference is now only ever a suggestion a person evaluates, which
  * is what it always was in fact.
@@ -160,7 +162,7 @@ export async function recordReferenceClaim(input: { buyerEmail: string; external
 }
 
 /**
- * Make the access a settled payment claims to grant actually exist.
+ * Provision what a payment is about to grant, before it is recorded as granted.
  *
  * `portalAccessStatus` is a column. Until this ran, nothing turned it into an
  * organization, an account, a subscription, or a credential the buyer could sign in
@@ -168,76 +170,58 @@ export async function recordReferenceClaim(input: { buyerEmail: string; external
  * `source: "access_payment"`. A public buyer of a Founding Clinic Seat was therefore
  * approved by a reviewer, marked `granted`, and had nowhere to go.
  *
- * Driven off the derived access status rather than off any one caller, because three
- * separate paths reach `granted` — a webhook settlement of a product needing no review,
- * an operator marking a payment paid, and a reviewer approving onboarding — and a
- * bridge wired into one of them is a bridge missing from the other two.
+ * The order is the control. Provision first and grant second, so the status is a
+ * statement about something that exists rather than a promise some other service might
+ * fulfil later. A caller that gets `ok: false` writes the settlement but not the grant.
  *
- * What each product provisions comes from the catalog, so a service fee provisions
- * nothing: `provisionFromPayment` skips a purchase whose modules are empty rather than
- * inventing a workspace for a consulting call.
+ * What a product provisions is declared on the product, in `provisionPlanKey`. A review
+ * or application fee leaves it null and provisions nothing — approving a credential
+ * review does not create a clinic software subscription, and the portals those products
+ * name do not exist yet, so inventing an account for one would be inventing capability.
  *
- * Never throws. The human decision that produced this status has already been recorded
- * and audited, and it must not be undone because a downstream write failed — but the
- * failure is returned rather than swallowed, so the operator sees that the buyer is not
- * yet able to sign in.
+ * Never throws. A provider outage is reported, not raised into a caller that has a
+ * human decision in hand.
  */
-async function syncProvisionedAccess(payment: {
+async function provisionGrantedAccess(payment: {
   id: string;
   buyerEmail: string;
   productKey: string;
-  portalAccessStatus: string;
+  externalPaymentReference: string | null;
 }): Promise<ProvisionedAccessOutcome> {
-  if (payment.portalAccessStatus === "granted") {
-    const provisioning = await provisionFromPayment({
-      source: "access_payment",
-      reference: payment.id,
-      email: payment.buyerEmail,
-      productKey: payment.productKey,
-    }).catch(() => null);
+  const product = getAccessProduct(payment.productKey);
+  // Nothing was purchased that needs provisioning. Reporting an attempt here would put
+  // a provisioning outcome on a consulting call that never had one.
+  if (!product?.provisionPlanKey) return { attempted: false, ok: true };
 
-    if (!provisioning) return { attempted: true, ok: false, reason: "provisioning_threw" };
-    if (provisioning.status === "failed" || provisioning.status === "contended") {
-      return { attempted: true, ok: false, reason: `provisioning_${provisioning.status}` };
-    }
-    // Nothing was provisioned because nothing was purchased that needs provisioning: a
-    // consulting call and a workflow review both grant no modules, and reporting those
-    // as an attempt would put a provisioning outcome on a purchase that never had one.
-    if (provisioning.status === "skipped" || provisioning.modules.length === 0) {
-      return { attempted: false, ok: true };
-    }
+  const provisioning = await provisionFromPayment({
+    source: "access_payment",
+    reference: payment.externalPaymentReference ?? payment.id,
+    email: payment.buyerEmail,
+    planKey: product.provisionPlanKey,
+  }).catch(() => null);
 
-    if (provisioning.activation && provisioning.organizationId) {
-      const delivered = await deliverActivation({
-        email: payment.buyerEmail,
-        token: provisioning.activation.token,
-        provisioningKey: provisioning.provisioningKey,
-      }).catch(() => null);
-      // Provisioned but unreachable. The buyer has an account they cannot get into, and
-      // saying so is the difference between an operator reissuing the link and a buyer
-      // waiting on an email that never came.
-      if (!delivered?.ok) return { attempted: true, ok: false, reason: "activation_undelivered" };
-    }
-
-    return { attempted: true, ok: true, organizationId: provisioning.organizationId, modules: provisioning.modules };
+  if (!provisioning) return { attempted: true, ok: false, reason: "provisioning_threw" };
+  if (provisioning.status !== "complete") {
+    return { attempted: true, ok: false, reason: `provisioning_${provisioning.status}`, provisioning };
   }
+  return { attempted: true, ok: true, organizationId: provisioning.organizationId, provisioning };
+}
 
-  if (payment.portalAccessStatus === "revoked" || payment.portalAccessStatus === "suspended") {
-    // A refunded or held purchase must lose what it was given, or the buyer keeps every
-    // capability while the payment row says otherwise.
-    const revoked = await revokeProvisionedAccess({
-      source: "access_payment",
-      reference: payment.id,
-      state: "revoked",
-    }).catch(() => null);
-    // `not_provisioned` is the ordinary case: nothing was ever created for this payment.
-    if (revoked && !revoked.ok && revoked.reason !== "not_provisioned") {
-      return { attempted: true, ok: false, reason: "revocation_failed" };
-    }
-    return { attempted: Boolean(revoked?.ok), ok: true };
-  }
-
-  return { attempted: false, ok: true };
+/**
+ * Withdraw what a payment previously granted.
+ *
+ * The mirror of the above, and just as necessary: a refunded Founding Clinic Seat whose
+ * workspace survives leaves the buyer holding every paid capability while the payment
+ * row says revoked. `not_provisioned` is the ordinary answer — most payments never
+ * built anything — so it is not a failure.
+ */
+async function syncRevokedAccess(payment: { id: string; externalPaymentReference: string | null; portalAccessStatus: string }) {
+  if (payment.portalAccessStatus !== "revoked" && payment.portalAccessStatus !== "suspended") return;
+  await revokeProvisionedAccess({
+    source: "access_payment",
+    reference: payment.externalPaymentReference ?? payment.id,
+    state: "revoked",
+  }).catch(() => null);
 }
 
 type VerifyResult =
@@ -265,11 +249,19 @@ export async function verifyAccessPayment(session: ClinicSession, input: AccessP
   }
 
   const now = new Date();
-  const portalAccessStatus = derivePortalAccess({
+  const derivedAccess = derivePortalAccess({
     status: targetStatus,
     productKey: payment.productKey,
     reviewApproved: payment.onboarding?.reviewApproved ?? false,
   });
+
+  // Provision before granting, as the review path does. The asymmetry with that path is
+  // deliberate: a failure there refuses the whole decision, because an approval can
+  // simply be made again. Here, money has arrived — refusing to record the settlement
+  // because a workspace could not be built would lose the more important fact. So the
+  // settlement is written and the grant is withheld, and the operator is told which.
+  const provisioning = derivedAccess === "granted" ? await provisionGrantedAccess(payment) : { attempted: false, ok: true as const };
+  const portalAccessStatus = derivedAccess === "granted" && !provisioning.ok ? "pending" : derivedAccess;
 
   const updated = await db.$transaction(async (tx) => {
     const result = await tx.accessPayment.update({
@@ -316,7 +308,8 @@ export async function verifyAccessPayment(session: ClinicSession, input: AccessP
     return result;
   });
 
-  return { ok: true, payment: updated, provisioning: await syncProvisionedAccess(updated) };
+  await syncRevokedAccess(updated);
+  return { ok: true, payment: updated, provisioning };
 }
 
 export async function reviewPaidOnboarding(session: ClinicSession, input: {
@@ -332,16 +325,60 @@ export async function reviewPaidOnboarding(session: ClinicSession, input: {
     where: { id: input.paymentId, ...(isPlatformOperator(session) ? {} : { organizationId: session.organizationId }) },
     select: {
       ...paymentSelect,
+      organizationId: true,
       onboarding: { select: { id: true, status: true, reviewApproved: true } },
     },
   });
   if (!payment?.onboarding) return { ok: false as const, reason: "not_found" as const };
-  if (!['verified_paid', 'reconciled'].includes(payment.status)) {
+  if (!["verified_paid", "reconciled"].includes(payment.status)) {
     return { ok: false as const, reason: "payment_not_settled" as const };
   }
 
+  const product = getAccessProduct(payment.productKey);
+  if (!product) return { ok: false as const, reason: "not_found" as const };
+
   const approved = input.decision === "approve";
   const now = new Date();
+
+  // A product may say "approved" before software exists only if it is actually a
+  // review/application product. Workspace-bearing products must provision first and
+  // grant second. This keeps portalAccessStatus as a statement of fact rather than a
+  // promise that another service might fulfil later.
+  let provisioning:
+    | Awaited<ReturnType<typeof provisionFromPayment>>
+    | null = null;
+
+  if (approved && product.provisionPlanKey) {
+    const reference = payment.externalPaymentReference ?? payment.id;
+    provisioning = await provisionFromPayment({
+      source: "access_payment",
+      reference,
+      email: payment.buyerEmail,
+      planKey: product.provisionPlanKey,
+    });
+
+    if (provisioning.status !== "complete") {
+      await db.auditLog.create({
+        data: {
+          organizationId: session.organizationId,
+          actorId: session.userId,
+          actorType: "user",
+          action: "paid_onboarding.provisioning_blocked",
+          resourceType: "paid_onboarding",
+          resourceId: payment.onboarding.id,
+          metadata: {
+            paymentId: payment.id,
+            productKey: payment.productKey,
+            provisioningKey: provisioning.provisioningKey,
+            provisioningStatus: provisioning.status,
+            outstanding: provisioning.outstanding,
+          },
+        },
+      });
+      return { ok: false as const, reason: "provisioning_failed" as const, provisioning };
+    }
+  }
+
   const portalAccessStatus = derivePortalAccess({
     status: payment.status,
     productKey: payment.productKey,
@@ -362,7 +399,10 @@ export async function reviewPaidOnboarding(session: ClinicSession, input: {
 
     const result = await tx.accessPayment.update({
       where: { id: payment.id },
-      data: { portalAccessStatus },
+      data: {
+        portalAccessStatus,
+        ...(provisioning?.organizationId ? { organizationId: provisioning.organizationId } : {}),
+      },
       select: paymentSelect,
     });
 
@@ -375,22 +415,45 @@ export async function reviewPaidOnboarding(session: ClinicSession, input: {
         resourceType: "paid_onboarding",
         resourceId: payment.onboarding!.id,
         changes: { reviewApproved: { from: payment.onboarding!.reviewApproved, to: approved } },
-        metadata: { paymentId: payment.id, note: input.note, portalAccessStatus },
+        metadata: {
+          paymentId: payment.id,
+          note: input.note,
+          portalAccessStatus,
+          provisioningKey: provisioning?.provisioningKey ?? null,
+          organizationId: provisioning?.organizationId ?? payment.organizationId ?? null,
+        },
       },
     });
     return result;
   });
 
-  return { ok: true as const, payment: updated, approved, provisioning: await syncProvisionedAccess(updated) };
+  // Account activation is an operational side effect, so it happens only after access
+  // state has been committed. Delivery truth still comes from the outbound adapter: if
+  // email is unavailable the activation remains visible as undelivered rather than
+  // pretending the buyer can sign in — and the outcome is returned so the operator who
+  // just approved this buyer is told, rather than only the provisioning run knowing.
+  let activationDelivered: boolean | null = null;
+  if (approved && provisioning?.activation) {
+    const delivered = await deliverActivation({
+      email: payment.buyerEmail,
+      token: provisioning.activation.token,
+      provisioningKey: provisioning.provisioningKey,
+    }).catch(() => null);
+    activationDelivered = Boolean(delivered?.ok);
+  }
+
+  // A refunded or held purchase must lose what it was given, or the buyer keeps every
+  // capability while the payment row says otherwise.
+  await syncRevokedAccess(updated);
+
+  return { ok: true as const, payment: updated, approved, provisioning, activationDelivered };
 }
 
 export async function applyWebhookToAccessPayment(input: {
   externalPaymentReference: string | null;
   buyerEmail: string | null;
   outcome: "paid" | "refunded" | "failed";
-  /** Minor units the provider says were settled, when the event reports one. */
   amountMinorUnits?: number | null;
-  /** The provider's product identifier, when the event reports one. */
   providerProductId?: string | null;
 }) {
   const reference = input.externalPaymentReference?.trim() || null;
@@ -405,20 +468,11 @@ export async function applyWebhookToAccessPayment(input: {
       })
     : null;
 
-  // Matching on email alone is the weak path, and it is only reachable because a newly
-  // created payment has no provider reference yet. It must therefore corroborate *what*
-  // was bought before settling anything: an address is not a purchase. Without this, a
-  // buyer holding one open $8,000 invoice who bought something cheap on the same account
-  // had the expensive record marked paid.
   let matchedByEmail = false;
   if (!payment && email) {
     const candidates = await db.accessPayment.findMany({
       where: {
         buyerEmail: email,
-        // Derived from the transition table rather than listed, because the two
-        // directions need opposite sets and a hardcoded list gets one of them wrong.
-        // A settlement looks for an open payment; a refund looks for a settled one, and
-        // searching only open rows is why a refunded buyer kept portal access.
         status: { in: candidateStatusesFor(targetStatus) },
       },
       orderBy: { createdAt: "desc" },
@@ -453,11 +507,13 @@ export async function applyWebhookToAccessPayment(input: {
     return { applied: false as const, reason: "reference_required" as const };
   }
 
-  const portalAccessStatus = derivePortalAccess({
+  const derivedAccess = derivePortalAccess({
     status: targetStatus,
     productKey: payment.productKey,
     reviewApproved: payment.onboarding?.reviewApproved ?? false,
   });
+  const provisioning = derivedAccess === "granted" ? await provisionGrantedAccess(payment) : { attempted: false, ok: true as const };
+  const portalAccessStatus = derivedAccess === "granted" && !provisioning.ok ? "pending" : derivedAccess;
 
   await db.$transaction(async (tx) => {
     await tx.accessPayment.update({
@@ -477,12 +533,7 @@ export async function applyWebhookToAccessPayment(input: {
     }
   });
 
-  const provisioning = await syncProvisionedAccess({
-    id: payment.id,
-    buyerEmail: payment.buyerEmail,
-    productKey: payment.productKey,
-    portalAccessStatus,
-  });
+  await syncRevokedAccess({ ...payment, portalAccessStatus });
 
   return { applied: true as const, paymentId: payment.id, status: targetStatus, portalAccessStatus, provisioning };
 }

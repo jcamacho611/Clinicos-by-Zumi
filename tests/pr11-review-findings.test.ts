@@ -15,8 +15,8 @@ import {
   actionStreams,
   streamForState,
 } from "@/lib/operations/followup-rules";
-import { buyerRoleForModules, modulesForAccessProduct, planProvisioning } from "@/lib/provisioning/provisioning-rules";
-import { accessProductCatalog } from "@/lib/commerce/access-product-catalog";
+import { buyerRoleForModules, modulesForPlan, planProvisioning } from "@/lib/provisioning/provisioning-rules";
+import { accessProductCatalog, getAccessProduct } from "@/lib/commerce/access-product-catalog";
 import { candidateStatusesFor, corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
 import {
   whopEventAmountMinorUnits,
@@ -1345,74 +1345,94 @@ describe("an approved purchase produces something the buyer can sign in to", () 
   // The reviewed defect: provisionFromPayment was called only for membership webhooks,
   // never with source "access_payment". A public Founding Clinic buyer was approved by a
   // reviewer, marked granted, and received no organization, no account, and no
-  // credential — portalAccessStatus was a column and nothing behind it.
+  // credential — portalAccessStatus was a column with nothing behind it.
   const service = () => source("src/lib/commerce/access-payment-service.ts");
 
   it("provisions the purchase that named the defect", () => {
-    const modules = modulesForAccessProduct("founding_clinic_seat");
-    expect(modules).toContain("clinic_workspace");
-    expect(planProvisioning({ productKey: "founding_clinic_seat", hasOrganization: false }).modules).toContain("clinic_workspace");
+    const seat = getAccessProduct("founding_clinic_seat")!;
+    expect(seat.provisionPlanKey).toBe("klinikos");
+    expect(modulesForPlan(seat.provisionPlanKey!)).toContain("clinic_workspace");
   });
 
-  it("derives what to provision from the product, not the role", () => {
+  it("declares provisioning on the product, not on its role", () => {
     // Both are roleTarget "clinic" and they grant opposite things. Deriving from the
-    // role made a $750 review grant the $8,000 seat's capabilities.
-    const review = accessProductCatalog.find((product) => product.key === "clinic_workflow_review")!;
-    const seat = accessProductCatalog.find((product) => product.key === "founding_clinic_seat")!;
+    // role would make a $750 review grant the $8,000 seat's capabilities.
+    const review = getAccessProduct("clinic_workflow_review")!;
+    const seat = getAccessProduct("founding_clinic_seat")!;
     expect(review.roleTarget).toBe(seat.roleTarget);
-    expect(modulesForAccessProduct("clinic_workflow_review")).toEqual([]);
-    expect(modulesForAccessProduct("founding_clinic_seat").length).toBeGreaterThan(0);
+    expect(review.provisionPlanKey).toBeNull();
+    expect(seat.provisionPlanKey).not.toBeNull();
   });
 
-  it("grants nothing for a product whose catalog entry excludes a portal seat", () => {
-    const call = accessProductCatalog.find((product) => product.key === "ai_consulting_call")!;
-    expect(call.doesNotInclude.join(" ")).toContain("portal seat");
-    expect(modulesForAccessProduct("ai_consulting_call")).toEqual([]);
-  });
-
-  it("gives the review products an account but no clinic workspace", () => {
-    // Their buyer has to sign in to submit the profile or listing the review is of.
-    // Credential and listing gates still stand between that and any published work.
-    for (const key of ["contractor_application_review", "room_listing_review", "seller_listing_review"]) {
-      expect(modulesForAccessProduct(key)).toEqual(["grid"]);
-      expect(modulesForAccessProduct(key)).not.toContain("clinic_workspace");
+  it("provisions nothing for the fee-for-service products", () => {
+    // The consulting call says so in as many words, and the portals the review products
+    // name do not exist yet — inventing an account for one would invent capability.
+    expect(getAccessProduct("ai_consulting_call")!.doesNotInclude.join(" ")).toContain("portal seat");
+    for (const key of ["clinic_workflow_review", "contractor_application_review", "room_listing_review", "seller_listing_review", "ai_consulting_call"]) {
+      expect(getAccessProduct(key)!.provisionPlanKey).toBeNull();
     }
   });
 
-  it("maps every catalog product, so a new one cannot silently grant nothing by accident", () => {
+  it("makes every catalog product state its answer", () => {
+    // Declared on the type, so a product added later cannot omit it and provision
+    // nothing by accident.
     for (const product of accessProductCatalog) {
-      expect(() => modulesForAccessProduct(product.key)).not.toThrow();
+      expect(product).toHaveProperty("provisionPlanKey");
     }
-    const rules = source("src/lib/provisioning/provisioning-rules.ts");
-    // Record<AccessProductKey, …> makes an unmapped product a type error rather than an
-    // empty grant.
-    expect(rules).toContain("const PRODUCT_MODULES: Record<AccessProductKey, readonly SubscriptionModule[]>");
+    expect(source("src/lib/commerce/access-product-catalog.ts")).toContain("provisionPlanKey: PlanKey | null;");
   });
 
-  it("runs from the derived access status, not from one caller", () => {
+  it("provisions before granting, on every path that can grant", () => {
     // Three paths reach granted: a webhook settling a product needing no review, an
     // operator marking a payment paid, and a reviewer approving onboarding.
     const body = service();
-    expect(body.match(/syncProvisionedAccess\(/g)?.length).toBe(4);
-    expect(body).toContain('if (payment.portalAccessStatus === "granted")');
+    expect(body.match(/provisionGrantedAccess\(/g)?.length).toBe(3);
+    expect(body.match(/provisionFromPayment\(/g)?.length).toBe(2);
+  });
+
+  it("never records a grant whose access could not be built", () => {
+    const body = service();
+    expect(body.match(/derivedAccess === "granted" && !provisioning\.ok \? "pending" : derivedAccess/g)?.length).toBe(2);
+  });
+
+  it("refuses the review decision rather than granting on a failed provision", () => {
+    const fn = service().slice(service().indexOf("export async function reviewPaidOnboarding"));
+    const guard = fn.indexOf('reason: "provisioning_failed"');
+    expect(guard).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(fn.indexOf("const portalAccessStatus = derivePortalAccess"));
+  });
+
+  it("still records a settlement whose provisioning failed", () => {
+    // Money arrived. Refusing to record that because a workspace could not be built
+    // would lose the more important fact, so the settlement is written and only the
+    // grant is withheld.
+    const body = service();
+    const fn = body.slice(
+      body.indexOf("export async function verifyAccessPayment"),
+      body.indexOf("export async function reviewPaidOnboarding"),
+    );
+    expect(fn).toContain('derivedAccess === "granted" && !provisioning.ok ? "pending"');
+    expect(fn).not.toContain('reason: "provisioning_failed"');
   });
 
   it("withdraws access when the payment is reversed or held", () => {
-    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
-    expect(fn).toContain('payment.portalAccessStatus === "revoked"');
-    expect(fn).toContain("revokeProvisionedAccess");
+    const body = service();
+    expect(body).toContain("async function syncRevokedAccess");
+    expect(body).toContain("revokeProvisionedAccess");
+    expect(body.match(/syncRevokedAccess\(/g)?.length).toBe(4);
   });
 
-  it("never undoes the human decision because a downstream write failed", () => {
-    // The approval is recorded and audited before this runs, and it stays recorded.
-    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
-    expect(fn).not.toContain("throw");
-    expect(fn).toContain(".catch(() => null)");
+  it("keys provisioning and revocation on the same reference", () => {
+    // A mismatch here would provision under one key and try to revoke under another,
+    // which reads as "nothing was provisioned" and leaves the workspace standing.
+    const body = service();
+    expect(body.match(/reference: payment\.externalPaymentReference \?\? payment\.id/g)?.length).toBe(2);
   });
 
-  it("reports a provisioned buyer who cannot be reached as unfinished", () => {
-    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
-    expect(fn).toContain("activation_undelivered");
+  it("reports a provisioned buyer who cannot be reached", () => {
+    const fn = service().slice(service().indexOf("export async function reviewPaidOnboarding"));
+    expect(fn).toContain("activationDelivered");
+    expect(fn).toContain("deliverActivation");
   });
 
   it("tells the operator when the access they granted was not built", () => {
@@ -1428,10 +1448,5 @@ describe("an approved purchase produces something the buyer can sign in to", () 
     const route = source("src/app/api/whop/webhook/route.ts");
     const branch = route.slice(route.indexOf("if (settled.applied) {"));
     expect(branch.slice(0, branch.indexOf("\n      }"))).toContain("markWebhookIncomplete");
-  });
-
-  it("reports no attempt for a purchase that owes no workspace", () => {
-    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
-    expect(fn).toContain("provisioning.modules.length === 0");
   });
 });
