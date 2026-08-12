@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Activity, Bell, Blocks, Boxes, BriefcaseMedical, Calculator, CalendarDays, ChartNoAxesCombined, ChevronDown, CircleDollarSign, Gauge,
+  Activity, Bell, Blocks, Boxes, BriefcaseMedical, Calculator, CalendarDays, ChartNoAxesCombined, CircleDollarSign, Gauge,
   AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
@@ -12,12 +12,14 @@ import {
   Waypoints,
 } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
+import { NetworkContextSelector } from "@/components/clinic/network-context-selector";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
 import { roleLabel } from "@/lib/auth/rbac";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicSession } from "@/lib/auth/types";
+import type { ResolvedNetworkContext } from "@/lib/network-context";
 import { cn } from "@/lib/utils";
 
 const icons = {
@@ -37,7 +39,15 @@ function isVisibleDestination(role: ClinicSession["role"], href: string) {
   return canAccessWorkspace(role, href.slice(1));
 }
 
-function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: ClinicSession }) {
+function Sidebar({
+  onNavigate,
+  session,
+  resolvedContext,
+}: {
+  onNavigate?: () => void;
+  session: ClinicSession;
+  resolvedContext: ResolvedNetworkContext;
+}) {
   const pathname = usePathname();
   const visibleNavigation = navigation
     .map((group) => ({ ...group, items: group.items.filter((item) => isVisibleDestination(session.role, item.href)) }))
@@ -54,14 +64,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
       </div>
 
       <div className="px-3 pt-4">
-        <button className="flex w-full items-center gap-3 border border-white/12 bg-white/[.04] px-3 py-2.5 text-left transition hover:bg-white/[.07]">
-          <span className="grid size-8 place-items-center bg-[#1677a8] text-xs font-black text-white">{initials(session.organizationName)}</span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-xs font-bold text-white">{session.organizationName}</span>
-            <span className="block text-[10px] text-white/45">Clinic workspace</span>
-          </span>
-          <ChevronDown className="size-4 text-white/35" />
-        </button>
+        <NetworkContextSelector resolved={resolvedContext} />
       </div>
 
       <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-6" aria-label="Klinikos workspace navigation">
@@ -112,7 +115,15 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
   );
 }
 
-export function AppShell({ children, session }: { children: React.ReactNode; session: ClinicSession }) {
+export function AppShell({
+  children,
+  session,
+  resolvedContext,
+}: {
+  children: React.ReactNode;
+  session: ClinicSession;
+  resolvedContext: ResolvedNetworkContext;
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
@@ -123,12 +134,12 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
 
   return (
     <div className="min-h-screen bg-[var(--mode-background)] text-[#0b1e3a]" data-clinic-mode={designMode}>
-      <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar session={session} /></div>
+      <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar session={session} resolvedContext={resolvedContext} /></div>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button className="absolute inset-0 bg-[#090d12]/70 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
-          <div className="relative h-full w-[290px] shadow-2xl"><Sidebar onNavigate={() => setMobileOpen(false)} session={session} /></div>
+          <div className="relative h-full w-[290px] shadow-2xl"><Sidebar onNavigate={() => setMobileOpen(false)} session={session} resolvedContext={resolvedContext} /></div>
           <button className="absolute left-[302px] top-4 grid size-10 place-items-center border border-white/15 bg-[#0b1e3a] text-white shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
         </div>
       )}
