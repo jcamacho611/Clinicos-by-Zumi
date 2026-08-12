@@ -1,27 +1,5 @@
-/**
- * Zumi model provider registry.
- *
- * Every model call in Klinikos goes through one adapter surface. Nothing else in the
- * codebase is permitted to hold a provider SDK, because scattered calls make the two
- * things that actually matter here — redaction before egress, and an audit record
- * after — impossible to guarantee.
- *
- * The registry reports honestly. A provider with no credentials is NOT_CONFIGURED,
- * not "ready". There is no fallback to a canned response that would let a demo look
- * live while nothing is connected.
- *
- * Pure module: reads environment, never calls the network. The adapter that would
- * make the call is supplied at registration time.
- */
-
 import { REDACTION_LIMITATION_NOTICE } from "@/features/zumi/redaction";
 
-/**
- * The slice of the environment this module reads.
- *
- * Narrower than `NodeJS.ProcessEnv` on purpose: these functions need a string map and
- * nothing more, which keeps the test seam honest instead of casting fixtures.
- */
 export type ZumiEnv = Record<string, string | undefined>;
 
 export const providerHealthStates = [
@@ -34,20 +12,31 @@ export const providerHealthStates = [
 ] as const;
 export type ProviderHealthState = (typeof providerHealthStates)[number];
 
-/** States in which a provider may be handed a request. */
 const USABLE: readonly ProviderHealthState[] = ["CONFIGURED", "HEALTHY", "DEGRADED"];
 
 export function providerIsUsable(state: ProviderHealthState) {
   return USABLE.includes(state);
 }
 
+export type ZumiExternalSource = {
+  url: string;
+  title?: string | null;
+};
+
 export type ProviderRequest = {
-  /** Already redacted. The adapter must not be the first thing to see raw text. */
   system: string;
   prompt: string;
   maxOutputTokens: number;
   timeoutMs: number;
   signal?: AbortSignal;
+  /** Provider-hosted prior turn. Must be wrapped in a Klinikos-signed conversation token before it reaches this layer. */
+  previousResponseId?: string | null;
+  /** Public-web research only. The gateway must block PHI-shaped content before setting this true. */
+  allowWebSearch?: boolean;
+  /** Search the configured long-term Zumi knowledge store when available. */
+  allowKnowledgeSearch?: boolean;
+  /** Optional domain boundary for research. Empty means provider default web coverage. */
+  allowedDomains?: readonly string[];
 };
 
 export type ProviderResult = {
@@ -57,20 +46,17 @@ export type ProviderResult = {
   /** Integer micro-USD. Money is never a float in this codebase. */
   costMicroUsd: number;
   modelId: string;
+  /** Provider response identifier used only through a signed Klinikos conversation handle. */
+  responseId?: string | null;
+  /** External public sources used during research, when the adapter can surface them. */
+  sources?: ZumiExternalSource[];
 };
 
 export type ProviderAdapter = {
   key: string;
   label: string;
-  /** Model identifier this adapter will actually call, for the audit record. */
   modelId: string;
-  /** Environment variables that must be present before the adapter may be used. */
   requiredEnv: readonly string[];
-  /**
-   * Whether a Business Associate Agreement is on file for this provider in this
-   * deployment. Declared per adapter and defaulted to false — a provider is not
-   * PHI-eligible because someone assumed it was.
-   */
   baaOnFile: boolean;
   invoke: (request: ProviderRequest) => Promise<ProviderResult>;
 };
@@ -80,7 +66,6 @@ export type ProviderStatus = {
   label: string;
   modelId: string;
   state: ProviderHealthState;
-  /** Which required variables are absent. Names only — never values. */
   missingEnv: string[];
   baaOnFile: boolean;
   detail: string;
@@ -93,7 +78,6 @@ export function registerProvider(adapter: ProviderAdapter) {
   return adapter;
 }
 
-/** Test seam. Production code registers at module load and never clears. */
 export function resetProviderRegistry() {
   registry.clear();
 }
@@ -105,12 +89,6 @@ function missingEnvFor(adapter: ProviderAdapter, env: ZumiEnv) {
   });
 }
 
-/**
- * `ZUMI_DISABLED=1` is a deployment-level kill switch.
- *
- * It exists so an operator can stop all AI egress without a redeploy, which is the
- * first thing anyone asks for after an incident.
- */
 function killSwitchEngaged(env: ZumiEnv) {
   const value = env.ZUMI_DISABLED;
   return value === "1" || value?.toLowerCase() === "true";
@@ -140,13 +118,6 @@ export function listProviderStatus(env: ZumiEnv = process.env): ProviderStatus[]
   return [...registry.values()].map((adapter) => providerStatus(adapter, env));
 }
 
-/**
- * The provider a request should use, or a stated reason there is none.
- *
- * Selection is explicit-first: `ZUMI_PROVIDER` names the adapter, and only when it is
- * unset does the registry fall back to the first usable one. An operator who names a
- * provider gets that provider or an error — never a silent substitution.
- */
 export function selectProvider(env: ZumiEnv = process.env):
   | { ok: true; adapter: ProviderAdapter; status: ProviderStatus }
   | { ok: false; reason: "no_providers" | "disabled" | "not_configured" | "unknown_provider"; detail: string; statuses: ProviderStatus[] } {
@@ -190,13 +161,6 @@ export function selectProvider(env: ZumiEnv = process.env):
   };
 }
 
-/**
- * Whether this deployment may send protected health information to its model provider.
- *
- * Two independent conditions, both required: the adapter declares a signed BAA, and
- * the deployment is explicitly flagged as approved for it. Neither alone is enough,
- * and the default answer is no.
- */
 export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = process.env) {
   const approved = env.ZUMI_PHI_EGRESS_APPROVED === "1";
   return {
@@ -205,12 +169,6 @@ export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = proc
   };
 }
 
-/**
- * Status for surfaces that need to tell a user why Zumi is quiet.
- *
- * Deliberately shaped like `eduAiGatewayStatus()` so EDU can adopt it without either
- * side inventing a second vocabulary for the same fact.
- */
 export function zumiGatewayStatus(env: ZumiEnv = process.env) {
   const selection = selectProvider(env);
   if (selection.ok) {
