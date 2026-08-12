@@ -14,7 +14,7 @@ CREATE TABLE "GridReservationRecord" (
     "grossAmountCents" INTEGER NOT NULL,
     "depositAmountCents" INTEGER NOT NULL DEFAULT 0,
     "paymentStatus" TEXT NOT NULL DEFAULT 'not_required',
-    "status" TEXT NOT NULL DEFAULT 'reserved',
+    "status" TEXT NOT NULL DEFAULT 'pending',
     "fulfillmentStatus" TEXT NOT NULL DEFAULT 'not_started',
     "legacyGridRequestId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
