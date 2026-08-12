@@ -65,3 +65,26 @@ jobs:
         run: npm run test:mvp
       - name: Production build
         run: npm run build
+      - name: Production startup smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3000 npm start > /tmp/klinikos-start.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/klinikos-health.json; then
+              curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3000/
+              cat /tmp/klinikos-health.json
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Klinikos production server failed to become healthy."
+          cat /tmp/klinikos-start.log
+          exit 1
