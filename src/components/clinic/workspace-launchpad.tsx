@@ -16,7 +16,6 @@ type LaunchGroup = {
 };
 
 function canOpen(role: ClinicRole, href: string) {
-  if (href === "/edu") return true;
   return canAccessWorkspace(role, href.slice(1));
 }
 
@@ -67,7 +66,7 @@ export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
           Find any Klinikos pathway from Home.
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[#0b1e3a]/60">
-          Your role decides what appears here. Choose the outcome you need without having to understand how Klinikos is organized behind the scenes.
+          Your role decides what appears here. EDU entry is discoverable from the clinic shell, while EDU enrollment and institution scope are still enforced inside EDU itself.
         </p>
       </div>
 
