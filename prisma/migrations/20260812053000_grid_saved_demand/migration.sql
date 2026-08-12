@@ -41,4 +41,7 @@ ON "GridDemandRecord"("requestedStartAt");
 
 ALTER TABLE "GridDemandRecord"
 ADD CONSTRAINT "GridDemandRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- The Organization model maps to "organizations"; the Prisma model name is not the table
+-- name. Referencing "Organization" here meant this migration could never apply to any
+-- database, because no migration has ever created a table by that name.
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Landmark, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { GridPlatformFinanceConsole } from "@/components/grid/grid-platform-finance-console";
 import { requireClinicSession } from "@/lib/auth/session";
 import { getGridPlatformFinanceBoard } from "@/lib/grid/platform-finance-repository";

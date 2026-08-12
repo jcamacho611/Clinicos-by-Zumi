@@ -18,7 +18,7 @@ ON "GridFulfillmentEventRecord"("reservationId", "createdAt");
 
 ALTER TABLE "GridFulfillmentEventRecord"
 ADD CONSTRAINT "GridFulfillmentEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridFulfillmentEventRecord"
 ADD CONSTRAINT "GridFulfillmentEventRecord_reservationId_fkey"

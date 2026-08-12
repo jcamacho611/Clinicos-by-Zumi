@@ -36,7 +36,7 @@ ON "GridOfferEventRecord"("offerId", "createdAt");
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_destinationOrganizationId_fkey"
-FOREIGN KEY ("destinationOrganizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("destinationOrganizationId") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_parentOfferId_fkey"
@@ -44,7 +44,7 @@ FOREIGN KEY ("parentOfferId") REFERENCES "GridOfferRecord"("id") ON DELETE SET N
 
 ALTER TABLE "GridOfferEventRecord"
 ADD CONSTRAINT "GridOfferEventRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridOfferEventRecord"
 ADD CONSTRAINT "GridOfferEventRecord_offerId_fkey"

@@ -16,19 +16,34 @@ Last verified: 2026-08-10, on branch `feature/klinikos-edu-foundation`.
 | **BLOCKED** | Cannot proceed in code. Waiting on a contract, credential, approval, or decision outside this repository. |
 | **NOT BUILT** | Does not exist. |
 
-## A note on branches
+## Branch and build state
 
-Work is currently split across three open pull requests against `main`, and `main`
-itself does not build — its Prisma schema was truncated from 155 models to 17.
+Measured on `main` at commit `6d78663` (2026-08-12), not asserted:
 
-| PR | Branch | Contains |
-| --- | --- | --- |
-| #8 | `fix/prisma-schema-restore` | The schema repair alone. **Merge first; it unblocks everything.** |
-| #7 | `feature/zumi-command-experience` | Design law, `/sales`, `/start`, `/founding-clinic`, the Whop/access payment layer |
-| #9 | `feature/klinikos-edu-foundation` | EDU, GRID marketplace discovery, the design system, the Zumi gateway |
+| Check | Result |
+| --- | --- |
+| `prisma validate` | Green |
+| `prisma generate` | Green |
+| `tsc --noEmit` | Green |
+| `eslint .` | Green — zero errors, zero warnings |
+| Full test suite | 533 tests across 68 files, all passing |
+| `next build` | Green |
 
-**This document describes PR #9's branch.** Anything living only on PR #7 is marked
-*(PR #7)* and has not been verified here.
+| Measure | Count |
+| --- | --- |
+| Prisma models | 174 |
+| Committed migrations | 50 |
+| Page routes | 69 |
+| API routes | 184 |
+| Library modules | 225 |
+| Components | 114 |
+
+This section previously said `main` did not build because its Prisma schema had been
+truncated to 17 models, and pointed at pull requests #7, #8 and #9 as the place the real
+work lived. All three have long since been resolved; the schema is intact at 174 models
+and `main` is the canonical, green mainline. The stale claim is recorded here rather than
+silently deleted, because a status document that quietly rewrites its own history is not
+a status document.
 
 ## Zumi — the AI layer
 
@@ -91,9 +106,10 @@ Spec: `docs/KLINIKOS_EDU_PRODUCT_SPEC.md`.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Access payment intent, server-controlled pricing | **BUILT** *(PR #7)* | The schema deliberately excludes `amountCents` — the original shape would have let a buyer set their own price. |
-| Whop signature verification and entitlement evaluation | **BUILT** *(PR #7)* | Fails closed on an unverified signature. |
-| GoDaddy paylink checkout wiring | **NOT BUILT** | The link exists; it is not wired as the Operational Audit checkout. |
+| Commercial checkout intent, server-owned product and price | **BUILT** | `createCommercialCheckoutIntent` records the product, organization and expected amount server-side before the buyer leaves. The browser never supplies a price. |
+| Payment evidence separated from entitlement | **BUILT** | `recordCommercialPaymentEvidence` classifies how a payment was established — `webhook_signature`, `api_verification`, `manual_reconciliation`, or `unverified` — and entitlement is granted by `activateCommercialSubscription`, never by a browser redirect. |
+| GoDaddy paylink checkout wiring | **BUILT** | `createGoDaddyCommercialCheckout` creates the Klinikos intent first, then sends the buyer to the real paylink. Settlement is reconciled server-side or by an authorized human; the return leg never marks a payment paid. |
+| Whop connector | **ADAPTER READY** | `payment-connectors/whop.ts` exists and plan ids are env-mapped. Not an MVP path. |
 | Whop production credentials | **BLOCKED** | |
 | Stripe | **ADAPTER READY** | Keys declared in `.env.example`; nothing connected. |
 

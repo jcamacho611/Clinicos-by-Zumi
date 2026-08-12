@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, BadgeDollarSign, Check, CircleDollarSign, Handshake, Loader2, Map, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, BadgeDollarSign, Check, CircleDollarSign, Handshake, Map, Sparkles, X } from "lucide-react";
 import type { GridTransactionBoard } from "@/lib/grid/transaction-board-repository";
 import { KLINIKOS_GODADDY_PAYLINK } from "@/lib/commercial/klinikos-commercial";
 

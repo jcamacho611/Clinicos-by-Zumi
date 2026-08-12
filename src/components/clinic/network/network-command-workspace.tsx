@@ -1,8 +1,6 @@
 import Link from "next/link";
 import {
-  Activity, ArrowRight, Building2, CircleAlert, FileCheck2, Handshake, MapPinned,
-  Network, RadioTower, Route, ShieldCheck, Sparkles, TriangleAlert,
-} from "lucide-react";
+  ArrowRight, Building2, CircleAlert, Handshake, Network, RadioTower, Route, ShieldCheck, Sparkles, } from "lucide-react";
 import { NetworkHandoffActions, NetworkHandoffComposer } from "@/components/clinic/network/network-command-actions";
 import type { NetworkCommandWorkspace as NetworkCommandWorkspaceData } from "@/lib/repositories/network-handoff-repository";
 import { cn } from "@/lib/utils";

@@ -34,7 +34,7 @@ ON "GridOfferRecord"("expiresAt");
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_organizationId_fkey"
-FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_demandId_fkey"
@@ -42,12 +42,12 @@ FOREIGN KEY ("demandId") REFERENCES "GridDemandRecord"("id") ON DELETE CASCADE O
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_providerId_fkey"
-FOREIGN KEY ("providerId") REFERENCES "Provider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("providerId") REFERENCES "providers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_serviceListingId_fkey"
-FOREIGN KEY ("serviceListingId") REFERENCES "GridServiceListing"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("serviceListingId") REFERENCES "grid_service_listings"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "GridOfferRecord"
 ADD CONSTRAINT "GridOfferRecord_locationId_fkey"
-FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY ("locationId") REFERENCES "locations"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck } from "lucide-react";
+import { ArrowRight, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

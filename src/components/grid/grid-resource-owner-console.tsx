@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, Box, Building2, GraduationCap, PackageSearch, Pause, Send, ShieldCheck, Sparkles, Stethoscope, Wrench } from "lucide-react";
+import { Box, Building2, GraduationCap, PackageSearch, Pause, Send, ShieldCheck, Sparkles, Stethoscope, Wrench } from "lucide-react";
 
 type OwnedResource = {
   id: string;

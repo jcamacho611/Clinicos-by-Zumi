@@ -199,7 +199,7 @@ export function OrganizationOnboardingForm() {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5 text-[10px] font-semibold text-slate-500">
-        <span className="flex items-center gap-1.5"><LockKeyhole className="size-3.5 text-cyan-700" /> No credit card required to configure</span>
+        <span className="flex items-center gap-1.5"><LockKeyhole className="size-3.5 text-cyan-700" /> Your answers save as you go</span>
         <Link className="font-extrabold text-slate-900 hover:text-cyan-700" href="/login">Already have a workspace?</Link>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">{["Smart prefill", "Tenant isolated", "Audited", "Manual fallbacks ready"].map((label) => <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-bold text-slate-600" key={label}><Check className="size-3 text-cyan-700" />{label}</span>)}</div>
