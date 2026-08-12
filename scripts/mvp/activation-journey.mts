@@ -65,11 +65,21 @@ async function main() {
 
     const reconciled = await reconcileClinicPlanCheckout(session, checkout.id);
     clinicOrganizationId = reconciled.organizationId;
-    const subscription = await db.clinicSubscription.findFirst({ where: { organizationId: clinicOrganizationId }, orderBy: { createdAt: "desc" } });
+    // Payment confirmation/provider/evidence are commercial extension columns added by
+    // the commercial migration and intentionally read through the commercial SQL path,
+    // the same path used by the production activation guard.
+    const subscriptions = await db.$queryRaw<Array<{ planKey: string; status: string; paymentConfirmedAt: Date | null; paymentProvider: string | null; paymentEvidenceId: string | null }>>`
+      SELECT "planKey", "status", "paymentConfirmedAt", "paymentProvider", "paymentEvidenceId"
+      FROM "subscriptions"
+      WHERE "organizationId" = ${clinicOrganizationId}
+      ORDER BY "createdAt" DESC
+      LIMIT 1
+    `;
+    const subscription = subscriptions[0];
     check(
       "manual reconciliation activates paid access but remains processor-unverified evidence",
-      Boolean(subscription?.paymentConfirmedAt) && subscription?.status === "active" && subscription?.planKey === "clinic_core",
-      `subscription=${subscription?.planKey} status=${subscription?.status} paymentConfirmed=${Boolean(subscription?.paymentConfirmedAt)}`,
+      Boolean(subscription?.paymentConfirmedAt) && subscription?.status === "active" && subscription?.planKey === "clinic_core" && subscription?.paymentProvider === "godaddy" && Boolean(subscription?.paymentEvidenceId),
+      `subscription=${subscription?.planKey} status=${subscription?.status} paymentConfirmed=${Boolean(subscription?.paymentConfirmedAt)} provider=${subscription?.paymentProvider} evidence=${Boolean(subscription?.paymentEvidenceId)}`,
     );
 
     const token = new URL(reconciled.activationUrl).searchParams.get("token") ?? "";
