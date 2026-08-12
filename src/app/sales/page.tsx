@@ -13,7 +13,7 @@ import { ZumiInterview } from "@/components/command/zumi-interview";
  */
 
 export const metadata = {
-  title: "Clinic Operating Analysis — Klinikos by Zumi",
+  title: "Clinic Operating Analysis — Klinikos",
   description:
     "Zumi maps where your clinic loses control — follow-ups, paperwork, referrals, results, billing readiness, staff ownership and revenue signals — then prepares a private workflow review for human approval.",
 };
@@ -33,9 +33,9 @@ export default function ClinicOperatingAnalysisPage() {
               Your clinic does not need another dashboard. It needs an operating system.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Klinikos by Zumi maps the work your clinic is losing track of — follow-ups, paperwork, referrals, results, billing
-              readiness, staff tasks, med spa leads and revenue opportunities — then prepares a private workflow review for human
-              approval.
+              Klinikos maps the work your clinic is losing track of — follow-ups, paperwork, referrals, results, billing readiness,
+              staff tasks, med spa leads and revenue opportunities — while Zumi guides the analysis and prepares a private workflow
+              review for human approval.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="primary">

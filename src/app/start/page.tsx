@@ -18,7 +18,7 @@ import {
  */
 
 export const metadata = {
-  title: "Start — Klinikos by Zumi",
+  title: "Start — Klinikos",
   description:
     "Begin the Klinikos Clinic Operating Analysis. Zumi maps where your clinic loses control and prepares a private workflow review for human approval.",
 };
@@ -68,7 +68,7 @@ export default function StartPage() {
               Tell Zumi how the clinic actually runs.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Klinikos by Zumi maps the work your clinic is losing track of, then prepares a private workflow review for human approval.
+              Klinikos maps the work your clinic is losing track of, with Zumi guiding the operating analysis and preparing a private workflow review for human approval.
               Nothing is activated, purchased, or committed from this page.
             </p>
           </div>
