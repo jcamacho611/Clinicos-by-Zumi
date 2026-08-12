@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Building2, CheckCircle2, LoaderCircle, MapPin, ShieldCheck, UserRound, WalletCards } from "lucide-react";
+import { ArrowRight, CheckCircle2, LoaderCircle, MapPin, ShieldCheck, UserRound, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,13 +27,41 @@ type SignupResult = {
   reviewStatus: string;
 };
 
-export function CapacityIntakeForm() {
+type CapacityMode = "space" | "organization";
+
+const modeCopy = {
+  space: {
+    participantKind: "space_owner",
+    resourceType: "space",
+    policyClass: "healthcare_space",
+    accountLabel: "Business / owner name",
+    accountPlaceholder: "Example: Queens Treatment Suites",
+    typeLabel: "Capacity type",
+    listingPlaceholder: "Example: Saturday treatment room",
+    successTitle: "Your space is really in Grid now.",
+    types: ["Treatment room", "Chair", "Exam room", "Procedure room", "Office", "Training room", "Lab capacity", "Imaging capacity", "Other healthcare capacity"],
+  },
+  organization: {
+    participantKind: "organization",
+    resourceType: "organization_capacity",
+    policyClass: "organization_capacity",
+    accountLabel: "Organization name",
+    accountPlaceholder: "Example: Brooklyn Diagnostic Partners",
+    typeLabel: "Organization capacity",
+    listingPlaceholder: "Example: Saturday imaging availability",
+    successTitle: "Your organization is really in Grid now.",
+    types: ["Clinic capacity", "Provider capacity", "Appointment capacity", "Lab capacity", "Imaging capacity", "Specialty capacity", "Network capacity", "Other organization capacity"],
+  },
+} as const;
+
+export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) {
+  const copy = modeCopy[mode];
   const [step, setStep] = useState(0);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organizationName, setOrganizationName] = useState("");
-  const [type, setType] = useState("Treatment room");
+  const [type, setType] = useState<string>(copy.types[0]);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("NY");
@@ -59,7 +87,7 @@ export function CapacityIntakeForm() {
     return <div className="border border-emerald-200 bg-white p-7 shadow-[0_24px_70px_rgba(5,150,105,.08)]">
       <CheckCircle2 className="size-8 text-emerald-600" />
       <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[.18em] text-emerald-700">Account created</p>
-      <h3 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-950">Your space is really in Grid now.</h3>
+      <h3 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-950">{copy.successTitle}</h3>
       <p className="mt-3 text-sm leading-7 text-slate-600">Your account is active and the first capacity record has been persisted. The listing is in human review and is not public or bookable until that review succeeds.</p>
       <div className="mt-5 border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-600">
         <strong>Resource:</strong> {result.resourceId}<br />
@@ -100,17 +128,17 @@ export function CapacityIntakeForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          participantKind: "space_owner",
+          participantKind: copy.participantKind,
           fullName,
           email,
           password,
           organizationName,
           resource: {
-            resourceType: "space",
-            policyClass: "healthcare_space",
+            resourceType: copy.resourceType,
+            policyClass: copy.policyClass,
             subtype: type.toLowerCase().replaceAll(" ", "_"),
             title: name,
-            description: `${type} capacity in ${city}, ${state}. ${uses}`,
+            description: `${type} in ${city}, ${state}. ${uses}`,
             visibility: "public",
             city,
             state,
@@ -144,17 +172,17 @@ export function CapacityIntakeForm() {
     {step === 0 && <div className="mt-6 grid gap-4 sm:grid-cols-2">
       <label className={label}>Your name<Input value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>
       <label className={label}>Email<Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-      <label className={label}>Business / owner name<Input value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} placeholder="Example: Queens Treatment Suites" /></label>
+      <label className={label}>{copy.accountLabel}<Input value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} placeholder={copy.accountPlaceholder} /></label>
       <label className={label}>Password<Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /><span className="block text-[10px] font-normal leading-5 text-slate-400">12+ characters with uppercase, lowercase, number, and symbol.</span></label>
-      <label className={label}>Capacity type<select className={field} value={type} onChange={(event) => setType(event.target.value)}><option>Treatment room</option><option>Chair</option><option>Exam room</option><option>Procedure room</option><option>Office</option><option>Training room</option><option>Lab capacity</option><option>Imaging capacity</option><option>Other healthcare capacity</option></select></label>
-      <label className={label}>Listing name<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Example: Saturday treatment room" /></label>
+      <label className={label}>{copy.typeLabel}<select className={field} value={type} onChange={(event) => setType(event.target.value)}>{copy.types.map((option) => <option key={option}>{option}</option>)}</select></label>
+      <label className={label}>Listing name<Input value={name} onChange={(event) => setName(event.target.value)} placeholder={copy.listingPlaceholder} /></label>
     </div>}
 
     {step === 1 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>City<Input value={city} onChange={(event) => setCity(event.target.value)} /></label><label className={label}>State<Input value={state} maxLength={2} onChange={(event) => setState(event.target.value.toUpperCase())} /></label></div>}
 
     {step === 2 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>Available from<Input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label><label className={label}>Available until<Input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label><label className={label}>Simultaneous capacity<Input min={1} type="number" value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label></div>}
 
-    {step === 3 && <label className={`${label} mt-6 block`}>Permitted uses<textarea className={`${field} min-h-28 py-3`} value={uses} onChange={(event) => setUses(event.target.value)} placeholder="Example: consultations, wellness services, procedures only when separately eligible and permitted..." /></label>}
+    {step === 3 && <label className={`${label} mt-6 block`}>Permitted uses<textarea className={`${field} min-h-28 py-3`} value={uses} onChange={(event) => setUses(event.target.value)} placeholder="Describe what legitimate Grid participants can use this capacity for and any boundaries they need to know." /></label>}
 
     {step === 4 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>Pricing<select className={field} value={pricingModel} onChange={(event) => setPricingModel(event.target.value)}><option value="hourly">Hourly</option><option value="daily">Daily</option><option value="fixed">Fixed</option><option value="quote">Request quote</option></select></label><label className={label}>Price · USD<Input disabled={pricingModel === "quote"} inputMode="decimal" value={rate} onChange={(event) => setRate(event.target.value)} placeholder={pricingModel === "quote" ? "Set after request" : "75"} /></label></div>}
 
