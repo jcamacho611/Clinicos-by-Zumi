@@ -4,6 +4,7 @@ import { Prisma, RiskLevel } from "@prisma/client";
 import { hash } from "bcryptjs";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
+import { eligibleGridActivities } from "@/lib/grid/eligibility";
 import { db } from "@/lib/db";
 import {
   canTransitionGridProvider,
@@ -52,6 +53,48 @@ function credentialSummary(credential: { type: string; state: string | null; exp
     expiresAt: credential.expiresAt?.toISOString() ?? null,
     verificationStatus: credential.verificationStatus,
   };
+}
+
+/**
+ * Per-jurisdiction eligibility for one provider.
+ *
+ * Jurisdictions come from the credentials the provider actually holds; there is no
+ * point evaluating a state they have never been licensed in. A provider with no
+ * jurisdiction-bearing credential still gets one entry with a null jurisdiction, so the
+ * refusal reasons reach them rather than an empty list that looks like "nothing to do".
+ */
+function eligibilityByJurisdiction(
+  provider: {
+    providerType: string;
+    verificationStatus: string;
+    malpracticeVerificationStatus: string;
+    malpracticeExpiration: Date | null;
+    credentials: { type: string; state: string | null; expiresAt: Date | null; status: string; verificationStatus: string }[];
+  },
+  now: Date,
+) {
+  const jurisdictions = [...new Set(provider.credentials.map((credential) => credential.state?.trim().toUpperCase()).filter(Boolean))] as string[];
+  const scopes: (string | null)[] = jurisdictions.length > 0 ? jurisdictions : [null];
+
+  return scopes.map((jurisdiction) => ({
+    jurisdiction,
+    activities: eligibleGridActivities({
+      participant: {
+        verificationStatus: provider.verificationStatus,
+        providerType: provider.providerType,
+        malpracticeVerificationStatus: provider.malpracticeVerificationStatus,
+        malpracticeExpiration: provider.malpracticeExpiration,
+      },
+      credentials: provider.credentials,
+      jurisdiction,
+      at: now,
+    }).map((entry) => ({
+      activity: entry.activity,
+      label: entry.label,
+      eligible: entry.decision.eligible,
+      failures: entry.decision.eligible ? [] : entry.decision.failures,
+    })),
+  }));
 }
 
 export async function listGridWorkspace(session: ClinicSession) {
@@ -182,6 +225,20 @@ export async function listGridWorkspace(session: ClinicSession) {
       approvedAt: provider.approvedAt?.toISOString() ?? null,
       renewalDueAt: provider.renewalDueAt?.toISOString() ?? null,
       readyForGrid: readiness,
+      /**
+       * What this participant may actually do, per activity and per jurisdiction they
+       * hold a licence in.
+       *
+       * `readyForGrid` above is a single boolean and stays for the surfaces built on it.
+       * It cannot answer the question the marketplace actually needs answered — a nurse
+       * licensed in New York is not thereby eligible in Texas, and an injector is not
+       * thereby eligible to provide medical direction. This is that answer.
+       *
+       * Evaluated without a facility, so activities that happen at one report
+       * `facility_unknown` rather than a guess. That is the truthful state before a
+       * facility is named, and it becomes decidable once a real opportunity supplies one.
+       */
+      gridEligibility: eligibilityByJurisdiction(provider, now),
       owned,
       credentialSummary: provider.credentials.map(credentialSummary),
       credentialDetails: owned && canSeeSensitive ? provider.credentials.map((credential) => ({

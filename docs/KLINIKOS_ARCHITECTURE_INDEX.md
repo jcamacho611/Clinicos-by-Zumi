@@ -71,11 +71,11 @@ Everything else described as an integration is a catalog entry, an adapter contr
 | 3 | Relationships / Memberships | `NOT BUILT` | — | No membership join model. Role is a string column on `User` |
 | 4 | Authorization / Policy | `PARTIAL` | `src/lib/auth/rbac.ts` | RBAC over 38 resources × 5 actions. No ABAC, no relationship-, consent-, credential-, purpose-, or jurisdiction-awareness |
 | 5 | Consent / Delegation | `FOUNDATION` | 2 models | No delegation, no guardian/proxy, not consulted by authorization |
-| 6 | Credentials / Eligibility | `FOUNDATION` | 3 models + `credentialing-rules.ts` | Credentials are stored; contextual eligibility ("this activity, this place, this time") is not computed |
+| 6 | Credentials / Eligibility | `PARTIAL` | 3 models + `src/lib/grid/eligibility.ts` | Contextual eligibility is built and tested (35 tests). Read-only so far — surfaced in the Grid workspace, not yet enforced at offer/booking |
 | 7 | Event Engine | `NOT BUILT` | 16 per-domain `*Event` tables | No shared envelope, no outbox, no bus, no subscriptions, no retries, no DLQ. Each domain invented its own log |
 | 8 | Workflow / Automation | `PARTIAL` | `src/lib/operations/*`, `workflow-rules.ts` | Follow-up loop is a real state machine with truthful states. Nothing else is |
 | 9 | Intelligence Gateway | `BUILT` (gated) | `src/features/zumi/*` | Single entry point, admission policy, redaction, metering, audit. Refuses all egress pending BAA — correctly |
-| 10 | Grid Resource Exchange | `FOUNDATION` | 5 models | Two-sided listing/request. Not a composition engine. See §5 |
+| 10 | Grid Resource Exchange | `FOUNDATION` | 5 models + eligibility engine | Two-sided listing/request. Not a composition engine. See §5 |
 | 11 | Connector Runtime | `FOUNDATION` | `src/lib/connectors/*` | 30-connector catalog with readiness gates. No installation, credential, sync-job, or webhook runtime |
 | 12 | Financial Ledger | `NOT BUILT` | `Invoice`, `GridPayout` | No canonical ledger. Money meaning lives in per-domain columns |
 | 13 | Payments Orchestration | `PARTIAL` | `src/lib/commerce/*` | Whop one-time + subscription paths work end to end. Stripe is catalog-only |
@@ -164,7 +164,7 @@ Adjusted from Directive §65 for what the repository actually contains. Each ste
 | 3 | **Relationships: first-class** | Not started | Employment, contracting, patient-provider, guardian, supervision, care team |
 | 4 | **Authorization: relationship- and credential-aware** | Not started | Extend `rbac.ts` rather than replace it; add relationship, consent, credential, jurisdiction, purpose |
 | 5 | **Audit: decision basis** | Partial | Record *why* an action was permitted, not only that it was |
-| 6 | **Credentials: contextual eligibility** | Foundation exists | `isEligible(person, activity, place, time)` as one function |
+| 6 | **Credentials: contextual eligibility** | **Built, not yet enforcing** | `evaluateGridEligibility(participant, activity, jurisdiction, facility, window)`. Next: make offer and booking refuse on it |
 | 7 | **Event engine: envelope + outbox** | Not started | One envelope, one outbox, retries, DLQ. Collapse the 16 ad-hoc event tables behind it |
 | 8 | **Workflow engine** | Partial | Generalize the follow-up state machine into a reusable engine |
 | 9 | **Grid resource model** | Rebuild | Participant, Resource, Capability, Requirement, Availability, Demand |
