@@ -15,10 +15,10 @@ const doorwayActions = [
 ] as const;
 
 const roleResumePath: Partial<Record<ClinicRole, string>> = {
-  owner: "fix-referral-leakage",
-  admin: "fix-referral-leakage",
+  clinic_owner: "fix-referral-leakage",
+  administrator: "fix-referral-leakage",
   provider: "find-extra-work",
-  staff: "fix-referral-leakage",
+  clinical_staff: "fix-referral-leakage",
 };
 
 export function LivingHome({ role, firstName }: { role: ClinicRole; firstName: string }) {
