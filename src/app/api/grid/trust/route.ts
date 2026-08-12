@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
-import { recordManualGridReservationPayment } from "@/lib/grid/reservation-payment-repository";
+import { getGridTrustSummary } from "@/lib/grid/trust-repository";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ reservationId: string }> }) {
+export async function GET(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "grid", "update", { request });
+  const denied = await enforceApiPermission(session, "grid", "read", { request });
   if (denied) return denied;
 
   try {
-    const { reservationId } = await params;
-    return NextResponse.json({ data: await recordManualGridReservationPayment(session, reservationId, await request.json()) });
+    return NextResponse.json({ data: await getGridTrustSummary(session) });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }

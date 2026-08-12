@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { gridFulfillmentDecisionSchema } from "@/lib/grid/fulfillment-rules";
+import { reservationHasActiveGridIssues } from "@/lib/grid/trust-repository";
 import { canTransitionGridFulfillment, canTransitionGridReservation } from "@/lib/grid/transaction-state";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -63,6 +64,16 @@ export async function transitionGridFulfillment(session: ClinicSession, reservat
         `Grid fulfillment cannot move from ${reservation.fulfillmentStatus} to ${decision.targetStatus}.`,
         409,
       );
+    }
+
+    if (!["failed", "disputed"].includes(decision.targetStatus)) {
+      const issues = await reservationHasActiveGridIssues(tx, reservation.id);
+      if (issues.blocked) {
+        throw new NetworkAccessError(
+          `Grid fulfillment is on hold while ${issues.activeDisputes} marketplace dispute(s) and ${issues.activeSafetyIncidents} safety incident(s) remain open.`,
+          409,
+        );
+      }
     }
 
     if (decision.targetStatus === "checked_in") {
