@@ -1,3 +1,5 @@
+import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
+
 export type KlinikosPathNodeState = "complete" | "current" | "upcoming" | "blocked";
 
 export type KlinikosPathNode = {
@@ -80,19 +82,7 @@ export function getKlinikosPath(pathId: string) {
 }
 
 export function findKlinikosPathFromIntent(input: string) {
-  const normalized = input.trim().toLowerCase();
-  if (!normalized) return null;
-
-  const rules: Array<[string[], string]> = [
-    [["extra work", "pick up", "shift", "weekend work", "work friday"], "find-extra-work"],
-    [["injector", "grid-ready", "grid ready", "learn", "training", "qualify"], "become-grid-ready"],
-    [["need an injector", "need a nurse", "coverage", "staffing", "need staff"], "fill-staffing-need"],
-    [["referral", "losing patients", "stuck referral", "open loop"], "fix-referral-leakage"],
-  ];
-
-  for (const [keywords, pathId] of rules) {
-    if (keywords.some((keyword) => normalized.includes(keyword))) return getKlinikosPath(pathId) ?? null;
-  }
-
-  return null;
+  const result = resolveIntentDeterministically(input);
+  const pathId = result.candidatePathIds[0];
+  return pathId ? getKlinikosPath(pathId) ?? null : null;
 }
