@@ -37,8 +37,8 @@ export const gridSafetyIncidentStatuses = [
   "open",
   "triage_required",
   "under_review",
-  "participant_restricted",
-  "resource_suspended",
+  "restriction_recommended",
+  "resource_hold_recommended",
   "referred_to_governance",
   "closed",
 ] as const;
@@ -83,12 +83,12 @@ const disputeTransitions: Record<GridDisputeStatus, readonly GridDisputeStatus[]
 };
 
 const safetyTransitions: Record<GridSafetyIncidentStatus, readonly GridSafetyIncidentStatus[]> = {
-  open: ["triage_required", "under_review", "participant_restricted", "resource_suspended", "referred_to_governance", "closed"],
-  triage_required: ["under_review", "participant_restricted", "resource_suspended", "referred_to_governance", "closed"],
-  under_review: ["participant_restricted", "resource_suspended", "referred_to_governance", "closed"],
-  participant_restricted: ["under_review", "referred_to_governance", "closed"],
-  resource_suspended: ["under_review", "referred_to_governance", "closed"],
-  referred_to_governance: ["under_review", "participant_restricted", "resource_suspended", "closed"],
+  open: ["triage_required", "under_review", "restriction_recommended", "resource_hold_recommended", "referred_to_governance", "closed"],
+  triage_required: ["under_review", "restriction_recommended", "resource_hold_recommended", "referred_to_governance", "closed"],
+  under_review: ["restriction_recommended", "resource_hold_recommended", "referred_to_governance", "closed"],
+  restriction_recommended: ["under_review", "referred_to_governance", "closed"],
+  resource_hold_recommended: ["under_review", "referred_to_governance", "closed"],
+  referred_to_governance: ["under_review", "restriction_recommended", "resource_hold_recommended", "closed"],
   closed: [],
 };
 
