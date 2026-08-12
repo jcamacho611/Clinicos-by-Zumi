@@ -1,284 +1,166 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowRight, Check, LogIn } from "lucide-react";
-import styles from "./klinikos-homepage.module.css";
+import { ArrowRight, BriefcaseBusiness, GraduationCap, HeartHandshake, Network, Sparkles, Stethoscope } from "lucide-react";
 
-const fragments = [
-  ["FOLLOW-UP", "12%", "22%", "13s", "0s"],
-  ["REFERRAL", "78%", "18%", "17s", "1.2s"],
-  ["RESULT", "66%", "72%", "15s", "0.6s"],
-  ["PAPERWORK", "8%", "68%", "19s", "2s"],
-  ["STAFF TASK", "42%", "12%", "16s", ".9s"],
-  ["CLAIM", "88%", "52%", "14s", "1.6s"],
-  ["LEAD", "24%", "84%", "18s", ".3s"],
-  ["PAYMENT", "56%", "88%", "15s", "2.4s"],
-  ["SCHEDULING", "18%", "44%", "20s", "1.1s"],
-  ["LAB", "84%", "80%", "13s", ".5s"],
-  ["PROVIDER", "36%", "62%", "17s", "1.9s"],
-  ["REBOOKING", "70%", "36%", "16s", ".8s"],
+const continuity = [
+  ["01", "Someone owns it", "Work stops disappearing between calls, inboxes, spreadsheets, and systems."],
+  ["02", "The next step stays visible", "Follow-up, referrals, results, paperwork, and revenue work keep a clear next action."],
+  ["03", "Humans stay in control", "Clinical judgment, regulated decisions, sensitive releases, and irreversible actions remain human-governed."],
 ] as const;
 
-const zumiStates = [
-  ["Dormant", "Quiet. Nothing requires attention."],
-  ["Observing", "Reading operational state across your systems."],
-  ["Mapping", "Connecting each open thread to a system and an owner."],
-  ["Analyzing", "Weighing which gaps carry real operational risk."],
-  ["Signal detected", "A specific pathway has lost continuity."],
-  ["Resolved", "Owned, acknowledged and recorded."],
-] as const;
-
-const stageNames = [
-  "Entry",
-  "Scheduling",
-  "Intake",
-  "Staff ownership",
-  "Provider action",
-  "Result / referral / billing",
-  "Follow-up",
-  "Retention",
-] as const;
-
-const threads = [
+const ecosystem = [
   {
-    key: "followup",
-    label: "Follow-up",
-    before: ["Call logged", "Visit booked", "Forms sent", "No owner recorded", "Encounter closed", "2-week recheck advised", "Continuity breaks", "Patient not seen again"],
-    after: ["Call logged", "Visit booked", "Forms returned", "Owner: front desk", "Encounter closed", "Recheck captured", "Recheck booked 08/24", "Patient retained"],
-    breakAt: [6],
-    signal: "3 follow-ups require ownership",
-    resolved: "Every recommended recheck has a named owner and a date.",
+    icon: Stethoscope,
+    name: "Clinic OS",
+    body: "Patients, scheduling, intake, tasks, follow-up, referrals, results, revenue readiness, and owner visibility.",
+    href: "/start",
+    action: "Run a clinic",
   },
   {
-    key: "referral",
-    label: "Referral",
-    before: ["Provider referral", "Appointment offered", "Records attached", "Sent to Aegis Heart", "Awaiting consult", "Acknowledgment unknown", "Continuity breaks", "Outcome never returned"],
-    after: ["Provider referral", "Appointment offered", "Records attached", "Sent to Aegis Heart", "Consult confirmed", "Acknowledged 08/06", "Report returned", "Care loop closed"],
-    breakAt: [5, 6],
-    signal: "2 referrals have no recorded acknowledgment",
-    resolved: "Every outbound referral is tracked until a report comes back.",
+    icon: Network,
+    name: "Grid",
+    body: "Healthcare work, people, space, services, equipment, organizations, education capacity, and other reviewed resources.",
+    href: "/grid",
+    action: "Explore Grid",
   },
   {
-    key: "billing",
-    label: "Billing readiness",
-    before: ["Visit completed", "Eligibility unchecked", "Intake incomplete", "No coder assigned", "Note unsigned", "Claim not built", "Continuity breaks", "Revenue written off"],
-    after: ["Visit completed", "Eligibility verified", "Intake complete", "Owner: billing", "Note signed", "Readiness 100%", "Ready for staff submission", "Revenue protected"],
-    breakAt: [3, 6],
-    signal: "8 encounters are closed and not billing-ready",
-    resolved: "Readiness is checked before staff submits a claim.",
+    icon: GraduationCap,
+    name: "Klinikos EDU",
+    body: "Courses, simulations, scenarios, evidence, feedback, and readiness experiences connected to the wider ecosystem.",
+    href: "/edu",
+    action: "Open EDU",
   },
   {
-    key: "results",
-    label: "Results",
-    before: ["Order placed", "Specimen collected", "Panel resulted", "Sat in queue", "Not reviewed", "Not released", "Continuity breaks", "Patient not informed"],
-    after: ["Order placed", "Specimen collected", "Panel resulted", "Owner: Dr. Reyes", "Reviewed 08/09", "Release approved", "Recheck scheduled", "Patient informed"],
-    breakAt: [4, 6],
-    signal: "1 abnormal result is awaiting provider review",
-    resolved: "Abnormal results escalate to a named provider, never an unattended queue.",
-  },
-  {
-    key: "lead",
-    label: "Med-spa lead",
-    before: ["Inquiry received", "Consult offered", "No response logged", "No next action", "Never contacted", "No treatment plan", "Continuity breaks", "Lead lost"],
-    after: ["Inquiry received", "Consult offered", "Called back same day", "Owner: coordinator", "Consult held", "Plan priced", "Package booked", "Lead converted"],
-    breakAt: [2, 3, 6],
-    signal: "5 leads have no next action",
-    resolved: "Every inquiry has an owner and a next action within 24 hours.",
+    icon: HeartHandshake,
+    name: "Connected care",
+    body: "Referrals, handoffs, partner capacity, patient navigation, and continuity across organizations without pretending every vendor is already connected.",
+    href: "/how-it-works",
+    action: "See how it connects",
   },
 ] as const;
 
-const surfaces = [
-  { group: "Command", items: ["Command center", "Front desk", "Provider workspace"] },
-  { group: "Care delivery", items: ["Patient charts", "Schedule", "Encounters", "Telemedicine"] },
-  { group: "Clinical", items: ["Labs", "Imaging", "Medications", "Documents", "Intake & forms"] },
-  { group: "Connected care", items: ["Referral relay", "Network command", "Identity resolution", "Care Constellation"] },
-  { group: "Revenue & quality", items: ["Billing", "Claim readiness", "Insurance", "CRM & revenue recovery"] },
-  { group: "Provider network", items: ["Grid marketplace", "Credentials", "Availability", "Service requests"] },
-  { group: "Operations", items: ["Tasks", "Messages", "Escalations", "Patient navigation"] },
-  { group: "System", items: ["Settings & audit", "Access controls", "System health", "Integration roadmap"] },
+const engagements = [
+  { step: "01", name: "Clinic Operating Analysis", price: "$500", detail: "Map where work gets lost and leave with a concrete operating picture.", href: "/private-demo", action: "Start the analysis" },
+  { step: "02", name: "Implementation Blueprint", price: "$1,500", detail: "Go deeper on systems, staffing, workflow loss, sequencing, and implementation fit.", href: "/founding-clinic", action: "Review the blueprint path" },
+  { step: "03", name: "Founding Clinic Implementation", price: "from $8,000", detail: "Configure Klinikos around a real clinic with explicit production and external-connection gates.", href: "/founding-clinic", action: "Explore implementation" },
 ] as const;
-
-const levels = [
-  { num: "01", title: "Private workflow demo & cost review", credit: "Credited toward evaluation", detail: "A working session on your operational gaps, with a synthetic preliminary operating map.", price: "$500", href: "/private-demo" },
-  { num: "02", title: "Founding clinic evaluation", credit: "Credited toward the founding program", detail: "A deeper review of systems, staffing, workflow loss and implementation fit.", price: "$1,500", href: "/founding-clinic" },
-  { num: "03", title: "Founding clinic program", credit: "Prior credits applied", detail: "An early-stage build partnership with preferred onboarding and clear production gates.", price: "$8,000", href: "/founding-clinic" },
-] as const;
-
-function ZumiOrb({ state = "observing", size = "large" }: { state?: string; size?: "small" | "large" }) {
-  return (
-    <div className={styles.orb} data-size={size} data-state={state} aria-label={`Zumi ${state}`} role="img">
-      <div className={styles.orbGlow} />
-      <div className={styles.orbOrbit}>
-        {Array.from({ length: 8 }, (_, index) => (
-          <span className={styles.orbSpoke} key={index} style={{ "--rotation": `${index * 45}deg` } as React.CSSProperties}>
-            <i />
-          </span>
-        ))}
-      </div>
-      <div className={styles.orbCore}><span /></div>
-    </div>
-  );
-}
-
-function StatusStrip() {
-  return (
-    <div className={styles.statusStrip} aria-label="Demonstration status">
-      <span>Demo</span><span>Synthetic data</span><span>Human review required</span><span>No PHI</span>
-    </div>
-  );
-}
 
 export function KlinikosHomepage() {
-  const [phase, setPhase] = useState(0);
-  const [threadKey, setThreadKey] = useState("referral");
-  const [resolved, setResolved] = useState(false);
-
-  useEffect(() => {
-    const updatePhase = () => {
-      const viewport = window.innerHeight || 800;
-      const top = (id: string) => document.getElementById(id)?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-      let next = window.scrollY > 60 ? 1 : 0;
-      if (top("fragmentation") < viewport * 0.7) next = 2;
-      if (top("zumi") < viewport * 0.7) next = 3;
-      if (top("map") < viewport * 0.7) next = 4;
-      if (top("surfaces") < viewport * 0.7) next = 5;
-      setPhase((current) => current === next ? current : next);
-    };
-    updatePhase();
-    window.addEventListener("scroll", updatePhase, { passive: true });
-    return () => window.removeEventListener("scroll", updatePhase);
-  }, []);
-
-  const activeThread = threads.find((thread) => thread.key === threadKey) ?? threads[0];
-  const sequence = resolved ? activeThread.after : activeThread.before;
-  const orbState = ["dormant", "observing", "observing", "mapping", "analyzing", "resolved"][phase];
-  const phaseLabel = ["Zumi dormant", "Signals detected", "Observing fragmentation", "Mapping continuity", "Analyzing risk", "Under control"][phase];
-
   return (
-    <div className={styles.home} data-phase={phase}>
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/" aria-label="Klinikos home"><ZumiOrb size="small" state={orbState} /><span>KLINIKOS</span></Link>
-        <nav className={styles.nav} aria-label="Main navigation">
-          <a href="#fragmentation">Problem</a><a href="#zumi">Zumi</a><a href="#map">Operating map</a><a href="#surfaces">System</a><a href="#levels">Engagement</a>
-        </nav>
-        <div className={styles.headerActions}>
-          <Link className={styles.signIn} href="/login"><LogIn size={14} /><span>Sign in</span></Link>
-          <Link className={styles.headerCta} href="/private-demo">See your operating map <ArrowRight size={15} /></Link>
+    <div className="k-page">
+      <section id="fragmentation" className="mx-auto max-w-[1500px] px-5 py-28 sm:px-8 lg:px-12 lg:py-44">
+        <div className="grid gap-16 lg:grid-cols-[.72fr_1.28fr] lg:gap-24">
+          <div>
+            <p className="k-kicker">The actual problem</p>
+            <p className="k-muted mt-5 max-w-sm text-sm leading-7">Healthcare organizations already have software. The expensive failures usually happen between the software, the people, and the next step.</p>
+          </div>
+          <div>
+            <h2 className="max-w-5xl text-balance text-5xl font-semibold leading-[.96] tracking-[-.065em] sm:text-6xl lg:text-7xl">Your clinic is not missing another dashboard.</h2>
+            <p className="mt-8 max-w-3xl text-2xl font-medium leading-9 tracking-[-.03em] text-[var(--k-accent)] sm:text-3xl">It is missing continuity.</p>
+          </div>
         </div>
-      </header>
 
-      <main>
-        <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.heroGrid} />
-          <div className={styles.fragments} aria-hidden="true">
-            {fragments.map(([label, x, y, duration, delay]) => (
-              <span key={label} style={{ left: x, top: y, animationDuration: duration, animationDelay: delay }}>{label}</span>
-            ))}
-          </div>
-          <div className={styles.heroOrb}><ZumiOrb state={orbState} /></div>
-          <div className={styles.heroContent}>
-            <p className={styles.eyebrow}>THE CLINIC OPERATING SYSTEM</p>
-            <h1 id="hero-title">YOUR CLINIC ISN&apos;T MISSING SOFTWARE.</h1>
-            <h2>IT&apos;S MISSING CONTINUITY.</h2>
-            <p>Klinikos connects the work that happens between your systems. Follow-ups. Referrals. Results. Paperwork. Staff tasks. Revenue opportunities. Powered by Zumi.</p>
-            <div className={styles.heroActions}>
-              <Link className={styles.primaryButton} href="/private-demo">See your clinic operating map <ArrowRight size={17} /></Link>
-              <a className={styles.secondaryButton} href="#fragmentation">Explore Klinikos <ArrowDown size={17} /></a>
+        <div className="mt-24 grid border-y k-rule md:grid-cols-3">
+          {continuity.map(([number, title, body], index) => (
+            <article className={`py-8 md:py-10 ${index > 0 ? "md:border-l md:pl-9 lg:pl-12" : ""} ${index < 2 ? "border-b md:border-b-0" : ""} k-rule`} key={number}>
+              <p className="k-muted text-xs font-semibold">{number}</p>
+              <h3 className="mt-8 text-xl font-semibold tracking-[-.03em]">{title}</h3>
+              <p className="k-muted mt-4 max-w-sm text-sm leading-7">{body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="k-raised border-y k-rule">
+        <div className="mx-auto max-w-[1500px] px-5 py-28 sm:px-8 lg:px-12 lg:py-40">
+          <div className="grid gap-16 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:gap-24">
+            <div>
+              <p className="k-kicker">One operating layer</p>
+              <h2 className="mt-7 max-w-4xl text-balance text-4xl font-semibold leading-[1.02] tracking-[-.06em] sm:text-6xl">See the thread. See who owns it. See what happens next.</h2>
             </div>
-            <StatusStrip />
+            <p className="k-muted max-w-xl text-base leading-8">Klinikos sits across the work that normally falls between systems. It does not need to replace everything in order to make the operating picture clearer.</p>
           </div>
-          <div className={styles.scrollCue}><span>Scroll</span><ArrowDown size={14} /><b>{phaseLabel}</b></div>
-        </section>
 
-        <section className={styles.fragmentation} id="fragmentation" aria-labelledby="fragmentation-title">
-          <div className={styles.sectionLead}>
-            <p className={styles.sectionNumber}>01 / FRAGMENTATION</p>
-            <h2 id="fragmentation-title">THE PROBLEM ISN&apos;T THAT YOUR CLINIC HAS NO SOFTWARE.</h2>
-            <p>The problem is what happens between it.</p>
-          </div>
-          <div className={styles.islands} aria-label="Disconnected clinic systems">
-            {["EHR", "Scheduling", "Phone", "Texting", "Billing", "Labs", "CRM", "Documents", "Staff"].map((island) => <span key={island}>{island}</span>)}
-          </div>
-          <div className={styles.breakList}>
-            <div><b>Patient call</b><span>Scheduled</span><i>→</i><span>Paperwork requested</span><i>→</i><em>Continuity breaks</em></div>
-            <div><b>Referral</b><span>Sent</span><i>→</i><em>Acknowledgment unknown</em></div>
-            <div><b>Lead</b><span>Contacted</span><i>→</i><em>Follow-up ownership lost</em></div>
-          </div>
-          <p className={styles.humanNote}>Zumi observes these breaks. It does not close them without a person.</p>
-        </section>
-
-        <section className={styles.zumiReveal} id="zumi" aria-labelledby="zumi-title">
-          <div className={styles.zumiStage}>
-            <ZumiOrb state="mapping" />
-            <span className={styles.zumiAxis} />
-          </div>
-          <div className={styles.zumiCopy}>
-            <p className={styles.sectionNumber}>02 / OPERATING INTELLIGENCE</p>
-            <h2 id="zumi-title">MEET ZUMI.</h2>
-            <h3>Your clinic&apos;s operating intelligence.</h3>
-            <p>Zumi observes operational state, organizes workflows, surfaces signals and helps staff hold continuity. It sits across the operating layer. It does not replace your EHR, scheduler, phone line or biller.</p>
-            <div className={styles.stateLedger}>
-              {zumiStates.map(([label, note], index) => <div key={label} className={index === Math.min(phase, 5) ? styles.stateActive : ""}><span>0{index + 1}</span><b>{label}</b><p>{note}</p></div>)}
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.mapSection} id="map" aria-labelledby="map-title">
-          <div className={styles.mapHeading}>
-            <div><p className={styles.sectionNumber}>03 / SIGNATURE DEMONSTRATION</p><h2 id="map-title">ONE THREAD, END TO END.</h2></div>
-            <p>Pick a thread. See where continuity breaks, then let Zumi reorganize it into an accountable pathway.</p>
-          </div>
-          <div className={styles.threadPicker} role="group" aria-label="Choose an operating thread">
-            {threads.map((thread) => (
-              <button className={thread.key === threadKey ? styles.threadActive : ""} key={thread.key} onClick={() => { setThreadKey(thread.key); setResolved(false); }} type="button">{thread.label}</button>
-            ))}
-          </div>
-          <div className={styles.operatingMap} data-resolved={resolved}>
-            {stageNames.map((name, index) => {
-              const broken = !resolved && activeThread.breakAt.some((breakIndex) => breakIndex === index);
-              return (
-                <div className={styles.stage} data-broken={broken} key={name}>
-                  <div className={styles.stageLine} /><span className={styles.stageDot} />
-                  <p>{name}</p><b>{sequence[index]}</b>
+          <div className="mt-20 overflow-x-auto border-y k-rule">
+            <div className="grid min-w-[760px] grid-cols-5 py-7">
+              {["Signal", "Owner", "Next action", "Human review", "Outcome"].map((item, index) => (
+                <div className={`${index ? "border-l pl-6" : ""} k-rule`} key={item}>
+                  <p className="k-muted text-[10px] font-semibold uppercase tracking-[.14em]">0{index + 1}</p>
+                  <p className="mt-3 text-sm font-semibold">{item}</p>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-          <div className={styles.signalPanel} data-resolved={resolved}>
-            <div className={styles.signalIdentity}><ZumiOrb size="small" state={resolved ? "resolved" : "signal"} /><span><b>{resolved ? "Resolved pathway" : "Signal detected"}</b><small>Synthetic demonstration</small></span></div>
-            <div className={styles.signalCopy}><h3>{resolved ? activeThread.resolved : activeThread.signal}</h3><p>{resolved ? "Zumi reorganized the pathway. A person still confirms every step." : "Zumi found where this pathway stops. Nothing closes without a person."}</p></div>
-            <button type="button" onClick={() => setResolved((current) => !current)}>{resolved ? "Show the break again" : "Activate Zumi"}</button>
-          </div>
-          <StatusStrip />
-        </section>
+        </div>
+      </section>
 
-        <section className={styles.surfaces} id="surfaces" aria-labelledby="surfaces-title">
-          <div className={styles.surfaceIntro}>
-            <div><p className={styles.sectionNumber}>04 / PRODUCT SURFACES</p><h2 id="surfaces-title">THE SYSTEM YOUR STAFF ACTUALLY OPENS.</h2></div>
-            <p>Inside the product, motion stops and precision takes over. These surfaces are mapped into the ClinicOS engineering foundation. Availability remains clearly labeled as Live, Demo, Manual fallback, Pending connection, or Roadmap.</p>
-          </div>
-          <div className={styles.surfaceGrid}>
-            {surfaces.map((surface) => <div key={surface.group}><p>{surface.group}</p><ul>{surface.items.map((item) => <li key={item}><Check size={13} />{item}</li>)}</ul></div>)}
-          </div>
-          <div className={styles.truthBanner}><span>ENGINEERING FOUNDATION</span><p>Synthetic demonstration only. No production PHI. Vendor connections and regulated workflows require contracts, credentials, security review and human authorization.</p></div>
-        </section>
+      <section id="surfaces" className="mx-auto max-w-[1500px] px-5 py-28 sm:px-8 lg:px-12 lg:py-44">
+        <div className="max-w-4xl">
+          <p className="k-kicker">The ecosystem</p>
+          <h2 className="mt-7 text-balance text-4xl font-semibold leading-[1.02] tracking-[-.06em] sm:text-6xl">Different jobs. One Klinikos.</h2>
+          <p className="k-muted mt-7 max-w-2xl text-base leading-8">The product can be broad underneath without forcing every user to see everything at once. Each role enters through the surface that matters to them.</p>
+        </div>
 
-        <section className={styles.levels} id="levels" aria-labelledby="levels-title">
-          <p className={styles.sectionNumber}>05 / ENGAGEMENT</p>
-          <h2 id="levels-title">THREE LEVELS OF ENGAGEMENT.</h2>
-          <div className={styles.levelLedger}>
-            {levels.map((level, index) => (
-              <Link href={level.href} key={level.num} data-premium={index === 2}>
-                <strong>{level.num}</strong><div><h3>{level.title}</h3><span>{level.credit}</span></div><p>{level.detail}</p><b>{level.price}</b><ArrowRight size={20} />
+        <div className="mt-20 divide-y divide-[var(--k-line)] border-y border-[var(--k-line)]">
+          {ecosystem.map(({ icon: Icon, name, body, href, action }, index) => (
+            <Link className="group grid gap-7 py-9 sm:grid-cols-[70px_.55fr_1fr_auto] sm:items-center sm:gap-8 lg:py-11" href={href} key={name}>
+              <span className="k-muted text-sm font-semibold">0{index + 1}</span>
+              <span className="flex items-center gap-4"><span className="grid size-10 place-items-center rounded-full bg-[var(--k-public-raised)] text-[var(--k-accent)]"><Icon className="size-[18px]" /></span><span className="text-xl font-semibold tracking-[-.03em]">{name}</span></span>
+              <span className="k-muted max-w-2xl text-sm leading-7">{body}</span>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--k-accent)]">{action}<ArrowRight className="size-4 transition group-hover:translate-x-1" /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section id="intelligence" className="k-hero border-y k-rule">
+        <div className="mx-auto grid max-w-[1500px] gap-16 px-5 py-28 sm:px-8 lg:grid-cols-[.92fr_1.08fr] lg:items-center lg:gap-24 lg:px-12 lg:py-44">
+          <div>
+            <span className="grid size-12 place-items-center rounded-full bg-[var(--k-public-surface)] text-[var(--k-accent)] shadow-[var(--k-shadow)]"><Sparkles className="size-5" /></span>
+            <p className="k-kicker mt-8">Klinikos Intelligence</p>
+            <h2 className="mt-7 text-balance text-4xl font-semibold leading-[1.02] tracking-[-.06em] sm:text-6xl">Intelligence where the work is. Not another chatbot to babysit.</h2>
+          </div>
+          <div>
+            <p className="k-muted max-w-2xl text-base leading-8">Zumi helps users understand, summarize, research, prepare, and navigate. Deterministic Klinikos systems still own authorization, payment state, eligibility, credentials, transaction state, and safety boundaries.</p>
+            <div className="mt-10 grid gap-8 sm:grid-cols-2">
+              <div className="border-t pt-5 k-rule"><p className="text-sm font-semibold">Make complexity understandable</p><p className="k-muted mt-3 text-xs leading-6">Surface what matters without exposing orchestration, registries, internal state machines, or raw technical language.</p></div>
+              <div className="border-t pt-5 k-rule"><p className="text-sm font-semibold">Keep decisions grounded</p><p className="k-muted mt-3 text-xs leading-6">Sensitive or consequential actions remain permission-aware, evidence-aware, and human-reviewed where required.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="levels" className="mx-auto max-w-[1500px] px-5 py-28 sm:px-8 lg:px-12 lg:py-44">
+        <div className="grid gap-16 lg:grid-cols-[.7fr_1.3fr] lg:gap-24">
+          <div>
+            <p className="k-kicker">Start commercially</p>
+            <h2 className="mt-7 text-balance text-4xl font-semibold leading-[1.04] tracking-[-.055em] sm:text-5xl">Buy the amount of certainty you need.</h2>
+            <p className="k-muted mt-6 max-w-md text-sm leading-7">Each step has a different job. Payment never silently creates clinical authority or turns an unconnected vendor into a live integration.</p>
+          </div>
+
+          <div className="divide-y divide-[var(--k-line)] border-y border-[var(--k-line)]">
+            {engagements.map(({ step, name, price, detail, href, action }) => (
+              <Link className="group grid gap-5 py-8 sm:grid-cols-[56px_1fr_auto] sm:items-start sm:gap-7" href={href} key={step}>
+                <p className="k-muted text-sm font-semibold">{step}</p>
+                <div><div className="flex flex-wrap items-baseline gap-x-4 gap-y-2"><h3 className="text-xl font-semibold tracking-[-.03em]">{name}</h3><span className="text-lg font-semibold text-[var(--k-premium)]">{price}</span></div><p className="k-muted mt-3 max-w-xl text-sm leading-7">{detail}</p><p className="mt-4 text-xs font-semibold text-[var(--k-accent)]">{action}</p></div>
+                <ArrowRight className="mt-1 size-4 text-[var(--k-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--k-accent)]" />
               </Link>
             ))}
           </div>
-          <div className={styles.levelCta}><Link href="/private-demo">Start clinic operating analysis <ArrowRight size={17} /></Link><span>No PHI required · Requires human review</span></div>
-        </section>
-      </main>
+        </div>
+      </section>
 
-      <footer className={styles.footer}><span>KLINIKOS</span><p>The clinic operating system · Powered by Zumi</p><Link href="/login">Sign in</Link></footer>
+      <section className="k-raised border-y k-rule">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-9 px-5 py-24 sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:px-12 lg:py-32">
+          <div>
+            <p className="k-kicker">Klinikos</p>
+            <h2 className="mt-6 max-w-4xl text-balance text-4xl font-semibold leading-[1.02] tracking-[-.055em] sm:text-6xl">Operate the complexity underneath. Keep the experience above it clear.</h2>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <Link className="k-primary-action min-h-12 rounded-full px-6 text-sm font-semibold" href="/start">Start <ArrowRight className="size-4" /></Link>
+            <Link className="k-secondary-action min-h-12 rounded-full px-6 text-sm font-semibold" href="/grid"><BriefcaseBusiness className="size-4" /> Explore Grid</Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
