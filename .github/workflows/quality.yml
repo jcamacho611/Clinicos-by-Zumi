@@ -55,6 +55,14 @@ jobs:
       # cannot apply to an empty database fails here rather than in production.
       - name: Apply migrations to a fresh database
         run: npx prisma migrate deploy
+      # Applying cleanly is necessary but not sufficient: the schema those migrations
+      # build still has to carry the product. This runs MVP Journey 9 against the
+      # database CI just created — real repositories, real writes, restart included — so
+      # deployability stays a tested property rather than an assumption.
+      - name: Verify a fresh deployment works
+        run: npm run journey -- scripts/mvp/fresh-deploy-journey.ts
+        env:
+          AUTH_SECRET: ci-verification-only-secret-not-a-real-secret
       - name: Type check
         run: npm run type-check
       - name: Lint

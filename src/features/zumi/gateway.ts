@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
 import { admitZumiRequest, type ZumiAdmissionDenial } from "@/features/zumi/policy";
-import { containsLikelyIdentifiers, redactPayload, redactText } from "@/features/zumi/redaction";
+import { containsLikelyIdentifiers, redactPayload, redactText, type RedactionResult } from "@/features/zumi/redaction";
 import {
   orbStateForStage,
   validateRecommendation,
@@ -147,14 +147,18 @@ async function writeAuditLog(input: {
   }
 }
 
-function buildPrompt(request: ZumiRequest, canonicalContext: string, memoryContext: string): {
+function buildPrompt(
+  request: ZumiRequest,
+  question: RedactionResult,
+  canonicalContext: string,
+  memoryContext: string,
+): {
   prompt: string;
   redactionApplied: boolean;
   droppedKeys: string[];
   questionRedacted: boolean;
   redactedQuestion: string;
 } | null {
-  const question = redactText(request.question);
   const context = request.context === undefined ? null : redactPayload(request.context);
   const serializedContext = context ? JSON.stringify(context.value) : "";
   const privateBase = [
@@ -235,22 +239,33 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   const startedAt = Date.now();
   const selection = selectProvider();
   const conversationPolicy = resolveAuthenticatedConversationPolicy(request.session);
-  const contextPlan = planZumiContext(request.question, conversationPolicy);
-  const complexity = estimateResearchComplexity(request.question);
-  const injection = detectInstructionInjection(request.question);
+
+  // Redact once, here, before anything else is allowed to read the question.
+  //
+  // Redaction used to live inside buildPrompt, which was too late: the planners below
+  // embed the question in text that goes to the provider — the trusted orchestration
+  // instruction prints the intent goal verbatim — so an SSN, email or phone number in a
+  // question reached the model in the system prompt even though the user prompt was
+  // clean. Everything downstream now sees only the redacted text.
+  const question = redactText(request.question);
+  const questionText = question.text;
+
+  const contextPlan = planZumiContext(questionText, conversationPolicy);
+  const complexity = estimateResearchComplexity(questionText);
+  const injection = detectInstructionInjection(questionText);
   const presence = request.presence ?? zumiPresenceSchema.parse({});
   const accessibility = request.accessibility ?? zumiAccessibilitySchema.parse({});
-  const orchestration = planZumiOrchestration({ question: request.question, presence });
+  const orchestration = planZumiOrchestration({ question: questionText, presence });
   const [canonicalContext, memoryContext, trustedOrchestration] = await Promise.all([
     retrieveCanonicalContext({
-      question: request.question,
+      question: questionText,
       domains: contextPlan.domains,
       policy: conversationPolicy,
       maxCharacters: conversationPolicy.profile === "founder" ? 18_000 : 8_000,
       maxSections: conversationPolicy.profile === "founder" ? 16 : 6,
     }),
-    retrieveZumiMemoryContext(request.session, request.question),
-    resolveTrustedZumiOrchestration({ session: request.session, question: request.question, presence }),
+    retrieveZumiMemoryContext(request.session, questionText),
+    resolveTrustedZumiOrchestration({ session: request.session, question: questionText, presence }),
   ]);
 
   const decision = admitZumiRequest({
@@ -302,7 +317,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
 
   if (!selection.ok) throw new Error("Zumi admitted a request with no usable provider. This is a policy bug.");
 
-  const built = buildPrompt(request, canonicalContext.text, memoryContext.text);
+  const built = buildPrompt(request, question, canonicalContext.text, memoryContext.text);
   if (!built) {
     const auditLogId = await writeAuditLog({
       organizationId: request.session.organizationId,

@@ -1,0 +1,19 @@
+{
+  // Runtime config for the MVP journey scripts only. `npm run journey` selects it.
+  //
+  // Journeys import real server modules, and those modules import `server-only` — a
+  // Next.js compile-time marker that is not an installed package. Next aliases it during
+  // a build and Vitest aliases it during tests; a plain script has nothing to resolve, so
+  // it aliases it here to the same inert stub the test suite uses.
+  //
+  // This is deliberately a separate file rather than an entry in tsconfig.json: mapping
+  // `server-only` in the base config would make `next build` resolve the marker to a
+  // no-op and quietly disable the server/client boundary for the whole application.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "server-only": ["./tests/server-only-stub.ts"]
+    }
+  }
+}
