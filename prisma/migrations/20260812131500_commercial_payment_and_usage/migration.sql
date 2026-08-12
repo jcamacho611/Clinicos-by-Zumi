@@ -6,6 +6,18 @@
 -- reconciliation, Whop signed webhooks, and future approved processors can all
 -- converge on the same server-side state.
 
+-- An active subscription must be distinguishable from a trial/imported state that
+-- has never been backed by verified payment evidence. Prisma does not need to know
+-- these columns yet because the commercial repositories intentionally read/write
+-- them through audited server-side SQL.
+ALTER TABLE "subscriptions"
+  ADD COLUMN IF NOT EXISTS "paymentConfirmedAt" TIMESTAMP(3),
+  ADD COLUMN IF NOT EXISTS "paymentProvider" TEXT,
+  ADD COLUMN IF NOT EXISTS "paymentEvidenceId" TEXT;
+
+CREATE INDEX IF NOT EXISTS "subscriptions_payment_confirmation_idx"
+  ON "subscriptions" ("organizationId", "status", "paymentConfirmedAt");
+
 CREATE TABLE IF NOT EXISTS "commercial_checkout_intents" (
   "id" TEXT PRIMARY KEY,
   "state" TEXT NOT NULL UNIQUE,
