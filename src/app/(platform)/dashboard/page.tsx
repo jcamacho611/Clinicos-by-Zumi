@@ -1,5 +1,6 @@
 import { Dashboard } from "@/components/clinic/dashboard";
 import { LivingHome } from "@/components/clinic/living-home";
+import { PathSignals } from "@/components/clinic/path-signals";
 import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";
 import { requireClinicSession } from "@/lib/auth/session";
@@ -21,7 +22,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="space-y-14">
-      <LivingHome firstName={firstName} initialPaths={activePaths} initialSignals={recentPathSignals} />
+      <div>
+        <LivingHome firstName={firstName} initialPaths={activePaths} />
+        <PathSignals signals={recentPathSignals} />
+      </div>
       <section aria-labelledby="operations-heading" className="space-y-5">
         <div className="max-w-2xl">
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Operations</p>
