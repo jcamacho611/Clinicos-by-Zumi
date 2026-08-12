@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, BriefcaseMedical, GraduationCap, Grid3X3, LogIn, Sparkles } from "lucide-react";
+import { GridLaunchDock } from "@/components/marketing/grid-launch-dock";
 import { KlinikosHomepage } from "@/components/marketing/klinikos-homepage";
 
 export const metadata: Metadata = {
-  title: "Klinikos by Zumi | Clinic continuity, made visible",
+  title: "Klinikos | Clinic continuity, made visible",
   description:
-    "Klinikos connects clinic operations, healthcare opportunities, education pathways, and the work between existing systems into one clear experience.",
+    "Klinikos connects clinic operations, healthcare opportunities, education pathways, and the work between existing systems. Zumi is the operating intelligence inside Klinikos.",
 };
 
 const pathways = [
@@ -19,7 +20,7 @@ const pathways = [
   },
   {
     title: "Grid",
-    detail: "Find or offer healthcare work, services, capacity, space, and other eligible resources.",
+    detail: "Find or offer healthcare work, services, capacity, space, education, and other eligible resources.",
     href: "/grid",
     action: "Explore Grid",
     icon: Grid3X3,
@@ -63,7 +64,7 @@ export default function LandingPage() {
               Start with what you need.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/60 sm:text-lg">
-              You should never have to know how Klinikos is built to know where to go. Choose your path and the system takes you to the right experience.
+              Choose the outcome you need. Klinikos takes you to the right workspace while the infrastructure stays behind the experience.
             </p>
           </div>
 
@@ -91,10 +92,13 @@ export default function LandingPage() {
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-sm text-white/55">
             <Link className="inline-flex items-center gap-2 hover:text-white" href="/login"><LogIn className="size-4" /> Sign in</Link>
             <Link className="hover:text-white" href="/about">About Klinikos</Link>
-            <span>Complex infrastructure stays behind the experience. The path in front of you stays simple.</span>
+            <Link className="hover:text-white" href="/how-it-works">How Klinikos works</Link>
+            <span>Zumi is the operating intelligence inside Klinikos.</span>
           </div>
         </div>
       </section>
+
+      <GridLaunchDock />
 
       <Link
         aria-label="Read the Klinikos mission and company story"
