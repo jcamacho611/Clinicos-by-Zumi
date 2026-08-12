@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { computePlatformFeeCents } from "@/lib/grid/financial-rules";
+import { reservationHasActiveGridIssues } from "@/lib/grid/trust-repository";
 import { computeGridFinancialSplit } from "@/lib/grid/transaction-state";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -121,6 +122,15 @@ export async function allocateGridFinancialObligations(session: ClinicSession, r
     if (context.fulfillmentStatus !== "fulfilled") {
       throw new NetworkAccessError("Financial obligations are created only after Grid fulfillment is recorded as fulfilled.", 409);
     }
+
+    const issues = await reservationHasActiveGridIssues(tx, context.reservationId);
+    if (issues.blocked) {
+      throw new NetworkAccessError(
+        `Financial allocation is on hold while ${issues.activeDisputes} marketplace dispute(s) and ${issues.activeSafetyIncidents} safety incident(s) remain open.`,
+        409,
+      );
+    }
+
     if (!context.supplyOrganizationId) {
       throw new NetworkAccessError("The fulfilled Grid transaction has no verified supply organization for settlement.", 409);
     }
