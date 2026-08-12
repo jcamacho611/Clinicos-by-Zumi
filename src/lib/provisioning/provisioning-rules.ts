@@ -1,3 +1,4 @@
+import type { AccessProductKey } from "@/lib/commerce/access-product-catalog";
 import { getAccessTier, type AccessTierKey } from "@/lib/commerce/whop-catalog";
 import { planKeys, type PlanKey } from "@/lib/growth/pricing";
 
@@ -75,6 +76,37 @@ const PLAN_MODULES: Record<PlanKey, readonly SubscriptionModule[]> = {
   klinikos_multi: [...CORE_CLINIC_MODULES, "billing_readiness", "revenue_recovery", "advanced_reports", "grid", "multi_location"],
   klinikos_enterprise: [...CORE_CLINIC_MODULES, "billing_readiness", "revenue_recovery", "advanced_reports", "grid", "multi_location", "migration"],
 };
+
+/**
+ * Modules granted by each one-time marketplace product.
+ *
+ * Read from what each catalog entry says it includes, not from its `roleTarget`. Two
+ * products share `roleTarget: "clinic"` and grant opposite things: a Founding Clinic
+ * Seat is an implementation package with a workspace, while a Private Workflow Review
+ * explicitly excludes an ongoing software subscription. Deriving from the role made the
+ * review grant the seat's capabilities.
+ *
+ * The three review products grant `grid` and nothing else. Their buyer has to sign in
+ * to submit the profile, listing, and evidence the review is *of* — but credential and
+ * listing gates still stand between that and any published listing or booked work, and
+ * those gates are enforced elsewhere and unaffected by this.
+ *
+ * The two service fees grant nothing. The consulting call says so in as many words
+ * ("Software access or a portal seat" is in its `doesNotInclude`), and the workflow
+ * review excludes the subscription.
+ */
+const PRODUCT_MODULES: Record<AccessProductKey, readonly SubscriptionModule[]> = {
+  clinic_workflow_review: [],
+  founding_clinic_seat: [...CORE_CLINIC_MODULES, "billing_readiness", "revenue_recovery"],
+  contractor_application_review: ["grid"],
+  room_listing_review: ["grid"],
+  seller_listing_review: ["grid"],
+  ai_consulting_call: [],
+};
+
+export function modulesForAccessProduct(productKey: string): readonly SubscriptionModule[] {
+  return PRODUCT_MODULES[productKey as AccessProductKey] ?? [];
+}
 
 export function modulesForTier(tierKey: string): readonly SubscriptionModule[] {
   return TIER_MODULES[tierKey as AccessTierKey] ?? [];
@@ -161,10 +193,16 @@ export function planProvisioning(input: {
   tierKey?: string;
   /** Klinikos plan, when the purchase came through the Growth Engine path. */
   planKey?: string;
+  /** Marketplace product, when the purchase was a one-time access payment. */
+  productKey?: string;
   /** Whether the buyer already belongs to an organization. */
   hasOrganization: boolean;
 }): ProvisioningPlan {
-  const modules = input.planKey ? modulesForPlan(input.planKey) : modulesForTier(input.tierKey ?? "");
+  const modules = input.planKey
+    ? modulesForPlan(input.planKey)
+    : input.productKey
+      ? modulesForAccessProduct(input.productKey)
+      : modulesForTier(input.tierKey ?? "");
   const tier = input.tierKey ? getAccessTier(input.tierKey) : undefined;
 
   // An evaluator has bought materials, not a workspace. Provisioning one would hand

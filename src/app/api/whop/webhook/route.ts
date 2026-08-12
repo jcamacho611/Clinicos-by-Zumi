@@ -121,6 +121,14 @@ export async function POST(request: Request) {
         providerProductId: envelope.data?.product_id ?? null,
       });
       if (settled.applied) {
+        // A settled payment whose access could not be built is not a finished delivery.
+        // Leaving it non-terminal means the provider's next redelivery re-attempts the
+        // provisioning, which is idempotent, rather than the buyer paying for a
+        // workspace that was never created.
+        if (!settled.provisioning.ok) {
+          await markWebhookIncomplete(delivery.id, settled.provisioning.reason);
+          return noStore({ ok: false, applied: true, scope: "access_payment", status: settled.status, reason: settled.provisioning.reason, retry: true }, 500);
+        }
         return noStore({ ok: true, applied: true, scope: "access_payment", status: settled.status }, 200);
       }
 

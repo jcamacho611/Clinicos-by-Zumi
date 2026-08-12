@@ -31,6 +31,8 @@ export type ProvisionInput = {
   email: string;
   tierKey?: string;
   planKey?: string;
+  /** Marketplace product, when the purchase was a one-time access payment. */
+  productKey?: string;
   clinicName?: string;
 };
 
@@ -58,6 +60,7 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
   const plan = planProvisioning({
     tierKey: input.tierKey,
     planKey: input.planKey,
+    productKey: input.productKey,
     hasOrganization: Boolean(existingOrganizationId),
   });
 

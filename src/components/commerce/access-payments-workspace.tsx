@@ -79,10 +79,21 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ paymentId, action, note: note.trim(), externalPaymentReference: reference.trim() || undefined }),
       });
-      const result = await response.json() as { error?: string; data?: AccessPaymentRow };
+      const result = await response.json() as {
+        error?: string;
+        data?: AccessPaymentRow;
+        provisioning?: { ok: boolean; reason?: string };
+      };
       if (!response.ok || !result.data) {
         setError(result.error ?? "That decision could not be recorded.");
         return;
+      }
+      // The decision was recorded; the access it grants was not built. Saying nothing
+      // here would leave the operator believing a buyer can sign in when they cannot.
+      if (result.provisioning && !result.provisioning.ok) {
+        setError(
+          `Decision recorded, but the buyer's access was not provisioned (${result.provisioning.reason ?? "unknown"}). They cannot sign in yet.`,
+        );
       }
       setRows((current) => current.map((row) => (row.id === paymentId ? { ...row, ...result.data } : row)));
       setNote("");

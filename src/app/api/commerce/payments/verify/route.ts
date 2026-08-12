@@ -50,7 +50,12 @@ export async function POST(request: Request) {
         { status: reviewed.reason === "not_found" ? 404 : 409 },
       );
     }
-    return NextResponse.json({ ok: true, data: reviewed.payment, reviewApproved: reviewed.approved }, { headers: { "Cache-Control": "private, no-store" } });
+    // The decision stands regardless — it is recorded and audited — but an operator who
+    // approved a buyer needs to know if that buyer still cannot sign in.
+    return NextResponse.json(
+      { ok: true, data: reviewed.payment, reviewApproved: reviewed.approved, provisioning: reviewed.provisioning },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 
   const parsed = accessPaymentVerificationSchema.safeParse(body);
@@ -69,5 +74,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message, reason: result.reason }, { status });
   }
 
-  return NextResponse.json({ ok: true, data: result.payment }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json(
+    { ok: true, data: result.payment, provisioning: result.provisioning },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

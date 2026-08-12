@@ -15,7 +15,8 @@ import {
   actionStreams,
   streamForState,
 } from "@/lib/operations/followup-rules";
-import { buyerRoleForModules, planProvisioning } from "@/lib/provisioning/provisioning-rules";
+import { buyerRoleForModules, modulesForAccessProduct, planProvisioning } from "@/lib/provisioning/provisioning-rules";
+import { accessProductCatalog } from "@/lib/commerce/access-product-catalog";
 import { candidateStatusesFor, corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
 import {
   whopEventAmountMinorUnits,
@@ -1337,5 +1338,100 @@ describe("a reference a buyer typed is a claim, not a binding", () => {
   it("preserves metadata written by other paths when appending a claim", () => {
     // buyerNote lives in the same column. Replacing the object wholesale would erase it.
     expect(claimFn()).toContain("...((payment.metadata as Record<string, unknown> | null) ?? {})");
+  });
+});
+
+describe("an approved purchase produces something the buyer can sign in to", () => {
+  // The reviewed defect: provisionFromPayment was called only for membership webhooks,
+  // never with source "access_payment". A public Founding Clinic buyer was approved by a
+  // reviewer, marked granted, and received no organization, no account, and no
+  // credential — portalAccessStatus was a column and nothing behind it.
+  const service = () => source("src/lib/commerce/access-payment-service.ts");
+
+  it("provisions the purchase that named the defect", () => {
+    const modules = modulesForAccessProduct("founding_clinic_seat");
+    expect(modules).toContain("clinic_workspace");
+    expect(planProvisioning({ productKey: "founding_clinic_seat", hasOrganization: false }).modules).toContain("clinic_workspace");
+  });
+
+  it("derives what to provision from the product, not the role", () => {
+    // Both are roleTarget "clinic" and they grant opposite things. Deriving from the
+    // role made a $750 review grant the $8,000 seat's capabilities.
+    const review = accessProductCatalog.find((product) => product.key === "clinic_workflow_review")!;
+    const seat = accessProductCatalog.find((product) => product.key === "founding_clinic_seat")!;
+    expect(review.roleTarget).toBe(seat.roleTarget);
+    expect(modulesForAccessProduct("clinic_workflow_review")).toEqual([]);
+    expect(modulesForAccessProduct("founding_clinic_seat").length).toBeGreaterThan(0);
+  });
+
+  it("grants nothing for a product whose catalog entry excludes a portal seat", () => {
+    const call = accessProductCatalog.find((product) => product.key === "ai_consulting_call")!;
+    expect(call.doesNotInclude.join(" ")).toContain("portal seat");
+    expect(modulesForAccessProduct("ai_consulting_call")).toEqual([]);
+  });
+
+  it("gives the review products an account but no clinic workspace", () => {
+    // Their buyer has to sign in to submit the profile or listing the review is of.
+    // Credential and listing gates still stand between that and any published work.
+    for (const key of ["contractor_application_review", "room_listing_review", "seller_listing_review"]) {
+      expect(modulesForAccessProduct(key)).toEqual(["grid"]);
+      expect(modulesForAccessProduct(key)).not.toContain("clinic_workspace");
+    }
+  });
+
+  it("maps every catalog product, so a new one cannot silently grant nothing by accident", () => {
+    for (const product of accessProductCatalog) {
+      expect(() => modulesForAccessProduct(product.key)).not.toThrow();
+    }
+    const rules = source("src/lib/provisioning/provisioning-rules.ts");
+    // Record<AccessProductKey, …> makes an unmapped product a type error rather than an
+    // empty grant.
+    expect(rules).toContain("const PRODUCT_MODULES: Record<AccessProductKey, readonly SubscriptionModule[]>");
+  });
+
+  it("runs from the derived access status, not from one caller", () => {
+    // Three paths reach granted: a webhook settling a product needing no review, an
+    // operator marking a payment paid, and a reviewer approving onboarding.
+    const body = service();
+    expect(body.match(/syncProvisionedAccess\(/g)?.length).toBe(4);
+    expect(body).toContain('if (payment.portalAccessStatus === "granted")');
+  });
+
+  it("withdraws access when the payment is reversed or held", () => {
+    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
+    expect(fn).toContain('payment.portalAccessStatus === "revoked"');
+    expect(fn).toContain("revokeProvisionedAccess");
+  });
+
+  it("never undoes the human decision because a downstream write failed", () => {
+    // The approval is recorded and audited before this runs, and it stays recorded.
+    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
+    expect(fn).not.toContain("throw");
+    expect(fn).toContain(".catch(() => null)");
+  });
+
+  it("reports a provisioned buyer who cannot be reached as unfinished", () => {
+    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
+    expect(fn).toContain("activation_undelivered");
+  });
+
+  it("tells the operator when the access they granted was not built", () => {
+    const workspace = source("src/components/commerce/access-payments-workspace.tsx");
+    expect(workspace).toContain("result.provisioning");
+    expect(workspace).toContain("They cannot sign in yet.");
+    const route = source("src/app/api/commerce/payments/verify/route.ts");
+    expect(route).toContain("provisioning: reviewed.provisioning");
+    expect(route).toContain("provisioning: result.provisioning");
+  });
+
+  it("keeps a settled-but-unprovisioned webhook delivery retryable", () => {
+    const route = source("src/app/api/whop/webhook/route.ts");
+    const branch = route.slice(route.indexOf("if (settled.applied) {"));
+    expect(branch.slice(0, branch.indexOf("\n      }"))).toContain("markWebhookIncomplete");
+  });
+
+  it("reports no attempt for a purchase that owes no workspace", () => {
+    const fn = service().slice(service().indexOf("async function syncProvisionedAccess"));
+    expect(fn).toContain("provisioning.modules.length === 0");
   });
 });
