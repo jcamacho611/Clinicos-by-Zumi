@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { clinicActivationSchema, clinicCheckoutRequestSchema } from "@/lib/commercial/clinic-activation-rules";
+import { clinicActivationDraftFieldsSchema, clinicActivationSchema, clinicCheckoutRequestSchema } from "@/lib/commercial/clinic-activation-rules";
 import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
 import { getCommercialProduct } from "@/lib/commercial/product-catalog";
 import { findBannedPublicCopy } from "@/lib/design/command-system";
@@ -58,6 +58,40 @@ describe("Klinikos MVP commercial activation", () => {
     expect(clinicActivationSchema.safeParse({ ...base, password: "weakpassword" }).success).toBe(false);
     expect(clinicActivationSchema.safeParse({ ...base, acceptTerms: false }).success).toBe(false);
     expect(clinicActivationSchema.safeParse({ ...base, syntheticDataOnly: false }).success).toBe(false);
+  });
+
+  it("persists only non-secret resumable onboarding fields", () => {
+    const parsed = clinicActivationDraftFieldsSchema.parse({
+      ownerName: "Jordan Ellis",
+      clinicType: "Primary care",
+      locationName: "Main clinic",
+      city: "Brooklyn",
+      state: "ny",
+      timezone: "America/New_York",
+      teamSize: "1-5",
+      primaryGoal: "Coordinate clinic operations",
+      currentSystems: "Existing EHR",
+      migrationExpectation: "needs_review",
+      communicationsState: "existing_vendor",
+      password: "must-not-survive",
+      acceptTerms: true,
+      organizationId: "must-not-survive",
+      role: "clinic_owner",
+      productKey: "clinic_scale",
+    });
+    expect(parsed.state).toBe("NY");
+    expect(parsed).not.toHaveProperty("password");
+    expect(parsed).not.toHaveProperty("acceptTerms");
+    expect(parsed).not.toHaveProperty("organizationId");
+    expect(parsed).not.toHaveProperty("role");
+    expect(parsed).not.toHaveProperty("productKey");
+
+    const repository = read("src/lib/commercial/clinic-activation-draft.ts");
+    const route = read("src/app/api/onboarding/activate/route.ts");
+    expect(repository).toContain("activationDraft");
+    expect(repository).toContain("verifyClinicActivationToken");
+    expect(route).toContain("export async function PATCH");
+    expect(route).toContain("clinicActivationDraftSchema");
   });
 
   it("does not expose the legacy public organization endpoint as a production free-access path", () => {
