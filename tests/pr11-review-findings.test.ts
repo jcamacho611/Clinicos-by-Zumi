@@ -18,6 +18,9 @@ import {
 import { buyerRoleForModules, planProvisioning } from "@/lib/provisioning/provisioning-rules";
 import { corroborateEmailMatch, derivePortalAccess } from "@/lib/commerce/access-payment-rules";
 import { whopEventAmountMinorUnits } from "@/lib/commerce/whop-rules";
+import { admitZumiRequest, type ZumiAdmissionInput } from "@/features/zumi/policy";
+import { phiEgressPermitted, zumiGatewayStatus, registerProvider, resetProviderRegistry, type ProviderAdapter } from "@/features/zumi/providers";
+import { anthropicAdapter } from "@/features/zumi/adapters/anthropic";
 
 /**
  * One test per reviewed defect on PR #11.
@@ -998,5 +1001,100 @@ describe("a signed payment event only settles the purchase it is actually for", 
     for (const key of ["CLINIC_WORKFLOW_REVIEW", "FOUNDING_CLINIC_SEAT", "AI_CONSULTING_CALL"]) {
       expect(example).toContain(`WHOP_PRODUCT_ID_${key}=""`);
     }
+  });
+});
+
+
+describe("no clinic content reaches a model provider that is not approved to receive it", () => {
+  // The reviewed defect: selectProvider never consulted baaOnFile and phiEgressPermitted
+  // was computed only to decorate a refusal message. An ANTHROPIC_API_KEY plus a model
+  // name was therefore enough to start sending, and the regex redaction that was
+  // standing in for the control does not recognise a patient's name or clinical prose.
+  const request = (overrides: Partial<ZumiAdmissionInput> = {}): ZumiAdmissionInput => ({
+    capability: "operational_summary",
+    role: "clinic_owner",
+    sessionOrganizationId: "org_1",
+    requestedOrganizationId: "org_1",
+    entitlements: [],
+    phiEgressPermitted: true,
+    providerAvailable: true,
+    ...overrides,
+  });
+
+  const adapter = (baaOnFile: boolean): ProviderAdapter => ({
+    key: "test",
+    label: "Test provider",
+    modelId: "test-model",
+    requiredEnv: [],
+    baaOnFile,
+    invoke: async () => {
+      throw new Error("a test provider must never be invoked");
+    },
+  });
+
+  afterEach(() => {
+    resetProviderRegistry();
+  });
+
+  it("refuses an otherwise fully authorized request when egress is not permitted", () => {
+    const decision = admitZumiRequest(request({ phiEgressPermitted: false }));
+    expect(decision.allowed).toBe(false);
+    expect(decision).toMatchObject({ reason: "phi_egress_not_permitted", status: 403 });
+  });
+
+  it("refuses it for an owner, because this is not a permissions question", () => {
+    expect(admitZumiRequest(request({ role: "clinic_owner", phiEgressPermitted: false })).allowed).toBe(false);
+  });
+
+  it("still reports a missing provider as missing rather than as unapproved", () => {
+    // Otherwise an operator with nothing configured goes looking for a BAA they do not
+    // need yet, instead of connecting a provider.
+    const decision = admitZumiRequest(request({ phiEgressPermitted: false, providerAvailable: false }));
+    expect(decision).toMatchObject({ reason: "provider_unavailable" });
+  });
+
+  it("requires both a BAA and a deployment approval, and neither alone", () => {
+    expect(phiEgressPermitted(adapter(true), {}).permitted).toBe(false);
+    expect(phiEgressPermitted(adapter(false), { ZUMI_PHI_EGRESS_APPROVED: "1" }).permitted).toBe(false);
+    expect(phiEgressPermitted(adapter(true), { ZUMI_PHI_EGRESS_APPROVED: "1" }).permitted).toBe(true);
+  });
+
+  it("names which of the two conditions is missing", () => {
+    expect(phiEgressPermitted(adapter(false), { ZUMI_PHI_EGRESS_APPROVED: "1" }).reason).toBe("no_baa");
+    expect(phiEgressPermitted(adapter(true), {}).reason).toBe("deployment_not_approved");
+  });
+
+  it("keeps the shipped Anthropic adapter unapproved even with the flag set", () => {
+    // A BAA is not something an environment variable can grant.
+    expect(anthropicAdapter.baaOnFile).toBe(false);
+    expect(phiEgressPermitted(anthropicAdapter, { ZUMI_PHI_EGRESS_APPROVED: "1" }).permitted).toBe(false);
+  });
+
+  it("does not describe a configured-but-unapproved deployment as connected", () => {
+    // The workspace reads this. Advertising an assistant that refuses every request is
+    // the same untruth in a friendlier place.
+    registerProvider(adapter(false));
+    const status = zumiGatewayStatus({});
+    expect(status.available).toBe(false);
+    expect(status.mode).toBe("pending_phi_approval");
+    expect(status.detail).toContain("Business Associate Agreement");
+  });
+
+  it("says connected only once both conditions hold", () => {
+    registerProvider(adapter(true));
+    expect(zumiGatewayStatus({ ZUMI_PHI_EGRESS_APPROVED: "1" })).toMatchObject({ available: true, mode: "connected" });
+  });
+
+  it("decides egress before the prompt is built, not after", () => {
+    const gateway = source("src/features/zumi/gateway.ts");
+    expect(gateway.indexOf("phiEgressPermitted(selection.adapter)")).toBeLessThan(gateway.indexOf("buildPrompt(request)"));
+  });
+
+  it("cannot be defaulted open by a new caller", () => {
+    // A required field rather than an optional one: omitting it is a type error, not a
+    // silent grant.
+    const policy = source("src/features/zumi/policy.ts");
+    expect(policy).toContain("phiEgressPermitted: boolean;");
+    expect(policy).not.toContain("phiEgressPermitted?: boolean");
   });
 });

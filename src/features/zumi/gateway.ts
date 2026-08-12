@@ -7,6 +7,7 @@ import {
   containsLikelyIdentifiers,
   redactPayload,
   redactText,
+  REDACTION_LIMITATION_NOTICE,
 } from "@/features/zumi/redaction";
 import {
   orbStateForStage,
@@ -235,12 +236,20 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   ensureProvidersRegistered();
   const selection = selectProvider();
 
+  // Computed before admission rather than after, because it decides whether the request
+  // may happen at all. It used to be read only on the redaction-failure path, where it
+  // decorated a message — which left the ordinary path sending clinic content to a
+  // provider with no BAA the moment credentials existed.
+  const phi = selection.ok ? phiEgressPermitted(selection.adapter) : null;
+
   const decision = admitZumiRequest({
     capability: request.capability,
     role: request.session.role,
     sessionOrganizationId: request.session.organizationId,
     requestedOrganizationId: request.organizationId,
     entitlements: request.entitlements,
+    phiEgressPermitted: phi?.permitted ?? false,
+    phiEgressDetail: phi?.detail,
     providerAvailable: selection.ok,
     providerDetail: selection.ok ? undefined : selection.detail,
   });
@@ -298,12 +307,11 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       durationMs: Date.now() - startedAt,
       auditLogId,
     });
-    const phi = phiEgressPermitted(selection.adapter);
     return {
       allowed: false,
       reason: "prohibited",
       status: 403,
-      message: `This request still contains identifier-shaped content after redaction, so Zumi did not send it. ${phi.notice}`,
+      message: `This request still contains identifier-shaped content after redaction, so Zumi did not send it. ${phi?.notice ?? REDACTION_LIMITATION_NOTICE}`,
       invocationId: null,
     };
   }

@@ -12,11 +12,15 @@
  *   3. tenant        — the organization on the request must match the session.
  *   4. permission    — baseline `ai:read`, then the capability's own requirement.
  *   5. entitlement   — what the clinic bought.
- *   6. availability  — whether a provider is actually connected.
+ *   6. PHI egress    — whether this provider may receive clinic content at all.
+ *   7. availability  — whether a provider is actually connected.
  *
  * Availability is last on purpose. A denial should tell the truth about *why*, and
  * "not connected" is a weaker, more forgivable answer than "you may not do this" —
- * reporting it first would hide the real reason behind an outage.
+ * reporting it first would hide the real reason behind an outage. PHI egress sits
+ * immediately before it for the same reason inverted: a deployment that is connected
+ * but not approved must not be described as disconnected, because an operator would
+ * then go looking for an outage that does not exist.
  */
 
 import { can } from "@/lib/auth/rbac";
@@ -42,6 +46,15 @@ export type ZumiAdmissionInput = {
   requestedOrganizationId: string;
   /** Entitlement keys resolved server-side. Never read from the request body. */
   entitlements: readonly string[];
+  /**
+   * Whether the selected provider may receive clinic content in this deployment.
+   *
+   * Named `phiEgressPermitted` rather than something softer because that is exactly
+   * what it decides. Passed in rather than read here so the policy stays pure, and
+   * required rather than optional so a new caller cannot omit it and default it open.
+   */
+  phiEgressPermitted: boolean;
+  phiEgressDetail?: string;
   providerAvailable: boolean;
   providerDetail?: string;
 };
@@ -54,6 +67,7 @@ export type ZumiAdmissionDenial = {
     | "tenant_mismatch"
     | "permission_denied"
     | "entitlement_required"
+    | "phi_egress_not_permitted"
     | "provider_unavailable";
   /** Safe to show a user. Says what happened without leaking what exists. */
   message: string;
@@ -132,6 +146,24 @@ export function admitZumiRequest(input: ZumiAdmissionInput): ZumiAdmissionDecisi
       reason: "entitlement_required",
       status: 402,
       message: `${capability.label} is part of an access level this organization does not currently hold.`,
+    };
+  }
+
+  // Nothing built from a clinic's records may reach a provider that is not approved to
+  // receive it. Redaction runs later and removes identifier *shapes* — it does not
+  // recognise a patient's name, a chief complaint written in prose, or any of the
+  // ordinary clinical language every one of these capabilities operates on. Treating a
+  // scrubbing pass as permission is the specific mistake this check exists to prevent.
+  // Guarded on availability so a deployment with nothing connected is told that, rather
+  // than being told it lacks an approval for a provider it does not have.
+  if (input.providerAvailable && !input.phiEgressPermitted) {
+    return {
+      allowed: false,
+      reason: "phi_egress_not_permitted",
+      status: 403,
+      message:
+        input.phiEgressDetail ??
+        "Zumi will not send clinic content to a model provider that is not covered by a Business Associate Agreement and approved for this deployment.",
     };
   }
 

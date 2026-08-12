@@ -21,8 +21,13 @@ import {
  * swap than forty lines of fetch.
  *
  * **`baaOnFile` is false.** No Business Associate Agreement is executed for this
- * deployment, so PHI must not reach it. The gateway enforces that independently;
- * this declaration is the adapter's own honest statement of its status.
+ * deployment, so PHI must not reach it. That is enforced in `admitZumiRequest`, which
+ * refuses every request while this is false — not merely noted in a message, which is
+ * all it was until the gate was added. The practical consequence is deliberate: this
+ * adapter can hold valid credentials and still send nothing, and Zumi reports
+ * `pending_phi_approval` rather than claiming to be connected. Flipping this to true
+ * is an assertion that counsel executed an agreement, and belongs to whoever can make
+ * that statement truthfully.
  */
 
 const API_URL = "https://api.anthropic.com/v1/messages";

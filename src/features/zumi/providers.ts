@@ -196,12 +196,32 @@ export function selectProvider(env: ZumiEnv = process.env):
  * Two independent conditions, both required: the adapter declares a signed BAA, and
  * the deployment is explicitly flagged as approved for it. Neither alone is enough,
  * and the default answer is no.
+ *
+ * This is an admission gate, not a label. It was computed and used only to decorate a
+ * refusal message, which meant a configured provider with `baaOnFile: false` accepted
+ * requests while `ZUMI_PHI_EGRESS_APPROVED` was unset. Redaction did not close that
+ * gap and cannot: the rules match identifier *shapes*, and a patient's name in ordinary
+ * clinical prose has no shape to match. `admitZumiRequest` now refuses on this, so the
+ * only thing standing between a clinic's operational text and an unapproved vendor is a
+ * decision someone made deliberately rather than a regular expression.
+ *
+ * `reason` names which of the two conditions is missing so an operator can see what to
+ * fix. A BAA is not something code can grant — the adapter declaring `baaOnFile: true`
+ * is an assertion that counsel executed one, and it is deliberately false today.
  */
 export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = process.env) {
   const approved = env.ZUMI_PHI_EGRESS_APPROVED === "1";
+  const permitted = adapter.baaOnFile && approved;
+  const reason = permitted ? null : !adapter.baaOnFile ? ("no_baa" as const) : ("deployment_not_approved" as const);
   return {
-    permitted: adapter.baaOnFile && approved,
+    permitted,
+    reason,
     notice: REDACTION_LIMITATION_NOTICE,
+    detail: permitted
+      ? `${adapter.label} is under a Business Associate Agreement and this deployment is approved to send protected health information to it.`
+      : !adapter.baaOnFile
+        ? `No Business Associate Agreement is on file for ${adapter.label}, so Zumi will not send clinic content to it. ${REDACTION_LIMITATION_NOTICE}`
+        : `This deployment is not approved to send protected health information to ${adapter.label} (ZUMI_PHI_EGRESS_APPROVED is unset). ${REDACTION_LIMITATION_NOTICE}`,
   };
 }
 
@@ -214,6 +234,18 @@ export function phiEgressPermitted(adapter: ProviderAdapter, env: ZumiEnv = proc
 export function zumiGatewayStatus(env: ZumiEnv = process.env) {
   const selection = selectProvider(env);
   if (selection.ok) {
+    // A connected provider that may not receive clinic content is not "available", and
+    // saying so here is what keeps the workspace from advertising an assistant that
+    // refuses every request it is given.
+    const phi = phiEgressPermitted(selection.adapter, env);
+    if (!phi.permitted) {
+      return {
+        available: false as const,
+        mode: "pending_phi_approval" as const,
+        provider: selection.adapter.key,
+        detail: phi.detail,
+      };
+    }
     return {
       available: true as const,
       mode: "connected" as const,

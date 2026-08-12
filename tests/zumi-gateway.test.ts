@@ -47,6 +47,9 @@ const baseRequest = (overrides: Partial<ZumiAdmissionInput> = {}): ZumiAdmission
   sessionOrganizationId: "org_1",
   requestedOrganizationId: "org_1",
   entitlements: [],
+  // The permitted case is the base so each earlier check can be exercised in isolation.
+  // The refusal it now guards has its own describe block below.
+  phiEgressPermitted: true,
   providerAvailable: true,
   ...overrides,
 });
