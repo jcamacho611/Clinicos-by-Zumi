@@ -128,7 +128,9 @@ export async function createUniversalReservationFromAcceptedOffer(session: Clini
 
     const end = offer.offeredEndAt ?? new Date(offer.offeredStartAt.getTime() + 60 * 60 * 1000);
     const lockKey = `grid:resource:${offer.resourceKind}:${offer.resourceReference}`;
-    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`);
+    // See reservation-repository: pg_advisory_xact_lock returns void, which $queryRaw
+    // cannot deserialize. The lock is taken for its side effect.
+    await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`);
 
     const resource = await getEligibleGridResourceForTransaction(tx, {
       resourceId: offer.resourceReference,
