@@ -119,7 +119,7 @@ export default function StartPage() {
           <HumanReviewBanner />
         </div>
         <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-8 text-xs text-slate-500">
-          <Link className="font-bold text-slate-300 hover:text-white" href="/access">Get verified free access</Link>
+          <Link className="font-bold text-slate-300 hover:text-white" href="/access">Request evaluation access</Link>
           <Link className="font-bold text-slate-300 hover:text-white" href="/pricing">See clinic pricing</Link>
           <span className="inline-flex items-center gap-2"><ShieldCheck className="size-3.5" /> Access, payment, credentials, and regulated actions remain separate gates.</span>
         </div>
