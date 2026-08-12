@@ -17,6 +17,8 @@ import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
 
+export const maxDuration = 120;
+
 const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 const MAX_ZUMI_BODY_BYTES = 64 * 1024;
 
@@ -96,6 +98,7 @@ export async function GET() {
         publicWebSeparatedFromPrivateContext: true,
         founderModeIsNotAuthorizationBypass: true,
         deterministicOrchestrationOutranksModelSuggestions: true,
+        deepCognition: "bounded_plan_investigate_critic_repair",
       },
       capabilities: zumiCapabilities.map((capability) => ({
         key: capability.key,
@@ -234,6 +237,7 @@ export async function POST(request: Request) {
       sources: result.continuation?.sources ?? [],
       toolsUsed: result.continuation?.toolsUsed ?? [],
       research: result.research,
+      cognition: result.cognition,
       orchestration: result.orchestration,
       trustedOrchestration: result.trustedOrchestration,
       presence,
