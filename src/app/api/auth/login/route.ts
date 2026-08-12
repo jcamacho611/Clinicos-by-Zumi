@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     });
     clearLoginFailures(key);
 
-    const response = NextResponse.json({ ok: true, redirectTo: identity.role === "contractor" ? "/grid" : "/dashboard" });
+    const response = NextResponse.json({ ok: true, redirectTo: identity.role === "contractor" ? "/grid/opportunities" : "/dashboard" });
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
     response.headers.set("Cache-Control", "no-store");
     return response;

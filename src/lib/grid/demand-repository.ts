@@ -37,6 +37,7 @@ type GridDemandRow = {
 };
 
 function requireGridPermission(session: ClinicSession, action: "read" | "create") {
+  if (action === "create" && session.role === "contractor") return;
   if (!can(session.role, "network", action) && !can(session.role, "grid", action)) {
     throw new NetworkAccessError("Grid demand access is not permitted for this role.", 403);
   }
@@ -80,6 +81,13 @@ export async function createSavedGridDemand(session: ClinicSession, rawInput: un
   requireGridPermission(session, "create");
   await requireSyntheticOrganization(session.organizationId);
   const input = savedGridDemandSchema.parse(rawInput);
+  if (!['draft', 'open'].includes(input.status)) {
+    throw new NetworkAccessError("A new Grid need can only begin as draft or open.", 409);
+  }
+  if (session.role === "contractor" && input.visibility === "public") {
+    throw new NetworkAccessError("External Grid participant needs begin private, matched-only, or inside the reviewed network.", 409);
+  }
+
   const id = randomUUID();
   const requirements = JSON.stringify(input.requirements);
 
@@ -116,6 +124,7 @@ export async function createSavedGridDemand(session: ClinicSession, rawInput: un
         visibility: input.visibility,
         syntheticDemo: true,
         containsPhi: false,
+        externalParticipant: session.role === "contractor",
       },
     },
   });
