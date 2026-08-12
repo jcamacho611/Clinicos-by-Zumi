@@ -1,0 +1,120 @@
+import { describe, expect, it } from "vitest";
+import { allocateFundedUsage, evaluateCustomerFundedAccess } from "@/lib/commercial/customer-funded-access";
+import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
+import { getCommercialProduct } from "@/lib/commercial/product-catalog";
+import { salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
+
+describe("Klinikos commercial truth", () => {
+  it("allocates customer-backed variable usage in allowance, prepaid, then authorized-overage order", () => {
+    expect(allocateFundedUsage(1_000, {
+      includedAllowanceRemainingCents: 250,
+      prepaidBalanceCents: 500,
+      authorizedOverageRemainingCents: 500,
+    })).toEqual({
+      allocations: [
+        { source: "included_allowance", amountCents: 250 },
+        { source: "prepaid_balance", amountCents: 500 },
+        { source: "authorized_overage", amountCents: 250 },
+      ],
+      shortfallCents: 0,
+    });
+  });
+
+  it("refuses unfunded vendor spend even when the subscription is paid", () => {
+    const decision = evaluateCustomerFundedAccess({
+      subscriptionStatus: "active",
+      paymentConfirmed: true,
+      entitlements: ["grid"],
+      includedAllowanceRemainingCents: 100,
+      prepaidBalanceCents: 0,
+      authorizedOverageRemainingCents: 0,
+      demoMode: false,
+      syntheticDataOnly: false,
+    }, {
+      capability: "maps.route_matrix",
+      requiredEntitlement: "grid",
+      estimatedVariableCostCents: 250,
+      costBucket: "maps",
+    });
+
+    expect(decision.allowed).toBe(false);
+    if (!decision.allowed) {
+      expect(decision.reason).toBe("funds_required");
+      expect(decision.shortfallCents).toBe(150);
+    }
+  });
+
+  it("never lets payment override a policy block", () => {
+    const decision = evaluateCustomerFundedAccess({
+      subscriptionStatus: "active",
+      paymentConfirmed: true,
+      entitlements: ["grid"],
+      includedAllowanceRemainingCents: 100_000,
+      prepaidBalanceCents: 100_000,
+      authorizedOverageRemainingCents: 100_000,
+      demoMode: false,
+      syntheticDataOnly: false,
+    }, {
+      capability: "regulated.action",
+      requiredEntitlement: "grid",
+      estimatedVariableCostCents: 1,
+      policyBlocked: true,
+    });
+
+    expect(decision).toMatchObject({ allowed: false, reason: "policy_blocked" });
+  });
+
+  it("keeps the operational audit separate from production software activation", () => {
+    const product = getCommercialProduct("operational_audit");
+    expect(product?.modules).toEqual([]);
+    expect(product?.postPurchaseBoundary).toMatch(/does not activate production software/i);
+  });
+
+  it("treats GoDaddy as checkout-only until independently reconciled", async () => {
+    const status = goDaddyPaymentConnector.status();
+    expect(status.checkoutConfigured).toBe(true);
+    expect(status.webhookConfigured).toBe(false);
+    expect(status.processorVerification).toBe(false);
+
+    const product = getCommercialProduct("operational_audit");
+    expect(product).toBeTruthy();
+    const checkout = await goDaddyPaymentConnector.createCheckout?.({
+      product: product!,
+      organizationId: "org-test",
+      email: "buyer@example.com",
+      state: "state-test",
+      returnUrl: "https://klinikos.io/payments/success",
+    });
+    expect(checkout?.checkoutUrl).toMatch(/^https:\/\/.+paylinks\.godaddy\.com\/?$/);
+    expect(checkout?.processorVerificationAvailable).toBe(false);
+  });
+
+  it("requires an auditable buyer email before an operational-audit checkout can be created", () => {
+    const base = {
+      clinic: "Brooklyn Family Medicine",
+      decisionMaker: "Owner",
+      locations: 1,
+      providers: 3,
+      staff: 5,
+      encounters: 100,
+      revenueBand: "500k-1m",
+      insuranceMix: "mixed",
+      billing: "internal",
+      monthlyTech: 2_000,
+      knownLeakage: 5_000,
+      ehr: "existing",
+      biggestPain: "follow-up",
+      afterHours: 12,
+      referrals: true,
+      labs: true,
+      claims: true,
+      multiLocation: false,
+      score: 80,
+      status: "QUALIFIED",
+      auditPrice: 1_250,
+    } as const;
+
+    expect(salesAuditQualificationSchema.safeParse(base).success).toBe(false);
+    expect(salesAuditQualificationSchema.safeParse({ ...base, email: "buyer@clinic.example" }).success).toBe(true);
+  });
+});
