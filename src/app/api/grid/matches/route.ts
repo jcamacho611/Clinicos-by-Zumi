@@ -81,8 +81,26 @@ export async function POST(request: Request) {
       maxPriceCents: parsed.maxPriceCents,
       requiresClinicalEligibility: parsed.requiresClinicalEligibility,
     });
+    const serviceById = new Map(services.map((service) => [service.id, service]));
 
-    return NextResponse.json({ data: matches.slice(0, 25) });
+    return NextResponse.json({
+      data: matches.slice(0, 25).map((match) => {
+        const service = serviceById.get(match.serviceId);
+        return {
+          ...match,
+          providerName: service?.provider.displayName ?? "Verified Grid professional",
+          providerType: service?.provider.providerType ?? null,
+          specialty: service?.provider.specialty ?? null,
+          serviceName: service?.serviceName ?? "Grid service",
+          category: service?.category ?? parsed.category,
+          priceLowCents: service?.priceLowCents ?? null,
+          priceHighCents: service?.priceHighCents ?? null,
+          requiresDeposit: service?.requiresDeposit ?? false,
+          requiresMedicalReview: service?.requiresMedicalReview ?? false,
+          onCallNow: service?.provider.onCallNow ?? false,
+        };
+      }),
+    });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
