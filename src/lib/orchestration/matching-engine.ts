@@ -60,7 +60,9 @@ export function distanceScore(distanceMiles: number | null, maximumMiles: number
  * required dimensions. It never converts a failed regulated eligibility decision
  * into a high-scoring match.
  */
-export function requiredEligibilityDimension<T>(evaluate: (candidate: T) => { eligible: boolean; reasons: string[] }): MatchDimension<T> {
+export function requiredEligibilityDimension<T extends { id: string } = { id: string; eligible: boolean }>(
+  evaluate: (candidate: T) => { eligible: boolean; reasons: string[] },
+): MatchDimension<T> {
   return {
     key: "eligibility",
     weight: 0,
