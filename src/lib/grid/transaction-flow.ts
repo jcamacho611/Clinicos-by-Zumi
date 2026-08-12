@@ -1,12 +1,10 @@
 import { z } from "zod";
-import { gridDemandSchema } from "@/lib/grid/demand";
+import { gridDemandSchema } from "@/lib/grid/demand-contract";
 
 export const gridDemandStatuses = ["draft", "open", "matched", "offered", "reserved", "fulfilled", "cancelled", "expired"] as const;
 export const gridOfferStatuses = ["draft", "sent", "accepted", "countered", "declined", "expired", "withdrawn"] as const;
 
 export const savedGridDemandSchema = gridDemandSchema.extend({
-  title: z.string().trim().min(3).max(160),
-  description: z.string().trim().min(10).max(2_000),
   status: z.enum(gridDemandStatuses).default("open"),
   visibility: z.enum(["private", "matched_only", "network", "public"]).default("matched_only"),
 });
