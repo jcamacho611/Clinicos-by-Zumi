@@ -19,6 +19,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Private Workflow Demo & Cost Review sales engine with public `/demo`, `/private-demo`, `/founding-clinic`, and `/sales` routes; server-controlled $500, $1,500, and $8,000 offers; credit-forward disclosure; synthetic scenario generation; a human-reviewed recap lifecycle; tenant-owned `/admin/sales` and `/owner/founding-program` workspaces; and manual payment fallback
 - PostgreSQL-backed Grid demonstration with public `/grid/join` independent-contractor enrollment, nurse/injector credentials and malpractice review, mobile/chair/partner-location preferences, on-call availability, admin approval, accept/counter/decline booking decisions, manual payout estimates, bounded Zumi guidance, hidden admin identity fields, cross-organization request states, dual-tenant audit receipts, and authenticated `/grid/*` plus `/admin/grid` workspaces
 - Governed Network Command with relationship-aware partner profiles, visual clinic constellation, integration/capacity/manual-fallback signals, consent- and agreement-bound handoff preparation, connected/manual/fax/Direct delivery states, recipient actions, append-only dual-organization events, and authenticated `/network`, `/network/map`, `/network/handoffs`, `/network/directory`, and `/admin/network` workspaces
+- PostgreSQL-backed Zumi Workflow Copilot shared by `/ai-assistants` and `/voice-assistant`, with typed or push-to-talk input, same-page processing and results, deterministic local safety/routing rules, optional tenant-owned synthetic patient context, confidence and provenance, review tasks, urgent holds, human approval/rejection receipts, and execution blocked at every stage
 - Offer-first public landing page and self-service organization launch with clinic type, primary location, owner credential, tenant-specific roles and permissions, trial modules, default appointment types, pending connector records, onboarding settings, signed session creation, and audit/activity receipts
 - Owner command center
 - Front desk and provider workspaces
@@ -36,7 +37,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - PostgreSQL-backed no-fault and workers' compensation case rooms with organization-isolated profiles, policy/employer and injury facts, diagnosis and form status, human-reviewed updates, owner tasks, case-linked document custody, required packet checklists, readiness state machine, manual PDF packet export, patient-level billing context labeled as non-attributed, and full case audit history; external carrier, attorney, form, payer, and clearinghouse delivery remains `Pending Connection`
 - Quality measures, care gaps, and outreach
 - Secure-message, task, and escalation workspaces
-- Same-page AI safety-routing simulator
+- Same-page Zumi workflow command surface with synthetic-data acknowledgment and visible review state
 - Patient portal preview
 - Integration roadmap and organization audit settings
 - Network Command, Care Constellation, and purpose-bound clinic connections
@@ -50,7 +51,7 @@ This is an engineering foundation and demonstration environment. It is **not** a
 - Live Capacity Exchange request flow with verified listing reads, tenant-filtered patient selection, appointment-request holds, manual-confirmation tasks, and audit receipts
 - Live Patient Navigation workflow with safety classification, administrative draft generation, human review, urgent escalation, and tenant-filtered appointment/referral context; drafts remain blocked from send
 - Live Provider Consultation Marketplace with credential snapshots, connected-clinic checks, provider request/accept/schedule/close transitions, responsible-provider tasks, and manual adapter boundaries
-- Voice-first ClinicOS Copilot with same-screen transcript review and typing fallback
+- Voice-first Zumi Copilot with editable browser transcript, typing fallback, no stored audio, and production speech marked `Pending connection`
 - Searchable, PostgreSQL-backed Priority Zero registry covering 62 domains and 2,157 capabilities, including the incorporated 52-section ClinicOS Master Feature List
 
 The full non-removable product constitution is documented in [`docs/CLINICOS_MASTER_CANON.md`](./docs/CLINICOS_MASTER_CANON.md) and encoded in [`src/lib/feature-registry-canon.ts`](./src/lib/feature-registry-canon.ts). Priority Zero means permanent scope, not a claim that every integration is live.
@@ -142,6 +143,8 @@ npm start            # production server
 - `POST /api/encounters/:encounterId/addenda` lets authorized signers append an immutable signed clarification to a locked note without changing the original.
 - `POST /api/encounters/:encounterId/transition` submits a complete draft for review or signs and permanently locks a reviewed note.
 - `POST /api/workflows/classify` requires authentication and applies deterministic safety-routing rules.
+- `GET|POST /api/copilot/runs` returns tenant-scoped Copilot history or creates a synthetic-demo-only administrative run after AI/voice permission checks; it persists the classification, blocked draft, review task, optional urgent escalation, provenance, run events, and audit receipt without executing a downstream action.
+- `POST /api/copilot/runs/:runId/review` requires AI-update permission and records an authorized human approval or rejection while leaving patient messages, claims, referrals, records, payments, and appointments unexecuted.
 - `GET /api/feature-registry` requires authentication and registry-read permission, then returns the PostgreSQL-backed P0 canon and delivery summary with private/no-store caching.
 - `GET|POST /api/identity/matches` lists organization-owned match candidates or runs a deterministic, minimum-necessary scan across connected clinics covered by an active demographic-sharing agreement.
 - `POST /api/identity/matches/:matchId/review` requires identity-update permission, an explicit human decision, a reason, and optional field-level reconciliation before linking or separating source charts.

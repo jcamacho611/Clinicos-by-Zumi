@@ -212,15 +212,42 @@ Connected delivery means a handoff record became visible inside the authorized C
 - lint, strict TypeScript validation, Prisma validation, migration status, whitespace checks, and a clean optimized production build passed
 - responsive browser verification at 390 by 844 confirmed full-width layout, no horizontal overflow, labeled form controls, human-review gating, and no browser warnings or errors
 - the clean local production server returned `200` from `/api/health`, rendered the partner names and governed Grid link without raw user IDs, returned `401` from the unauthenticated Network Command API, and redirected protected pages to `/login`
+- Render deployed commit `fdbd6e40055a1cf5723b4baadf1ad1599db66a29` at `https://zumi.onrender.com`; the live Network Command API returns the intended authenticated boundary
+
+## Zumi AI Workflow Copilot slice
+
+Status: Live PostgreSQL workflow ledger and deterministic local engine with Demo content. Browser speech is Demo. External AI and production transcription are Pending connection and Require production review.
+
+This slice adds:
+
+- one shared Zumi Copilot engine rendered by both `/ai-assistants` and `/voice-assistant` instead of parallel AI systems
+- typed and push-to-talk browser input, an editable visible transcript, a typing fallback, visible processing stages, and an immediate result on the same page
+- explicit synthetic-data acknowledgment before every run and a server-side block on Copilot use outside demo organizations
+- bounded administrative routing for scheduling, referrals, follow-up/revenue recovery, intake readiness, owner summaries, no-fault/workers' compensation, benefits verification, clinical review, claim readiness, record release, and emergency language
+- a deterministic local engine that remains available without `AI_KEY` and records its rule version, confidence, input mode, generated time, provider-connection status, limitations, and no-audio-storage state
+- PostgreSQL `copilot_runs` and append-only `copilot_events` joined to the existing AI classification, AI draft, AI review, voice session, task, escalation, notification, patient, user, organization, and audit foundations
+- organization, role, optional patient-context, AI-create, AI-review, and voice-create enforcement, including cross-tenant not-found behavior
+- a review queue where authorized people can accept an output as an administrative staff draft or reject it; both decisions record an AI review, event, task completion, and audit receipt
+- mandatory execution blocks: no message, claim, referral, record, payment, appointment, eligibility, credential, diagnosis, prescription, or treatment action runs from the Copilot surface
+- urgent holds that stop routine processing, create an escalation and notification, and display the required emergency language without claiming clinical triage
+- synthetic seed data for a referral-coordination run, classification, draft, review task, events, and audit receipt
+
+An accepted Copilot draft is not an executed workflow. It is marked `approved_for_staff_action` so an authorized person can continue in the existing governed workspace. The Copilot never calls a downstream send or transition endpoint.
+
+## Verification record for the Zumi Copilot slice
+
+- migration `20260810001500_zumi_copilot_workflows` was applied to the configured PostgreSQL database and the synthetic organization was seeded with a referral-coordination run, event history, review task, and audit receipt
+- Prisma Client generation, strict TypeScript validation, lint, Prisma validation, whitespace checks, all 37 test files and all 157 tests passed
+- the optimized Next.js production build compiled successfully and generated all 143 static paths without removing existing clinical, Grid, network, sales, or portal routes
+- the clean production server reported no pending migrations, reached ready state, and returned a healthy demo-mode response with PostgreSQL configured and live integrations disabled
 - Render deployment verification follows the focused commit and push; this document does not claim that deployment completed before the release exists
 
 ## Next build slice
 
-After the Network Directory slice is committed, pushed, and confirmed on Render, the next ordered slice is the Zumi AI Workflow Copilot:
+After the Copilot migration, full verification, focused commit, push, and Render check, the next ordered slice is role-specific portal convergence and production-readiness command:
 
-1. same-page typed and browser-voice input with visible processing steps and immediate results
-2. bounded administrative intents for task creation, referral preparation, follow-up drafting, missing-information detection, workflow summary, and owner briefing
-3. deterministic local fallback when no reviewed AI provider is configured
-4. explicit draft, citation/provenance, confidence/limits, and human-review state for every output
-5. tool permissions that re-use the current organization, role, patient relationship, consent, and audit boundaries
-6. no autonomous diagnosis, prescribing, record release, claim submission, credential approval, patient messaging, or emergency continuation
+1. owner, administrator, front-desk, provider, biller, case-manager, quality, read-only, and patient role journey verification
+2. role-specific command cards and deep links backed by existing tenant-filtered repositories rather than placeholder data
+3. production-readiness evidence dashboard for authentication, sessions, backups, audit coverage, connector status, migration status, security gates, and manual fallbacks
+4. broader denial and cross-tenant tests across the connected workspaces
+5. no claim of HIPAA production readiness until infrastructure, BAA, risk, backup, recovery, monitoring, and professional review gates are completed

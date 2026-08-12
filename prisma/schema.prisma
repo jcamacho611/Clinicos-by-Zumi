@@ -3634,6 +3634,56 @@ model VoiceSession {
   @@map("voice_sessions")
 }
 
+model CopilotRun {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  userId               String
+  patientId            String?
+  inputMode            String    @default("typed")
+  inputText            String
+  intentKey            String
+  category             String
+  riskLevel            RiskLevel
+  assignedTeam         String
+  confidence           Decimal?  @db.Decimal(5, 4)
+  status               String    @default("awaiting_review")
+  engine               String    @default("deterministic_local")
+  rulesVersion         String
+  aiClassificationId   String?
+  aiDraftId            String?
+  voiceSessionId       String?
+  requiresHumanReview  Boolean   @default(true)
+  blockedFromExecution Boolean   @default(true)
+  provenance           Json
+  limitations          String[]
+  reviewedBy           String?
+  reviewedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, patientId, createdAt])
+  @@index([userId, createdAt])
+  @@map("copilot_runs")
+}
+
+model CopilotEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  runId          String
+  actorId        String?
+  actorType      String   @default("system")
+  type           String
+  status         String
+  detail         String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([runId, createdAt])
+  @@map("copilot_events")
+}
+
 model FeatureRegistrySection {
   id              String                      @id
   number          Int                         @unique

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
-  ArrowRight, AudioLines, BadgeCheck, Building2,
+  ArrowRight, BadgeCheck, Building2,
   FileCheck2, Fingerprint, HeartHandshake, KeyRound, MapPin, Network, Orbit,
   RadioTower, Route, ShieldCheck, Sparkles,
 } from "lucide-react";
-import { AiWorkflowDemo } from "@/components/clinic/ai-workflow-demo";
+import { CopilotWorkspace } from "@/components/clinic/copilot-workspace";
 import { HandoffActions } from "@/components/clinic/care-coordination-actions";
 import { CapacityRequestAction } from "@/components/clinic/capacity-actions";
 import { NetworkDirectoryPanel } from "@/components/clinic/network-directory-panel";
@@ -23,6 +23,7 @@ import type { PassportWorkspace } from "@/lib/repositories/passport-repository";
 import type { CareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
 import type { CareTeamWorkspace } from "@/lib/repositories/care-team-repository";
 import type { CapacityWorkspace } from "@/lib/repositories/capacity-repository";
+import type { CopilotWorkspace as CopilotWorkspaceData } from "@/lib/repositories/copilot-repository";
 
 export function NetworkWorkspace({ overview, directory, growth, canCreate, canManage }: { overview: ConnectedCareOverview; directory: NetworkDirectoryWorkspace; growth: NetworkGrowthWorkspace; canCreate: boolean; canManage: boolean }) {
   return <div className="space-y-6">
@@ -94,10 +95,8 @@ export function InjuryEpisodesWorkspace({ overview }: { overview: ConnectedCareO
   </div>;
 }
 
-export function VoiceAssistantWorkspace() {
-  return <div className="space-y-6"><PageIntro title="Talk to ClinicOS" description="Speak or type in the same command surface. The transcript stays editable and nothing is sent until the user confirms the action." aside={<Badge tone="sky"><AudioLines className="mr-1.5 size-3" /> Voice-first demo</Badge>} />
-    <div className="grid gap-4 lg:grid-cols-[1.1fr_.9fr]"><AiWorkflowDemo /><div className="space-y-4"><SectionCard title="Voice safety contract" description="Browser speech is a demonstration adapter, not a production PHI transcription claim."><div className="space-y-3 p-4">{[["No ambient recording", "Push-to-talk only"], ["Visible transcript", "Edit before analysis"], ["Clinical questions", "Route to provider"], ["Emergencies", "Stop routine processing"], ["Fallback", "Typing always available"]].map(([label, value]) => <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3" key={label}><BadgeCheck className="size-4 text-teal-600" /><div><p className="text-xs font-extrabold text-slate-900">{label}</p><p className="text-[10px] text-slate-500">{value}</p></div></div>)}</div></SectionCard><SectionCard title="Approved future adapter" description="A production transcription vendor requires security, retention, consent, BAA, failure recovery, and audit review before PHI use."><div className="p-4"><div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3"><AudioLines className="size-5 text-amber-700" /><p className="text-[10px] leading-5 text-amber-900">Current mode: browser voice with synthetic demo data only. No audio is stored by ClinicOS.</p></div></div></SectionCard></div></div>
-  </div>;
+export function VoiceAssistantWorkspace({ canCreate, canReview, canUseVoice, workspace }: { canCreate: boolean; canReview: boolean; canUseVoice: boolean; workspace: CopilotWorkspaceData }) {
+  return <CopilotWorkspace canCreate={canCreate} canReview={canReview} canUseVoice={canUseVoice} focusMode="voice" workspace={workspace} />;
 }
 
 export function RegistryDomainWorkspace({ section }: { section: CanonicalRegistrySection }) {

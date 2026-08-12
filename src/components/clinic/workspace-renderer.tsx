@@ -54,6 +54,7 @@ import { listCodingWorkspace } from "@/lib/repositories/coding-revenue-repositor
 import { LuxeMediWorkspace } from "@/components/clinic/luxe-medi-workspace";
 import { listLuxeMediWorkspace } from "@/lib/repositories/luxe-medi-repository";
 import { listCaseWorkspace } from "@/lib/repositories/case-repository";
+import { listCopilotWorkspace } from "@/lib/repositories/copilot-repository";
 
 export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
@@ -156,7 +157,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       if (!can(role, "escalations", "read")) return notFound();
       return <EscalationsWorkspace workspace={await listCareCoordinationWorkspace(organizationId, userId)} />;
     }
-    case "ai-assistants": return <AiAssistantsWorkspace />;
+    case "ai-assistants": {
+      if (!can(role, "ai", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listCopilotWorkspace>[0];
+      return <AiAssistantsWorkspace canCreate={can(role, "ai", "create")} canReview={can(role, "ai", "update")} canUseVoice={can(role, "voice", "create")} workspace={await listCopilotWorkspace(session)} />;
+    }
     case "patient-navigation": {
       if (!can(role, "tasks", "read")) return notFound();
       return <PatientNavigationWorkspace canCreate={can(role, "tasks", "create")} canReview={can(role, "tasks", "update")} workspace={await listPatientNavigationWorkspace(organizationId)} />;
@@ -202,7 +207,11 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       return <IntakePassportWorkspace workspace={await listPassportWorkspace(organizationId)} />;
     }
     case "injury-episodes": return <InjuryEpisodesWorkspace overview={await getConnectedCareOverview(organizationId)} />;
-    case "voice-assistant": return <VoiceAssistantWorkspace />;
+    case "voice-assistant": {
+      if (!can(role, "voice", "read") || !can(role, "ai", "read")) return notFound();
+      const session = { organizationId, role, userId } as Parameters<typeof listCopilotWorkspace>[0];
+      return <VoiceAssistantWorkspace canCreate={can(role, "ai", "create")} canReview={can(role, "ai", "update")} canUseVoice={can(role, "voice", "create")} workspace={await listCopilotWorkspace(session)} />;
+    }
     case "feature-registry": {
       const sections = await listPriorityZeroRegistry();
       return <FeatureRegistryWorkspace sections={sections.map((section) => ({

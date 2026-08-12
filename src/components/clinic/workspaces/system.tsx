@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {
-  Activity, AlertOctagon, ArrowRight, BadgeCheck, Blocks, Bot, CalendarDays, Check, ChevronRight,
+  Activity, AlertOctagon, ArrowRight, BadgeCheck, Blocks, CalendarDays, Check, ChevronRight,
   CircleDollarSign, ClipboardCheck, Clock3, Cloud, FileCheck2, FileText, Fingerprint,
-  FlaskConical, HeartPulse, LockKeyhole, MessageCircle, MessagesSquare,
+  FlaskConical, MessageCircle, MessagesSquare,
   MonitorSmartphone, PhoneCall, Plus, Send, Settings2, ShieldAlert, ShieldCheck,
   Network, Sparkles, Stethoscope, UserRoundCheck, Webhook, Workflow,
 } from "lucide-react";
-import { AiWorkflowDemo } from "@/components/clinic/ai-workflow-demo";
+import { CopilotWorkspace } from "@/components/clinic/copilot-workspace";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import type { CareCoordinationWorkspace } from "@/lib/repositories/care-coordina
 import type { PatientNavigationWorkspace } from "@/lib/repositories/patient-navigation-repository";
 import type { ProviderConsultationWorkspace } from "@/lib/repositories/provider-consultation-repository";
 import type { CredentialingWorkspace as CredentialingWorkspaceData } from "@/lib/repositories/credentialing-repository";
+import type { CopilotWorkspace as CopilotWorkspaceData } from "@/lib/repositories/copilot-repository";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
 export function MessagesWorkspace() {
@@ -55,17 +56,8 @@ export function EscalationsWorkspace({ workspace }: { workspace: CareCoordinatio
   </div>;
 }
 
-export function AiAssistantsWorkspace() {
-  const assistants = [
-    { name: "Front Desk Agent", scope: "Classify requests, draft office-safe replies, create tasks", icon: PhoneCall, status: "Demo-ready", tone: "teal" },
-    { name: "Provider Prep Agent", scope: "Summarize chart history and missing visit information", icon: Stethoscope, status: "Human review", tone: "sky" },
-    { name: "Billing Prep Agent", scope: "Flag missing claim fields before biller review", icon: CircleDollarSign, status: "Roadmap", tone: "amber" },
-    { name: "Quality Gap Agent", scope: "Prepare outreach lists from configured measure rules", icon: HeartPulse, status: "Roadmap", tone: "rose" },
-  ];
-  return <div className="space-y-6"><PageIntro title="AI for workflow, never for practicing medicine." description="ClinicOS assistants summarize, classify, draft, route, detect missing information, and prepare reports. Diagnosis, prescribing, interpretation, treatment, and final clinical communication stay human." />
-    <section className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]"><AiWorkflowDemo /><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">{assistants.map((assistant) => <Card className="p-4" key={assistant.name}><div className="flex items-start gap-3"><span className={`grid size-10 place-items-center rounded-xl ${assistant.tone === "teal" ? "bg-teal-50 text-teal-700" : assistant.tone === "sky" ? "bg-sky-50 text-sky-700" : assistant.tone === "amber" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"}`}><assistant.icon className="size-5" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-950">{assistant.name}</p><StatusBadge status={assistant.status} /></div><p className="mt-2 text-[10px] leading-5 text-slate-500">{assistant.scope}</p></div></div></Card>)}</div></section>
-    <Card className="border-slate-800 bg-slate-950 p-6 text-white"><div className="grid gap-6 lg:grid-cols-[.8fr_1.2fr]"><div><Bot className="size-7 text-lime-300" /><h3 className="mt-5 text-2xl font-extrabold tracking-[-.04em]">Hard clinical boundaries</h3><p className="mt-3 text-xs leading-6 text-slate-400">These rules are part of the workflow engine, not optional wording in a prompt.</p></div><div className="grid gap-2 sm:grid-cols-2">{["No diagnosis", "No prescribing", "No treatment decisions", "No final lab interpretation", "No insurance guarantees", "No record release without approval"].map((rule) => <div className="flex items-center gap-2 rounded-xl bg-white/6 p-3 ring-1 ring-inset ring-white/10" key={rule}><LockKeyhole className="size-3.5 text-teal-300" /><p className="text-[10px] font-bold text-slate-200">{rule}</p></div>)}</div></div></Card>
-  </div>;
+export function AiAssistantsWorkspace({ canCreate, canReview, canUseVoice, workspace }: { canCreate: boolean; canReview: boolean; canUseVoice: boolean; workspace: CopilotWorkspaceData }) {
+  return <CopilotWorkspace canCreate={canCreate} canReview={canReview} canUseVoice={canUseVoice} workspace={workspace} />;
 }
 
 export function PatientNavigationWorkspace({ workspace, canCreate, canReview }: { workspace: PatientNavigationWorkspace; canCreate: boolean; canReview: boolean }) {

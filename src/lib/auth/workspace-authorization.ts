@@ -48,7 +48,7 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   escalations: { all: [["escalations", "read"]] },
   "ai-assistants": { all: [["ai", "read"]] },
   "patient-navigation": { all: [["tasks", "read"]] },
-  "voice-assistant": { all: [["voice", "read"]] },
+  "voice-assistant": { all: [["voice", "read"], ["ai", "read"]] },
   "portal-admin": { all: [["portal", "read"]] },
   integrations: { all: [["integrations", "read"]] },
   settings: { all: [["settings", "read"]] },

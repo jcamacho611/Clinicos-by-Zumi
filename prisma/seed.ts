@@ -165,8 +165,12 @@ async function main() {
   await prisma.prescription.deleteMany();
   await prisma.refillRequest.deleteMany();
   await prisma.medicationReconciliation.deleteMany();
+  await prisma.copilotEvent.deleteMany();
+  await prisma.copilotRun.deleteMany();
   await prisma.aiReview.deleteMany();
   await prisma.aiDraft.deleteMany();
+  await prisma.aiClassification.deleteMany();
+  await prisma.aiSummary.deleteMany();
   await prisma.luxeTreatmentSession.deleteMany();
   await prisma.luxeTreatmentPlan.deleteMany();
   await prisma.luxePromotion.deleteMany();
@@ -2173,6 +2177,69 @@ async function main() {
       provider: "browser_web_speech_demo",
       retentionExpiresAt: new Date("2026-07-15T12:00:00.000Z"),
     },
+  });
+
+  const seededCopilotResult = {
+    intentKey: "referral_coordination",
+    category: "Referral / Network Handoff",
+    riskLevel: "Needs Staff",
+    assignedTeam: "Referral coordination",
+    confidence: 0.93,
+    status: "awaiting_review",
+    headline: "Closed-loop handoff prepared",
+    explanation: "Zumi identified a synthetic network coordination request. Consent, destination, minimum-necessary categories, and human confirmation remain required.",
+    draft: "Prepare a referral or capacity request for human review. Do not send chart content until consent and the sharing path are confirmed.",
+    nextAction: "Open Network Command and prepare the appropriate handoff draft.",
+    blockedActions: ["Automatic chart sharing", "Referral send", "Appointment confirmation"],
+    limitations: [
+      "Administrative workflow support only. This is not diagnosis, prescribing, treatment, legal advice, or a final billing decision.",
+      "No message, claim, referral, record, payment, or appointment was sent or completed.",
+      "Synthetic demonstration data only. An authorized human must review every output.",
+    ],
+  };
+  await prisma.aiClassification.create({
+    data: { id: "ai-classification-copilot-demo", organizationId: bfm.id, sourceType: "copilot_run", sourceId: "copilot-run-referral-demo", category: seededCopilotResult.category, confidence: seededCopilotResult.confidence, riskLevel: RiskLevel.NEEDS_STAFF, requiresHumanReview: true, assignedTeam: seededCopilotResult.assignedTeam, rulesVersion: "zumi-copilot-2026-08-10.1", createdAt: new Date("2026-08-09T22:00:00.000Z") },
+  });
+  await prisma.aiDraft.create({
+    data: { id: "ai-draft-copilot-demo", organizationId: bfm.id, patientId: maya.id, sourceType: "copilot_run", sourceId: "copilot-run-referral-demo", purpose: seededCopilotResult.intentKey, content: JSON.stringify(seededCopilotResult), riskLevel: RiskLevel.NEEDS_STAFF, requiresHumanReview: true, blockedFromSend: true, status: "draft", createdAt: new Date("2026-08-09T22:00:00.000Z") },
+  });
+  await prisma.copilotRun.create({
+    data: {
+      id: "copilot-run-referral-demo",
+      organizationId: bfm.id,
+      userId: "user-nadja",
+      patientId: maya.id,
+      inputMode: "typed",
+      inputText: "Show me the synthetic referrals still waiting for a response.",
+      intentKey: seededCopilotResult.intentKey,
+      category: seededCopilotResult.category,
+      riskLevel: RiskLevel.NEEDS_STAFF,
+      assignedTeam: seededCopilotResult.assignedTeam,
+      confidence: seededCopilotResult.confidence,
+      status: "awaiting_review",
+      engine: "deterministic_local",
+      rulesVersion: "zumi-copilot-2026-08-10.1",
+      aiClassificationId: "ai-classification-copilot-demo",
+      aiDraftId: "ai-draft-copilot-demo",
+      requiresHumanReview: true,
+      blockedFromExecution: true,
+      provenance: { engine: "deterministic_local", rulesVersion: "zumi-copilot-2026-08-10.1", inputMode: "typed", syntheticDemo: true, generatedAt: "2026-08-09T22:00:00.000Z", providerConnection: "Pending connection", audioStored: false },
+      limitations: seededCopilotResult.limitations,
+      createdAt: new Date("2026-08-09T22:00:00.000Z"),
+    },
+  });
+  await prisma.copilotEvent.createMany({
+    data: [
+      { id: "copilot-event-referral-input", organizationId: bfm.id, runId: "copilot-run-referral-demo", actorId: "user-nadja", actorType: "user", type: "input_confirmed", status: "complete", detail: "Typed request confirmed for synthetic demo processing.", createdAt: new Date("2026-08-09T22:00:00.000Z") },
+      { id: "copilot-event-referral-safety", organizationId: bfm.id, runId: "copilot-run-referral-demo", actorType: "system", type: "safety_classified", status: "complete", detail: "Referral / Network Handoff routed to Referral coordination.", metadata: { confidence: 0.93, riskLevel: "Needs Staff", rulesVersion: "zumi-copilot-2026-08-10.1" }, createdAt: new Date("2026-08-09T22:00:01.000Z") },
+      { id: "copilot-event-referral-hold", organizationId: bfm.id, runId: "copilot-run-referral-demo", actorType: "system", type: "review_hold_created", status: "awaiting_review", detail: "Draft saved with execution and patient-message delivery blocked pending authorized human review.", metadata: { draftId: "ai-draft-copilot-demo", taskId: "task-copilot-referral-demo", blockedFromExecution: true }, createdAt: new Date("2026-08-09T22:00:02.000Z") },
+    ],
+  });
+  await prisma.task.create({
+    data: { id: "task-copilot-referral-demo", organizationId: bfm.id, patientId: maya.id, category: "zumi_copilot_review", title: "Review Zumi draft: Referral / Network Handoff", details: "copilot-run:copilot-run-referral-demo Open Network Command and prepare the appropriate handoff draft.", ownerId: "user-nadja", priority: "normal", riskLevel: RiskLevel.NEEDS_STAFF, dueAt: new Date("2026-08-09T22:00:00.000Z"), status: "open", createdBy: "user-nadja" },
+  });
+  await prisma.auditLog.create({
+    data: { id: "audit-copilot-referral-demo", organizationId: bfm.id, actorId: "user-nadja", actorType: "user", action: "zumi_copilot.run_created", resourceType: "copilot_run", resourceId: "copilot-run-referral-demo", patientId: maya.id, metadata: { inputMode: "typed", intentKey: seededCopilotResult.intentKey, category: seededCopilotResult.category, taskId: "task-copilot-referral-demo", blockedFromExecution: true, humanReviewRequired: true, syntheticDemo: true }, createdAt: new Date("2026-08-09T22:00:02.000Z") },
   });
 
   console.log(`Seeded ClinicOS demo data and ${clinicOsDayOneRegistry.length} immutable Priority Zero registry sections.`);
