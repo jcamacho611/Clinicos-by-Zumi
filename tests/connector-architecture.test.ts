@@ -155,6 +155,7 @@ describe("connector catalog invariants", () => {
     const selfHosted = getConnector("self_hosted");
     expect(selfHosted).toBeTruthy();
     const status = connectorStatus(selfHosted!, {
+      ...process.env,
       ZUMI_SELF_HOSTED_BASE_URL: "https://private.internal",
       ZUMI_SELF_HOSTED_MODEL: "private-model",
       ZUMI_SELF_HOSTED_API_KEY: "never-return-this",
