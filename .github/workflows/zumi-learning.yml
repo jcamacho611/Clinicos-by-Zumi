@@ -1,0 +1,56 @@
+name: Zumi Learning
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 10 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zumi-learning
+  cancel-in-progress: false
+
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ZUMI_OPENAI_VECTOR_STORE_ID: ${{ secrets.ZUMI_OPENAI_VECTOR_STORE_ID }}
+      ZUMI_OPENAI_MODEL: ${{ vars.ZUMI_OPENAI_MODEL }}
+      ZUMI_LEARNING_MODEL: ${{ vars.ZUMI_LEARNING_MODEL }}
+      ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS: ${{ vars.ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS }}
+      ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS: ${{ vars.ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS }}
+      ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL: ${{ vars.ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL }}
+      ZUMI_LEARNING_BUDGET_MICRO_USD: ${{ vars.ZUMI_LEARNING_BUDGET_MICRO_USD }}
+      ZUMI_LEARNING_RESERVED_MICRO_USD_PER_TOPIC: ${{ vars.ZUMI_LEARNING_RESERVED_MICRO_USD_PER_TOPIC }}
+      ZUMI_LEARNING_MAX_TOPICS_PER_RUN: ${{ vars.ZUMI_LEARNING_MAX_TOPICS_PER_RUN }}
+      ZUMI_LEARNING_MAX_TOOL_CALLS: ${{ vars.ZUMI_LEARNING_MAX_TOOL_CALLS }}
+      ZUMI_LEARNING_MAX_OUTPUT_TOKENS: ${{ vars.ZUMI_LEARNING_MAX_OUTPUT_TOKENS }}
+      ZUMI_LEARNING_SEARCH_CONTEXT_SIZE: ${{ vars.ZUMI_LEARNING_SEARCH_CONTEXT_SIZE }}
+    steps:
+      - name: Check learning configuration
+        id: config
+        shell: bash
+        run: |
+          if [ -z "$OPENAI_API_KEY" ] || [ -z "$ZUMI_OPENAI_VECTOR_STORE_ID" ] || [ -z "$ZUMI_LEARNING_BUDGET_MICRO_USD" ] || [ -z "$ZUMI_LEARNING_RESERVED_MICRO_USD_PER_TOPIC" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Zumi learning is intentionally inactive until provider credentials, vector storage, and explicit budgets are configured."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.configured == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.config.outputs.configured == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        if: steps.config.outputs.configured == 'true'
+        run: npm ci
+      - name: Run capped curriculum study
+        if: steps.config.outputs.configured == 'true'
+        run: npx tsx scripts/zumi-learn.ts
