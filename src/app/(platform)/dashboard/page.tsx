@@ -3,19 +3,23 @@ import { LivingHome } from "@/components/clinic/living-home";
 import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";
 import { requireClinicSession } from "@/lib/auth/session";
+import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
   const session = await requireClinicSession();
   if (session.role === "contractor") redirect("/grid");
-  const appointments = await listAppointmentsForOrganization(session.organizationId);
+  const [appointments, activePaths] = await Promise.all([
+    listAppointmentsForOrganization(session.organizationId),
+    listActivePathSnapshots(session),
+  ]);
   const query = await searchParams;
   const seededDemo = session.organizationId === "org-bfm" || session.organizationId === "org-luxe";
   const firstName = session.name.split(/\s+/)[0] || "there";
 
   return (
     <div className="space-y-14">
-      <LivingHome firstName={firstName} role={session.role} />
+      <LivingHome firstName={firstName} initialPaths={activePaths} />
       <section aria-labelledby="operations-heading" className="space-y-5">
         <div className="max-w-2xl">
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Operations</p>
