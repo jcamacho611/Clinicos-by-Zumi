@@ -50,15 +50,15 @@ any failed check.
 | 5 | `zumi-journey.ts` | With no provider, Zumi reports Pending Connection and returns no answer, recommendations or sources. Once connected, prohibitions hold, RBAC is not widened, founder mode widens discussion but not authorization, PHI does not cross the boundary, and unevidenced recommendations are dropped. |
 | 6 | `tenant-isolation-journey.mts` | Adversarial. Tenant A cannot read B's patients, lists, audit log or private Grid demand, cannot activate against B, and deleting A leaves B intact. |
 | 8 | `role-routing-journey.ts` | Every role reaches a useful product and nothing more. The sidebar, launchpad and route guard all decide access with one function; a Grid participant reaches no clinic workspace; a portal token is worthless as a staff session and the reverse. |
-| 12 | `failure-recovery-journey.ts` | Two simultaneous reservations of one offer produce one booking; a single-capacity resource cannot be double-booked by two concurrent deals; the loser leaves no partial state; a retry returns the same booking; an unanswered offer stays unreservable. |
 | 9 | `fresh-deploy-journey.ts` | An empty database becomes a working deployment: all migrations apply, the tables the product needs exist, `migrate deploy` is idempotent, empty state reads as empty, first real work succeeds, and a restart finds it still there. |
+| 12 | `failure-recovery-journey.ts` | Two simultaneous reservations of one offer produce one booking; a single-capacity resource cannot be double-booked by two concurrent deals; the loser leaves no partial state; a retry returns the same booking; an unanswered offer stays unreservable. |
 
 Journeys 7 (paid clinic activation), 10 (production readiness) and 11 (mobile) are not
 yet written.
 
 ## Writing one
 
-Two failure modes have caught us out, and both make a check pass while proving nothing.
+Three failure modes have caught us out, and each makes a check pass while proving nothing.
 
 **A check that never ran.** The Zumi journey asserted that no identifiers reached the
 provider and passed — against zero payloads, because the request had been refused before
