@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { KLINIKOS_GODADDY_PAYLINK } from "@/lib/commercial/klinikos-commercial";
 import { db } from "@/lib/db";
+import { verifyGridResourceForTransaction } from "@/lib/grid/resource-transaction-policy";
 import { canTransitionGridDemand } from "@/lib/grid/transaction-flow";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -51,6 +52,7 @@ type ReservationRow = {
 };
 
 function requireGridPermission(session: ClinicSession, action: "read" | "create") {
+  if (session.role === "contractor") return;
   if (!can(session.role, "network", action) && !can(session.role, "grid", action)) {
     throw new NetworkAccessError("Grid reservation access is not permitted for this role.", 403);
   }
@@ -96,24 +98,47 @@ async function takeResourceLocks(client: Prisma.TransactionClient, offer: Accept
   for (const key of keys.sort()) await client.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`);
 }
 
-async function assertUniversalReservationAvailable(client: Prisma.TransactionClient, offer: AcceptedOfferRow) {
+async function assertUniversalReservationAvailable(
+  client: Prisma.TransactionClient,
+  offer: AcceptedOfferRow,
+  input: { resourceTransactionCapacity?: number | null; demandQuantity: number },
+) {
   const start = offer.offeredStartAt;
   const end = offer.offeredEndAt ?? new Date(start.getTime() + 60 * 60 * 1000);
 
-  const conflicts = await client.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-    SELECT "id"
-    FROM "GridReservationRecord"
-    WHERE "status" IN ('pending', 'held', 'consumed')
-      AND (
-        (${offer.providerId} IS NOT NULL AND "providerId" = ${offer.providerId})
-        OR (${offer.locationId} IS NOT NULL AND "locationId" = ${offer.locationId})
-        OR (${offer.resourceReference} IS NOT NULL AND "resourceKind" = ${offer.resourceKind} AND "resourceReference" = ${offer.resourceReference})
-      )
-      AND "reservedStartAt" < ${end}
-      AND COALESCE("reservedEndAt", "reservedStartAt" + INTERVAL '1 hour') > ${start}
-    LIMIT 1
-  `);
-  if (conflicts.length) throw new NetworkAccessError("The selected Grid resource is no longer available for that time.", 409);
+  if (offer.providerId || offer.locationId) {
+    const conflicts = await client.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+      SELECT "id"
+      FROM "GridReservationRecord"
+      WHERE "status" IN ('pending', 'held', 'consumed')
+        AND (
+          (${offer.providerId} IS NOT NULL AND "providerId" = ${offer.providerId})
+          OR (${offer.locationId} IS NOT NULL AND "locationId" = ${offer.locationId})
+        )
+        AND "reservedStartAt" < ${end}
+        AND COALESCE("reservedEndAt", "reservedStartAt" + INTERVAL '1 hour') > ${start}
+      LIMIT 1
+    `);
+    if (conflicts.length) throw new NetworkAccessError("The selected provider or location is no longer available for that time.", 409);
+  }
+
+  if (offer.resourceReference) {
+    const capacity = Math.max(1, input.resourceTransactionCapacity ?? 1);
+    const usage = await client.$queryRaw<Array<{ quantity: number }>>(Prisma.sql`
+      SELECT COALESCE(SUM(d."quantity"), 0)::int AS "quantity"
+      FROM "GridReservationRecord" r
+      JOIN "GridDemandRecord" d ON d."id" = r."demandId"
+      WHERE r."status" IN ('pending', 'held', 'consumed')
+        AND r."resourceKind" = ${offer.resourceKind}
+        AND r."resourceReference" = ${offer.resourceReference}
+        AND r."reservedStartAt" < ${end}
+        AND COALESCE(r."reservedEndAt", r."reservedStartAt" + INTERVAL '1 hour') > ${start}
+    `);
+    const alreadyReserved = usage[0]?.quantity ?? 0;
+    if (alreadyReserved + input.demandQuantity > capacity) {
+      throw new NetworkAccessError("The selected Grid resource no longer has enough remaining capacity for that time.", 409);
+    }
+  }
 
   const overlapTargets: Prisma.GridRequestWhereInput[] = [];
   if (offer.providerId) overlapTargets.push({ providerId: offer.providerId });
@@ -148,7 +173,6 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
     const offer = offers[0];
     if (!offer) throw new NetworkAccessError("Accepted Grid offer not found for this organization.", 404);
     if (offer.status !== "accepted") throw new NetworkAccessError("Only an accepted Grid offer can be reserved.", 409);
-    if (offer.resourceReference) throw new NetworkAccessError("This resource class requires a connected policy verifier before reservation.", 409);
 
     const existing = await tx.$queryRaw<ReservationRow[]>(Prisma.sql`
       SELECT * FROM "GridReservationRecord" WHERE "offerId" = ${offer.id} LIMIT 1
@@ -156,17 +180,33 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
     if (existing[0]) return serializeReservation(existing[0]);
 
     await takeResourceLocks(tx, offer);
-    await assertUniversalReservationAvailable(tx, offer);
 
-    const demands = await tx.$queryRaw<Array<{ status: string }>>(Prisma.sql`
-      SELECT "status" FROM "GridDemandRecord"
+    const demands = await tx.$queryRaw<Array<{ status: string; quantity: number }>>(Prisma.sql`
+      SELECT "status", "quantity" FROM "GridDemandRecord"
       WHERE "id" = ${offer.demandId} AND "organizationId" = ${session.organizationId}
       FOR UPDATE
     `);
     const demandStatus = demands[0]?.status;
+    const demandQuantity = Math.max(1, demands[0]?.quantity ?? 1);
     if (!demandStatus || !canTransitionGridDemand(demandStatus, "reserved")) {
       throw new NetworkAccessError(`Grid demand in ${demandStatus ?? "unknown"} state cannot be reserved.`, 409);
     }
+
+    let resourceTransactionCapacity: number | null = null;
+    if (offer.resourceReference || offer.resourceKind) {
+      if (!offer.resourceReference || !offer.resourceKind) throw new NetworkAccessError("Grid resource reference is incomplete.", 409);
+      const verified = await verifyGridResourceForTransaction(tx, {
+        resourceId: offer.resourceReference,
+        resourceKind: offer.resourceKind,
+        startsAt: offer.offeredStartAt,
+        endsAt: offer.offeredEndAt,
+        quantity: demandQuantity,
+        requesterOrganizationIds: [session.organizationId],
+      });
+      resourceTransactionCapacity = verified.transactionCapacity;
+    }
+
+    await assertUniversalReservationAvailable(tx, offer, { resourceTransactionCapacity, demandQuantity });
 
     const requiresDeposit = offer.depositAmountCents > 0;
     const reservationStatus = requiresDeposit ? "pending" : "held";
@@ -205,11 +245,13 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
           resourceId: reservationId,
           metadata: {
             demandId: offer.demandId,
+            demandQuantity,
             offerId: offer.id,
             status: reservationStatus,
             paymentStatus,
             depositAmountCents: offer.depositAmountCents,
             locationPayableCents: offer.locationPayableCents,
+            universalResourceReference: offer.resourceReference,
             syntheticDemo: true,
           },
         },
@@ -220,7 +262,7 @@ export async function createReservationFromAcceptedOffer(session: ClinicSession,
         ) VALUES (
           ${randomUUID()}, ${session.organizationId}, ${offer.id}, ${session.userId}, 'grid.offer.reservation_created',
           'accepted', 'accepted', 'Accepted offer converted into a Grid reservation hold.',
-          CAST(${JSON.stringify({ reservationId, reservationStatus, paymentStatus, locationPayableCents: offer.locationPayableCents })} AS JSONB), CURRENT_TIMESTAMP
+          CAST(${JSON.stringify({ reservationId, reservationStatus, paymentStatus, demandQuantity, locationPayableCents: offer.locationPayableCents })} AS JSONB), CURRENT_TIMESTAMP
         )
       `),
     ]);

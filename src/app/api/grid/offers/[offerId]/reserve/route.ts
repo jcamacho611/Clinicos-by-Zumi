@@ -8,10 +8,12 @@ import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-ev
 export async function POST(request: Request, { params }: { params: Promise<{ offerId: string }> }) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "create", { request });
-  if (denied) return denied;
 
   try {
+    if (session.role !== "contractor") {
+      const denied = await enforceApiPermission(session, "grid", "create", { request });
+      if (denied) return denied;
+    }
     const { offerId } = await params;
     const reservation = await createReservationFromAcceptedOffer(session, offerId);
     await recordTrustedPathDomainEvent(session, {

@@ -8,10 +8,12 @@ import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-ev
 export async function PATCH(request: Request, { params }: { params: Promise<{ offerId: string }> }) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "update", { request });
-  if (denied) return denied;
 
   try {
+    if (session.role !== "contractor") {
+      const denied = await enforceApiPermission(session, "grid", "update", { request });
+      if (denied) return denied;
+    }
     const { offerId } = await params;
     const body = await request.json();
     const updated = await transitionGridOffer(session, offerId, body);
