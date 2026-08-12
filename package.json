@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "postinstall": "node scripts/postinstall.mjs",
     "render:build": "node scripts/render-build.mjs",
-    "start": "next start",
+    "start": "node scripts/start.mjs",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
