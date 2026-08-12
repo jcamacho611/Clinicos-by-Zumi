@@ -52,7 +52,10 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
     acceptTerms: false,
     syntheticDataOnly: true,
   });
-  const autosaveDraft = useMemo(() => draftFromForm(form), [form.ownerName, form.clinicType, form.locationName, form.city, form.state, form.timezone, form.teamSize, form.primaryGoal, form.currentSystems, form.migrationExpectation, form.communicationsState]);
+  // The persisted draft deliberately excludes password and terms; depending on the
+  // full form object keeps the Hook dependency honest while draftFromForm strips those
+  // secrets before the request body is created.
+  const autosaveDraft = useMemo(() => draftFromForm(form), [form]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
