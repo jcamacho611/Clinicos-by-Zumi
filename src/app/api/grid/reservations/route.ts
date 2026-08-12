@@ -7,7 +7,7 @@ import { networkAccessErrorResponse } from "@/lib/network-access-http";
 export async function GET(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "network", "read", { request });
+  const denied = await enforceApiPermission(session, "grid", "read", { request });
   if (denied) return denied;
 
   try {
