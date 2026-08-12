@@ -16,6 +16,8 @@ import { sealStepUpProof, verifyStepUpProof } from "@/lib/security/step-up-token
 import { klinikosSecurityHeaders } from "@/lib/security/headers";
 import { buildZumiMasterInstruction } from "@/features/zumi/master-directive";
 
+const processEnv = (values: Record<string, string | undefined> = {}): NodeJS.ProcessEnv => ({ ...values });
+
 const session = (overrides: Partial<ClinicSession> = {}): ClinicSession => ({
   sessionId: "session_1",
   userId: "user_1",
@@ -32,36 +34,36 @@ const session = (overrides: Partial<ClinicSession> = {}): ClinicSession => ({
 
 describe("Zumi conversation identity policy", () => {
   it("activates founder breadth only from an exact server-side user-id allowlist", () => {
-    const founder = resolveAuthenticatedConversationPolicy(session(), { KLINIKOS_FOUNDER_USER_IDS: "user_1,user_9" } as NodeJS.ProcessEnv);
+    const founder = resolveAuthenticatedConversationPolicy(session(), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1,user_9" }));
     expect(founder).toMatchObject({ profile: "founder", internalStrategyAllowed: true, commercialStrategyAllowed: true });
 
-    const sameEmailWrongId = resolveAuthenticatedConversationPolicy(session({ userId: "other" }), { KLINIKOS_FOUNDER_USER_IDS: "user_1" } as NodeJS.ProcessEnv);
+    const sameEmailWrongId = resolveAuthenticatedConversationPolicy(session({ userId: "other" }), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1" }));
     expect(sameEmailWrongId.profile).toBe("clinic_owner");
   });
 
   it("does not turn founder conversation breadth into an authorization bypass", () => {
-    const founder = resolveAuthenticatedConversationPolicy(session(), { KLINIKOS_FOUNDER_USER_IDS: "user_1" } as NodeJS.ProcessEnv);
+    const founder = resolveAuthenticatedConversationPolicy(session(), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1" }));
     const instruction = buildZumiMasterInstruction({ policy: founder });
     expect(instruction).toContain("Founder mode is conversational breadth, not a permission bypass");
     expect(instruction).toContain("server-side authorization");
   });
 
   it("keeps contractors outside clinic-wide and patient data", () => {
-    const policy = resolveAuthenticatedConversationPolicy(session({ role: "contractor" }), {} as NodeJS.ProcessEnv);
+    const policy = resolveAuthenticatedConversationPolicy(session({ role: "contractor" }), processEnv());
     expect(policy).toMatchObject({ profile: "grid_participant", organizationDataAllowed: false, patientDataAllowed: false, mayUseWriteTools: false });
   });
 });
 
 describe("context routing and local corpus", () => {
   it("routes a founder Grid pricing question to the right context domains", () => {
-    const policy = resolveAuthenticatedConversationPolicy(session(), { KLINIKOS_FOUNDER_USER_IDS: "user_1" } as NodeJS.ProcessEnv);
+    const policy = resolveAuthenticatedConversationPolicy(session(), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1" }));
     const plan = planZumiContext("How should Grid pricing and payouts work?", policy);
     expect(plan.domains).toEqual(expect.arrayContaining(["canon", "grid", "commercial", "product_status", "user_context"]));
     expect(plan.includeInternalDocs).toBe(true);
   });
 
   it("gives normal customers only the curated customer-safe corpus", async () => {
-    const policy = resolveAuthenticatedConversationPolicy(session(), {} as NodeJS.ProcessEnv);
+    const policy = resolveAuthenticatedConversationPolicy(session(), processEnv());
     const result = await retrieveCanonicalContext({
       question: "What is Klinikos Grid and what can it do?",
       domains: ["canon", "grid", "product_status"],
@@ -74,7 +76,7 @@ describe("context routing and local corpus", () => {
   });
 
   it("lets an authenticated founder retrieve internal canonical material", async () => {
-    const policy = resolveAuthenticatedConversationPolicy(session(), { KLINIKOS_FOUNDER_USER_IDS: "user_1" } as NodeJS.ProcessEnv);
+    const policy = resolveAuthenticatedConversationPolicy(session(), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1" }));
     const result = await retrieveCanonicalContext({
       question: "Explain Grid architecture, transaction flow, payment model and implementation status",
       domains: ["canon", "grid", "commercial", "engineering", "product_status"],
@@ -100,8 +102,8 @@ describe("adaptive research and hostile instruction handling", () => {
 });
 
 describe("tool exfiltration boundary", () => {
-  const founder = resolveAuthenticatedConversationPolicy(session(), { KLINIKOS_FOUNDER_USER_IDS: "user_1" } as NodeJS.ProcessEnv);
-  const viewer = resolveAuthenticatedConversationPolicy(session({ role: "viewer" }), {} as NodeJS.ProcessEnv);
+  const founder = resolveAuthenticatedConversationPolicy(session(), processEnv({ KLINIKOS_FOUNDER_USER_IDS: "user_1" }));
+  const viewer = resolveAuthenticatedConversationPolicy(session({ role: "viewer" }), processEnv());
 
   it("never sends secrets through a tool", () => {
     expect(authorizeZumiToolUse({ policy: founder, toolKey: "web", action: "read", inputDataClass: "secret", sendsDataExternally: true, publicResearchTool: true }).allowed).toBe(false);
@@ -124,7 +126,7 @@ describe("tool exfiltration boundary", () => {
 });
 
 describe("conversation and step-up proof binding", () => {
-  const env = { AUTH_SECRET: "12345678901234567890123456789012" } as NodeJS.ProcessEnv;
+  const env = processEnv({ AUTH_SECRET: "12345678901234567890123456789012" });
 
   it("binds conversation continuation to both tenant and user", () => {
     const token = sealZumiConversation({ responseId: "resp_1", organizationId: "org_1", userId: "user_1" }, env);
@@ -165,13 +167,13 @@ describe("abuse and browser hardening", () => {
   });
 
   it("sets clickjacking, MIME, CSP and production transport protections", () => {
-    const prod = Object.fromEntries(klinikosSecurityHeaders({ NODE_ENV: "production" } as NodeJS.ProcessEnv).map(({ key, value }) => [key, value]));
+    const prod = Object.fromEntries(klinikosSecurityHeaders(processEnv({ NODE_ENV: "production" })).map(({ key, value }) => [key, value]));
     expect(prod["X-Frame-Options"]).toBe("DENY");
     expect(prod["X-Content-Type-Options"]).toBe("nosniff");
     expect(prod["Content-Security-Policy"]).toContain("frame-ancestors 'none'");
     expect(prod["Strict-Transport-Security"]).toContain("max-age=");
 
-    const dev = Object.fromEntries(klinikosSecurityHeaders({ NODE_ENV: "development" } as NodeJS.ProcessEnv).map(({ key, value }) => [key, value]));
+    const dev = Object.fromEntries(klinikosSecurityHeaders(processEnv({ NODE_ENV: "development" })).map(({ key, value }) => [key, value]));
     expect(dev["Strict-Transport-Security"]).toBeUndefined();
   });
 });
