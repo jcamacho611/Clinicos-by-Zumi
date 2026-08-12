@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Fingerprint, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { LoginForm } from "@/components/clinic/login-form";
-import { Button } from "@/components/ui/button";
 import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } from "@/lib/auth/config";
 import { getClinicSession } from "@/lib/auth/session";
 
@@ -24,11 +23,12 @@ export default async function LoginPage() {
           <h1 className="mt-3 text-4xl font-extrabold tracking-[-.055em] text-slate-950">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">Sign in to your Klinikos workspace. Every session is bound to one organization and role.</p>
           <LoginForm demoCredentials={demoCredentials} />
-          <p className="mt-5 text-center text-xs font-semibold text-slate-500">New to Klinikos? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/start">Create a free organization workspace</Link></p>
+          <p className="mt-5 text-center text-xs font-semibold text-slate-500">Considering Klinikos? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/start">Start the Clinic Operating Analysis</Link></p>
           <p className="mt-3 text-center text-xs font-semibold text-slate-500">Looking for your records? <Link className="font-extrabold text-teal-700 hover:text-teal-600" href="/portal/login">Open the patient portal</Link></p>
-          <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>
-          <Button className="w-full" disabled size="lg" variant="secondary"><Fingerprint className="size-5" /> Use a passkey <span className="ml-1 text-[10px] font-medium text-slate-400">Credential model ready</span></Button>
-          <p className="mt-8 flex items-center gap-2 text-[10px] leading-5 text-slate-500"><ShieldCheck className="size-4 shrink-0 text-teal-600" />Never enter real patient information in this demonstration environment.</p>
+          <div className="mt-7 rounded-xl border border-slate-200 bg-white/70 p-4 text-[11px] leading-5 text-slate-500">
+            <strong className="text-slate-800">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.
+          </div>
+          <p className="mt-8 flex items-center gap-2 text-[10px] leading-5 text-slate-500"><ShieldCheck className="size-4 shrink-0 text-teal-600" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
         </div>
       </section>
       <section className="relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-end">

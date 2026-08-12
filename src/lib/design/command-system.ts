@@ -3,7 +3,7 @@
  *
  * This module is design law, not a suggestion. Every authenticated and public
  * Klinikos surface renders its ground, panels, and accents from these tokens, and
- * a test asserts the public surfaces obey the copy rules below.
+ * tests assert the public surfaces obey the copy rules below.
  *
  * The reason it lives in code rather than a style guide: a palette written in a
  * document drifts the moment two people build two pages. A palette imported by both
@@ -61,6 +61,9 @@ export const BANNED_PUBLIC_COPY = [
   "instant approval",
   "instantly live",
   "monetization os",
+  "klinikos by zumi",
+  "clinicos by zumi",
+  "clinicos os",
 ] as const;
 
 export const CLAIM_ONLY_TERMS = [
@@ -150,9 +153,14 @@ export const ELEMENT_ADMISSION_TEST = [
 ] as const;
 
 export const GOVERNED_PUBLIC_SURFACES = [
-  "src/app/sales/page.tsx",
-  "src/app/start/page.tsx",
-  "src/app/private-demo/page.tsx",
+  "src/app/about/page.tsx",
+  "src/app/capabilities/page.tsx",
   "src/app/founding-clinic/page.tsx",
   "src/app/grid/join/page.tsx",
+  "src/app/how-it-works/page.tsx",
+  "src/app/login/page.tsx",
+  "src/app/pricing/page.tsx",
+  "src/app/private-demo/page.tsx",
+  "src/app/sales/page.tsx",
+  "src/app/start/page.tsx",
 ] as const;
