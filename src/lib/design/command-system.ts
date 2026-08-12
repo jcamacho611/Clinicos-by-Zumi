@@ -61,6 +61,9 @@ export const BANNED_PUBLIC_COPY = [
   "instant approval",
   "instantly live",
   "monetization os",
+  "klinikos by zumi",
+  "clinicos by zumi",
+  "clinicos os",
 ] as const;
 
 export const CLAIM_ONLY_TERMS = [
@@ -112,6 +115,7 @@ export function findCopyViolations(text: string): string[] {
 export const APPROVED_PUBLIC_COPY = [
   "Klinikos",
   "Zumi",
+  "Zumi is the operating intelligence inside Klinikos",
   "Clinic Operating Analysis",
   "Private Workflow Review",
   "Founding Clinic Qualification",
