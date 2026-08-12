@@ -2,10 +2,22 @@ import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/rbac";
-import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { db } from "@/lib/db";
+import {
+  assertGridEligibilityForExistingRequest,
+  assertLegacyGridPaymentCondition,
+} from "@/lib/grid/eligibility-enforcement";
 import { assertGridReservationAvailable } from "@/lib/grid/transaction-service";
+import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { transitionGridRequest } from "@/lib/repositories/grid-repository";
+
+const ELIGIBILITY_RECHECK_STATES = new Set([
+  "accepted",
+  "countered",
+  "credential_check",
+  "pending_deposit",
+  "confirmed",
+]);
 
 export async function POST(request: Request, { params }: { params: Promise<{ requestId: string }> }) {
   const session = await getClinicSession();
@@ -19,9 +31,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ req
   try {
     const body = await request.json();
 
+    if (ELIGIBILITY_RECHECK_STATES.has(body?.targetStatus)) {
+      await assertGridEligibilityForExistingRequest(session, requestId);
+    }
+
     if (body?.targetStatus === "confirmed") {
-      const gridRequest = await db.gridRequest.findUnique({
-        where: { id: requestId },
+      await assertLegacyGridPaymentCondition(session, requestId, body?.depositStatus);
+
+      const gridRequest = await db.gridRequest.findFirst({
+        where: {
+          id: requestId,
+          OR: [{ organizationId: session.organizationId }, { destinationOrganizationId: session.organizationId }],
+        },
         select: {
           id: true,
           providerId: true,
