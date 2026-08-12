@@ -46,14 +46,14 @@ async function migrationReadiness() {
   try {
     const migrationDirectory = join(process.cwd(), "prisma", "migrations");
     const expected = readdirSync(migrationDirectory, { withFileTypes: true }).filter((entry) => entry.isDirectory()).length;
-    const rows = await db.$queryRaw<Array<{ applied: bigint; failed: bigint }>>(Prisma.sql`
+    const rows = await db.$queryRaw<Array<{ applied: number; failed: number }>>(Prisma.sql`
       SELECT
-        COUNT(*) FILTER (WHERE "finished_at" IS NOT NULL AND "rolled_back_at" IS NULL) AS applied,
-        COUNT(*) FILTER (WHERE "finished_at" IS NULL AND "rolled_back_at" IS NULL) AS failed
+        (COUNT(*) FILTER (WHERE "finished_at" IS NOT NULL AND "rolled_back_at" IS NULL))::int AS applied,
+        (COUNT(*) FILTER (WHERE "finished_at" IS NULL AND "rolled_back_at" IS NULL))::int AS failed
       FROM "_prisma_migrations"
     `);
-    const applied = Number(rows[0]?.applied ?? 0n);
-    const failed = Number(rows[0]?.failed ?? 0n);
+    const applied = rows[0]?.applied ?? 0;
+    const failed = rows[0]?.failed ?? 0;
     if (failed > 0) return item("migrations", "Migrations", "BLOCKED", `${failed} database migration${failed === 1 ? "" : "s"} are incomplete.`, "Resolve failed migrations before production use.");
     if (applied < expected) return item("migrations", "Migrations", "DEGRADED", `${applied} of ${expected} repository migrations are recorded as applied.`, "Apply the remaining production migrations.");
     return item("migrations", "Migrations", "READY", `${applied} applied migrations; no unfinished migration is recorded.`);
