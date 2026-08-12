@@ -3,6 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { transitionGridOffer } from "@/lib/grid/offer-repository";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
+import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-event-bridge";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ offerId: string }> }) {
   const session = await getClinicSession();
@@ -12,7 +13,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ of
 
   try {
     const { offerId } = await params;
-    return NextResponse.json({ data: await transitionGridOffer(session, offerId, await request.json()) });
+    const body = await request.json();
+    const updated = await transitionGridOffer(session, offerId, body);
+    if (body?.targetStatus === "accepted") {
+      await recordTrustedPathDomainEvent(session, {
+        eventType: "grid.offer.accepted",
+        sourceType: "grid_offer",
+        sourceId: offerId,
+        metadata: { demandId: updated.demandId, status: updated.status },
+      });
+    }
+    return NextResponse.json({ data: updated });
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
