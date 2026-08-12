@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
+import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { buildSalesAuditNotes, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
         data: {
           organizationId: session.organizationId,
           name: input.clinic,
+          email: input.email,
           source: "other",
           campaignSource: "Klinikos Revenue Desk",
           serviceInterest: "Klinikos Operational Audit",
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
           organizationId: session.organizationId,
           category: "lead_follow_up",
           title: `Confirm audit payment · ${input.clinic}`,
-          details: `lead:${lead.id} Confirm GoDaddy payment externally, then continue the audit workflow. Do not infer payment from checkout launch.`,
+          details: `lead:${lead.id} Confirm GoDaddy payment externally, then reconcile it into the Klinikos commercial ledger before beginning the audit. Do not infer payment from checkout launch.`,
           ownerId: session.userId,
           priority: "high",
           riskLevel: "NEEDS_STAFF",
@@ -69,13 +71,41 @@ export async function POST(request: Request) {
           action: "sales.audit_checkout_started",
           resourceType: "lead",
           resourceId: lead.id,
-          metadata: { score: input.score, auditPrice: input.auditPrice, taskId: task.id },
+          metadata: { score: input.score, auditPrice: input.auditPrice, buyerEmail: input.email, taskId: task.id },
         },
       });
       return { leadId: lead.id, taskId: task.id };
     });
 
-    return NextResponse.json({ data: result }, { status: 201, headers: { "Cache-Control": "private, no-store" } });
+    const checkout = await createGoDaddyCommercialCheckout({
+      organizationId: session.organizationId,
+      email: input.email,
+      productKey: "operational_audit",
+      expectedAmountCents: input.auditPrice * 100,
+      returnUrl: new URL("/payments/success", request.url).toString(),
+    });
+
+    await db.leadEvent.create({
+      data: {
+        organizationId: session.organizationId,
+        leadId: result.leadId,
+        actorId: session.userId,
+        eventType: "audit_checkout_intent_created",
+        note: "Klinikos created a server-owned commercial checkout intent before opening the GoDaddy payment rail.",
+        metadata: {
+          checkoutIntentId: checkout.intentId,
+          provider: checkout.provider,
+          productKey: checkout.productKey,
+          expectedAmountCents: checkout.expectedAmountCents,
+          processorVerificationAvailable: checkout.processorVerificationAvailable,
+        },
+      },
+    });
+
+    return NextResponse.json(
+      { data: { ...result, checkout } },
+      { status: 201, headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     return networkAccessErrorResponse(error);
   }
