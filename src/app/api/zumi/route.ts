@@ -6,34 +6,24 @@ import { invokeZumi } from "@/features/zumi/gateway";
 import { resolveOrganizationEntitlements } from "@/features/zumi/entitlements";
 import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/features/zumi/schemas";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
-
-/**
- * The only HTTP entry point to Zumi.
- *
- * It is deliberately thin. Every decision — permission, entitlement, tenant,
- * redaction, audit — belongs to the gateway, so a second route added later cannot
- * accidentally implement a weaker version of any of them.
- *
- * Both methods declare the baseline `ai:read` gate here as well as inside the
- * gateway. That is not redundancy for its own sake: a route is the thing a reviewer
- * reads to learn what it requires, and the repository's authorization contract test
- * asserts every session-bearing method states its gate at the door.
- */
+import { registerOpenAIProvider } from "@/features/zumi/openai-adapter";
+import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 
 const NO_STORE = { "Cache-Control": "private, no-store" } as const;
 
-/**
- * The request body.
- *
- * Note what is absent: no organizationId, no role, no entitlements, no
- * requiresHumanReview. Those are resolved server-side from the session. A body that
- * could name its own organization would make the tenant check theatre.
- */
+// Registration is idempotent: the registry is keyed by provider name.
+registerOpenAIProvider();
+
+const domainSchema = z.string().trim().min(3).max(200).regex(/^[a-z0-9.-]+$/i);
+
 const requestSchema = z.object({
-  capability: z.string().trim().min(2).max(80),
-  question: z.string().trim().min(3).max(2_000),
-  /** Structured operational context. Redacted by the gateway before egress. */
+  capability: z.string().trim().min(2).max(80).default("conversation"),
+  question: z.string().trim().min(3).max(8_000),
   context: z.record(z.string(), z.unknown()).optional(),
+  conversationToken: z.string().trim().max(4_000).optional(),
+  webResearch: z.boolean().default(false),
+  knowledgeSearch: z.boolean().default(true),
+  allowedDomains: z.array(domainSchema).max(20).optional(),
 });
 
 export async function GET() {
@@ -45,26 +35,26 @@ export async function GET() {
 
   const status = zumiGatewayStatus();
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
-
-  return NextResponse.json(
-    {
-      data: {
-        status,
-        orbStates: zumiOrbStates,
-        // The catalog is descriptive, not a grant. A capability listed here is still
-        // subject to every check in the gateway when it is actually invoked.
-        capabilities: zumiCapabilities.map((capability) => ({
-          key: capability.key,
-          label: capability.label,
-          tier: capability.tier,
-          produces: capability.produces,
-          entitled: capability.requiresEntitlement === null || entitlements.includes(capability.requiresEntitlement),
-          requiresEntitlement: capability.requiresEntitlement,
-        })),
+  return NextResponse.json({
+    data: {
+      status,
+      orbStates: zumiOrbStates,
+      conversation: {
+        supported: true,
+        continuity: "signed_previous_response",
+        publicWebResearchSeparatedFromPhi: true,
+        knowledgeRetrievalConfigured: Boolean(process.env.ZUMI_OPENAI_VECTOR_STORE_ID?.trim()),
       },
+      capabilities: zumiCapabilities.map((capability) => ({
+        key: capability.key,
+        label: capability.label,
+        tier: capability.tier,
+        produces: capability.produces,
+        entitled: capability.requiresEntitlement === null || entitlements.includes(capability.requiresEntitlement),
+        requiresEntitlement: capability.requiresEntitlement,
+      })),
     },
-    { headers: NO_STORE },
-  );
+  }, { headers: NO_STORE });
 }
 
 export async function POST(request: Request) {
@@ -75,29 +65,53 @@ export async function POST(request: Request) {
   }
 
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400, headers: NO_STORE });
+  if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400, headers: NO_STORE });
+
+  const previous = parsed.data.conversationToken
+    ? openZumiConversation(parsed.data.conversationToken, {
+        organizationId: session.organizationId,
+        userId: session.userId,
+      })
+    : null;
+
+  if (parsed.data.conversationToken && !previous) {
+    return NextResponse.json({ error: "Conversation token is invalid, expired, or belongs to another account." }, { status: 400, headers: NO_STORE });
   }
 
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
-
+  const capability = parsed.data.webResearch ? "public_research" : parsed.data.capability;
   const result = await invokeZumi({
     session,
-    capability: parsed.data.capability,
-    // The session's organization, passed as the requested one. There is no path by
-    // which a caller supplies this value.
+    capability,
     organizationId: session.organizationId,
     entitlements,
     question: parsed.data.question,
     context: parsed.data.context,
+    previousResponseId: previous?.responseId ?? null,
+    allowWebResearch: parsed.data.webResearch,
+    allowKnowledgeSearch: parsed.data.knowledgeSearch,
+    allowedDomains: parsed.data.allowedDomains,
+    timeoutMs: parsed.data.webResearch ? 45_000 : undefined,
+    maxOutputTokens: parsed.data.webResearch ? 2_000 : undefined,
   });
 
   if (!result.allowed) {
-    return NextResponse.json(
-      { error: result.message, reason: result.reason },
-      { status: result.status, headers: NO_STORE },
-    );
+    return NextResponse.json({ error: result.message, reason: result.reason }, { status: result.status, headers: NO_STORE });
   }
 
-  return NextResponse.json({ data: result.response }, { headers: NO_STORE });
+  const conversationToken = result.continuation?.responseId
+    ? sealZumiConversation({
+        responseId: result.continuation.responseId,
+        organizationId: session.organizationId,
+        userId: session.userId,
+      })
+    : null;
+
+  return NextResponse.json({
+    data: {
+      ...result.response,
+      conversationToken,
+      sources: result.continuation?.sources ?? [],
+    },
+  }, { headers: NO_STORE });
 }
