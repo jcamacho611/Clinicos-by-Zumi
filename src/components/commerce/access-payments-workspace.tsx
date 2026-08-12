@@ -46,6 +46,16 @@ const statusTone: Record<string, string> = {
   held: "bg-amber-100 text-amber-900",
 };
 
+/**
+ * Whether this row is waiting on the onboarding decision.
+ *
+ * Settled, has an onboarding record, and nobody has approved it yet. Products that
+ * need no review never produce one, so they never show these controls.
+ */
+function awaitingReview(row: AccessPaymentRow) {
+  return ["verified_paid", "reconciled"].includes(row.status) && Boolean(row.onboarding) && !row.onboarding!.reviewApproved;
+}
+
 function money(amountCents: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amountCents / 100);
 }
@@ -66,7 +76,17 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
       row.buyerEmail.includes(term) || row.productKey.includes(term) || row.status.includes(term) || row.roleTarget.includes(term));
   }, [rows, filter]);
 
-  async function record(paymentId: string, action: string) {
+  /**
+   * Record a decision.
+   *
+   * `kind: "payment"` settles, holds, fails, refunds or reconciles the payment.
+   * `kind: "review"` is the onboarding decision — the one that actually opens the
+   * portal for a product requiring human review, and the one this workspace had no
+   * control for. The API has accepted it since the review path shipped; without a
+   * button, every Founding Clinic purchase sat at `pending` forever unless somebody
+   * hand-built the request.
+   */
+  async function record(paymentId: string, action: string, kind: "payment" | "review" = "payment") {
     if (note.trim().length < 8) {
       setError("A note of at least 8 characters is required for every decision.");
       return;
@@ -77,11 +97,16 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
       const response = await fetch("/api/commerce/payments/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ paymentId, action, note: note.trim(), externalPaymentReference: reference.trim() || undefined }),
+        body: JSON.stringify(
+          kind === "review"
+            ? { paymentId, reviewDecision: action, note: note.trim() }
+            : { paymentId, action, note: note.trim(), externalPaymentReference: reference.trim() || undefined },
+        ),
       });
       const result = await response.json() as {
         error?: string;
         data?: AccessPaymentRow;
+        reviewApproved?: boolean;
         provisioning?: { ok: boolean; reason?: string };
       };
       if (!response.ok || !result.data) {
@@ -95,7 +120,23 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
           `Decision recorded, but the buyer's access was not provisioned (${result.provisioning.reason ?? "unknown"}). They cannot sign in yet.`,
         );
       }
-      setRows((current) => current.map((row) => (row.id === paymentId ? { ...row, ...result.data } : row)));
+      // The response carries the payment, not its onboarding record, so the review
+      // outcome is folded in separately — otherwise an approved row keeps offering the
+      // approve button it has already been given.
+      setRows((current) =>
+        current.map((row) =>
+          row.id === paymentId
+            ? {
+                ...row,
+                ...result.data,
+                onboarding:
+                  row.onboarding && result.reviewApproved !== undefined
+                    ? { ...row.onboarding, reviewApproved: result.reviewApproved }
+                    : row.onboarding,
+              }
+            : row,
+        ),
+      );
       setNote("");
       setReference("");
       setActiveId(null);
@@ -154,7 +195,12 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
                     <p className="mt-2 text-[10px] leading-4 text-amber-800">Awaiting human review</p>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate-700">{row.portalAccessStatus}</td>
+                <td className="px-4 py-3 text-slate-700">
+                  {row.portalAccessStatus}
+                  {awaitingReview(row) ? (
+                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900">Needs review</span>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3 text-[11px] text-slate-500">{row.externalPaymentReference ?? "—"}</td>
                 <td className="px-4 py-3">
                   {activeId === row.id ? (
@@ -176,6 +222,32 @@ export function AccessPaymentsWorkspace({ initialRows }: { initialRows: AccessPa
                               {claim.reference}
                             </button>
                           ))}
+                        </div>
+                      ) : null}
+                      {awaitingReview(row) ? (
+                        <div className="grid gap-1.5 rounded border border-amber-200 bg-amber-50 p-2">
+                          <p className="text-[10px] font-bold uppercase tracking-[.14em] text-amber-900">
+                            Awaiting your review — access opens on approval
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            <Button
+                              disabled={pendingAction !== null}
+                              onClick={() => record(row.id, "approve", "review")}
+                              size="sm"
+                              type="button"
+                            >
+                              {pendingAction === `${row.id}:approve` ? <LoaderCircle className="size-3 animate-spin" /> : "Approve onboarding"}
+                            </Button>
+                            <Button
+                              disabled={pendingAction !== null}
+                              onClick={() => record(row.id, "reject", "review")}
+                              size="sm"
+                              type="button"
+                              variant="secondary"
+                            >
+                              {pendingAction === `${row.id}:reject` ? <LoaderCircle className="size-3 animate-spin" /> : "Reject"}
+                            </Button>
+                          </div>
                         </div>
                       ) : null}
                       <div className="flex flex-wrap gap-1.5">

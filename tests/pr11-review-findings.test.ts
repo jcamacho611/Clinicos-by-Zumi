@@ -1450,3 +1450,51 @@ describe("an approved purchase produces something the buyer can sign in to", () 
     expect(branch.slice(0, branch.indexOf("\n      }"))).toContain("markWebhookIncomplete");
   });
 });
+
+describe("the operator can actually make the decision that opens the portal", () => {
+  // The reviewed defect: /admin/payments rendered verify/hold/fail/refund/reconcile and
+  // nothing else. The API has accepted reviewDecision since the review path shipped, but
+  // with no control for it every Founding Clinic purchase sat at portalAccessStatus
+  // "pending" forever unless somebody hand-built the request — so the provisioning wired
+  // to approval could never fire through the shipped UI.
+  const workspace = () => source("src/components/commerce/access-payments-workspace.tsx");
+
+  it("sends the review decision the API has always accepted", () => {
+    const body = workspace();
+    expect(body).toContain('reviewDecision: action');
+    expect(body).toContain('record(row.id, "approve", "review")');
+    expect(body).toContain('record(row.id, "reject", "review")');
+    const route = source("src/app/api/commerce/payments/verify/route.ts");
+    expect(route).toContain('reviewDecision: z.enum(["approve", "reject"])');
+  });
+
+  it("keeps the review decision on its own request shape", () => {
+    // A review is not a payment transition; sending it as one would fail validation.
+    const body = workspace();
+    expect(body).toContain('kind === "review"');
+    expect(body).toContain("{ paymentId, reviewDecision: action, note: note.trim() }");
+  });
+
+  it("offers the control only where a review is actually outstanding", () => {
+    const body = workspace();
+    expect(body).toContain("function awaitingReview(row: AccessPaymentRow)");
+    expect(body).toContain('["verified_paid", "reconciled"].includes(row.status)');
+    expect(body).toContain("!row.onboarding!.reviewApproved");
+  });
+
+  it("makes an outstanding review findable in the queue", () => {
+    expect(workspace()).toContain("Needs review");
+  });
+
+  it("stops offering approval once it has been given", () => {
+    // The response carries the payment, not its onboarding record, so the review outcome
+    // has to be folded in or the row keeps offering a decision already made.
+    const body = workspace();
+    expect(body).toContain("reviewApproved?: boolean;");
+    expect(body).toContain("result.reviewApproved !== undefined");
+  });
+
+  it("still requires a note, because a decision without a reason is not auditable", () => {
+    expect(workspace()).toContain("A note of at least 8 characters is required for every decision.");
+  });
+});
