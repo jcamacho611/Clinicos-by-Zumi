@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Check, LoaderCircle, ShieldCheck } from "lucide-react";
 import type { ClinicActivationDraft } from "@/lib/commercial/clinic-activation-rules";
 
@@ -52,6 +52,7 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
     acceptTerms: false,
     syntheticDataOnly: true,
   });
+  const autosaveDraft = useMemo(() => draftFromForm(form), [form.ownerName, form.clinicType, form.locationName, form.city, form.state, form.timezone, form.teamSize, form.primaryGoal, form.currentSystems, form.migrationExpectation, form.communicationsState]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -69,7 +70,7 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
         const response = await fetch("/api/onboarding/activate", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, ...draftFromForm(form) }),
+          body: JSON.stringify({ token, ...autosaveDraft }),
           signal: controller.signal,
         });
         const payload = await response.json();
@@ -84,7 +85,7 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [form.ownerName, form.clinicType, form.locationName, form.city, form.state, form.timezone, form.teamSize, form.primaryGoal, form.currentSystems, form.migrationExpectation, form.communicationsState, token]);
+  }, [autosaveDraft, token]);
 
   function submit() {
     setError("");
