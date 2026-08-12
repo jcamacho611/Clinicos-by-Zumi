@@ -117,6 +117,11 @@ function checkoutStateFromData(data: Record<string, unknown>) {
   return asString(metadata.klinikos_checkout_state) ?? asString(metadata.checkout_state) ?? asString(metadata.state);
 }
 
+function organizationIdFromData(data: Record<string, unknown>) {
+  const metadata = metadataFromData(data);
+  return asString(metadata.klinikos_organization_id);
+}
+
 function membershipIdFromData(data: Record<string, unknown>) {
   return asString(data.membership_id) ?? nestedString(asObject(data.membership), "id") ?? null;
 }
@@ -194,6 +199,7 @@ export function normalizeWhopWebhook(input: {
       verificationMethod: "webhook_signature",
       processorVerified: true,
       productKey: product?.key ?? asString(metadata.klinikos_product_key),
+      organizationId: organizationIdFromData(data),
       email: emailFromData(data),
       externalCustomerId:
         asString(data.customer_id) ?? nestedString(asObject(data.customer), "id") ?? nestedString(asObject(data.member), "id"),
