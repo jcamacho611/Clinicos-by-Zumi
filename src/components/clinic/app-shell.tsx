@@ -102,7 +102,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
           {deeperGroups.map((group) => {
             const groupActive = group.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
             return (
-              <details className="group/nav" defaultOpen={groupActive} key={group.label}>
+              <details className="group/nav" open={groupActive ? true : undefined} key={group.label}>
                 <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-semibold text-white/50 transition hover:bg-white/[.04] hover:text-white marker:hidden">
                   <span>{group.label}</span>
                   <span className="ml-auto text-[9px] text-white/25">{group.items.length}</span>
