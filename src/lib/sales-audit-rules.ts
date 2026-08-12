@@ -3,6 +3,7 @@ import { z } from "zod";
 export const salesAuditQualificationSchema = z.object({
   clinic: z.string().trim().min(2).max(160),
   decisionMaker: z.string().trim().min(2).max(160),
+  email: z.string().trim().toLowerCase().email().max(254),
   locations: z.number().int().min(1).max(500),
   providers: z.number().int().min(1).max(5000),
   staff: z.number().int().min(1).max(10000),
@@ -30,6 +31,7 @@ export function buildSalesAuditNotes(input: SalesAuditQualification) {
   return [
     "Klinikos Operational Audit qualification",
     `Decision maker: ${input.decisionMaker}`,
+    `Buyer email: ${input.email}`,
     `Locations: ${input.locations}; providers: ${input.providers}; staff: ${input.staff}; encounters/month: ${input.encounters}`,
     `Revenue band: ${input.revenueBand}; insurance mix: ${input.insuranceMix}; billing: ${input.billing || "unknown"}; EHR/PM: ${input.ehr || "unknown"}`,
     `Reported monthly technology spend: $${input.monthlyTech.toLocaleString()}`,
@@ -39,6 +41,6 @@ export function buildSalesAuditNotes(input: SalesAuditQualification) {
     `Biggest operating frustration: ${input.biggestPain || "not recorded"}`,
     `Qualification score: ${input.score}/100; status: ${input.status}`,
     `Recommended audit price: $${input.auditPrice.toLocaleString()}`,
-    "Checkout uses the official Klinikos GoDaddy payment link. Payment must be independently confirmed before the audit is marked paid.",
+    "Checkout uses the official Klinikos GoDaddy payment connector. Checkout launch is not payment proof; payment must be independently reconciled before the audit is marked paid.",
   ].join("\n");
 }
