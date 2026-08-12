@@ -21,9 +21,19 @@ function configuredReservationCents(env: NodeJS.ProcessEnv = process.env) {
   return parsed;
 }
 
-function actualCostCents(costMicroUsd: number) {
+function providerCostCents(costMicroUsd: number) {
   if (!Number.isFinite(costMicroUsd) || costMicroUsd <= 0) return 0;
   return Math.ceil(costMicroUsd / 10_000);
+}
+
+/**
+ * Self-hosted inference can correctly report $0 third-party API cost while still
+ * consuming real Klinikos compute. Successful paid Zumi work therefore consumes at
+ * least the reserved internal cost unit. If a provider reports a higher real cost,
+ * the higher value wins and the commercial ledger detects the overrun.
+ */
+function fundedCostCents(costMicroUsd: number, reservedCents: number) {
+  return Math.max(reservedCents, providerCostCents(costMicroUsd));
 }
 
 export type FundedZumiRequest = {
@@ -46,13 +56,6 @@ export type FundedZumiResult =
       invocationId: null;
     };
 
-/**
- * Commercial wrapper around the single governed Zumi gateway.
- *
- * The order is intentional: select the configured inference provider, reserve the
- * customer's funded usage, invoke the governed gateway, then settle actual provider
- * cost or release the reservation on a failed/denied call.
- */
 export async function invokeFundedZumi(request: FundedZumiRequest): Promise<FundedZumiResult> {
   const selection = selectProvider();
   if (!selection.ok) {
@@ -100,7 +103,7 @@ export async function invokeFundedZumi(request: FundedZumiRequest): Promise<Fund
       return {
         allowed: false,
         reason: error.reason === "invalid_state" ? "commercial_unavailable" : error.reason,
-        status: error.reason === "policy_blocked" || error.reason === "upgrade_required" ? 403 : error.status === 503 ? 503 : 402,
+        status: error.reason === "policy_blocked" || error.reason === "upgrade_required" ? 403 : 402,
         message: error.message,
         invocationId: null,
       };
@@ -134,9 +137,11 @@ export async function invokeFundedZumi(request: FundedZumiRequest): Promise<Fund
       organizationId: request.session.organizationId,
       actorId: request.session.userId,
       reservationId: reservation.reservationId,
-      actualCostCents: actualCostCents(result.response.usage.costMicroUsd),
+      actualCostCents: fundedCostCents(result.response.usage.costMicroUsd, reservation.estimatedCostCents),
       metadata: {
         invocationAuditLogId: result.response.auditLogId,
+        providerCostMicroUsd: result.response.usage.costMicroUsd,
+        internalReservedCostCents: reservation.estimatedCostCents,
         inputTokens: result.response.usage.inputTokens,
         outputTokens: result.response.usage.outputTokens,
       },
