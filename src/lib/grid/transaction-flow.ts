@@ -33,6 +33,7 @@ export const gridOfferSchema = z.object({
   demandId: z.string().min(1),
   providerId: z.string().min(1).optional().nullable(),
   serviceListingId: z.string().min(1).optional().nullable(),
+  recipientOrganizationId: z.string().min(1).optional().nullable(),
   resourceKind: z.string().trim().min(2).max(80).optional().nullable(),
   resourceReference: z.string().trim().min(1).max(200).optional().nullable(),
 }).and(offerTermsSchema).superRefine((value, ctx) => {
@@ -44,6 +45,9 @@ export const gridOfferSchema = z.object({
   }
   if (Boolean(value.resourceKind) !== Boolean(value.resourceReference)) {
     ctx.addIssue({ code: "custom", path: ["resourceReference"], message: "Generic resource kind and reference must be provided together." });
+  }
+  if (value.resourceReference && !value.providerId && !value.locationId && !value.recipientOrganizationId) {
+    ctx.addIssue({ code: "custom", path: ["recipientOrganizationId"], message: "Generic resource offers require a recipient organization." });
   }
 });
 
