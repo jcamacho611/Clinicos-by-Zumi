@@ -28,6 +28,13 @@ services:
         value: "false"
       # Paid access. Without these the commerce surfaces report Pending Connection
       # and no purchase can be started or settled.
+      # The one organization allowed to review the marketplace payment queue across
+      # tenants. Every other operator sees only their own organization's purchases.
+      # Unset means nobody has platform scope — safe, but it also means the /admin/payments
+      # review path has no authorized operator, so a deployment that sells one-time
+      # products must set this to its Klinikos-operated organization id.
+      - key: KLINIKOS_PLATFORM_ORG_ID
+        sync: false
       - key: WHOP_API_KEY
         sync: false
       - key: WHOP_WEBHOOK_SECRET

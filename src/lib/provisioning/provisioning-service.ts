@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import { db } from "@/lib/db";
 import { createAccountActivationToken } from "@/lib/auth/account-activation";
 import { canonicalAppUrl, canonicalAppUrlIsPublic } from "@/lib/app-url";
@@ -12,6 +14,14 @@ import {
   type ProvisioningStep,
   type StepState,
 } from "@/lib/provisioning/provisioning-rules";
+
+/**
+ * How long a claim is honoured before it is treated as abandoned.
+ *
+ * Long enough that a slow but living run is not overtaken, short enough that a crashed
+ * worker delays a purchase by minutes rather than forever.
+ */
+const CLAIM_TIMEOUT_MS = 2 * 60 * 1000;
 
 type Steps = Partial<Record<ProvisioningStep, StepState>>;
 
@@ -26,7 +36,12 @@ export type ProvisionInput = {
 
 export type ProvisionResult = {
   provisioningKey: string;
-  status: "complete" | "partial" | "failed" | "skipped";
+  /**
+   * `contended` means another worker holds this run's claim, so this caller did no work
+   * and cannot say whether the purchase provisioned. Callers treat it like a failure —
+   * retry — but it is recorded distinctly because nothing went wrong.
+   */
+  status: "complete" | "partial" | "failed" | "skipped" | "contended";
   organizationId: string | null;
   modules: string[];
   outstanding: string[];
@@ -92,26 +107,63 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
   }
 
   const steps: Steps = { ...(run.steps as Steps) };
-  let organizationId = run.organizationId ?? existingOrganizationId;
   let subscriptionId = run.subscriptionId;
 
-  await db.provisioningRun.update({ where: { id: run.id }, data: { attempts: { increment: 1 } } });
+  // Take the claim before doing anything. `updateMany` with these conditions is the
+  // lock: exactly one concurrent caller matches a row, and the others match none. The
+  // stale-claim clause is what keeps a crashed worker from stranding the purchase —
+  // an abandoned claim becomes takeable again after the timeout.
+  const claimToken = randomUUID();
+  const staleBefore = new Date(Date.now() - CLAIM_TIMEOUT_MS);
+  const claimed = await db.provisioningRun.updateMany({
+    where: {
+      id: run.id,
+      status: { not: "complete" },
+      OR: [{ claimedAt: null }, { claimedAt: { lt: staleBefore } }],
+    },
+    data: { claimedAt: new Date(), claimedBy: claimToken, attempts: { increment: 1 } },
+  });
+
+  if (claimed.count === 0) {
+    // Another worker is executing this run right now. Doing the work anyway is exactly
+    // what created two tenants for one purchase, so this caller does nothing and says so.
+    return {
+      provisioningKey: key,
+      status: "contended",
+      organizationId: run.organizationId,
+      modules: [...plan.modules],
+      outstanding: [...plan.outstanding],
+      alreadyProvisioned: false,
+      activation: null,
+    };
+  }
+
+  // Only read after the claim is held. Reading it earlier would use a snapshot the
+  // previous holder may have moved on from.
+  const held = await db.provisioningRun.findUnique({ where: { id: run.id }, select: { organizationId: true } });
+  let organizationId = held?.organizationId ?? existingOrganizationId;
 
   try {
-    if (needsWork(steps.organization)) {
-      organizationId = organizationId ?? (await createOrganization(email, input.clinicName));
-      steps.organization = "complete";
-    }
-
-    // Every module-bearing purchase gets an identity attached to the tenant it just
-    // paid for. Without this the buyer owns a subscription inside an organization they
-    // cannot authenticate into, and creating a workspace later would make a second one.
     let activation: ProvisionResult["activation"] = null;
-    if (organizationId && plan.modules.length > 0) {
-      const user = await attachBuyerToOrganization(email, organizationId, buyerRoleForModules(plan.modules));
-      if (!user.authCredential) {
-        activation = { ...(await createAccountActivationToken({ email, userId: user.id, organizationId })), userId: user.id };
+
+    // Creating the organization and attaching the buyer to it happen together or not at
+    // all. Separately, a failed attachment left behind an organization nobody could reach
+    // — and writing that orphan's id onto the run poisoned every later retry, because the
+    // buyer's real organization no longer matched.
+    if (plan.modules.length > 0) {
+      const attached = await attachBuyerToTenant({
+        email,
+        organizationId,
+        clinicName: input.clinicName,
+        roleKey: buyerRoleForModules(plan.modules),
+      });
+      organizationId = attached.organizationId;
+      steps.organization = "complete";
+      if (!attached.hasCredential) {
+        activation = { ...(await createAccountActivationToken({ email, userId: attached.userId, organizationId })), userId: attached.userId };
       }
+    } else if (needsWork(steps.organization)) {
+      steps.organization = "complete";
     }
 
     if (needsWork(steps.subscription) && organizationId) {
@@ -143,6 +195,8 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
         status,
         completedAt: status === "complete" ? new Date() : null,
         failureReason: null,
+        claimedAt: null,
+        claimedBy: null,
       },
     });
 
@@ -156,14 +210,18 @@ export async function provisionFromPayment(input: ProvisionInput): Promise<Provi
       activation,
     };
   } catch (error) {
+    // The claim is released so a retry can proceed. `organizationId` is deliberately not
+    // written: on this path the buyer may not be attached to it, and persisting an
+    // organization the buyer does not belong to is what made retries fail forever.
     await db.provisioningRun.update({
       where: { id: run.id },
       data: {
-        organizationId,
         subscriptionId,
         steps,
         status: "failed",
         failureReason: error instanceof Error ? error.message.slice(0, 300) : "unknown error",
+        claimedAt: null,
+        claimedBy: null,
       },
     }).catch(() => undefined);
 
@@ -184,31 +242,57 @@ function deriveStatus(steps: Steps): "complete" | "partial" {
 }
 
 /**
- * Bind the buyer's identity to the tenant their payment created.
+ * Put the buyer inside a tenant, creating one only if they do not already have it.
  *
- * Idempotent by the user's email, which is unique: a webhook redelivery finds the same
- * row rather than making a second buyer. An email that already belongs to another
- * organization is an error rather than a silent re-parent — moving someone between
- * tenants is not something a payment webhook should be able to do.
+ * One transaction, deliberately. Previously the organization was created by one
+ * statement and the buyer attached by another, so a failed attachment left an
+ * unreachable organization behind — and the id of that orphan then got written onto the
+ * shared provisioning run, after which every retry read it and failed the
+ * cross-organization identity check forever.
+ *
+ * Idempotent on the buyer's email, which is unique. A concurrent create loses that
+ * constraint and rolls the whole transaction back, including the organization, so the
+ * loser leaves nothing behind to clean up.
  */
-async function attachBuyerToOrganization(email: string, organizationId: string, roleKey: "clinic_owner" | "contractor") {
-  const existing = await db.user.findUnique({
-    where: { email },
-    include: { authCredential: { select: { id: true } } },
-  });
-  if (existing) {
-    if (existing.organizationId !== organizationId) throw new Error("Buyer identity is already attached to another organization.");
-    return existing;
-  }
-  return db.user.create({
-    data: {
-      organizationId,
-      email,
-      name: email.split("@")[0] || "Klinikos member",
-      roleKey,
-      status: "active",
-    },
-    include: { authCredential: { select: { id: true } } },
+async function attachBuyerToTenant(input: {
+  email: string;
+  organizationId: string | null;
+  clinicName?: string;
+  roleKey: "clinic_owner" | "contractor";
+}) {
+  return db.$transaction(async (tx) => {
+    // Re-read inside the transaction. The caller's view may predate another worker
+    // finishing, and an email that now exists must be honoured rather than duplicated.
+    const existing = await tx.user.findUnique({
+      where: { email: input.email },
+      select: { id: true, organizationId: true, authCredential: { select: { id: true } } },
+    });
+
+    if (existing) {
+      // Moving someone between tenants is not something a payment webhook may do.
+      if (input.organizationId && existing.organizationId !== input.organizationId) {
+        throw new Error("Buyer identity is already attached to another organization.");
+      }
+      return {
+        organizationId: existing.organizationId,
+        userId: existing.id,
+        hasCredential: Boolean(existing.authCredential),
+      };
+    }
+
+    const organizationId = input.organizationId ?? (await createOrganization(input.email, input.clinicName, tx));
+    const user = await tx.user.create({
+      data: {
+        organizationId,
+        email: input.email,
+        name: input.email.split("@")[0] || "Klinikos member",
+        roleKey: input.roleKey,
+        status: "active",
+      },
+      select: { id: true },
+    });
+
+    return { organizationId, userId: user.id, hasCredential: false };
   });
 }
 
@@ -266,21 +350,23 @@ export async function deliverActivation(input: { email: string; token: string; p
   return outcome;
 }
 
-async function createOrganization(email: string, clinicName?: string) {
+type TxClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+async function createOrganization(email: string, clinicName: string | undefined, tx: TxClient) {
   const name = clinicName?.trim() || `${email.split("@")[0]} Clinic`;
-  const slug = await uniqueSlug(name);
-  const organization = await db.organization.create({
+  const slug = await uniqueSlug(name, tx);
+  const organization = await tx.organization.create({
     data: { name, slug, clinicType: "independent_clinic", status: "active", demoMode: true },
     select: { id: true },
   });
   return organization.id;
 }
 
-async function uniqueSlug(name: string) {
+async function uniqueSlug(name: string, tx: TxClient) {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "clinic";
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const candidate = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 7)}`;
-    const taken = await db.organization.findUnique({ where: { slug: candidate }, select: { id: true } });
+    const taken = await tx.organization.findUnique({ where: { slug: candidate }, select: { id: true } });
     if (!taken) return candidate;
   }
   return `${base}-${Date.now().toString(36)}`;

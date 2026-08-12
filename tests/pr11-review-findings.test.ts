@@ -822,3 +822,81 @@ describe("seventh review round — links that resolve", () => {
     expect(service).toContain("would not resolve");
   });
 });
+
+describe("eighth review round — one purchase provisions once", () => {
+  const svc = () => readFileSync(join(process.cwd(), "src/lib/provisioning/provisioning-service.ts"), "utf8");
+
+  it("claims the run before executing any step", () => {
+    // Two concurrent deliveries both saw the run as pending and both created an
+    // organization. The claim is a conditional updateMany: exactly one caller matches.
+    const body = svc();
+    const claim = body.indexOf("db.provisioningRun.updateMany({");
+    const attach = body.indexOf("attachBuyerToTenant({");
+    expect(claim).toBeGreaterThan(-1);
+    expect(attach).toBeGreaterThan(claim);
+    expect(body).toContain("if (claimed.count === 0)");
+  });
+
+  it("does no work at all when the claim is held elsewhere", () => {
+    expect(svc()).toContain('status: "contended"');
+  });
+
+  it("lets an abandoned claim be retaken so a crash cannot strand a purchase", () => {
+    const body = svc();
+    expect(body).toContain("CLAIM_TIMEOUT_MS");
+    expect(body).toContain("{ claimedAt: { lt: staleBefore } }");
+  });
+
+  it("releases the claim on both the success and failure paths", () => {
+    const body = svc();
+    expect(body.match(/claimedAt: null,\s*\n\s*claimedBy: null,/g)?.length).toBe(2);
+  });
+
+  it("creates the organization and attaches the buyer in one transaction", () => {
+    // Separately, a failed attachment left an unreachable organization behind.
+    const body = svc();
+    const fn = body.slice(body.indexOf("async function attachBuyerToTenant"));
+    expect(fn).toContain("db.$transaction");
+    expect(fn.indexOf("createOrganization(")).toBeLessThan(fn.indexOf("tx.user.create"));
+  });
+
+  it("re-reads the buyer inside the transaction rather than trusting a stale view", () => {
+    const fn = svc().slice(svc().indexOf("async function attachBuyerToTenant"));
+    expect(fn).toContain("tx.user.findUnique");
+  });
+
+  it("never writes an organization the buyer may not belong to onto a failed run", () => {
+    // Persisting the orphan is what made every later retry fail the cross-organization
+    // identity check permanently.
+    const body = svc();
+    const failure = body.slice(body.indexOf('status: "failed",\n        failureReason:') - 400);
+    const block = failure.slice(0, failure.indexOf("}).catch"));
+    expect(block).not.toMatch(/^\s*organizationId,\s*$/m);
+  });
+
+  it("still refuses to move a buyer between tenants", () => {
+    expect(svc()).toContain("Buyer identity is already attached to another organization.");
+  });
+
+  it("makes a contended result retryable at the webhook", () => {
+    const route = readFileSync(join(process.cwd(), "src/app/api/whop/webhook/route.ts"), "utf8");
+    expect(route).toContain('provisioning.status === "contended"');
+    expect(route).toContain("provisioning_contended");
+  });
+
+  it("declares the platform operator variable the review queue needs", () => {
+    // The cross-tenant fix fails closed, so without this the shipped /admin/payments
+    // workspace has no authorized operator on a blueprint deployment.
+    const blueprint = readFileSync(join(process.cwd(), "render.yaml"), "utf8");
+    expect(blueprint).toContain("KLINIKOS_PLATFORM_ORG_ID");
+    const line = blueprint.split("\n").find((entry) => entry.includes("KLINIKOS_PLATFORM_ORG_ID")) ?? "";
+    expect(line).not.toContain("value:");
+  });
+
+  it("keeps the claim migration additive", () => {
+    const sql = readFileSync(join(process.cwd(), "prisma/migrations/20260812050000_provisioning_run_claim/migration.sql"), "utf8");
+    expect(sql).toContain("ADD COLUMN IF NOT EXISTS");
+    expect(/DROP\s+(TABLE|COLUMN)|TRUNCATE|DELETE FROM/i.test(sql)).toBe(false);
+    expect(/ADD COLUMN[^;]*NOT NULL/i.test(sql)).toBe(false);
+  });
+});

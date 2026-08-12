@@ -130,8 +130,12 @@ export async function POST(request: Request) {
         tierKey: result.tierKey ?? undefined,
       }).catch(() => null);
 
-      if (!provisioning || provisioning.status === "failed") {
-        await markWebhookIncomplete(delivery.id, provisioning ? "provisioning_failed" : "provisioning_threw");
+      // `contended` means another worker held the run's claim, so this delivery learned
+      // nothing about the outcome. Treated like a failure — retry — because acknowledging
+      // it would mark the delivery terminal on the strength of work we did not observe.
+      if (!provisioning || provisioning.status === "failed" || provisioning.status === "contended") {
+        const reason = !provisioning ? "provisioning_threw" : provisioning.status === "contended" ? "provisioning_contended" : "provisioning_failed";
+        await markWebhookIncomplete(delivery.id, reason);
         return noStore({ error: "Provisioning did not complete.", retry: true }, 500);
       }
 

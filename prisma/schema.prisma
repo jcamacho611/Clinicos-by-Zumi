@@ -4420,6 +4420,13 @@ model ProvisioningRun {
   /// problem to see rather than a silent dead end for the customer.
   activationDeliveredAt     DateTime?
   activationDeliveryFailure String?
+  /// Held while a worker is executing this run's steps. A concurrent caller that cannot
+  /// take the claim does no work at all — without it, two deliveries of the same webhook
+  /// each created an organization, and the loser wrote its orphan tenant onto this row.
+  /// A claim older than the timeout is treated as abandoned so a dead process cannot
+  /// strand a purchase permanently.
+  claimedAt      DateTime?
+  claimedBy      String?
   attempts       Int      @default(0)
   startedAt      DateTime @default(now())
   completedAt    DateTime?
@@ -4427,6 +4434,8 @@ model ProvisioningRun {
   updatedAt      DateTime @updatedAt
 
   @@index([email, status])
+  /// Scans for reclaimable runs.
+  @@index([status, claimedAt])
   @@index([organizationId])
   @@index([status, updatedAt])
   @@map("provisioning_runs")
