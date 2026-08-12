@@ -39,7 +39,38 @@ const PATIENT_MESSAGE_CHANNEL: OutboundChannel = "email";
  * recorded as done while the patient received nothing.
  */
 export function communicationsConnected(env: OutboundEnv = process.env) {
-  return outboundChannelStatus(PATIENT_MESSAGE_CHANNEL, env).deliverable;
+  return patientMessageDeliverability(env).deliverable;
+}
+
+/**
+ * Whether a patient message may be delivered, and why not if it may not.
+ *
+ * Two conditions, both required, and the second is the one that was missing. A patient
+ * message names the patient and describes their appointment, their paperwork, or the
+ * fact that they did not attend — that is PHI, whatever the message is called.
+ *
+ * `RESEND_API_KEY` being present makes email *technically* deliverable. It does not make
+ * the rail approved for PHI: the connector catalog declares Resend `handlesPhi: false`
+ * and says clinical email stays blocked until approved. Sending on credential presence
+ * alone would disclose PHI through a rail nobody signed a BAA for — the same mistake as
+ * Law 11 on the AI side, in a different gateway.
+ */
+export function patientMessageDeliverability(env: OutboundEnv = process.env) {
+  const channel = outboundChannelStatus(PATIENT_MESSAGE_CHANNEL, env);
+  if (!channel.deliverable) return { deliverable: false as const, reason: channel.reason, detail: channel.detail };
+
+  const phiApproved = connectorsByGateway("communication").some(
+    (connector) => connector.handlesPhi && connectorReadiness(connector).phiUsable,
+  );
+  if (!phiApproved) {
+    return {
+      deliverable: false as const,
+      reason: "phi_not_approved" as const,
+      detail: "A messaging provider is configured, but none is approved to carry protected health information. Patient messages stay prepared until one is.",
+    };
+  }
+
+  return { deliverable: true as const };
 }
 
 /**
@@ -312,12 +343,17 @@ async function sendApprovedMessage(input: {
     return { ok: true as const, state: "failed" as const, detail: "No contact address is on file for this patient." };
   }
 
-  const outcome = await deliverOutbound({
-    channel: PATIENT_MESSAGE_CHANNEL,
-    to: recipient,
-    subject: input.action.title,
-    body: input.action.body,
-  });
+  // Checked immediately before egress rather than only at sweep time, so an approval
+  // recorded while a PHI-approved rail existed cannot send after it is withdrawn.
+  const phiGate = patientMessageDeliverability();
+  const outcome = phiGate.deliverable
+    ? await deliverOutbound({
+        channel: PATIENT_MESSAGE_CHANNEL,
+        to: recipient,
+        subject: input.action.title,
+        body: input.action.body,
+      })
+    : ({ ok: false, reason: phiGate.reason, detail: phiGate.detail } as const);
 
   if (outcome.ok) {
     await db.operationalAction.update({
@@ -402,8 +438,10 @@ async function retryApprovedDeliveries(organizationId: string) {
  * configuration facts, and telling an owner to "retry" them would be advice they cannot
  * act on.
  */
-function deliveryFailureState(reason: "no_connector" | "no_sender" | "provider_error" | "invalid_recipient"): ActionState {
-  if (reason === "no_connector") return "awaiting_connection";
+function deliveryFailureState(reason: "no_connector" | "no_sender" | "provider_error" | "invalid_recipient" | "phi_not_approved"): ActionState {
+  // Not a failure to retry against: no provider is approved to carry this content, and
+  // that is a contract, not an outage.
+  if (reason === "no_connector" || reason === "phi_not_approved") return "awaiting_connection";
   if (reason === "no_sender") return "awaiting_delivery";
   return "failed";
 }

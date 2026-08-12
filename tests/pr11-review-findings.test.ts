@@ -734,3 +734,38 @@ describe("fifth review round — cross-tenant exposure", () => {
     expect(svc()).toContain("if (!platformOrganizationId) return false");
   });
 });
+
+describe("sixth review round — PHI cannot leave on an unapproved rail", () => {
+  const svc = () => readFileSync(join(process.cwd(), "src/lib/operations/followup-service.ts"), "utf8");
+
+  it("requires a PHI-approved connector, not merely a configured one", () => {
+    // A patient message names the patient and describes their appointment, paperwork,
+    // or non-attendance. RESEND_API_KEY being present makes email deliverable; the
+    // catalog declares Resend handlesPhi:false, so it does not make it permitted.
+    expect(svc()).toContain("export function patientMessageDeliverability");
+    expect(svc()).toContain("connector.handlesPhi && connectorReadiness(connector).phiUsable");
+    expect(svc()).toContain('reason: "phi_not_approved"');
+  });
+
+  it("re-checks the gate immediately before egress, not only at sweep time", () => {
+    // An approval recorded while a PHI-approved rail existed must not send after that
+    // approval is withdrawn.
+    const body = svc();
+    const gate = body.indexOf("const phiGate = patientMessageDeliverability()");
+    const send = body.indexOf("await deliverOutbound(", gate);
+    expect(gate).toBeGreaterThan(-1);
+    expect(send).toBeGreaterThan(gate);
+  });
+
+  it("reports the block as awaiting connection rather than a retryable failure", () => {
+    // No approved rail is a contract, not an outage. Telling an owner to retry would be
+    // advice they cannot act on.
+    expect(svc()).toContain('reason === "no_connector" || reason === "phi_not_approved"');
+  });
+
+  it("keeps Resend declared as not carrying PHI", () => {
+    const catalog = readFileSync(join(process.cwd(), "src/lib/connectors/catalog.ts"), "utf8");
+    const resend = catalog.slice(catalog.indexOf('id: "resend"'), catalog.indexOf('id: "resend"') + 500);
+    expect(resend).toContain("handlesPhi: false");
+  });
+});
