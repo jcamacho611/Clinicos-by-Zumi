@@ -84,7 +84,7 @@ export function KlinikosAtmosphereController() {
             <div>
               <p className="k-kicker">Appearance</p>
               <h2 className="mt-2 text-lg font-semibold tracking-[-.03em]">Atmosphere</h2>
-              <p className="k-muted mt-2 max-w-xs text-xs leading-5">Auto follows your device's local time. Lock any atmosphere whenever you want.</p>
+              <p className="k-muted mt-2 max-w-xs text-xs leading-5">Auto follows your device local time. Lock any atmosphere whenever you want.</p>
             </div>
             <button type="button" className="k-icon-button" onClick={() => setOpen(false)} aria-label="Close appearance settings"><X className="size-4" /></button>
           </div>
