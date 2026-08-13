@@ -1,80 +1,86 @@
 # MVP journeys
 
-A journey is not a unit test. It runs the real repositories and services against a real
-PostgreSQL database with real sessions, so authorization, tenant scoping and lifecycle
-rules are exercised rather than mocked. A journey passing means a person could do that
-thing; a journey failing means either the product is wrong or our understanding of it was.
+A journey is not a unit test. It runs real Klinikos repositories/services against a real PostgreSQL database with real sessions so authorization, tenant scoping, lifecycle rules, payment truth, and concurrency are exercised instead of mocked.
 
-Journeys have found defects the unit suite could not see, because the unit suite never
-touches a database:
+A passing journey means the exact behavior asserted was observed through the real persistence path. A failing journey means the implementation, test, assumption, documentation, or environment must be investigated before anything is weakened merely to make the check green.
 
-- nine migrations referenced Prisma **model** names instead of the mapped **table** names,
-  so a fresh deployment was impossible while every test stayed green
-- `SELECT pg_advisory_xact_lock(...)` was issued through `$queryRaw`, which cannot
-  deserialize a `void` column, so **no Grid reservation could ever be created**
-- the follow-up loop wrote zero audit records
-- redaction ran too late in the Zumi gateway, so identifiers reached the model provider
-  in the system prompt while the user prompt beside it was clean
+## Why these exist
 
-## Running them
+Journeys have found defects that ordinary tests did not expose, including:
+
+- migrations that referenced Prisma model names instead of mapped PostgreSQL table names, making a fresh deploy impossible while unit tests stayed green;
+- `SELECT pg_advisory_xact_lock(...)` being issued through a Prisma raw-query path that attempted to deserialize PostgreSQL `void`, preventing Grid reservations;
+- an operations loop that resolved work without writing the expected audit record;
+- PHI/sensitive redaction happening too late, after another Zumi consumer had already read the raw question;
+- contention tests that initially refused both requests for an ordinary already-booked reason instead of actually proving the concurrency lock.
+
+## Running the complete suite
+
+Use a disposable PostgreSQL database.
 
 ```bash
-createdb klinikos_mvp
 export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/klinikos_mvp"
 export DIRECT_DATABASE_URL="$DATABASE_URL"
-export AUTH_SECRET="…any 32+ character value for local runs…"
+export AUTH_SECRET="replace-with-any-32-plus-character-local-test-secret"
 
-npx prisma migrate deploy
-npm run journey -- scripts/mvp/grid-journey.mts
+npm run test:mvp
 ```
 
-`npm run journey` is `tsx` with `tsconfig.journeys.json`. That config exists for one
-reason: journeys import real server modules, and those import `server-only` — a Next.js
-compile-time marker that is not an installed package. Next aliases it during a build and
-Vitest aliases it during tests, so the journey config aliases it to the same inert stub.
-It is deliberately **not** in the base `tsconfig.json`, because mapping `server-only`
-there would make `next build` resolve the marker to a no-op and silently disable the
-server/client boundary for the whole application.
+The runner is `scripts/mvp/run-all.mjs`. It invokes each real journey through `tsx` with the server-only stub path required for running server modules outside a Next.js build. Do not globally alias `server-only` in the application tsconfig; that would weaken the real server/client boundary.
 
-Each journey creates its own organizations, cleans up after itself, and exits non-zero on
-any failed check.
+Each journey owns its fixtures, cleans up after itself where applicable, and exits non-zero on failure.
 
-## The journeys
+## Current automated journeys
 
-| # | File | Proves |
+The current runner executes **10** journeys in this order:
+
+| Order | File | Proves |
 | --- | --- | --- |
-| 1 | `commercial-journey.mts` | Payment evidence and entitlement are separate facts. An unverified event never activates anything; activation needs a membership event *and* a corroborating verified payment; replay is idempotent. |
-| 2 | `operations-journey.mts` | Appointment risk is detected deterministically, produces real operational work, and — with no messaging connector — no patient message claims to have been sent. Resolving the real-world cause closes the action. |
-| 3 | `grid-journey.mts` | Need → offer → acceptance → reservation. A reservation cannot exist before acceptance, only the recipient may accept, an offer may only name a human-approved resource, and the same offer cannot be reserved twice. |
-| 4 | `grid-trust-journey.mts` | Dispute and safety incident are distinct records, both block the reservation, duplicates and cross-tenant disputes are refused, and resolution vocabulary never claims money moved or a participant was suspended. |
-| 5 | `zumi-journey.ts` | With no provider, Zumi reports Pending Connection and returns no answer, recommendations or sources. Once connected, prohibitions hold, RBAC is not widened, founder mode widens discussion but not authorization, PHI does not cross the boundary, and unevidenced recommendations are dropped. |
-| 6 | `tenant-isolation-journey.mts` | Adversarial. Tenant A cannot read B's patients, lists, audit log or private Grid demand, cannot activate against B, and deleting A leaves B intact. |
-| 8 | `role-routing-journey.ts` | Every role reaches a useful product and nothing more. The sidebar, launchpad and route guard all decide access with one function; a Grid participant reaches no clinic workspace; a portal token is worthless as a staff session and the reverse. |
-| 9 | `fresh-deploy-journey.ts` | An empty database becomes a working deployment: all migrations apply, the tables the product needs exist, `migrate deploy` is idempotent, empty state reads as empty, first real work succeeds, and a restart finds it still there. |
-| 12 | `failure-recovery-journey.ts` | Two simultaneous reservations of one offer produce one booking; a single-capacity resource cannot be double-booked by two concurrent deals; the loser leaves no partial state; a retry returns the same booking; an unanswered offer stays unreservable. |
+| 1 | `fresh-deploy-journey.ts` | An empty PostgreSQL database can receive every committed migration, the required tables exist, `migrate deploy` is idempotent, first real work succeeds, and restarted code can read persisted state. |
+| 2 | `commercial-journey.mts` | Checkout/payment evidence and entitlement are separate facts; unverified evidence cannot activate service; verified evidence can be reconciled idempotently; browser-return truth is insufficient. |
+| 3 | `activation-journey.mts` | A paid buyer can progress through verified commercial evidence, subscription/entitlement, organization provisioning, role/session setup, and first useful Klinikos entry without treating payment alone as authorization. |
+| 4 | `operations-journey.mts` | Appointment/operational risk produces real work, no unavailable communication connector is falsely represented as having sent anything, human resolution closes the action, and the lifecycle is audited. |
+| 5 | `grid-journey.mts` | Need → match/offer → acceptance → reservation → fulfillment/financial state respects eligibility and ownership; reservations cannot precede acceptance or be duplicated. |
+| 6 | `grid-trust-journey.mts` | Disputes and safety incidents are distinct governed records, both can hold a reservation, duplicates/cross-tenant misuse are refused, and resolution language never invents payout/suspension facts. |
+| 7 | `zumi-journey.ts` | Zumi degrades truthfully when a provider is unavailable; deterministic prohibitions and RBAC survive provider availability; founder breadth does not widen authorization; PHI does not cross an unapproved boundary; unevidenced governed recommendations are dropped. |
+| 8 | `tenant-isolation-journey.mts` | Adversarial tenant A cannot read or mutate tenant B patient/list/audit/commercial/Grid state; tenant A cleanup does not damage tenant B. |
+| 9 | `role-routing-journey.ts` | Owner/admin/front desk/provider/clinical/case/viewer/patient/Grid/student roles reach useful allowed surfaces while route guards/session audiences prevent privilege crossover. |
+| 10 | `failure-recovery-journey.ts` | Retries, duplicate requests, interrupted flows, and simultaneous reservations fail safely; a scarce resource gets one winner; the loser leaves no partial state; an idempotent retry returns the same durable result. |
 
-Journeys 7 (paid clinic activation), 10 (production readiness) and 11 (mobile) are not
-yet written.
+## What is not fully automated here
 
-## Writing one
+Production readiness is not a single journey because some facts live outside the repository: deployment host state, DNS/TLS, BAAs/contracts, external vendor credentials, real settlement/payouts, production monitoring, and independent browser/device behavior.
 
-Three failure modes have caught us out, and each makes a check pass while proving nothing.
+Browser/mobile QA is therefore still a separate release gate even though responsive code is covered by build/tests.
 
-**A check that never ran.** The Zumi journey asserted that no identifiers reached the
-provider and passed — against zero payloads, because the request had been refused before
-egress. Assert that the thing you are measuring actually happened, and report
-`INCONCLUSIVE` rather than `PASS` when it did not.
+Likewise, a green journey does not establish regulatory compliance or that an external vendor connection is production-approved.
 
-**Two copies of a module.** `tsx` loads `.mts` through the ESM graph and the `.ts` files
-it imports through the CJS one. A journey that registers something into a module registry
-must be a `.ts` file, or it will register into a copy the code under test never reads.
+## Journey-writing rules
 
-**A refusal for the wrong reason.** Journey 12's contention check first ran against the
-resource an earlier check had already booked, so both concurrent deals were refused for
-the ordinary reason that the chair was taken — the check looked like it was proving the
-lock and was proving nothing. Contended scenarios need their own fixtures.
+### 1. Do not allow a check that never exercised the thing it claims to prove
 
-When a journey fails, decide *what* is wrong before changing anything — the test, the
-implementation, the assumption, or the documentation. Several of these journeys failed
-first because the journey was wrong, and the correct fix was to the journey. Do not
-weaken the product to make a journey green.
+A Zumi PHI assertion once passed against zero provider payloads because the request was refused before egress. Assert that the measured event actually occurred. Report an inconclusive scenario rather than a false pass.
+
+### 2. Beware duplicate module graphs
+
+`tsx` can load `.mts` and imported `.ts` modules through different module graphs. A journey that mutates a module-level registry may need to live in `.ts` so the code under test observes the same registry instance.
+
+### 3. A refusal for the wrong reason is not proof
+
+Concurrency tests need fresh fixtures. Two failures caused by an already-booked resource do not prove locking or race safety.
+
+### 4. Manual-but-truthful beats fake automation
+
+If an external connector is not configured, the journey should prove a recoverable manual/Pending Connection state rather than mock a success and call it production behavior.
+
+### 5. AI is not the source of deterministic state
+
+Zumi may reason, draft, research, or recommend. Authentication, tenant, eligibility, credential, consent, payment, transaction, safety, and audit truth remain deterministic Klinikos state.
+
+### 6. Do not weaken clinical-data retention just to simplify cleanup
+
+No cascade-delete shortcut should be added merely for test convenience. Retention, archive, legal hold, export, anonymization, and deletion require explicit policy.
+
+## Verification baseline
+
+The PR #66 candidate that became the current application baseline passed all ten journeys together with 547 tests, fresh 50-migration deployment, TypeScript, lint, production build, startup smoke, and the exact Render deploy-contract.
