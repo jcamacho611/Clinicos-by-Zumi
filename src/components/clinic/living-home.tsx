@@ -120,7 +120,7 @@ export function LivingHome({
       setSelectedInstanceId(payload.data.instanceId);
       setIntent("");
       setState("idle");
-      setMessage("Ready. Here's the next useful step.");
+      setMessage("Ready. Here's the safest next step.");
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Klinikos could not start that yet.");
