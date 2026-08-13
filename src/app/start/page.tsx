@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Compass, Radar, ShieldCheck } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, GraduationCap, Radar, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HumanReviewBanner,
@@ -9,46 +9,47 @@ import {
   ZumiCommandShell,
 } from "@/components/command/zumi-command-shell";
 
-/**
- * Entry point, under command law.
- *
- * A router rather than a form: it establishes what Klinikos is, what the analysis
- * will do, and sends the operator into the guided flow. No fields are collected
- * here, because nothing useful can be asked before Zumi has framed the mission.
- */
-
 export const metadata = {
   title: "Start — Klinikos",
   description:
-    "Begin the Klinikos Clinic Operating Analysis. Zumi maps where your clinic loses control and prepares a private workflow review for human approval.",
+    "Choose how you want to use Klinikos: operate a clinic, join the Grid, learn through Klinikos EDU, or begin a clinic operating analysis.",
 };
 
 const entryPaths = [
   {
     icon: Radar,
-    eyebrow: "Most operators start here",
-    title: "Clinic Operating Analysis",
-    body: "Answer a short sequence of operational questions. Zumi builds your operating map and identifies where work is getting lost.",
+    eyebrow: "Clinic owners & operators",
+    title: "Map what is breaking first",
+    body: "Answer a short set of operational questions. Klinikos turns the answers into a practical view of follow-up, paperwork, referrals, results, staffing, and revenue leakage.",
     href: "/sales",
-    cta: "Start the analysis",
+    cta: "Start the clinic analysis",
     primary: true,
   },
   {
-    icon: Compass,
-    eyebrow: "Already decided",
-    title: "Founding Clinic Qualification",
-    body: "For operators seriously considering Klinikos as their clinic command layer and ready to be evaluated for the founding pathway.",
-    href: "/founding-clinic",
-    cta: "View qualification",
+    icon: Building2,
+    eyebrow: "Run a clinic",
+    title: "Clinic OS",
+    body: "Sign in to operate patients, schedules, tasks, forms, follow-up, referrals, results, revenue work, and the daily work that normally gets scattered across systems.",
+    href: "/login",
+    cta: "Enter Clinic OS",
     primary: false,
   },
   {
-    icon: ShieldCheck,
-    eyebrow: "Independent clinicians",
-    title: "Klinikos GRID",
-    body: "For nurses, injectors, and location partners joining the governed provider network. Credentials are verified by a human before activation.",
-    href: "/grid/join",
-    cta: "Join GRID",
+    icon: BriefcaseBusiness,
+    eyebrow: "Work, space, services & capacity",
+    title: "Klinikos Grid",
+    body: "Find or offer healthcare work, rooms, chairs, services, equipment, products, organizations, referral capacity, and other reviewed healthcare resources.",
+    href: "/grid",
+    cta: "Explore Grid",
+    primary: false,
+  },
+  {
+    icon: GraduationCap,
+    eyebrow: "Learn & build readiness",
+    title: "Klinikos EDU",
+    body: "Open courses, scenarios, evidence-based practice work, and the education pathway that can connect learning to future Grid opportunity and healthcare capacity.",
+    href: "/edu",
+    cta: "Explore EDU",
     primary: false,
   },
 ] as const;
@@ -57,57 +58,70 @@ export default function StartPage() {
   return (
     <ZumiCommandShell>
       <section aria-labelledby="start-heading" className="border-b border-white/10">
-        <div className="mx-auto grid max-w-[1500px] gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:py-24">
+        <div className="mx-auto grid max-w-[1500px] gap-16 px-5 py-24 sm:px-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-32">
           <div>
             <MissionPhaseProgress current="brief" />
-            <p className="mt-8 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Command center entry</p>
+            <p className="mt-10 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Start with what you want to accomplish</p>
             <h1
-              className="mt-4 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
+              className="mt-5 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
               id="start-heading"
             >
-              Tell Zumi how the clinic actually runs.
+              One Klinikos. Different ways in.
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Klinikos maps the work your clinic is losing track of, with Zumi guiding the operating analysis and preparing a private workflow review for human approval.
-              Nothing is activated, purchased, or committed from this page.
+              Operate a clinic, find or offer healthcare capacity, learn through EDU, or map an operational problem before you buy. Klinikos keeps the complexity underneath and gives each person the doorway that matches what they are here to do.
             </p>
           </div>
 
           <ZumiBriefingPanel active>
-            Pick the path that matches where you are. If you are not sure, start with the Clinic Operating Analysis — it takes a few
-            minutes and produces your operating map. Do not enter patient names, records, diagnoses, or PHI anywhere in Klinikos intake.
+            Choose the closest starting point. You can move between Klinikos experiences later when your role and permissions allow it. Clinic intake should never include patient names, diagnoses, records, or PHI.
           </ZumiBriefingPanel>
         </div>
       </section>
 
-      <section aria-labelledby="paths-heading" className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8">
-        <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-cyan-300" id="paths-heading">Choose your entry</h2>
+      <section aria-labelledby="paths-heading" className="mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:py-32">
+        <div className="max-w-3xl">
+          <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-cyan-300">Choose your entry</p>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-[-.05em] text-white sm:text-5xl" id="paths-heading">Start where the value is obvious to you.</h2>
+          <p className="mt-5 text-sm leading-7 text-slate-400">You do not need to understand the product architecture. Pick the outcome that matches why you came.</p>
+        </div>
 
-        <ul className="mt-6 grid gap-5 lg:grid-cols-3">
+        <ul className="mt-14 grid gap-x-10 gap-y-14 lg:grid-cols-2">
           {entryPaths.map((path) => (
-            <li className="flex" key={path.href}>
-              <article className={`flex w-full flex-col p-6 sm:p-7 ${path.primary ? "border border-cyan-300/30 bg-cyan-400/[.06]" : "border border-white/10 bg-white/[.04]"}`}>
-                <path.icon aria-hidden="true" className={`size-5 ${path.primary ? "text-cyan-300" : "text-slate-400"}`} />
-                <p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">{path.eyebrow}</p>
-                <h3 className="mt-2 text-lg font-extrabold tracking-[-.03em] text-white">{path.title}</h3>
-                <p className="mt-3 text-[12px] leading-6 text-slate-300">{path.body}</p>
-                <div className="mt-auto pt-6">
-                  <Button
-                    asChild
-                    className={path.primary ? "w-full" : "w-full border border-white/20 bg-transparent text-slate-200 hover:text-white"}
-                    variant={path.primary ? "primary" : "secondary"}
-                  >
-                    <Link href={path.href}>{path.cta} <ArrowRight aria-hidden="true" className="size-4" /></Link>
-                  </Button>
+            <li className="flex border-t border-white/12 pt-7" key={path.href}>
+              <article className="flex w-full flex-col">
+                <div className="flex items-start gap-5">
+                  <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${path.primary ? "bg-cyan-300 text-slate-950" : "border border-white/12 bg-white/[.035] text-slate-300"}`}>
+                    <path.icon aria-hidden="true" className="size-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">{path.eyebrow}</p>
+                    <h3 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-white">{path.title}</h3>
+                    <p className="mt-4 max-w-xl text-[13px] leading-7 text-slate-400">{path.body}</p>
+                    <div className="mt-7">
+                      <Button
+                        asChild
+                        className={path.primary ? "" : "border border-white/20 bg-transparent text-slate-200 hover:text-white"}
+                        variant={path.primary ? "primary" : "secondary"}
+                      >
+                        <Link href={path.href}>{path.cta} <ArrowRight aria-hidden="true" className="size-4" /></Link>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </article>
             </li>
           ))}
         </ul>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+        <div className="mt-20 grid gap-5 lg:grid-cols-2">
           <NoPHINotice />
           <HumanReviewBanner />
+        </div>
+        <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-8 text-xs text-slate-500">
+          <Link className="font-bold text-slate-300 hover:text-white" href="/access">Request evaluation access</Link>
+          <Link className="font-bold text-slate-300 hover:text-white" href="/pricing">See clinic pricing</Link>
+          <span className="inline-flex items-center gap-2"><ShieldCheck className="size-3.5" /> Access, payment, credentials, and regulated actions remain separate gates.</span>
         </div>
       </section>
     </ZumiCommandShell>

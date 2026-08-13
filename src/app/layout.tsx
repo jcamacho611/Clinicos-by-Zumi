@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/manrope";
+import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
 
 const siteUrl = "https://klinikos.io";
@@ -28,8 +30,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning data-klinikos-atmosphere="day" data-klinikos-atmosphere-preference="auto">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: klinikosAtmosphereBootstrap }} />
+      </head>
+      <body>
+        {children}
+        <KlinikosAtmosphereController />
+      </body>
     </html>
   );
 }

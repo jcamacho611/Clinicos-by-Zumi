@@ -23,16 +23,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const firstName = session.name.split(/\s+/)[0] || "there";
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-20">
       <div>
-        <LivingHome firstName={firstName} initialPaths={activePaths} initialGuidance={pathGuidance} />
+        <LivingHome firstName={firstName} role={session.role} initialPaths={activePaths} initialGuidance={pathGuidance} />
         <PathSignals signals={recentPathSignals} />
       </div>
-      <section aria-labelledby="operations-heading" className="space-y-5">
+      <section aria-labelledby="operations-heading" className="space-y-8">
         <div className="max-w-2xl">
           <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Operations</p>
-          <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]" id="operations-heading">Your clinic workspace, when you need the detail.</h2>
-          <p className="mt-2 text-xs leading-6 text-[#0b1e3a]/52">Living Home keeps goals and next actions first. The operational dashboard remains available underneath for direct clinical and business work.</p>
+          <h2 className="mt-3 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]" id="operations-heading">The detail is here when you need it.</h2>
+          <p className="mt-3 text-xs leading-6 text-[#0b1e3a]/52">Home keeps priorities and next actions first. Open the deeper clinic workspace when you need the full operational view.</p>
         </div>
         <Dashboard
           appointments={appointments}

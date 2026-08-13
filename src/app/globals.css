@@ -14,27 +14,147 @@
   --accent-signal:#1677a8;
   --accent-intelligence:#43d9ff;
   --accent-premium:#b89a5b;
-  --mode-background:#f1f0eb;
-  --mode-header:rgba(241,240,235,.94);
+
+  /* Klinikos atmosphere defaults. The before-paint bootstrap replaces these with
+     the visitor's local-time atmosphere before the app becomes interactive. */
+  --k-public-bg:#f4f7f6;
+  --k-public-surface:#ffffff;
+  --k-public-raised:#eef4f3;
+  --k-text:#0b1e3a;
+  --k-muted:#61717d;
+  --k-line:rgba(11,30,58,.14);
+  --k-accent:#1677a8;
+  --k-accent-2:#258f8d;
+  --k-premium:#a88645;
+  --k-shell:#0b1e3a;
+  --k-shell-text:#f4f7f6;
+  --k-work-bg:#f1f5f4;
+  --k-work-header:rgba(248,250,249,.9);
+  --k-ambient:radial-gradient(circle at 76% 12%,rgba(39,143,141,.12),transparent 28%),linear-gradient(180deg,#f7faf9 0%,#eef4f3 100%);
+  --k-shadow:0 24px 80px rgba(11,30,58,.09);
+  --mode-background:var(--k-work-bg);
+  --mode-header:var(--k-work-header);
+}
+
+html[data-klinikos-atmosphere="dawn"] {
+  --k-public-bg:#f7f0e7;
+  --k-public-surface:#fffaf4;
+  --k-public-raised:#f2e8dc;
+  --k-text:#17314a;
+  --k-muted:#6c7580;
+  --k-line:rgba(23,49,74,.14);
+  --k-accent:#4f89a4;
+  --k-accent-2:#c98364;
+  --k-premium:#b58a4a;
+  --k-shell:#17314a;
+  --k-shell-text:#fffaf4;
+  --k-work-bg:#f6f0e8;
+  --k-work-header:rgba(255,250,244,.9);
+  --k-ambient:radial-gradient(circle at 78% 8%,rgba(220,152,113,.22),transparent 26%),radial-gradient(circle at 18% 20%,rgba(111,177,199,.18),transparent 32%),linear-gradient(180deg,#fffaf4 0%,#f2e7dc 100%);
+  --k-shadow:0 24px 80px rgba(66,54,45,.08);
+}
+
+html[data-klinikos-atmosphere="day"] {
+  --k-public-bg:#f4f7f6;
+  --k-public-surface:#ffffff;
+  --k-public-raised:#eef4f3;
+  --k-text:#0b1e3a;
+  --k-muted:#61717d;
+  --k-line:rgba(11,30,58,.14);
+  --k-accent:#1677a8;
+  --k-accent-2:#258f8d;
+  --k-premium:#9f824d;
+  --k-shell:#0b1e3a;
+  --k-shell-text:#f4f7f6;
+  --k-work-bg:#f1f5f4;
+  --k-work-header:rgba(248,250,249,.9);
+  --k-ambient:radial-gradient(circle at 76% 12%,rgba(39,143,141,.12),transparent 28%),radial-gradient(circle at 20% 2%,rgba(22,119,168,.11),transparent 25%),linear-gradient(180deg,#f8fbfa 0%,#eef4f3 100%);
+  --k-shadow:0 24px 80px rgba(11,30,58,.09);
+}
+
+html[data-klinikos-atmosphere="golden"] {
+  --k-public-bg:#f4ecdf;
+  --k-public-surface:#fff8ed;
+  --k-public-raised:#eee0cc;
+  --k-text:#283840;
+  --k-muted:#6f6b63;
+  --k-line:rgba(40,56,64,.15);
+  --k-accent:#8d672f;
+  --k-accent-2:#277c91;
+  --k-premium:#aa752c;
+  --k-shell:#21323d;
+  --k-shell-text:#fff8ed;
+  --k-work-bg:#f3ebdf;
+  --k-work-header:rgba(255,248,237,.9);
+  --k-ambient:radial-gradient(circle at 82% 8%,rgba(217,149,62,.28),transparent 28%),radial-gradient(circle at 12% 24%,rgba(55,137,151,.13),transparent 34%),linear-gradient(180deg,#fff8ed 0%,#eee0cc 100%);
+  --k-shadow:0 26px 90px rgba(87,66,39,.1);
+}
+
+html[data-klinikos-atmosphere="night"] {
+  --k-public-bg:#07121d;
+  --k-public-surface:#0d1b29;
+  --k-public-raised:#132635;
+  --k-text:#edf6f8;
+  --k-muted:#9baab4;
+  --k-line:rgba(210,234,239,.14);
+  --k-accent:#55c7df;
+  --k-accent-2:#76a9c8;
+  --k-premium:#c3a66b;
+  --k-shell:#06101a;
+  --k-shell-text:#edf6f8;
+  --k-work-bg:#edf2f4;
+  --k-work-header:rgba(245,248,249,.92);
+  --k-ambient:radial-gradient(circle at 78% 10%,rgba(79,151,183,.23),transparent 29%),radial-gradient(circle at 14% 18%,rgba(91,110,181,.14),transparent 34%),linear-gradient(180deg,#07121d 0%,#0b1a28 100%);
+  --k-shadow:0 28px 100px rgba(0,0,0,.26);
 }
 
 [data-clinic-mode="medical"],
 [data-clinic-mode="luxe"],
 [data-clinic-mode="network"] {
-  --mode-background:#f1f0eb;
-  --mode-header:rgba(241,240,235,.94);
+  --mode-background:var(--k-work-bg);
+  --mode-header:var(--k-work-header);
 }
 
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;background:var(--surface-primary)}
-body{min-height:100vh;margin:0;background:var(--surface-primary);color:var(--ink);font-family:"Manrope Variable","Avenir Next",Inter,system-ui,sans-serif;text-rendering:optimizeLegibility}
+html{scroll-behavior:smooth;background:var(--k-public-bg)}
+body{min-height:100vh;margin:0;background:var(--k-public-bg);color:var(--k-text);font-family:"Manrope Variable","Avenir Next",Inter,system-ui,sans-serif;text-rendering:optimizeLegibility;transition:background-color .5s ease,color .35s ease}
 button,input,textarea,select{font:inherit}
 button,a{-webkit-tap-highlight-color:transparent}
-::selection{background:#43d9ff;color:#061016}
+::selection{background:var(--k-accent);color:var(--k-public-surface)}
 ::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:#28323d;background-clip:padding-box;border:2px solid transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--k-text) 24%,transparent);background-clip:padding-box;border:2px solid transparent}
 
-.clinical-grid{background-image:linear-gradient(rgba(67,217,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(67,217,255,.045) 1px,transparent 1px);background-size:48px 48px}
+/* Reusable atmosphere primitives. New customer-facing surfaces use these rather
+   than hard-coded dark/light palettes so they can move with local time safely. */
+.k-page{background:var(--k-public-bg);color:var(--k-text);transition:background-color .55s ease,color .35s ease}
+.k-hero{background:var(--k-ambient);color:var(--k-text);transition:background .65s ease,color .35s ease}
+.k-surface{background:var(--k-public-surface);color:var(--k-text);border-color:var(--k-line)}
+.k-raised{background:var(--k-public-raised);color:var(--k-text);border-color:var(--k-line)}
+.k-text{color:var(--k-text)}
+.k-muted{color:var(--k-muted)}
+.k-accent{color:var(--k-accent)}
+.k-premium{color:var(--k-premium)}
+.k-rule{border-color:var(--k-line)}
+.k-kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--k-accent)}
+.k-primary-action{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;background:var(--k-text);color:var(--k-public-surface);transition:transform .2s ease,opacity .2s ease,background .35s ease,color .35s ease}
+.k-primary-action:hover{transform:translateY(-1px)}
+.k-secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;border:1px solid var(--k-line);color:var(--k-text);background:transparent;transition:border-color .2s ease,background .2s ease}
+.k-secondary-action:hover{border-color:color-mix(in srgb,var(--k-accent) 55%,var(--k-line));background:color-mix(in srgb,var(--k-accent) 6%,transparent)}
+.k-input-shell{border:1px solid var(--k-line);background:color-mix(in srgb,var(--k-public-surface) 76%,transparent);box-shadow:0 18px 58px color-mix(in srgb,var(--k-text) 7%,transparent);backdrop-filter:blur(18px)}
+.k-input-shell:focus-within{border-color:color-mix(in srgb,var(--k-accent) 60%,var(--k-line));box-shadow:0 0 0 4px color-mix(in srgb,var(--k-accent) 10%,transparent),0 18px 58px color-mix(in srgb,var(--k-text) 7%,transparent)}
+.k-input-shell input{color:var(--k-text)}
+.k-input-shell input::placeholder{color:color-mix(in srgb,var(--k-muted) 72%,transparent)}
+
+/* The appearance control is deliberately compact and floats above route-specific
+   layouts. It is a real user preference, not a mock organization setting. */
+.k-atmosphere-control{position:fixed;right:16px;bottom:16px;z-index:90;display:flex;flex-direction:column;align-items:flex-end;gap:10px;color:var(--k-text)}
+.k-atmosphere-trigger{min-height:42px;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--k-line);border-radius:999px;background:color-mix(in srgb,var(--k-public-surface) 90%,transparent);padding:0 14px;color:var(--k-text);font-size:10px;font-weight:800;letter-spacing:.04em;box-shadow:0 14px 40px color-mix(in srgb,#000 14%,transparent);backdrop-filter:blur(18px)}
+.k-atmosphere-trigger:hover{border-color:color-mix(in srgb,var(--k-accent) 48%,var(--k-line))}
+.k-atmosphere-popover{width:min(360px,calc(100vw - 32px));border:1px solid var(--k-line);border-radius:24px;background:color-mix(in srgb,var(--k-public-surface) 96%,transparent);padding:22px;box-shadow:var(--k-shadow);backdrop-filter:blur(24px)}
+.k-icon-button{display:grid;width:34px;height:34px;place-items:center;border:1px solid var(--k-line);border-radius:999px;color:var(--k-text);background:transparent}
+.k-atmosphere-option-icon{display:grid;width:36px;height:36px;flex:0 0 auto;place-items:center;border-radius:999px;background:color-mix(in srgb,var(--k-accent) 10%,transparent);color:var(--k-accent)}
+
+.clinical-grid{background-image:linear-gradient(color-mix(in srgb,var(--k-accent) 5%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--k-accent) 5%,transparent) 1px,transparent 1px);background-size:48px 48px}
 .text-balance{text-wrap:balance}
 
 .zumi-orb{position:relative;width:260px;aspect-ratio:1;border:1px solid rgba(67,217,255,.22);border-radius:50%;display:grid;place-items:center}
@@ -48,5 +168,10 @@ button,a{-webkit-tap-highlight-color:transparent}
 .zumi-node:nth-child(4){left:9%;top:35%}
 @keyframes zumi-breathe{0%,100%{transform:scale(.985);opacity:.82}50%{transform:scale(1.015);opacity:1}}
 .zumi-orb{animation:zumi-breathe 6s cubic-bezier(.16,1,.3,1) infinite}
+
+@media(max-width:640px){
+  .k-atmosphere-control{right:12px;bottom:12px}
+  .k-atmosphere-trigger{width:42px;padding:0;justify-content:center}
+}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

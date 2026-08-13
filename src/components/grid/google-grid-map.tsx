@@ -47,6 +47,7 @@ declare global {
 }
 
 const SCRIPT_ID = "klinikos-google-maps";
+const UNITED_STATES_CENTER = { lat: 39.8283, lng: -98.5795 };
 
 function loadGoogleMaps(apiKey: string) {
   return new Promise<GoogleMapsNamespace>((resolve, reject) => {
@@ -77,10 +78,25 @@ function loadGoogleMaps(apiKey: string) {
   });
 }
 
+function requestBrowserLocation() {
+  return new Promise<LatLngLiteral | null>((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 7000, maximumAge: 5 * 60 * 1000 },
+    );
+  });
+}
+
 export function GoogleGridMap({ points }: { points: GridMapPoint[] }) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const markersRef = useRef<MarkerInstance[]>([]);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "unconfigured" | "error">("idle");
+  const [locationState, setLocationState] = useState<"locating" | "found" | "unavailable">("locating");
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? "";
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() ?? "";
   const usablePoints = useMemo(
@@ -89,24 +105,27 @@ export function GoogleGridMap({ points }: { points: GridMapPoint[] }) {
   );
 
   useEffect(() => {
-    if (!apiKey || !mapId || usablePoints.length === 0 || !elementRef.current) {
+    if (!apiKey || !mapId || !elementRef.current) {
       setState("unconfigured");
       return;
     }
 
     let cancelled = false;
     setState("loading");
+    setLocationState("locating");
 
-    loadGoogleMaps(apiKey)
-      .then((maps) => {
+    Promise.all([loadGoogleMaps(apiKey), requestBrowserLocation()])
+      .then(([maps, userLocation]) => {
         if (cancelled || !elementRef.current) return;
         for (const marker of markersRef.current) marker.map = null;
         markersRef.current = [];
 
-        const first = usablePoints[0];
+        setLocationState(userLocation ? "found" : "unavailable");
+        const firstPoint = usablePoints[0];
+        const center = userLocation ?? (firstPoint ? { lat: firstPoint.latitude, lng: firstPoint.longitude } : UNITED_STATES_CENTER);
         const map = new maps.Map(elementRef.current, {
-          center: { lat: first.latitude, lng: first.longitude },
-          zoom: usablePoints.length === 1 ? 12 : 9,
+          center,
+          zoom: userLocation ? 11 : usablePoints.length === 1 ? 12 : usablePoints.length > 1 ? 9 : 4,
           mapId,
           clickableIcons: false,
           streetViewControl: false,
@@ -114,17 +133,29 @@ export function GoogleGridMap({ points }: { points: GridMapPoint[] }) {
           fullscreenControl: true,
         });
         const bounds = new maps.LatLngBounds();
+        let boundCount = 0;
+
+        if (userLocation) {
+          bounds.extend(userLocation);
+          boundCount += 1;
+          markersRef.current.push(new maps.marker.AdvancedMarkerElement({
+            map,
+            position: userLocation,
+            title: "You are here",
+          }));
+        }
 
         for (const point of usablePoints) {
           const position = { lat: point.latitude, lng: point.longitude };
           bounds.extend(position);
+          boundCount += 1;
           markersRef.current.push(new maps.marker.AdvancedMarkerElement({
             map,
             position,
             title: `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`,
           }));
         }
-        if (usablePoints.length > 1) map.fitBounds(bounds, 64);
+        if (boundCount > 1) map.fitBounds(bounds, 72);
         setState("ready");
       })
       .catch(() => {
@@ -139,20 +170,20 @@ export function GoogleGridMap({ points }: { points: GridMapPoint[] }) {
   }, [apiKey, mapId, usablePoints]);
 
   if (state === "unconfigured") {
-    return <div className="grid min-h-[420px] place-items-center bg-[#eef3f6] p-8 text-center">
+    return <div className="grid min-h-[460px] place-items-center bg-[#eef3f6] p-10 text-center">
       <div className="max-w-md">
         <MapPin className="mx-auto size-8 text-[#174ea6]" />
-        <p className="mt-4 text-sm font-extrabold text-[#0b1220]">Geographic map waiting for real coordinates</p>
-        <p className="mt-2 text-[12px] leading-6 text-[#5b6675]">Grid will not manufacture map pins. Add reviewed resources with latitude/longitude and configure the Maps browser key + map ID to activate the geographic view.</p>
+        <p className="mt-5 text-sm font-extrabold text-[#0b1220]">Map setup is still pending</p>
+        <p className="mt-3 text-[12px] leading-6 text-[#5b6675]">Grid listings remain available without a map. Once the Maps browser key and map ID are configured, people can see their location and real reviewed resources around them.</p>
       </div>
     </div>;
   }
 
-  return <div className="relative min-h-[420px] bg-[#eef3f6]">
-    <div ref={elementRef} className="absolute inset-0" aria-label="Klinikos Grid geographic map" />
-    {state === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#174ea6]">Loading geographic Grid…</p></div>}
-    {state === "error" && <div className="absolute inset-0 grid place-items-center bg-[#eef3f6] p-8 text-center"><div><ShieldCheck className="mx-auto size-7 text-[#9a7a1f]" /><p className="mt-4 text-sm font-extrabold text-[#0b1220]">Map unavailable</p><p className="mt-2 max-w-sm text-[12px] leading-6 text-[#5b6675]">The listing results remain available below. Grid does not substitute synthetic coordinates when the map provider fails.</p></div></div>}
-    {state === "ready" && <div className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm"><Navigation className="size-3.5 text-[#174ea6]" /> Real reviewed resource coordinates</div>}
+  return <div className="relative min-h-[460px] bg-[#eef3f6]">
+    <div ref={elementRef} className="absolute inset-0" aria-label="Klinikos Grid map showing your location and reviewed resources" />
+    {state === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#174ea6]">Opening your Grid map…</p></div>}
+    {state === "error" && <div className="absolute inset-0 grid place-items-center bg-[#eef3f6] p-10 text-center"><div><ShieldCheck className="mx-auto size-7 text-[#9a7a1f]" /><p className="mt-5 text-sm font-extrabold text-[#0b1220]">Map unavailable</p><p className="mt-3 max-w-sm text-[12px] leading-6 text-[#5b6675]">The listing results remain available below. Grid does not substitute fake coordinates when the map provider fails.</p></div></div>}
+    {state === "ready" && <div className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm"><Navigation className="size-3.5 text-[#174ea6]" /> {locationState === "found" ? "You are here · real Grid inventory appears around you" : usablePoints.length ? "Reviewed Grid resource coordinates" : "No public Grid inventory near you yet"}</div>}
   </div>;
 }
 
