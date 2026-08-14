@@ -1,0 +1,85 @@
+/* Compatibility for older surfaces that still carry literal pre-reference colors.
+   Imported last so the product feels coherent while page-specific functional logic
+   is preserved. Remove individual selectors as those pages are natively migrated. */
+
+.klinikos-cinematic-root [class*="bg-[#f3f0e8]"],
+.klinikos-cinematic-root [class*="bg-[#f8f6f0]"],
+.klinikos-cinematic-root [class*="bg-[#faf9f5]"],
+.klinikos-cinematic-root [class*="bg-[#f7f8fa]"],
+.klinikos-cinematic-root [class*="bg-[#f3f6f8]"] {
+  background-color:#090506!important;
+}
+
+.klinikos-cinematic-root [class*="bg-[#153f37]"],
+.klinikos-cinematic-root [class*="bg-[#173c34]"],
+.klinikos-cinematic-root [class*="bg-[#0b1220]"],
+.klinikos-cinematic-root [class*="bg-[#0b1e3a]"] {
+  background-color:#0b0506!important;
+}
+
+.klinikos-cinematic-root [class*="bg-[#dceee7]"],
+.klinikos-cinematic-root [class*="bg-[#a9d9c7]"],
+.klinikos-cinematic-root [class*="bg-[#f1e7c6]"],
+.klinikos-cinematic-root [class*="bg-[#ede3bf]"] {
+  background-color:rgba(230,129,123,.08)!important;
+}
+
+.klinikos-cinematic-root [class*="text-[#173c34]"],
+.klinikos-cinematic-root [class*="text-[#15352f]"],
+.klinikos-cinematic-root [class*="text-[#493f20]"] {
+  color:#f8efed!important;
+}
+
+.klinikos-cinematic-root [class*="text-[#5f756e]"],
+.klinikos-cinematic-root [class*="text-[#657b73]"],
+.klinikos-cinematic-root [class*="text-[#6c847c]"],
+.klinikos-cinematic-root [class*="text-[#72867f]"],
+.klinikos-cinematic-root [class*="text-[#748b83]"],
+.klinikos-cinematic-root [class*="text-[#7b8e87]"],
+.klinikos-cinematic-root [class*="text-[#81928c]"],
+.klinikos-cinematic-root [class*="text-[#879791]"],
+.klinikos-cinematic-root [class*="text-[#8a9a94]"] {
+  color:#9f8985!important;
+}
+
+.klinikos-cinematic-root [class*="text-[#276c5e]"],
+.klinikos-cinematic-root [class*="text-[#286f61]"],
+.klinikos-cinematic-root [class*="text-[#2b7868]"],
+.klinikos-cinematic-root [class*="text-[#3b7c6e]"] {
+  color:#e6817b!important;
+}
+
+.klinikos-cinematic-root [class*="text-[#9a6d12]"],
+.klinikos-cinematic-root [class*="text-[#715c1c]"],
+.klinikos-cinematic-root [class*="text-[#74642c]"],
+.klinikos-cinematic-root [class*="text-[#8d7a38]"],
+.klinikos-cinematic-root [class*="text-[#e7d182]"],
+.klinikos-cinematic-root [class*="text-[#e4c978]"] {
+  color:#efaaa1!important;
+}
+
+.klinikos-cinematic-root [class*="border-[#d8ddd4]"],
+.klinikos-cinematic-root [class*="border-[#dce1d8]"],
+.klinikos-cinematic-root [class*="border-[#e7e7df]"] {
+  border-color:rgba(226,139,133,.14)!important;
+}
+
+.klinikos-cinematic-root [class*="shadow-[0_24px_70px_rgba(21,63,55"] {
+  box-shadow:0 24px 70px rgba(0,0,0,.32)!important;
+}
+
+.rose-auth-form :where(input,textarea,select) {
+  border-color:rgba(226,139,133,.16)!important;
+  background:#100708!important;
+  color:#f8efed!important;
+}
+
+.rose-auth-form :where(input,textarea)::placeholder { color:#806965!important; }
+
+.rose-auth-form :where(button[type="submit"]) {
+  border-color:rgba(239,170,161,.16)!important;
+  background:#e6817b!important;
+  color:#19090b!important;
+}
+
+.rose-auth-form :where(button[type="submit"]):hover { background:#efaaa1!important; }
