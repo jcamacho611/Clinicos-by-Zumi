@@ -13,213 +13,154 @@
     radial-gradient(circle at 92% 18%, rgba(230, 129, 123, .045), transparent 25%),
     #050303;
   color: #f8efed;
+  color-scheme: dark;
 }
 
-.klinikos-cinematic-root :focus-visible {
-  outline-color: #e6817b;
-}
-
-.klinikos-cinematic-root ::selection {
-  background: #e6817b;
-  color: #19090b;
-}
+.klinikos-cinematic-root :focus-visible { outline-color: #e6817b; }
+.klinikos-cinematic-root ::selection { background: #e6817b; color: #19090b; }
 
 .klinikos-cinematic-root .k-page,
+.klinikos-cinematic-root .k-hero { background-color: #050303; color: #f8efed; }
 .klinikos-cinematic-root .k-hero {
-  background-color: #050303;
-  color: #f8efed;
+  background: radial-gradient(circle at 50% 16%, rgba(132,31,39,.24), transparent 36%), linear-gradient(180deg,#050303 0%,#090506 100%);
 }
-
-.klinikos-cinematic-root .k-hero {
-  background:
-    radial-gradient(circle at 50% 16%, rgba(132, 31, 39, .24), transparent 36%),
-    linear-gradient(180deg, #050303 0%, #090506 100%);
-}
-
 .klinikos-cinematic-root .k-surface,
-.klinikos-cinematic-root .k-raised {
-  background: rgba(18, 9, 11, .78);
-  border-color: rgba(226, 139, 133, .14);
-  color: #f8efed;
-}
-
-.klinikos-cinematic-root .k-text { color: #f8efed; }
-.klinikos-cinematic-root .k-muted { color: #a98f8b; }
-.klinikos-cinematic-root .k-accent { color: #e6817b; }
-.klinikos-cinematic-root .k-premium { color: #efaaa1; }
-.klinikos-cinematic-root .k-rule { border-color: rgba(226, 139, 133, .14); }
-.klinikos-cinematic-root .k-kicker { color: #e6817b; }
-
+.klinikos-cinematic-root .k-raised { background: rgba(18,9,11,.78); border-color: rgba(226,139,133,.14); color:#f8efed; }
+.klinikos-cinematic-root .k-text { color:#f8efed; }
+.klinikos-cinematic-root .k-muted { color:#a98f8b; }
+.klinikos-cinematic-root .k-accent { color:#e6817b; }
+.klinikos-cinematic-root .k-premium { color:#efaaa1; }
+.klinikos-cinematic-root .k-rule { border-color:rgba(226,139,133,.14); }
+.klinikos-cinematic-root .k-kicker { color:#e6817b; }
 .klinikos-cinematic-root .k-primary-action {
-  background: #e6817b;
-  color: #1b090c;
-  border: 1px solid rgba(255, 220, 216, .16);
-  box-shadow: 0 14px 44px rgba(112, 25, 31, .18);
+  background:#e6817b; color:#1b090c; border:1px solid rgba(255,220,216,.16); box-shadow:0 14px 44px rgba(112,25,31,.18);
 }
-
-.klinikos-cinematic-root .k-primary-action:hover {
-  background: #efaaa1;
-}
-
+.klinikos-cinematic-root .k-primary-action:hover { background:#efaaa1; }
 .klinikos-cinematic-root .k-secondary-action {
-  border-color: rgba(226, 139, 133, .16);
-  color: #f1dfdc;
-  background: rgba(18, 9, 11, .45);
+  border-color:rgba(226,139,133,.16); color:#f1dfdc; background:rgba(18,9,11,.45);
 }
-
-.klinikos-cinematic-root .k-secondary-action:hover {
-  border-color: rgba(230, 129, 123, .36);
-  background: rgba(230, 129, 123, .06);
-}
-
+.klinikos-cinematic-root .k-secondary-action:hover { border-color:rgba(230,129,123,.36); background:rgba(230,129,123,.06); }
 .klinikos-cinematic-root .k-input-shell {
-  border-color: rgba(226, 139, 133, .16);
-  background: rgba(18, 9, 11, .72);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, .26);
+  border-color:rgba(226,139,133,.16); background:rgba(18,9,11,.72); box-shadow:0 18px 60px rgba(0,0,0,.26);
 }
-
 .klinikos-cinematic-root .k-input-shell:focus-within {
-  border-color: rgba(230, 129, 123, .52);
-  box-shadow: 0 0 0 4px rgba(230, 129, 123, .07), 0 18px 60px rgba(0, 0, 0, .28);
+  border-color:rgba(230,129,123,.52); box-shadow:0 0 0 4px rgba(230,129,123,.07),0 18px 60px rgba(0,0,0,.28);
 }
-
 .klinikos-cinematic-root .k-input-shell input,
-.klinikos-cinematic-root .k-input-shell textarea {
-  color: #f8efed;
-}
-
+.klinikos-cinematic-root .k-input-shell textarea { color:#f8efed; }
 .klinikos-cinematic-root .k-input-shell input::placeholder,
-.klinikos-cinematic-root .k-input-shell textarea::placeholder {
-  color: #806965;
-}
+.klinikos-cinematic-root .k-input-shell textarea::placeholder { color:#806965; }
 
 .klinikos-platform {
-  --workspace-panel: rgba(15, 7, 9, .80);
-  --workspace-panel-raised: rgba(24, 11, 13, .84);
-  --workspace-border: rgba(226, 139, 133, .14);
-  --workspace-text: #f8efed;
-  --workspace-muted: #a98f8b;
-  --workspace-accent: #e6817b;
-  color-scheme: dark;
+  --workspace-panel:rgba(15,7,9,.80);
+  --workspace-panel-raised:rgba(24,11,13,.84);
+  --workspace-border:rgba(226,139,133,.14);
+  --workspace-text:#f8efed;
+  --workspace-muted:#a98f8b;
+  --workspace-accent:#e6817b;
+  color-scheme:dark;
 }
+.klinikos-platform .klinikos-workspace { color:var(--workspace-text); }
+.klinikos-platform .klinikos-workspace :where(h1,h2,h3,h4,h5,h6) { color:#f8efed; }
+.klinikos-platform .klinikos-workspace :where(p,li,dt,dd,label) { text-wrap:pretty; }
+.klinikos-platform .klinikos-workspace :where(input,textarea,select) { color-scheme:dark; }
+.klinikos-platform .klinikos-workspace :where(input,textarea,select):not([type="checkbox"]):not([type="radio"]) { border-color:rgba(226,139,133,.14); }
 
-.klinikos-platform .klinikos-workspace {
-  color: var(--workspace-text);
-}
+.klinikos-cinematic-root :where(input,textarea,select) { accent-color:#e6817b; }
+.klinikos-cinematic-root :where(button,a) { text-underline-offset:3px; }
 
-.klinikos-platform .klinikos-workspace :where(h1, h2, h3, h4, h5, h6) {
-  color: #f8efed;
-}
-
-.klinikos-platform .klinikos-workspace :where(p, li, dt, dd, label) {
-  text-wrap: pretty;
-}
-
-.klinikos-platform .klinikos-workspace :where(input, textarea, select) {
-  color-scheme: dark;
-}
-
-.klinikos-platform .klinikos-workspace :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
-  border-color: rgba(226, 139, 133, .14);
-}
-
-.klinikos-cinematic-root :where(input, textarea, select) {
-  accent-color: #e6817b;
-}
-
-.klinikos-cinematic-root :where(button, a) {
-  text-underline-offset: 3px;
-}
-
-.klinikos-cinematic-root .zumi-orb {
-  border-color: rgba(230, 129, 123, .24);
-}
-
-.klinikos-cinematic-root .zumi-orb::before {
-  border-color: rgba(230, 129, 123, .30);
-  box-shadow: 0 0 72px rgba(210, 83, 82, .13);
-}
-
+.klinikos-cinematic-root .zumi-orb { border-color:rgba(230,129,123,.24); }
+.klinikos-cinematic-root .zumi-orb::before { border-color:rgba(230,129,123,.30); box-shadow:0 0 72px rgba(210,83,82,.13); }
 .klinikos-cinematic-root .zumi-orb::after {
-  background: radial-gradient(circle at 35% 30%, #ffd8d3 0, #ee9089 19%, #a74449 50%, #2a0d11 76%);
-  box-shadow: 0 0 48px rgba(224, 105, 99, .34);
+  background:radial-gradient(circle at 35% 30%,#ffd8d3 0,#ee9089 19%,#a74449 50%,#2a0d11 76%);
+  box-shadow:0 0 48px rgba(224,105,99,.34);
 }
+.klinikos-cinematic-root .zumi-node { background:#ef9089; box-shadow:0 0 18px #ef9089; }
 
-.klinikos-cinematic-root .zumi-node {
-  background: #ef9089;
-  box-shadow: 0 0 18px #ef9089;
-}
-
-/* Persistent Zumi panel. ID specificity intentionally wins over older blue-era utility classes. */
 .klinikos-cinematic-root #zumi-presence-panel {
-  border-color: rgba(226, 139, 133, .18) !important;
-  background: rgba(9, 5, 6, .985) !important;
-  color: #f8efed !important;
-  box-shadow: 0 32px 100px rgba(0, 0, 0, .52) !important;
-  backdrop-filter: blur(26px);
+  border-color:rgba(226,139,133,.18)!important;
+  background:rgba(9,5,6,.985)!important;
+  color:#f8efed!important;
+  box-shadow:0 32px 100px rgba(0,0,0,.52)!important;
+  backdrop-filter:blur(26px);
 }
-
 .klinikos-cinematic-root #zumi-presence-panel > header {
-  border-color: rgba(226, 139, 133, .14) !important;
-  background: linear-gradient(180deg, #12090b, #0b0506) !important;
-  color: #f8efed !important;
+  border-color:rgba(226,139,133,.14)!important;
+  background:linear-gradient(180deg,#12090b,#0b0506)!important;
+  color:#f8efed!important;
 }
+.klinikos-cinematic-root #zumi-presence-panel :where(input,textarea,select) {
+  border-color:rgba(226,139,133,.16)!important;
+  background:rgba(18,9,11,.88)!important;
+  color:#f8efed!important;
+}
+.klinikos-cinematic-root #zumi-presence-panel :where(input,textarea)::placeholder { color:#806965!important; }
+.klinikos-cinematic-root #zumi-presence-panel :where(button[role="tab"][aria-selected="true"]) { background:#e6817b!important; color:#19090b!important; }
+.klinikos-cinematic-root #zumi-presence-panel :where(a) { color:#efaaa1; }
 
-.klinikos-cinematic-root #zumi-presence-panel :where(input, textarea, select) {
-  border-color: rgba(226, 139, 133, .16) !important;
-  background: rgba(18, 9, 11, .88) !important;
-  color: #f8efed !important;
-}
+.sales-canvas,.grid-canvas { color-scheme:dark; }
+.sales-canvas :where(h1,h2,h3),.grid-canvas :where(h1,h2,h3) { text-wrap:balance; }
 
-.klinikos-cinematic-root #zumi-presence-panel :where(input, textarea)::placeholder {
-  color: #806965 !important;
-}
+/* Legacy-page compatibility layer. These selectors intentionally come after Tailwind.
+   They convert the remaining pre-reference public/auth/portal/Grid pages without
+   rewriting their business logic or semantic HTML. */
+.klinikos-cinematic-root [class~="bg-white"],
+.klinikos-cinematic-root [class*="bg-white/"] { background-color:#0d0708!important; }
+.klinikos-cinematic-root [class~="bg-slate-950"],
+.klinikos-cinematic-root [class~="bg-slate-900"] { background-color:#080405!important; }
+.klinikos-cinematic-root [class~="bg-slate-50"],
+.klinikos-cinematic-root [class~="bg-slate-100"] { background-color:#100708!important; }
+.klinikos-cinematic-root [class*="bg-[#f7f8fa]"],
+.klinikos-cinematic-root [class*="bg-[#eef4f3]"],
+.klinikos-cinematic-root [class*="bg-[#faf9f5]"],
+.klinikos-cinematic-root [class*="bg-[#f1f0eb]"] { background-color:#090506!important; }
 
-.klinikos-cinematic-root #zumi-presence-panel :where(button[role="tab"][aria-selected="true"]) {
-  background: #e6817b !important;
-  color: #19090b !important;
-}
+.klinikos-cinematic-root [class~="text-slate-950"],
+.klinikos-cinematic-root [class~="text-slate-900"],
+.klinikos-cinematic-root [class~="text-slate-800"],
+.klinikos-cinematic-root [class*="text-[#0b1220]"],
+.klinikos-cinematic-root [class*="text-[#0b1e3a]"] { color:#f8efed!important; }
+.klinikos-cinematic-root [class~="text-slate-700"],
+.klinikos-cinematic-root [class~="text-slate-600"],
+.klinikos-cinematic-root [class*="text-[#5b6675]"] { color:#bca5a1!important; }
+.klinikos-cinematic-root [class~="text-slate-500"],
+.klinikos-cinematic-root [class~="text-slate-400"] { color:#927b77!important; }
 
-.klinikos-cinematic-root #zumi-presence-panel :where(a) {
-  color: #efaaa1;
-}
+.klinikos-cinematic-root [class~="text-teal-700"],
+.klinikos-cinematic-root [class~="text-teal-600"],
+.klinikos-cinematic-root [class~="text-cyan-300"],
+.klinikos-cinematic-root [class*="text-[#174ea6]"] { color:#e6817b!important; }
+.klinikos-cinematic-root [class~="text-amber-300"],
+.klinikos-cinematic-root [class*="text-[#e6c55b]"],
+.klinikos-cinematic-root [class*="text-[#d4af37]"] { color:#efaaa1!important; }
 
-.sales-canvas,
-.grid-canvas {
-  color-scheme: dark;
-}
+.klinikos-cinematic-root [class~="border-slate-200"],
+.klinikos-cinematic-root [class~="border-slate-300"],
+.klinikos-cinematic-root [class*="border-[#e6e9ee]"],
+.klinikos-cinematic-root [class*="border-[#e1e5ea]"] { border-color:rgba(226,139,133,.14)!important; }
 
-.sales-canvas :where(h1, h2, h3),
-.grid-canvas :where(h1, h2, h3) {
-  text-wrap: balance;
-}
+.klinikos-cinematic-root [class~="ring-slate-200"],
+.klinikos-cinematic-root [class~="ring-slate-300"] { --tw-ring-color:rgba(226,139,133,.16)!important; }
 
 .klinikos-cinematic-root article {
-  --tw-prose-body: #c9b5b1;
-  --tw-prose-headings: #f8efed;
-  --tw-prose-links: #efaaa1;
-  --tw-prose-bold: #f8efed;
-  --tw-prose-counters: #a98f8b;
-  --tw-prose-bullets: #8d6f6b;
-  --tw-prose-hr: rgba(226, 139, 133, .14);
-  --tw-prose-quotes: #e7d4d0;
-  --tw-prose-quote-borders: rgba(230, 129, 123, .38);
-  --tw-prose-captions: #8f7773;
-  --tw-prose-code: #f2c0ba;
+  --tw-prose-body:#c9b5b1;
+  --tw-prose-headings:#f8efed;
+  --tw-prose-links:#efaaa1;
+  --tw-prose-bold:#f8efed;
+  --tw-prose-counters:#a98f8b;
+  --tw-prose-bullets:#8d6f6b;
+  --tw-prose-hr:rgba(226,139,133,.14);
+  --tw-prose-quotes:#e7d4d0;
+  --tw-prose-quote-borders:rgba(230,129,123,.38);
+  --tw-prose-captions:#8f7773;
+  --tw-prose-code:#f2c0ba;
 }
 
-@media (max-width: 767px) {
-  .klinikos-cinematic-root {
-    background:
-      radial-gradient(circle at 52% 0%, rgba(123, 29, 36, .16), transparent 28%),
-      #050303;
-  }
+@media(max-width:767px){
+  .klinikos-cinematic-root { background:radial-gradient(circle at 52% 0%,rgba(123,29,36,.16),transparent 28%),#050303; }
 }
-
-@media (prefers-reduced-motion: reduce) {
+@media(prefers-reduced-motion:reduce){
   .klinikos-cinematic-root *,
   .klinikos-cinematic-root *::before,
-  .klinikos-cinematic-root *::after {
-    scroll-behavior: auto !important;
-  }
+  .klinikos-cinematic-root *::after { scroll-behavior:auto!important; }
 }
