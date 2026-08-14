@@ -19,7 +19,11 @@ describe("patient portal experience", () => {
     expect(dashboard).toContain("Your portal stays separate from clinic staff access.");
     expect(dashboard).toContain("access to this portal is recorded.");
     expect(dashboard).toContain("const releasedRecords = data.records;");
+    expect(dashboard).toContain("const portalMessages = data.messages;");
+    expect(dashboard).toContain('form.completionMode === "patient"');
+    expect(dashboard).toContain('["not_started", "in_progress"].includes(form.status)');
     expect(dashboard).not.toContain("data.records.slice(0, 6)");
+    expect(dashboard).not.toContain("data.messages.slice(0, 5)");
 
     expect(dashboard).not.toContain("next portal workflow slice");
     expect(dashboard).not.toContain("generic calendar");
