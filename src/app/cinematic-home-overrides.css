@@ -1,8 +1,6 @@
 /* Reference-locked Living Home refinements loaded after the legacy stylesheet. */
 
-/* Keep the cinematic background inside the Living Home stacking context.
-   The fixed rose layers previously used negative z-index without an isolated
-   parent, which allowed the section background to paint over them in production. */
+/* Keep the cinematic background inside the Living Home stacking context. */
 .rose-home {
   position: relative;
   isolation: isolate;
@@ -58,19 +56,27 @@
   box-shadow:0 -26px 0 rgba(230,129,123,.08),0 24px 0 rgba(230,129,123,.045) !important;
 }
 
-/* Clean production rose: no hero text, rails, composer, cards, or navigation are baked into the asset. */
+/*
+ * ACTUAL GENERATED PRODUCTION ROSE.
+ * This is the clean photoreal image generated from the approved visual direction,
+ * not the hand-built SVG and not a crop of the UI reference screenshot.
+ */
 .rose-home .rose-atmosphere {
   background:
-    radial-gradient(circle at 50% 42%,rgba(126,25,31,.02) 0%,rgba(0,0,0,.08) 44%,rgba(0,0,0,.66) 79%,#050303 100%),
-    radial-gradient(ellipse at 50% 40%,rgba(230,122,116,.14),rgba(84,18,23,.12) 32%,rgba(0,0,0,0) 69%),
-    url('/klinikos-approved-rose.svg') center 35%/min(86vw,1320px) auto no-repeat !important;
-  filter:saturate(.94) contrast(1.11) brightness(1.02);
+    radial-gradient(circle at 50% 42%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.05) 46%,rgba(0,0,0,.48) 76%,#050303 100%),
+    url('/klinikos-rose-generated.webp') center 34%/min(91vw,1390px) auto no-repeat !important;
+  filter:saturate(.91) contrast(1.08) brightness(.94);
+  transform-origin: 50% 38%;
 }
 
-/* The screenshot exposed that the desktop composition was taller than the
-   browser viewport, leaving the operational cards clipped below the fold.
-   Compress only shorter desktop viewports while preserving the large-screen
-   reference geometry. */
+/* Preserve the reference's dark perimeter without obscuring the generated petals. */
+.rose-home .rose-vignette {
+  background:
+    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.12) 13%,rgba(5,3,3,0) 31%,rgba(5,3,3,0) 69%,rgba(5,3,3,.18) 87%,#050303 100%),
+    linear-gradient(180deg,rgba(5,3,3,.16) 0%,transparent 18%,transparent 72%,rgba(5,3,3,.68) 100%);
+}
+
+/* Compress only shorter desktop viewports while preserving the reference hierarchy. */
 @media (min-width: 1024px) and (max-height: 1100px) {
   .rose-home .reference-home {
     min-height: calc(100vh - 92px) !important;
@@ -108,7 +114,7 @@
 
 @media(max-width:900px){
   .rose-home .rose-atmosphere {
-    background-size:min(150vw,1040px),auto !important;
+    background-size:min(154vw,1080px),auto !important;
     background-position:center 13% !important;
   }
 }
