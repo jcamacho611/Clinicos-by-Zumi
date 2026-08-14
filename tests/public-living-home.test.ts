@@ -61,16 +61,17 @@ describe("public Living Home interaction contract", () => {
 
   it("renders the request, truthful progress, response, and relevant action in order", () => {
     const requestPosition = source.indexOf("{turn.prompt}");
-    const progressPosition = source.indexOf("{progressSteps.map");
-    const responsePosition = source.indexOf("{turn.resolution.title}");
-    const actionPosition = source.indexOf("{turn.resolution.destination.action}");
+    const progressPosition = source.indexOf("{progressSteps.map", requestPosition);
+    const responsePosition = source.indexOf("{turn.resolution.title}", progressPosition);
+    const actionPosition = source.indexOf("{turn.resolution.destination.action}", responsePosition);
 
     expect(requestPosition).toBeGreaterThan(0);
     expect(progressPosition).toBeGreaterThan(requestPosition);
     expect(responsePosition).toBeGreaterThan(progressPosition);
     expect(actionPosition).toBeGreaterThan(responsePosition);
+    expect(source).toContain("Listening");
     expect(source).toContain("Understanding");
-    expect(source).toContain("Preparing the next move");
+    expect(source).toContain("Preparing");
     expect(source).toContain("Ready");
   });
 
@@ -97,15 +98,27 @@ describe("public Living Home interaction contract", () => {
 
     expect(inferencePosition).toBeGreaterThan(0);
     expect(inferencePosition).toBeLessThan(schedulePosition);
-    expect(source).toContain("response: 480");
+    expect(source).toContain("response: 520");
   });
 
-  it("keeps the full-screen workspace responsive without hiding the composer", () => {
-    expect(source).toContain("h-[100svh]");
-    expect(source).toContain("sm:grid-cols-3");
-    expect(source).toContain("lg:grid-cols-[12rem_minmax(0,1fr)]");
+  it("keeps the cinematic workspace responsive without hiding either composer", () => {
+    expect(source).toContain("min-h-screen");
+    expect(source).toContain("sm:grid-cols-2");
+    expect(source).toContain("lg:grid-cols-[180px_minmax(0,1fr)_180px]");
     expect(source).toContain('id="public-klinikos-intent"');
-    expect(source).toContain('placeholder={conversationStarted ? "Continue the thread..."');
+    expect(source).toContain('placeholder="Ask Klinikos anything..."');
+    expect(source).toContain('placeholder="Continue the thread..."');
+  });
+
+  it("keeps the approved rose navigation and operational surfaces wired to real routes", () => {
+    expect(source).toContain('/login?next=/dashboard');
+    expect(source).toContain('/login?next=/grid');
+    expect(source).toContain('/login?next=/patients');
+    expect(source).toContain('href: "/edu"');
+    expect(source).toContain("Today's Priorities");
+    expect(source).toContain("Revenue Opportunities");
+    expect(source).toContain("Team Workflow");
+    expect(source).toContain("Grid Network");
   });
 
   it("removes the global appearance control from the focused Living Home", () => {
