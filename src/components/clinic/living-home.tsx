@@ -121,6 +121,16 @@ function attentionReasons(appointment: Appointment, role: ClinicRole) {
   return reasons;
 }
 
+function attentionTone(appointment: Appointment, role: ClinicRole): BadgeTone {
+  const reasons = attentionReasons(appointment, role);
+  if (!reasons.length) return appointment.status === "Completed" ? "resolved" : "observing";
+  return appointment.status === "No Show" ? "signal" : "analyzing";
+}
+
+function attentionColor(appointment: Appointment, role: ClinicRole) {
+  return attentionTone(appointment, role) === "signal" ? "var(--status-signal)" : "var(--status-analyzing)";
+}
+
 function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount: number) {
   if (attentionCount === 0) {
     return {
@@ -345,7 +355,7 @@ export function LivingHome({
           appointment,
           left: ((start - min) / span) * 100,
           width: Math.max(((end - start) / span) * 100, 4),
-          needsAttention: attentionReasons(appointment, role).length > 0,
+          tone: attentionTone(appointment, role),
         };
       }),
     };
@@ -355,6 +365,7 @@ export function LivingHome({
     ? ((nowMs - ribbon.min) / Math.max(ribbon.max - ribbon.min, 1)) * 100
     : null;
 
+  const highRiskAttention = attentionItems.some(({ appointment }) => appointment.status === "No Show");
   const briefing = briefingCopy(role, attentionItems.length, dayAppointments.length);
   const opportunity = opportunityForRole(role);
   const orbState = intelligenceState(state, message);
@@ -399,7 +410,7 @@ export function LivingHome({
         <div className="grid gap-12 lg:grid-cols-[1.12fr_.88fr] lg:items-center lg:gap-20">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge tone={attentionItems.length ? "signal" : "resolved"}>{briefing.eyebrow}</Badge>
+              <Badge tone={attentionItems.length ? (highRiskAttention ? "signal" : "analyzing") : "resolved"}>{briefing.eyebrow}</Badge>
               {onboardingComplete ? <Badge tone="resolved">Setup complete</Badge> : null}
             </div>
             <p className="mt-8 text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">
@@ -471,7 +482,7 @@ export function LivingHome({
             <>
               <div className="relative mt-7 hidden h-24 overflow-hidden border-y border-[var(--line-dark)] md:block">
                 <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--line-dark)]" />
-                {ribbon.blocks.map(({ appointment, left, width, needsAttention }) => (
+                {ribbon.blocks.map(({ appointment, left, width, tone }) => (
                   <Link
                     className="absolute top-4 h-16 overflow-hidden border border-[var(--line-dark)] px-3 py-2 transition-opacity hover:opacity-85"
                     href={`/patients/${appointment.patientId}`}
@@ -480,9 +491,11 @@ export function LivingHome({
                       left: `${left}%`,
                       width: `${width}%`,
                       minWidth: "var(--space-8)",
-                      background: needsAttention
+                      background: tone === "signal"
                         ? "color-mix(in oklch, var(--status-signal) 18%, var(--surface-raised))"
-                        : "var(--surface-raised)",
+                        : tone === "analyzing"
+                          ? "color-mix(in oklch, var(--status-analyzing) 16%, var(--surface-raised))"
+                          : "var(--surface-raised)",
                     }}
                   >
                     <span className="block truncate text-xs font-semibold">{appointment.time}</span>
@@ -506,7 +519,7 @@ export function LivingHome({
                         <span className="block truncate text-sm font-semibold">{appointment.patient}</span>
                         <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type} · {appointment.status}</span>
                       </span>
-                      <Badge tone={reasons.length ? "signal" : appointment.status === "Completed" ? "resolved" : "observing"}>
+                      <Badge tone={attentionTone(appointment, role)}>
                         {reasons.length ? "Needs you" : appointment.status}
                       </Badge>
                     </Link>
@@ -531,7 +544,7 @@ export function LivingHome({
                   Exceptions, not noise.
                 </h2>
               </div>
-              <CircleAlert className="size-5 text-[var(--status-signal)]" />
+              <CircleAlert className="size-5" style={{ color: highRiskAttention ? "var(--status-signal)" : "var(--status-analyzing)" }} />
             </div>
 
             {attentionItems.length ? (
@@ -539,7 +552,7 @@ export function LivingHome({
                 {attentionItems.slice(0, 5).map(({ appointment, reasons }) => (
                   <details className="group py-5" key={appointment.id}>
                     <summary className="flex cursor-pointer list-none items-start gap-4 marker:hidden">
-                      <span className="mt-1 size-2 shrink-0 bg-[var(--status-signal)] shadow-[var(--glow-cyan)]" />
+                      <span className="mt-1 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold">{appointment.patient} · {appointment.time}</span>
                         <span className="mt-2 block text-xs leading-6 text-[var(--text-secondary)]">{reasons[0]}</span>
