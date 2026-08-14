@@ -6,37 +6,41 @@ const WORDMARK_SRC = "/klinikos-wordmark-generated.webp";
 
 export function KlinikosMark({ className = "h-8 w-auto" }: { className?: string }) {
   return (
-    <Image
-      alt=""
-      aria-hidden="true"
-      className={`object-contain ${className}`}
-      height={640}
-      priority
-      src={MARK_SRC}
-      unoptimized
-      width={640}
-    />
+    <span className={`relative inline-block overflow-hidden ${className}`} aria-hidden="true">
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="absolute left-1/2 top-1/2 h-[108%] w-[108%] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover mix-blend-screen"
+        height={1254}
+        priority
+        src={MARK_SRC}
+        unoptimized
+        width={1254}
+      />
+    </span>
   );
 }
 
 function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: string }) {
   return (
-    <Image
-      alt="Klinikos"
-      className={`object-contain object-left ${className}`}
-      height={400}
-      priority
-      src={WORDMARK_SRC}
-      unoptimized
-      width={1200}
-    />
+    <span className={`relative inline-block overflow-hidden ${className}`}>
+      <Image
+        alt="Klinikos"
+        className="absolute left-1/2 top-1/2 h-[320%] w-[104%] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover object-center mix-blend-screen"
+        height={724}
+        priority
+        src={WORDMARK_SRC}
+        unoptimized
+        width={2172}
+      />
+    </span>
   );
 }
 
 export function KlinikosWordmark({
   className = "",
   markClassName = "h-7 w-7",
-  textClassName = "h-[24px] w-auto",
+  textClassName = "h-[24px] w-[220px]",
   href,
   inverse = false,
   framed = false,
@@ -53,15 +57,13 @@ export function KlinikosWordmark({
       <span
         className={
           framed
-            ? "grid size-14 place-items-center overflow-hidden rounded-[16px] border border-[#efaaa1]/16 bg-[#050303] shadow-[0_0_34px_rgba(232,126,121,.08)]"
+            ? "grid size-14 place-items-center overflow-hidden rounded-[16px] border border-[#efaaa1]/16 bg-transparent shadow-[0_0_34px_rgba(232,126,121,.08)]"
             : "inline-grid place-items-center overflow-hidden"
         }
       >
         <KlinikosMark className={markClassName} />
       </span>
-      <span className="inline-flex overflow-hidden bg-[#050303]">
-        <KlinikosLettering className={textClassName} />
-      </span>
+      <KlinikosLettering className={textClassName} />
     </span>
   );
 
