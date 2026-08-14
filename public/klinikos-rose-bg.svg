@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Abstract rose atmosphere">
+  <defs>
+    <radialGradient id="petal" cx="50%" cy="45%" r="58%">
+      <stop offset="0" stop-color="#5b1219"/>
+      <stop offset="0.35" stop-color="#7f252c"/>
+      <stop offset="0.7" stop-color="#4b141a"/>
+      <stop offset="1" stop-color="#16080b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="48%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#2b0205"/>
+      <stop offset="0.35" stop-color="#7e151b"/>
+      <stop offset="0.7" stop-color="#3a080d"/>
+      <stop offset="1" stop-color="#0c0405" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <g opacity="0.96">
+    <ellipse cx="600" cy="455" rx="420" ry="300" fill="url(#petal)" transform="rotate(-8 600 455)"/>
+    <ellipse cx="545" cy="410" rx="355" ry="240" fill="#6a1a22" opacity="0.65" transform="rotate(18 545 410)"/>
+    <ellipse cx="680" cy="430" rx="315" ry="225" fill="#5f131a" opacity="0.72" transform="rotate(-25 680 430)"/>
+    <ellipse cx="600" cy="540" rx="360" ry="210" fill="#4a1016" opacity="0.78" transform="rotate(8 600 540)"/>
+    <ellipse cx="600" cy="435" rx="245" ry="205" fill="url(#core)"/>
+    <path d="M420 440c90-170 260-210 390-84-82 18-148 74-190 162-37-77-102-112-200-78Z" fill="#8f2c33" opacity="0.66"/>
+    <path d="M478 530c72-40 139-42 205-7 55 30 100 79 134 145-105-48-200-52-284-10-64-29-83-74-55-128Z" fill="#5b141b" opacity="0.84"/>
+    <path d="M558 335c67-45 143-37 225 26-83 12-146 45-188 99-54-40-66-81-37-125Z" fill="#9b353a" opacity="0.66"/>
+    <path d="M515 477c35-92 121-135 209-93-83 19-129 67-142 144-42-3-64-20-67-51Z" fill="#a33e43" opacity="0.74"/>
+    <path d="M576 448c17-48 69-78 114-56-35 11-65 36-82 74-23 0-36-6-32-18Z" fill="#c24a4d" opacity="0.76"/>
+    <circle cx="615" cy="456" r="54" fill="#3a0509"/>
+    <circle cx="617" cy="455" r="25" fill="#7c1217"/>
+  </g>
+  <ellipse cx="600" cy="460" rx="510" ry="355" fill="none" stroke="#b24a4d" stroke-opacity="0.08" stroke-width="30" filter="url(#soft)"/>
+</svg>
