@@ -57,6 +57,8 @@ PR #72’s exact final head also passed the same Quality gate before merge.
 
 ## Commercial / payments / activation
 
+Redirect state is never payment evidence.
+
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Server-owned commercial products/amounts | **BUILT** | Browser cannot choose trusted price. |
