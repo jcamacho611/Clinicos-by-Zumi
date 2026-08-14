@@ -140,7 +140,7 @@ export const HUMAN_REVIEW_NOTICE =
   "Submitting a request or a payment does not activate production clinical use, approve PHI workflows, guarantee results, replace licensed judgment, or authorize clinical services. A human reviews every request.";
 
 export const PLATFORM_BOUNDARY_NOTICE =
-  "Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is an embedded intelligence and orchestration layer inside Klinikos, not the product name. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review.";
+  "Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is Klinikos Intelligence, the assistance layer inside Klinikos, not the product name. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review.";
 
 export const ELEMENT_ADMISSION_TEST = [
   "Would a clinic owner understand why this is here?",

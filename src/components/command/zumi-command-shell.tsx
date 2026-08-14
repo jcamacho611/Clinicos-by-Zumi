@@ -101,7 +101,7 @@ export function KlinikosSafetyFooter() {
     <footer className="relative border-t border-white/10">
       <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
         <p className="max-w-4xl text-[11px] leading-6 text-slate-400">
-          Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is an embedded intelligence and orchestration layer inside Klinikos. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review. Zumi organises operational information and drafts administrative work for a human to approve; it does not diagnose, prescribe, decide treatment, guarantee coverage, submit claims, or release records.
+          Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is Klinikos Intelligence, the assistance layer inside Klinikos. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review. Zumi organises operational information and drafts administrative work for a human to approve; it does not diagnose, prescribe, decide treatment, guarantee coverage, submit claims, or release records.
         </p>
         <div className="mt-6 flex flex-wrap gap-5 text-[11px] font-bold">
           <Link className="text-slate-400 hover:text-white" href="/legal/privacy">Privacy notice</Link>

@@ -122,7 +122,7 @@ export function KlinikosHomepage() {
           <div>
             <p className="k-muted max-w-2xl text-base leading-8">Zumi helps users understand, summarize, research, prepare, and navigate. Deterministic Klinikos systems still own authorization, payment state, eligibility, credentials, transaction state, and safety boundaries.</p>
             <div className="mt-10 grid gap-8 sm:grid-cols-2">
-              <div className="border-t pt-5 k-rule"><p className="text-sm font-semibold">Make complexity understandable</p><p className="k-muted mt-3 text-xs leading-6">Surface what matters without exposing orchestration, registries, internal state machines, or raw technical language.</p></div>
+              <div className="border-t pt-5 k-rule"><p className="text-sm font-semibold">Make complexity understandable</p><p className="k-muted mt-3 text-xs leading-6">Surface what matters without making your team learn how the system works underneath.</p></div>
               <div className="border-t pt-5 k-rule"><p className="text-sm font-semibold">Keep decisions grounded</p><p className="k-muted mt-3 text-xs leading-6">Sensitive or consequential actions remain permission-aware, evidence-aware, and human-reviewed where required.</p></div>
             </div>
           </div>
