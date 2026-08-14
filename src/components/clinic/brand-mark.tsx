@@ -4,15 +4,18 @@ export function BrandMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "relative grid size-10 place-items-center overflow-hidden rounded-[14px] bg-[#0b1e3a] shadow-[0_12px_30px_rgba(7,29,45,.25)] ring-1 ring-[#d4af37]/35",
+        "relative grid size-10 place-items-center overflow-hidden rounded-[13px] border border-[#efaaa1]/18 bg-[#070304]/88 text-[#fff9f7] shadow-[0_0_34px_rgba(230,129,123,.08)]",
         className,
       )}
       aria-hidden="true"
     >
-      <svg className="size-7" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 5.5h3v21H8v-21Z" fill="#F7F8FA" />
-        <path d="M11 16 21.5 5.5h4L15 16l10.5 10.5h-4L11 16Z" fill="#D4AF37" />
-        <path d="M5.5 4h20.5v2H5.5V4Zm0 22h20.5v2H5.5v-2Z" fill="#D4AF37" opacity=".9" />
+      <svg className="size-7 overflow-visible" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M45 16C42 31 39 48 38 78" stroke="currentColor" strokeLinecap="round" strokeWidth="4.2" />
+        <path d="M38 50C49 39 60 28 73 18" stroke="currentColor" strokeLinecap="round" strokeWidth="4.2" />
+        <path d="M39 50C51 58 62 67 74 78" stroke="currentColor" strokeLinecap="round" strokeWidth="4.2" />
+        <path d="M17 64C28 43 49 30 78 27" stroke="currentColor" strokeLinecap="round" strokeWidth="2.8" />
+        <path d="M20 63C33 66 48 61 58 50" stroke="#efaaa1" strokeLinecap="round" strokeWidth="1.4" opacity=".7" />
+        <circle cx="79" cy="26" r="3.2" fill="#efaaa1" />
       </svg>
     </span>
   );
