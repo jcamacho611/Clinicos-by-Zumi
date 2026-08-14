@@ -126,7 +126,7 @@ Living Home is the adaptive front door for authenticated users. Public entry sho
 
 It does not replace implementation evidence. Routes and capabilities become **Built** only through code and verification reflected in the status sources.
 
-Marketplace product mechanics and their official research basis live in `docs/MARKETPLACE_DESIGN_RESEARCH.md`. The exact Grid discovery, geolocation, map/ledger, privacy, degraded-state, enrollment, transaction-continuation, and acceptance contract lives in `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`.
+Marketplace product mechanics and their official research basis live in `docs/MARKETPLACE_DESIGN_RESEARCH.md`. The exact Grid discovery, geolocation, map/ledger, privacy, degraded-state, enrollment, transaction-continuation, and acceptance contract lives in `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`. `docs/prompts/CONTINUE_GRID_TO_MVP_PROMPT.md` is the execution-ready handoff for a coding agent and must be used with the canonical sources above, never instead of them.
 
 ## Grid scope
 

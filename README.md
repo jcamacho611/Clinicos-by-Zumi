@@ -217,10 +217,11 @@ Start here, in this order:
 2. `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md`
 3. `docs/MARKETPLACE_DESIGN_RESEARCH.md`
 4. `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`
-5. `docs/FEATURE_STATUS.md`
-6. `docs/EXTERNAL_DEPENDENCY_MATRIX.md`
-7. `docs/MVP_JOURNEYS.md`
-8. `docs/KLINIKOS_ARCHITECTURE_INDEX.md`
-9. `docs/CLINICOS_MASTER_CANON.md` for deeper historical/permanent scope where it does not conflict with current truth
+5. `docs/prompts/CONTINUE_GRID_TO_MVP_PROMPT.md` when handing the Grid MVP to an implementation agent
+6. `docs/FEATURE_STATUS.md`
+7. `docs/EXTERNAL_DEPENDENCY_MATRIX.md`
+8. `docs/MVP_JOURNEYS.md`
+9. `docs/KLINIKOS_ARCHITECTURE_INDEX.md`
+10. `docs/CLINICOS_MASTER_CANON.md` for deeper historical/permanent scope where it does not conflict with current truth
 
 Priority Zero and the feature registry represent permanent scope direction, not a claim that every external integration or capability is already live.
