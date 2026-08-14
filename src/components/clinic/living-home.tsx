@@ -35,6 +35,21 @@ type AttentionItem = {
   reasons: string[];
 };
 
+type RibbonBlock = {
+  appointment: Appointment;
+  left: number;
+  width: number;
+  lane: number;
+  tone: BadgeTone;
+};
+
+type RibbonModel = {
+  min: number;
+  max: number;
+  laneCount: number;
+  blocks: RibbonBlock[];
+};
+
 const terminalStatuses = new Set<Appointment["status"]>(["Completed", "Cancelled", "No Show"]);
 
 function doorwayActionsForRole(role: ClinicRole): DoorwayAction[] {
@@ -80,28 +95,17 @@ function localGreeting() {
   return "Good evening";
 }
 
-function normalizedProviderName(value: string) {
-  return value.split(",")[0]?.trim().toLowerCase() ?? "";
-}
-
-function appointmentsForRole(appointments: Appointment[], role: ClinicRole, userName: string) {
-  if (role !== "provider" && role !== "clinical_staff") return appointments;
-  const target = userName.trim().toLowerCase();
-  const matching = appointments.filter((appointment) => normalizedProviderName(appointment.provider) === target);
-  return matching.length ? matching : appointments;
-}
-
 function selectDay(appointments: Appointment[]) {
   if (!appointments.length) return [];
   const today = appointments.filter((appointment) => appointment.date === "Today");
   if (today.length) return today;
-
   const firstActive = appointments.find((appointment) => !terminalStatuses.has(appointment.status));
   const day = firstActive?.date ?? appointments[appointments.length - 1]?.date;
   return appointments.filter((appointment) => appointment.date === day);
 }
 
 function attentionReasons(appointment: Appointment, role: ClinicRole) {
+  if (appointment.status === "Cancelled") return [];
   const reasons: string[] = [];
   if (appointment.status === "Requested" || appointment.status === "Pending Confirmation") {
     reasons.push("Confirmation still needs to be recorded.");
@@ -109,13 +113,20 @@ function attentionReasons(appointment: Appointment, role: ClinicRole) {
   if (appointment.status === "No Show") {
     reasons.push("The visit is recorded as a no-show and may need follow-up.");
   }
-  if (!appointment.formsComplete) {
+  if (!appointment.formsComplete && appointment.status !== "No Show") {
     reasons.push("Required intake is incomplete.");
   }
-  if (!appointment.insuranceVerified && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")) {
+  if (
+    !appointment.insuranceVerified
+    && appointment.status !== "No Show"
+    && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")
+  ) {
     reasons.push("Coverage has not been verified.");
   }
-  if (appointment.paymentDue > 0 && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")) {
+  if (
+    appointment.paymentDue > 0
+    && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")
+  ) {
     reasons.push(`$${appointment.paymentDue.toFixed(2)} remains due.`);
   }
   return reasons;
@@ -141,7 +152,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
         : "No schedule exception needs your attention in this view.",
     };
   }
-
   if (role === "clinic_owner" || role === "administrator") {
     return {
       eyebrow: `${String(attentionCount).padStart(2, "0")} decisions today`,
@@ -149,7 +159,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
       support: `${appointmentCount} scheduled ${appointmentCount === 1 ? "visit is" : "visits are"} in view. Klinikos is keeping the exceptions above the rest.`,
     };
   }
-
   if (role === "front_desk") {
     return {
       eyebrow: `${String(attentionCount).padStart(2, "0")} before the next block`,
@@ -157,7 +166,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
       support: "Incomplete intake, confirmation, coverage, and payment work stays visible before it becomes a front-desk fire.",
     };
   }
-
   if (role === "provider" || role === "clinical_staff") {
     return {
       eyebrow: `${String(attentionCount).padStart(2, "0")} require review`,
@@ -165,7 +173,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
       support: `${attentionCount} ${attentionCount === 1 ? "visit has" : "visits have"} a readiness item worth seeing before care moves forward.`,
     };
   }
-
   if (role === "biller") {
     return {
       eyebrow: `${String(attentionCount).padStart(2, "0")} revenue checks`,
@@ -173,7 +180,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
       support: "The queue keeps financial readiness tied to the visit that created it.",
     };
   }
-
   return {
     eyebrow: `${String(attentionCount).padStart(2, "0")} need attention`,
     headline: `${attentionCount} ${attentionCount === 1 ? "item is" : "items are"} waiting on a person.`,
@@ -193,7 +199,7 @@ function opportunityForRole(role: ClinicRole) {
   if (role === "front_desk") {
     return {
       title: "Protect the next appointment block.",
-      body: "Open the front-desk workspace and clear the readiness items that can still be resolved before arrival.",
+      body: "Clear the readiness items that can still be resolved before the next arrivals.",
       href: "/front-desk",
       action: "Open front desk",
     };
@@ -209,7 +215,7 @@ function opportunityForRole(role: ClinicRole) {
   if (role === "clinical_staff" || role === "case_manager") {
     return {
       title: "Keep the next handoff moving.",
-      body: "Open the care network to see referrals, relationships, and governed handoffs that are already within your role.",
+      body: "Open the care network to see referrals, relationships, and governed handoffs already within your role.",
       href: "/network/directory",
       action: "Open care network",
     };
@@ -217,7 +223,7 @@ function opportunityForRole(role: ClinicRole) {
   if (role === "biller") {
     return {
       title: "Move readiness toward revenue.",
-      body: "Open billing work that is waiting on documentation, coverage, or a human review.",
+      body: "Open billing work waiting on documentation, coverage, or human review.",
       href: "/billing",
       action: "Open billing",
     };
@@ -238,8 +244,7 @@ function relativeTime(iso: string, nowMs: number | null) {
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  return `${days}d ago`;
+  return `${Math.round(hours / 24)}d ago`;
 }
 
 function guidanceTone(state: PathGuidanceView["state"]): BadgeTone {
@@ -266,9 +271,40 @@ function intelligenceState(state: "idle" | "saving" | "error", message: string |
   return "observing";
 }
 
+function buildRibbon(appointments: Appointment[], role: ClinicRole): RibbonModel | null {
+  if (!appointments.length) return null;
+  const sorted = [...appointments].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
+  const starts = sorted.map((appointment) => new Date(appointment.startsAt).getTime()).filter(Number.isFinite);
+  const ends = sorted.map((appointment) => new Date(appointment.endsAt).getTime()).filter(Number.isFinite);
+  if (!starts.length || !ends.length) return null;
+
+  const min = Math.min(...starts);
+  const max = Math.max(...ends);
+  const span = Math.max(max - min, 60 * 60 * 1000);
+  const laneRightEdges: number[] = [];
+  const blocks: RibbonBlock[] = [];
+
+  for (const appointment of sorted) {
+    const start = new Date(appointment.startsAt).getTime();
+    const end = new Date(appointment.endsAt).getTime();
+    const left = ((start - min) / span) * 100;
+    const width = Math.max(((end - start) / span) * 100, 4);
+    const right = Math.min(100, left + width);
+    let lane = laneRightEdges.findIndex((edge) => edge <= left - 0.5);
+    if (lane < 0) {
+      lane = laneRightEdges.length;
+      laneRightEdges.push(right);
+    } else {
+      laneRightEdges[lane] = right;
+    }
+    blocks.push({ appointment, left, width, lane, tone: attentionTone(appointment, role) });
+  }
+
+  return { min, max, laneCount: Math.max(1, laneRightEdges.length), blocks };
+}
+
 export function LivingHome({
   firstName,
-  userName,
   organizationName,
   role,
   appointments,
@@ -278,7 +314,6 @@ export function LivingHome({
   onboardingComplete = false,
 }: {
   firstName: string;
-  userName: string;
   organizationName: string;
   role: ClinicRole;
   appointments: Appointment[];
@@ -307,8 +342,7 @@ export function LivingHome({
   }, []);
 
   const doorwayActions = doorwayActionsForRole(role);
-  const scopedAppointments = useMemo(() => appointmentsForRole(appointments, role, userName), [appointments, role, userName]);
-  const dayAppointments = useMemo(() => selectDay(scopedAppointments), [scopedAppointments]);
+  const dayAppointments = useMemo(() => selectDay(appointments), [appointments]);
   const attentionItems = useMemo<AttentionItem[]>(
     () => dayAppointments
       .map((appointment) => ({ appointment, reasons: attentionReasons(appointment, role) }))
@@ -323,6 +357,7 @@ export function LivingHome({
     () => dayAppointments.filter((appointment) => !terminalStatuses.has(appointment.status)).slice(0, 4),
     [dayAppointments],
   );
+  const ribbon = useMemo(() => buildRibbon(dayAppointments, role), [dayAppointments, role]);
 
   const activeSnapshot = useMemo(
     () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
@@ -337,34 +372,9 @@ export function LivingHome({
     ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
     : null;
 
-  const ribbon = useMemo(() => {
-    if (!dayAppointments.length) return null;
-    const starts = dayAppointments.map((appointment) => new Date(appointment.startsAt).getTime()).filter(Number.isFinite);
-    const ends = dayAppointments.map((appointment) => new Date(appointment.endsAt).getTime()).filter(Number.isFinite);
-    if (!starts.length || !ends.length) return null;
-    const min = Math.min(...starts);
-    const max = Math.max(...ends);
-    const span = Math.max(max - min, 60 * 60 * 1000);
-    return {
-      min,
-      max,
-      blocks: dayAppointments.map((appointment) => {
-        const start = new Date(appointment.startsAt).getTime();
-        const end = new Date(appointment.endsAt).getTime();
-        return {
-          appointment,
-          left: ((start - min) / span) * 100,
-          width: Math.max(((end - start) / span) * 100, 4),
-          tone: attentionTone(appointment, role),
-        };
-      }),
-    };
-  }, [dayAppointments, role]);
-
   const nowPosition = ribbon && nowMs !== null && nowMs >= ribbon.min && nowMs <= ribbon.max
     ? ((nowMs - ribbon.min) / Math.max(ribbon.max - ribbon.min, 1)) * 100
     : null;
-
   const highRiskAttention = attentionItems.some(({ appointment }) => appointment.status === "No Show");
   const briefing = briefingCopy(role, attentionItems.length, dayAppointments.length);
   const opportunity = opportunityForRole(role);
@@ -480,15 +490,25 @@ export function LivingHome({
 
           {ribbon ? (
             <>
-              <div className="relative mt-7 hidden h-24 overflow-hidden border-y border-[var(--line-dark)] md:block">
-                <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--line-dark)]" />
-                {ribbon.blocks.map(({ appointment, left, width, tone }) => (
+              <div
+                className="relative mt-7 hidden overflow-hidden border-y border-[var(--line-dark)] md:block"
+                style={{ height: `${ribbon.laneCount * 72 + 32}px` }}
+              >
+                {Array.from({ length: ribbon.laneCount }).map((_, lane) => (
+                  <div
+                    className="absolute inset-x-0 border-t border-[var(--line-dark)] opacity-70"
+                    key={lane}
+                    style={{ top: `${16 + lane * 72}px` }}
+                  />
+                ))}
+                {ribbon.blocks.map(({ appointment, left, width, lane, tone }) => (
                   <Link
-                    className="absolute top-4 h-16 overflow-hidden border border-[var(--line-dark)] px-3 py-2 transition-opacity hover:opacity-85"
+                    className="absolute h-14 overflow-hidden border border-[var(--line-dark)] px-3 py-2 transition-opacity hover:opacity-85 focus:z-30"
                     href={`/patients/${appointment.patientId}`}
                     key={appointment.id}
                     style={{
                       left: `${left}%`,
+                      top: `${20 + lane * 72}px`,
                       width: `${width}%`,
                       minWidth: "var(--space-8)",
                       background: tone === "signal"
@@ -519,9 +539,7 @@ export function LivingHome({
                         <span className="block truncate text-sm font-semibold">{appointment.patient}</span>
                         <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type} · {appointment.status}</span>
                       </span>
-                      <Badge tone={attentionTone(appointment, role)}>
-                        {reasons.length ? "Needs you" : appointment.status}
-                      </Badge>
+                      <Badge tone={attentionTone(appointment, role)}>{reasons.length ? "Needs you" : appointment.status}</Badge>
                     </Link>
                   );
                 })}
@@ -540,9 +558,7 @@ export function LivingHome({
             <div className="flex items-end justify-between gap-5">
               <div>
                 <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Needs you</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="needs-you-title">
-                  Exceptions, not noise.
-                </h2>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="needs-you-title">Exceptions, not noise.</h2>
               </div>
               <CircleAlert className="size-5" style={{ color: highRiskAttention ? "var(--status-signal)" : "var(--status-analyzing)" }} />
             </div>
@@ -598,7 +614,6 @@ export function LivingHome({
                 </div>
                 <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activeDefinition.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{activeSnapshot.goal}</p>
-
                 <div className="mt-6 h-1 overflow-hidden bg-[var(--line-dark)]">
                   <div className="h-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, Math.round(activeRuntime.progress * 100))}%` }} />
                 </div>
