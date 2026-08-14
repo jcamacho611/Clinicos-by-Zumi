@@ -5,6 +5,7 @@ import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
 import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
+import "./cinematic-home-overrides.css";
 
 const siteUrl = "https://klinikos.io";
 
