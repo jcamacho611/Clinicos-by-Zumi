@@ -169,7 +169,7 @@ export function PublicLivingGateway() {
       ? `Klinikos is ready. ${latestResolution.title}${latestResolution.destination ? ` Next action available: ${latestResolution.destination.action}.` : ""}`
       : "Klinikos is ready.";
 
-  const heroStage = useMemo(() => {
+  useMemo(() => {
     if (!activeTurn) return 0;
     return stageIndex(activeTurn.stage);
   }, [activeTurn]);
@@ -341,8 +341,8 @@ export function PublicLivingGateway() {
                     >
                       <CornerDownLeft className="size-5" />
                     </button>
-                    <div className="reference-zumi absolute -bottom-9 left-1/2 flex -translate-x-1/2 items-center gap-3">
-                      <ZumiOrb state="idle" size="sm" />
+                    <div className="reference-zumi absolute -bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-3">
+                      <ZumiOrb state="dormant" size={48} />
                       <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-[#9d7772]">Your AI Operating Partner</span>
                     </div>
                   </div>
@@ -410,13 +410,13 @@ export function PublicLivingGateway() {
                       </ol>
                       <div className="rounded-[26px] border border-[#d0837d]/12 bg-[#0f0708]/72 p-6 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
-                          <ZumiOrb state={complete ? "resolved" : orbState(turn.stage)} size="sm" />
+                          <ZumiOrb state={complete ? "resolved" : orbState(turn.stage)} size={52} />
                           <p className="text-[10px] uppercase tracking-[.22em] text-[#e6817b]">{statusLabel(turn.stage)}</p>
                         </div>
                         {complete && (
                           <div className="mt-6">
                             <h2 className="text-2xl font-light tracking-[-.04em] text-[#f8efed]">{resolution.title}</h2>
-                            <p className="mt-3 text-sm leading-7 text-[#ad9691]">{resolution.summary}</p>
+                            <p className="mt-3 text-sm leading-7 text-[#ad9691]">{resolution.body}</p>
                             {resolution.assumption && <p className="mt-4 border-l border-[#e6817b]/35 pl-4 text-xs leading-6 text-[#9d817d]">Assumption: {resolution.assumption}</p>}
                             {actions.length > 0 && (
                               <div className="mt-6 flex flex-wrap gap-3">
