@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Check, LoaderCircle, ShieldCheck } from "lucide-react";
+import { Check, CheckCircle2, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
+import { Badge, Button, Card, Input } from "@/components/ds";
 import type { ClinicActivationDraft } from "@/lib/commercial/clinic-activation-rules";
 
 type FormState = ClinicActivationDraft & {
@@ -40,7 +41,19 @@ function draftFromForm(form: FormState): ClinicActivationDraft {
   };
 }
 
-export function ClinicActivationForm({ token, organizationName, email, productLabel, initialDraft }: { token: string; organizationName: string; email: string; productLabel: string; initialDraft?: ClinicActivationDraft }) {
+export function ClinicActivationForm({
+  token,
+  organizationName,
+  email,
+  productLabel,
+  initialDraft,
+}: {
+  token: string;
+  organizationName: string;
+  email: string;
+  productLabel: string;
+  initialDraft?: ClinicActivationDraft;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialDraft ? "saved" : "idle");
@@ -52,9 +65,6 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
     acceptTerms: false,
     syntheticDataOnly: true,
   });
-  // The persisted draft deliberately excludes password and terms; depending on the
-  // full form object keeps the Hook dependency honest while draftFromForm strips those
-  // secrets before the request body is created.
   const autosaveDraft = useMemo(() => draftFromForm(form), [form]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -108,42 +118,166 @@ export function ClinicActivationForm({ token, organizationName, email, productLa
     });
   }
 
+  const saveTone = saveState === "error" ? "signal" : saveState === "saved" ? "resolved" : saveState === "saving" ? "analyzing" : "neutral";
+
   return (
-    <div className="mt-8 space-y-5">
+    <div className="mt-9 space-y-8">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="border border-slate-200 bg-slate-50 p-4"><p className="text-[9px] font-black uppercase tracking-[.14em] text-slate-400">Organization</p><p className="mt-2 text-sm font-black text-slate-900">{organizationName}</p></div>
-        <div className="border border-slate-200 bg-slate-50 p-4"><p className="text-[9px] font-black uppercase tracking-[.14em] text-slate-400">Paid plan</p><p className="mt-2 text-sm font-black text-slate-900">{productLabel}</p></div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs leading-6 text-slate-500">Owner account: <strong className="text-slate-800">{email}</strong>. Organization, email, role, plan, and payment state come from the signed activation link and cannot be changed by this form.</p>
-        <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[.12em] ${saveState === "error" ? "text-rose-700" : "text-slate-400"}`}>{saveState === "saving" ? <LoaderCircle className="size-3 animate-spin" /> : saveState === "saved" ? <Check className="size-3 text-emerald-600" /> : null}{saveState === "saving" ? "Saving progress" : saveState === "saved" ? "Progress saved" : saveState === "error" ? "Save retry needed" : "Progress autosaves"}</span>
-      </div>
-
-      {error && <div className="border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-800" role="alert">{error}</div>}
-      {saveState === "error" && <div className="border border-amber-200 bg-amber-50 p-3 text-[11px] leading-5 text-amber-900">Your current page is still usable, but Klinikos could not persist the latest non-secret setup changes. Keep this page open or retry a field change before refreshing.</div>}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-xs font-bold text-slate-600">Your name<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm outline-none focus:border-[#174ea6]" value={form.ownerName} onChange={(event) => update("ownerName", event.target.value)} /></label>
-        <label className="text-xs font-bold text-slate-600">Create password<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm outline-none focus:border-[#174ea6]" type="password" autoComplete="new-password" value={form.password} onChange={(event) => update("password", event.target.value)} /><span className="mt-1 block text-[10px] font-medium text-slate-400">For security, your password is never included in autosaved onboarding progress.</span></label>
-        <label className="text-xs font-bold text-slate-600">Clinic type<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm outline-none focus:border-[#174ea6]" value={form.clinicType} onChange={(event) => update("clinicType", event.target.value)} /></label>
-        <label className="text-xs font-bold text-slate-600">Primary location name<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm outline-none focus:border-[#174ea6]" value={form.locationName} onChange={(event) => update("locationName", event.target.value)} /></label>
-        <label className="text-xs font-bold text-slate-600">City<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm outline-none focus:border-[#174ea6]" value={form.city} onChange={(event) => update("city", event.target.value)} /></label>
-        <label className="text-xs font-bold text-slate-600">State<input className="mt-2 h-11 w-full border border-slate-300 px-3 text-sm uppercase outline-none focus:border-[#174ea6]" maxLength={2} value={form.state} onChange={(event) => update("state", event.target.value.toUpperCase())} /></label>
-        <label className="text-xs font-bold text-slate-600">Timezone<select className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#174ea6]" value={form.timezone} onChange={(event) => update("timezone", event.target.value)}><option value="America/New_York">Eastern</option><option value="America/Chicago">Central</option><option value="America/Denver">Mountain</option><option value="America/Los_Angeles">Pacific</option></select></label>
-        <label className="text-xs font-bold text-slate-600">Team size<select className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#174ea6]" value={form.teamSize} onChange={(event) => update("teamSize", event.target.value)}><option>1-5</option><option>6-15</option><option>16-30</option><option>31-75</option><option>75+</option></select></label>
+        <Card>
+          <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Organization</p>
+          <p className="mt-3 text-lg font-extrabold">{organizationName}</p>
+          <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{email}</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Paid plan</p>
+          <p className="mt-3 text-lg font-extrabold">{productLabel}</p>
+          <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Bound to the signed activation link</p>
+        </Card>
       </div>
 
-      <label className="block text-xs font-bold text-slate-600">What should Klinikos help you control first?<textarea className="mt-2 min-h-24 w-full border border-slate-300 p-3 text-sm outline-none focus:border-[#174ea6]" value={form.primaryGoal} onChange={(event) => update("primaryGoal", event.target.value)} /></label>
-      <label className="block text-xs font-bold text-slate-600">Systems you currently use<textarea className="mt-2 min-h-20 w-full border border-slate-300 p-3 text-sm outline-none focus:border-[#174ea6]" placeholder="EHR, scheduling, billing, phone, messaging, spreadsheets, etc." value={form.currentSystems} onChange={(event) => update("currentSystems", event.target.value)} /></label>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-xs font-bold text-slate-600">Migration expectation<select className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#174ea6]" value={form.migrationExpectation} onChange={(event) => update("migrationExpectation", event.target.value as FormState["migrationExpectation"])}><option value="needs_review">Review with Klinikos first</option><option value="not_now">No migration now</option><option value="manual_import">Manual import</option><option value="assisted_import">Assisted import</option></select></label>
-        <label className="text-xs font-bold text-slate-600">Communications today<select className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#174ea6]" value={form.communicationsState} onChange={(event) => update("communicationsState", event.target.value as FormState["communicationsState"])}><option value="needs_review">Needs review</option><option value="existing_vendor">Existing vendor</option><option value="manual_fallback">Manual workflow</option><option value="not_connected">Not connected</option></select></label>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-y py-5" style={{ borderColor: "var(--line-light)" }}>
+        <div className="max-w-2xl">
+          <p className="text-sm font-extrabold">Commercial truth is already locked.</p>
+          <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
+            Organization, email, role, plan, and payment state come from the signed link and cannot be changed by this form.
+          </p>
+        </div>
+        <Badge tone={saveTone}>
+          {saveState === "saving" ? <LoaderCircle className="size-3 animate-spin" aria-hidden="true" /> : saveState === "saved" ? <Check className="size-3" aria-hidden="true" /> : null}
+          {saveState === "saving" ? "Saving" : saveState === "saved" ? "Progress saved" : saveState === "error" ? "Save retry needed" : "Autosave ready"}
+        </Badge>
       </div>
 
-      <div className="border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber-900"><div className="flex gap-3"><ShieldCheck className="mt-0.5 size-4 shrink-0" /><p>Paid software access does not itself approve production patient-data use or turn pending external integrations into live connections. Until the organization completes production review, use synthetic/non-PHI data and the displayed manual fallbacks.</p></div></div>
-      <label className="flex items-start gap-3 text-xs leading-6 text-slate-600"><input className="mt-1" type="checkbox" checked={form.acceptTerms} onChange={(event) => update("acceptTerms", event.target.checked)} /><span>I confirm I am authorized to activate this clinic workspace and I will not enter PHI until Klinikos marks the deployment approved for production patient-data use.</span></label>
-      <button className="inline-flex min-h-12 items-center gap-2 bg-[#174ea6] px-6 text-xs font-black text-white disabled:opacity-50" disabled={pending || !form.acceptTerms || !form.ownerName.trim() || !form.password || !form.city.trim()} onClick={submit}>{pending && <LoaderCircle className="size-4 animate-spin" />} Activate my Klinikos workspace</button>
+      {error ? (
+        <div className="p-4 text-xs font-bold" role="alert" style={{ color: "var(--status-signal)", background: "color-mix(in oklch, var(--status-signal) 8%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-signal) 30%, transparent)", borderRadius: "var(--radius-md)" }}>
+          {error}
+        </div>
+      ) : null}
+
+      {saveState === "error" ? (
+        <div className="p-4 text-xs leading-6" style={{ color: "var(--text-on-paper)", background: "color-mix(in oklch, var(--status-analyzing) 9%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-analyzing) 30%, transparent)", borderRadius: "var(--radius-md)" }}>
+          Your current page is still usable, but Klinikos could not persist the latest non-secret setup changes. Keep this page open or change a field again before refreshing.
+        </div>
+      ) : null}
+
+      <ActivationSection number="01" title="Who is opening this workspace?" description="Set the clinic owner account and the primary operating location.">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Input label="Your name" value={form.ownerName} onChange={(event) => update("ownerName", event.target.value)} />
+          <div>
+            <Input label="Create password" type="password" value={form.password} onChange={(event) => update("password", event.target.value)} />
+            <p className="mt-2 flex items-center gap-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+              <LockKeyhole className="size-3" aria-hidden="true" /> Password is never included in autosaved onboarding progress.
+            </p>
+          </div>
+          <Input label="Clinic type" value={form.clinicType} onChange={(event) => update("clinicType", event.target.value)} />
+          <Input label="Primary location name" value={form.locationName} onChange={(event) => update("locationName", event.target.value)} />
+          <Input label="City" value={form.city} onChange={(event) => update("city", event.target.value)} />
+          <Input label="State" value={form.state} onChange={(event) => update("state", event.target.value.toUpperCase().slice(0, 2))} />
+          <SelectField label="Timezone" value={form.timezone} onChange={(value) => update("timezone", value)} options={[
+            ["America/New_York", "Eastern"],
+            ["America/Chicago", "Central"],
+            ["America/Denver", "Mountain"],
+            ["America/Los_Angeles", "Pacific"],
+          ]} />
+          <SelectField label="Team size" value={form.teamSize} onChange={(value) => update("teamSize", value)} options={[
+            ["1-5", "1-5"], ["6-15", "6-15"], ["16-30", "16-30"], ["31-75", "31-75"], ["75+", "75+"],
+          ]} />
+        </div>
+      </ActivationSection>
+
+      <ActivationSection number="02" title="What should Klinikos help control first?" description="Give Living Home useful context without asking you to understand the backend.">
+        <TextareaField label="Primary operating goal" value={form.primaryGoal} onChange={(value) => update("primaryGoal", value)} />
+        <div className="mt-6">
+          <TextareaField label="Systems you currently use" value={form.currentSystems} onChange={(value) => update("currentSystems", value)} placeholder="EHR, scheduling, billing, phone, messaging, spreadsheets, etc." />
+        </div>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <SelectField label="Migration expectation" value={form.migrationExpectation} onChange={(value) => update("migrationExpectation", value as FormState["migrationExpectation"])} options={[
+            ["needs_review", "Review with Klinikos first"],
+            ["not_now", "No migration now"],
+            ["manual_import", "Manual import"],
+            ["assisted_import", "Assisted import"],
+          ]} />
+          <SelectField label="Communications today" value={form.communicationsState} onChange={(value) => update("communicationsState", value as FormState["communicationsState"])} options={[
+            ["needs_review", "Needs review"],
+            ["existing_vendor", "Existing vendor"],
+            ["manual_fallback", "Manual workflow"],
+            ["not_connected", "Not connected"],
+          ]} />
+        </div>
+      </ActivationSection>
+
+      <ActivationSection number="03" title="Activate access safely" description="Paid access opens the workspace. It does not silently approve production PHI or external integrations.">
+        <div className="flex items-start gap-4 p-5" style={{ background: "color-mix(in oklch, var(--status-analyzing) 9%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-analyzing) 28%, transparent)", borderRadius: "var(--radius-md)" }}>
+          <ShieldCheck className="mt-0.5 size-5 shrink-0" style={{ color: "var(--status-analyzing)" }} aria-hidden="true" />
+          <div>
+            <p className="text-sm font-extrabold">Start with synthetic or non-PHI data until production review is complete.</p>
+            <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
+              Paid software access does not itself approve production patient-data use or turn pending external integrations into live connections. Living Home will preserve those blockers instead of pretending they are complete.
+            </p>
+          </div>
+        </div>
+
+        <label className="mt-6 flex cursor-pointer items-start gap-3 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
+          <input className="mt-1 size-4" type="checkbox" checked={form.acceptTerms} onChange={(event) => update("acceptTerms", event.target.checked)} />
+          <span>I confirm I am authorized to activate this clinic workspace and I will not enter PHI until Klinikos marks the deployment approved for production patient-data use.</span>
+        </label>
+
+        <div className="mt-7 flex flex-wrap items-center gap-4">
+          <Button variant="gold" size="lg" disabled={pending || !form.acceptTerms || !form.ownerName.trim() || !form.password || !form.city.trim()} onClick={submit}>
+            {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="size-4" aria-hidden="true" />}
+            {pending ? "Activating workspace" : "Activate my Klinikos workspace"}
+          </Button>
+          <p className="max-w-sm text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+            Successful activation signs you into the organization bound to this link and opens Living Home.
+          </p>
+        </div>
+      </ActivationSection>
     </div>
+  );
+}
+
+function ActivationSection({ number, title, description, children }: { number: string; title: string; description: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t pt-7" style={{ borderColor: "var(--line-light)" }}>
+      <div className="mb-7 grid gap-2 sm:grid-cols-[auto_1fr] sm:gap-5">
+        <p className="text-[10px] font-extrabold" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{number}</p>
+        <div>
+          <h3 className="text-xl font-extrabold tracking-tight">{title}</h3>
+          <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
+      <select
+        className="min-h-11 bg-transparent px-1 text-sm outline-none"
+        style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function TextareaField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
+      <textarea
+        className="min-h-28 resize-y bg-transparent px-1 py-3 text-sm leading-6 outline-none"
+        style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}
+        placeholder={placeholder}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   );
 }
