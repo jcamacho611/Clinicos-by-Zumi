@@ -240,6 +240,15 @@ function guidanceTone(state: PathGuidanceView["state"]): BadgeTone {
   return "mapping";
 }
 
+function guidanceLabel(state: PathGuidanceView["state"]) {
+  if (state === "blocked") return "Needs attention";
+  if (state === "review_required") return "Ready for review";
+  if (state === "waiting") return "Waiting";
+  if (state === "completed") return "Completed";
+  if (state === "available") return "Ready";
+  return "Recommended";
+}
+
 function intelligenceState(state: "idle" | "saving" | "error", message: string | null): ZumiState {
   if (state === "saving") return "analyzing";
   if (state === "error") return "signal";
@@ -568,7 +577,7 @@ export function LivingHome({
               <div className="mt-7 border-y border-[var(--line-dark)] py-7">
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge tone={activeGuidance ? guidanceTone(activeGuidance.state) : "observing"}>
-                    {activeGuidance?.state === "review_required" ? "Ready for review" : activeGuidance?.state ?? "In progress"}
+                    {activeGuidance ? guidanceLabel(activeGuidance.state) : "In progress"}
                   </Badge>
                   <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
                     {Math.round(activeRuntime.progress * 100)}% complete
