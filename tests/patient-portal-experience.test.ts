@@ -24,6 +24,7 @@ describe("patient portal experience", () => {
     expect(dashboard).toContain('["not_started", "in_progress"].includes(form.status)');
     expect(dashboard).not.toContain("data.records.slice(0, 6)");
     expect(dashboard).not.toContain("data.messages.slice(0, 5)");
+    expect(dashboard).not.toContain("line-clamp-");
 
     expect(dashboard).not.toContain("next portal workflow slice");
     expect(dashboard).not.toContain("generic calendar");
