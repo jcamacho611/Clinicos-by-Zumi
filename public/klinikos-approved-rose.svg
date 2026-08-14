@@ -1,1 +1,105 @@
-__PLACEHOLDER__
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" role="img" aria-labelledby="title desc">
+  <title id="title">Klinikos cinematic burgundy rose</title>
+  <desc id="desc">A large layered deep-burgundy rose on black for the Klinikos Living Home background, with no text or interface baked into the image.</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="63%">
+      <stop offset="0" stop-color="#2a0d12"/>
+      <stop offset=".42" stop-color="#12070a"/>
+      <stop offset=".77" stop-color="#070304"/>
+      <stop offset="1" stop-color="#020101"/>
+    </radialGradient>
+    <radialGradient id="petalA" cx="42%" cy="31%" r="86%">
+      <stop offset="0" stop-color="#a95555"/>
+      <stop offset=".22" stop-color="#7b3237"/>
+      <stop offset=".62" stop-color="#46171d"/>
+      <stop offset="1" stop-color="#18070a"/>
+    </radialGradient>
+    <radialGradient id="petalB" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#c06d67"/>
+      <stop offset=".18" stop-color="#8e4446"/>
+      <stop offset=".58" stop-color="#541c23"/>
+      <stop offset="1" stop-color="#1a080b"/>
+    </radialGradient>
+    <radialGradient id="petalC" cx="58%" cy="24%" r="84%">
+      <stop offset="0" stop-color="#8d3d41"/>
+      <stop offset=".38" stop-color="#63252b"/>
+      <stop offset=".72" stop-color="#351117"/>
+      <stop offset="1" stop-color="#120507"/>
+    </radialGradient>
+    <linearGradient id="edgeWarm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#efaaa1" stop-opacity=".36"/>
+      <stop offset=".34" stop-color="#c96f69" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#050202" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="heart" cx="48%" cy="43%" r="58%">
+      <stop offset="0" stop-color="#160204"/>
+      <stop offset=".22" stop-color="#31070c"/>
+      <stop offset=".52" stop-color="#5d1119"/>
+      <stop offset=".76" stop-color="#2a080d"/>
+      <stop offset="1" stop-color="#080203"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="depth" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#000" flood-opacity=".58"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" seed="17" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
+      <feComponentTransfer in="mono" result="grainAlpha"><feFuncA type="table" tableValues="0 .045"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="grainAlpha" mode="soft-light"/>
+    </filter>
+    <mask id="vignetteMask">
+      <radialGradient id="vm" cx="50%" cy="43%" r="58%"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>
+      <rect width="1600" height="1100" fill="url(#vm)"/>
+    </mask>
+  </defs>
+
+  <rect width="1600" height="1100" fill="url(#bg)"/>
+  <ellipse cx="805" cy="492" rx="610" ry="410" fill="#7d2028" opacity=".16" filter="url(#soft)"/>
+
+  <g transform="translate(800 500)" filter="url(#depth)" mask="url(#vignetteMask)">
+    <!-- outer silhouette -->
+    <path d="M-650 65C-687-74-565-229-382-306C-290-438-111-467 17-409C177-467 365-387 423-260C599-207 704-55 650 88C685 229 548 367 386 389C281 494 81 501-29 428C-190 493-394 437-453 318C-590 276-689 190-650 65Z" fill="url(#petalA)"/>
+    <path d="M-603-72C-527-281-360-387-177-344C-71-424 105-407 201-333C360-357 529-240 565-85C628 46 533 175 407 215C350 356 195 421 53 367C-81 435-257 392-328 291C-490 286-610 154-603-72Z" fill="url(#petalC)" opacity=".94"/>
+
+    <!-- broad outer petals -->
+    <path d="M-624 94C-598-30-476-122-321-135C-380 15-343 162-228 254C-395 332-578 263-624 94Z" fill="url(#petalB)"/>
+    <path d="M-528-205C-404-329-229-346-108-272C-216-185-265-67-232 56C-405 45-530-63-528-205Z" fill="url(#petalA)"/>
+    <path d="M-255-385C-93-433 66-382 133-278C10-252-90-163-126-45C-254-125-314-269-255-385Z" fill="url(#petalB)"/>
+    <path d="M73-389C237-381 363-282 369-160C247-204 111-160 30-65C-33-175-10-317 73-389Z" fill="url(#petalA)"/>
+    <path d="M344-273C505-207 588-68 548 56C441-15 301-15 202 52C187-79 246-212 344-273Z" fill="url(#petalB)"/>
+    <path d="M522 18C590 156 512 301 376 334C372 201 294 83 181 35C293-47 442-50 522 18Z" fill="url(#petalA)"/>
+    <path d="M324 300C230 431 63 452-44 371C60 303 119 193 104 76C232 105 331 192 324 300Z" fill="url(#petalB)"/>
+    <path d="M-45 389C-209 427-351 353-391 235C-263 253-143 194-83 94C17 170 46 306-45 389Z" fill="url(#petalA)"/>
+
+    <!-- middle petals -->
+    <path d="M-371 95C-351-80-222-184-83-174C-159-70-165 61-99 153C-221 208-341 174-371 95Z" fill="url(#petalC)"/>
+    <path d="M-283-172C-179-277-24-291 76-218C-40-154-97-50-81 64C-194 34-275-57-283-172Z" fill="url(#petalB)"/>
+    <path d="M-54-262C81-287 193-214 216-110C106-130 3-86-49-6C-118-80-124-191-54-262Z" fill="url(#petalA)"/>
+    <path d="M159-207C274-153 319-43 278 45C190-11 81-12 4 41C6-64 70-162 159-207Z" fill="url(#petalB)"/>
+    <path d="M260 6C306 112 244 211 148 229C153 135 100 48 18 11C98-42 206-38 260 6Z" fill="url(#petalC)"/>
+    <path d="M112 208C44 291-65 292-129 223C-54 185-11 117-13 43C77 62 133 128 112 208Z" fill="url(#petalB)"/>
+    <path d="M-145 222C-250 229-320 146-297 57C-220 110-127 109-61 61C-48 146-83 207-145 222Z" fill="url(#petalA)"/>
+
+    <!-- inner spiral -->
+    <path d="M-172 32C-176-74-91-143 5-128C-55-70-66 10-25 70C-97 93-161 70-172 32Z" fill="url(#petalB)"/>
+    <path d="M-60-124C31-159 118-104 125-26C57-53-14-27-46 30C-93-13-97-82-60-124Z" fill="url(#petalC)"/>
+    <path d="M78-83C146-37 149 44 93 83C66 24 7 0-48 17C-34-55 21-96 78-83Z" fill="url(#petalB)"/>
+    <path d="M82 64C38 128-44 127-83 70C-25 55 13 15 17-34C78-7 102 35 82 64Z" fill="url(#petalA)"/>
+    <path d="M-48 75C-102 30-85-43-31-68C-21-17 17 17 63 18C33 72-9 91-48 75Z" fill="url(#petalC)"/>
+    <ellipse cx="5" cy="5" rx="94" ry="76" fill="url(#heart)" opacity=".92"/>
+    <path d="M-73 18C-57-58 21-87 70-35C25-27-4 8-5 51C-40 49-65 37-73 18Z" fill="#5b161e" opacity=".88"/>
+    <path d="M-5-62C47-70 84-29 69 12C41-5 7 0-12 23C-26-6-23-39-5-62Z" fill="#8d3239" opacity=".76"/>
+
+    <!-- warm edge highlights -->
+    <path d="M-528-205C-404-329-229-346-108-272" fill="none" stroke="url(#edgeWarm)" stroke-width="8" stroke-linecap="round" opacity=".32"/>
+    <path d="M-255-385C-93-433 66-382 133-278" fill="none" stroke="url(#edgeWarm)" stroke-width="7" stroke-linecap="round" opacity=".3"/>
+    <path d="M73-389C237-381 363-282 369-160" fill="none" stroke="url(#edgeWarm)" stroke-width="6" stroke-linecap="round" opacity=".2"/>
+    <path d="M-371 95C-351-80-222-184-83-174" fill="none" stroke="url(#edgeWarm)" stroke-width="5" stroke-linecap="round" opacity=".2"/>
+  </g>
+
+  <rect width="1600" height="1100" fill="transparent" filter="url(#grain)" opacity=".65"/>
+  <rect width="1600" height="1100" fill="url(#bg)" opacity=".12"/>
+</svg>
