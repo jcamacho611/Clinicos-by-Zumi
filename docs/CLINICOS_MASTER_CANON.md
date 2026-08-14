@@ -1,743 +1,739 @@
 # KLINIKOS OPERATING SYSTEM — MASTER SOURCE OF TRUTH
 
-Version: `2026-08-11.1`
+Version: `2026-08-14.4`
 Status: `AUTHORITATIVE`
 
 This document is the product and architecture source of truth for Klinikos.
 
-If implementation, documentation, design, legacy naming, feature registries, or prior briefs conflict with this document, this document governs product direction unless explicitly superseded by a later source-of-truth update.
+If implementation, documentation, design, legacy naming, feature registries, or prior briefs conflict with this document, the latest verified source of truth and current repository/runtime evidence govern. `docs/SOURCE_OF_TRUTH.md` defines current visual, security, commercial, and engineering law. This document defines the deeper system architecture and product composition.
 
-## Non-negotiable definition
+## 1. Non-negotiable definition
 
 Klinikos is a healthcare operating system and ecosystem.
 
-It is not merely:
-
-- an Electronic Medical Record (EMR)
-- an Electronic Health Record (EHR)
-- a Customer Relationship Management system (CRM)
-- a clinic management application
-- a staffing marketplace
-- an education platform
-- a patient portal
-- an Artificial Intelligence assistant
-- a billing application
-
-Those are capabilities, applications, marketplaces, or subsystems that may operate inside Klinikos.
+It is not merely an Electronic Medical Record (EMR), Electronic Health Record (EHR), Customer Relationship Management (CRM) system, clinic management application, staffing marketplace, education platform, patient portal, Artificial Intelligence assistant, or billing application. Those are capabilities or subsystems that may operate inside Klinikos.
 
 Think of Klinikos as the operating environment underneath an interconnected healthcare economy.
 
-The system must support many participant types while giving each participant a personalized, role-aware, permission-aware experience.
+The user experiences simplicity. The architecture handles complexity.
 
-## Core design philosophy
+## 2. Product hierarchy
 
-Klinikos should feel extremely simple on the frontend even when significant complexity exists on the backend.
+The master product is **Klinikos**.
 
-Frontend principles:
+- **Living Home** is the adaptive operating surface.
+- **Klinikos Intelligence / Zumi** is the embedded reasoning and orchestration subsystem.
+- **Clinic OS** is the operational system for clinics and organizations.
+- **Grid** is the governed healthcare resource, opportunity, capacity, matching, transaction and fulfillment network.
+- **Care** is the governed care-navigation and care-workflow layer.
+- **Klinikos EDU** is the education, competency and workforce-development layer.
+- **Network** is the multi-organization, multi-location coordination and analytics layer.
+- **Patient** is the simplified patient-facing experience.
 
-- effortless
-- personalized
-- conversational
-- visually clean
-- fast
-- financially useful
-- minimal unnecessary forms
-- minimal unnecessary clicks
-- context-aware
-- role-aware
-- permission-aware
+The repository spelling `Clinicos` is legacy technical naming only.
 
-Complexity belongs in the backend.
-Security belongs in the backend.
-Routing belongs in the backend.
-Integrations belong in the backend.
-Artificial Intelligence orchestration belongs in the backend.
+## 3. North-star flow
 
-The user should experience one ecosystem.
+The canonical user and system flow is:
 
-## Universal entry experience
+`IDENTITY → CONTEXT → INTENT → PATH → NEXT ACTION → GOVERNED EXECUTION → OUTCOME`
 
-### Screen 1 — Identity
+This supersedes older architecture descriptions that routed directly from identity into a generic personalized workspace without durable Path state.
 
-Present sign in or create account.
+### Meaning
 
-Allow supported accelerated authentication options such as:
+- **Identity** establishes who the actor is.
+- **Context** establishes organization, role, patient/resource scope, permissions and current environment.
+- **Intent** captures what the actor is trying to accomplish.
+- **Path** is the durable goal/workflow instance that coordinates progress across systems.
+- **Next Action** is the best currently permitted and useful action.
+- **Governed Execution** uses deterministic engines, domain services, connectors and human review where required.
+- **Outcome** is the measured result, not merely a screen transition.
 
-- Google
-- Apple
-- Microsoft
-- GitHub where appropriate
-- email/password
-- other appropriate identity providers
+Living Home is the primary surface that projects this architecture to the user.
 
-The purpose of this screen is only to establish identity.
+## 4. Core architectural law
 
-Do not force the user to choose patient, doctor, student, or another role before entering.
+The backend is organized around shared deterministic engines plus domain-specific services.
 
-A single human may have multiple roles at the same time, for example:
+**Do not duplicate business logic inside screens, agents, routes or AI prompts when a shared engine can own it.**
 
-- registered nurse
-- independent contractor
-- student
-- patient
-- clinic employee
+The canonical dependency direction is:
 
-Klinikos must support multiple roles under one identity.
+`Identity / Context`
+→ `Authorization / Policy`
+→ `Capabilities / Contracts`
+→ `Intent`
+→ `Path Runtime`
+→ `Next Action / Blockers`
+→ `Domain Execution`
+→ `Events / Signals`
+→ `Financial / Communications / Integrations`
+→ `Outcomes / Telemetry`
+→ `Intelligence explanation and coordination`
 
-### Screen 2 — Connect intelligence
+Klinikos Intelligence may interpret and coordinate, but deterministic Klinikos services remain authoritative for permission, eligibility, credentials, payment truth, transaction state, clinical release, safety and destructive/binding actions.
 
-After identity is established, allow the user or organization to connect a supported Artificial Intelligence provider.
+## 5. Shared orchestration fabric
 
-Possible providers may include OpenAI, Anthropic, Google, xAI, or other supported providers.
+The shared orchestration fabric is the main convergence target.
 
-Do not assume that a consumer Artificial Intelligence subscription can automatically be reused inside Klinikos.
+### 5.1 Shared contracts
 
-Klinikos must determine which providers permit external application access through supported mechanisms such as:
+Define reusable contracts for:
 
-- Application Programming Interfaces (APIs)
-- OAuth authorization
-- organization accounts
-- enterprise accounts
-- Bring Your Own Key arrangements
-- other officially supported authorization mechanisms
+- actor and context
+- capability
+- policy decision
+- intent
+- Path state
+- Next Action
+- blocker
+- alternative/fallback
+- event
+- signal
+- notification intent
+- human-review request
+- financial obligation
+- connector readiness
+- outcome
 
-Do not claim that an existing consumer subscription pays for Application Programming Interface usage unless that provider explicitly supports it.
+### 5.2 Intent Engine
 
-Klinikos must remain provider-agnostic. The Artificial Intelligence provider can change without rebuilding the platform.
+The Intent Engine converts user/system requests into structured deterministic intents.
 
-Klinikos owns the:
+It must:
 
-- workflows
-- permissions
-- tools
-- context
-- routing
-- interfaces
-- healthcare logic
-- business logic
-- data access rules
+- preserve natural-language input;
+- resolve known goals without forcing category selection;
+- preserve ambiguity when confidence is low;
+- request one concise clarification only when a consequential missing fact blocks safe execution;
+- never widen authorization;
+- emit structured intent that downstream engines can reason over.
 
-The connected Artificial Intelligence provider supplies intelligence where appropriate.
+### 5.3 Capability / Policy Engine
 
-### Screen 3 — Intelligent routing
+The shared capability-policy layer decides whether an actor in a context may perform or receive a capability.
 
-Once authenticated and configured, Klinikos Intelligence begins the onboarding conversation.
+It must consume:
 
-The primary routing question is based on intent: what is the user here to accomplish?
-
-The conversation determines the appropriate destination while the interface simultaneously changes and routes the user toward the appropriate Klinikos environment.
-
-The conversation and interface work together.
-The conversation is not the entire interface.
-
-## Participant universe
-
-Klinikos must support all legitimate participant classes that belong in the ecosystem, including at minimum:
-
-### Patients and clients
-
-People seeking:
-
-- medical care
-- aesthetics
-- specialists
-- appointments
-- services
-- providers
-- information
-- payments
-- records
-- follow-up
-- navigation
-
-### Healthcare providers
-
-Including appropriate categories such as:
-
-- physicians
-- nurse practitioners
-- physician assistants
-- registered nurses
-- injectors
-- therapists
-- acupuncturists
-- specialists
-- allied health professionals
-- other appropriately licensed professionals
-
-### Independent healthcare professionals
-
-People seeking:
-
-- shifts
-- clients
-- treatment space
-- opportunities
-- professional exposure
-- continuing education
-- insurance connections
-- credential management
-- income opportunities
-
-### Clinic employees
-
-Including:
-
-- front desk
-- billing
-- administration
-- office managers
-- clinical staff
-- coordinators
-
-### Clinic owners
-
-Seeking:
-
-- operations
-- revenue
-- staffing
-- analytics
-- workflow
-- payments
-- capacity optimization
-- patient acquisition
-- cost reduction
-
-### Healthcare networks
-
-Organizations operating:
-
-- multiple clinics
-- multiple providers
-- multiple locations
-- multiple specialties
-
-### Students
-
-Student environments may include:
-
-- learning
-- simulation
-- assignments
-- software training
-- credentials
-- career preparation
-- Grid entry after qualification
-
-Students may enter through institutional or individual accounts.
-
-### Educators
-
-Including:
-
-- instructors
-- professors
-- program directors
-- clinical educators
-
-### Educational institutions
-
-Including:
-
-- universities
-- colleges
-- nursing schools
-- medical training organizations
-- certification organizations
-
-### Location and facility partners
-
-Organizations or individuals offering:
-
-- treatment rooms
-- chairs
-- medical office space
-- equipment
-- approved facilities
-
-### Business service partners
-
-Potential categories include:
-
-- malpractice insurance
-- professional insurance
-- payment providers
-- laboratories
-- radiology
-- pharmacies
-- billing organizations
-- clearinghouses
-- credentialing services
-- telemedicine
-- professional services
-
-The participant universe must not be artificially limited to this list.
-
-## Klinikos Core
-
-Everything operates on a common foundation.
-
-### Klinikos Identity
-
-One identity system supporting:
-
-- multiple roles
-- organizations
-- locations
-- credentials
-- role switching
-- account relationships
-
-### Klinikos Permission Engine
-
-The system must determine:
-
-- who can see something
-- why they can see it
-- what they can do with it
-- how long access lasts
-- which organization granted access
-- whether patient authorization is required
-- whether professional credentials are required
-
-Apply least-privilege principles.
-No application receives unrestricted access merely because it belongs to Klinikos.
-
-### Klinikos Intelligence
-
-One orchestration layer works with supported Artificial Intelligence providers.
-
-Behavior changes based on:
-
-- user
-- role
+- identity
 - organization
-- permissions
-- current task
-- environment
-- connected applications
+- role
+- resource ownership
+- credentials
+- jurisdiction
+- patient authorization/consent where required
+- entitlement
+- connector readiness
+- safety/clinical review requirements
+
+A ranking engine may never override a hard policy failure.
+
+### 5.4 Path Runtime
+
+A Path is a durable goal-oriented workflow instance.
+
+A Path must persist at minimum:
+
+- actor
+- organization/context
+- goal/intent
+- status
+- current node
+- completed nodes
+- blocked nodes
+- blockers
+- contextual payload
+- activity timestamps
+- completion/cancellation state
+
+Path transitions must be driven only by allowlisted user actions or trusted domain events that match the exact current node and Path type.
+
+Unknown events do not advance Paths.
+
+### 5.5 Path Event Ledger
+
+Every consequential Path transition emits an append-only event record with:
+
+- Path instance
+- actor/system attribution
+- source domain
+- event type
+- previous state
+- resulting state
+- reason/evidence
+- timestamp
+
+### 5.6 Next Action Engine
+
+The Next Action Engine ranks the best currently permitted actions using:
+
+- current Path node
+- blockers
+- urgency
+- dependency readiness
+- user role/context
+- operational impact
+- financial impact where legitimate
+- safety/clinical constraints
+- available alternatives
+
+It returns explainable actions, not opaque scores.
+
+### 5.7 Blocker / Alternative Engine
+
+The blocker engine records why progress cannot continue and what truthful alternatives exist.
 
 Examples:
 
-- patient: navigation assistant
-- provider: professional workflow assistant
-- owner: business and operational intelligence
-- student: learning assistant
-- educator: teaching assistant
-- independent contractor: career and opportunity assistant
-- administrator: operations assistant
+- missing credential
+- missing patient authorization
+- connector not activated
+- payment evidence absent
+- availability conflict
+- human review required
+- unsupported external capability
 
-Same operating intelligence. Different tools, context, permissions, and experiences.
+Blocked must not be rendered as completed.
 
-## The Grid
+### 5.8 Human Review Engine
 
-The Grid is a major economic and connection layer of Klinikos.
+Human review remains explicit for regulated, clinical, credential, PHI-sharing, money-movement, destructive and binding actions where policy requires it.
 
-It should eventually connect appropriate supply and demand across healthcare, for example:
+The review engine must support:
 
-- available professional + available shift
-- available treatment room + professional needing space
-- clinic staffing shortage + qualified available professional
-- patient demand + appropriate provider availability
-- new graduate + qualified opportunity
-- provider + insurance product
-- clinic + service provider
-- educator + student
-- institution + Klinikos learning environment
+- reasoned queue entries
+- required reviewer role
+- evidence/context
+- approve / deny / request-info
+- immutable decision record
+- resulting state transition
 
-The Grid must not expose unnecessary protected patient information.
-Only the minimum information necessary to complete the permitted transaction or workflow may cross into Grid workflows.
+## 6. Identity and context architecture
 
-## Klinikos Clinic
+One human may hold multiple legitimate contexts.
 
-Clinic capabilities may include:
+The identity/context layer must support:
 
-- patient registry
-- scheduling
-- intake
-- forms
-- staff tasks
-- follow-ups
+- multiple organizations
+- multiple roles
+- location context
+- provider/professional context
+- patient context
+- student/educator context
+- Grid participant context
+- explicit context switching
+
+Context switching must never leak data or permissions between organizations or patient contexts.
+
+## 7. Healthcare relationship graph
+
+Klinikos needs a governed graph abstraction over existing relational data.
+
+The graph may describe relationships among:
+
+- people
+- organizations
+- providers
+- patients
+- facilities
+- care teams
 - referrals
-- results tracking
+- education relationships
+- Grid participants/resources
+- payer/partner relationships
+
+Graph traversal must always be authorization-filtered. It is not a reason to create a single unrestricted data lake.
+
+## 8. Grid architecture
+
+Grid is the governed healthcare resource orchestration network.
+
+The universal expression is:
+
+- **I NEED** → demand
+- **I HAVE** → supply/resource
+
+### 8.1 Canonical Grid concepts
+
+- GridParticipant
+- GridResource
+- GridDemand
+- GridRequirement
+- GridCapability
+- GridAvailability
+- GridMatch
+- GridOffer
+- GridAgreement
+- GridReservation / Booking
+- GridTransaction
+- GridFulfillment
+- GridFinancialObligation
+- GridDispute
+- GridIncident
+- GridReputationSignal
+
+Existing provider/service/request/location/availability/payout models should be adapted into these abstractions rather than discarded without reason.
+
+### 8.2 Matching pipeline
+
+`DISCOVERY → HARD ELIGIBILITY → AUTHORIZATION → SUITABILITY → RANKING → OFFER`
+
+Hard gates include, where relevant:
+
+- credentials
+- jurisdiction
+- malpractice/insurance requirements
+- availability
+- geography
+- facility policy
+- setting
+- organization rules
+- price/budget
+- resource state
+
+Artificial Intelligence may interpret demand and explain matches. It does not decide eligibility.
+
+### 8.3 Multi-party composition
+
+Grid transactions may require multiple slots, not fixed buyer/seller sides.
+
+Examples:
+
+`PATIENT/CLIENT + ELIGIBLE CLINICIAN + APPROVED LOCATION + REQUIRED RESOURCE + TIME + CONSENT + PAYMENT`
+
+`STUDENT + INSTITUTION + PRECEPTOR + CLINICAL SITE + HOURS + CREDENTIALS`
+
+`PATIENT NEED + SPECIALIST + FACILITY CAPACITY + AUTHORIZATION`
+
+Composition templates define required participants/resources, policy, agreements, scheduling, payment and fulfillment rules.
+
+### 8.4 Reservation and collision safety
+
+Reservations must prevent double-booking of providers, rooms, equipment and other exclusive capacity.
+
+Availability alone does not guarantee a reservation.
+
+### 8.5 Fulfillment
+
+A booking is not success.
+
+Grid must distinguish:
+
+- BOOKED
+- CHECKED_IN / STARTED
+- IN_PROGRESS
+- FULFILLED
+- PARTIALLY_FULFILLED
+- FAILED
+- CANCELLED
+
+Payout or settlement policy may depend on verified fulfillment.
+
+## 9. Financial architecture
+
+Klinikos records economic truth but should avoid unnecessary custody of funds.
+
+### 9.1 Financial Obligation Engine
+
+Represent obligations in integer cents.
+
+Examples:
+
+- customer payment due
+- provider payable
+- facility payable
+- platform fee
+- refund obligation
+- partner fee
+- implementation/service fee
+
+Obligations require provenance and governing transaction/contract context.
+
+### 9.2 Payment truth
+
+`REDIRECT ≠ PAYMENT`.
+
+Browser return state never creates entitlement or proves payment.
+
+Use:
+
+`server-owned checkout intent → external payment rail → verified payment evidence → reconciliation → entitlement/transaction transition`
+
+### 9.3 Payouts
+
+Payouts are separate from gross payment receipt and must respect:
+
+- fulfillment requirements
+- disputes/holds
+- human approval when required
+- processor evidence
+- participant verification
+
+## 10. Events, signals and activity
+
+### 10.1 Event Engine
+
+Every consequential domain transition should emit a structured event.
+
+Events connect systems without allowing uncontrolled data flow.
+
+Examples:
+
+- appointment cancelled
+- Grid demand opened
+- credential verified
+- referral completed
+- Path advanced
+- payment evidence recorded
+- fulfillment confirmed
+
+### 10.2 Signal Engine
+
+Signals are interpreted operational meaning derived from events/data, such as:
+
+- appointment at risk
+- follow-up overdue
+- unused capacity
+- revenue opportunity
+- credential expiring
+- referral stalled
+
+Signals must retain provenance.
+
+### 10.3 Activity / Timeline Engine
+
+Create a normalized timeline abstraction over domain events while preserving domain ownership and authorization.
+
+## 11. Notifications and communications
+
+The Notification Engine should produce governed notification intents rather than allowing arbitrary domain code to send messages directly.
+
+A notification intent should include:
+
+- recipient
+- purpose
+- permitted channel(s)
+- sensitivity/PHI classification
+- content template/data
+- delivery requirement
+- evidence state
+
+PHI-containing or regulated messages require approved channels and appropriate policy.
+
+Prepared does not mean delivered.
+
+## 12. Integrations and connectors
+
+Use one connector taxonomy and readiness model.
+
+Canonical states include:
+
+- READY
+- CONFIGURED
+- MANUAL_FALLBACK
+- ADAPTER_READY
+- PENDING_CONNECTION
+- EXTERNAL_APPROVAL_REQUIRED
+- BLOCKED
+
+Connector activation should consider:
+
+- organization entitlement
+- customer-funded allowance where applicable
+- credentials/secrets
+- vendor readiness
+- BAA/compliance approval where required
+- health/reliability state
+
+Do not present configured-looking UI as proof a connector is live.
+
+## 13. Jobs, retries and reliability
+
+Cross-system and long-running work requires a shared workflow/job abstraction.
+
+It must support:
+
+- idempotency
+- retry policy
+- exponential backoff
+- dead-letter state
+- failure reason
+- human recovery path
+- correlation to Path/event/transaction
+
+Path state must survive connector or worker failure.
+
+## 14. Search and command
+
+Universal search/command is authorization-filtered.
+
+It may search legitimate objects such as:
+
+- patients
+- providers
+- organizations
+- Grid resources/demand
+- Paths
+- tasks
+- referrals
+- documents
+- EDU content
+
+Search must never return an object merely because it exists; authorization is part of retrieval.
+
+## 15. Outcome telemetry and Time-to-Outcome
+
+Klinikos should measure whether work actually moves.
+
+Outcome telemetry may record:
+
+- Path started/completed/abandoned
+- blocker frequency
+- time between nodes
+- time to first useful action
+- time to completion
+- recovered capacity/revenue only when legitimately derived
+- Grid match/offer/booking/fulfillment conversion
+- referral closure
+- activation success
+
+**Time-to-Outcome** is the duration from a valid goal/intention start to a defined useful outcome.
+
+Do not optimize vanity engagement metrics at the expense of real operational outcomes.
+
+## 16. Klinikos Intelligence / Zumi architecture
+
+Zumi is a provider-neutral orchestration and reasoning layer.
+
+It should consume structured engines rather than recreating their authority inside prompts.
+
+Desired loop:
+
+`UNDERSTAND → IDENTIFY UNKNOWN → RETRIEVE AUTHORIZED CONTEXT → PLAN → CHOOSE TOOLS → EXECUTE SAFE WORK → CROSS-CHECK → EXPLAIN → PRESENT NEXT ACTION`
+
+Zumi may:
+
+- interpret intent
+- summarize
+- compare
+- research permitted public information
+- explain blockers
+- prepare actions
+- coordinate tool use
+- render structured results/workspaces
+
+Zumi may not override:
+
+- authentication
+- authorization
+- eligibility
+- clinical release
+- credential verification
+- payment evidence
+- safety holds
+- binding/destructive confirmation requirements
+
+PHI/sensitive data must be redacted before unrestricted external providers/tools receive it.
+
+Core Klinikos workflows remain usable when Zumi is unavailable.
+
+## 17. Clinic OS architecture
+
+Clinic OS uses shared engines rather than bespoke page logic.
+
+Priority domains include:
+
+- patient registry/search
+- intake/forms/documents
+- scheduling
+- staff tasks
+- follow-up
+- referrals/results
+- provider workflow
+- owner/operator priorities
 - billing readiness
-- insurance workflows
-- claims workflows
-- clinical documentation where appropriate
-- Electronic Medical Record functionality where appropriate
+- revenue opportunities
 - communications
-- inventory
-- reporting
-- medical spa operations
-- revenue recovery
+- inventory where implemented
 
-Electronic Medical Record functionality is a component. It is not the definition of Klinikos.
+Domain events should advance Paths only through explicit adapters and allowlisted transitions.
 
-## Klinikos Patient
+## 18. Care architecture
 
-The consumer-facing environment may include:
+Care is governed care coordination/navigation, not autonomous diagnosis.
 
-- provider discovery
+Use shared identity, permission, consent, Path, event, notification and human-review engines for:
+
 - appointments
 - forms
-- documents
-- communication
-- payments
-- instructions
-- appropriate records
-- results after appropriate release
-- service discovery
 - referrals
-- Artificial Intelligence navigation
-- Grid interactions where appropriate
-
-The long-term goal is for Klinikos to remain useful enough that patients keep the application installed rather than interacting with it only during appointments.
-
-## Klinikos Provider
-
-The professional workspace may include:
-
-- schedule
-- patients/cases where authorized
-- documentation
-- tasks
-- communications
 - results
-- referrals
-- credentials
-- Grid opportunities
-- earnings
-- education
-- continuing education
-- professional profile
-- availability
-- workspace/location discovery
+- follow-up
+- provider review
+- patient navigation
+- care-team coordination
 
-## Klinikos Education
+Clinical judgment stays with qualified human professionals where required.
 
-Education connects directly into the operating ecosystem.
+## 19. EDU architecture
+
+EDU is part of the same identity, competency and opportunity ecosystem.
 
 Lifecycle:
 
-LEARN
-→ PRACTICE
-→ QUALIFY
-→ CREDENTIAL
-→ GRADUATE
-→ ENTER GRID
-→ FIND OPPORTUNITIES
-→ WORK
-→ BUILD REPUTATION
-→ CONTINUE EDUCATION
+`LEARN → PRACTICE → QUALIFY → CREDENTIAL → ENTER GRID → OPPORTUNITY → WORK → REPUTATION → CONTINUING EDUCATION`
 
-Educational institutions have organizational environments.
-Educators have teaching environments.
-Students have learning environments.
-Education connects to the workforce ecosystem rather than existing as an unrelated product.
+Education achievements may inform capability/eligibility only when verified by governed credential/evidence processes.
 
-## Klinikos Network
+## 20. Patient architecture
 
-The enterprise and network command center should eventually provide authorized visibility across:
+Patient-facing Klinikos is intentionally simpler.
 
-- clinics
-- locations
-- providers
-- staffing
-- capacity
-- revenue
-- claims
-- insurance performance
-- patient flow
-- utilization
-- operational performance
-- revenue leakage
-- opportunities
-- costs
+Prioritize:
 
-Network leadership should see network-level intelligence without manually opening every clinic.
+- next appointment/action
+- forms/documents
+- balances/payment state where supported
+- messages
+- referrals/follow-up
+- care navigation
 
-## Payments and money movement
+Never expose internal clinic administration, unrestricted Grid data, backend architecture vocabulary or organization-wide operational intelligence.
 
-Klinikos uses a common financial orchestration layer.
+## 21. Security architecture
 
-Potential flows include:
+Security is a system property, not a feature.
 
-- patient payments
-- subscriptions
-- clinic subscriptions
-- education subscriptions
-- provider payments
-- marketplace transactions
-- deposits
-- refunds
-- invoices
-- room/chair payments
-- platform fees
-- provider payouts
-- location payouts
-- revenue splits
-- partner payments
+Required principles include:
 
-Do not design this as Klinikos storing everybody's money.
-
-Separate:
-
-- payment information
-- payment authorization
-- transaction records
-- actual custody of funds
-
-Use properly regulated payment infrastructure where required.
-Klinikos should orchestrate and record financial workflows without unnecessarily becoming custodian of user funds.
-
-## Event Engine — connective tissue
-
-Applications communicate through permissioned events.
-
-Example: appointment cancelled
-
-1. Clinic publishes cancellation event.
-2. Capacity engine recognizes unused capacity.
-3. Revenue engine calculates potential loss.
-4. Patient system may identify appropriate waitlisted demand.
-5. Grid may identify staffing/resources if needed.
-6. Communication engine contacts authorized participants.
-7. Replacement appointment is booked.
-8. Payment workflow runs if required.
-9. Network analytics records recovered revenue.
-
-Example: nurse cancels shift
-
-1. Staffing event is generated.
-2. Grid searches qualified available professionals.
-3. Credential engine confirms eligibility.
-4. Appropriate professionals receive the opportunity.
-5. Replacement accepts.
-6. Clinic schedule updates.
-7. Payment/payout rules update.
-
-No unnecessary patient medical information enters staffing marketplace workflows.
-
-This event architecture is how Klinikos becomes one system without becoming one giant unsafe database.
-
-## Security architecture
-
-Security is foundational and must be designed from the beginning.
-
-Architecture must address, where applicable:
-
-- Health Insurance Portability and Accountability Act (HIPAA) requirements
-- encryption at rest
-- encryption in transit
-- role-based access
-- attribute/context-based access where appropriate
-- Multi-Factor Authentication (MFA)
-- audit logs
+- least privilege
 - tenant isolation
+- role/resource authorization
+- patient-context isolation
+- explicit consent/data-sharing rules
+- encryption in transit and at rest where applicable
+- auditability
+- MFA where appropriate
 - secrets management
-- vendor access
-- Business Associate Agreements (BAAs)
-- backups
-- disaster recovery
+- vendor/BAA governance
+- rate limiting and abuse prevention
+- backup and recovery
 - incident response
-- credential security
-- session management
-- intrusion detection
-- monitoring
-- rate limiting
-- abuse prevention
-- data minimization
-- retention policies
-- deletion policies
-- secure software development
-- vulnerability management
-- dependency security
-- supply-chain security
+- secure software/dependency practices
+- retention/deletion policy
 
-Do not claim cybersecurity can be perfectly secure.
-Use defense in depth.
-Healthcare safety and privacy take priority over convenience when there is a genuine conflict.
+Do not combine databases or expose data merely because two applications communicate.
 
-## Data separation
+## 22. Data boundary law
 
-Explicit data boundaries are required.
+Clinical data does not automatically flow into Grid, education, public profiles or marketing.
 
-Clinical data must not automatically flow into:
+Grid staffing/resource workflows receive only the minimum data needed for the permitted transaction.
 
-- Grid marketplace
-- public provider profiles
-- education environments
-- marketing systems
+Education data does not automatically become clinical data.
 
-Grid staffing data must not automatically expose:
+External Artificial Intelligence providers receive only the minimum authorized data required for the task.
 
-- patient diagnoses
-- clinical notes
-- unrelated patient identity information
+## 23. Frontend projection law
 
-Education data must not automatically become clinical data.
+The frontend projects backend truth without exposing backend complexity.
 
-Artificial Intelligence providers receive only the minimum information required for the authorized task.
+Living Home should answer:
 
-## Existing system integration
+- what is happening
+- what needs me
+- what should I do next
+- what is blocked
+- what changed
+- what opportunity exists
 
-Klinikos must work with organizations that already use other software.
+Backend terms such as Path IDs, policy engine, entitlement resolver or state machine should not be shown to normal users.
 
-The integration layer should support, where available:
+The approved cinematic rose reference governs converted product surfaces as defined in `docs/SOURCE_OF_TRUTH.md`.
 
-- existing Electronic Health Record systems
-- Electronic Medical Record systems
-- Practice Management Systems
-- billing platforms
-- clearinghouses
-- laboratories
-- payment processors
-- calendars
-- communications systems
-- websites
-- insurance eligibility systems
-- educational systems
+## 24. Repository implementation law
 
-Supported mechanisms may include:
+Before changing architecture:
 
-- Application Programming Interfaces
-- webhooks
-- Fast Healthcare Interoperability Resources (FHIR)
-- Health Level Seven (HL7)
-- secure imports/exports
-- other legitimate integration standards
+1. inspect current code, schema, migrations and tests;
+2. classify relevant components as BUILT, PARTIAL, PLACEHOLDER, DEMO ONLY, NOT BUILT, NEEDS REFACTORING or REUSABLE SHARED SERVICE;
+3. reuse existing models/services when they satisfy the contract;
+4. add adapters before destructive rewrites;
+5. keep domain authority deterministic;
+6. preserve concurrent work;
+7. run meaningful merge-ready gates.
 
-Do not assume every vendor provides an open integration.
-Vendor cooperation or contractual access may be required.
+Do not claim a subsystem is implemented because a document describes it.
 
-## Business principle
+## 25. Current convergence order
 
-Klinikos should create economic and operational value throughout the ecosystem through combinations of:
+Unless current code evidence requires a safer dependency order:
 
-- make money
-- save money
-- save time
-- reduce friction
-- create opportunity
-- improve access
-- improve safety
-- improve experience
-- improve visibility
-- improve coordination
+### Phase A — shared orchestration fabric
 
-Do not remove an established Klinikos capability simply because it does not directly generate revenue.
-Instead determine:
+Contracts → Capability/Policy → Intent → Path Runtime → Next Actions → Blockers/Alternatives → Events → Signals
 
-- where it belongs
-- who needs it
-- what it connects to
-- what data it requires
-- how it creates ecosystem value
+### Phase B — durable shared state
 
-## Architecture contract
+Path persistence → event ledger → notifications → activity/timeline → human review → jobs/retries → telemetry
 
-The canonical architecture is:
+### Phase C — cross-domain execution
 
-USER
-↓
-IDENTITY
-↓
-AI CONNECTION / KLINIKOS INTELLIGENCE
-↓
-INTENT ROUTER
-↓
-PERSONALIZED WORKSPACE
-↓
-SHARED KLINIKOS SERVICES
-↓
-APPLICATIONS
-↓
-EVENT ENGINE
-↓
-AUTHORIZED CROSS-SYSTEM AUTOMATIONS
-↓
-ANALYTICS / INTELLIGENCE
+Clinic OS ↔ Grid ↔ Referrals/Care ↔ EDU/Credentials ↔ Financial obligations/payments ↔ Connectors
 
-Every major application or subsystem must define its relationship to:
+### Phase D — universal coordination
 
-- Identity
-- Permissions
-- Intelligence
-- Events
-- Payments
-- Communications
-- Data
+Relationship graph → generalized matching → resource/demand composition → reservations → fulfillment → reputation
 
-## Repository implementation law
+### Phase E — intelligence and measurement
 
-All future repository work must use this document as the product and architecture source of truth.
+Zumi consumes structured engines → universal command/search → outcome telemetry → Time-to-Outcome optimization
 
-Existing code must be inspected before changing it.
+## 26. Absolute rules
 
-Classify major components as:
+1. Do not reduce Klinikos to an EHR or clinic dashboard.
+2. Do not claim capability without repository/runtime evidence.
+3. Do not expose protected healthcare information unnecessarily.
+4. Do not let Artificial Intelligence override deterministic authorization or eligibility.
+5. Do not let browser state establish payment truth.
+6. Do not fake external integration, delivery, verification or completion.
+7. Preserve human review where policy requires it.
+8. Core workflows remain usable when Intelligence/connectors are degraded.
+9. Preserve Path state across subsystem failure.
+10. Prefer shared engines over duplicated domain logic.
+11. Reuse existing models/services before introducing new ones.
+12. Use integer cents for financial state.
+13. Keep patient, organization and Grid data boundaries explicit.
+14. Every consequential transition must be auditable.
+15. Backend complexity should produce frontend simplicity.
 
-- BUILT
-- PARTIAL
-- PLACEHOLDER
-- DEMO ONLY
-- NOT BUILT
-- NEEDS REFACTORING
-- REUSABLE SHARED SERVICE
+## 27. Completion law
 
-Do not claim something exists unless repository evidence proves it.
-Do not destroy working code unnecessarily.
-Prefer KEEP, REFACTOR, MOVE, SPLIT, MERGE, DEPRECATE, or BUILD NEW decisions backed by evidence.
+Architecture work is complete only when the contracts are implemented in code, current domain services consume them, durable state is persisted where required, tests prove security and state transitions, and production/build gates are green.
 
-Implementation priority must follow architectural dependency, not excitement.
+A document alone is never completion.
 
-A default dependency order is:
+## 28. Final objective
 
-Identity
-→ Permissions
-→ Organization model
-→ Shared data contracts
-→ Event engine
-→ Intelligence orchestration
-→ Communications / Payments / Integrations
-→ Specialized applications and Grid transactions
+**ONE KLINIKOS IDENTITY.**
 
-This sequence may be refined when repository evidence requires it, but deviations must be explained.
+**MULTIPLE GOVERNED CONTEXTS.**
 
-## Absolute rules
+**ONE SHARED ORCHESTRATION FABRIC.**
 
-1. Do not reduce Klinikos to an Electronic Medical Record.
-2. Do not reduce Klinikos to clinic management software.
-3. Do not remove established capabilities without explaining why.
-4. Do not claim something exists unless repository evidence proves it.
-5. Do not expose protected healthcare information unnecessarily.
-6. Do not combine databases simply because applications communicate.
-7. Do not assume consumer Artificial Intelligence subscriptions include Application Programming Interface usage.
-8. Do not make clinical decisions autonomously where qualified professional judgment is required.
-9. Do not sacrifice patient safety for automation.
-10. Do not sacrifice security for convenience.
-11. Do not build duplicate functionality when a shared Klinikos service can serve multiple applications.
-12. Every application must define its relationship to Identity, Permissions, Intelligence, Events, Payments, Communications, and Data.
-13. Preserve the complete ecosystem vision.
-14. Backend complexity should produce frontend simplicity.
-15. Explain why architecture is organized a certain way before major implementation decisions.
-16. Whenever an abbreviation is introduced in product-facing documentation, write its full meaning first followed by the abbreviation in parentheses and explain it in plain English where appropriate.
+**DURABLE PATHS FROM INTENT TO OUTCOME.**
 
-## Final objective
+**MULTIPLE SPECIALIZED EXPERIENCES.**
 
-ONE KLINIKOS IDENTITY.
+**STRICT DATA BOUNDARIES.**
 
-ONE KLINIKOS ECOSYSTEM.
+**PERMISSIONED CROSS-SYSTEM EXECUTION.**
 
-ONE INTELLIGENCE ORCHESTRATION LAYER.
+**ONE ECONOMIC AND CARE NETWORK.**
 
-MULTIPLE SPECIALIZED EXPERIENCES.
+**MEASURED TIME TO OUTCOME.**
 
-STRICT DATA BOUNDARIES.
-
-PERMISSIONED CONNECTIONS BETWEEN THEM.
-
-ONE ECONOMIC NETWORK.
-
-The user experiences simplicity.
-The architecture handles complexity.
+The user experiences one coherent system.
+The architecture handles the complexity underneath.
