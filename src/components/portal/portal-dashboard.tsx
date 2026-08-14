@@ -344,7 +344,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                   <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>Privacy</p>
                   <h3 className="mt-2 text-xl font-extrabold">Your portal stays separate from clinic staff access.</h3>
                   <p className="mt-3 text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-                    Your patient session is limited to your own portal identity. Patient-visible clinical content still follows the clinic's release rules, and access to this portal is recorded.
+                    Your patient session is limited to your own portal identity. Patient-visible clinical content still follows the clinic&apos;s release rules, and access to this portal is recorded.
                   </p>
                 </div>
               </div>
