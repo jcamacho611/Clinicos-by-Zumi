@@ -11,6 +11,7 @@ import {
   CircleAlert,
   ClipboardList,
   GraduationCap,
+  Network,
   Stethoscope,
 } from "lucide-react";
 import { Badge, Button, DsSurface, Input, ZumiOrb, type BadgeTone, type ZumiState } from "@/components/ds";
@@ -44,10 +45,17 @@ function doorwayActionsForRole(role: ClinicRole): DoorwayAction[] {
       { label: "Klinikos EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", icon: GraduationCap },
     ];
   }
-  if (role === "provider" || role === "clinical_staff" || role === "case_manager") {
+  if (role === "provider") {
     return [
-      { label: "Today's care", description: "Open the work that needs clinical or care-team attention", href: role === "provider" ? "/provider" : "/tasks", icon: Stethoscope },
+      { label: "Today's care", description: "Open the work that needs clinical attention", href: "/provider", icon: Stethoscope },
       { label: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", icon: BriefcaseBusiness },
+      { label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", icon: GraduationCap },
+    ];
+  }
+  if (role === "clinical_staff" || role === "case_manager") {
+    return [
+      { label: "Today's care", description: "Open the work that needs care-team attention", href: "/tasks", icon: Stethoscope },
+      { label: "Care network", description: "Follow referrals, handoffs, and connected work", href: "/network/directory", icon: Network },
       { label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", icon: GraduationCap },
     ];
   }
@@ -180,12 +188,20 @@ function opportunityForRole(role: ClinicRole) {
       action: "Open front desk",
     };
   }
-  if (role === "provider" || role === "clinical_staff" || role === "case_manager") {
+  if (role === "provider") {
     return {
       title: "See the work that fits you.",
       body: "Grid can surface eligible healthcare work, services, learning, and capacity without changing your clinical permissions.",
       href: "/grid",
       action: "View opportunities",
+    };
+  }
+  if (role === "clinical_staff" || role === "case_manager") {
+    return {
+      title: "Keep the next handoff moving.",
+      body: "Open the care network to see referrals, relationships, and governed handoffs that are already within your role.",
+      href: "/network/directory",
+      action: "Open care network",
     };
   }
   if (role === "biller") {
