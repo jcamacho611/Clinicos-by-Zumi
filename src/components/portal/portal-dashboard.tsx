@@ -53,7 +53,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
     .filter((appointment) => new Date(appointment.startsAt) >= now && !["CANCELLED", "NO_SHOW"].includes(appointment.status))
     .sort((left, right) => left.startsAt.localeCompare(right.startsAt));
   const nextAppointment = futureAppointments[0];
-  const recentRecords = data.records.slice(0, 6);
+  const releasedRecords = data.records;
   const recentMessages = data.messages.slice(0, 5);
   const accessHistory = data.accessHistory.slice(0, 5);
 
@@ -150,7 +150,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                 {data.patient.displayName}, your next step is clear.
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-                Only information your care team has explicitly released to you appears here. Internal clinical drafts and staff-only records stay inside the clinic workspace.
+                Your appointments, assigned forms, and account balances are tied to your patient account. Records, results, instructions, and clinic-to-patient messages appear only when the clinic has made them patient-visible or approved them for release.
               </p>
             </div>
           </section>
@@ -257,11 +257,11 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                   <FileCheck2 className="size-5" style={{ color: "var(--accent-signal)" }} aria-hidden="true" />
                   <div>
                     <h3 className="text-sm font-extrabold">Records</h3>
-                    <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Only items explicitly released by your care team.</p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Only items explicitly released or made patient-visible by your care team.</p>
                   </div>
                 </div>
                 <div className="mt-5">
-                  {recentRecords.length ? recentRecords.map((record) => (
+                  {releasedRecords.length ? releasedRecords.map((record) => (
                     <article className="py-4 first:pt-0 last:pb-0" style={{ borderTop: "var(--border-hair-light)" }} key={`${record.kind}-${record.id}`}>
                       <div className="flex items-start gap-4">
                         <span
@@ -344,7 +344,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                   <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>Privacy</p>
                   <h3 className="mt-2 text-xl font-extrabold">Your portal stays separate from clinic staff access.</h3>
                   <p className="mt-3 text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-                    Your patient session is limited to your own portal identity and information the clinic has released to you. Access to this portal is recorded.
+                    Your patient session is limited to your own portal identity. Patient-visible clinical content still follows the clinic's release rules, and access to this portal is recorded.
                   </p>
                 </div>
               </div>
