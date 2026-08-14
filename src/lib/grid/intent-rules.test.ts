@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { gridOfferEnrollmentHref, inferGridIntent, matchesGridSearchTerms } from "@/lib/grid/intent-rules";
 
@@ -22,6 +24,13 @@ describe("Grid deterministic intent routing", () => {
   it("requires all meaningful terms instead of filtering by only the first", () => {
     expect(matchesGridSearchTerms(["Registered nurse", "California"], ["nurse", "california"])).toBe(true);
     expect(matchesGridSearchTerms(["Registered nurse", "Nevada"], ["nurse", "california"])).toBe(false);
+  });
+
+  it("keeps an explicit exchange direction while the visitor types", () => {
+    const source = fs.readFileSync(path.join(process.cwd(), "src/components/grid/grid-exchange-field.tsx"), "utf8");
+    expect(source).toContain('onClick={() => setDirectionOverride("offer")}');
+    expect(source).toContain("onChange={(event) => setQuery(event.target.value)}");
+    expect(source).not.toContain("setDirectionOverride(null)");
   });
 
   it("keeps non-clinical services out of clinical eligibility routing", () => {
