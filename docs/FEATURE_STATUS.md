@@ -2,7 +2,9 @@
 
 This file is the implementation-truth index. If something is labelled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
 
-Last verified application baseline: `main` at `0299240e71d81cab9c885f4225925b1173fc8058` after PR #66.
+Last full verified application baseline recorded here: `main` at `0299240e71d81cab9c885f4225925b1173fc8058` after PR #66.
+
+The product/website/marketplace documentation review inspected `main` at `a8821523d60f11ad863572df5493d84a6a944410`. Documentation review does not promote implementation status or replace a full-suite verification baseline.
 
 ## Status vocabulary
 
@@ -79,8 +81,12 @@ Repository checks prove the candidate tree. They do not alone prove the newest c
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Generalized resource model | **BUILT** | Universal resource/demand/offer/reservation/financial primitives exist. |
-| Public marketplace discovery | **BUILT** | Browse/detail/filter paths exist. |
-| Public map can center on visitor location | **BUILT** | Requires browser permission. |
+| Public marketplace discovery | **PARTIALLY BUILT** | Browse/detail/filter paths exist, but public browse currently composes separate provider/location and universal-resource discovery surfaces instead of one query/result ledger. |
+| Natural-language Grid intent interpretation | **PARTIALLY BUILT** | A limited phrase set and basic time/location extraction exist; generalized resource, qualification, quantity, economics, accessibility, confidence, and editable-assumption handling are incomplete. |
+| Public map can center on visitor location | **PARTIALLY BUILT** | Actual browser geolocation and a distinct visitor marker exist. On the inspected baseline, permission is requested automatically after map configuration rather than only after an explicit user action. |
+| Explicit location consent and manual city/ZIP fallback | **NOT BUILT** | Required by the current specialist spec before the geolocation experience is considered MVP-ready. |
+| Synchronized map and result ledger | **PARTIALLY BUILT** | Map/rail behavior exists for mapped resources and unmapped results remain visible, but all providers, locations, resources, bounds, selection, and focus do not yet share one canonical contract. |
+| Privacy-safe visitor location lifecycle | **PARTIALLY BUILT** | Current centering is client-side, but URL/log/analytics/session-replay prohibitions and verification need an explicit end-to-end implementation gate. |
 | Fake nearby inventory to populate empty map | **NOT BUILT BY DESIGN** | Empty market remains truthful. |
 | Professional/provider participation | **BUILT / PARTIAL** | Core enrollment, profile, availability, internal review, offers and transactions exist; some role-specific onboarding paths remain incomplete. |
 | Spaces / rooms / chairs | **BUILT / PARTIAL** | Resource model and marketplace representation exist; production supply depends on real published inventory. |
@@ -92,7 +98,7 @@ Repository checks prove the candidate tree. They do not alone prove the newest c
 | Provider license verification against external authorities | **PENDING CONNECTION** | Requires board/vendor access. |
 | Malpractice verification against external source | **PENDING CONNECTION** | Internal review is not external verification. |
 | Marketplace payout movement | **PENDING CONNECTION** | Internal financial state does not claim funds moved. |
-| Maps/geocoding/routing vendor | **ADAPTER READY** | Public/client boundaries exist; production key/vendor configuration remains external. |
+| Maps/geocoding/routing vendor | **ADAPTER READY** | Public/client boundaries and truthful unconfigured behavior exist; Google Maps requires the public API key and map ID, while production geocoding/routing configuration and verification remain external. |
 
 ## Klinikos EDU
 

@@ -155,7 +155,7 @@ The frontend/commercial convergence candidate merged as PR #66 after the exact c
 - production startup smoke;
 - exact Render deploy-contract.
 
-The application baseline immediately before this documentation sync was `main` commit `0299240e71d81cab9c885f4225925b1173fc8058`.
+The last full verification baseline recorded in canonical documentation remains `main` commit `0299240e71d81cab9c885f4225925b1173fc8058`. This product-and-marketplace documentation review inspected `main` at `a8821523d60f11ad863572df5493d84a6a944410`; it does not claim a newer full-suite verification baseline.
 
 ## MVP journeys
 
@@ -214,9 +214,13 @@ npm start
 Start here, in this order:
 
 1. `docs/SOURCE_OF_TRUTH.md`
-2. `docs/FEATURE_STATUS.md`
-3. `docs/EXTERNAL_DEPENDENCY_MATRIX.md`
-4. `docs/MVP_JOURNEYS.md`
-5. `docs/CLINICOS_MASTER_CANON.md` for deeper historical/permanent scope where it does not conflict with current truth
+2. `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md`
+3. `docs/MARKETPLACE_DESIGN_RESEARCH.md`
+4. `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`
+5. `docs/FEATURE_STATUS.md`
+6. `docs/EXTERNAL_DEPENDENCY_MATRIX.md`
+7. `docs/MVP_JOURNEYS.md`
+8. `docs/KLINIKOS_ARCHITECTURE_INDEX.md`
+9. `docs/CLINICOS_MASTER_CANON.md` for deeper historical/permanent scope where it does not conflict with current truth
 
 Priority Zero and the feature registry represent permanent scope direction, not a claim that every external integration or capability is already live.

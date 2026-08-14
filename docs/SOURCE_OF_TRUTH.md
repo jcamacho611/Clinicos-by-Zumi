@@ -1,9 +1,9 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-12.3`
+Version: `2026-08-13.1`
 Status: `AUTHORITATIVE`
 
-This document supersedes conflicting product naming, deployment, commercial, Zumi-intelligence, Grid-scope, frontend-language, and security-direction statements in older briefs. For deeper permanent-scope material not amended here, `docs/CLINICOS_MASTER_CANON.md` and the Klinikos Constitution remain useful historical/canonical references.
+This document supersedes conflicting product naming, deployment, commercial, Zumi-intelligence, Grid-scope, frontend-language, and security-direction statements in older briefs. `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md` organizes the current full product/website experience beneath this law. `docs/MARKETPLACE_DESIGN_RESEARCH.md` and `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md` govern the detailed Grid discovery direction. For deeper permanent-scope material not amended here, `docs/CLINICOS_MASTER_CANON.md` and the Klinikos Constitution remain useful historical/canonical references.
 
 ## 1. Brand law
 
@@ -84,6 +84,18 @@ Current frontend direction:
 - mobile task-first behavior;
 - no fake availability, fake actions, or fake integration states.
 
+Website and product organization must preserve one coherent Klinikos experience:
+
+- public pages explain audience, outcome, next step, and current truth rather than listing modules;
+- Living Home remains the authenticated heart and an adaptive operating briefing, not a generic dashboard;
+- Clinic OS, Grid, Network, EDU, commercial activation, and Zumi are connected through resumable user goals rather than separate product silos;
+- public, participant, customer, patient, learner, and operator surfaces share one design foundation but prioritize different work;
+- every exposed action is real, intentionally disabled with a reason, or absent;
+- comparison, status, price/economics, availability, eligibility, verification, and external delivery must be evidence-backed;
+- cards are not the default composition when a map, ledger, timeline, calendar, queue, table, or split pane better fits the work.
+
+The complete surface map and MVP convergence boundary live in `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md`.
+
 The global Klinikos atmosphere system supports `Auto`, Dawn, Day, Golden Hour, and Night. `Auto` follows the browser's local time. A user's manual choice may persist locally. Appearance never changes authorization, safety, billing, or workflow behavior.
 
 ## 5. Commercial and payment truth
@@ -147,7 +159,21 @@ Rules:
 - operator-assisted/manual first transactions are acceptable when labeled truthfully;
 - no fake marketplace inventory.
 
-The public Grid map may center on a visitor's real location when permission is granted even when no listings exist. It must not fabricate nearby pins to make the market appear populated.
+Grid discovery is intent-first and generalized across permitted resource classes. One synchronized result ledger should connect search, map context, evidence, economics, eligibility explanation, and the next transaction action. Hard constraints remain deterministic even when Zumi helps interpret a natural-language request.
+
+Geolocation law:
+
+- browser location permission follows an explicit user action; it is not requested automatically on page load;
+- manual city/ZIP/region and non-map list discovery remain first-class paths;
+- exact visitor coordinates are not persisted, logged, placed in URLs, or sent to analytics by default;
+- the visitor marker is distinct from inventory;
+- only approved real resource locations may create supply pins;
+- provider residential and patient addresses are private by default; use approved practice locations, service areas, or appropriately approximate public locations;
+- mapped and unmapped results remain accessible through one ledger;
+- map, geocoding, or routing failure never blocks list discovery or transaction continuation;
+- distance, ETA, availability, verification, demand, and price are shown only when Klinikos has a legitimate computation or evidence source and labels its basis.
+
+The detailed interaction, privacy, degraded-state, and acceptance contract is `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`. Research-derived marketplace direction is recorded in `docs/MARKETPLACE_DESIGN_RESEARCH.md`. Grid must not fabricate nearby pins or any other inventory to make an empty market appear populated.
 
 ## 7. What Zumi must become
 
@@ -315,7 +341,7 @@ When a journey fails, determine whether the implementation, test, assumption, do
 
 ## 17. Verification baseline
 
-The PR #66 candidate that produced the current application baseline passed:
+The last full verification baseline recorded in canonical documentation is the PR #66 candidate. It passed:
 
 - Prisma validation/generation;
 - all 50 migrations against a fresh PostgreSQL database;
@@ -327,7 +353,7 @@ The PR #66 candidate that produced the current application baseline passed:
 - production startup smoke;
 - exact Render deploy-contract.
 
-These checks prove the repository candidate. They do not by themselves prove that an external production deployment has completed.
+These checks prove that repository candidate. They do not by themselves prove that an external production deployment has completed. The product/website/marketplace documentation review for version `2026-08-13.1` inspected `main` at `a8821523d60f11ad863572df5493d84a6a944410`; because this is a documentation-only review, it does not promote a newer full verification baseline.
 
 ## 18. Capability-status vocabulary
 

@@ -24,6 +24,13 @@ This registry tracks major authenticated and public product surfaces that are vi
 | Public site | `/` and public sales surfaces | Free/no-credit-card/self-service language | Conflicts with founding clinic implementation model | REMOVE / RENAME | Use qualification-led funnel and truthful implementation offer | Open |
 | Entire app | all exposed screens | Static/demo metrics | Some synthetic values can be mistaken for live production data | MARK DEMO | Make every synthetic value explicit, derive from data, or remove | Open |
 
+| Public Grid browse | `/grid/browse` | Split provider/location and universal-resource discovery | Competing browsers and result models make a generalized exchange feel fragmented | REDESIGN / MERGE | Converge on one intent, constraint, map, result-ledger, and dossier contract | Open |
+| Public Grid browse | `/grid/browse` | Browser geolocation timing | Configured map requests location automatically on load | REDESIGN / PRIVACY | Prompt only after **Use my location**; add city/ZIP/manual and denied/unavailable states | Open |
+| Public Grid browse | `/grid/browse` | Map/result synchronization | Not every provider, location, resource, bound, focus, and selection shares one result identity | WIRE / REDESIGN | Implement the canonical synchronized map and accessible result ledger | Open |
+| Public Grid browse | `/grid/browse` | Result comparison | Evidence, economics, eligibility explanation, freshness, and next action are not yet one dossier | REDESIGN | Add inline decision dossier without losing search context | Open |
+| Grid intent | `/grid` and `/grid/browse` | Natural-language understanding | Current interpreter covers only a limited phrase and constraint set | HARDEN | Expand typed intent across generalized resources; keep hard eligibility deterministic | Open |
+| Grid enrollment | `/grid/join`, `/grid/join/location`, `/grid/join/seller` | Resource/location/seller paths | Multiple entry paths do not yet read as one resumable readiness and publication system | MERGE / REDESIGN | Reuse identity/org context, branch after resource type, show gaps/review/public preview, preserve draft | Open |
+
 ## Operating rules
 
 - Every exposed control must be real, intentionally disabled with a reason, hidden, or removed.
