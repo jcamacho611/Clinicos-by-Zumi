@@ -35,7 +35,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         organizationName={session.organizationName}
         recentSignals={recentPathSignals}
         role={session.role}
-        userName={session.name}
       />
       <WorkspaceLaunchpad role={session.role} />
     </div>
