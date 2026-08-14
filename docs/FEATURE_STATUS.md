@@ -1,8 +1,12 @@
-# Klinikos feature status
+# Klinikos Feature Status
 
-This file is the implementation-truth index. If something is labelled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
+Status: `IMPLEMENTATION TRUTH INDEX`  
+Last verified merged baseline: `main@4b2a5dc89f3dae7a175b2f8eda9f83f866b77de6`  
+Verified: 2026-08-14
 
-Last verified application baseline: `feat/grid-exchange-mvp`, based on `main` at `a8821523d60f11ad863572df5493d84a6a944410`, verified 2026-08-13. External deployment of this candidate is not implied.
+If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
+
+Repository verification does not by itself prove that the same commit is already deployed on the external production host.
 
 ## Status vocabulary
 
@@ -10,175 +14,215 @@ Last verified application baseline: `feat/grid-exchange-mvp`, based on `main` at
 | --- | --- |
 | **BUILT** | Implemented and verified against real internal state. |
 | **PARTIALLY BUILT** | A useful path works; named gaps remain. |
-| **MANUAL FALLBACK** | The workflow is real, but a human performs the external step. |
+| **MANUAL FALLBACK** | Workflow is real, but a human performs the external step. |
 | **ADAPTER READY** | Internal interface/safety/failure behavior exists; external production connection is not verified. |
-| **PENDING CONNECTION** | Code may be ready, but credentials, vendor enrollment, contract, BAA, or production approval is missing. |
-| **BLOCKED** | Cannot truthfully proceed until an external dependency is resolved. |
+| **PENDING CONNECTION** | Credentials, vendor enrollment, contract, BAA, or production approval is missing/unverified. |
+| **BLOCKED** | Cannot truthfully proceed until an external condition is resolved. |
 | **NOT BUILT** | Does not exist yet. |
+| **NOT BUILT BY DESIGN** | Intentionally prohibited because it would create false/unsafe product state. |
 
 ## Verification baseline
 
-The exact PR #66 candidate passed:
+The exact final candidate for PR #74 passed before merge:
 
 | Check | Result |
 | --- | --- |
 | Prisma schema validation | Green |
 | Prisma client generation | Green |
-| Fresh PostgreSQL migrations | 51/51 applied successfully |
+| Fresh PostgreSQL migrations | **51/51** applied successfully |
 | TypeScript | Green |
 | ESLint | Green |
-| Unit/integration test suite | 560 tests across 75 files, all passing |
-| DB-backed MVP journeys | 10/10 passing |
+| Automated tests | Green |
+| DB-backed MVP journeys | **10/10** passing |
 | Production Next.js build | Green |
 | Production startup smoke | Green |
 | Exact Render deploy-contract | Green |
 
-Repository checks prove the candidate tree. They do not alone prove the newest commit has completed deployment on the external production host.
+PR #72’s exact final head also passed the same Quality gate before merge.
 
-## Public / commercial entry
-
-| Capability | Status | Notes |
-| --- | --- | --- |
-| Canonical public brand: Klinikos | **BUILT** | `Clinicos` remains only in legacy repository/migration/compatibility identifiers. |
-| Canonical public identity: `https://klinikos.io` | **BUILT** | Render hostname is infrastructure only. External deployment must still be verified independently. |
-| Outcome-first public landing | **BUILT** | Editorial/spacious structure; backend architecture is not dumped on visitors. |
-| Public `/start` routing | **BUILT** | Evaluation/access language no longer pretends there is an unrestricted free production account. |
-| Public Grid entry | **BUILT** | Browse/join paths exist. |
-| Public Klinikos EDU entry | **BUILT** | EDU is exposed as a first-class product surface. |
-| Clinic Operating Analysis checkout launch | **BUILT** | Server-owned $500 intent is created before the configured GoDaddy paylink opens. |
-| $1,500 / $8,000+ flexible commercial flows | **PARTIALLY BUILT** | Product definitions and intake/review boundaries exist; they are not incorrectly routed through the $500 paylink. |
-| Browser redirect marks payment paid | **NOT BUILT BY DESIGN** | Redirect state is never payment evidence. |
-
-## Payments, activation, and access
+## Public / customer entry
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Server-owned commercial product and amount | **BUILT** | Browser cannot choose the trusted price. |
-| Checkout intent ledger | **BUILT** | Intent precedes external checkout. |
-| Payment evidence separated from entitlement | **BUILT** | Verification source is recorded independently of activation. |
-| GoDaddy paylink launch | **BUILT** | Current checkout rail for Clinic Operating Analysis. |
-| Manual payment reconciliation | **MANUAL FALLBACK** | Authorized reconciliation is valid when evidence is recorded truthfully. |
-| Paid clinic activation/provisioning journey | **BUILT** | Automated DB-backed journey covers buyer → payment evidence → subscription → organization provisioning → first useful entry. |
-| Stripe direct settlement | **ADAPTER READY** | Environment/config surfaces exist; not the current verified rail. |
-| Marketplace payouts | **PENDING CONNECTION** | Requires a real payout rail/credentials/terms; internal ledger state must not be presented as money moved. |
-| Customer-funded variable usage policy | **BUILT** | Product/commercial policy exists for included allowance, prepaid funds, or bounded authorized overage. |
+| Canonical public brand: Klinikos | **BUILT** | `Clinicos` remains only where legacy compatibility/operational identifiers justify it. |
+| Canonical public identity: `https://klinikos.io` | **BUILT** | Product identity is canonical; newest external deployment still requires independent verification. |
+| Conversation-first public Living Home | **BUILT** | Full-screen goal-first root; continuous multi-turn thread; relevant destination surfaced progressively. |
+| Truthful Living Home progress | **BUILT** | Understanding → Preparing the next move → Ready describes deterministic interface processing, not external completion. |
+| Public follow-up context | **BUILT** | Safe prior resolution can inform short follow-ups without introducing authenticated Path IDs. |
+| Accessible progress/focus behavior | **BUILT** | Live status is outside the busy region, reduced motion respected, composer remains usable/refocused. |
+| Public `/start` clinic path | **BUILT** | Commercial/start path exists without implying unrestricted free production access. |
+| Public Grid entry | **BUILT** | Browse, Exchange Field, detail and join/enrollment paths exist. |
+| Public Klinikos EDU entry | **BUILT** | EDU remains first-class. |
+| Separate patient sign-in | **BUILT** | Patient session remains separate from clinic/staff session. |
 
-## Living Home and frontend system
+## Commercial / payments / activation
 
-| Capability | Status | Notes |
-| --- | --- | --- |
-| Role-aware Living Home | **BUILT** | Goal-first entry with plain next-step language. |
-| Progressive authenticated navigation | **BUILT** | Immediate work is visible; deeper product areas collapse until needed. |
-| Backend vocabulary suppression | **BUILT** | Home avoids exposing Path/capability/orchestration jargon as customer language. |
-| Aegean atmosphere system | **BUILT** | Auto follows browser-local Dawn/Day/Golden/Night; manual preference persists locally. |
-| Appearance changes permissions/product behavior | **NOT BUILT BY DESIGN** | Presentation only. |
-| Full browser/mobile production visual QA | **PARTIALLY BUILT** | Responsive implementation exists; independent post-deploy visual verification remains an operating gate after each major release. |
-
-## Grid
+Redirect state is never payment evidence.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Generalized resource model | **BUILT** | Universal resource/demand/offer/reservation/financial primitives exist. |
-| Deterministic Exchange Field | **BUILT** | “Need” and “have” statements route inline across work, providers, space, products, equipment, services, organizations, education, networks, and referrals without requiring an AI provider. |
-| Public marketplace discovery | **BUILT** | Intent, query, map/list, provider, resource, detail, and governed-request paths exist with honest empty states. |
-| Sign-in continuation from discovery | **BUILT** | Same-origin continuation preserves the selected provider/resource path and rejects external redirect targets. |
-| Public map can center on visitor location | **BUILT** | Location is requested only after the visitor chooses the control. A keyless interactive geographic fallback works without Google configuration. |
-| Exact resource-radius matching | **BUILT** | Permission-derived saved-demand coordinates are persisted as an optional pair; deterministic Haversine filtering never invents distance for ungeocoded supply. |
-| Public coordinate minimization | **BUILT** | Public discovery reduces coordinate precision while governed server-side matching retains the stored values. |
-| Fake nearby inventory to populate empty map | **NOT BUILT BY DESIGN** | Empty market remains truthful. |
-| Professional/provider participation | **BUILT / PARTIAL** | Core enrollment, profile, availability, internal review, offers and transactions exist; some role-specific onboarding paths remain incomplete. |
-| Spaces / rooms / chairs | **BUILT / PARTIAL** | Resource model and marketplace representation exist; production supply depends on real published inventory. |
-| Services / other resource classes | **BUILT / PARTIAL** | Generalized backend supports broader classes; not every specialized UX is complete. |
-| Offer → accept → reservation | **BUILT** | DB-backed journey verified. |
-| Concurrency protection | **BUILT** | Competing reservations leave one winner and no partial loser state. |
-| Disputes / safety incidents / holds | **BUILT** | Separate trust/problem records and governed resolution states exist. |
-| Integer-cent financial obligations | **BUILT** | Financial state is deterministic and server-owned. |
-| Provider license verification against external authorities | **PENDING CONNECTION** | Requires board/vendor access. |
-| Malpractice verification against external source | **PENDING CONNECTION** | Internal review is not external verification. |
-| Marketplace payout movement | **PENDING CONNECTION** | Internal financial state does not claim funds moved. |
-| Maps/geocoding/routing vendor | **PARTIALLY BUILT** | Interactive OpenStreetMap fallback and browser geolocation are usable now. The richer Google JavaScript marker adapter exists, but Google keys/map ID plus geocoding/routing remain external and are not claimed connected. |
+| Server-owned commercial products/amounts | **BUILT** | Browser cannot choose trusted price. |
+| Clinic Operating Analysis `$500` checkout intent | **BUILT** | Server-owned intent exists before configured GoDaddy paylink opens. |
+| Implementation Blueprint `$1,500` / Founding implementation `$8,000+` definitions | **BUILT / PARTIAL** | Product definitions and intake/review boundaries exist; not forced through the `$500` link. |
+| GoDaddy checkout launch | **BUILT** | Current configured rail for Clinic Operating Analysis. |
+| Browser redirect marks payment paid | **NOT BUILT BY DESIGN** | Redirect never establishes payment evidence. |
+| Payment evidence separated from entitlement | **BUILT** | Verification source/state is independent from activation. |
+| Manual reconciliation | **MANUAL FALLBACK** | Valid when authorized and evidence is recorded truthfully. |
+| Paid clinic activation/provisioning journey | **BUILT** | DB-backed journey covers buyer → evidence → subscription → organization provisioning → first useful entry. |
+| Stripe direct settlement | **ADAPTER READY** | Config surfaces exist; not the currently verified checkout rail. |
+| Marketplace payout movement | **PENDING CONNECTION** | Internal financial state does not mean external money moved. |
+| Customer-funded variable-usage policy | **BUILT** | Included allowance/prepaid/bounded-overage policy exists. |
+
+## Living Home / frontend system
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Authenticated role-aware Living Home | **BUILT** | Goal/next-action briefing rather than module wall. |
+| Progressive authenticated navigation | **BUILT** | Deeper areas remain available without dominating immediate work. |
+| Backend-vocabulary suppression | **BUILT** | Customer home avoids Path/capability/orchestration jargon. |
+| Aegean design foundation | **BUILT** | Shared design tokens/primitives and atmosphere system. |
+| Public Living Home appearance-control suppression | **BUILT** | Root conversation owns the screen; atmosphere behavior remains elsewhere. |
+| Full post-deploy desktop/mobile visual QA of newest `main` | **VERIFY EXTERNALLY** | Repository/UI tests are not a substitute for checking the actual deployed browser experience. |
+
+## Patient portal
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Separate patient auth/session | **BUILT** | Patient identity cannot become clinic staff session. |
+| Aegean patient sign-in/portal experience | **BUILT** | Converged with Klinikos design without widening access. |
+| One `Next for you` priority state | **BUILT** | Patient-owned actionable forms → upcoming appointment → visible balance → all-clear. |
+| Staff/provider-owned or submitted form treated as patient action | **NOT BUILT BY DESIGN** | Those states are excluded from `Needs you`. |
+| Released clinical records visibility | **BUILT** | All returned released/patient-visible records remain accessible. |
+| Portal messages visibility | **BUILT** | All returned approved/inbound messages remain readable without hidden line clamping. |
+| Patient privacy/release copy | **BUILT** | Wording distinguishes patient-bound operational data from explicit clinical release gates. |
+
+## Grid discovery and exchange
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Generalized Grid resource/transaction model | **BUILT** | Demand/resource/offer/reservation/financial/fulfillment/trust primitives exist. |
+| Universal I NEED / I HAVE Exchange Field | **BUILT** | Deterministic routing across work, provider, space, product, equipment, service, network, education, organization and referral lanes. |
+| Manual direction override | **BUILT** | Explicit need/offer selection survives subsequent typing. |
+| All-term public discovery | **BUILT** | Meaningful query terms are applied rather than only the first token. |
+| State name/code matching | **BUILT** | Public discovery can match e.g. California ↔ CA. |
+| Query-matched map/resource-ledger consistency | **BUILT** | Universal-resource map and ledger receive the same filtered result set. |
+| Public provider/location/resource browse | **BUILT / PARTIAL** | Real reviewed/published inventory only; supply density depends on actual participants. |
+| Truthful provider-listing request action | **BUILT** | Generic request is labeled generic when selected listing is not yet bound into the transaction workflow. |
+| Same-origin sign-in continuation | **BUILT** | External redirect targets are not trusted. |
+| Explicit opt-in browser geolocation | **BUILT** | Location is requested only after visitor action. |
+| Keyless OpenStreetMap fallback | **BUILT** | Interactive map context works without Google credentials. |
+| Optional Google map-provider path | **ADAPTER READY** | Requires actual key/map ID/configuration to claim connected. |
+| Exact coordinate-radius matching | **BUILT** | Real Haversine distance; radius is authoritative when a real origin/radius exists, including across state boundaries. |
+| Coordinate integrity constraints | **BUILT** | Database rejects half-null/out-of-range coordinate pairs. |
+| Public coordinate minimization | **BUILT** | Public precision reduced; governed server-side matching retains stored values. |
+| Fake nearby inventory | **NOT BUILT BY DESIGN** | Empty market remains empty/truthful. |
+| Structured weekday/time interpretation into availability filters | **NOT BUILT** | Free-text handling exists; deterministic weekday initialization is a named next convergence target. |
+| Pin/ledger selected-result synchronization | **PARTIALLY BUILT** | Same result truth exists; richer bidirectional focus/selection remains. |
+| Manual city/ZIP/place origin + richer Search-this-area behavior | **PARTIALLY BUILT** | City/state discovery exists; complete map-origin UX remains future convergence. |
+
+## Grid transaction / trust
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Demand → offer → accept → reservation | **BUILT** | DB-backed journey verified. |
+| Scarce-capacity concurrency protection | **BUILT** | One winner; no partial loser state. |
+| Financial obligations in integer cents | **BUILT** | Server-owned internal financial state. |
+| Fulfillment event lifecycle | **BUILT** | Internal evidence/state path exists. |
+| Dispute vs safety incident separation | **BUILT** | Separate problem types and governed holds/resolution. |
+| External provider-license verification | **PENDING CONNECTION** | Requires real authority/vendor access. |
+| External malpractice verification | **PENDING CONNECTION** | Internal review is not external verification. |
+| External marketplace payout settlement | **PENDING CONNECTION** | Internal ledger must not be represented as money moved. |
 
 ## Klinikos EDU
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| EDU foundation/data model | **BUILT** | Migration and core models exist. |
-| Public EDU landing/entry | **BUILT** | First-class path in public and authenticated experience. |
-| Synthetic-data/safety boundaries | **BUILT** | Student projections exclude answer-key/private instructor fields. |
-| Student scenario run console | **BUILT** | Start, actions/evidence, hand-in. |
-| Submission lifecycle | **BUILT** | Ownership/lateness/evidence behavior enforced. |
-| Grading API and release rules | **BUILT** | Student cannot write/release grades; unreleased grade stays hidden. |
-| Instructor grading UI | **PARTIALLY BUILT** | Server path works; full instructor UX remains incomplete. |
-| Competency/certificate write path | **NOT BUILT** | Models/direction exist. |
-| EDU AI | **ADAPTER READY** | Inert until governed Zumi provider path is available for the approved use. |
-| LTI 1.3 / institutional SSO | **PENDING CONNECTION** | Needs school credentials/agreement. |
-| FERPA institutional/legal review | **BLOCKED** | Outside repository code. |
+| EDU foundation/data model | **BUILT** | Core models/migration exist. |
+| Public EDU entry | **BUILT** | First-class public/authenticated surface. |
+| Synthetic safety/data boundaries | **BUILT** | Student projections exclude answer-key/private instructor material. |
+| Student scenario console | **BUILT** | Start, actions/evidence, hand-in. |
+| Submission lifecycle | **BUILT** | Ownership/lateness/evidence rules. |
+| Grading/release API | **BUILT** | Student cannot release own grade; unreleased grade remains hidden. |
+| Instructor grading UI | **PARTIALLY BUILT** | Server path stronger than full operator UX. |
+| Competency/certificate write path | **NOT BUILT** | Direction/models exist. |
+| EDU AI | **ADAPTER READY** | Requires governed/approved intelligence path. |
+| LTI / institutional SSO | **PENDING CONNECTION** | Requires institution credentials/agreement. |
+| FERPA institutional/legal review | **BLOCKED** | External legal/institutional condition, not solved by repository code. |
 
-## Zumi / Klinikos Intelligence
+## Klinikos Intelligence / Zumi
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Provider-neutral gateway | **BUILT** | Governed admission and provider abstraction exist. |
-| Prohibited capability policy | **BUILT** | Deterministic refusal before provider use. |
+| Provider-neutral governed gateway | **BUILT** | Admission/provider abstraction exists. |
 | Tenant/RBAC/entitlement admission | **BUILT** | AI cannot widen access. |
-| PHI/sensitive egress redaction before planner/router/provider consumption | **BUILT** | Regression coverage enforces the ordering. |
+| Prohibited-capability policy | **BUILT** | Deterministic refusal before provider use where applicable. |
+| PHI/sensitive redaction before planner/router/memory/tool/provider consumption | **BUILT** | Regression coverage enforces ordering. |
 | Signed conversation continuity | **BUILT** | Bound to server-side identity/context. |
-| Founder conversation profile | **BUILT / PARTIAL** | Broader authorized product context without bypassing data/action policy. |
-| Direct / research / deeper reasoning classification | **BUILT / PARTIAL** | Routing architecture exists; quality depends on connected provider/tool capability. |
-| Prompt-injection/tool-exfiltration boundaries | **BUILT / PARTIAL** | Core controls exist; ongoing adversarial testing remains required. |
-| Usage/audit ledger | **BUILT** | Provider/usage paths are recorded without storing raw prompt/output as the ledger payload. |
-| Production model provider for general Zumi use | **PENDING CONNECTION** | Exact live provider/config/contract status must be verified per environment. |
-| PHI-capable model use | **BLOCKED until approved** | Requires exact provider approval, contract/BAA, configuration, and explicit deployment approval. |
+| Founder conversation profile | **BUILT / PARTIAL** | Broader authorized context without bypassing policy. |
+| Direct/research/deeper reasoning routing | **BUILT / PARTIAL** | Architecture exists; real quality depends on connected provider/tools. |
+| Prompt-injection/tool-exfiltration boundaries | **BUILT / PARTIAL** | Core controls exist; adversarial testing remains ongoing work. |
+| Usage/audit ledger | **BUILT** | Provider/usage paths are recorded without using raw prompt/output as the billing ledger. |
+| Production general model provider | **PENDING CONNECTION** | Exact environment/provider/contract/config must be verified. |
+| PHI-capable external model use | **BLOCKED until approved** | Requires exact provider approval, BAA/contract, config and deployment approval. |
 | Streaming UX | **NOT BUILT** | |
-| Live provider health probing | **PARTIALLY BUILT** | Health-state concepts exist; complete production probing/observability is not universal. |
-| Formal reasoning-quality evaluation harness | **NOT BUILT** | Structural/safety tests are not a substitute for answer-quality evals. |
+| Formal reasoning-quality eval harness | **NOT BUILT** | Safety/structure tests do not prove answer quality. |
 
 ## Clinic OS / operations
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Auth, sessions, RBAC, tenant-scoped staff work | **BUILT** | Core authorization contract exists. |
-| Patients / appointments / encounters | **BUILT / PARTIAL** | Real PostgreSQL-backed paths exist; broader specialty workflows continue expanding. |
-| Documents / forms / labs / imaging / medications | **BUILT / PARTIAL** | Internal workflows and manual fallbacks exist; external rails are not implied live. |
-| Tasks / operational actions / follow-up | **BUILT** | DB-backed operations journey verifies risk → work → resolution and audit. |
-| Referrals / Network handoffs | **BUILT / PARTIAL** | Governed internal lifecycle exists; external delivery varies by connector/fallback. |
-| Revenue/coding/claim readiness | **BUILT / PARTIAL** | Preparation/readiness logic exists; no autonomous clearinghouse submission claim. |
-| No-fault / workers' comp case workflows | **BUILT / PARTIAL** | Internal cases/packets/readiness; external carrier/legal delivery remains separate. |
-| Patient portal | **BUILT / PARTIAL** | Scoped portal auth/read experience exists; production activation remains deployment-dependent. |
-| Production external clinical connections | **PENDING CONNECTION** | Labs, clearinghouse, payer, eRx/EPCS, etc. require exact vendor approval and credentials. |
+| Staff auth/sessions/RBAC/tenant scope | **BUILT** | Core authorization contract exists. |
+| Patients / appointments / encounters | **BUILT / PARTIAL** | Real PostgreSQL-backed workflows; specialty breadth continues. |
+| Documents / forms / e-sign | **BUILT / PARTIAL** | Internal governed lifecycle exists. |
+| Labs / imaging / medications | **BUILT / PARTIAL** | Internal lifecycle/readiness exists; external rails are not implied live. |
+| Tasks / operational actions / follow-up | **BUILT** | DB-backed risk → work → resolution/audit journey. |
+| Referrals / Network handoffs | **BUILT / PARTIAL** | Governed internal lifecycle; external delivery varies by verified connector/fallback. |
+| Revenue/coding/claim readiness | **BUILT / PARTIAL** | Preparation/readiness exists; no autonomous clearinghouse-submission claim. |
+| No-fault / workers’ comp case workflows | **BUILT / PARTIAL** | Internal case/packet/readiness; external carrier/legal delivery separate. |
+| Production external clinical connections | **PENDING CONNECTION** | Labs, clearinghouse, payer, eRx/EPCS and similar rails require exact vendor approval/credentials. |
+| Certified EHR claim | **NOT BUILT BY DESIGN** | Repository does not establish certification. |
 
 ## Network
 
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Partner directory/relationships | **BUILT** | Relationship-aware internal model. |
-| Governed handoff composer/lifecycle | **BUILT** | Consent, purpose, minimum-necessary and human decision boundaries. |
-| Connected in-product recipient delivery | **BUILT** | Means visibility inside the authorized Klinikos recipient workspace only. |
-| Fax / Direct / external exchange | **MANUAL FALLBACK / PENDING CONNECTION** | Status must not claim vendor delivery without evidence. |
+| Governed handoff lifecycle | **BUILT** | Consent, purpose, minimum necessary and human decision boundaries. |
+| In-product authorized recipient delivery | **BUILT** | Means visibility inside authorized Klinikos workspace only. |
+| Fax / Direct / external exchange | **MANUAL FALLBACK / PENDING CONNECTION** | Do not claim vendor delivery without evidence. |
 | Cross-tenant isolation | **BUILT** | Adversarial journey coverage. |
 
-## Deployment and reliability
+## Deployment / reliability
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Fresh empty-DB migration journey | **BUILT** | All 50 migrations verified in CI. |
-| Render production build contract in repo | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
-| Runtime start contract | **BUILT** | `npm start`; no build/migration on every wake. |
-| Missing `.next` preflight | **BUILT** | Startup fails with an actionable deployment-contract error rather than opaque Next crash. |
-| Exact deploy-contract CI job | **BUILT** | Install/build/start contract runs before merge. |
-| External production deployment of latest main | **VERIFY EXTERNALLY** | Never inferred from repository green alone. |
+| Fresh empty-DB migration gate | **BUILT** | Current exact candidate applies all 51 migrations. |
+| Repository Node pin | **BUILT** | `.node-version` resolves CI/runtime contract to Node 20.19.4. |
+| Render build contract | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
+| Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |
+| Missing `.next` preflight | **BUILT** | Startup fails with actionable contract message. |
+| Exact deploy-contract CI | **BUILT** | Production install/build/start path runs before merge. |
+| External production deployment of newest `main` | **VERIFY EXTERNALLY** | Must be checked from actual host/domain/login/browser journey. |
+
+## External infrastructure truth
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Production database migrations after Aug 12 incident | **RECOVERED** | Failed Grid migration record was rolled back and corrected migration subsequently applied. |
+| Neon HIPAA project mode | **NOT VERIFIED AS ENABLED** | Last infrastructure inspection reported `hipaa: false`; do not infer legal compliance from code. |
+| Production app latest release | **VERIFY EXTERNALLY** | Repository status is not deploy proof. |
 
 ## Claims Klinikos does not make
 
-None of the following may be inferred merely from the repository:
+The repository alone does **not** prove:
 
-- Klinikos is a certified EHR.
-- Klinikos is HIPAA compliant by virtue of code alone.
-- A lab, clearinghouse, eligibility, payer, e-prescribing, credentialing, payment, fax, email, voice, or other external integration is live without verified production evidence.
-- A provider license or malpractice policy is externally verified unless a real authority/vendor response established that fact.
-- A browser redirect verifies payment.
-- A Grid ledger entry means money moved.
-- A marketplace listing is a Klinikos endorsement.
-- AI may diagnose, prescribe, release records, approve credentials, bypass consent, or widen authorization.
+- certified EHR status;
+- HIPAA compliance as a legal/compliance program;
+- live lab/clearinghouse/payer/eRx/fax/email/voice/credential/payment/payout connections without production evidence;
+- external provider license or malpractice verification without a real authority/vendor response;
+- payment because a browser returned from checkout;
+- payout because a Grid ledger entry exists;
+- marketplace endorsement merely because a listing is published;
+- AI authority to diagnose, prescribe, release records, approve credentials, bypass consent or widen authorization.
 
-See `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external gates and `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
+See `docs/EXTERNAL_DEPENDENCY_MATRIX.md`, `docs/MVP_JOURNEYS.md`, `docs/SOURCE_OF_TRUTH.md`, and the current specialist specifications for deeper truth.

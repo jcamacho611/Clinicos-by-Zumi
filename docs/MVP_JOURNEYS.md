@@ -83,4 +83,8 @@ No cascade-delete shortcut should be added merely for test convenience. Retentio
 
 ## Verification baseline
 
-The PR #66 candidate that became the current application baseline passed all ten journeys together with 547 tests, fresh 50-migration deployment, TypeScript, lint, production build, startup smoke, and the exact Render deploy-contract.
+On 2026-08-14, the exact final Grid MVP candidate (`740721959cbd3aa180763ebc772580e14c076ad0`) passed **all ten journeys** together with Prisma generation/validation, **51/51 fresh PostgreSQL migrations**, TypeScript, lint, the automated test suite, production build, production startup smoke, and the exact deploy-contract. It merged into `main` as `4b2a5dc89f3dae7a175b2f8eda9f83f866b77de6`.
+
+The exact final public Living Home candidate (`4f6d5f464f8ce85f15ce1a6ae9548105f058e950`) also passed the full Quality gate before merging as `2b570dd912633290f63cb7e412b56e3c7d107c7b`.
+
+These checks prove the repository candidates. They do not by themselves prove that the newest `main` commit has completed deployment on the external production host.
