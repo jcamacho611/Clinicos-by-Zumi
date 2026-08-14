@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { calculateDistanceMiles, isGridCoordinates, openStreetMapUrl, publicGridCoordinate } from "@/lib/grid/geo-rules";
+import {
+  calculateDistanceMiles,
+  evaluateGridGeographicScope,
+  isGridCoordinates,
+  openStreetMapUrl,
+  publicGridCoordinate,
+} from "@/lib/grid/geo-rules";
 
 describe("Grid geographic rules", () => {
   it("calculates a real-world radius with the Haversine formula", () => {
@@ -16,6 +22,29 @@ describe("Grid geographic rules", () => {
     expect(isGridCoordinates({ latitude: 40.7 })).toBe(false);
     expect(isGridCoordinates({ latitude: 91, longitude: -74 })).toBe(false);
     expect(isGridCoordinates({ latitude: 40.7, longitude: -74 })).toBe(true);
+  });
+
+  it("uses coordinate radius instead of state text when a real origin exists", () => {
+    const nearbyAcrossState = evaluateGridGeographicScope(
+      { latitude: 40.7, longitude: -74, radiusMiles: 10, state: "NY" },
+      { latitude: 40.71, longitude: -74.01, state: "NJ" },
+    );
+    const coarseOnly = evaluateGridGeographicScope(
+      { state: "NY" },
+      { state: "NJ" },
+    );
+
+    expect(nearbyAcrossState.mode).toBe("radius");
+    expect(nearbyAcrossState.eligible).toBe(true);
+    expect(nearbyAcrossState.distanceMiles).toBeLessThan(2);
+    expect(coarseOnly).toEqual({ eligible: false, distanceMiles: null, mode: "state" });
+  });
+
+  it("requires candidate coordinates when a saved need uses a radius", () => {
+    expect(evaluateGridGeographicScope(
+      { latitude: 40.7, longitude: -74, radiusMiles: 25, state: "NY" },
+      { state: "NY" },
+    )).toEqual({ eligible: false, distanceMiles: null, mode: "radius" });
   });
 
   it("reduces coordinate precision for public discovery", () => {
