@@ -59,16 +59,16 @@ describe("public Living Home interaction contract", () => {
     expect(source).not.toContain("doorwayActions");
     expect(source).not.toContain("Ways to enter Klinikos");
     expect(source).not.toContain("One more detail will help");
-    expect(source).toContain("Living thread");
-    expect(source).toContain("Continue the thread...");
+    expect(source).toContain("turns.map((turn)");
+    expect(source).toContain("priorResolution");
     expect(page).not.toContain("KlinikosHomepage");
   });
 
   it("renders truthful listening, understanding, connecting, preparing, and ready states", () => {
     const requestPosition = source.indexOf("{turn.prompt}");
     const progressPosition = source.indexOf("{progressSteps.map", requestPosition);
-    const responsePosition = source.indexOf("{turn.resolution.title}", progressPosition);
-    const actionPosition = source.indexOf("{destination.action}", responsePosition);
+    const responsePosition = source.indexOf("{resolution.title}", progressPosition);
+    const actionPosition = source.indexOf("actions.map((action)", responsePosition);
 
     expect(requestPosition).toBeGreaterThan(0);
     expect(progressPosition).toBeGreaterThan(requestPosition);
@@ -80,7 +80,6 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain("Preparing");
     expect(source).toContain("Ready");
     expect(source).toContain('if (resolution.destination)');
-    expect(source).toContain('connectingSuppressed');
   });
 
   it("supports keyboard submission, accessible status, and reduced motion", () => {
@@ -116,7 +115,6 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain("lg:grid-cols-[190px_minmax(0,1fr)_190px]");
     expect(source).toContain('id="public-klinikos-intent"');
     expect(source).toContain('placeholder="Ask Klinikos anything..."');
-    expect(source).toContain('placeholder="Continue the thread..."');
     expect(source).toContain("What needs");
     expect(source).toContain("to happen?");
     expect(source).toContain("Your AI Operating Partner");
