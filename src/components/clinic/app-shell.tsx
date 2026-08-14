@@ -10,7 +10,7 @@ import {
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X, Waypoints,
 } from "lucide-react";
-import { BrandMark } from "@/components/clinic/brand-mark";
+import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { ZumiPresence } from "@/components/clinic/zumi-presence";
 import { Button } from "@/components/ui/button";
@@ -48,13 +48,15 @@ function SidebarLink({ active, href, icon: iconName, label, onNavigate }: {
   return (
     <Link
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition",
-        active ? "bg-white/[.10] text-[var(--k-shell-text)]" : "text-white/58 hover:bg-white/[.05] hover:text-white",
+        "group flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold transition duration-200",
+        active
+          ? "border border-[#e6817b]/18 bg-[#e6817b]/[.09] text-[#fff8f6] shadow-[0_0_28px_rgba(230,129,123,.05)]"
+          : "border border-transparent text-[#b89f9b] hover:border-[#e6817b]/10 hover:bg-[#e6817b]/[.045] hover:text-[#f8efed]",
       )}
       href={href}
       onClick={onNavigate}
     >
-      <Icon className={cn("size-[17px]", active ? "text-[var(--k-accent)]" : "text-white/34 group-hover:text-[var(--k-accent)]")} strokeWidth={1.8} />
+      <Icon className={cn("size-[17px]", active ? "text-[#e6817b]" : "text-[#866d69] group-hover:text-[#e6817b]")} strokeWidth={1.65} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
     </Link>
   );
@@ -69,22 +71,18 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
   const deeperGroups = visibleNavigation.filter((group) => group.label !== "Home");
 
   return (
-    <aside className="flex h-full w-[264px] flex-col border-r border-white/10 bg-[var(--k-shell)] text-[var(--k-shell-text)] transition-colors duration-500">
-      <div className="flex h-[82px] items-center gap-3 px-5">
-        <BrandMark />
-        <div>
-          <p className="text-[15px] font-extrabold tracking-[-.03em]">Klinikos</p>
-          <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.18em] text-[var(--k-premium)]">Operating ecosystem</p>
-        </div>
+    <aside className="flex h-full w-[264px] flex-col border-r border-[#e28b85]/12 bg-[#070304]/98 text-[#f8efed] shadow-[20px_0_70px_rgba(0,0,0,.28)]">
+      <div className="flex h-[88px] items-center px-5">
+        <KlinikosWordmark href="/dashboard" framed inverse markClassName="h-7 w-7" textClassName="h-[20px] w-auto" className="gap-3" />
       </div>
 
-      <div className="px-4 pb-3 pt-2">
-        <p className="truncate text-xs font-semibold">{session.organizationName}</p>
-        <p className="mt-1 text-[10px] text-white/42">{roleLabel(session.role)}</p>
+      <div className="mx-4 rounded-[16px] border border-[#e28b85]/10 bg-[#12090b]/65 px-4 py-3">
+        <p className="truncate text-xs font-semibold text-[#f8efed]">{session.organizationName}</p>
+        <p className="mt-1 text-[10px] text-[#9f8985]">{roleLabel(session.role)}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-8" aria-label="Klinikos workspace navigation">
-        <div className="border-y border-white/10 py-3">
+      <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-8" aria-label="Klinikos workspace navigation">
+        <div className="border-y border-[#e28b85]/10 py-3">
           <SidebarLink active={pathname === "/dashboard"} href="/dashboard" icon="LayoutDashboard" label="Home" onNavigate={onNavigate} />
           {homeGroup?.items.filter((item) => item.href !== "/dashboard").map((item) => (
             <SidebarLink
@@ -103,12 +101,12 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
             const groupActive = group.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
             return (
               <details className="group/nav" open={groupActive ? true : undefined} key={group.label}>
-                <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-semibold text-white/50 transition hover:bg-white/[.04] hover:text-white marker:hidden">
+                <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773] transition hover:bg-[#e6817b]/[.04] hover:text-[#d8c1bd] marker:hidden">
                   <span>{group.label}</span>
-                  <span className="ml-auto text-[9px] text-white/25">{group.items.length}</span>
-                  <ChevronDown className="size-3.5 text-white/30 transition group-open/nav:rotate-180" />
+                  <span className="ml-auto text-[9px] text-[#6f5b58]">{group.items.length}</span>
+                  <ChevronDown className="size-3.5 text-[#725d59] transition group-open/nav:rotate-180" />
                 </summary>
-                <div className="mt-1 space-y-0.5 border-l border-white/10 pl-2">
+                <div className="mt-1 space-y-0.5 border-l border-[#e28b85]/10 pl-2">
                   {group.items.map((item) => (
                     <SidebarLink
                       active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
@@ -126,15 +124,15 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
         </div>
       </nav>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="border-t border-[#e28b85]/10 p-4">
         <div className="flex items-center gap-3">
-          <span className="grid size-9 place-items-center rounded-full border border-white/16 bg-white/[.05] text-xs font-extrabold">{initials(session.name)}</span>
+          <span className="grid size-9 place-items-center rounded-full border border-[#efaaa1]/18 bg-[#e6817b]/[.06] text-xs font-semibold text-[#f8efed]">{initials(session.name)}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold">{session.name}</p>
-            <Link className="mt-1 block text-[10px] text-white/40 hover:text-white" href="/settings" onClick={onNavigate}>Settings & appearance</Link>
+            <p className="truncate text-xs font-semibold text-[#f8efed]">{session.name}</p>
+            <Link className="mt-1 block text-[10px] text-[#8f7773] hover:text-[#efaaa1]" href="/settings" onClick={onNavigate}>Settings & appearance</Link>
           </div>
           <form action="/api/auth/logout" method="post">
-            <Button className="text-white/55 hover:bg-white/10 hover:text-white" aria-label="Sign out" size="icon" title="Sign out" type="submit" variant="ghost"><LogOut className="size-4" /></Button>
+            <Button className="text-[#9f8985] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" aria-label="Sign out" size="icon" title="Sign out" type="submit" variant="ghost"><LogOut className="size-4" /></Button>
           </form>
         </div>
       </div>
@@ -152,38 +150,39 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
   const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
 
   return (
-    <div className="min-h-screen bg-[var(--mode-background)] text-[#0b1e3a] transition-colors duration-500" data-clinic-mode={designMode}>
+    <div className="klinikos-platform min-h-screen bg-[var(--mode-background)] text-[var(--k-text)] transition-colors duration-500" data-clinic-mode={designMode} data-klinikos-ds>
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_72%_0%,rgba(150,41,48,.14),transparent_28%),radial-gradient(circle_at_20%_85%,rgba(230,129,123,.035),transparent_28%)]" />
       <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar session={session} /></div>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-[#07121d]/70 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
+          <button className="absolute inset-0 bg-[#050303]/82 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
           <div className="relative h-full w-[290px] shadow-2xl"><Sidebar onNavigate={() => setMobileOpen(false)} session={session} /></div>
-          <button className="absolute left-[302px] top-4 grid size-10 place-items-center rounded-full border border-white/15 bg-[var(--k-shell)] text-white shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
+          <button className="absolute left-[302px] top-4 grid size-10 place-items-center rounded-full border border-[#efaaa1]/15 bg-[#0c0607] text-[#f8efed] shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
         </div>
       )}
 
-      <div className="lg:pl-[264px]">
-        <header className="sticky top-0 z-30 flex h-[82px] items-center gap-4 border-b border-[#0b1e3a]/10 bg-[color:var(--mode-header)] px-4 backdrop-blur-xl transition-colors duration-500 sm:px-7 lg:px-10">
-          <Button className="border-[#0b1e3a]/12 bg-transparent text-[#0b1e3a] lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
+      <div className="relative lg:pl-[264px]">
+        <header className="sticky top-0 z-30 flex h-[82px] items-center gap-4 border-b border-[#e28b85]/10 bg-[color:var(--mode-header)] px-4 backdrop-blur-2xl transition-colors duration-500 sm:px-7 lg:px-10">
+          <Button className="border-[#e28b85]/15 bg-transparent text-[#f8efed] lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
           <div className="min-w-0">
-            <p className="text-[9px] font-extrabold uppercase tracking-[.18em] text-[var(--k-accent)]">{meta.eyebrow}</p>
-            <h1 className="truncate text-xl font-extrabold tracking-[-.035em] text-[#0b1e3a]">{meta.title}</h1>
+            <p className="text-[9px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">{meta.eyebrow}</p>
+            <h1 className="truncate text-xl font-light tracking-[-.035em] text-[#f8efed]">{meta.title}</h1>
           </div>
 
-          <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 border-b border-[#0b1e3a]/18 px-1 py-2 md:flex">
-            <Search className="size-4 text-[#0b1e3a]/38" />
-            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#0b1e3a] outline-none placeholder:text-[#0b1e3a]/34" placeholder="Search Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
-            <VoiceInputButton className="[&_button]:h-7 [&_button]:px-2 [&_button]:text-[10px]" onTranscript={setGlobalSearch} />
+          <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex">
+            <Search className="size-4 text-[#9f8985]" />
+            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Search Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
+            <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={setGlobalSearch} />
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <Button aria-label="Open Klinikos Intelligence" className="border-[#0b1e3a]/12 bg-transparent text-[#0b1e3a]" onClick={() => window.dispatchEvent(new Event("zumi:toggle"))} size="icon" title="Open Klinikos Intelligence" type="button" variant="secondary"><Command className="size-4" /></Button>
-            <Button className="relative border-[#0b1e3a]/12 bg-transparent text-[#0b1e3a]" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
+            <Button aria-label="Open Klinikos Intelligence" className="border-[#e28b85]/14 bg-[#12090b]/40 text-[#e6817b] hover:bg-[#e6817b]/10" onClick={() => window.dispatchEvent(new Event("zumi:toggle"))} size="icon" title="Open Klinikos Intelligence" type="button" variant="secondary"><Command className="size-4" /></Button>
+            <Button className="relative border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1680px] px-4 py-8 text-[#0b1e3a] sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-14">{children}</main>
+        <main className="klinikos-workspace mx-auto w-full max-w-[1680px] px-4 py-8 text-[var(--k-text)] sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-14">{children}</main>
       </div>
 
       <ZumiPresence userName={session.name} />
