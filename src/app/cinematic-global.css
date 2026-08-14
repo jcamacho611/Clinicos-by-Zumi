@@ -1,0 +1,200 @@
+/*
+ * Klinikos cinematic product layer.
+ *
+ * This file is intentionally imported after globals.css. It provides one visual
+ * atmosphere across public, authenticated, Grid, EDU, patient, legal, activation,
+ * and commercial surfaces without changing authorization or workflow behavior.
+ */
+
+.klinikos-cinematic-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 52% -8%, rgba(123, 29, 36, .20), transparent 34%),
+    radial-gradient(circle at 92% 18%, rgba(230, 129, 123, .045), transparent 25%),
+    #050303;
+  color: #f8efed;
+}
+
+.klinikos-cinematic-root :focus-visible {
+  outline-color: #e6817b;
+}
+
+.klinikos-cinematic-root ::selection {
+  background: #e6817b;
+  color: #19090b;
+}
+
+/* Shared product panels. Pages that already use the semantic Klinikos utility
+   classes inherit the new language automatically. */
+.klinikos-cinematic-root .k-page,
+.klinikos-cinematic-root .k-hero {
+  background-color: #050303;
+  color: #f8efed;
+}
+
+.klinikos-cinematic-root .k-hero {
+  background:
+    radial-gradient(circle at 50% 16%, rgba(132, 31, 39, .24), transparent 36%),
+    linear-gradient(180deg, #050303 0%, #090506 100%);
+}
+
+.klinikos-cinematic-root .k-surface,
+.klinikos-cinematic-root .k-raised {
+  background: rgba(18, 9, 11, .78);
+  border-color: rgba(226, 139, 133, .14);
+  color: #f8efed;
+}
+
+.klinikos-cinematic-root .k-text { color: #f8efed; }
+.klinikos-cinematic-root .k-muted { color: #a98f8b; }
+.klinikos-cinematic-root .k-accent { color: #e6817b; }
+.klinikos-cinematic-root .k-premium { color: #efaaa1; }
+.klinikos-cinematic-root .k-rule { border-color: rgba(226, 139, 133, .14); }
+.klinikos-cinematic-root .k-kicker { color: #e6817b; }
+
+.klinikos-cinematic-root .k-primary-action {
+  background: #e6817b;
+  color: #1b090c;
+  border: 1px solid rgba(255, 220, 216, .16);
+  box-shadow: 0 14px 44px rgba(112, 25, 31, .18);
+}
+
+.klinikos-cinematic-root .k-primary-action:hover {
+  background: #efaaa1;
+}
+
+.klinikos-cinematic-root .k-secondary-action {
+  border-color: rgba(226, 139, 133, .16);
+  color: #f1dfdc;
+  background: rgba(18, 9, 11, .45);
+}
+
+.klinikos-cinematic-root .k-secondary-action:hover {
+  border-color: rgba(230, 129, 123, .36);
+  background: rgba(230, 129, 123, .06);
+}
+
+.klinikos-cinematic-root .k-input-shell {
+  border-color: rgba(226, 139, 133, .16);
+  background: rgba(18, 9, 11, .72);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .26);
+}
+
+.klinikos-cinematic-root .k-input-shell:focus-within {
+  border-color: rgba(230, 129, 123, .52);
+  box-shadow: 0 0 0 4px rgba(230, 129, 123, .07), 0 18px 60px rgba(0, 0, 0, .28);
+}
+
+.klinikos-cinematic-root .k-input-shell input,
+.klinikos-cinematic-root .k-input-shell textarea {
+  color: #f8efed;
+}
+
+.klinikos-cinematic-root .k-input-shell input::placeholder,
+.klinikos-cinematic-root .k-input-shell textarea::placeholder {
+  color: #806965;
+}
+
+/* Authenticated product workspace. Keeps all page-local cards legible even when
+   older screens still carry blue-era hard-coded text utilities. */
+.klinikos-platform {
+  --workspace-panel: rgba(15, 7, 9, .80);
+  --workspace-panel-raised: rgba(24, 11, 13, .84);
+  --workspace-border: rgba(226, 139, 133, .14);
+  --workspace-text: #f8efed;
+  --workspace-muted: #a98f8b;
+  --workspace-accent: #e6817b;
+  color-scheme: dark;
+}
+
+.klinikos-platform .klinikos-workspace {
+  color: var(--workspace-text);
+}
+
+.klinikos-platform .klinikos-workspace :where(h1, h2, h3, h4, h5, h6) {
+  color: #f8efed;
+}
+
+.klinikos-platform .klinikos-workspace :where(p, li, dt, dd, label) {
+  text-wrap: pretty;
+}
+
+.klinikos-platform .klinikos-workspace :where(input, textarea, select) {
+  color-scheme: dark;
+}
+
+.klinikos-platform .klinikos-workspace :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
+  border-color: rgba(226, 139, 133, .14);
+}
+
+/* Shared native form language for standalone public/auth pages. */
+.klinikos-cinematic-root :where(input, textarea, select) {
+  accent-color: #e6817b;
+}
+
+.klinikos-cinematic-root :where(button, a) {
+  text-underline-offset: 3px;
+}
+
+/* Klinikos Intelligence must read rose, never legacy cyan, wherever the shared
+   orb is rendered outside Living Home. */
+.klinikos-cinematic-root .zumi-orb {
+  border-color: rgba(230, 129, 123, .24);
+}
+
+.klinikos-cinematic-root .zumi-orb::before {
+  border-color: rgba(230, 129, 123, .30);
+  box-shadow: 0 0 72px rgba(210, 83, 82, .13);
+}
+
+.klinikos-cinematic-root .zumi-orb::after {
+  background: radial-gradient(circle at 35% 30%, #ffd8d3 0, #ee9089 19%, #a74449 50%, #2a0d11 76%);
+  box-shadow: 0 0 48px rgba(224, 105, 99, .34);
+}
+
+.klinikos-cinematic-root .zumi-node {
+  background: #ef9089;
+  box-shadow: 0 0 18px #ef9089;
+}
+
+/* Commercial shell and Grid/public surfaces. */
+.sales-canvas,
+.grid-canvas {
+  color-scheme: dark;
+}
+
+.sales-canvas :where(h1, h2, h3),
+.grid-canvas :where(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+/* Legal text remains calm and readable in the same product family. */
+.klinikos-cinematic-root article {
+  --tw-prose-body: #c9b5b1;
+  --tw-prose-headings: #f8efed;
+  --tw-prose-links: #efaaa1;
+  --tw-prose-bold: #f8efed;
+  --tw-prose-counters: #a98f8b;
+  --tw-prose-bullets: #8d6f6b;
+  --tw-prose-hr: rgba(226, 139, 133, .14);
+  --tw-prose-quotes: #e7d4d0;
+  --tw-prose-quote-borders: rgba(230, 129, 123, .38);
+  --tw-prose-captions: #8f7773;
+  --tw-prose-code: #f2c0ba;
+}
+
+@media (max-width: 767px) {
+  .klinikos-cinematic-root {
+    background:
+      radial-gradient(circle at 52% 0%, rgba(123, 29, 36, .16), transparent 28%),
+      #050303;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .klinikos-cinematic-root *,
+  .klinikos-cinematic-root *::before,
+  .klinikos-cinematic-root *::after {
+    scroll-behavior: auto !important;
+  }
+}
