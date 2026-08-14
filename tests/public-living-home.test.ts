@@ -81,13 +81,23 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain('role="status"');
     expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
     expect(source.indexOf('role="status"')).toBeLessThan(source.indexOf("<section"));
-    expect(source).toContain("composer.current?.focus()");
-    expect(source).toContain("ref={composer}");
+    expect(source).toContain("readOnly={Boolean(activeTurn)}");
+    expect(source).toContain("latestResolution.title");
+    expect(source).toContain("latestResolution.destination.action");
   });
 
   it("passes the prior resolved intent into conversational follow-ups", () => {
     expect(source).toContain("const priorResolution = [...turns].reverse().find");
-    expect(source).toContain("resolvePublicLivingIntent(prompt, priorResolution)");
+    expect(source).toContain("const resolution = resolvePublicLivingIntent(prompt, priorResolution)");
+  });
+
+  it("performs inference before scheduling the progress reveal", () => {
+    const inferencePosition = source.indexOf("const resolution = resolvePublicLivingIntent");
+    const schedulePosition = source.indexOf("schedule(timing.preparing");
+
+    expect(inferencePosition).toBeGreaterThan(0);
+    expect(inferencePosition).toBeLessThan(schedulePosition);
+    expect(source).toContain("response: 480");
   });
 
   it("keeps the full-screen workspace responsive without hiding the composer", () => {

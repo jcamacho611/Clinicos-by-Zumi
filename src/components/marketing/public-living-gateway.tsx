@@ -40,16 +40,16 @@ export function PublicLivingGateway() {
   const nextTurnId = useRef(1);
   const timers = useRef<number[]>([]);
   const threadEnd = useRef<HTMLDivElement>(null);
-  const composer = useRef<HTMLTextAreaElement>(null);
   const activeTurn = turns.find((turn) => turn.stage !== "complete") ?? null;
   const activeTurnId = activeTurn?.id ?? null;
   const activeStage = activeTurn?.stage ?? null;
   const conversationStarted = turns.length > 0;
+  const latestResolution = turns[turns.length - 1]?.resolution ?? null;
 
   const liveStatus = activeStage
     ? `Klinikos is ${statusLabel(activeStage).toLowerCase()}.`
-    : turns.length
-      ? "Klinikos is ready for the next request."
+    : latestResolution
+      ? `Klinikos is ready. ${latestResolution.title}${latestResolution.destination ? ` Next action available: ${latestResolution.destination.action}.` : ""}`
       : "Klinikos is ready.";
 
   useEffect(() => {
@@ -61,10 +61,6 @@ export function PublicLivingGateway() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     threadEnd.current?.scrollIntoView({ behavior: activeTurnId && !reduceMotion ? "smooth" : "auto", block: "end" });
   }, [activeStage, activeTurnId, turns.length]);
-
-  useEffect(() => {
-    if (conversationStarted && activeTurnId === null) composer.current?.focus();
-  }, [activeTurnId, conversationStarted]);
 
   function updateTurn(id: number, update: Partial<ConversationTurn>) {
     setTurns((current) => current.map((turn) => turn.id === id ? { ...turn, ...update } : turn));
@@ -80,6 +76,7 @@ export function PublicLivingGateway() {
     const prompt = intent.trim();
     if (!prompt || activeTurn) return;
     const priorResolution = [...turns].reverse().find((turn) => turn.resolution)?.resolution ?? null;
+    const resolution = resolvePublicLivingIntent(prompt, priorResolution);
 
     const id = nextTurnId.current;
     nextTurnId.current += 1;
@@ -89,13 +86,13 @@ export function PublicLivingGateway() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timing = reduceMotion
       ? { preparing: 0, ready: 0, response: 0 }
-      : { preparing: 420, ready: 900, response: 1_180 };
+      : { preparing: 160, ready: 320, response: 480 };
 
     schedule(timing.preparing, () => updateTurn(id, { stage: "preparing" }));
     schedule(timing.ready, () => updateTurn(id, { stage: "ready" }));
     schedule(timing.response, () => updateTurn(id, {
       stage: "complete",
-      resolution: resolvePublicLivingIntent(prompt, priorResolution),
+      resolution,
     }));
   }
 
@@ -241,13 +238,12 @@ export function PublicLivingGateway() {
             <div className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-end gap-4 border-b border-[var(--line-dark)] pb-3 focus-within:border-[var(--accent-intelligence)]">
               <textarea
                 className="max-h-36 min-h-14 resize-none bg-transparent py-4 text-base font-semibold leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] sm:text-lg"
-                disabled={Boolean(activeTurn)}
                 id="public-klinikos-intent"
                 onChange={(event) => setIntent(event.target.value)}
                 onKeyDown={handleComposerKeyDown}
                 placeholder={conversationStarted ? "Continue the thread..." : "Describe the outcome..."}
+                readOnly={Boolean(activeTurn)}
                 rows={1}
-                ref={composer}
                 value={intent}
               />
               <button
