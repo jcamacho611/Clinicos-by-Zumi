@@ -14,6 +14,15 @@ type GridCoordinateInput = {
   longitude?: number | null;
 };
 
+type GridGeographicOrigin = GridCoordinateInput & {
+  radiusMiles?: number | null;
+  state?: string | null;
+};
+
+type GridGeographicCandidate = GridCoordinateInput & {
+  state?: string | null;
+};
+
 export function isGridCoordinates(value: GridCoordinateInput | null | undefined): value is GridCoordinates {
   return Boolean(
     value
@@ -35,6 +44,43 @@ export function calculateDistanceMiles(origin: GridCoordinates, destination: Gri
     + Math.cos(originLatitude) * Math.cos(destinationLatitude) * Math.sin(longitudeDelta / 2) ** 2;
 
   return EARTH_RADIUS_MILES * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+/**
+ * Geographic hard-gate selection for saved Grid demand.
+ *
+ * When a permission-derived coordinate origin and radius are present, the radius is
+ * authoritative. A state text mismatch must not eliminate a nearby resource across
+ * a state boundary, and a stale/default state value must not override real distance.
+ * If coordinate-radius matching is unavailable, state remains the coarse fallback.
+ */
+export function evaluateGridGeographicScope(origin: GridGeographicOrigin, candidate: GridGeographicCandidate) {
+  const radiusMode = isGridCoordinates(origin)
+    && Number.isFinite(origin.radiusMiles)
+    && origin.radiusMiles! >= 0;
+
+  if (radiusMode) {
+    if (!isGridCoordinates(candidate)) {
+      return { eligible: false, distanceMiles: null, mode: "radius" as const };
+    }
+    const distanceMiles = calculateDistanceMiles(origin, candidate);
+    return {
+      eligible: distanceMiles <= origin.radiusMiles!,
+      distanceMiles,
+      mode: "radius" as const,
+    };
+  }
+
+  const stateMismatch = Boolean(
+    origin.state
+    && candidate.state
+    && origin.state.toLowerCase() !== candidate.state.toLowerCase(),
+  );
+  return {
+    eligible: !stateMismatch,
+    distanceMiles: null,
+    mode: "state" as const,
+  };
 }
 
 /**
