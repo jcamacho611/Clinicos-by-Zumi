@@ -1,60 +1,66 @@
 import Link from "next/link";
 import { Radio, ShieldAlert, ShieldCheck } from "lucide-react";
-import { BrandMark } from "@/components/clinic/brand-mark";
+import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { DsSurface } from "@/components/ds";
 import { HUMAN_REVIEW_NOTICE, missionPhases, NO_PHI_NOTICE, type MissionPhaseKey } from "@/lib/sales/zumi-command";
 
 /** Klinikos command surface with Zumi as the embedded intelligence layer. */
 export function ZumiCommandShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#05090f] text-slate-100">
-      <a
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-cyan-300 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-[#05090f]"
-        href="#zumi-main"
-      >
-        Skip to main content
-      </a>
+    <DsSurface>
+      <div className="min-h-screen" style={{ background: "var(--obsidian)", color: "var(--text-primary)" }}>
+        <a
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:px-4 focus:py-2 focus:text-sm focus:font-bold"
+          href="#zumi-main"
+          style={{ background: "var(--cyan-300)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}
+        >
+          Skip to main content
+        </a>
 
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(23,78,166,.28),transparent_60%)]" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0"
+          style={{ background: "radial-gradient(ellipse at top, color-mix(in oklch, var(--aegean-700) 34%, transparent), transparent 62%)" }}
+        />
 
-      <header className="relative border-b border-white/10" role="banner">
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
-          <Link className="flex items-center gap-3" href="/">
-            <BrandMark />
-            <span>
-              <span className="block text-sm font-extrabold tracking-[-.03em] text-white">Klinikos</span>
-              <span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#e6c55b]">Healthcare Operating Network</span>
-            </span>
-          </Link>
-          <p className="ml-auto flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-cyan-300">
-            <Radio aria-hidden="true" className="size-3.5" />
-            Zumi standing by
-          </p>
-        </div>
-      </header>
+        <header className="relative" role="banner" style={{ borderBottom: "var(--border-hair-dark)" }}>
+          <div className="mx-auto flex min-h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
+            <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="text-xs" />
+            <p className="ml-auto flex items-center gap-2 text-[10px] font-bold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>
+              <Radio aria-hidden="true" className="size-3.5" />
+              Klinikos Intelligence ready
+            </p>
+          </div>
+        </header>
 
-      <main className="relative" id="zumi-main">{children}</main>
-      <KlinikosSafetyFooter />
-    </div>
+        <main className="relative" id="zumi-main">{children}</main>
+        <KlinikosSafetyFooter />
+      </div>
+    </DsSurface>
   );
 }
 
-export function ZumiAssistantOrb({ active = false, label = "Zumi" }: { active?: boolean; label?: string }) {
+export function ZumiAssistantOrb({ active = false, label = "Klinikos Intelligence" }: { active?: boolean; label?: string }) {
   return (
     <span className="flex items-center gap-3">
       <span className="relative flex size-9 items-center justify-center">
-        <span aria-hidden="true" className={`absolute inset-0 rounded-full border border-cyan-300/50 bg-cyan-400/10 ${active ? "motion-safe:animate-pulse" : ""}`} />
-        <span aria-hidden="true" className="size-2.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,.9)]" />
+        <span
+          aria-hidden="true"
+          className={`absolute inset-0 rounded-full ${active ? "motion-safe:animate-pulse" : ""}`}
+          style={{ border: "1px solid color-mix(in oklch, var(--cyan-400) 48%, transparent)", background: "color-mix(in oklch, var(--cyan-500) 10%, transparent)" }}
+        />
+        <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: "var(--cyan-300)", boxShadow: "0 0 12px color-mix(in oklch, var(--cyan-300) 88%, transparent)" }} />
       </span>
-      <span className="text-[11px] font-extrabold uppercase tracking-[.16em] text-cyan-200">{label}</span>
+      <span className="text-[11px] font-extrabold uppercase" style={{ color: "var(--cyan-300)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
     </span>
   );
 }
 
 export function ZumiBriefingPanel({ children, active }: { children: React.ReactNode; active?: boolean }) {
   return (
-    <div className="border border-white/10 bg-white/[.04] p-5 backdrop-blur-sm sm:p-6">
+    <div className="p-5 backdrop-blur-sm sm:p-6" style={{ background: "var(--surface-raised)", border: "var(--border-hair-dark)", borderRadius: "var(--radius-md)" }}>
       <ZumiAssistantOrb active={active} />
-      <div className="mt-4 text-sm leading-7 text-slate-300">{children}</div>
+      <div className="mt-4 text-sm leading-7" style={{ color: "var(--text-secondary)" }}>{children}</div>
     </div>
   );
 }
@@ -68,8 +74,18 @@ export function MissionPhaseProgress({ current }: { current: MissionPhaseKey }) 
           const state = index < currentIndex ? "complete" : index === currentIndex ? "current" : "upcoming";
           return (
             <li className="flex items-center gap-2" key={phase.key}>
-              <span aria-hidden="true" className={`size-1.5 rounded-full ${state === "current" ? "bg-cyan-300" : state === "complete" ? "bg-cyan-300/40" : "bg-white/20"}`} />
-              <span className={`text-[10px] font-bold uppercase tracking-[.14em] ${state === "current" ? "text-cyan-200" : "text-slate-500"}`} {...(state === "current" ? { "aria-current": "step" as const } : {})}>{phase.label}</span>
+              <span
+                aria-hidden="true"
+                className="size-1.5 rounded-full"
+                style={{ background: state === "current" ? "var(--cyan-300)" : state === "complete" ? "color-mix(in oklch, var(--cyan-300) 42%, transparent)" : "color-mix(in oklch, var(--text-primary) 20%, transparent)" }}
+              />
+              <span
+                className="text-[10px] font-bold uppercase"
+                style={{ color: state === "current" ? "var(--cyan-300)" : "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}
+                {...(state === "current" ? { "aria-current": "step" as const } : {})}
+              >
+                {phase.label}
+              </span>
             </li>
           );
         })}
@@ -80,7 +96,10 @@ export function MissionPhaseProgress({ current }: { current: MissionPhaseKey }) 
 
 export function HumanReviewBanner() {
   return (
-    <p className="flex gap-3 border border-[#e6c55b]/30 bg-[#e6c55b]/[.07] px-4 py-3 text-[11px] leading-5 text-[#f0dda0]">
+    <p
+      className="flex gap-3 px-4 py-3 text-[11px] leading-5"
+      style={{ color: "var(--gold-200)", background: "color-mix(in oklch, var(--gold-500) 8%, transparent)", border: "1px solid color-mix(in oklch, var(--gold-500) 30%, transparent)", borderRadius: "var(--radius-sm)" }}
+    >
       <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span><strong className="font-extrabold">Human Review Required.</strong> {HUMAN_REVIEW_NOTICE}</span>
     </p>
@@ -89,7 +108,10 @@ export function HumanReviewBanner() {
 
 export function NoPHINotice() {
   return (
-    <p className="flex gap-3 border border-rose-400/30 bg-rose-500/[.07] px-4 py-3 text-[11px] leading-5 text-rose-200">
+    <p
+      className="flex gap-3 px-4 py-3 text-[11px] leading-5"
+      style={{ color: "var(--status-signal)", background: "color-mix(in oklch, var(--status-signal) 8%, transparent)", border: "1px solid color-mix(in oklch, var(--status-signal) 30%, transparent)", borderRadius: "var(--radius-sm)" }}
+    >
       <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span><strong className="font-extrabold">No PHI.</strong> {NO_PHI_NOTICE}</span>
     </p>
@@ -98,15 +120,15 @@ export function NoPHINotice() {
 
 export function KlinikosSafetyFooter() {
   return (
-    <footer className="relative border-t border-white/10">
+    <footer className="relative" style={{ borderTop: "var(--border-hair-dark)" }}>
       <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
-        <p className="max-w-4xl text-[11px] leading-6 text-slate-400">
-          Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is Klinikos Intelligence, the assistance layer inside Klinikos. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review. Zumi organises operational information and drafts administrative work for a human to approve; it does not diagnose, prescribe, decide treatment, guarantee coverage, submit claims, or release records.
+        <p className="max-w-4xl text-[11px] leading-6" style={{ color: "var(--text-secondary)" }}>
+          Klinikos is an engineering foundation built toward regulated healthcare deployment. Zumi is Klinikos Intelligence, the assistance layer inside Klinikos. Klinikos is not a certified electronic health record, a production clinical system, a clearinghouse, a diagnostic tool, or a substitute for licensed clinical judgment. Production activation requires review. Klinikos Intelligence organises operational information and drafts administrative work for a human to approve; it does not diagnose, prescribe, decide treatment, guarantee coverage, submit claims, or release records.
         </p>
         <div className="mt-6 flex flex-wrap gap-5 text-[11px] font-bold">
-          <Link className="text-slate-400 hover:text-white" href="/legal/privacy">Privacy notice</Link>
-          <Link className="text-slate-400 hover:text-white" href="/legal/terms">Terms</Link>
-          <Link className="text-slate-400 hover:text-white" href="/legal/ai">AI terms</Link>
+          <Link className="hover:underline" style={{ color: "var(--text-secondary)" }} href="/legal/privacy">Privacy notice</Link>
+          <Link className="hover:underline" style={{ color: "var(--text-secondary)" }} href="/legal/terms">Terms</Link>
+          <Link className="hover:underline" style={{ color: "var(--text-secondary)" }} href="/legal/ai">AI terms</Link>
         </div>
       </div>
     </footer>
