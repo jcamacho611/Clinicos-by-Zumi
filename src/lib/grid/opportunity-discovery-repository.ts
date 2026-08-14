@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
-import { calculateDistanceMiles, isGridCoordinates } from "@/lib/grid/geo-rules";
+import { evaluateGridGeographicScope } from "@/lib/grid/geo-rules";
 import { rankGridMatches } from "@/lib/grid/matching-engine";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -97,7 +97,6 @@ function textFit(demand: DemandRow, resource: ResourceRow) {
 function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: AvailabilityRow[]) {
   const reasons: string[] = [];
   let score = 50;
-  let distanceMiles: number | null = null;
 
   if (resource.status !== "active" || resource.reviewStatus !== "approved") return null;
   if (!resourceKinds[demand.kind]?.includes(resource.resourceType)) return null;
@@ -105,12 +104,11 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
   const sameOrganization = resource.organizationId === demand.organizationId;
   const purposeBoundMatch = resource.visibility === "matched_only";
   if (!sameOrganization && resource.visibility !== "public" && !purposeBoundMatch) return null;
-  if (demand.state && resource.state && demand.state.toLowerCase() !== resource.state.toLowerCase()) return null;
-  if (isGridCoordinates(demand) && demand.radiusMiles != null) {
-    if (!isGridCoordinates(resource)) return null;
-    distanceMiles = calculateDistanceMiles(demand, resource);
-    if (distanceMiles > demand.radiusMiles) return null;
-  }
+
+  const geography = evaluateGridGeographicScope(demand, resource);
+  if (!geography.eligible) return null;
+  const distanceMiles = geography.distanceMiles;
+
   if (demand.maxPriceCents != null && resource.priceCents != null && resource.priceCents > demand.maxPriceCents) return null;
   if (resource.capacity < demand.quantity) return null;
 
