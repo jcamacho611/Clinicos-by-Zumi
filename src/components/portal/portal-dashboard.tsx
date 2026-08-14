@@ -278,7 +278,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                             <p className="text-sm font-extrabold">{record.title}</p>
                             <Badge tone="neutral">{record.kind}</Badge>
                           </div>
-                          <p className="mt-2 line-clamp-3 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{record.detail}</p>
+                          <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{record.detail}</p>
                           <p className="mt-2 text-[10px] font-bold" style={{ color: "var(--text-on-paper-dim)" }}>Released {formatDate(record.releasedAt)}</p>
                         </div>
                       </div>
@@ -302,7 +302,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                         <Badge tone={message.direction === "OUTBOUND" ? "observing" : "neutral"}>{message.direction === "OUTBOUND" ? "From your clinic" : "You"}</Badge>
                         <span className="text-[10px] font-bold" style={{ color: "var(--text-on-paper-dim)" }}>{formatDate(message.sentAt)}</span>
                       </div>
-                      <p className="mt-3 line-clamp-4 text-sm leading-6">{message.body}</p>
+                      <p className="mt-3 text-sm leading-6">{message.body}</p>
                     </article>
                   )) : <PortalEmpty text="No portal messages are available yet." />}
                 </div>
