@@ -12,11 +12,14 @@ describe("patient portal experience", () => {
 
     expect(dashboard).toContain("Next for you");
     expect(dashboard).toContain("Everything important is handled");
-    expect(dashboard).toContain("Only information your care team has explicitly released to you appears here.");
+    expect(dashboard).toContain("Your appointments, assigned forms, and account balances are tied to your patient account.");
+    expect(dashboard).toContain("Records, results, instructions, and clinic-to-patient messages appear only when the clinic has made them patient-visible or approved them for release.");
     expect(dashboard).toContain("Private patient session");
     expect(dashboard).toContain("Records and messages");
     expect(dashboard).toContain("Your portal stays separate from clinic staff access.");
-    expect(dashboard).toContain("Access to this portal is recorded.");
+    expect(dashboard).toContain("access to this portal is recorded.");
+    expect(dashboard).toContain("const releasedRecords = data.records;");
+    expect(dashboard).not.toContain("data.records.slice(0, 6)");
 
     expect(dashboard).not.toContain("next portal workflow slice");
     expect(dashboard).not.toContain("generic calendar");
