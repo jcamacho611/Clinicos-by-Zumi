@@ -38,20 +38,18 @@
   box-shadow:0 -26px 0 rgba(230,129,123,.08),0 24px 0 rgba(230,129,123,.045) !important;
 }
 
-/* Keep the exact reference hero atmosphere while the production rose asset is
-   staged separately. This intentionally uses the existing repo-owned rose asset
-   rather than a screenshot crop or a missing URL. */
+/* Clean production rose: no hero text, rails, composer, cards, or navigation are baked into the asset. */
 .rose-home .rose-atmosphere {
   background:
     radial-gradient(circle at 50% 42%,rgba(126,25,31,.03) 0%,rgba(0,0,0,.14) 42%,rgba(0,0,0,.78) 76%,#050303 100%),
-    radial-gradient(ellipse at 50% 40%,rgba(230,122,116,.14),rgba(84,18,23,.13) 31%,rgba(0,0,0,0) 67%),
-    url('/klinikos-rose-bg.svg') center 38%/min(78vw,1160px) auto no-repeat !important;
-  filter:saturate(.82) contrast(1.10) brightness(.91);
+    radial-gradient(ellipse at 50% 40%,rgba(230,122,116,.12),rgba(84,18,23,.11) 31%,rgba(0,0,0,0) 67%),
+    url('/klinikos-approved-rose.svg') center 38%/min(82vw,1220px) auto no-repeat !important;
+  filter:saturate(.88) contrast(1.12) brightness(.93);
 }
 
 @media(max-width:900px){
   .rose-home .rose-atmosphere {
-    background-size:min(130vw,960px),auto !important;
-    background-position:center 18% !important;
+    background-size:min(138vw,980px),auto !important;
+    background-position:center 15% !important;
   }
 }
