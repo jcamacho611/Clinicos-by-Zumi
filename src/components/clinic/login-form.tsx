@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 
 interface LoginFormProps {
   demoCredentials?: { email: string; password: string };
+  returnTo?: string | null;
 }
 
-export function LoginForm({ demoCredentials }: LoginFormProps) {
+export function LoginForm({ demoCredentials, returnTo }: LoginFormProps) {
   const [email, setEmail] = useState(demoCredentials?.email ?? "");
   const [password, setPassword] = useState(demoCredentials?.password ?? "");
   const [error, setError] = useState("");
@@ -24,7 +25,7 @@ export function LoginForm({ demoCredentials }: LoginFormProps) {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, returnTo }),
       });
       const result = await response.json() as { error?: string; redirectTo?: string };
 

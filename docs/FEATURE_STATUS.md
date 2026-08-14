@@ -2,7 +2,7 @@
 
 This file is the implementation-truth index. If something is labelled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
 
-Last verified application baseline: `main` at `0299240e71d81cab9c885f4225925b1173fc8058` after PR #66.
+Last verified application baseline: `feat/grid-exchange-mvp`, based on `main` at `a8821523d60f11ad863572df5493d84a6a944410`, verified 2026-08-13. External deployment of this candidate is not implied.
 
 ## Status vocabulary
 
@@ -24,10 +24,10 @@ The exact PR #66 candidate passed:
 | --- | --- |
 | Prisma schema validation | Green |
 | Prisma client generation | Green |
-| Fresh PostgreSQL migrations | 50/50 applied successfully |
+| Fresh PostgreSQL migrations | 51/51 applied successfully |
 | TypeScript | Green |
 | ESLint | Green |
-| Unit/integration test suite | 547 tests across 71 files, all passing |
+| Unit/integration test suite | 560 tests across 75 files, all passing |
 | DB-backed MVP journeys | 10/10 passing |
 | Production Next.js build | Green |
 | Production startup smoke | Green |
@@ -79,8 +79,12 @@ Repository checks prove the candidate tree. They do not alone prove the newest c
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Generalized resource model | **BUILT** | Universal resource/demand/offer/reservation/financial primitives exist. |
-| Public marketplace discovery | **BUILT** | Browse/detail/filter paths exist. |
-| Public map can center on visitor location | **BUILT** | Requires browser permission. |
+| Deterministic Exchange Field | **BUILT** | “Need” and “have” statements route inline across work, providers, space, products, equipment, services, organizations, education, networks, and referrals without requiring an AI provider. |
+| Public marketplace discovery | **BUILT** | Intent, query, map/list, provider, resource, detail, and governed-request paths exist with honest empty states. |
+| Sign-in continuation from discovery | **BUILT** | Same-origin continuation preserves the selected provider/resource path and rejects external redirect targets. |
+| Public map can center on visitor location | **BUILT** | Location is requested only after the visitor chooses the control. A keyless interactive geographic fallback works without Google configuration. |
+| Exact resource-radius matching | **BUILT** | Permission-derived saved-demand coordinates are persisted as an optional pair; deterministic Haversine filtering never invents distance for ungeocoded supply. |
+| Public coordinate minimization | **BUILT** | Public discovery reduces coordinate precision while governed server-side matching retains the stored values. |
 | Fake nearby inventory to populate empty map | **NOT BUILT BY DESIGN** | Empty market remains truthful. |
 | Professional/provider participation | **BUILT / PARTIAL** | Core enrollment, profile, availability, internal review, offers and transactions exist; some role-specific onboarding paths remain incomplete. |
 | Spaces / rooms / chairs | **BUILT / PARTIAL** | Resource model and marketplace representation exist; production supply depends on real published inventory. |
@@ -92,7 +96,7 @@ Repository checks prove the candidate tree. They do not alone prove the newest c
 | Provider license verification against external authorities | **PENDING CONNECTION** | Requires board/vendor access. |
 | Malpractice verification against external source | **PENDING CONNECTION** | Internal review is not external verification. |
 | Marketplace payout movement | **PENDING CONNECTION** | Internal financial state does not claim funds moved. |
-| Maps/geocoding/routing vendor | **ADAPTER READY** | Public/client boundaries exist; production key/vendor configuration remains external. |
+| Maps/geocoding/routing vendor | **PARTIALLY BUILT** | Interactive OpenStreetMap fallback and browser geolocation are usable now. The richer Google JavaScript marker adapter exists, but Google keys/map ID plus geocoding/routing remain external and are not claimed connected. |
 
 ## Klinikos EDU
 

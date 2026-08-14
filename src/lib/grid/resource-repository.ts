@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
+import { publicGridCoordinate } from "@/lib/grid/geo-rules";
 import {
   evaluateGridResourcePolicy,
   gridResourceCreateSchema,
@@ -225,8 +226,8 @@ export async function listPublicGridResources() {
       city: row.city,
       state: row.state,
       timezone: row.timezone,
-      latitude: row.latitude,
-      longitude: row.longitude,
+      latitude: publicGridCoordinate(row.latitude),
+      longitude: publicGridCoordinate(row.longitude),
       pricingModel: row.pricingModel,
       priceCents: row.priceCents,
       capacity: row.capacity,

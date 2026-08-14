@@ -1,4 +1,5 @@
-import { CalendarClock, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CalendarClock, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
 
 type PublicGridResource = {
   id: string;
@@ -92,6 +93,7 @@ export function UniversalResourceBrowser({ resources, intent }: { resources: Pub
             <div className="flex items-center justify-between gap-3"><span className="inline-flex items-center gap-1.5"><CalendarClock className="size-3.5 text-[#174ea6]" />{nextAvailability(resource)}</span><span>Capacity {resource.capacity}</span></div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2 text-[8px] font-extrabold uppercase tracking-[.1em] text-[#6c7582]"><span className="border border-[#e0e4e9] px-2 py-1">{label(resource.policyClass)}</span>{resource.subtype && <span className="border border-[#e0e4e9] px-2 py-1">{resource.subtype}</span>}</div>
+          <Link className="mt-5 inline-flex min-h-11 items-center gap-2 border border-[#0b1220] px-4 text-[11px] font-extrabold text-[#0b1220] hover:bg-[#0b1220] hover:text-white" href={`/login?returnTo=${encodeURIComponent(`/grid/resources/request/${resource.id}?from=discovery`)}`}>Start governed request <ArrowRight className="size-3.5" /></Link>
         </article>)}
       </div>}
     </div>
