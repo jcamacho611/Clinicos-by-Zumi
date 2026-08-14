@@ -36,7 +36,9 @@ function appointmentTone(status: string): BadgeTone {
 }
 
 function formTone(status: string): BadgeTone {
-  return status === "completed" ? "resolved" : "analyzing";
+  if (status === "completed") return "resolved";
+  if (["not_started", "in_progress"].includes(status)) return "analyzing";
+  return "neutral";
 }
 
 type NextStep = {
@@ -48,13 +50,14 @@ type NextStep = {
 
 export function PortalDashboard({ data, organizationName }: { data: PortalDashboardData; organizationName: string }) {
   const now = new Date();
-  const pendingForms = data.forms.filter((form) => !["completed", "cancelled"].includes(form.status));
+  const patientForms = data.forms.filter((form) => form.completionMode === "patient");
+  const pendingForms = patientForms.filter((form) => ["not_started", "in_progress"].includes(form.status));
   const futureAppointments = [...data.appointments]
     .filter((appointment) => new Date(appointment.startsAt) >= now && !["CANCELLED", "NO_SHOW"].includes(appointment.status))
     .sort((left, right) => left.startsAt.localeCompare(right.startsAt));
   const nextAppointment = futureAppointments[0];
   const releasedRecords = data.records;
-  const recentMessages = data.messages.slice(0, 5);
+  const portalMessages = data.messages;
   const accessHistory = data.accessHistory.slice(0, 5);
 
   let nextStep: NextStep;
@@ -221,11 +224,11 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                   <ClipboardCheck className="size-5" style={{ color: "var(--accent-signal)" }} aria-hidden="true" />
                   <div>
                     <h3 className="text-sm font-extrabold">Forms</h3>
-                    <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Paperwork your clinic has assigned to you.</p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Paperwork your clinic has assigned for you to complete.</p>
                   </div>
                 </div>
                 <div className="mt-5">
-                  {data.forms.length ? data.forms.map((form) => (
+                  {patientForms.length ? patientForms.map((form) => (
                     <div
                       className="flex items-center gap-3 py-4 first:pt-0 last:pb-0"
                       style={{ borderTop: "var(--border-hair-light)" }}
@@ -243,7 +246,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                       </div>
                       <Badge tone={formTone(form.status)}>{statusLabel(form.status)}</Badge>
                     </div>
-                  )) : <PortalEmpty text="No forms are assigned to you." />}
+                  )) : <PortalEmpty text="No forms are assigned for you to complete." />}
                 </div>
               </Card>
             </div>
@@ -293,7 +296,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
                   </div>
                 </div>
                 <div className="mt-5">
-                  {recentMessages.length ? recentMessages.map((message) => (
+                  {portalMessages.length ? portalMessages.map((message) => (
                     <article className="py-4 first:pt-0 last:pb-0" style={{ borderTop: "var(--border-hair-light)" }} key={message.id}>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge tone={message.direction === "OUTBOUND" ? "observing" : "neutral"}>{message.direction === "OUTBOUND" ? "From your clinic" : "You"}</Badge>
