@@ -23,19 +23,21 @@
   padding-bottom: 2px;
 }
 
-/* Generated production rose, tuned toward the approved screenshot instead of over-cropping it. */
+/* Transparent production rose. The site background owns the black/cherry atmosphere now. */
 .rose-home .rose-atmosphere {
-  background:
-    radial-gradient(circle at 50% 40%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.02) 46%,rgba(0,0,0,.31) 75%,#050303 100%),
-    url('/klinikos-rose-generated.webp') center 31% / min(82vw,1240px) auto no-repeat !important;
-  filter: saturate(.9) contrast(1.04) brightness(.92);
+  background-image: url('/klinikos-rose-wide-transparent.webp') !important;
+  background-repeat: no-repeat !important;
+  background-position: center 30% !important;
+  background-size: min(84vw, 1280px) auto !important;
+  filter: saturate(.94) contrast(1.03) brightness(.92);
   transform-origin: 50% 36%;
 }
 
 .rose-home .rose-vignette {
   background:
-    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.30) 8%,rgba(5,3,3,0) 26%,rgba(5,3,3,0) 74%,rgba(5,3,3,.30) 92%,#050303 100%),
-    linear-gradient(180deg,rgba(5,3,3,.11) 0%,transparent 17%,transparent 72%,rgba(5,3,3,.70) 100%);
+    radial-gradient(circle at 50% 40%,rgba(126,25,31,.03) 0%,rgba(0,0,0,.01) 44%,rgba(0,0,0,.22) 72%,#050303 100%),
+    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.24) 8%,rgba(5,3,3,0) 25%,rgba(5,3,3,0) 75%,rgba(5,3,3,.24) 92%,#050303 100%),
+    linear-gradient(180deg,rgba(5,3,3,.08) 0%,transparent 18%,transparent 70%,rgba(5,3,3,.72) 100%);
 }
 
 .rose-home .reference-header {
@@ -72,26 +74,16 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 22% 48%, rgba(230,129,123,.24), transparent 15%),
-    radial-gradient(circle at 58% 44%, rgba(126,35,43,.30), transparent 24%),
-    radial-gradient(circle at 76% 68%, rgba(239,170,161,.07), transparent 19%),
+    url('/klinikos-rose-centered-transparent.webp') center 52% / min(58vw,760px) auto no-repeat,
+    radial-gradient(circle at 22% 48%, rgba(230,129,123,.18), transparent 17%),
     linear-gradient(110deg,#080405 0%,#17090c 48%,#0a0506 100%) !important;
 }
 
 .rose-home .speedster-panel::before {
   content:"";
   position:absolute;
-  inset:18% 12%;
-  border:1px solid rgba(230,129,123,.20);
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 28% 48%,rgba(239,170,161,.15) 0 2px,transparent 3px),
-    radial-gradient(circle at 57% 28%,rgba(230,129,123,.16) 0 2px,transparent 3px),
-    radial-gradient(circle at 78% 61%,rgba(230,129,123,.16) 0 2px,transparent 3px),
-    radial-gradient(circle at 51% 76%,rgba(239,170,161,.11) 0 2px,transparent 3px);
-  box-shadow:
-    0 0 52px rgba(188,57,62,.10),
-    inset 0 0 48px rgba(230,129,123,.035) !important;
+  inset:0;
+  background:linear-gradient(90deg,rgba(5,3,3,.08),rgba(5,3,3,.22) 52%,rgba(5,3,3,.72));
 }
 
 .rose-home .speedster-panel::after {
@@ -99,10 +91,9 @@
   position:absolute;
   left:12%;
   right:10%;
-  bottom:38%;
+  bottom:20%;
   height:1px;
-  background:linear-gradient(90deg,transparent,rgba(230,129,123,.52),rgba(239,170,161,.18),transparent) !important;
-  box-shadow:0 -26px 0 rgba(230,129,123,.08),0 24px 0 rgba(230,129,123,.045) !important;
+  background:linear-gradient(90deg,transparent,rgba(230,129,123,.34),transparent) !important;
 }
 
 @media (min-width: 1024px) {
@@ -174,8 +165,8 @@
 
 @media(max-width:900px){
   .rose-home .rose-atmosphere {
-    background-size:min(140vw,980px),auto !important;
-    background-position:center 12% !important;
+    background-size:min(142vw,980px) auto !important;
+    background-position:center 11% !important;
   }
 
   .rose-home .reference-card-row {
