@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-14.2`  
+Version: `2026-08-14.3`  
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, experience, design, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -110,7 +110,13 @@ Hard eligibility precedes ranking. AI may interpret intent and explain matches; 
 
 Klinikos can monetize through paid operational analysis, implementation, recurring Clinic OS, Grid, EDU and governed add-ons. Customer-funded allowances should bound variable AI, messaging, voice, maps, verification and similar external costs.
 
-**REDIRECT ≠ PAYMENT.** Browser return state cannot create entitlement. Server-owned checkout intent, payment evidence/reconciliation and authorized activation remain separate.
+**REDIRECT ≠ PAYMENT.**
+
+Browser redirect/return state does **not** establish payment.
+
+Payment evidence is recorded separately from entitlement.
+
+Server-owned checkout intent, payment evidence/reconciliation and authorized activation remain separate. Browser return state cannot create entitlement.
 
 Manual but truthful MVP operations are acceptable. Fake payment, fake delivery, fake verification, fake payout and fake external results are not.
 
