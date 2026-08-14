@@ -55,9 +55,10 @@ export function calculateDistanceMiles(origin: GridCoordinates, destination: Gri
  * If coordinate-radius matching is unavailable, state remains the coarse fallback.
  */
 export function evaluateGridGeographicScope(origin: GridGeographicOrigin, candidate: GridGeographicCandidate) {
+  const radiusMiles = origin.radiusMiles;
   const radiusMode = isGridCoordinates(origin)
-    && Number.isFinite(origin.radiusMiles)
-    && origin.radiusMiles! >= 0;
+    && Number.isFinite(radiusMiles)
+    && radiusMiles! >= 0;
 
   if (radiusMode) {
     if (!isGridCoordinates(candidate)) {
@@ -65,7 +66,7 @@ export function evaluateGridGeographicScope(origin: GridGeographicOrigin, candid
     }
     const distanceMiles = calculateDistanceMiles(origin, candidate);
     return {
-      eligible: distanceMiles <= origin.radiusMiles!,
+      eligible: distanceMiles <= radiusMiles!,
       distanceMiles,
       mode: "radius" as const,
     };
