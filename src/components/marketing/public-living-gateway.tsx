@@ -103,7 +103,7 @@ export function PublicLivingGateway() {
     <section
       aria-busy={Boolean(activeTurn)}
       aria-labelledby="public-living-title"
-      className="h-[100svh] min-h-[42rem] overflow-hidden bg-[var(--surface-primary)] text-[var(--text-primary)]"
+      className="h-[100svh] min-h-[34rem] overflow-hidden bg-[var(--surface-primary)] text-[var(--text-primary)]"
       data-klinikos-ds=""
     >
       <div className="mx-auto flex h-full max-w-[var(--container-max)] flex-col px-5 sm:px-8 lg:px-12">

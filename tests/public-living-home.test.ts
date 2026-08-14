@@ -32,6 +32,7 @@ describe("public Living Home intent", () => {
 describe("public Living Home interaction contract", () => {
   const source = read("src/components/marketing/public-living-gateway.tsx");
   const page = read("src/app/page.tsx");
+  const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
 
   it("uses one continuous conversation surface rather than a split catalog", () => {
     expect(source).not.toContain("doorwayActions");
@@ -71,5 +72,10 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain("lg:grid-cols-[12rem_minmax(0,1fr)]");
     expect(source).toContain('id="public-klinikos-intent"');
     expect(source).toContain('placeholder={conversationStarted ? "Continue the thread..."');
+  });
+
+  it("removes the global appearance control from the focused Living Home", () => {
+    expect(atmosphere).toContain('if (pathname === "/") return null');
+    expect(atmosphere).toContain("usePathname()");
   });
 });
