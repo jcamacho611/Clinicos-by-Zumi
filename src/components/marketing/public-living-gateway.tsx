@@ -4,6 +4,7 @@ import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CornerDownLeft } from "lucide-react";
 import { ZumiOrb, type ZumiState } from "@/components/ds";
+import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 
 const progressSteps = ["Understanding", "Preparing the next move", "Ready"] as const;
@@ -113,7 +114,7 @@ export function PublicLivingGateway() {
       >
       <div className="mx-auto flex h-full max-w-[var(--container-max)] flex-col px-5 sm:px-8 lg:px-12">
         <header className="flex min-h-20 shrink-0 items-center border-b border-[var(--line-dark)]">
-          <Link className="text-xs font-extrabold tracking-[var(--tracking-wider)]" href="/">KLINIKOS</Link>
+          <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="text-xs" />
           <p className="ml-4 hidden text-[var(--text-micro)] font-bold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)] sm:block">
             Living Home
           </p>
