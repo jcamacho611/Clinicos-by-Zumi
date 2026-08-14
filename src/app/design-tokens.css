@@ -13,7 +13,6 @@
  */
 
 [data-klinikos-ds] {
-  /* Neutrals */
   --obsidian: oklch(15% 0.006 255);
   --obsidian-2: oklch(19% 0.008 255);
   --graphite: oklch(24% 0.01 255);
@@ -24,48 +23,33 @@
   --silver: oklch(78% 0.006 255);
   --ink: oklch(97% 0.004 90);
   --ink-dim: oklch(72% 0.02 255);
-
-  /* Aegean / intelligence */
   --aegean-900: oklch(22% 0.06 245);
   --aegean-700: oklch(35% 0.09 245);
   --aegean-500: oklch(48% 0.11 235);
   --cyan-400: oklch(78% 0.13 210);
   --cyan-500: oklch(70% 0.15 205);
-
-  /* Premium */
   --gold-300: oklch(84% 0.09 85);
   --gold-500: oklch(70% 0.12 80);
   --gold-700: oklch(55% 0.1 75);
-
-  /* Semantic surfaces */
   --surface-primary: var(--obsidian);
   --surface-secondary: var(--obsidian-2);
   --surface-raised: var(--graphite);
   --surface-paper: var(--off-white);
   --surface-paper-2: var(--stone-2);
-
   --text-primary: var(--ink);
   --text-secondary: var(--ink-dim);
   --text-on-paper: var(--obsidian);
   --text-on-paper-dim: oklch(45% 0.01 255);
-
-  /* Accents carry meaning, never decoration: cyan = Zumi acting, aegean = signal,
-     gold = premium/paid moments only. */
   --accent-intelligence: var(--cyan-500);
   --accent-signal: var(--aegean-500);
   --accent-premium: var(--gold-500);
-
   --line-dark: oklch(32% 0.012 255);
   --line-light: oklch(85% 0.01 80);
-
-  /* The six Zumi operating states, shared by ZumiOrb and Badge. */
   --status-observing: var(--aegean-500);
   --status-mapping: var(--cyan-500);
   --status-analyzing: var(--gold-500);
   --status-signal: oklch(68% 0.19 25);
   --status-resolved: oklch(62% 0.13 165);
-
-  /* Type */
   --font-sans: "Manrope Variable", "Manrope", -apple-system, "Avenir Next", sans-serif;
   --text-display: clamp(3.4rem, 7vw, 7.2rem);
   --text-h1: clamp(2.6rem, 4.4vw, 4.6rem);
@@ -83,8 +67,6 @@
   --leading-snug: 1.15;
   --leading-normal: 1.5;
   --leading-relaxed: 1.7;
-
-  /* Spacing — 8px base unit */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -101,8 +83,6 @@
   --radius-full: 999px;
   --container-max: 1320px;
   --grid-unit: 8px;
-
-  /* Effects */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 180ms;
@@ -116,13 +96,93 @@
   --border-hair-light: 1px solid var(--line-light);
 }
 
-/* ZumiOrb node rotation. Declared once here so the component carries no keyframes. */
+/* Full Klinikos rose conversion. Higher-specificity global tokens intentionally
+   supersede the legacy blue/time-of-day palette while preserving semantic names. */
+html:root,
+html:root[data-klinikos-atmosphere="dawn"],
+html:root[data-klinikos-atmosphere="day"],
+html:root[data-klinikos-atmosphere="golden"],
+html:root[data-klinikos-atmosphere="night"] {
+  --ink:#f8efed;
+  --muted:#b89f9b;
+  --paper:#050303;
+  --line:rgba(226,139,133,.16);
+  --surface-primary:#050303;
+  --surface-raised:#160b0d;
+  --surface-paper:#0d0708;
+  --surface-paper-raised:#1a0c0f;
+  --surface-ink:#f8efed;
+  --accent-signal:#b9575b;
+  --accent-intelligence:#e6817b;
+  --accent-premium:#efaaa1;
+  --k-public-bg:#050303;
+  --k-public-surface:#100708;
+  --k-public-raised:#180b0d;
+  --k-text:#f8efed;
+  --k-muted:#b89f9b;
+  --k-line:rgba(226,139,133,.16);
+  --k-accent:#e6817b;
+  --k-accent-2:#b9575b;
+  --k-premium:#efaaa1;
+  --k-shell:#070304;
+  --k-shell-text:#f8efed;
+  --k-work-bg:#090506;
+  --k-work-header:rgba(10,5,6,.92);
+  --k-ambient:radial-gradient(circle at 50% 34%,rgba(137,34,41,.26),transparent 34%),radial-gradient(circle at 78% 8%,rgba(232,129,123,.08),transparent 28%),linear-gradient(180deg,#050303 0%,#0b0506 100%);
+  --k-shadow:0 28px 100px rgba(0,0,0,.42);
+  --mode-background:var(--k-work-bg);
+  --mode-header:var(--k-work-header);
+}
+
+[data-klinikos-ds] {
+  --obsidian:#050303;
+  --obsidian-2:#0c0607;
+  --graphite:#160b0d;
+  --graphite-2:#211013;
+  --stone:#d6c0bc;
+  --stone-2:#eadbd8;
+  --off-white:#f8efed;
+  --silver:#c5ada9;
+  --ink:#f8efed;
+  --ink-dim:#b89f9b;
+  --aegean-900:#3b1014;
+  --aegean-700:#712b31;
+  --aegean-500:#b9575b;
+  --cyan-400:#f0aaa3;
+  --cyan-500:#e6817b;
+  --gold-300:#f4c4bb;
+  --gold-500:#efaaa1;
+  --gold-700:#c87570;
+  --surface-primary:#050303;
+  --surface-secondary:#0c0607;
+  --surface-raised:#160b0d;
+  --surface-paper:#0d0708;
+  --surface-paper-2:#170b0d;
+  --text-primary:#f8efed;
+  --text-secondary:#b89f9b;
+  --text-on-paper:#f8efed;
+  --text-on-paper-dim:#aa918d;
+  --accent-intelligence:#e6817b;
+  --accent-signal:#b9575b;
+  --accent-premium:#efaaa1;
+  --line-dark:rgba(226,139,133,.16);
+  --line-light:rgba(248,239,237,.18);
+  --status-observing:#b9575b;
+  --status-mapping:#e6817b;
+  --status-analyzing:#efaaa1;
+  --status-signal:#ef6d68;
+  --status-resolved:#d68f87;
+  --glow-cyan:0 0 40px rgba(230,129,123,.35);
+  --glow-gold:0 0 30px rgba(239,170,161,.26);
+  --shadow-card:0 20px 60px rgba(0,0,0,.45);
+  --shadow-card-light:0 12px 30px rgba(0,0,0,.24);
+}
+
 @keyframes zumi-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Motion is never decorative, so removing it costs nothing. */
 @media (prefers-reduced-motion: reduce) {
   [data-klinikos-ds] * {
     animation-duration: 0.001ms !important;
