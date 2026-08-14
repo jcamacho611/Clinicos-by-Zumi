@@ -18,24 +18,54 @@
 }
 
 .rose-home > header {
-  min-height: 82px !important;
+  min-height: 88px !important;
   padding-top: 2px;
   padding-bottom: 2px;
 }
 
-/* Generated production rose, tuned to the approved composition. */
+/* Generated production rose, tuned toward the approved screenshot instead of over-cropping it. */
 .rose-home .rose-atmosphere {
   background:
-    radial-gradient(circle at 50% 40%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.03) 48%,rgba(0,0,0,.36) 75%,#050303 100%),
-    url('/klinikos-rose-generated.webp') center 20% / min(76vw,1160px) auto no-repeat !important;
-  filter: saturate(.86) contrast(1.02) brightness(.86);
-  transform-origin: 50% 34%;
+    radial-gradient(circle at 50% 40%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.02) 46%,rgba(0,0,0,.31) 75%,#050303 100%),
+    url('/klinikos-rose-generated.webp') center 31% / min(82vw,1240px) auto no-repeat !important;
+  filter: saturate(.9) contrast(1.04) brightness(.92);
+  transform-origin: 50% 36%;
 }
 
 .rose-home .rose-vignette {
   background:
-    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.36) 9%,rgba(5,3,3,0) 27%,rgba(5,3,3,0) 73%,rgba(5,3,3,.36) 91%,#050303 100%),
-    linear-gradient(180deg,rgba(5,3,3,.20) 0%,transparent 17%,transparent 72%,rgba(5,3,3,.74) 100%);
+    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.30) 8%,rgba(5,3,3,0) 26%,rgba(5,3,3,0) 74%,rgba(5,3,3,.30) 92%,#050303 100%),
+    linear-gradient(180deg,rgba(5,3,3,.11) 0%,transparent 17%,transparent 72%,rgba(5,3,3,.70) 100%);
+}
+
+.rose-home .reference-header {
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.rose-home .reference-state-rail,
+.rose-home .reference-action-rail {
+  align-self: start;
+  padding-top: 255px;
+}
+
+.rose-home .reference-action-rail nav {
+  transform: translateX(-4px);
+}
+
+.rose-home .reference-zumi {
+  z-index: 3;
+}
+
+.rose-home .reference-card-row {
+  position: relative;
+  z-index: 2;
+}
+
+.rose-home .reference-lower-strip {
+  position: relative;
+  z-index: 1;
 }
 
 .rose-home .speedster-panel {
@@ -77,61 +107,78 @@
 
 @media (min-width: 1024px) {
   .rose-home .reference-home {
-    min-height: calc(100vh - 82px) !important;
+    min-height: calc(100vh - 88px) !important;
     padding-top: 0 !important;
     padding-bottom: 1rem !important;
   }
 
-  .rose-home .reference-home > section {
+  .rose-home .reference-center {
     min-height: 0 !important;
     justify-content: flex-start !important;
-    padding-top: clamp(.7rem, 1.8vh, 1.7rem) !important;
+    padding-top: clamp(2.4rem, 5.2vh, 4.7rem) !important;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: 1rem !important;
-    max-width: 700px !important;
-    font-size: clamp(4.2rem, 5.55vw, 5.9rem) !important;
-    line-height: .88 !important;
-    letter-spacing: -.058em !important;
+    margin-top: 1.35rem !important;
+    max-width: 760px !important;
+    font-size: clamp(4.8rem, 6.55vw, 7rem) !important;
+    line-height: .87 !important;
+    letter-spacing: -.064em !important;
   }
 
   .rose-home .reference-hero h1 + p {
-    margin-top: .9rem !important;
+    margin-top: 1.25rem !important;
   }
 
   .rose-home #living-composer {
-    margin-top: 1.45rem !important;
+    margin-top: 2.25rem !important;
     max-width: 770px !important;
   }
 
   .rose-home #living-composer > div {
-    min-height: 92px !important;
+    min-height: 108px !important;
+  }
+
+  .rose-home .reference-card-row {
+    margin-top: 4.7rem !important;
   }
 }
 
 @media (min-width: 1024px) and (max-height: 940px) {
-  .rose-home .reference-home > section {
-    padding-top: .25rem !important;
+  .rose-home .reference-state-rail,
+  .rose-home .reference-action-rail {
+    padding-top: 205px;
+  }
+
+  .rose-home .reference-center {
+    padding-top: 1.15rem !important;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: .75rem !important;
-    font-size: clamp(3.95rem, 5.1vw, 5.45rem) !important;
+    margin-top: 1rem !important;
+    font-size: clamp(4.25rem, 5.75vw, 6.2rem) !important;
   }
 
   .rose-home .reference-hero h1 + p {
-    margin-top: .65rem !important;
+    margin-top: .85rem !important;
   }
 
   .rose-home #living-composer {
-    margin-top: 1rem !important;
+    margin-top: 1.55rem !important;
+  }
+
+  .rose-home .reference-card-row {
+    margin-top: 4rem !important;
   }
 }
 
 @media(max-width:900px){
   .rose-home .rose-atmosphere {
-    background-size:min(128vw,880px),auto !important;
-    background-position:center 8% !important;
+    background-size:min(140vw,980px),auto !important;
+    background-position:center 12% !important;
+  }
+
+  .rose-home .reference-card-row {
+    margin-top: 4.5rem !important;
   }
 }
