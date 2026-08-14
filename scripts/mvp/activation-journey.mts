@@ -9,6 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { createClinicPlanCheckout, reconcileClinicPlanCheckout, getClinicActivationPreview, completeClinicActivation } from "@/lib/commercial/clinic-provisioning";
 import { getClinicActivationDraft, saveClinicActivationDraft } from "@/lib/commercial/clinic-activation-draft";
+import { getClinicLaunchBriefing } from "@/lib/commercial/clinic-launch-briefing";
 
 process.env.KLINIKOS_GODADDY_CORE_PAYLINK ||= "https://pay.godaddy.com/securepaylink/mvp-core-test";
 process.env.NEXT_PUBLIC_APP_URL ||= "http://localhost:3000";
@@ -82,6 +83,13 @@ async function main() {
       `subscription=${subscription?.planKey} status=${subscription?.status} paymentConfirmed=${Boolean(subscription?.paymentConfirmedAt)} provider=${subscription?.paymentProvider} evidence=${Boolean(subscription?.paymentEvidenceId)}`,
     );
 
+    const preActivationLaunch = await getClinicLaunchBriefing(clinicOrganizationId);
+    check(
+      "paid subscription alone cannot claim the owner workspace finished activation",
+      preActivationLaunch.paidAccess === true && preActivationLaunch.verifiedFirstLogin === false,
+      `paidAccess=${preActivationLaunch.paidAccess} verifiedFirstLogin=${preActivationLaunch.verifiedFirstLogin}`,
+    );
+
     const token = new URL(reconciled.activationUrl).searchParams.get("token") ?? "";
     const preview = await getClinicActivationPreview(token);
     check(
@@ -131,15 +139,26 @@ async function main() {
       acceptTerms: true,
       syntheticDataOnly: true,
     }, { ipAddress: "127.0.0.1", userAgent: "mvp-activation-journey" });
-    const [owner, organization, onboardingSetting] = await Promise.all([
+    const [owner, organization, onboardingSetting, launchBriefing] = await Promise.all([
       db.user.findUnique({ where: { email: ownerEmail }, select: { organizationId: true, roleKey: true, authCredential: { select: { id: true } } } }),
       db.organization.findUnique({ where: { id: clinicOrganizationId }, select: { demoMode: true, clinicType: true } }),
       db.setting.findFirst({ where: { organizationId: clinicOrganizationId, key: "onboarding.profile" }, select: { value: true } }),
+      getClinicLaunchBriefing(clinicOrganizationId),
     ]);
     check(
       "activation creates one owner account in the paid organization with persisted setup",
       workspace.identity.organizationId === clinicOrganizationId && owner?.organizationId === clinicOrganizationId && owner?.roleKey === "clinic_owner" && Boolean(owner.authCredential) && organization?.demoMode === false && Boolean(onboardingSetting),
       `ownerOrgMatches=${owner?.organizationId === clinicOrganizationId} role=${owner?.roleKey} credential=${Boolean(owner?.authCredential)} demoMode=${organization?.demoMode}`,
+    );
+    check(
+      "completed paid activation yields a verified first-login briefing without inventing production PHI approval",
+      launchBriefing.verifiedFirstLogin === true
+        && launchBriefing.paidAccess === true
+        && launchBriefing.planKey === "clinic_core"
+        && launchBriefing.primaryGoal === "Control follow-up and appointment readiness"
+        && launchBriefing.productionPatientDataEnabled === false
+        && launchBriefing.pendingConnections > 0,
+      `verified=${launchBriefing.verifiedFirstLogin} plan=${launchBriefing.planKey} goal=${launchBriefing.primaryGoal} phi=${launchBriefing.productionPatientDataEnabled} pendingConnections=${launchBriefing.pendingConnections}`,
     );
 
     let replayRefused = false;
