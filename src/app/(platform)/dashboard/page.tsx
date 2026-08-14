@@ -12,10 +12,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (session.role === "contractor") redirect("/grid");
 
   const [appointments, activePaths, recentPathSignals] = await Promise.all([
-    listAppointmentsForOrganization(session.organizationId),
+    listAppointmentsForOrganization(
+      session.organizationId,
+      session.role === "provider" ? { providerUserId: session.userId } : {},
+    ),
     listActivePathSnapshots(session),
     listRecentPathSignals(session),
   ]);
+  const livingAppointments = appointments.filter((appointment) => appointment.status !== "Cancelled");
   const pathGuidance = resolvePathGuidanceList(session, activePaths);
   const query = await searchParams;
   const firstName = session.name.split(/\s+/)[0] || "there";
@@ -23,7 +27,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-16">
       <LivingHome
-        appointments={appointments}
+        appointments={livingAppointments}
         firstName={firstName}
         initialGuidance={pathGuidance}
         initialPaths={activePaths}
