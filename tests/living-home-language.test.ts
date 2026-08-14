@@ -7,7 +7,7 @@ function read(relative: string) {
 }
 
 describe("Living Home customer language", () => {
-  it("keeps orchestration vocabulary in the backend while presenting plain next-step language", () => {
+  it("keeps orchestration vocabulary in the backend while presenting an operating briefing", () => {
     const home = read("src/components/clinic/living-home.tsx");
 
     for (const leakedPhrase of [
@@ -21,8 +21,15 @@ describe("Living Home customer language", () => {
     }
 
     expect(home).toContain("What needs to happen?");
-    expect(home).toContain("Here's the safest next step.");
-    expect(home).toContain(">Continue <");
+    expect(home).toContain("Show me the next step");
+    expect(home).toContain("Needs you");
+    expect(home).toContain("Already handled");
+    expect(home).toContain("Continue");
+    expect(home).toContain("Coming up");
+    expect(home).toContain("Opportunity");
+    expect(home).toContain(">Why<");
+    expect(home).toContain("Evidence · direct record");
+    expect(home).not.toContain("{activeGuidance?.state}");
   });
 
   it("keeps the full workspace catalog available without dumping it on Home", () => {
@@ -39,7 +46,8 @@ describe("Living Home customer language", () => {
     }
 
     expect(launchpad).toContain("More when you need it");
-    expect(launchpad).toContain("Home keeps the important work up front.");
+    expect(launchpad).toContain("Keep the whole product available without putting it all in your face.");
+    expect(launchpad).toContain("These deeper areas stay collapsed until you need something specific.");
     expect(launchpad).toContain("<details");
   });
 });

@@ -16,6 +16,7 @@ import type { Appointment } from "@/lib/types";
 interface AppointmentQueryOptions {
   from?: Date;
   to?: Date;
+  providerUserId?: string;
 }
 
 interface AppointmentMutationActor {
@@ -30,10 +31,25 @@ async function loadAppointmentAggregates(
   options: AppointmentQueryOptions = {},
   appointmentId?: string,
 ): Promise<AppointmentAggregate[]> {
+  let scopedProviderId: string | undefined;
+  if (options.providerUserId) {
+    const provider = await db.provider.findFirst({
+      where: {
+        organizationId,
+        userId: options.providerUserId,
+        status: "active",
+      },
+      select: { id: true },
+    });
+    if (!provider) return [];
+    scopedProviderId = provider.id;
+  }
+
   const appointments = await db.appointment.findMany({
     where: {
       organizationId,
       patient: { organizationId },
+      ...(scopedProviderId ? { providerId: scopedProviderId } : {}),
       ...(appointmentId ? { id: appointmentId } : {}),
       ...(options.from || options.to
         ? { startsAt: { ...(options.from ? { gte: options.from } : {}), ...(options.to ? { lte: options.to } : {}) } }

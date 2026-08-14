@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { DsSurface } from "@/components/ds";
 import { navigation } from "@/lib/navigation";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicRole } from "@/lib/auth/rbac";
@@ -59,38 +60,46 @@ export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
   ];
 
   return (
-    <section aria-labelledby="explore-klinikos" className="border-y border-[#0b1e3a]/12 py-10 sm:py-12">
-      <div className="max-w-3xl">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">More when you need it</p>
-        <h2 className="mt-3 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a] sm:text-3xl" id="explore-klinikos">
-          Home keeps the important work up front.
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#0b1e3a]/60">
-          Open a section only when you need something specific. Klinikos already filters this list to what your role can use.
-        </p>
-      </div>
+    <DsSurface className="-mx-4 bg-[var(--surface-paper)] text-[var(--text-on-paper)] sm:-mx-6 lg:-mx-8">
+      <section aria-labelledby="explore-klinikos" className="mx-auto max-w-[var(--container-max)] border-y border-[var(--line-light)] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
+        <div className="grid gap-8 lg:grid-cols-[.78fr_1.22fr] lg:gap-16">
+          <div className="max-w-xl">
+            <p className="text-[var(--text-on-paper-dim)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">More when you need it</p>
+            <h2
+              className="mt-4 font-semibold tracking-[var(--tracking-tight)]"
+              id="explore-klinikos"
+              style={{ fontSize: "var(--text-h2)", lineHeight: "var(--leading-snug)" }}
+            >
+              Keep the whole product available without putting it all in your face.
+            </h2>
+            <p className="mt-5 max-w-lg text-sm leading-7 text-[var(--text-on-paper-dim)]">
+              These deeper areas stay collapsed until you need something specific. Klinikos only includes destinations your current role can open.
+            </p>
+          </div>
 
-      <div className="mt-8 grid gap-3 md:grid-cols-2">
-        {detailedGroups.map((group) => (
-          <details className="group rounded-2xl border border-[#0b1e3a]/9 bg-white px-5 py-1 shadow-[0_10px_30px_rgba(11,30,58,.035)]" key={group.label}>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-sm font-extrabold text-[#0b1e3a] marker:hidden">
-              <span>{group.label}</span>
-              <span className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#0b1e3a]/35">{group.items.length} options</span>
-            </summary>
-            <div className="divide-y divide-[#0b1e3a]/8 border-t border-[#0b1e3a]/8 pb-2">
-              {group.items.map((item) => (
-                <Link className="group/item flex items-start gap-4 py-4" href={item.href} key={item.href}>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-extrabold text-[#0b1e3a] transition group-hover/item:text-[#0f658f]">{item.label}</span>
-                    <span className="mt-1.5 block text-[11px] leading-5 text-[#0b1e3a]/52">{item.description}</span>
-                  </span>
-                  <ArrowUpRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#0b1e3a]/28 transition group-hover/item:-translate-y-0.5 group-hover/item:translate-x-0.5 group-hover/item:text-[#1677a8]" />
-                </Link>
-              ))}
-            </div>
-          </details>
-        ))}
-      </div>
-    </section>
+          <div className="grid gap-3 md:grid-cols-2">
+            {detailedGroups.map((group) => (
+              <details className="group border border-[var(--line-light)] bg-[var(--surface-paper-2)]" key={group.label}>
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
+                  <span className="text-sm font-semibold">{group.label}</span>
+                  <span className="text-[var(--text-on-paper-dim)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">{group.items.length} options</span>
+                </summary>
+                <div className="divide-y divide-[var(--line-light)] border-t border-[var(--line-light)] px-5 pb-2">
+                  {group.items.map((item) => (
+                    <Link className="group/item flex min-h-16 items-start gap-4 py-4" href={item.href} key={item.href}>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold transition-opacity group-hover/item:opacity-80">{item.label}</span>
+                        <span className="mt-1.5 block text-[var(--text-on-paper-dim)] text-xs leading-5">{item.description}</span>
+                      </span>
+                      <ArrowUpRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--accent-signal)] transition-transform group-hover/item:-translate-y-0.5 group-hover/item:translate-x-0.5" />
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    </DsSurface>
   );
 }
