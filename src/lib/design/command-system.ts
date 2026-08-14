@@ -1,55 +1,44 @@
 /**
- * Klinikos Command Design System — "Black Ops x Aegean Medical Intelligence".
+ * Klinikos Command Design System — cinematic rose operating environment.
  *
- * This module is design law, not a suggestion. Every authenticated and public
- * Klinikos surface renders its ground, panels, and accents from these tokens, and
- * tests assert the public surfaces obey the copy rules below.
- *
- * The reason it lives in code rather than a style guide: a palette written in a
- * document drifts the moment two people build two pages. A palette imported by both
- * pages cannot.
+ * Shared visual law for authenticated, EDU, operational, and public command surfaces.
+ * The approved Klinikos reference establishes the product language: obsidian, black cherry,
+ * oxblood, warm ivory, dusty rose, muted coral, and restrained ember highlights.
  *
  * Pure module. No database, no network.
  */
 
-/**
- * Palette.
- *
- * Graphite/navy ground, Aegean blue structure, cyan reserved for the Zumi intelligence layer,
- * gold used sparingly for human-review and value moments, rose for boundaries the
- * operator must not cross. Cyan is never decorative — if it glows, Zumi is involved.
- */
 export const commandPalette = {
-  ground: "#05090f",
-  groundRaised: "#070d15",
-  aegean: "#174ea6",
-  aegeanDeep: "#0b1e3a",
-  cyan: "#67e8f9",
-  cyanDim: "rgba(103,232,249,.08)",
-  violet: "#7c6bd6",
-  gold: "#e6c55b",
-  goldDim: "rgba(230,197,91,.08)",
-  rose: "#fb7185",
-  marble: "#f7f8fa",
-  stone: "#94a3b8",
+  ground: "#050303",
+  groundRaised: "#0c0607",
+  aegean: "#712b31",
+  aegeanDeep: "#18090b",
+  cyan: "#e6817b",
+  cyanDim: "rgba(230,129,123,.08)",
+  violet: "#9d5f72",
+  gold: "#efaaa1",
+  goldDim: "rgba(239,170,161,.08)",
+  rose: "#ef7771",
+  marble: "#f8efed",
+  stone: "#b89f9b",
 } as const;
 
 export const commandSurfaces = {
-  shell: "min-h-screen bg-[#05090f] text-slate-100",
-  aegeanField: "pointer-events-none fixed inset-x-0 top-0 h-px bg-[#174ea6]/40",
-  panel: "border border-white/10 bg-white/[.04] backdrop-blur-sm",
-  panelRaised: "border border-white/10 bg-[#070d15]",
-  panelAi: "border border-cyan-300/30 bg-cyan-400/[.06]",
-  panelReview: "border border-[#e6c55b]/30 bg-[#e6c55b]/[.07]",
-  panelBoundary: "border border-rose-400/30 bg-rose-500/[.07]",
-  divider: "border-white/10",
+  shell: "min-h-screen bg-[#050303] text-[#f8efed]",
+  aegeanField: "pointer-events-none fixed inset-x-0 top-0 h-px bg-[#e6817b]/30",
+  panel: "border border-[#e28b85]/15 bg-[#12090b]/70 backdrop-blur-sm",
+  panelRaised: "border border-[#e28b85]/15 bg-[#0c0607]",
+  panelAi: "border border-[#e6817b]/30 bg-[#e6817b]/[.06]",
+  panelReview: "border border-[#efaaa1]/30 bg-[#efaaa1]/[.07]",
+  panelBoundary: "border border-[#ef7771]/30 bg-[#ef7771]/[.07]",
+  divider: "border-[#e28b85]/15",
   interactive:
-    "min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300",
-  eyebrow: "text-[11px] font-extrabold uppercase tracking-[.18em] text-[#e6c55b]",
-  eyebrowAi: "text-[11px] font-extrabold uppercase tracking-[.18em] text-cyan-300",
-  headline: "font-extrabold tracking-[-.065em] text-white",
-  body: "text-sm leading-7 text-slate-300",
-  meta: "text-[11px] leading-5 text-slate-400",
+    "min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6817b]",
+  eyebrow: "text-[11px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]",
+  eyebrowAi: "text-[11px] font-extrabold uppercase tracking-[.18em] text-[#e6817b]",
+  headline: "font-light tracking-[-.055em] text-[#f8efed]",
+  body: "text-sm leading-7 text-[#cbb6b2]",
+  meta: "text-[11px] leading-5 text-[#9f8985]",
 } as const;
 
 export const BANNED_PUBLIC_COPY = [
