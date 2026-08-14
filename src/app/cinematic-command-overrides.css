@@ -1,0 +1,35 @@
+/* Final compatibility pass for command/copilot surfaces that predate the reference lock. */
+
+.klinikos-cinematic-root [class*="bg-[#05090f]"] { background-color:#050303!important; }
+.klinikos-cinematic-root [class*="bg-[#070d15]"] { background-color:#0c0607!important; }
+.klinikos-cinematic-root [class*="bg-[#101720]"] { background-color:#160b0d!important; }
+.klinikos-cinematic-root [class*="bg-[#06101a]"] { background-color:#070304!important; }
+.klinikos-cinematic-root [class*="bg-[#07121d]"] { background-color:#090506!important; }
+
+/* Cyan/teal/sky/blue were the previous intelligence language. Rose is now the
+   intelligence accent; semantic success/error colors are intentionally left alone. */
+.klinikos-cinematic-root [class*="text-cyan-"] ,
+.klinikos-cinematic-root [class*="text-teal-"] ,
+.klinikos-cinematic-root [class*="text-sky-"] ,
+.klinikos-cinematic-root [class*="text-blue-"] { color:#e6817b!important; }
+
+.klinikos-cinematic-root [class*="border-cyan-"] ,
+.klinikos-cinematic-root [class*="border-teal-"] ,
+.klinikos-cinematic-root [class*="border-sky-"] ,
+.klinikos-cinematic-root [class*="border-blue-"] { border-color:rgba(230,129,123,.24)!important; }
+
+.klinikos-cinematic-root [class*="bg-cyan-"] ,
+.klinikos-cinematic-root [class*="bg-teal-"] ,
+.klinikos-cinematic-root [class*="bg-sky-"] ,
+.klinikos-cinematic-root [class*="bg-blue-"] { background-color:rgba(230,129,123,.08)!important; }
+
+.klinikos-cinematic-root [class*="ring-cyan-"] ,
+.klinikos-cinematic-root [class*="ring-teal-"] ,
+.klinikos-cinematic-root [class*="ring-sky-"] ,
+.klinikos-cinematic-root [class*="ring-blue-"] { --tw-ring-color:rgba(230,129,123,.30)!important; }
+
+/* Project-safe aliases used by old components now point into the approved family. */
+[data-klinikos-ds] {
+  --cyan-300:#f0aaa3;
+  --gold-200:#f4c4bb;
+}

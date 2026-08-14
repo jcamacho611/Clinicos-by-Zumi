@@ -1,0 +1,55 @@
+/* Reference-locked Living Home refinements loaded after the legacy stylesheet. */
+
+.rose-home .speedster-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 48%, rgba(230,129,123,.24), transparent 15%),
+    radial-gradient(circle at 58% 44%, rgba(126,35,43,.30), transparent 24%),
+    radial-gradient(circle at 76% 68%, rgba(239,170,161,.07), transparent 19%),
+    linear-gradient(110deg,#080405 0%,#17090c 48%,#0a0506 100%) !important;
+}
+
+.rose-home .speedster-panel::before {
+  content:"";
+  position:absolute;
+  inset:18% 12%;
+  border:1px solid rgba(230,129,123,.20);
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 28% 48%,rgba(239,170,161,.15) 0 2px,transparent 3px),
+    radial-gradient(circle at 57% 28%,rgba(230,129,123,.16) 0 2px,transparent 3px),
+    radial-gradient(circle at 78% 61%,rgba(230,129,123,.16) 0 2px,transparent 3px),
+    radial-gradient(circle at 51% 76%,rgba(239,170,161,.11) 0 2px,transparent 3px);
+  transform:none !important;
+  box-shadow:
+    0 0 52px rgba(188,57,62,.10),
+    inset 0 0 48px rgba(230,129,123,.035) !important;
+}
+
+.rose-home .speedster-panel::after {
+  content:"";
+  position:absolute;
+  left:12%;
+  right:10%;
+  bottom:38%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(230,129,123,.52),rgba(239,170,161,.18),transparent) !important;
+  box-shadow:0 -26px 0 rgba(230,129,123,.08),0 24px 0 rgba(230,129,123,.045) !important;
+}
+
+/* Clean production rose: no hero text, rails, composer, cards, or navigation are baked into the asset. */
+.rose-home .rose-atmosphere {
+  background:
+    radial-gradient(circle at 50% 42%,rgba(126,25,31,.03) 0%,rgba(0,0,0,.14) 42%,rgba(0,0,0,.78) 76%,#050303 100%),
+    radial-gradient(ellipse at 50% 40%,rgba(230,122,116,.12),rgba(84,18,23,.11) 31%,rgba(0,0,0,0) 67%),
+    url('/klinikos-approved-rose.svg') center 38%/min(82vw,1220px) auto no-repeat !important;
+  filter:saturate(.88) contrast(1.12) brightness(.93);
+}
+
+@media(max-width:900px){
+  .rose-home .rose-atmosphere {
+    background-size:min(138vw,980px),auto !important;
+    background-position:center 15% !important;
+  }
+}
