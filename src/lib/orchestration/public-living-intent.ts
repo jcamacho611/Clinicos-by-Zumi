@@ -98,6 +98,15 @@ const pathDestinationKeys: Record<string, PublicLivingDestination["key"]> = {
   "fix-referral-leakage": "referrals",
 };
 
+const destinationLabels: Record<PublicLivingDestination["key"], string> = {
+  clinic: "clinic operations",
+  grid: "Grid",
+  edu: "Klinikos EDU",
+  patient: "patient access",
+  referrals: "referral and follow-up",
+  staffing: "staffing and capacity",
+};
+
 function ruleForKey(key: PublicLivingDestination["key"]) {
   return publicRules.find((rule) => rule.destination.key === key) ?? null;
 }
@@ -106,7 +115,10 @@ function matchScore(prompt: string, rule: PublicRule) {
   return rule.patterns.reduce((score, pattern) => score + (pattern.test(prompt) ? 1 : 0), 0);
 }
 
-export function resolvePublicLivingIntent(rawPrompt: string): PublicLivingResolution {
+export function resolvePublicLivingIntent(
+  rawPrompt: string,
+  priorResolution: PublicLivingResolution | null = null,
+): PublicLivingResolution {
   const prompt = rawPrompt.trim();
   const established = resolveIntentDeterministically(prompt);
   const establishedKey = established.candidatePathIds[0]
@@ -138,6 +150,18 @@ export function resolvePublicLivingIntent(rawPrompt: string): PublicLivingResolu
       assumption: tied || winner.score === 1 ? winner.rule.assumption : null,
       destination: winner.rule.destination,
       confidence: Math.min(0.92, 0.56 + winner.score * 0.14),
+    };
+  }
+
+  if (priorResolution?.destination) {
+    const destination = priorResolution.destination;
+    const label = destinationLabels[destination.key];
+    return {
+      title: `I’m keeping this with the ${label} thread.`,
+      body: `Klinikos is treating this update as a constraint or refinement on the active ${label} goal, preserving the earlier context instead of restarting or forcing a new category.`,
+      assumption: `Your latest message refines the previous ${label} request rather than starting an unrelated goal.`,
+      destination,
+      confidence: Math.max(0.52, priorResolution.confidence * 0.9),
     };
   }
 

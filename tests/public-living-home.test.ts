@@ -27,6 +27,22 @@ describe("public Living Home intent", () => {
     expect(resolution.title).toBe("I’m keeping this as the working goal.");
     expect(resolution.body).toContain("instead of forcing it into the wrong product category");
   });
+
+  it("preserves a known destination when a short follow-up adds context", () => {
+    const initial = resolvePublicLivingIntent("I need a treatment room");
+    const followUp = resolvePublicLivingIntent("Saturday", initial);
+
+    expect(followUp.destination).toMatchObject({ key: "grid", href: "/grid" });
+    expect(followUp.title).toContain("Grid thread");
+    expect(followUp.assumption).toContain("refines the previous Grid request");
+  });
+
+  it("lets a clear new intent override the prior conversation destination", () => {
+    const initial = resolvePublicLivingIntent("I need a treatment room");
+    const changedGoal = resolvePublicLivingIntent("Actually I need injector training", initial);
+
+    expect(changedGoal.destination).toMatchObject({ key: "edu", href: "/edu" });
+  });
 });
 
 describe("public Living Home interaction contract", () => {
@@ -64,6 +80,14 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('role="status"');
     expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(source.indexOf('role="status"')).toBeLessThan(source.indexOf("<section"));
+    expect(source).toContain("composer.current?.focus()");
+    expect(source).toContain("ref={composer}");
+  });
+
+  it("passes the prior resolved intent into conversational follow-ups", () => {
+    expect(source).toContain("const priorResolution = [...turns].reverse().find");
+    expect(source).toContain("resolvePublicLivingIntent(prompt, priorResolution)");
   });
 
   it("keeps the full-screen workspace responsive without hiding the composer", () => {

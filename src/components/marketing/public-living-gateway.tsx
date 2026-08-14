@@ -40,6 +40,7 @@ export function PublicLivingGateway() {
   const nextTurnId = useRef(1);
   const timers = useRef<number[]>([]);
   const threadEnd = useRef<HTMLDivElement>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const activeTurn = turns.find((turn) => turn.stage !== "complete") ?? null;
   const activeTurnId = activeTurn?.id ?? null;
   const activeStage = activeTurn?.stage ?? null;
@@ -61,6 +62,10 @@ export function PublicLivingGateway() {
     threadEnd.current?.scrollIntoView({ behavior: activeTurnId && !reduceMotion ? "smooth" : "auto", block: "end" });
   }, [activeStage, activeTurnId, turns.length]);
 
+  useEffect(() => {
+    if (conversationStarted && activeTurnId === null) composer.current?.focus();
+  }, [activeTurnId, conversationStarted]);
+
   function updateTurn(id: number, update: Partial<ConversationTurn>) {
     setTurns((current) => current.map((turn) => turn.id === id ? { ...turn, ...update } : turn));
   }
@@ -74,6 +79,7 @@ export function PublicLivingGateway() {
     event.preventDefault();
     const prompt = intent.trim();
     if (!prompt || activeTurn) return;
+    const priorResolution = [...turns].reverse().find((turn) => turn.resolution)?.resolution ?? null;
 
     const id = nextTurnId.current;
     nextTurnId.current += 1;
@@ -89,7 +95,7 @@ export function PublicLivingGateway() {
     schedule(timing.ready, () => updateTurn(id, { stage: "ready" }));
     schedule(timing.response, () => updateTurn(id, {
       stage: "complete",
-      resolution: resolvePublicLivingIntent(prompt),
+      resolution: resolvePublicLivingIntent(prompt, priorResolution),
     }));
   }
 
@@ -100,12 +106,14 @@ export function PublicLivingGateway() {
   }
 
   return (
-    <section
-      aria-busy={Boolean(activeTurn)}
-      aria-labelledby="public-living-title"
-      className="h-[100svh] min-h-[34rem] overflow-hidden bg-[var(--surface-primary)] text-[var(--text-primary)]"
-      data-klinikos-ds=""
-    >
+    <>
+      <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
+      <section
+        aria-busy={Boolean(activeTurn)}
+        aria-labelledby="public-living-title"
+        className="h-[100svh] min-h-[34rem] overflow-hidden bg-[var(--surface-primary)] text-[var(--text-primary)]"
+        data-klinikos-ds=""
+      >
       <div className="mx-auto flex h-full max-w-[var(--container-max)] flex-col px-5 sm:px-8 lg:px-12">
         <header className="flex min-h-20 shrink-0 items-center border-b border-[var(--line-dark)]">
           <Link className="text-xs font-extrabold tracking-[var(--tracking-wider)]" href="/">KLINIKOS</Link>
@@ -119,8 +127,6 @@ export function PublicLivingGateway() {
             Sign in
           </Link>
         </header>
-
-        <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
 
         <main className="min-h-0 flex-1" id="living-conversation">
           {!conversationStarted ? (
@@ -241,6 +247,7 @@ export function PublicLivingGateway() {
                 onKeyDown={handleComposerKeyDown}
                 placeholder={conversationStarted ? "Continue the thread..." : "Describe the outcome..."}
                 rows={1}
+                ref={composer}
                 value={intent}
               />
               <button
@@ -259,6 +266,7 @@ export function PublicLivingGateway() {
           </div>
         </form>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
