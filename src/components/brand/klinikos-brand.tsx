@@ -19,10 +19,10 @@ function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: stri
       aria-label="Klinikos"
       className={className}
       height="39"
-      width="270"
+      width="236"
       preserveAspectRatio="xMinYMid meet"
       role="img"
-      viewBox="0 0 238 34"
+      viewBox="0 0 205 34"
       xmlns="http://www.w3.org/2000/svg"
     >
       <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75">
@@ -33,8 +33,7 @@ function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: stri
         <path d="M101 5C100 13 99 22 100 30M99 4C103 3 106 3 109 4" />
         <path d="M117 29C119 20 119 11 121 4M119 18C126 13 131 8 136 3M120 18C127 21 133 25 139 30" />
         <path d="M157 5C146 4 141 11 142 18C143 26 150 30 158 29C166 28 170 21 168 14C167 8 163 5 157 5Z" />
-        <path d="M178 29C180 20 180 12 180 5C187 13 193 21 199 29C200 21 200 13 202 5" />
-        <path d="M212 6C216 3 224 4 228 7C224 8 217 9 215 13C213 17 219 18 224 19C230 21 233 25 229 29C225 32 216 31 212 27" />
+        <path d="M182 6C186 3 194 4 198 7C194 8 187 9 185 13C183 17 189 18 194 19C200 21 203 25 199 29C195 32 186 31 182 27" />
       </g>
     </svg>
   );
