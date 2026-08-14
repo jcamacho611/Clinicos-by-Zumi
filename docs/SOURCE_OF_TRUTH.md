@@ -121,7 +121,7 @@ Payment law:
 1. Klinikos creates a server-owned checkout intent.
 2. The buyer may be sent to the configured external checkout.
 3. Browser redirect/return state does **not** establish payment.
-4. Payment evidence is distinct from entitlement.
+4. Payment evidence is recorded separately from entitlement.
 5. Activation requires qualifying verified evidence/reconciliation and the appropriate subscription/activation event.
 6. Manual reconciliation may be used when truthful, authorized and recorded.
 7. Payment never widens RBAC, tenant, clinical, privacy, credentialing, safety or record-release policy.
