@@ -4,6 +4,7 @@ import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmos
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
 import "./cinematic-global.css";
+import "./cinematic-legacy-overrides.css";
 
 const siteUrl = "https://klinikos.io";
 
