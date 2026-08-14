@@ -22,6 +22,8 @@ type GridDemandRow = {
   locationType: string | null;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
   radiusMiles: number | null;
   maxPriceCents: number | null;
   quantity: number;
@@ -94,13 +96,14 @@ export async function createSavedGridDemand(session: ClinicSession, rawInput: un
   const rows = await db.$queryRaw<GridDemandRow[]>(Prisma.sql`
     INSERT INTO "GridDemandRecord" (
       "id", "organizationId", "createdBy", "kind", "title", "description", "category",
-      "serviceName", "requestedStartAt", "requestedEndAt", "locationType", "city", "state",
+      "serviceName", "requestedStartAt", "requestedEndAt", "locationType", "city", "state", "latitude", "longitude",
       "radiusMiles", "maxPriceCents", "quantity", "requiresClinicalEligibility", "requirements",
       "status", "visibility", "createdAt", "updatedAt"
     ) VALUES (
       ${id}, ${session.organizationId}, ${session.userId}, ${input.kind}, ${input.title}, ${input.description}, ${input.category},
       ${input.serviceName ?? null}, ${input.requestedStartAt ? new Date(input.requestedStartAt) : null},
       ${input.requestedEndAt ? new Date(input.requestedEndAt) : null}, ${input.locationType ?? null}, ${input.city ?? null}, ${input.state ?? null},
+      ${input.latitude ?? null}, ${input.longitude ?? null},
       ${input.radiusMiles ?? null}, ${input.maxPriceCents ?? null}, ${input.quantity}, ${input.requiresClinicalEligibility},
       CAST(${requirements} AS JSONB), ${input.status}, ${input.visibility}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )

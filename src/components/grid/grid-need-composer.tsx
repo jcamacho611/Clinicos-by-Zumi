@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Crosshair, LoaderCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -44,6 +44,9 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
   const [serviceName, setServiceName] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("NY");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
   const [radiusMiles, setRadiusMiles] = useState("25");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -61,6 +64,31 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
   function changeKind(next: Kind) {
     setKind(next);
     if (["work", "provider"].includes(next)) setClinical(true);
+  }
+
+  function useCurrentLocation() {
+    setError(null);
+    if (!navigator.geolocation) {
+      setError("This browser does not provide location access. City and state matching is still available.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setCity("");
+        setState("");
+        setLocating(false);
+      },
+      (reason) => {
+        setError(reason.code === reason.PERMISSION_DENIED
+          ? "Location permission was not granted. Grid will use city and state without claiming an exact radius."
+          : "Grid could not read this device location. City and state matching is still available.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60 * 1000 },
+    );
   }
 
   async function submit() {
@@ -100,6 +128,8 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
           locationType: locationType.trim() || null,
           city: city.trim() || null,
           state: state.trim() || null,
+          latitude,
+          longitude,
           radiusMiles: radiusMiles.trim() ? Math.max(0, Math.round(Number(radiusMiles))) : null,
           maxPriceCents,
           quantity: Math.max(1, Math.round(Number(quantity || "1"))),
@@ -144,6 +174,7 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">Specific service or capability<Input className="mt-2" value={serviceName} onChange={(event) => setServiceName(event.target.value)} placeholder="Optional" /></label>
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">City<Input className="mt-2" value={city} onChange={(event) => setCity(event.target.value)} /></label>
       <div className="grid grid-cols-[100px_1fr] gap-2"><label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">State<Input className="mt-2" maxLength={2} value={state} onChange={(event) => setState(event.target.value.toUpperCase())} /></label><label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">Radius miles<Input className="mt-2" min={0} type="number" value={radiusMiles} onChange={(event) => setRadiusMiles(event.target.value)} /></label></div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[.03] p-4 md:col-span-2"><div><p className="text-xs font-extrabold text-white">Use a real search origin</p><p className="mt-1 text-[10px] leading-5 text-white/40">Optional. Grid asks only after you choose this button. Without it, results use city/state and do not claim exact distance.</p></div><Button disabled={locating} onClick={useCurrentLocation} type="button" variant="secondary">{locating ? <LoaderCircle className="size-4 animate-spin" /> : <Crosshair className="size-4" />}{latitude != null && longitude != null ? "Location captured" : "Use my location"}</Button></div>
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">Start<Input className="mt-2" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">End<Input className="mt-2" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label>
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45">Quantity / capacity<Input className="mt-2" min={1} type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label>

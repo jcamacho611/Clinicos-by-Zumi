@@ -1,6 +1,6 @@
 # Klinikos Grid Transaction Flow
 
-This document records the post-marketplace transaction spine currently being built on `agent/grid-transaction-flow`.
+This document records the implemented Grid transaction spine and the public-to-governed continuation verified on `feat/grid-exchange-mvp`.
 
 ## Canonical lifecycle
 
@@ -11,6 +11,8 @@ A later state must never be inferred merely because an earlier state exists.
 ## Saved demand
 
 `GridDemandRecord` represents a need before the buyer has selected supply. It is intentionally separate from the legacy `GridRequest`, because `GridRequest` already assumes a selected provider and service listing.
+
+Demand can optionally store a permission-derived latitude/longitude pair plus a radius. Exact distance is used only when both demand and resource have real coordinates. City/state matching remains available without claiming a precise distance.
 
 Demand supports the universal Grid kinds:
 
@@ -27,7 +29,17 @@ Demand supports the universal Grid kinds:
 
 ## Offer
 
-`GridOfferRecord` binds a saved demand to selected supply. Current provider/service offers are revalidated against Grid readiness before creation. Location offers revalidate location availability. Generic resource references remain synthetic/manual-policy-review until their resource-class verifier exists.
+`GridOfferRecord` binds a saved demand to selected supply. Provider/service offers are revalidated against Grid readiness before creation. Universal resource offers revalidate approved resource policy, ownership, availability, and capacity before sending and again before acceptance/reservation. Unsupported regulated classes remain blocked by their policy rather than being treated as generic supply.
+
+## Public continuation
+
+The Exchange Field interprets intent deterministically and routes public discovery without requiring an AI provider. Public projections contain only reviewed/published fields, reduce map-coordinate precision, and do not expose private evidence, contact details, internal notes, payment data, or PHI.
+
+A reviewed universal resource can continue through:
+
+`public discovery -> sign in with safe same-origin return path -> saved demand -> offer -> acceptance -> atomic reservation`
+
+Provider and universal-resource presentation is coordinated in the public map/result ledger, while each class retains its own eligibility policy.
 
 ## Truth rules
 
@@ -37,6 +49,9 @@ Demand supports the universal Grid kinds:
 - Offer expiration must be in the future.
 - A demand must identify selected supply before an offer exists.
 - Reservation conflicts must prevent provider/location double booking.
+- A distance is shown or used for radius eligibility only when both sides have valid stored coordinates.
+- Browser location is requested only after a user action and is not converted into fake marketplace inventory.
+- Public coordinate projection is less precise than governed server-side matching data.
 - Booking, payment, fulfillment, and settlement remain distinct states.
 - Payout cannot be represented as settled before fulfillment and a real external settlement reference.
 - All consequential transitions must be attributable and auditable.
@@ -55,14 +70,12 @@ The current branch uses small additive SQL migrations and typed repository acces
 - existing Grid request transition endpoints
 - existing Grid payout transition endpoints
 
-## Next slice
+## Remaining external / later slices
 
-1. Offer transition endpoint with accepted/countered/declined/expired/withdrawn states.
-2. Accepted provider/service offer converts to a reservation/request only after rechecking eligibility and availability.
-3. Atomic reservation conflict checks.
-4. Payment condition and manual GoDaddy payment reconciliation state.
-5. Fulfillment confirmation.
-6. Financial obligations and settlement reconciliation.
+1. Connect and verify a production Google Maps/geocoding/routing account only if richer multi-marker routing is commercially justified; the fallback map does not claim those APIs are connected.
+2. Connect a regulated payment/payout processor before any payout state is presented as money moved.
+3. Connect external professional-license and malpractice authorities before describing internal review as external verification.
+4. Continue converging specialized enrollment screens on the shared visual system without combining their policy classes.
 
 ## Safety boundary
 

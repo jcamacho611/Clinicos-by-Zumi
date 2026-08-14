@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
+import { evaluateGridGeographicScope } from "@/lib/grid/geo-rules";
 import { rankGridMatches } from "@/lib/grid/matching-engine";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -19,6 +20,8 @@ type DemandRow = {
   locationType: string | null;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
   radiusMiles: number | null;
   maxPriceCents: number | null;
   quantity: number;
@@ -40,6 +43,8 @@ type ResourceRow = {
   status: string;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
   pricingModel: string;
   priceCents: number | null;
   capacity: number;
@@ -99,7 +104,11 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
   const sameOrganization = resource.organizationId === demand.organizationId;
   const purposeBoundMatch = resource.visibility === "matched_only";
   if (!sameOrganization && resource.visibility !== "public" && !purposeBoundMatch) return null;
-  if (demand.state && resource.state && demand.state.toLowerCase() !== resource.state.toLowerCase()) return null;
+
+  const geography = evaluateGridGeographicScope(demand, resource);
+  if (!geography.eligible) return null;
+  const distanceMiles = geography.distanceMiles;
+
   if (demand.maxPriceCents != null && resource.priceCents != null && resource.priceCents > demand.maxPriceCents) return null;
   if (resource.capacity < demand.quantity) return null;
 
@@ -116,6 +125,13 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
   } else if (demand.state && resource.state && demand.state.toLowerCase() === resource.state.toLowerCase()) {
     score += 8;
     reasons.push("Same state as the saved need.");
+  }
+  if (distanceMiles != null) {
+    const proximityScore = demand.radiusMiles && demand.radiusMiles > 0
+      ? Math.max(2, Math.round(15 * (1 - distanceMiles / demand.radiusMiles)))
+      : 15;
+    score += proximityScore;
+    reasons.push(`${distanceMiles.toFixed(1)} miles from the permission-derived search origin and inside the requested radius.`);
   }
   if (capacityClass && slots.length) {
     score += 15;
@@ -144,6 +160,7 @@ function resourceDiscovery(demand: DemandRow, resource: ResourceRow, slots: Avai
     description: resource.description,
     city: resource.city,
     state: resource.state,
+    distanceMiles,
     pricingModel: resource.pricingModel,
     priceCents: resource.priceCents,
     capacity: resource.capacity,

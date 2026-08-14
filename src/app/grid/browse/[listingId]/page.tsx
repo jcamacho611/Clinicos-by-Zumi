@@ -12,6 +12,7 @@ import {
   weekdayLabels,
 } from "@/lib/grid/marketplace-rules";
 import { getMarketplaceListing } from "@/lib/repositories/grid-marketplace-repository";
+import { getClinicSession } from "@/lib/auth/session";
 
 /**
  * Public listing detail.
@@ -30,7 +31,7 @@ const toneClass = {
 
 export default async function GridListingPage({ params }: { params: Promise<{ listingId: string }> }) {
   const { listingId } = await params;
-  const listing = await getMarketplaceListing(listingId);
+  const [listing, session] = await Promise.all([getMarketplaceListing(listingId), getClinicSession()]);
   if (!listing) notFound();
 
   const verification = presentVerification(listing.provider);
@@ -134,9 +135,9 @@ export default async function GridListingPage({ params }: { params: Promise<{ li
             {bookable ? (
               <Link
                 className="mt-6 flex min-h-[48px] w-full items-center justify-center bg-[#0b1220] px-4 text-sm font-bold text-white hover:bg-[#174ea6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#174ea6]"
-                href="/login"
+                href={session ? "/grid/needs/new?kind=provider" : `/login?returnTo=${encodeURIComponent(`/grid/browse/${listing.id}`)}`}
               >
-                Sign in to request
+                {session ? "Create provider request" : "Sign in to request"}
               </Link>
             ) : (
               <p className="mt-6 border border-[#b45309]/30 bg-[#b45309]/[.07] px-4 py-3 text-[12px] leading-5 text-[#b45309]">
@@ -145,7 +146,7 @@ export default async function GridListingPage({ params }: { params: Promise<{ li
             )}
 
             <p className="mt-4 text-[12px] leading-5 text-[#5b6675]">
-              Requesting starts a governed booking workflow that a human confirms. It does not book an appointment, authorize treatment,
+              This opens the governed provider-need workflow. It does not select or reserve this listing, book an appointment, authorize treatment,
               or guarantee availability.
             </p>
 

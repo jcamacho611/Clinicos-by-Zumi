@@ -3,10 +3,12 @@ import { z } from "zod";
 import { authenticateCredentials } from "@/lib/auth/credentials";
 import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
 import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
+import { safeReturnTo } from "@/lib/auth/return-to";
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(256),
+  returnTo: z.string().max(500).optional().nullable(),
 });
 
 export async function POST(request: Request) {
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     });
     clearLoginFailures(key);
 
-    const response = NextResponse.json({ ok: true, redirectTo: identity.role === "contractor" ? "/grid/opportunities" : "/dashboard" });
+    const response = NextResponse.json({ ok: true, redirectTo: safeReturnTo(parsed.data.returnTo) ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard") });
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
     response.headers.set("Cache-Control", "no-store");
     return response;

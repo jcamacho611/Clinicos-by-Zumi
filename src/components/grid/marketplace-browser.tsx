@@ -68,8 +68,8 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   );
 }
 
-export function MarketplaceBrowser({ listings }: { listings: MarketplaceListing[] }) {
-  const [filters, setFilters] = useState<MarketplaceFilters>(emptyMarketplaceFilters);
+export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: MarketplaceListing[]; initialQuery?: string }) {
+  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({ ...emptyMarketplaceFilters, q: initialQuery }));
   const [showFilters, setShowFilters] = useState(false);
 
   const results = useMemo(() => applyMarketplaceFilters(listings, filters), [listings, filters]);
