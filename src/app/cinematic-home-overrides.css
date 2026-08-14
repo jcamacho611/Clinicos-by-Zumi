@@ -1,6 +1,5 @@
 /* Reference-locked Living Home refinements loaded after the legacy stylesheet. */
 
-/* Keep the cinematic background inside the Living Home stacking context. */
 .rose-home {
   position: relative;
   isolation: isolate;
@@ -19,9 +18,24 @@
 }
 
 .rose-home > header {
-  min-height: 86px !important;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  min-height: 82px !important;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* Generated production rose, tuned to the approved composition. */
+.rose-home .rose-atmosphere {
+  background:
+    radial-gradient(circle at 50% 40%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.03) 48%,rgba(0,0,0,.36) 75%,#050303 100%),
+    url('/klinikos-rose-generated.webp') center 20% / min(76vw,1160px) auto no-repeat !important;
+  filter: saturate(.86) contrast(1.02) brightness(.86);
+  transform-origin: 50% 34%;
+}
+
+.rose-home .rose-vignette {
+  background:
+    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.36) 9%,rgba(5,3,3,0) 27%,rgba(5,3,3,0) 73%,rgba(5,3,3,.36) 91%,#050303 100%),
+    linear-gradient(180deg,rgba(5,3,3,.20) 0%,transparent 17%,transparent 72%,rgba(5,3,3,.74) 100%);
 }
 
 .rose-home .speedster-panel {
@@ -45,7 +59,6 @@
     radial-gradient(circle at 57% 28%,rgba(230,129,123,.16) 0 2px,transparent 3px),
     radial-gradient(circle at 78% 61%,rgba(230,129,123,.16) 0 2px,transparent 3px),
     radial-gradient(circle at 51% 76%,rgba(239,170,161,.11) 0 2px,transparent 3px);
-  transform:none !important;
   box-shadow:
     0 0 52px rgba(188,57,62,.10),
     inset 0 0 48px rgba(230,129,123,.035) !important;
@@ -62,79 +75,63 @@
   box-shadow:0 -26px 0 rgba(230,129,123,.08),0 24px 0 rgba(230,129,123,.045) !important;
 }
 
-/* Actual generated production rose. Keep it as the image source, then tune only presentation around it. */
-.rose-home .rose-atmosphere {
-  background:
-    radial-gradient(circle at 50% 39%,rgba(126,25,31,.01) 0%,rgba(0,0,0,.035) 44%,rgba(0,0,0,.38) 76%,#050303 100%),
-    url('/klinikos-rose-generated.webp') center 28%/min(82vw,1260px) auto no-repeat !important;
-  filter:saturate(.89) contrast(1.06) brightness(.90);
-  transform-origin: 50% 34%;
-}
-
-/* Preserve the reference's dark perimeter without covering the rose center. */
-.rose-home .rose-vignette {
-  background:
-    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.20) 9%,rgba(5,3,3,0) 27%,rgba(5,3,3,0) 73%,rgba(5,3,3,.20) 91%,#050303 100%),
-    linear-gradient(180deg,rgba(5,3,3,.10) 0%,transparent 17%,transparent 75%,rgba(5,3,3,.72) 100%);
-}
-
 @media (min-width: 1024px) {
   .rose-home .reference-home {
-    min-height: calc(100vh - 86px) !important;
+    min-height: calc(100vh - 82px) !important;
     padding-top: 0 !important;
-    padding-bottom: 1.25rem !important;
+    padding-bottom: 1rem !important;
   }
 
   .rose-home .reference-home > section {
     min-height: 0 !important;
     justify-content: flex-start !important;
-    padding-top: clamp(1rem, 2.5vh, 2.35rem) !important;
+    padding-top: clamp(.7rem, 1.8vh, 1.7rem) !important;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: 1.5rem !important;
-    max-width: 720px !important;
-    font-size: clamp(4.6rem, 6.2vw, 6.85rem) !important;
+    margin-top: 1rem !important;
+    max-width: 700px !important;
+    font-size: clamp(4.2rem, 5.55vw, 5.9rem) !important;
     line-height: .88 !important;
-    letter-spacing: -.06em !important;
+    letter-spacing: -.058em !important;
   }
 
   .rose-home .reference-hero h1 + p {
-    margin-top: 1.25rem !important;
+    margin-top: .9rem !important;
   }
 
   .rose-home #living-composer {
-    margin-top: 2rem !important;
+    margin-top: 1.45rem !important;
     max-width: 770px !important;
   }
 
   .rose-home #living-composer > div {
-    min-height: 96px !important;
+    min-height: 92px !important;
   }
 }
 
 @media (min-width: 1024px) and (max-height: 940px) {
   .rose-home .reference-home > section {
-    padding-top: .55rem !important;
+    padding-top: .25rem !important;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: 1rem !important;
-    font-size: clamp(4.15rem, 5.7vw, 6.15rem) !important;
+    margin-top: .75rem !important;
+    font-size: clamp(3.95rem, 5.1vw, 5.45rem) !important;
   }
 
   .rose-home .reference-hero h1 + p {
-    margin-top: .85rem !important;
+    margin-top: .65rem !important;
   }
 
   .rose-home #living-composer {
-    margin-top: 1.3rem !important;
+    margin-top: 1rem !important;
   }
 }
 
 @media(max-width:900px){
   .rose-home .rose-atmosphere {
-    background-size:min(140vw,980px),auto !important;
-    background-position:center 11% !important;
+    background-size:min(128vw,880px),auto !important;
+    background-position:center 8% !important;
   }
 }
