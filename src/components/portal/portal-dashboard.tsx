@@ -69,7 +69,7 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
     nextStep = {
       eyebrow: "Coming up",
       title: `${nextAppointment.type} on ${formatDate(nextAppointment.startsAt)}`,
-      detail: `${nextAppointment.provider}${nextAppointment.telemedicine ? " · Telemedicine" : ""}. Your clinic will release any forms or instructions here when they are ready for you.",
+      detail: `${nextAppointment.provider}${nextAppointment.telemedicine ? " · Telemedicine" : ""}. Your clinic will release any forms or instructions here when they are ready for you.`,
       tone: "observing",
     };
   } else if (data.financial.balanceCents > 0) {
