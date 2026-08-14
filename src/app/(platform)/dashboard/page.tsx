@@ -1,6 +1,4 @@
-import { Dashboard } from "@/components/clinic/dashboard";
 import { LivingHome } from "@/components/clinic/living-home";
-import { PathSignals } from "@/components/clinic/path-signals";
 import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";
 import { requireClinicSession } from "@/lib/auth/session";
@@ -12,6 +10,7 @@ import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
   const session = await requireClinicSession();
   if (session.role === "contractor") redirect("/grid");
+
   const [appointments, activePaths, recentPathSignals] = await Promise.all([
     listAppointmentsForOrganization(session.organizationId),
     listActivePathSnapshots(session),
@@ -19,29 +18,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]);
   const pathGuidance = resolvePathGuidanceList(session, activePaths);
   const query = await searchParams;
-  const seededDemo = session.organizationId === "org-bfm" || session.organizationId === "org-luxe";
   const firstName = session.name.split(/\s+/)[0] || "there";
 
   return (
-    <div className="space-y-20">
-      <div>
-        <LivingHome firstName={firstName} role={session.role} initialPaths={activePaths} initialGuidance={pathGuidance} />
-        <PathSignals signals={recentPathSignals} />
-      </div>
-      <section aria-labelledby="operations-heading" className="space-y-8">
-        <div className="max-w-2xl">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Operations</p>
-          <h2 className="mt-3 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]" id="operations-heading">The detail is here when you need it.</h2>
-          <p className="mt-3 text-xs leading-6 text-[#0b1e3a]/52">Home keeps priorities and next actions first. Open the deeper clinic workspace when you need the full operational view.</p>
-        </div>
-        <Dashboard
-          appointments={appointments}
-          onboardingComplete={query.onboarding === "complete"}
-          organizationName={session.organizationName}
-          seededDemo={seededDemo}
-          userName={session.name}
-        />
-      </section>
+    <div className="space-y-16">
+      <LivingHome
+        appointments={appointments}
+        firstName={firstName}
+        initialGuidance={pathGuidance}
+        initialPaths={activePaths}
+        onboardingComplete={query.onboarding === "complete"}
+        organizationName={session.organizationName}
+        recentSignals={recentPathSignals}
+        role={session.role}
+        userName={session.name}
+      />
       <WorkspaceLaunchpad role={session.role} />
     </div>
   );
