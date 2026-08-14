@@ -9,7 +9,12 @@ ADD CONSTRAINT "GridDemandRecord_coordinate_pair_check"
 CHECK (
   ("latitude" IS NULL AND "longitude" IS NULL)
   OR
-  ("latitude" BETWEEN -90 AND 90 AND "longitude" BETWEEN -180 AND 180)
+  (
+    "latitude" IS NOT NULL
+    AND "longitude" IS NOT NULL
+    AND "latitude" BETWEEN -90 AND 90
+    AND "longitude" BETWEEN -180 AND 180
+  )
 );
 
 -- Universal resources already store coordinates. Enforce the same pair and
@@ -19,5 +24,10 @@ ADD CONSTRAINT "GridResourceRecord_coordinate_pair_check"
 CHECK (
   ("latitude" IS NULL AND "longitude" IS NULL)
   OR
-  ("latitude" BETWEEN -90 AND 90 AND "longitude" BETWEEN -180 AND 180)
+  (
+    "latitude" IS NOT NULL
+    AND "longitude" IS NOT NULL
+    AND "latitude" BETWEEN -90 AND 90
+    AND "longitude" BETWEEN -180 AND 180
+  )
 );
