@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { gridLocationTypes } from "@/lib/grid-rules";
+import { gridSearchTerms, matchesGridSearchTerms } from "@/lib/grid/intent-rules";
 
 /**
  * GRID marketplace discovery rules.
@@ -128,19 +129,17 @@ export type MarketplaceListing = {
 };
 
 function matchesText(listing: MarketplaceListing, term: string) {
-  if (!term) return true;
-  const haystack = [
+  return matchesGridSearchTerms([
     listing.serviceName,
     listing.category,
     listing.description,
     listing.provider.displayName,
     listing.provider.providerType,
-    listing.provider.specialty ?? "",
+    listing.provider.specialty,
     ...listing.provider.servicesOffered,
     ...listing.serviceAreas,
-  ].join(" ").toLowerCase();
-  // Every word must appear somewhere, so extra words narrow rather than widen.
-  return term.toLowerCase().split(/\s+/).filter(Boolean).every((word) => haystack.includes(word));
+    ...listing.states,
+  ], gridSearchTerms(term));
 }
 
 export function filterListings(listings: MarketplaceListing[], filters: MarketplaceFilters): MarketplaceListing[] {

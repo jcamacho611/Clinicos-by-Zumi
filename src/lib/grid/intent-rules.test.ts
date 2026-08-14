@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gridOfferEnrollmentHref, inferGridIntent } from "@/lib/grid/intent-rules";
+import { gridOfferEnrollmentHref, inferGridIntent, matchesGridSearchTerms } from "@/lib/grid/intent-rules";
 
 describe("Grid deterministic intent routing", () => {
   it("routes a clinical coverage need to work", () => {
@@ -10,6 +10,18 @@ describe("Grid deterministic intent routing", () => {
     const interpretation = inferGridIntent("I have a treatment room available Saturdays");
     expect(interpretation).toMatchObject({ direction: "offer", intent: "space", followUp: "What city is the space in?" });
     expect(gridOfferEnrollmentHref(interpretation.intent)).toBe("/grid/join/location");
+  });
+
+  it("preserves every meaningful search term and matches state names to codes", () => {
+    const interpretation = inferGridIntent("I need a nurse in California");
+    expect(interpretation.searchTerms).toEqual(["nurse", "california"]);
+    expect(matchesGridSearchTerms(["Registered nurse", "CA"], interpretation.searchTerms)).toBe(true);
+    expect(matchesGridSearchTerms(["Registered nurse", "NY"], interpretation.searchTerms)).toBe(false);
+  });
+
+  it("requires all meaningful terms instead of filtering by only the first", () => {
+    expect(matchesGridSearchTerms(["Registered nurse", "California"], ["nurse", "california"])).toBe(true);
+    expect(matchesGridSearchTerms(["Registered nurse", "Nevada"], ["nurse", "california"])).toBe(false);
   });
 
   it("keeps non-clinical services out of clinical eligibility routing", () => {

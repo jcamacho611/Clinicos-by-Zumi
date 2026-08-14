@@ -29,12 +29,54 @@ const intentLabels: Record<GridIntentKind, string> = {
   referral: "referral capacity",
 };
 
+const stateNameByCode: Record<string, string> = {
+  al: "alabama", ak: "alaska", az: "arizona", ar: "arkansas", ca: "california", co: "colorado", ct: "connecticut",
+  de: "delaware", dc: "district of columbia", fl: "florida", ga: "georgia", hi: "hawaii", id: "idaho", il: "illinois",
+  in: "indiana", ia: "iowa", ks: "kansas", ky: "kentucky", la: "louisiana", me: "maine", md: "maryland",
+  ma: "massachusetts", mi: "michigan", mn: "minnesota", ms: "mississippi", mo: "missouri", mt: "montana",
+  ne: "nebraska", nv: "nevada", nh: "new hampshire", nj: "new jersey", nm: "new mexico", ny: "new york",
+  nc: "north carolina", nd: "north dakota", oh: "ohio", ok: "oklahoma", or: "oregon", pa: "pennsylvania",
+  ri: "rhode island", sc: "south carolina", sd: "south dakota", tn: "tennessee", tx: "texas", ut: "utah",
+  vt: "vermont", va: "virginia", wa: "washington", wv: "west virginia", wi: "wisconsin", wy: "wyoming",
+};
+
+const stateCodeByName = new Map(Object.entries(stateNameByCode).map(([code, name]) => [name, code]));
+
 const commonWords = new Set([
   "a", "an", "and", "are", "available", "for", "find", "have", "i", "in", "is", "me", "my", "need", "of", "on", "or", "something", "the", "to", "want", "with",
 ]);
 
 function contains(value: string, patterns: readonly string[]) {
   return patterns.some((pattern) => value.includes(pattern));
+}
+
+export function gridSearchTerms(rawQuery: string) {
+  return rawQuery.trim().toLowerCase().split(/[^a-z0-9]+/)
+    .filter((term) => term.length >= 2 && !commonWords.has(term))
+    .slice(0, 12);
+}
+
+export function matchesGridSearchTerms(
+  values: readonly (string | null | undefined)[],
+  terms: readonly string[],
+) {
+  if (!terms.length) return true;
+
+  const expanded = values
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => {
+      const normalized = value.trim().toLowerCase();
+      const stateName = stateNameByCode[normalized];
+      const stateCode = stateCodeByName.get(normalized);
+      return [normalized, stateName, stateCode].filter((entry): entry is string => Boolean(entry));
+    });
+  const haystack = expanded.join(" ");
+  const tokens = new Set(haystack.split(/[^a-z0-9]+/).filter(Boolean));
+
+  return terms.every((term) => {
+    const normalized = term.toLowerCase();
+    return normalized.length <= 2 ? tokens.has(normalized) : haystack.includes(normalized);
+  });
 }
 
 export function inferGridIntent(rawQuery: string, fallback: GridIntentKind = "all") {
@@ -67,7 +109,7 @@ export function inferGridIntent(rawQuery: string, fallback: GridIntentKind = "al
     intent,
     label: intentLabels[intent],
     followUp,
-    searchTerms: query.split(/[^a-z0-9]+/).filter((term) => term.length >= 2 && !commonWords.has(term)).slice(0, 12),
+    searchTerms: gridSearchTerms(query),
   };
 }
 

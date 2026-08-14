@@ -77,6 +77,8 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
       (position) => {
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
+        setCity("");
+        setState("");
         setLocating(false);
       },
       (reason) => {
