@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Check, Moon, Palette, Sparkles, Sun, Sunrise, Sunset, X } from "lucide-react";
 import {
   atmosphereForLocalHour,
@@ -42,6 +43,7 @@ const options: Array<{
 ];
 
 export function KlinikosAtmosphereController() {
+  const pathname = usePathname();
   const [preference, setPreference] = useState<KlinikosAtmospherePreference>("auto");
   const [atmosphere, setAtmosphere] = useState<KlinikosAtmosphere>("day");
   const [open, setOpen] = useState(false);
@@ -75,6 +77,8 @@ export function KlinikosAtmosphereController() {
     setAtmosphere(nextAtmosphere);
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { preference: next, atmosphere: nextAtmosphere } }));
   }
+
+  if (pathname === "/") return null;
 
   return (
     <div className="k-atmosphere-control" data-open={open ? "true" : "false"}>
