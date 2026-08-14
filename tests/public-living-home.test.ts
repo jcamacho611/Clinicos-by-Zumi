@@ -12,10 +12,15 @@ describe("public Living Home intent", () => {
     ["I need a nurse Saturday", "staffing", "/grid"],
     ["I want training to become an injector", "edu", "/edu"],
     ["Book an appointment for me", "patient", "/portal"],
-    ["Our referrals and follow-up are getting lost", "referrals", "/start"],
-    ["Help me run my clinic", "clinic", "/start"],
+    ["Our referrals and follow-up are getting lost", "referrals", "/referrals"],
+    ["Help me run my clinic", "clinic", "/dashboard"],
     ["I need a treatment room Saturday", "grid", "/grid"],
-  ])("infers %s without inventing authenticated Path IDs", (prompt, key, href) => {
+    ["Show me today's priorities", "priorities", "/tasks"],
+    ["Where are we losing revenue?", "revenue", "/crm"],
+    ["Show me outstanding claims", "billing", "/billing"],
+    ["Show me our care gaps", "insights", "/quality"],
+    ["Open the provider workspace", "care", "/provider"],
+  ])("infers %s into a real product destination", (prompt, key, href) => {
     const resolution = resolvePublicLivingIntent(prompt);
     expect(resolution.destination).toMatchObject({ key, href });
     expect(resolution.body.length).toBeGreaterThan(30);
@@ -59,19 +64,23 @@ describe("public Living Home interaction contract", () => {
     expect(page).not.toContain("KlinikosHomepage");
   });
 
-  it("renders the request, truthful progress, response, and relevant action in order", () => {
+  it("renders truthful listening, understanding, connecting, preparing, and ready states", () => {
     const requestPosition = source.indexOf("{turn.prompt}");
-    const progressPosition = source.indexOf("{progressSteps.map");
-    const responsePosition = source.indexOf("{turn.resolution.title}");
-    const actionPosition = source.indexOf("{turn.resolution.destination.action}");
+    const progressPosition = source.indexOf("{progressSteps.map", requestPosition);
+    const responsePosition = source.indexOf("{turn.resolution.title}", progressPosition);
+    const actionPosition = source.indexOf("{destination.action}", responsePosition);
 
     expect(requestPosition).toBeGreaterThan(0);
     expect(progressPosition).toBeGreaterThan(requestPosition);
     expect(responsePosition).toBeGreaterThan(progressPosition);
     expect(actionPosition).toBeGreaterThan(responsePosition);
+    expect(source).toContain("Listening");
     expect(source).toContain("Understanding");
-    expect(source).toContain("Preparing the next move");
+    expect(source).toContain("Connecting");
+    expect(source).toContain("Preparing");
     expect(source).toContain("Ready");
+    expect(source).toContain('if (resolution.destination)');
+    expect(source).toContain('connectingSuppressed');
   });
 
   it("supports keyboard submission, accessible status, and reduced motion", () => {
@@ -86,26 +95,54 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain("latestResolution.destination.action");
   });
 
-  it("passes the prior resolved intent into conversational follow-ups", () => {
+  it("passes prior resolved intent into conversational follow-ups", () => {
     expect(source).toContain("const priorResolution = [...turns].reverse().find");
     expect(source).toContain("const resolution = resolvePublicLivingIntent(prompt, priorResolution)");
   });
 
   it("performs inference before scheduling the progress reveal", () => {
     const inferencePosition = source.indexOf("const resolution = resolvePublicLivingIntent");
-    const schedulePosition = source.indexOf("schedule(timing.preparing");
+    const schedulePosition = source.indexOf("schedule(170");
 
     expect(inferencePosition).toBeGreaterThan(0);
     expect(inferencePosition).toBeLessThan(schedulePosition);
-    expect(source).toContain("response: 480");
+    expect(source).toContain("stage: \"connecting\"");
+    expect(source).toContain("stage: \"preparing\"");
+    expect(source).toContain("stage: \"ready\"");
   });
 
-  it("keeps the full-screen workspace responsive without hiding the composer", () => {
-    expect(source).toContain("h-[100svh]");
-    expect(source).toContain("sm:grid-cols-3");
-    expect(source).toContain("lg:grid-cols-[12rem_minmax(0,1fr)]");
+  it("keeps the reference composition responsive and command-first", () => {
+    expect(source).toContain("min-h-screen");
+    expect(source).toContain("lg:grid-cols-[190px_minmax(0,1fr)_190px]");
     expect(source).toContain('id="public-klinikos-intent"');
-    expect(source).toContain('placeholder={conversationStarted ? "Continue the thread..."');
+    expect(source).toContain('placeholder="Ask Klinikos anything..."');
+    expect(source).toContain('placeholder="Continue the thread..."');
+    expect(source).toContain("What needs");
+    expect(source).toContain("to happen?");
+    expect(source).toContain("Your AI Operating Partner");
+  });
+
+  it("wires the reference navigation and cards to real product surfaces", () => {
+    expect(source).toContain('protectedHref("/dashboard")');
+    expect(source).toContain('protectedHref("/grid")');
+    expect(source).toContain('protectedHref("/provider")');
+    expect(source).toContain('protectedHref("/billing")');
+    expect(source).toContain('protectedHref("/quality")');
+    expect(source).toContain('protectedHref("/tasks")');
+    expect(source).toContain('protectedHref("/crm")');
+    expect(source).toContain('href: "/edu"');
+    expect(source).toContain("Today's Priorities");
+    expect(source).toContain("Revenue Opportunities");
+    expect(source).toContain("Team Workflow");
+    expect(source).toContain("Grid Network");
+    expect(source).toContain("workspaceActions");
+  });
+
+  it("uses real document and voice destinations instead of dead decorative composer controls", () => {
+    expect(source).toContain('protectedHref("/documents")');
+    expect(source).toContain('protectedHref("/voice-assistant")');
+    expect(source).toContain('aria-label="Open documents"');
+    expect(source).toContain('aria-label="Talk to Zumi"');
   });
 
   it("removes the global appearance control from the focused Living Home", () => {

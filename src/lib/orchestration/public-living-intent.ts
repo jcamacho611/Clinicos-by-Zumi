@@ -1,7 +1,18 @@
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 
 export type PublicLivingDestination = {
-  key: "clinic" | "grid" | "edu" | "patient" | "referrals" | "staffing";
+  key:
+    | "clinic"
+    | "grid"
+    | "edu"
+    | "patient"
+    | "referrals"
+    | "staffing"
+    | "priorities"
+    | "revenue"
+    | "billing"
+    | "insights"
+    | "care";
   href: string;
   action: string;
 };
@@ -24,6 +35,50 @@ type PublicRule = {
 
 const publicRules: readonly PublicRule[] = [
   {
+    destination: { key: "priorities", href: "/tasks", action: "Open today's priorities" },
+    patterns: [
+      /\b(?:today'?s?|my|our)\s+(?:priorities|tasks|work queue|to[- ]?do)\b/i,
+      /\bwhat\s+(?:needs|requires)\s+(?:my|our)\s+attention\b/i,
+      /\b(?:overdue|urgent|pending)\s+(?:tasks?|work|follow[- ]?ups?)\b/i,
+    ],
+    title: "I’m treating this as a priority queue request.",
+    body: "Klinikos can bring the governed task and escalation surfaces forward so the user sees owned work, due work, and the next available action instead of a static summary.",
+    assumption: "You want actionable work that is already represented in Klinikos rather than a general productivity list.",
+  },
+  {
+    destination: { key: "revenue", href: "/crm", action: "Open revenue recovery" },
+    patterns: [
+      /\b(?:losing|lost|recover|recoverable)\s+(?:money|revenue|leads?|patients?|bookings?)\b/i,
+      /\b(?:revenue opportunities?|missed leads?|dormant clients?|unbooked follow[- ]?ups?)\b/i,
+      /\bwhere\s+(?:are|am)\s+(?:we|i)\s+losing\s+(?:money|revenue)\b/i,
+    ],
+    title: "I’m treating this as a revenue recovery request.",
+    body: "Klinikos can bring the CRM and revenue-recovery workflow forward so missed opportunities become owned next actions. Values remain grounded in recorded data rather than invented estimates.",
+    assumption: "The immediate goal is to identify and act on recorded revenue leakage or missed conversion opportunities.",
+  },
+  {
+    destination: { key: "billing", href: "/billing", action: "Open billing" },
+    patterns: [
+      /\b(?:billing|claim|claims|payment|payments|invoice|invoices)\b/i,
+      /\b(?:insurance|eligibility|authorization|claim readiness)\b/i,
+      /\b(?:unpaid|outstanding|denied)\s+(?:claim|claims|balance|balances|payment|payments)\b/i,
+    ],
+    title: "I’m treating this as a revenue-cycle request.",
+    body: "Klinikos can bring the billing, claim-readiness, insurance, and payment workspaces forward while keeping submission and other consequential actions governed.",
+    assumption: "You want to inspect or advance recorded revenue-cycle work rather than receive general billing information.",
+  },
+  {
+    destination: { key: "insights", href: "/quality", action: "Open operational insights" },
+    patterns: [
+      /\b(?:insights?|analytics?|metrics?|performance|trends?)\b/i,
+      /\b(?:care gaps?|quality|hedis|missed appointments?|network activity)\b/i,
+      /\bshow\s+me\s+(?:what|where|how)\s+(?:is|are|we)\b/i,
+    ],
+    title: "I’m treating this as an operational insight request.",
+    body: "Klinikos can bring recorded quality, care-gap, operational, and network signals forward without fabricating metrics that the underlying data does not support.",
+    assumption: "You want an evidence-backed operational view rather than a generic explanation.",
+  },
+  {
     destination: { key: "staffing", href: "/grid", action: "Find capacity" },
     patterns: [
       /\b(?:hire|hiring|staff|staffing|coverage)\b/i,
@@ -35,10 +90,10 @@ const publicRules: readonly PublicRule[] = [
     assumption: "You are looking for qualified healthcare capacity rather than general information about staffing.",
   },
   {
-    destination: { key: "referrals", href: "/start", action: "Open clinic operations" },
+    destination: { key: "referrals", href: "/referrals", action: "Open follow-up" },
     patterns: [
       /\breferrals?\b/i,
-      /\b(?:follow[- ]?up|open loops?|care gaps?|missing results?|lost patients?)\b/i,
+      /\b(?:follow[- ]?up|open loops?|missing results?|lost patients?)\b/i,
       /\b(?:results?|handoffs?)\s+(?:are\s+)?(?:missing|stuck|late|lost)\b/i,
     ],
     title: "I’m treating this as a continuity problem.",
@@ -55,6 +110,17 @@ const publicRules: readonly PublicRule[] = [
     title: "I’m treating this as a patient access request.",
     body: "The patient-facing experience keeps appointments, forms, messages, and the next requested step together. Sign-in and identity checks still happen before private information appears.",
     assumption: "You want to continue as a patient or client rather than operate a clinic workflow.",
+  },
+  {
+    destination: { key: "care", href: "/provider", action: "Open care workspace" },
+    patterns: [
+      /\b(?:encounter|clinical|provider workspace|care workflow|patient care)\b/i,
+      /\b(?:labs?|imaging|medications?|telemedicine)\b/i,
+      /\b(?:document|review|close)\s+(?:an?\s+)?encounter\b/i,
+    ],
+    title: "I’m treating this as a governed care workflow.",
+    body: "Klinikos can bring the provider workspace and connected clinical operations forward while preserving role, consent, and authorization boundaries.",
+    assumption: "You are trying to perform or coordinate care work rather than access the patient-facing portal.",
   },
   {
     destination: { key: "edu", href: "/edu", action: "Open Klinikos EDU" },
@@ -79,10 +145,10 @@ const publicRules: readonly PublicRule[] = [
     assumption: "You are trying to find or offer healthcare capacity, opportunity, or a resource.",
   },
   {
-    destination: { key: "clinic", href: "/start", action: "Open clinic operations" },
+    destination: { key: "clinic", href: "/dashboard", action: "Open clinic operations" },
     patterns: [
       /\b(?:run|operate|manage|grow|fix|organize)\s+(?:my\s+|our\s+|a\s+)?clinic\b/i,
-      /\b(?:front desk|intake|scheduling|billing|revenue|clinic operations?)\b/i,
+      /\b(?:front desk|intake|scheduling|clinic operations?)\b/i,
       /\b(?:patients?|paperwork|tasks?)\s+(?:are\s+)?(?:falling behind|getting lost|unorganized)\b/i,
     ],
     title: "I’m treating this as a clinic operating goal.",
@@ -105,6 +171,11 @@ const destinationLabels: Record<PublicLivingDestination["key"], string> = {
   patient: "patient access",
   referrals: "referral and follow-up",
   staffing: "staffing and capacity",
+  priorities: "today's priorities",
+  revenue: "revenue recovery",
+  billing: "billing",
+  insights: "operational insights",
+  care: "care",
 };
 
 function ruleForKey(key: PublicLivingDestination["key"]) {
@@ -168,7 +239,7 @@ export function resolvePublicLivingIntent(
   return {
     title: "I’m keeping this as the working goal.",
     body: "Klinikos has kept your request intact instead of forcing it into the wrong product category. Continue here with the outcome, deadline, or constraint that matters most, and the workspace will adapt around it.",
-    assumption: "No clinic, Grid, EDU, patient, staffing, or referral destination is being selected yet.",
+    assumption: "No product destination is being selected until the request supports one.",
     destination: null,
     confidence: 0.25,
   };
