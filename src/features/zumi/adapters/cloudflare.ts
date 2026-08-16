@@ -112,6 +112,7 @@ export function createCloudflareZumiAdapter(env: ZumiEnv = process.env): Provide
 export function cloudflareZumiRequested(env: ZumiEnv = process.env) {
   return (
     configuredValue(env, "ZUMI_PROVIDER") === "cloudflare" ||
-    REQUIRED_ENV.some((name) => configuredValue(env, name).length > 0)
+    configuredValue(env, "ZUMI_CLOUDFLARE_ACCOUNT_ID").length > 0 ||
+    configuredValue(env, "ZUMI_CLOUDFLARE_API_TOKEN").length > 0
   );
 }
