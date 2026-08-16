@@ -1,8 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const MARK_SRC = "/klinikos-orbital-k-transparent.webp";
-const WORDMARK_SRC = "/klinikos-wordmark-transparent.webp";
+// These point at the files that actually ship in public/. The previous
+// "-transparent" names had no corresponding assets, so the mark and wordmark 404'd
+// on every surface that renders the brand — the public site, login, the sales shell
+// and every authenticated page.
+const MARK_SRC = "/klinikos-orbital-k-generated.webp";
+const WORDMARK_SRC = "/klinikos-wordmark-generated.webp";
 
 export function KlinikosMark({ className = "h-8 w-auto" }: { className?: string }) {
   return (
@@ -11,11 +15,11 @@ export function KlinikosMark({ className = "h-8 w-auto" }: { className?: string 
         alt=""
         aria-hidden="true"
         className="h-full w-full object-contain"
-        height={512}
+        height={640}
         priority
         src={MARK_SRC}
         unoptimized
-        width={512}
+        width={640}
       />
     </span>
   );
@@ -27,11 +31,11 @@ function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: stri
       <Image
         alt="Klinikos"
         className="h-full w-full object-contain"
-        height={166}
+        height={400}
         priority
         src={WORDMARK_SRC}
         unoptimized
-        width={1400}
+        width={1200}
       />
     </span>
   );
