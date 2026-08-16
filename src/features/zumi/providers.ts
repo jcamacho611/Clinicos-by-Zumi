@@ -11,6 +11,7 @@
  * let a demo look live while nothing is connected.
  */
 
+import { createCloudflareZumiAdapter, cloudflareZumiRequested } from "@/features/zumi/adapters/cloudflare";
 import { createSelfHostedZumiAdapter, selfHostedZumiRequested } from "@/features/zumi/adapters/self-hosted";
 import { REDACTION_LIMITATION_NOTICE } from "@/features/zumi/redaction";
 
@@ -25,7 +26,7 @@ export const providerHealthStates = [
   "ERROR",
   "DISABLED",
 ] as const;
-export type ProviderHealthState = (typeof providerHealthStates)[number];
+export type ProviderHealthState = typeof providerHealthStates[number];
 
 /** States in which a provider may be handed a request. */
 const USABLE: readonly ProviderHealthState[] = ["CONFIGURED", "HEALTHY", "DEGRADED"];
@@ -115,10 +116,13 @@ export function resetProviderRegistry() {
 /**
  * Register built-in providers only when the deployment explicitly asks for them or
  * begins configuring them. This preserves the honest "no providers" state in a blank
- * environment while making `self_hosted` a first-class production option without an
- * application-level bootstrap side effect.
+ * environment while making owned and low-cost inference rails first-class production
+ * options without application-level bootstrap side effects.
  */
 function ensureEnvironmentProvidersRegistered(env: ZumiEnv) {
+  if (cloudflareZumiRequested(env) && !registry.has("cloudflare")) {
+    registerProvider(createCloudflareZumiAdapter(env));
+  }
   if (selfHostedZumiRequested(env) && !registry.has("self_hosted")) {
     registerProvider(createSelfHostedZumiAdapter(env));
   }
