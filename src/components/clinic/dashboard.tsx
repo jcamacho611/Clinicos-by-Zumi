@@ -24,8 +24,7 @@ const statusTone: Record<string, BadgeTone> = {
   "Checked In": "teal", "In Room": "sky", Confirmed: "slate", Urgent: "rose", High: "amber",
 };
 
-export function Dashboard({ appointments, onboardingComplete = false, organizationName, seededDemo, userName }: { appointments: Appointment[]; onboardingComplete?: boolean; organizationName: string; seededDemo: boolean; userName: string }) {
-  const firstName = userName.split(/\s+/)[0] || "there";
+export function Dashboard({ appointments, onboardingComplete = false, organizationName, seededDemo }: { appointments: Appointment[]; onboardingComplete?: boolean; organizationName: string; seededDemo: boolean }) {
   if (!seededDemo) {
     const setupSteps = [
       [UserPlus, "Add the first patient", "Create a synthetic patient record and verify tenant isolation.", "/patients"],
@@ -42,17 +41,27 @@ export function Dashboard({ appointments, onboardingComplete = false, organizati
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">Your organization, owner account, roles, trial modules, scheduling defaults, audit trail, and pending connector records are live. This workspace contains no patient data yet.</p>
         </div>
       </section>
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         {setupSteps.map(([Icon, title, body, href], index) => <Card className="group" key={title}><CardContent><div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-700"><Icon className="size-5" /></span><div className="min-w-0 flex-1"><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Step {index + 1}</p><h3 className="mt-1 text-base font-extrabold text-slate-950">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-500">{body}</p><Link className="mt-4 inline-flex items-center gap-2 text-xs font-extrabold text-cyan-700 hover:text-cyan-600" href={href}>Open setup <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></Link></div></div></CardContent></Card>)}
       </section>
       <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5"><div className="flex gap-3"><Building2 className="mt-0.5 size-5 shrink-0 text-amber-700" /><div><h3 className="text-sm font-extrabold text-amber-950">Synthetic data only</h3><p className="mt-1 text-xs leading-6 text-amber-800">Do not enter real patient information until production infrastructure, BAAs, organizational policies, and security review are complete. Vendor-dependent actions remain pending or manual.</p></div></div></section>
     </div>;
   }
+  // Every figure here is counted from the appointments this component was given.
+  // The previous values were fixed strings — "$8,420" in open claims, "12" care gaps
+  // closed, "3" awaiting clinical review — presented as if they were the clinic's own
+  // numbers. A dashboard that invents its metrics is worse than one that shows fewer.
+  const intakeOutstanding = appointments.filter((appointment) => !appointment.formsComplete).length;
+  const coverageUnverified = appointments.filter((appointment) => !appointment.insuranceVerified).length;
+  // Appointment.paymentDue is already whole dollars — the repository mapper divides
+  // paymentDueCents by 100 before it gets here. Dividing again showed $1 where the
+  // clinic was owed $120.
+  const balanceDueDollars = appointments.reduce((total, appointment) => total + (appointment.paymentDue || 0), 0);
   const metrics = [
     { label: "Visits today", value: String(appointments.length), change: "Live from the schedule", icon: CalendarCheck2, tone: "bg-[#dff7f1] text-teal-700" },
-    { label: "Clinical review", value: "3", change: "2 results · 1 message", icon: ShieldAlert, tone: "bg-rose-50 text-rose-600" },
-    { label: "Open claims", value: "$8,420", change: "$2,180 needs action", icon: CircleDollarSign, tone: "bg-amber-50 text-amber-700" },
-    { label: "Care gaps closed", value: "12", change: "+18% this month", icon: CheckCircle2, tone: "bg-sky-50 text-sky-700" },
+    { label: "Intake outstanding", value: String(intakeOutstanding), change: intakeOutstanding === 0 ? "Every visit has its paperwork" : "Counted from today's visits", icon: ShieldAlert, tone: "bg-rose-50 text-rose-600" },
+    { label: "Coverage unverified", value: String(coverageUnverified), change: coverageUnverified === 0 ? "All checked" : "Counted from today's visits", icon: CheckCircle2, tone: "bg-sky-50 text-sky-700" },
+    { label: "Balance due", value: `$${balanceDueDollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, change: "Across today's visits", icon: CircleDollarSign, tone: "bg-amber-50 text-amber-700" },
   ];
   return (
     <div className="space-y-6">
@@ -60,10 +69,15 @@ export function Dashboard({ appointments, onboardingComplete = false, organizati
         <div className="absolute -right-28 -top-36 size-[360px] rounded-full border-[70px] border-teal-300/10" />
         <div className="absolute bottom-0 right-[18%] h-24 w-24 rounded-full bg-lime-300/10 blur-2xl" />
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          {/* Home already greets the person, states the real date and counts what
+              actually needs them. This used to repeat all three with a fixed date, a
+              second greeting that could disagree about the time of day, and an invented
+              "three items need human review". It now introduces the detail view instead
+              of competing with the briefing above it. */}
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-teal-300">Tuesday, July 14 · 9:48 AM</p>
-            <h2 className="mt-3 max-w-2xl text-balance text-3xl font-extrabold tracking-[-.05em] sm:text-4xl">Good morning, {firstName}. The clinic is moving.</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Three items need human review before the next appointment block. Everything else is on track.</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-teal-300">Clinic detail</p>
+            <h2 className="mt-3 max-w-2xl text-balance text-3xl font-extrabold tracking-[-.05em] sm:text-4xl">The full operational view.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Today&apos;s schedule, readiness and queues in full. Home stays focused on what needs a decision.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild className="bg-white text-slate-950 hover:bg-slate-100" variant="secondary"><Link href="/patients">Open patient charts <ArrowUpRight className="size-4" /></Link></Button>
@@ -72,7 +86,7 @@ export function Dashboard({ appointments, onboardingComplete = false, organizati
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 [&>*]:min-w-0">
         {metrics.map((metric, index) => (
           <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 12 }} key={metric.label} transition={{ delay: index * 0.06, duration: 0.35 }}>
             <Card className="metric-sheen h-full">
@@ -87,7 +101,10 @@ export function Dashboard({ appointments, onboardingComplete = false, organizati
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr] [&>*]:min-w-0">
+        {/* The section's [&>*]:min-w-0 is what lets this card shrink below the width
+            of the 690px table it holds, so the table scrolls inside its own container
+            instead of the whole page scrolling sideways on a phone. */}
         <Card>
           <CardHeader>
             <div><p className="text-sm font-extrabold text-slate-950">Today&apos;s patient flow</p><p className="mt-1 text-[11px] text-slate-500">Live operational readiness across both clinic locations.</p></div>
@@ -114,7 +131,7 @@ export function Dashboard({ appointments, onboardingComplete = false, organizati
         </Card>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr] [&>*]:min-w-0">
         <Card>
           <CardHeader><div><p className="text-sm font-extrabold text-slate-950">Priority work queue</p><p className="mt-1 text-[11px] text-slate-500">Ordered by safety, timing, and operational impact.</p></div><Button asChild size="sm" variant="ghost"><Link href="/tasks">All tasks</Link></Button></CardHeader>
           <CardContent className="space-y-2 pt-4">{tasks.slice(0, 4).map((task) => <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 transition hover:bg-slate-50" key={task.id}><span className={`grid size-9 place-items-center rounded-xl ${task.category === "Clinical" ? "bg-rose-50 text-rose-600" : task.category === "Billing" ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"}`}>{task.category === "Clinical" ? <FlaskConical className="size-4" /> : task.category === "Billing" ? <FileWarning className="size-4" /> : <Clock3 className="size-4" />}</span><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-900">{task.title}</p><p className="mt-1 text-[10px] text-slate-400">{task.patient} · {task.owner}</p></div><Badge tone={statusTone[task.priority] ?? "slate"}>{task.priority}</Badge></div>)}</CardContent>
