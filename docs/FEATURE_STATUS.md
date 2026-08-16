@@ -67,12 +67,14 @@ Repository checks prove the candidate tree. They do not alone prove the newest c
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Role-aware Living Home | **BUILT** | Goal-first entry with plain next-step language. |
+| Role-aware Living Home | **BUILT** | Operating briefing composed from real appointments, operational actions and work in motion. Needs you / already handled / coming up / continue, with a one-sentence verdict that is allowed to report a calm day. |
+| Reasoning and evidence on raised work | **BUILT** | Every Living Home row opens to show why it reached this person and what it was derived from, in clinic language. |
+| Living Home figures counted from clinic data | **BUILT** | No fixed demonstration numbers on the authenticated home or its detail view; sections with no data render an explicit empty state. |
 | Progressive authenticated navigation | **BUILT** | Immediate work is visible; deeper product areas collapse until needed. |
 | Backend vocabulary suppression | **BUILT** | Home avoids exposing Path/capability/orchestration jargon as customer language. |
 | Aegean atmosphere system | **BUILT** | Auto follows browser-local Dawn/Day/Golden/Night; manual preference persists locally. |
 | Appearance changes permissions/product behavior | **NOT BUILT BY DESIGN** | Presentation only. |
-| Full browser/mobile production visual QA | **PARTIALLY BUILT** | Responsive implementation exists; independent post-deploy visual verification remains an operating gate after each major release. |
+| Full browser/mobile production visual QA | **PARTIALLY BUILT** | Responsive implementation exists; independent post-deploy visual verification remains an operating gate after each major release. Living Home and the clinic detail view were verified signed in against PostgreSQL at 1440px and 390px with no horizontal scroll and no console errors. |
 
 ## Grid
 
