@@ -7,7 +7,7 @@ const rail = readFileSync(join(process.cwd(), "src/lib/home/operating-rail.ts"),
 
 describe("Living Home opportunity truth", () => {
   it("suppresses the historical role-template opportunity in favor of the server-owned rail", () => {
-    expect(dashboard).toContain("[&_[aria-labelledby='opportunity-title']]:hidden");
+    expect(dashboard).toContain("[&_[aria-labelledby=opportunity-title]]:hidden");
     expect(dashboard).toContain("<HomeOperatingRailPanel rail={operatingRail} />");
   });
 
