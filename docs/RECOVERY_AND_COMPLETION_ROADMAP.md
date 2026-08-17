@@ -15,6 +15,7 @@ Canonical base: `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
 - Current main is `7833eb7f4469705e3b1aeb9fa645e96532d6ca45`.
 - Current main's push Quality gate completed successfully.
 - Every remote branch present during the audit is classified in `docs/BRANCH_LEDGER.md`.
+- Concurrent PR #97 is preserved and reviewed; its safe auth/commercial/federal-evidence work has explicit merge blockers rather than being duplicated or discarded.
 - Production domain and Render health returned HTTP 200 on 2026-08-16; health truth is `mode: demo`, database configured, live integrations false.
 
 ## 2. Repository audit scorecard
@@ -66,14 +67,14 @@ Recovery rule: create a current-main implementation branch, compare each changed
 ## 5. Next ten execution items
 
 1. **Merge this repository-truth convergence** after exact-head Quality and review.
-2. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
-3. **Remove person-specific demo identity from Grid fixtures/tests/UI** and replace it with neutral provider/participant labels without weakening synthetic-data evidence.
-4. **Complete selected-resource and map/ledger continuity**: pin/list focus, preserved selected resource into governed request, manual city/ZIP/place origin, privacy-safe bounds behavior.
-5. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
-6. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements.
-7. **Prove two end-to-end Grid transactions through the same engine**: one regulated workforce/space composition and one non-clinical business-service engagement, both operator-assisted and auditable.
-8. **Connect financial rails only when approved**: processor sandbox/webhook truth, connected-account onboarding, payout evidence, reconciliation, and resource-class fee policy. Keep manual fallback until then.
-9. **Activate and evaluate Zumi for approved non-PHI workloads** with provider-side spend controls, latency/error monitoring, and a formal representative-task quality suite.
+2. **Resolve and merge the safe parts of PR #97**: keep server-owned qualification/auth intent/NPPES/LEIE work, align checkout price with the real paylink, bound/cache connector work, neutralize fixtures, and rebase on current main.
+3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
+4. **Remove person-specific demo identity from Grid fixtures/tests/UI** and replace it with neutral provider/participant labels without weakening synthetic-data evidence.
+5. **Complete selected-resource and map/ledger continuity**: pin/list focus, preserved selected resource into governed request, manual city/ZIP/place origin, privacy-safe bounds behavior.
+6. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
+7. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements.
+8. **Prove two end-to-end Grid transactions through the same engine**: one regulated workforce/space composition and one non-clinical business-service engagement, both operator-assisted and auditable.
+9. **Connect/evaluate approved external rails**: processor/payout evidence when approved and non-PHI Zumi with spend, latency, error, and quality controls. Keep manual fallback until then.
 10. **Prepare a controlled pilot release**: exact deploy SHA in health/observability, production browser/mobile QA, backup/restore evidence, security/compliance sign-off, real pilot supply, support/runbook, and rollback.
 
 ## 6. Grid milestone proof required

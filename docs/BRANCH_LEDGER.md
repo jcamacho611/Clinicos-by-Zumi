@@ -23,7 +23,7 @@ This ledger classifies every remote branch present during the audit plus local-o
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
 | `origin/main` | `7833eb7` | `CANONICAL` | Current merge base after PRs #95 and #96. |
-| `recovery/repository-truth-convergence-2026-08-16` | based on `7833eb7` | `ACTIVE_RECOVERY` | This audit/canon/recovery branch. |
+| `origin/recovery/repository-truth-convergence-2026-08-16` | `d8d0b13` | `ACTIVE_RECOVERY` | This audit/canon/recovery branch and PR #98. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 
 ## Local preservation ledger
@@ -45,6 +45,7 @@ These branches are not merge candidates as a unit.
 | --- | --- | --- |
 | `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Two documentation/registry commits may contain useful wording, but current source hierarchy and engine registry must win. Review only against a named registry gap. |
 | `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with the current auth/session architecture and a configured mail rail; no automatic recovery. |
+| `origin/feat/ecosystem-wiring-pass-1` | `f314526` | Open PR #97. Preserve its auth-return fix, server-owned commercial qualification, governed NPPES evidence, and LEIE pre-screening. Do not merge until checkout amount truth, connector bounds/caching, negative-result language, neutral fixtures, and current-main reconciliation are fixed. |
 
 ## Merged branches — preserve, do not re-merge
 
@@ -177,10 +178,11 @@ origin/codex/create-app-concepts-for-viral-revenue-generation
 
 1. Keep `origin/main` as the only merge base.
 2. Finish source-of-truth convergence and status corrections.
-3. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto a current-main implementation branch.
-4. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
-5. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.
-6. Keep all remaining branches as history unless a specific failing journey names a recoverable behavior.
+3. Resolve PR #97's documented checkout/connector/current-main blockers and preserve its safe wiring improvements.
+4. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto latest main.
+5. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
+6. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.
+7. Keep all remaining branches as history unless a specific failing journey names a recoverable behavior.
 
 ## Destructive-action rule
 
