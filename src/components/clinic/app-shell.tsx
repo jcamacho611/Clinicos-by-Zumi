@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import {
   Activity, Bell, Blocks, Boxes, BriefcaseMedical, Calculator, CalendarDays, ChartNoAxesCombined, ChevronDown, CircleDollarSign, Gauge,
-  AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
+  AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X, Waypoints,
@@ -15,7 +15,7 @@ import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { ZumiPresence } from "@/components/clinic/zumi-presence";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
-import { roleLabel } from "@/lib/auth/rbac";
+import { can, roleLabel } from "@/lib/auth/rbac";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicSession } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ function initials(name: string) {
 
 function isVisibleDestination(role: ClinicSession["role"], href: string) {
   if (href === "/edu") return true;
+  if (href === "/zumi") return can(role, "ai", "read");
   return canAccessWorkspace(role, href.slice(1));
 }
 
@@ -143,11 +144,31 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
 export function AppShell({ children, session }: { children: React.ReactNode; session: ClinicSession }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState("");
+  const [zumiPrompt, setZumiPrompt] = useState("");
   const slug = pathname.split("/").filter(Boolean)[0] || "dashboard";
   const meta = workspaceMeta[slug] ?? workspaceMeta.dashboard;
   const networkMode = ["grid", "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "injury-episodes", "health-passport", "intake-passport"].includes(slug);
   const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
+
+  function summonZumi(question?: string, voice = false) {
+    if (typeof window === "undefined") return;
+    if (question?.trim()) {
+      window.dispatchEvent(new CustomEvent("zumi:prompt", { detail: { question: question.trim(), voice } }));
+    } else {
+      window.dispatchEvent(new Event("zumi:open"));
+    }
+  }
+
+  function submitZumi(event: FormEvent) {
+    event.preventDefault();
+    const question = zumiPrompt.trim();
+    if (!question) {
+      summonZumi();
+      return;
+    }
+    setZumiPrompt("");
+    summonZumi(question);
+  }
 
   return (
     <div className="klinikos-platform min-h-screen bg-[var(--mode-background)] text-[var(--k-text)] transition-colors duration-500" data-clinic-mode={designMode} data-klinikos-ds>
@@ -170,15 +191,16 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
             <h1 className="truncate text-xl font-light tracking-[-.035em] text-[#f8efed]">{meta.title}</h1>
           </div>
 
-          <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex">
-            <Search className="size-4 text-[#9f8985]" />
-            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Search Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
-            <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={setGlobalSearch} />
-          </div>
+          <form className="ml-auto hidden w-full max-w-[520px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex" onSubmit={submitZumi}>
+            <Sparkles className="size-4 text-[#e6817b]" />
+            <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Ask Zumi or search Klinikos…" aria-label="Ask Zumi" onChange={(event) => setZumiPrompt(event.target.value)} value={zumiPrompt} />
+            <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={(transcript) => { setZumiPrompt(""); summonZumi(transcript, true); }} />
+            <button aria-label="Send to Zumi" className="grid size-7 place-items-center rounded-full text-[#9f8985] transition hover:bg-[#e6817b]/10 hover:text-[#f8efed]" type="submit"><Search className="size-3.5" /></button>
+          </form>
 
-          <div className="hidden items-center gap-2 sm:flex">
-            <Button aria-label="Open Klinikos Intelligence" className="border-[#e28b85]/14 bg-[#12090b]/40 text-[#e6817b] hover:bg-[#e6817b]/10" onClick={() => window.dispatchEvent(new Event("zumi:toggle"))} size="icon" title="Open Klinikos Intelligence" type="button" variant="secondary"><Command className="size-4" /></Button>
-            <Button className="relative border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
+          <div className="flex items-center gap-2">
+            <Button aria-label="Open Zumi" className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6]" onClick={() => summonZumi()} title="Open Zumi" type="button" variant="secondary"><Sparkles className="size-4" /><span className="hidden text-xs font-semibold sm:inline">Zumi</span></Button>
+            <Button className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
           </div>
         </header>
 
