@@ -41,6 +41,9 @@ async function invokeCloudflare(
     // Workers AI requests through Cloudflare's AI REST API require a gateway ID.
     // `default` is a documented first-use path and auto-creates the account gateway.
     "cf-aig-gateway-id": config.gatewayId || DEFAULT_GATEWAY_ID,
+    // Keep AI Gateway usage/cost metadata while preventing raw Zumi prompts and
+    // completions from being persisted in provider-side request logs by default.
+    "cf-aig-collect-log-payload": "false",
   };
 
   const response = await fetch(endpointFor(config.accountId), {
