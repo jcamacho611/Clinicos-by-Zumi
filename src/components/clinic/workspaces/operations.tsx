@@ -2,13 +2,14 @@ import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, CalendarClock, CalendarPlus, Check, CheckCircle2,
   Clock3, CreditCard, FileText, HeartPulse, MessageSquareText, MonitorPlay,
-  PhoneCall, Plus, Search, ShieldCheck, Stethoscope, UserCheck, Users, Video,
+  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck, Users, Video,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppointmentStatusControl } from "@/components/clinic/appointment-status-control";
 import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
+import { PatientListSearch } from "@/components/clinic/patient-list-search";
 import { tasks } from "@/lib/clinic-data";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -65,10 +66,7 @@ export function ProviderWorkspace({ appointments, encounters }: { appointments: 
 export function PatientsWorkspace({ patients }: { patients: Patient[] }) {
   return <div className="space-y-6">
     <PageIntro title="Every patient, one continuous record." description="Search demographics, care team, risk, portal status, balance, and the next clinical step without leaving the patient index." action={<Button asChild variant="primary"><Link href="/patients/new"><Plus className="size-4" /> Add patient</Link></Button>} />
-    <Card className="overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2"><Search className="size-4 text-slate-400" /><input className="min-w-0 flex-1 bg-transparent text-xs outline-none" placeholder="Search name, MRN, phone, payer..." /></div></div>
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-slate-100 text-[9px] font-extrabold uppercase tracking-[.14em] text-slate-400"><th className="px-5 py-3">Patient</th><th className="px-3 py-3">DOB / MRN</th><th className="px-3 py-3">Coverage</th><th className="px-3 py-3">Care team</th><th className="px-3 py-3">Next step</th><th className="px-3 py-3">Balance</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{patients.map((patient) => <tr className="border-b border-slate-100 text-xs transition last:border-0 hover:bg-slate-50/70" key={patient.id}><td className="px-5 py-4"><Link href={`/patients/${patient.id}`}><Person color={patient.riskLevel === "Urgent" ? "rose" : patient.riskLevel === "Needs Provider" ? "amber" : "teal"} detail={`${patient.phone} · ${patient.preferredLanguage}`} initials={patient.initials} name={`${patient.firstName} ${patient.lastName}`} /></Link></td><td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.dob}</p><p className="mt-1 text-[10px] text-slate-400">{patient.mrn}</p></td><td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.insurance}</p><p className="mt-1 text-[10px] text-slate-400">{patient.plan}</p></td><td className="px-3 py-4 text-slate-600">{patient.provider}</td><td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.nextAppointment}</p><p className="mt-1 text-[10px] text-slate-400">Last: {patient.lastVisit}</p></td><td className="px-3 py-4 font-extrabold text-slate-900">${patient.balance}</td><td className="px-5 py-4"><StatusBadge status={patient.riskLevel} /></td></tr>)}</tbody></table></div>
-    </Card>
+    <PatientListSearch patients={patients} />
   </div>;
 }
 
