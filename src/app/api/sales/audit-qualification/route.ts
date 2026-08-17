@@ -27,7 +27,7 @@ export async function POST(request: Request) {
           email: input.email,
           source: "other",
           campaignSource: "Klinikos Revenue Desk",
-          serviceInterest: "Klinikos Operational Audit",
+          serviceInterest: "Klinikos Clinic Operating Analysis",
           appointmentInterest: "Founding Clinic discovery",
           estimatedValueCents: input.auditPrice * 100,
           assignedTo: session.userId,

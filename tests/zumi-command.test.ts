@@ -208,18 +208,16 @@ describe("engagement offers", () => {
 });
 
 describe("audit pricing and preliminary qualification", () => {
-  it("prices the paid Operational Audit from reported provider scale", () => {
-    expect(auditPriceForAnswers({ provider_scale: ["1"] })).toBe(750);
-    expect(auditPriceForAnswers({ provider_scale: ["2_5"] })).toBe(1250);
-    expect(auditPriceForAnswers({ provider_scale: ["6_15"] })).toBe(2500);
-    expect(auditPriceForAnswers({ provider_scale: ["16_30"] })).toBe(4000);
-    expect(auditPriceForAnswers({ provider_scale: ["30_plus"] })).toBe(5000);
+  it("keeps the Clinic Operating Analysis aligned with the configured checkout amount", () => {
+    expect(auditPriceForAnswers({ provider_scale: ["1"] })).toBe(500);
+    expect(auditPriceForAnswers({ provider_scale: ["2_5"] })).toBe(500);
+    expect(auditPriceForAnswers({ provider_scale: ["6_15"] })).toBe(500);
+    expect(auditPriceForAnswers({ provider_scale: ["16_30"] })).toBe(500);
+    expect(auditPriceForAnswers({ provider_scale: ["30_plus"] })).toBe(500);
   });
 
-  it("falls to the lowest tier when scale was never answered", () => {
-    // Undercharging is the recoverable failure. Defaulting high would surprise
-    // someone with a price they never agreed to.
-    expect(auditPriceForAnswers({})).toBe(750);
+  it("uses the same canonical price when scale was never answered", () => {
+    expect(auditPriceForAnswers({})).toBe(500);
   });
 
   it("scores a large fragmented clinic as a strong candidate", () => {

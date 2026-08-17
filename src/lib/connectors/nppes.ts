@@ -1,7 +1,10 @@
 import "server-only";
 
+import { connectorTimeoutSignal, readBoundedResponseText } from "@/lib/connectors/http-guardrails";
+
 const NPPES_ENDPOINT = "https://npiregistry.cms.hhs.gov/api/";
 const NPPES_VERSION = "2.1";
+const NPPES_MAX_RESPONSE_BYTES = 512 * 1024;
 
 export type NppesTaxonomy = {
   code: string | null;
@@ -47,12 +50,12 @@ function providerName(result: JsonRecord) {
   const first = asString(basic.first_name);
   const middle = asString(basic.middle_name);
   const last = asString(basic.last_name);
-  return [first, middle, last].filter(Boolean).join(" ") || "NPPES provider";
+  return [first, middle, last].filter(Boolean).join(" ") || "NPPES record";
 }
 
 function normalizeTaxonomies(value: unknown): NppesTaxonomy[] {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
+  return value.slice(0, 50).flatMap((entry) => {
     const taxonomy = asRecord(entry);
     if (!taxonomy) return [];
     return [{
@@ -80,12 +83,22 @@ export async function lookupNppesByNpi(rawNpi: string): Promise<NppesLookupResul
   const response = await fetch(url, {
     headers: { accept: "application/json" },
     next: { revalidate: 86_400 },
+    signal: connectorTimeoutSignal(),
   });
   if (!response.ok) throw new Error(`CMS NPPES returned HTTP ${response.status}.`);
 
-  const payload = await response.json() as NppesPayload;
+  const text = await readBoundedResponseText(response, NPPES_MAX_RESPONSE_BYTES, "CMS NPPES");
+  let payload: NppesPayload;
+  try {
+    payload = JSON.parse(text) as NppesPayload;
+  } catch {
+    throw new Error("CMS NPPES returned an invalid JSON response.");
+  }
   const results = Array.isArray(payload.results) ? payload.results : [];
-  const first = asRecord(results[0]);
+  const first = results
+    .slice(0, 10)
+    .map(asRecord)
+    .find((result) => result && asString(result.number) === npi) ?? null;
   if (!first) return null;
 
   const basic = asRecord(first.basic) ?? {};

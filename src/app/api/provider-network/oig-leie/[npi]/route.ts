@@ -25,7 +25,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ npi:
         metadata: {
           source: data.source,
           possibleMatchCount: data.possibleMatches.length,
+          sourceUpdatedAt: data.sourceUpdatedAt,
           finalVerification: false,
+          exclusionClearance: false,
           credentialAuthority: false,
         },
       },

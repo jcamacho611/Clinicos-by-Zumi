@@ -1,4 +1,4 @@
-import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
+import { clinicCommercialOffers, clinicPlans } from "@/lib/commercial/klinikos-commercial";
 
 export const commercialProductKeys = [
   "operational_audit",
@@ -38,18 +38,16 @@ const clinicBoundary =
 export const commercialProducts: readonly CommercialProduct[] = [
   {
     key: "operational_audit",
-    label: "Klinikos Operational Audit",
+    label: clinicCommercialOffers.privateWorkflowReview.name,
     audience: "clinic",
     billing: "one_time",
-    // Operational Audit pricing is derived from the server-side qualification rules,
-    // so there is intentionally no single catalog price here.
-    priceCents: null,
+    priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
     publicPurchasable: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
     postPurchaseBoundary:
-      "Payment purchases the audit engagement only. It does not activate production software, PHI workflows, clinical authority, Grid eligibility, or any regulated capability.",
+      "Payment purchases the Clinic Operating Analysis only. It does not activate production software, PHI workflows, clinical authority, Grid eligibility, or any regulated capability.",
   },
   {
     key: "clinic_core",
@@ -165,6 +163,17 @@ export const commercialProducts: readonly CommercialProduct[] = [
 
 export function getCommercialProduct(key: string | null | undefined) {
   return commercialProducts.find((product) => product.key === key);
+}
+
+export function resolveCommercialCheckoutAmount(product: CommercialProduct, requestedAmountCents?: number | null) {
+  const amountCents = requestedAmountCents ?? product.priceCents ?? null;
+  if (amountCents !== null && (!Number.isInteger(amountCents) || amountCents < 0)) {
+    throw new Error("Expected checkout amount must be a non-negative integer number of cents.");
+  }
+  if (product.priceCents !== null && amountCents !== product.priceCents) {
+    throw new Error(`Checkout amount does not match the server-owned price for ${product.label}.`);
+  }
+  return amountCents;
 }
 
 export function whopPlanIdForProduct(product: CommercialProduct, env: NodeJS.ProcessEnv = process.env) {

@@ -23,8 +23,8 @@ describe("CMS NPPES connector", () => {
         number: "1234567890",
         enumeration_type: "NPI-1",
         basic: {
-          first_name: "Ada",
-          last_name: "Lovelace",
+          first_name: "SAMPLE",
+          last_name: "PROVIDER",
           credential: "RN",
           status: "A",
           enumeration_date: "2020-01-01",
@@ -49,7 +49,7 @@ describe("CMS NPPES connector", () => {
     expect(result).toMatchObject({
       source: "CMS NPPES",
       npi: "1234567890",
-      name: "Ada Lovelace",
+      name: "SAMPLE PROVIDER",
       credential: "RN",
       taxonomies: [{ code: "163W00000X", description: "Registered Nurse", primary: true, state: "NY" }],
     });
@@ -61,5 +61,18 @@ describe("CMS NPPES connector", () => {
   it("returns null when CMS has no matching NPI record", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ result_count: 0, results: [] }), { status: 200 }));
     await expect(lookupNppesByNpi("1234567890")).resolves.toBeNull();
+  });
+
+  it("rejects an oversized response before parsing it", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", {
+      status: 200,
+      headers: { "content-length": String(512 * 1024 + 1) },
+    }));
+    await expect(lookupNppesByNpi("1234567890")).rejects.toThrow(/safety limit/i);
+  });
+
+  it("rejects malformed upstream JSON", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("not-json", { status: 200 }));
+    await expect(lookupNppesByNpi("1234567890")).rejects.toThrow(/invalid JSON/i);
   });
 });

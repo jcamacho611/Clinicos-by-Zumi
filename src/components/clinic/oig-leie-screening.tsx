@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, LoaderCircle, Search, ShieldCheck } from "lucide-react";
+import { AlertCircle, AlertTriangle, LoaderCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type LeieResult = {
@@ -19,6 +19,7 @@ type LeieResult = {
     exclusionDate: string | null;
   }>;
   screenedAt: string;
+  sourceUpdatedAt: string | null;
   verificationNotice: string;
 };
 
@@ -49,8 +50,9 @@ export function OigLeieScreening({ npi }: { npi: string | null }) {
       <Button disabled={busy} onClick={screen} size="sm" variant="secondary">{busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Search className="size-3.5" />} Screen LEIE</Button>
     </div>
     {result && <div className="mt-3 space-y-2 text-[10px] leading-5">
-      <p className={`flex items-center gap-1.5 font-extrabold ${hasPossibleMatch ? "text-rose-700" : "text-teal-700"}`}>{hasPossibleMatch ? <AlertTriangle className="size-3.5" /> : <ShieldCheck className="size-3.5" />}{hasPossibleMatch ? `${result.possibleMatches.length} possible exclusion match${result.possibleMatches.length === 1 ? "" : "es"}` : "No NPI match found in the downloaded LEIE screening data"}</p>
+      <p className={`flex items-center gap-1.5 font-extrabold ${hasPossibleMatch ? "text-rose-700" : "text-amber-800"}`}>{hasPossibleMatch ? <AlertTriangle className="size-3.5" /> : <AlertCircle className="size-3.5" />}{hasPossibleMatch ? `${result.possibleMatches.length} exact-NPI exclusion candidate${result.possibleMatches.length === 1 ? "" : "s"}` : "No exact-NPI candidate found in this preliminary LEIE screen"}</p>
       {hasPossibleMatch && result.possibleMatches.slice(0, 3).map((match, index) => <div className="rounded-xl bg-rose-50 p-2 text-rose-900" key={`${match.npi}-${index}`}><strong>{match.businessName ?? [match.firstName, match.lastName].filter(Boolean).join(" ") ?? "Possible match"}</strong>{match.state ? ` · ${match.state}` : ""}{match.exclusionType ? ` · ${match.exclusionType}` : ""}{match.exclusionDate ? ` · ${match.exclusionDate}` : ""}</div>)}
+      {result.sourceUpdatedAt && <p className="text-slate-500">Downloaded source updated {new Date(result.sourceUpdatedAt).toLocaleDateString()}.</p>}
       <p className="text-amber-800">{result.verificationNotice}</p>
     </div>}
     {error && <p className="mt-3 text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
