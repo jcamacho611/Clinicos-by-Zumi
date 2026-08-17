@@ -4,7 +4,7 @@ import { getClinicSession } from "@/lib/auth/session";
 import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
-import { buildSalesAuditNotes, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
+import { buildSalesAuditNotes, evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
 
 export async function POST(request: Request) {
   const session = await getClinicSession();
@@ -13,7 +13,8 @@ export async function POST(request: Request) {
   if (denied) return denied;
 
   try {
-    const input = salesAuditQualificationSchema.parse(await request.json());
+    const prospect = salesAuditQualificationSchema.parse(await request.json());
+    const input = evaluateSalesAuditQualification(prospect);
     if (input.status !== "QUALIFIED" || input.score < 70) {
       return NextResponse.json({ error: "The prospect is not qualified for audit checkout yet." }, { status: 422 });
     }
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { data: { ...result, checkout } },
+      { data: { ...result, qualification: { score: input.score, status: input.status, auditPrice: input.auditPrice }, checkout } },
       { status: 201, headers: { "Cache-Control": "private, no-store" } },
     );
   } catch (error) {

@@ -7,9 +7,11 @@ import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } 
 import { getClinicSession } from "@/lib/auth/session";
 import { safeReturnTo } from "@/lib/auth/return-to";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
-  const { returnTo: rawReturnTo } = await searchParams;
-  const returnTo = safeReturnTo(rawReturnTo);
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
+  const { returnTo: rawReturnTo, next: legacyNext } = await searchParams;
+  // `returnTo` is canonical. `next` remains supported because older public surfaces
+  // emitted it; both values still pass through the same same-origin safety gate.
+  const returnTo = safeReturnTo(rawReturnTo ?? legacyNext);
   const session = await getClinicSession();
   if (session) redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
 

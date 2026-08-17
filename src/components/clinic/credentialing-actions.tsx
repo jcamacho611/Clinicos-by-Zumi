@@ -1,18 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeCheck, Check, LoaderCircle, Plus, ShieldAlert, X } from "lucide-react";
+import { BadgeCheck, Check, LoaderCircle, Plus, Search, ShieldAlert, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OigLeieScreening } from "@/components/clinic/oig-leie-screening";
 import type { CredentialingWorkspace } from "@/lib/repositories/credentialing-repository";
 
 const selectClass = "h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50";
 const textAreaClass = "min-h-20 w-full resize-y rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50";
 
+type NppesEvidence = {
+  source: "CMS NPPES";
+  sourceVersion: string;
+  npi: string;
+  enumerationType: string | null;
+  status: string | null;
+  name: string;
+  credential: string | null;
+  lastUpdated: string | null;
+  enumerationDate: string | null;
+  taxonomies: Array<{ code: string | null; description: string | null; primary: boolean; state: string | null; license: string | null }>;
+  authorityNotice: string;
+};
+
 async function post(url: string, body: unknown) {
   const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error ?? "Credentialing action failed.");
+}
+
+export function NppesLookupAction({ npi, providerName }: { npi: string | null; providerName: string }) {
+  const [busy, setBusy] = useState(false);
+  const [evidence, setEvidence] = useState<NppesEvidence | null | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+
+  async function lookup() {
+    if (!npi || busy) return;
+    setBusy(true); setError(null);
+    try {
+      const response = await fetch(`/api/provider-network/nppes/${encodeURIComponent(npi)}`, { headers: { Accept: "application/json" } });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error ?? "CMS NPPES lookup failed.");
+      setEvidence(payload?.data ?? null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "CMS NPPES lookup failed.");
+    } finally { setBusy(false); }
+  }
+
+  if (!npi) return <p className="mt-3 text-[10px] text-slate-400">Add the provider NPI before checking the free federal public registries.</p>;
+  return <div className="mt-3 space-y-2">
+    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500">Free public NPI evidence</p><p className="mt-1 text-[10px] text-slate-400">CMS NPPES · {providerName}</p></div>
+        <Button disabled={busy} onClick={lookup} size="sm" variant="secondary">{busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Search className="size-3.5" />} Check NPPES</Button>
+      </div>
+      {evidence === null && <p className="mt-3 text-[10px] font-bold text-amber-700">No NPPES record was returned for NPI {npi}.</p>}
+      {evidence && <div className="mt-3 space-y-2 text-[10px] leading-5 text-slate-600"><p><strong>{evidence.name}</strong> · NPI {evidence.npi} · {evidence.status ?? "status not supplied"}</p>{evidence.taxonomies.length > 0 && <p>{evidence.taxonomies.slice(0, 3).map((taxonomy) => `${taxonomy.primary ? "Primary: " : ""}${taxonomy.code ?? "taxonomy"}${taxonomy.description ? ` ${taxonomy.description}` : ""}`).join(" · ")}</p>}<p className="text-amber-800">{evidence.authorityNotice}</p></div>}
+      {error && <p className="mt-3 text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
+    </div>
+    <OigLeieScreening npi={npi} />
+  </div>;
 }
 
 export function CredentialCreateAction({ providers, enabled }: { providers: CredentialingWorkspace["providers"]; enabled: boolean }) {

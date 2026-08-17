@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { allocateFundedUsage, evaluateCustomerFundedAccess } from "@/lib/commercial/customer-funded-access";
 import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
 import { getCommercialProduct } from "@/lib/commercial/product-catalog";
-import { salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
+import { evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
 
 describe("Klinikos commercial truth", () => {
   it("allocates customer-backed variable usage in allowance, prepaid, then authorized-overage order", () => {
@@ -109,12 +109,45 @@ describe("Klinikos commercial truth", () => {
       labs: true,
       claims: true,
       multiLocation: false,
-      score: 80,
-      status: "QUALIFIED",
-      auditPrice: 1_250,
     } as const;
 
     expect(salesAuditQualificationSchema.safeParse(base).success).toBe(false);
     expect(salesAuditQualificationSchema.safeParse({ ...base, email: "buyer@clinic.example" }).success).toBe(true);
+  });
+
+  it("derives qualification score, status, and audit price from server-owned rules", () => {
+    const parsed = salesAuditQualificationSchema.parse({
+      clinic: "Brooklyn Family Medicine",
+      decisionMaker: "Owner",
+      email: "buyer@clinic.example",
+      locations: 1,
+      providers: 3,
+      staff: 5,
+      encounters: 100,
+      revenueBand: "500k-1m",
+      insuranceMix: "mixed",
+      billing: "internal",
+      monthlyTech: 2_000,
+      knownLeakage: 5_000,
+      ehr: "existing",
+      biggestPain: "follow-up",
+      afterHours: 12,
+      referrals: true,
+      labs: true,
+      claims: true,
+      multiLocation: false,
+      score: 100,
+      status: "QUALIFIED",
+      auditPrice: 1,
+    });
+
+    expect(parsed).not.toHaveProperty("score");
+    expect(parsed).not.toHaveProperty("status");
+    expect(parsed).not.toHaveProperty("auditPrice");
+
+    const evaluated = evaluateSalesAuditQualification(parsed);
+    expect(evaluated.score).toBeGreaterThanOrEqual(70);
+    expect(evaluated.status).toBe("QUALIFIED");
+    expect(evaluated.auditPrice).toBe(1250);
   });
 });
