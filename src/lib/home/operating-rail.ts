@@ -17,6 +17,8 @@ import { db } from "@/lib/db";
 export type RailDestination = {
   key: string;
   label: string;
+  /** One or two words for the icon rail, where the full label does not fit. */
+  short: string;
   description: string;
   href: string;
   workspace: string;
@@ -50,42 +52,42 @@ type Candidate = Omit<RailDestination, "live"> & { counter?: "tasks" | "grid_off
 function candidatesForRole(role: ClinicRole): Candidate[] {
   if (role === "clinic_owner" || role === "administrator") {
     return [
-      { key: "operations", label: "Clinic operations", description: "Patients, schedule, staff work, follow-up, and revenue", href: "/front-desk", workspace: "front-desk" },
-      { key: "grid", label: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid", workspace: "grid", counter: "grid_offers" },
-      { key: "edu", label: "Klinikos EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", workspace: "edu" },
+      { key: "operations", label: "Clinic operations", short: "Operations", description: "Patients, schedule, staff work, follow-up, and revenue", href: "/front-desk", workspace: "front-desk" },
+      { key: "grid", label: "Grid", short: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "provider") {
     return [
-      { key: "care", label: "Today's care", description: "Open the work that needs clinical attention", href: "/provider", workspace: "provider" },
-      { key: "grid", label: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", workspace: "grid", counter: "grid_offers" },
-      { key: "edu", label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
+      { key: "care", label: "Today's care", short: "Care", description: "Open the work that needs clinical attention", href: "/provider", workspace: "provider" },
+      { key: "grid", label: "Grid", short: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "clinical_staff" || role === "case_manager") {
     return [
-      { key: "care", label: "Today's care", description: "Open the work that needs care-team attention", href: "/tasks", workspace: "tasks", counter: "tasks" },
-      { key: "network", label: "Care network", description: "Follow referrals, handoffs, and connected work", href: "/network/directory", workspace: "network" },
-      { key: "edu", label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
+      { key: "care", label: "Today's care", short: "Care", description: "Open the work that needs care-team attention", href: "/tasks", workspace: "tasks", counter: "tasks" },
+      { key: "network", label: "Care network", short: "Network", description: "Follow referrals, handoffs, and connected work", href: "/network/directory", workspace: "network" },
+      { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "front_desk") {
     return [
-      { key: "operations", label: "Front desk", description: "Arrivals, intake, confirmation, coverage, and payment work", href: "/front-desk", workspace: "front-desk" },
-      { key: "work", label: "My work", description: "Open the task queue your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
-      { key: "edu", label: "Klinikos EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
+      { key: "operations", label: "Front desk", short: "Front desk", description: "Arrivals, intake, confirmation, coverage, and payment work", href: "/front-desk", workspace: "front-desk" },
+      { key: "work", label: "My work", short: "My work", description: "Open the task queue your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
+      { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "biller") {
     return [
-      { key: "billing", label: "Billing", description: "Coverage, balances, and revenue work waiting on a person", href: "/billing", workspace: "billing" },
-      { key: "work", label: "My work", description: "Open the task queue your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
-      { key: "edu", label: "Klinikos EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
+      { key: "billing", label: "Billing", short: "Billing", description: "Coverage, balances, and revenue work waiting on a person", href: "/billing", workspace: "billing" },
+      { key: "work", label: "My work", short: "My work", description: "Open the task queue your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
+      { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
     ];
   }
   return [
-    { key: "work", label: "My work", description: "Go directly to the work your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
-    { key: "edu", label: "Klinikos EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
+    { key: "work", label: "My work", short: "My work", description: "Go directly to the work your role can act on", href: "/tasks", workspace: "tasks", counter: "tasks" },
+    { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, and professional learning", href: "/edu", workspace: "edu" },
   ];
 }
 

@@ -112,7 +112,12 @@ describe("Home operating rail", () => {
 });
 
 describe("Living Home surface behavior", () => {
-  const home = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/living-home.tsx"), "utf8");
+  // Home is one surface across two files — the composer/rails shell and the standing
+  // operating picture. Both are read so a section moving between them cannot silently
+  // drop a guard.
+  const shell = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/living-home.tsx"), "utf8");
+  const operations = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/living-home-operations.tsx"), "utf8");
+  const home = shell + operations;
 
   it("transforms in place instead of navigating away when a visit is selected", () => {
     // Every schedule entry used to be a Link straight out of Home. Selecting a visit
@@ -139,5 +144,36 @@ describe("Living Home surface behavior", () => {
   it("hides the patient record link when the role cannot read patients", () => {
     expect(home).toContain("canOpenPatientRecord");
     expect(home).toContain("cannot open the patient record");
+  });
+
+  it("advances the phase rail on real milestones, never on a timer", () => {
+    // The reference design played Listening → Understanding → Connecting → Preparing
+    // → Ready back on setTimeout, which shows progress whether or not any is
+    // happening. Each phase here is set beside the work it names.
+    expect(shell).not.toMatch(/setTimeout|setInterval/);
+    expect(shell).toContain('setPhase("understanding")');
+    expect(shell).toContain('setPhase("connecting")');
+    expect(shell).toContain('setPhase("preparing")');
+  });
+
+  it("does not put words in the person's mouth when a destination is picked", () => {
+    // A destination prefills the composer and returns the caret. It must not submit a
+    // sentence the person never wrote and then show it back to them as their own.
+    expect(shell).toContain("composerRef.current?.focus()");
+    expect(shell).not.toMatch(/proposeDestination[\s\S]{0,400}submitIntent\(/);
+  });
+
+  it("builds the workspace from the created Path, not from a canned table", () => {
+    expect(shell).not.toContain("Sample data");
+    expect(shell).toContain("activeSnapshot.goal");
+    expect(shell).toContain("activeGuidance?.blockers");
+    // Nothing is executed from Home, and the footer says so rather than implying a
+    // send, submission or payout happened here.
+    expect(shell).toContain("Nothing is executed from this surface");
+  });
+
+  it("derives the highlighted destination from the governed link, not the typed words", () => {
+    expect(shell).toContain("destinationForHref");
+    expect(shell).toContain("activeGuidance?.href ?? null");
   });
 });

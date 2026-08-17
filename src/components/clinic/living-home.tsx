@@ -1,22 +1,20 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
-  ArrowUpRight,
+  ArrowUp,
+  BarChart3,
   BriefcaseBusiness,
-  CalendarClock,
-  CheckCircle2,
-  CircleAlert,
-  ClipboardList,
   GraduationCap,
-  Network,
-  Stethoscope,
-  X,
+  HeartPulse,
+  ReceiptText,
+  Users,
 } from "lucide-react";
-import { Badge, Button, DsSurface, Input, ZumiOrb, type BadgeTone, type ZumiState } from "@/components/ds";
+import { Badge, DsSurface, ZumiOrb, type ZumiState } from "@/components/ds";
+import { LivingHomeOperations } from "@/components/clinic/living-home-operations";
 import type { PathGuidanceView } from "@/components/clinic/path-next-action";
+import { VoiceInputButton } from "@/components/clinic/voice-input";
 import type { ClinicRole } from "@/lib/auth/rbac";
 import type { HomeOpportunity, RailDestination } from "@/lib/home/operating-rail";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
@@ -31,36 +29,47 @@ export type IntelligenceRailStatus = {
   detail: string;
 };
 
-type AttentionItem = {
-  appointment: Appointment;
-  reasons: string[];
+/**
+ * The five stages the interface actually moves through, in order.
+ *
+ * These name deterministic interface processing — reading the request, calling
+ * Klinikos, resolving the next governed step — and nothing about external
+ * completion. Each one is set at a real milestone in `submitIntent` rather than
+ * played back on a timer, so the rail cannot show progress that is not happening.
+ */
+const PHASES = ["listening", "understanding", "connecting", "preparing", "ready"] as const;
+type Phase = (typeof PHASES)[number];
+
+const PHASE_LABELS: Record<Phase, string> = {
+  listening: "Listening",
+  understanding: "Understanding",
+  connecting: "Connecting",
+  preparing: "Preparing",
+  ready: "Ready",
 };
 
-type RibbonBlock = {
-  appointment: Appointment;
-  left: number;
-  width: number;
-  lane: number;
-  tone: BadgeTone;
-};
-
-type RibbonModel = {
-  min: number;
-  max: number;
-  laneCount: number;
-  blocks: RibbonBlock[];
-};
-
-const terminalStatuses = new Set<Appointment["status"]>(["Completed", "Cancelled", "No Show"]);
-
-const railIcons: Record<string, typeof Stethoscope> = {
-  operations: Stethoscope,
-  care: Stethoscope,
+const destinationIcons: Record<string, typeof Users> = {
+  operations: Users,
+  care: HeartPulse,
   grid: BriefcaseBusiness,
-  network: Network,
-  billing: ClipboardList,
-  work: ClipboardList,
+  network: HeartPulse,
+  billing: ReceiptText,
+  work: BarChart3,
   edu: GraduationCap,
+};
+
+type WorkspaceRow = {
+  key: string;
+  label: string;
+  value: string;
+  state: string;
+  tone: "open" | "blocked" | "settled" | "neutral";
+};
+
+type TranscriptEntry = {
+  id: string;
+  speaker: "You" | "Klinikos";
+  text: string;
 };
 
 function roleLabel(role: ClinicRole) {
@@ -71,301 +80,50 @@ function roleLabel(role: ClinicRole) {
   return role.replaceAll("_", " ");
 }
 
-function localGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function selectDay(appointments: Appointment[]) {
-  if (!appointments.length) return [];
-  const today = appointments.filter((appointment) => appointment.date === "Today");
-  if (today.length) return today;
-  const firstActive = appointments.find((appointment) => !terminalStatuses.has(appointment.status));
-  const day = firstActive?.date ?? appointments[appointments.length - 1]?.date;
-  return appointments.filter((appointment) => appointment.date === day);
-}
-
-function attentionReasons(appointment: Appointment, role: ClinicRole) {
-  if (appointment.status === "Cancelled") return [];
-  const reasons: string[] = [];
-  if (appointment.status === "Requested" || appointment.status === "Pending Confirmation") {
-    reasons.push("Confirmation still needs to be recorded.");
-  }
-  if (appointment.status === "No Show") {
-    reasons.push("The visit is recorded as a no-show and may need follow-up.");
-  }
-  if (!appointment.formsComplete && appointment.status !== "No Show") {
-    reasons.push("Required intake is incomplete.");
-  }
-  if (
-    !appointment.insuranceVerified
-    && appointment.status !== "No Show"
-    && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")
-  ) {
-    reasons.push("Coverage has not been verified.");
-  }
-  if (
-    appointment.paymentDue > 0
-    && (role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller")
-  ) {
-    reasons.push(`$${appointment.paymentDue.toFixed(2)} remains due.`);
-  }
-  return reasons;
-}
-
-function attentionTone(appointment: Appointment, role: ClinicRole): BadgeTone {
-  const reasons = attentionReasons(appointment, role);
-  if (!reasons.length) return appointment.status === "Completed" ? "resolved" : "observing";
-  return appointment.status === "No Show" ? "signal" : "analyzing";
-}
-
-function attentionColor(appointment: Appointment, role: ClinicRole) {
-  return attentionTone(appointment, role) === "signal" ? "var(--status-signal)" : "var(--status-analyzing)";
-}
-
-function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount: number) {
-  if (attentionCount === 0) {
-    return {
-      eyebrow: "Operating briefing",
-      headline: "Everything important is handled.",
-      support: appointmentCount
-        ? `${appointmentCount} scheduled ${appointmentCount === 1 ? "visit is" : "visits are"} visible with no current readiness exception in this view.`
-        : "No schedule exception needs your attention in this view.",
-    };
-  }
-  if (role === "clinic_owner" || role === "administrator") {
-    return {
-      eyebrow: `${String(attentionCount).padStart(2, "0")} decisions today`,
-      headline: `${attentionCount} ${attentionCount === 1 ? "item needs" : "items need"} your attention.`,
-      support: `${appointmentCount} scheduled ${appointmentCount === 1 ? "visit is" : "visits are"} in view. Klinikos is keeping the exceptions above the rest.`,
-    };
-  }
-  if (role === "front_desk") {
-    return {
-      eyebrow: `${String(attentionCount).padStart(2, "0")} before the next block`,
-      headline: `${attentionCount} ${attentionCount === 1 ? "thing needs" : "things need"} clearing.`,
-      support: "Incomplete intake, confirmation, coverage, and payment work stays visible before it becomes a front-desk fire.",
-    };
-  }
-  if (role === "provider" || role === "clinical_staff") {
-    return {
-      eyebrow: `${String(attentionCount).padStart(2, "0")} require review`,
-      headline: `${appointmentCount} ${appointmentCount === 1 ? "visit is" : "visits are"} on the day ribbon.`,
-      support: `${attentionCount} ${attentionCount === 1 ? "visit has" : "visits have"} a readiness item worth seeing before care moves forward.`,
-    };
-  }
-  if (role === "biller") {
-    return {
-      eyebrow: `${String(attentionCount).padStart(2, "0")} revenue checks`,
-      headline: `${attentionCount} ${attentionCount === 1 ? "visit has" : "visits have"} coverage or payment work attached.`,
-      support: "The queue keeps financial readiness tied to the visit that created it.",
-    };
-  }
-  return {
-    eyebrow: `${String(attentionCount).padStart(2, "0")} need attention`,
-    headline: `${attentionCount} ${attentionCount === 1 ? "item is" : "items are"} waiting on a person.`,
-    support: "Klinikos keeps the exception visible and the next action close.",
-  };
-}
-
-function relativeTime(iso: string, nowMs: number | null) {
-  if (nowMs === null) return "recently";
-  const delta = nowMs - new Date(iso).getTime();
-  const minutes = Math.max(0, Math.round(delta / 60_000));
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
-}
-
-function guidanceTone(state: PathGuidanceView["state"]): BadgeTone {
-  if (state === "blocked") return "signal";
-  if (state === "review_required") return "analyzing";
-  if (state === "waiting") return "observing";
-  if (state === "completed") return "resolved";
-  return "mapping";
-}
-
-function guidanceLabel(state: PathGuidanceView["state"]) {
-  if (state === "blocked") return "Needs attention";
-  if (state === "review_required") return "Ready for review";
+function guidanceStateLabel(state: PathGuidanceView["state"]) {
+  if (state === "blocked") return "Blocked";
+  if (state === "review_required") return "Needs review";
   if (state === "waiting") return "Waiting";
   if (state === "completed") return "Completed";
   if (state === "available") return "Ready";
   return "Recommended";
 }
 
+function rowToneColor(tone: WorkspaceRow["tone"]) {
+  if (tone === "blocked") return "var(--status-signal)";
+  if (tone === "open") return "var(--status-analyzing)";
+  if (tone === "settled") return "var(--status-resolved)";
+  return "var(--text-secondary)";
+}
+
 /**
  * The orb reports what is actually happening, in this order of truth:
  *
- * 1. a failed submission is a signal, regardless of anything else;
+ * 1. a failed request is a signal, regardless of anything else;
  * 2. work in flight is analyzing;
- * 3. otherwise the orb reflects whether a model provider is genuinely reachable.
+ * 3. a resolved next step is resolved;
+ * 4. otherwise the orb reflects whether a model provider is genuinely reachable.
  *
  * The orb previously idled at "observing" whether or not any provider was connected,
  * which read as a live intelligence layer sitting attentively on a deployment where
- * nothing was configured. A quiet, honest state is better than an attentive lie.
+ * nothing was configured. A quiet, honest state beats an attentive lie.
  */
-function intelligenceState(state: "idle" | "saving" | "error", available: boolean): ZumiState {
-  if (state === "error") return "signal";
-  if (state === "saving") return "analyzing";
-  return available ? "observing" : "mapping";
-}
-
-function buildRibbon(appointments: Appointment[], role: ClinicRole): RibbonModel | null {
-  if (!appointments.length) return null;
-  const sorted = [...appointments].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
-  const starts = sorted.map((appointment) => new Date(appointment.startsAt).getTime()).filter(Number.isFinite);
-  const ends = sorted.map((appointment) => new Date(appointment.endsAt).getTime()).filter(Number.isFinite);
-  if (!starts.length || !ends.length) return null;
-
-  const min = Math.min(...starts);
-  const max = Math.max(...ends);
-  const span = Math.max(max - min, 60 * 60 * 1000);
-  const laneRightEdges: number[] = [];
-  const blocks: RibbonBlock[] = [];
-
-  for (const appointment of sorted) {
-    const start = new Date(appointment.startsAt).getTime();
-    const end = new Date(appointment.endsAt).getTime();
-    const left = ((start - min) / span) * 100;
-    const width = Math.max(((end - start) / span) * 100, 4);
-    const right = Math.min(100, left + width);
-    let lane = laneRightEdges.findIndex((edge) => edge <= left - 0.5);
-    if (lane < 0) {
-      lane = laneRightEdges.length;
-      laneRightEdges.push(right);
-    } else {
-      laneRightEdges[lane] = right;
-    }
-    blocks.push({ appointment, left, width, lane, tone: attentionTone(appointment, role) });
-  }
-
-  return { min, max, laneCount: Math.max(1, laneRightEdges.length), blocks };
+function orbStateFor(phase: Phase, failed: boolean, intelligenceAvailable: boolean): ZumiState {
+  if (failed) return "signal";
+  if (phase === "connecting" || phase === "preparing" || phase === "understanding") return "analyzing";
+  if (phase === "ready") return "resolved";
+  return intelligenceAvailable ? "observing" : "mapping";
 }
 
 /**
- * The inline workspace.
- *
- * Selecting a visit anywhere on Home opens it here rather than navigating to another
- * route. Home stays the operating surface: the schedule, the exception list and the
- * next block all stay on screen and in context while the selected visit expands in
- * place. Every field shown is a field the server already loaded for this view — the
- * panel reads state, it does not synthesize it — and the one control that leaves Home
- * is an explicit link to the real record.
+ * Which destination the resolved work belongs to, read from the governed link the
+ * Path engine produced. Derived from where the work actually points — never guessed
+ * from the words the person typed.
  */
-function FocusPanel({
-  appointment,
-  canOpenPatientRecord,
-  onDismiss,
-  role,
-}: {
-  appointment: Appointment;
-  canOpenPatientRecord: boolean;
-  onDismiss: () => void;
-  role: ClinicRole;
-}) {
-  const reasons = attentionReasons(appointment, role);
-  const showsMoney = role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller";
-  const headingId = `focus-${appointment.id}`;
-
-  return (
-    <section
-      aria-labelledby={headingId}
-      className="mt-7 border-y border-[var(--line-dark)] bg-[var(--surface-raised)] px-5 py-7 sm:px-7"
-    >
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="mt-2 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
-        <div className="min-w-0 flex-1">
-          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">
-            {appointment.date} · {appointment.time}–{appointment.endTime}
-          </p>
-          <h3 className="mt-2 text-xl font-semibold tracking-[var(--tracking-tight)]" id={headingId}>
-            {appointment.patient}
-          </h3>
-          <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">
-            {appointment.type} · {appointment.provider} · {appointment.telemedicine ? "Telemedicine" : appointment.location}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge tone={attentionTone(appointment, role)}>{reasons.length ? "Needs you" : appointment.status}</Badge>
-          <button
-            aria-label="Close this visit"
-            className="grid size-9 place-items-center border border-[var(--line-dark)] text-[var(--text-secondary)] transition-opacity hover:opacity-75"
-            onClick={onDismiss}
-            type="button"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-7 grid gap-7 lg:grid-cols-[1fr_1fr] lg:gap-12">
-        <div>
-          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Why</p>
-          {reasons.length ? (
-            <div className="mt-4 space-y-3">
-              {reasons.map((reason) => (
-                <p className="text-xs leading-6 text-[var(--text-secondary)]" key={reason}>{reason}</p>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">
-              Nothing on this visit is currently waiting on a person. It is here because you opened it.
-            </p>
-          )}
-
-          <div className="mt-6 grid gap-2 text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)] sm:grid-cols-3">
-            <span>Source · schedule</span>
-            <span>Observed · {appointment.time}</span>
-            <span>Evidence · direct record</span>
-          </div>
-        </div>
-
-        <div className="border-t border-[var(--line-dark)] pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
-          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Readiness</p>
-          <dl className="mt-4 divide-y divide-[var(--line-dark)]">
-            <div className="flex items-baseline justify-between gap-4 py-3 first:pt-0">
-              <dt className="text-xs text-[var(--text-secondary)]">Status</dt>
-              <dd className="text-xs font-semibold">{appointment.status}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 py-3">
-              <dt className="text-xs text-[var(--text-secondary)]">Intake</dt>
-              <dd className="text-xs font-semibold">{appointment.formsComplete ? "Complete" : "Incomplete"}</dd>
-            </div>
-            {showsMoney ? (
-              <>
-                <div className="flex items-baseline justify-between gap-4 py-3">
-                  <dt className="text-xs text-[var(--text-secondary)]">Coverage</dt>
-                  <dd className="text-xs font-semibold">{appointment.insuranceVerified ? "Verified" : "Not verified"}</dd>
-                </div>
-                <div className="flex items-baseline justify-between gap-4 py-3">
-                  <dt className="text-xs text-[var(--text-secondary)]">Balance</dt>
-                  <dd className="text-xs font-semibold">${appointment.paymentDue.toFixed(2)}</dd>
-                </div>
-              </>
-            ) : null}
-          </dl>
-
-          {canOpenPatientRecord ? (
-            <Link
-              className="mt-6 inline-flex min-h-11 items-center gap-2 border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
-              href={`/patients/${appointment.patientId}`}
-            >
-              Open the full record <ArrowUpRight className="size-3.5" />
-            </Link>
-          ) : (
-            <p className="mt-6 text-xs leading-6 text-[var(--text-secondary)]">
-              Your role can see this visit on the schedule but cannot open the patient record.
-            </p>
-          )}
-        </div>
-      </div>
-    </section>
-  );
+function destinationForHref(href: string | null, destinations: RailDestination[]) {
+  if (!href) return null;
+  const match = destinations.find((destination) => href === destination.href || href.startsWith(`${destination.href}/`));
+  return match?.key ?? null;
 }
 
 export function LivingHome({
@@ -395,488 +153,399 @@ export function LivingHome({
   canOpenPatientRecord: boolean;
   onboardingComplete?: boolean;
 }) {
-  const [intent, setIntent] = useState("");
+  const [draft, setDraft] = useState("");
   const [paths, setPaths] = useState(initialPaths);
   const [guidance, setGuidance] = useState(initialGuidance);
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(initialPaths[0]?.instanceId ?? null);
-  const [focusedAppointmentId, setFocusedAppointmentId] = useState<string | null>(null);
-  const [state, setState] = useState<"idle" | "saving" | "error">("idle");
-  const [message, setMessage] = useState<string | null>(null);
-  const [greeting, setGreeting] = useState("Welcome");
-  const [nowMs, setNowMs] = useState<number | null>(null);
-  const focusRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const update = () => {
-      setGreeting(localGreeting());
-      setNowMs(Date.now());
-    };
-    update();
-    const timer = window.setInterval(update, 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const dayAppointments = useMemo(() => selectDay(appointments), [appointments]);
-  const attentionItems = useMemo<AttentionItem[]>(
-    () => dayAppointments
-      .map((appointment) => ({ appointment, reasons: attentionReasons(appointment, role) }))
-      .filter((item) => item.reasons.length > 0),
-    [dayAppointments, role],
-  );
-  const completedAppointments = useMemo(
-    () => dayAppointments.filter((appointment) => appointment.status === "Completed"),
-    [dayAppointments],
-  );
-  const upcomingAppointments = useMemo(
-    () => dayAppointments.filter((appointment) => !terminalStatuses.has(appointment.status)).slice(0, 4),
-    [dayAppointments],
-  );
-  const ribbon = useMemo(() => buildRibbon(dayAppointments, role), [dayAppointments, role]);
-  const focusedAppointment = useMemo(
-    () => dayAppointments.find((appointment) => appointment.id === focusedAppointmentId) ?? null,
-    [dayAppointments, focusedAppointmentId],
-  );
-
-  // Selecting a visit from the exception list or the next block scrolls the ribbon's
-  // inline workspace into view, so the surface visibly transforms instead of quietly
-  // changing something the reader cannot see from where they clicked.
-  useEffect(() => {
-    if (!focusedAppointmentId) return;
-    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [focusedAppointmentId]);
+  const [phase, setPhase] = useState<Phase>("listening");
+  const [working, setWorking] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [clarification, setClarification] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [activeInstanceId, setActiveInstanceId] = useState<string | null>(null);
+  const [attentionCount, setAttentionCount] = useState(0);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const workspaceRef = useRef<HTMLDivElement | null>(null);
 
   const activeSnapshot = useMemo(
-    () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
-    [paths, selectedInstanceId],
+    () => paths.find((path) => path.instanceId === activeInstanceId) ?? null,
+    [paths, activeInstanceId],
   );
   const activeGuidance = useMemo(
-    () => guidance.find((item) => item.instanceId === activeSnapshot?.instanceId) ?? null,
-    [guidance, activeSnapshot?.instanceId],
+    () => guidance.find((item) => item.instanceId === activeInstanceId) ?? null,
+    [guidance, activeInstanceId],
   );
   const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
   const activeRuntime = activeSnapshot
     ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
     : null;
 
-  const nowPosition = ribbon && nowMs !== null && nowMs >= ribbon.min && nowMs <= ribbon.max
-    ? ((nowMs - ribbon.min) / Math.max(ribbon.max - ribbon.min, 1)) * 100
-    : null;
-  const highRiskAttention = attentionItems.some(({ appointment }) => appointment.status === "No Show");
-  const briefing = briefingCopy(role, attentionItems.length, dayAppointments.length);
-  const orbState = intelligenceState(state, intelligence.available);
+  const activeDestination = destinationForHref(activeGuidance?.href ?? null, rail);
+  const phaseIndex = PHASES.indexOf(phase);
+  const orbState = orbStateFor(phase, failed, intelligence.available);
 
-  function focusAppointment(appointmentId: string) {
-    setFocusedAppointmentId((current) => (current === appointmentId ? null : appointmentId));
-  }
+  // Every row is read off the Path the server actually created. Nothing is padded to
+  // fill the panel: a Path with no blockers shows no blocker rows.
+  const workspaceRows = useMemo<WorkspaceRow[]>(() => {
+    if (!activeSnapshot || !activeDefinition) return [];
+    const rows: WorkspaceRow[] = [
+      { key: "outcome", label: "Outcome", value: activeDefinition.title, state: "Organized", tone: "neutral" },
+      { key: "goal", label: "What you asked", value: activeSnapshot.goal, state: "Recorded", tone: "neutral" },
+    ];
+    if (activeRuntime) {
+      rows.push({
+        key: "progress",
+        label: "Progress",
+        value: `${Math.round(activeRuntime.progress * 100)}% complete`,
+        state: activeGuidance ? guidanceStateLabel(activeGuidance.state) : "In progress",
+        tone: activeGuidance?.state === "blocked" ? "blocked" : activeGuidance?.state === "completed" ? "settled" : "open",
+      });
+    }
+    for (const blocker of activeGuidance?.blockers ?? []) {
+      rows.push({
+        key: `blocker-${blocker.code}`,
+        label: blocker.title,
+        value: blocker.explanation,
+        state: blocker.canResolveNow ? `You can resolve` : `Waiting on ${blocker.owner}`,
+        tone: blocker.canResolveNow ? "open" : "blocked",
+      });
+    }
+    return rows;
+  }, [activeSnapshot, activeDefinition, activeRuntime, activeGuidance]);
 
-  async function submitIntent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage(null);
-    const resolved = resolveIntentDeterministically(intent);
+  const reset = useCallback(() => {
+    setWorking(false);
+    setFailed(false);
+    setPhase("listening");
+    setClarification(null);
+    setTranscript([]);
+    setActiveInstanceId(null);
+  }, []);
+
+  const say = useCallback((speaker: TranscriptEntry["speaker"], text: string) => {
+    setTranscript((current) => [...current, { id: `${speaker}-${current.length}-${text.slice(0, 12)}`, speaker, text }]);
+  }, []);
+
+  async function submitIntent(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const text = draft.trim();
+    if (text.length < 2) return;
+
+    setWorking(true);
+    setFailed(false);
+    setClarification(null);
+    setTranscript([{ id: "you-0", speaker: "You", text }]);
+    setActiveInstanceId(null);
+    setDraft("");
+    workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    // Understanding: deterministic intent resolution. No model is involved here, which
+    // is exactly why the composer keeps working on a deployment with no provider.
+    setPhase("understanding");
+    const resolved = resolveIntentDeterministically(text);
     const pathId = resolved.candidatePathIds[0] ?? null;
     if (!pathId) {
-      setMessage(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can help with that.");
+      setPhase("ready");
+      setClarification(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can help with that.");
+      say("Klinikos", "I can route this, but I need the outcome rather than the topic. Tell me what should be true when this is finished.");
       return;
     }
 
-    setState("saving");
+    setPhase("connecting");
     try {
       const response = await fetch("/api/paths", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pathId, goal: intent }),
+        body: JSON.stringify({ pathId, goal: text }),
       });
+      setPhase("preparing");
       const payload = await response.json() as { data?: PersistedPathSnapshot; guidance?: PathGuidanceView | null; error?: string };
       if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start that yet.");
 
-      setPaths((current) => [payload.data!, ...current.filter((path) => path.instanceId !== payload.data!.instanceId)]);
+      const snapshot = payload.data;
+      setPaths((current) => [snapshot, ...current.filter((path) => path.instanceId !== snapshot.instanceId)]);
       if (payload.guidance) {
         setGuidance((current) => [payload.guidance!, ...current.filter((item) => item.instanceId !== payload.guidance!.instanceId)]);
       }
-      setSelectedInstanceId(payload.data.instanceId);
-      setIntent("");
-      setState("idle");
-      setMessage("Ready. The next safe step is below.");
+      setActiveInstanceId(snapshot.instanceId);
+      setPhase("ready");
+      say("Klinikos", payload.guidance?.reason ?? "This is organized. The next safe step is below.");
+      if (resolved.requiresClarification && resolved.clarificationQuestions[0]) {
+        setClarification(resolved.clarificationQuestions[0]);
+      }
     } catch (error) {
-      setState("error");
-      setMessage(error instanceof Error ? error.message : "Klinikos could not start that yet.");
+      setFailed(true);
+      setPhase("ready");
+      say("Klinikos", error instanceof Error ? error.message : "Klinikos could not start that yet.");
     }
+  }
+
+  function onComposerKey(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void submitIntent();
+    }
+  }
+
+  // A destination prefills the composer and hands the caret back rather than putting
+  // words in the person's mouth. The request that reaches Klinikos is one they sent.
+  function proposeDestination(destination: RailDestination) {
+    setDraft(`Open ${destination.label.toLowerCase()}`);
+    composerRef.current?.focus();
   }
 
   return (
     <DsSurface className="-mx-4 overflow-hidden border-y border-[var(--line-dark)] bg-[var(--surface-primary)] text-[var(--text-primary)] sm:-mx-6 lg:-mx-8">
-      <section className="mx-auto max-w-[var(--container-max)] px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20" aria-labelledby="living-home-title">
-        <div className="grid gap-12 lg:grid-cols-[1.12fr_.88fr] lg:items-center lg:gap-20">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge tone={attentionItems.length ? (highRiskAttention ? "signal" : "analyzing") : "resolved"}>{briefing.eyebrow}</Badge>
+      <div className="mx-auto max-w-[var(--container-max)] px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+        <div className="grid gap-10 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-8">
+          {/* Phase rail — what the interface is doing right now, and nothing more. */}
+          <ol
+            aria-label="Klinikos Intelligence progress"
+            className="flex flex-row flex-wrap items-center gap-x-6 gap-y-3 lg:flex-col lg:items-start lg:gap-9 lg:pt-28"
+          >
+            {PHASES.map((step, index) => {
+              const active = working && index === phaseIndex;
+              const done = working && index < phaseIndex;
+              return (
+                <li className="flex items-center gap-3" key={step}>
+                  <span
+                    aria-hidden="true"
+                    className="size-2 shrink-0 rounded-full transition-all duration-500"
+                    style={{
+                      background: active ? "var(--accent-intelligence)" : done ? "var(--status-resolved)" : "var(--line-dark)",
+                      boxShadow: active ? "var(--glow-cyan)" : "none",
+                    }}
+                  />
+                  <span
+                    className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] transition-colors duration-500"
+                    style={{ color: active ? "var(--text-primary)" : done ? "var(--text-secondary)" : "var(--text-tertiary, var(--text-secondary))" }}
+                  >
+                    {PHASE_LABELS[step]}
+                  </span>
+                  {active ? <span className="sr-only">Current stage</span> : null}
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="min-w-0 text-center">
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">
+                Klinikos Intelligence
+              </p>
               {onboardingComplete ? <Badge tone="resolved">Setup complete</Badge> : null}
             </div>
-            <p className="mt-8 text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">
-              {organizationName} · {roleLabel(role)}
-            </p>
+
             <h1
-              className="mt-4 max-w-4xl text-balance font-semibold tracking-[var(--tracking-tighter)]"
+              className="mx-auto mt-6 max-w-4xl text-balance font-extralight tracking-[var(--tracking-tighter)]"
               id="living-home-title"
               style={{ fontSize: "var(--text-h1)", lineHeight: "var(--leading-tight)" }}
             >
-              {greeting}, {firstName}.
+              <span className="block">What needs</span>
+              <span className="block text-[var(--accent-intelligence)]">to happen?</span>
             </h1>
-            <div className="mt-8 grid max-w-3xl gap-5 sm:grid-cols-[auto_1fr] sm:items-end">
-              <p className="text-7xl font-semibold leading-none tracking-[var(--tracking-tighter)] text-[var(--accent-intelligence)] sm:text-8xl">
-                {String(attentionItems.length).padStart(2, "0")}
-              </p>
-              <div className="border-l border-[var(--line-dark)] pl-5">
-                <h2 className="text-2xl font-semibold tracking-[var(--tracking-tight)] sm:text-3xl">{briefing.headline}</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">{briefing.support}</p>
-              </div>
-            </div>
-          </div>
+            <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
+              {firstName}, Klinikos keeps permissions, payment, credentials, and human review in control underneath. Describe the outcome and it organizes the next safe step.
+            </p>
 
-          <div className="grid grid-cols-[1fr_auto] items-center gap-4 border-l border-[var(--line-dark)] pl-5 sm:pl-8">
-            <div>
-              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Klinikos Intelligence</p>
-              <p className="mt-3 text-xl font-semibold tracking-[var(--tracking-tight)]">Ask. Find. Do. Open.</p>
-              <p className="mt-2 max-w-sm text-xs leading-6 text-[var(--text-secondary)]">
-                Describe the outcome. Klinikos keeps permissions, payment, credentials, and human review in control underneath.
+            <form className="mx-auto mt-10 max-w-3xl" onSubmit={submitIntent}>
+              <div className="rounded-[26px] border border-[var(--line-dark)] bg-[var(--surface-raised)] px-5 py-4 text-left shadow-[var(--shadow-raised,none)]">
+                <label className="sr-only" htmlFor="living-home-composer">What needs to happen?</label>
+                <textarea
+                  className="max-h-36 min-h-[3rem] w-full resize-none bg-transparent text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]"
+                  id="living-home-composer"
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={onComposerKey}
+                  placeholder="Find coverage Friday, follow up a referral, continue a course…"
+                  ref={composerRef}
+                  rows={2}
+                  value={draft}
+                />
+                <div className="mt-3 flex items-center justify-between gap-4">
+                  <span className="text-[var(--text-micro)] text-[var(--text-secondary)]">
+                    Enter to send · Shift+Enter for a new line
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <VoiceInputButton onTranscript={(spoken) => setDraft((current) => (current ? `${current} ${spoken}` : spoken))} />
+                    <button
+                      aria-label="Show me the next step"
+                      className="grid size-11 place-items-center rounded-full bg-[var(--accent-intelligence)] text-[var(--surface-primary)] transition-opacity hover:opacity-90 disabled:opacity-40"
+                      disabled={draft.trim().length < 2}
+                      type="submit"
+                    >
+                      <ArrowUp className="size-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div className="mt-8 grid justify-items-center">
+              <ZumiOrb size={104} state={orbState} />
+              <p className="mt-4 text-sm text-[var(--text-secondary)]">Your Klinikos operating partner</p>
+              <p aria-live="polite" className="mt-2 text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">
+                {working ? PHASE_LABELS[phase] : PHASE_LABELS.listening}
               </p>
               {intelligence.available ? null : (
-                <p className="mt-3 max-w-sm text-xs leading-6 text-[var(--status-analyzing)]">
-                  Conversational intelligence is not connected on this deployment. The command below still works — it is resolved by deterministic Klinikos logic, not by a model.
+                <p className="mx-auto mt-4 max-w-sm text-xs leading-6 text-[var(--status-analyzing)]">
+                  Conversational intelligence is not connected on this deployment. The command above still works — it is resolved by deterministic Klinikos logic, not by a model.
                 </p>
               )}
             </div>
-            <ZumiOrb size={148} state={orbState} />
-          </div>
-        </div>
-
-        <form className="mt-12 border-y border-[var(--line-dark)] py-7" onSubmit={submitIntent}>
-          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-            <Input
-              dark
-              label="What needs to happen?"
-              onChange={(event) => {
-                setIntent(event.target.value);
-                if (state === "error") setState("idle");
-              }}
-              placeholder="Find coverage Friday, follow up a referral, continue a course..."
-              value={intent}
-            />
-            <Button disabled={state === "saving" || intent.trim().length < 2} size="lg" type="submit">
-              {state === "saving" ? "Working" : "Show me the next step"} <ArrowRight className="size-4" />
-            </Button>
-          </div>
-          {message ? (
-            <p className={`mt-4 text-xs leading-6 ${state === "error" ? "text-[var(--status-signal)]" : "text-[var(--text-secondary)]"}`} aria-live="polite">
-              {message}
-            </p>
-          ) : null}
-        </form>
-
-        <section className="mt-14" aria-labelledby="day-ribbon-title">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Day ribbon</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="day-ribbon-title">
-                {dayAppointments[0]?.date ?? "Current schedule"}
-              </h2>
-            </div>
-            <p className="text-xs text-[var(--text-secondary)]">{dayAppointments.length} {dayAppointments.length === 1 ? "visit" : "visits"} in view</p>
           </div>
 
-          {ribbon ? (
-            <>
-              <div
-                className="relative mt-7 hidden overflow-hidden border-y border-[var(--line-dark)] md:block"
-                style={{ height: `${ribbon.laneCount * 72 + 32}px` }}
-              >
-                {Array.from({ length: ribbon.laneCount }).map((_, lane) => (
-                  <div
-                    className="absolute inset-x-0 border-t border-[var(--line-dark)] opacity-70"
-                    key={lane}
-                    style={{ top: `${16 + lane * 72}px` }}
-                  />
-                ))}
-                {ribbon.blocks.map(({ appointment, left, width, lane, tone }) => (
+          {/* Destination rail — only what this role can actually open. */}
+          <nav aria-label="Klinikos destinations" className="flex flex-row flex-wrap items-start justify-center gap-6 lg:flex-col lg:gap-7 lg:pt-28">
+            {rail.map((destination) => {
+              const Icon = destinationIcons[destination.key] ?? BarChart3;
+              const highlighted = activeDestination === destination.key;
+              return (
+                <div className="grid w-24 justify-items-center gap-2" key={destination.key}>
                   <button
-                    aria-expanded={focusedAppointmentId === appointment.id}
-                    className={`absolute h-14 overflow-hidden border px-3 py-2 text-left transition-opacity hover:opacity-85 focus:z-30 ${
-                      focusedAppointmentId === appointment.id ? "border-[var(--accent-intelligence)]" : "border-[var(--line-dark)]"
-                    }`}
-                    key={appointment.id}
-                    onClick={() => focusAppointment(appointment.id)}
+                    aria-label={`Ask Klinikos about ${destination.label}`}
+                    title={destination.label}
+                    className="grid size-12 place-items-center rounded-full border transition-colors duration-500"
+                    onClick={() => proposeDestination(destination)}
                     style={{
-                      left: `${left}%`,
-                      top: `${20 + lane * 72}px`,
-                      width: `${width}%`,
-                      minWidth: "var(--space-8)",
-                      background: tone === "signal"
-                        ? "color-mix(in oklch, var(--status-signal) 18%, var(--surface-raised))"
-                        : tone === "analyzing"
-                          ? "color-mix(in oklch, var(--status-analyzing) 16%, var(--surface-raised))"
-                          : "var(--surface-raised)",
+                      borderColor: highlighted ? "var(--accent-intelligence)" : "var(--line-dark)",
+                      color: highlighted ? "var(--accent-intelligence)" : "var(--text-secondary)",
                     }}
                     type="button"
                   >
-                    <span className="block truncate text-xs font-semibold">{appointment.time}</span>
-                    <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.initials} · {appointment.status}</span>
+                    <Icon className="size-5" strokeWidth={1.5} />
                   </button>
-                ))}
-                {nowPosition !== null ? (
-                  <div className="absolute inset-y-0 z-20 w-px bg-[var(--accent-intelligence)] shadow-[var(--glow-cyan)]" style={{ left: `${nowPosition}%` }}>
-                    <span className="absolute left-2 top-1 text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">Now</span>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="mt-6 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)] md:hidden">
-                {dayAppointments.slice(0, 5).map((appointment) => {
-                  const reasons = attentionReasons(appointment, role);
-                  return (
-                    <button
-                      aria-expanded={focusedAppointmentId === appointment.id}
-                      className="flex w-full items-center gap-4 py-4 text-left"
-                      key={appointment.id}
-                      onClick={() => focusAppointment(appointment.id)}
-                      type="button"
-                    >
-                      <span className="w-20 shrink-0 text-sm font-semibold">{appointment.time}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">{appointment.patient}</span>
-                        <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type} · {appointment.status}</span>
-                      </span>
-                      <Badge tone={attentionTone(appointment, role)}>{reasons.length ? "Needs you" : appointment.status}</Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <div className="mt-7 border-y border-[var(--line-dark)] py-8">
-              <p className="text-sm font-semibold">No scheduled visits are in this view.</p>
-              <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">Klinikos will keep this quiet until there is something useful to show.</p>
-            </div>
-          )}
-
-          <div ref={focusRef}>
-            {focusedAppointment ? (
-              <FocusPanel
-                appointment={focusedAppointment}
-                canOpenPatientRecord={canOpenPatientRecord}
-                onDismiss={() => setFocusedAppointmentId(null)}
-                role={role}
-              />
-            ) : null}
-          </div>
-        </section>
-
-        <div className="mt-16 grid gap-14 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
-          <section aria-labelledby="needs-you-title">
-            <div className="flex items-end justify-between gap-5">
-              <div>
-                <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Needs you</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="needs-you-title">Exceptions, not noise.</h2>
-              </div>
-              <CircleAlert className="size-5" style={{ color: highRiskAttention ? "var(--status-signal)" : "var(--status-analyzing)" }} />
-            </div>
-
-            {attentionItems.length ? (
-              <div className="mt-7 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)]">
-                {attentionItems.slice(0, 5).map(({ appointment, reasons }) => (
-                  <button
-                    aria-expanded={focusedAppointmentId === appointment.id}
-                    className="flex w-full items-start gap-4 py-5 text-left"
-                    key={appointment.id}
-                    onClick={() => focusAppointment(appointment.id)}
-                    type="button"
+                  {/* Not uppercase with wide tracking like the other rail labels: a
+                      two-word destination ("Front desk", "Operations") renders wider
+                      than the chip and spills out of the column. */}
+                  <span
+                    className="text-balance text-center text-[11px] font-semibold leading-4"
+                    style={{ color: highlighted ? "var(--accent-intelligence)" : "var(--text-secondary)" }}
                   >
-                    <span className="mt-1 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold">{appointment.patient} · {appointment.time}</span>
-                      <span className="mt-2 block text-xs leading-6 text-[var(--text-secondary)]">{reasons[0]}</span>
+                    {destination.short}
+                  </span>
+                  {destination.live ? (
+                    <span
+                      className="text-center text-[var(--text-micro)]"
+                      style={{ color: destination.live.count > 0 ? "var(--accent-intelligence)" : "var(--text-secondary)" }}
+                    >
+                      {destination.live.count}
                     </span>
-                    <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">Why</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-7 border-y border-[var(--line-dark)] py-8">
-                <CheckCircle2 className="size-5 text-[var(--status-resolved)]" />
-                <p className="mt-4 text-sm font-semibold">Everything important is handled.</p>
-                <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">No schedule readiness exception needs a person in this view.</p>
-              </div>
-            )}
-          </section>
-
-          <section aria-labelledby="continue-title">
-            <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Continue</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="continue-title">Pick up where the work stopped.</h2>
-
-            {activeDefinition && activeRuntime && activeSnapshot ? (
-              <div className="mt-7 border-y border-[var(--line-dark)] py-7">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge tone={activeGuidance ? guidanceTone(activeGuidance.state) : "observing"}>
-                    {activeGuidance ? guidanceLabel(activeGuidance.state) : "In progress"}
-                  </Badge>
-                  <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
-                    {Math.round(activeRuntime.progress * 100)}% complete
-                  </span>
+                  ) : null}
                 </div>
-                <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activeDefinition.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{activeSnapshot.goal}</p>
-                <div className="mt-6 h-1 overflow-hidden bg-[var(--line-dark)]">
-                  <div className="h-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, Math.round(activeRuntime.progress * 100))}%` }} />
-                </div>
-
-                {activeGuidance ? (
-                  <div className="mt-6 border-l border-[var(--line-dark)] pl-5">
-                    <p className="text-sm font-semibold">{activeGuidance.title}</p>
-                    <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">{activeGuidance.reason}</p>
-                    {activeGuidance.blockers.slice(0, 2).map((blocker) => (
-                      <p className="mt-3 text-xs leading-6 text-[var(--status-analyzing)]" key={blocker.code}>{blocker.title}: {blocker.explanation}</p>
-                    ))}
-                  </div>
-                ) : null}
-
-                <Link
-                  className="mt-6 inline-flex min-h-11 items-center gap-2 border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
-                  href={activeGuidance?.href ?? `/paths/${activeDefinition.id}`}
-                >
-                  Continue <ArrowRight className="size-3.5" />
-                </Link>
-
-                {paths.length > 1 ? (
-                  <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 border-t border-[var(--line-dark)] pt-5">
-                    {paths.slice(0, 4).map((path) => {
-                      const definition = getKlinikosPath(path.pathId);
-                      if (!definition) return null;
-                      return (
-                        <button
-                          className={`min-h-11 text-xs font-semibold transition-opacity hover:opacity-85 ${path.instanceId === activeSnapshot.instanceId ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"}`}
-                          key={path.instanceId}
-                          onClick={() => setSelectedInstanceId(path.instanceId)}
-                          type="button"
-                        >
-                          {definition.title}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="mt-7 border-y border-[var(--line-dark)] py-8">
-                <p className="text-sm font-semibold">Nothing is waiting for you to resume.</p>
-                <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">Use the command above when you want Klinikos to organize a new outcome.</p>
-              </div>
-            )}
-          </section>
-        </div>
-
-        <div className="mt-16 grid gap-10 border-y border-[var(--line-dark)] py-10 lg:grid-cols-3 lg:divide-x lg:divide-[var(--line-dark)]">
-          <section className="lg:pr-8" aria-labelledby="handled-title">
-            <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Already handled</p>
-            <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="handled-title">Work that moved.</h2>
-            <div className="mt-5 space-y-4">
-              {recentSignals.slice(0, 3).map((signal) => (
-                <Link className="block border-l border-[var(--status-resolved)] pl-4" href={`/paths/${signal.pathId}`} key={signal.id}>
-                  <span className="block text-xs font-semibold">{signal.label}</span>
-                  <span className="mt-1 block text-[var(--text-micro)] text-[var(--text-secondary)]">{relativeTime(signal.occurredAt, nowMs)}</span>
-                </Link>
-              ))}
-              {!recentSignals.length && completedAppointments.length ? (
-                <p className="text-xs leading-6 text-[var(--text-secondary)]">{completedAppointments.length} {completedAppointments.length === 1 ? "visit has" : "visits have"} completed in this schedule view.</p>
-              ) : null}
-              {!recentSignals.length && !completedAppointments.length ? (
-                <p className="text-xs leading-6 text-[var(--text-secondary)]">No recent completed work is recorded here yet.</p>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="lg:px-8" aria-labelledby="coming-up-title">
-            <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Coming up</p>
-            <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="coming-up-title">The next block.</h2>
-            <div className="mt-5 divide-y divide-[var(--line-dark)]">
-              {upcomingAppointments.slice(0, 3).map((appointment) => (
-                <button
-                  aria-expanded={focusedAppointmentId === appointment.id}
-                  className="flex w-full items-start gap-4 py-3 text-left first:pt-0"
-                  key={appointment.id}
-                  onClick={() => focusAppointment(appointment.id)}
-                  type="button"
-                >
-                  <CalendarClock className="mt-0.5 size-4 shrink-0 text-[var(--accent-signal)]" />
-                  <span className="min-w-0">
-                    <span className="block text-xs font-semibold">{appointment.time} · {appointment.patient}</span>
-                    <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type}</span>
-                  </span>
-                </button>
-              ))}
-              {!upcomingAppointments.length ? <p className="text-xs leading-6 text-[var(--text-secondary)]">Nothing else is scheduled in this view.</p> : null}
-            </div>
-          </section>
-
-          <section className="lg:pl-8" aria-labelledby="opportunity-title">
-            <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Opportunity</p>
-            {opportunity ? (
-              <>
-                <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="opportunity-title">{opportunity.title}</h2>
-                <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">{opportunity.body}</p>
-                <p className="mt-3 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">{opportunity.evidence}</p>
-                <Link className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]" href={opportunity.href}>
-                  {opportunity.action} <ArrowUpRight className="size-3.5" />
-                </Link>
-              </>
-            ) : (
-              <>
-                <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="opportunity-title">Nothing is open right now.</h2>
-                <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">
-                  Klinikos shows something here when a real record is waiting on a decision your role can make. It will stay empty rather than invent a reason to act.
-                </p>
-              </>
-            )}
-          </section>
-        </div>
-
-        <section className="mt-14" aria-labelledby="role-destinations-title">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">More when you need it</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[var(--tracking-tight)]" id="role-destinations-title">Your role, not the whole product.</h2>
-            </div>
-            <p className="max-w-md text-xs leading-6 text-[var(--text-secondary)]">Only the major destinations that make sense for this role stay visible here. Deeper tools remain available when context calls for them.</p>
-          </div>
-
-          <div className={`mt-7 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)] ${rail.length >= 3 ? "lg:grid lg:grid-cols-3 lg:divide-x lg:divide-y-0" : "sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0"}`}>
-            {rail.map((destination) => {
-              const Icon = railIcons[destination.key] ?? ClipboardList;
-              return (
-                <Link className="group flex min-h-28 items-start gap-4 py-6 sm:px-6 sm:first:pl-0 sm:last:pr-0" href={destination.href} key={destination.key}>
-                  <Icon className="mt-1 size-5 shrink-0 text-[var(--accent-signal)]" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">{destination.label}</span>
-                    <span className="mt-2 block text-xs leading-5 text-[var(--text-secondary)]">{destination.description}</span>
-                    {destination.live ? (
-                      // A counted zero is still worth stating — it separates "we looked
-                      // and there is nothing" from a destination we cannot count at all.
-                      // It just must not wear the accent colour, or an empty queue reads
-                      // from across the room like something demanding attention.
-                      <span
-                        className={`mt-3 block text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] ${
-                          destination.live.count > 0 ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"
-                        }`}
-                      >
-                        {destination.live.count} {destination.live.count === 1 ? destination.live.singular : destination.live.noun}
-                      </span>
-                    ) : null}
-                  </span>
-                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--text-secondary)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </Link>
               );
             })}
-          </div>
-        </section>
-      </section>
+          </nav>
+        </div>
+
+        <div ref={workspaceRef}>
+          {working ? (
+            <section aria-labelledby="workspace-title" className="mt-14 overflow-hidden rounded-[20px] border border-[var(--line-dark)]">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line-dark)] px-6 py-4">
+                <div className="flex flex-wrap items-baseline gap-4">
+                  <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">
+                    {organizationName} · {roleLabel(role)}
+                  </span>
+                  <h2 className="text-lg font-semibold tracking-[var(--tracking-tight)]" id="workspace-title">
+                    {phase === "ready" ? activeDefinition?.title ?? "One more detail" : "Working…"}
+                  </h2>
+                </div>
+                <button
+                  className="min-h-11 rounded-full border border-[var(--line-dark)] px-5 text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)] transition-opacity hover:opacity-80"
+                  onClick={reset}
+                  type="button"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid divide-y divide-[var(--line-dark)] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+                <div className="px-6 py-6">
+                  <div className="space-y-5">
+                    {transcript.map((entry) => (
+                      <div key={entry.id}>
+                        <p
+                          className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]"
+                          style={{ color: entry.speaker === "Klinikos" ? "var(--accent-intelligence)" : "var(--text-secondary)" }}
+                        >
+                          {entry.speaker}
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-[var(--text-primary)]">{entry.text}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {clarification ? (
+                    <div className="mt-6 rounded-[14px] border border-[var(--line-dark)] px-5 py-4">
+                      <p className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">One thing missing</p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{clarification}</p>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="px-6 py-6">
+                  {workspaceRows.length ? (
+                    <dl className="divide-y divide-[var(--line-dark)]">
+                      {workspaceRows.map((row) => (
+                        <div className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-baseline gap-4 py-3 first:pt-0" key={row.key}>
+                          <dt className="min-w-0 truncate text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">{row.label}</dt>
+                          <dd className="min-w-0 text-xs leading-6 text-[var(--text-primary)]">{row.value}</dd>
+                          <dd
+                            className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]"
+                            style={{ color: rowToneColor(row.tone) }}
+                          >
+                            {row.state}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className="text-xs leading-6 text-[var(--text-secondary)]">
+                      {phase === "ready"
+                        ? "Klinikos has not organized anything yet, because it still needs the detail on the left."
+                        : "Reading your request and resolving the next governed step."}
+                    </p>
+                  )}
+
+                  {activeGuidance?.href ? (
+                    <Link
+                      className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
+                      href={activeGuidance.href}
+                    >
+                      Open the next step
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line-dark)] px-6 py-4">
+                <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
+                  Nothing is executed from this surface
+                </span>
+                <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
+                  {activeGuidance?.state === "review_required" ? "Requires human review" : "Governed by your role"}
+                </span>
+              </div>
+            </section>
+          ) : (
+            <>
+              <p className="mt-14 text-center text-sm text-[var(--text-secondary)]">
+                {attentionCount
+                  ? `${attentionCount} ${attentionCount === 1 ? "item needs" : "items need"} a person right now.`
+                  : "Nothing on the schedule needs a person right now."}
+              </p>
+              <LivingHomeOperations
+                appointments={appointments}
+                canOpenPatientRecord={canOpenPatientRecord}
+                guidance={guidance}
+                onCount={setAttentionCount}
+                opportunity={opportunity}
+                paths={paths}
+                recentSignals={recentSignals}
+                role={role}
+              />
+            </>
+          )}
+        </div>
+      </div>
     </DsSurface>
   );
 }
