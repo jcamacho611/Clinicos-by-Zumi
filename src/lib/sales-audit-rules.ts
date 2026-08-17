@@ -20,12 +20,53 @@ export const salesAuditQualificationSchema = z.object({
   labs: z.boolean(),
   claims: z.boolean(),
   multiLocation: z.boolean(),
-  score: z.number().int().min(0).max(100),
-  status: z.enum(["QUALIFIED", "MORE INFORMATION REQUIRED", "DO NOT SELL AUDIT YET"]),
-  auditPrice: z.number().int().min(0).max(100_000),
 });
 
-export type SalesAuditQualification = z.infer<typeof salesAuditQualificationSchema>;
+export type SalesAuditQualificationInput = z.infer<typeof salesAuditQualificationSchema>;
+export type SalesAuditStatus = "QUALIFIED" | "MORE INFORMATION REQUIRED" | "DO NOT SELL AUDIT YET";
+export type SalesAuditQualification = SalesAuditQualificationInput & {
+  score: number;
+  status: SalesAuditStatus;
+  auditPrice: number;
+};
+
+export function calculateSalesAuditScore(input: SalesAuditQualificationInput) {
+  let score = 0;
+  score += Math.min(20, input.providers * 3 + input.locations * 4);
+  score += input.decisionMaker ? 15 : 0;
+  score += Math.min(15, (input.referrals ? 5 : 0) + (input.labs ? 5 : 0) + (input.claims ? 5 : 0));
+  score += input.insuranceMix !== "cash" ? 10 : 3;
+  score += Math.min(10, input.monthlyTech >= 5000 ? 10 : input.monthlyTech >= 2000 ? 7 : input.monthlyTech > 0 ? 4 : 0);
+  score += Math.min(10, input.knownLeakage >= 5000 ? 10 : input.knownLeakage > 0 ? 6 : 0);
+  score += input.locations > 1 || input.multiLocation ? 10 : input.providers >= 3 ? 6 : 2;
+  score += input.afterHours >= 10 ? 5 : input.afterHours > 0 ? 3 : 0;
+  score += input.revenueBand === "1m+" ? 5 : input.revenueBand === "500k-1m" ? 3 : 0;
+  return Math.min(100, score);
+}
+
+export function salesAuditStatusForScore(score: number): SalesAuditStatus {
+  if (score >= 70) return "QUALIFIED";
+  if (score >= 45) return "MORE INFORMATION REQUIRED";
+  return "DO NOT SELL AUDIT YET";
+}
+
+export function calculateSalesAuditPrice(input: SalesAuditQualificationInput) {
+  if (input.providers <= 1) return 750;
+  if (input.providers <= 5) return 1250;
+  if (input.providers <= 15) return 2500;
+  if (input.providers <= 30) return 4000;
+  return 5000;
+}
+
+export function evaluateSalesAuditQualification(input: SalesAuditQualificationInput): SalesAuditQualification {
+  const score = calculateSalesAuditScore(input);
+  return {
+    ...input,
+    score,
+    status: salesAuditStatusForScore(score),
+    auditPrice: calculateSalesAuditPrice(input),
+  };
+}
 
 export function buildSalesAuditNotes(input: SalesAuditQualification) {
   return [
@@ -41,6 +82,6 @@ export function buildSalesAuditNotes(input: SalesAuditQualification) {
     `Biggest operating frustration: ${input.biggestPain || "not recorded"}`,
     `Qualification score: ${input.score}/100; status: ${input.status}`,
     `Recommended audit price: $${input.auditPrice.toLocaleString()}`,
-    "Checkout uses the official Klinikos GoDaddy payment connector. Checkout launch is not payment proof; payment must be independently reconciled before the audit is marked paid.",
+    "Qualification score, status, and price are derived server-side from the saved prospect inputs. Checkout uses the official Klinikos GoDaddy payment connector. Checkout launch is not payment proof; payment must be independently reconciled before the audit is marked paid.",
   ].join("\n");
 }
