@@ -3,7 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { checkSalesIntakeRateLimit, recordSalesIntakeAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { getClinicSession } from "@/lib/auth/session";
-import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
+import { createCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { createPublicDemoReservation, listSalesDemoWorkspace } from "@/lib/repositories/sales-demo-repository";
@@ -37,15 +37,16 @@ export async function POST(request: Request) {
 
   try {
     const result = await createPublicDemoReservation(await request.json().catch(() => null), metadata);
-    let checkout: Awaited<ReturnType<typeof createGoDaddyCommercialCheckout>> | null = null;
+    let checkout: Awaited<ReturnType<typeof createCommercialCheckout>> | null = null;
     let checkoutNotice = "Your request is saved for human review before payment.";
 
-    // The $500 Clinic Operating Analysis has an exact configured GoDaddy paylink.
-    // Create the server-owned checkout intent before exposing that external link so
-    // a browser redirect can never be confused with verified payment.
+    // The Clinic Operating Analysis has one exact server-owned price. If live Stripe
+    // and its signed webhook are both configured, the processor-verified rail is
+    // selected. Otherwise the existing exact-value GoDaddy/manual-evidence rail stays
+    // available. Either way, a browser redirect never becomes payment truth.
     if (result.reservation.selectedOffer === "private_workflow_demo") {
       try {
-        checkout = await createGoDaddyCommercialCheckout({
+        checkout = await createCommercialCheckout({
           organizationId: result.reservation.salesOwnerOrganizationId,
           email: result.reservation.contactEmail,
           productKey: "operational_audit",
@@ -64,16 +65,19 @@ export async function POST(request: Request) {
               actorType: "system",
               eventType: "checkout_ready",
               toStatus: result.reservation.status,
-              note: "Klinikos created a server-owned checkout intent before exposing the configured GoDaddy payment page.",
+              note: "Klinikos created a server-owned checkout intent before exposing the selected external payment page.",
               metadata: {
                 checkoutIntentId: checkout.intentId,
                 provider: checkout.provider,
                 expectedAmountCents: checkout.expectedAmountCents,
+                processorVerificationAvailable: checkout.processorVerificationAvailable,
               },
             },
           }),
         ]);
-        checkoutNotice = "Your $500 analysis is reserved. Continue to the secure GoDaddy payment page; access is not marked paid until payment is reconciled.";
+        checkoutNotice = checkout.processorVerificationAvailable
+          ? "Your analysis is reserved. Continue to secure checkout; Klinikos marks it paid only after signed processor evidence arrives."
+          : "Your analysis is reserved. Continue to the secure payment page; access is not marked paid until payment is reconciled.";
       } catch {
         await db.$transaction([
           db.demoReservation.update({
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
     } else {
       checkoutNotice = result.reservation.selectedOffer === "founding_clinic_program"
         ? "Implementation pricing starts at the displayed amount and is confirmed after scope review. Klinikos will not send you to a payment page for the wrong amount."
-        : "This fixed-price next step is saved for review. It will open an exact-value checkout only when the matching payment link is configured.";
+        : "This fixed-price next step is saved for review. It will open an exact-value checkout only when the matching payment rail is configured.";
     }
 
     return NextResponse.json(
