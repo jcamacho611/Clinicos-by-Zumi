@@ -1,8 +1,8 @@
 # Klinikos External Dependency Matrix
 
-Status: `AUTHORITATIVE EXTERNAL-TRUTH INDEX`  
-Updated: 2026-08-14  
-Repository baseline at update: `main@4b2a5dc89f3dae7a175b2f8eda9f83f866b77de6`
+Status: `AUTHORITATIVE EXTERNAL-TRUTH INDEX`
+Updated: 2026-08-16 America/New_York
+Repository baseline at update: `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
 
 This is the operating inventory for services, APIs, healthcare networks, credentials, contracts, BAAs, cost ownership, and production-connection truth.
 
@@ -22,13 +22,13 @@ The purpose is to replace unnecessary clinic software with native Klinikos capab
 
 | Klinikos capability | Current/preferred rail | PHI posture | External gates | Variable-cost owner | Current truth |
 | --- | --- | --- | --- | --- | --- |
-| Public application hosting | Render | PHI depends on production approval/configuration | Hosting account, environment secrets, production security/BAA posture where required | Klinikos infrastructure | **Built deploy contract; newest external deployment must be verified** |
-| Public domain / DNS | GoDaddy + `klinikos.io` | No PHI by DNS itself | DNS/TLS/domain account | Klinikos | **Canonical product identity; verify current DNS/TLS/route behavior externally** |
+| Public application hosting | Render | PHI depends on production approval/configuration | Hosting account, environment secrets, production security/BAA posture where required | Klinikos infrastructure | **Verified service health in demo mode on 2026-08-16; exact deployed SHA and PHI posture remain unverified** |
+| Public domain / DNS | GoDaddy + `klinikos.io` | No PHI by DNS itself | DNS/TLS/domain account | Klinikos | **`www.klinikos.io/api/health` returned HTTP 200 through Cloudflare/Render on 2026-08-16; exact deploy SHA remains unverified** |
 | Clinic Operating Analysis checkout | GoDaddy paylink | Keep PHI out of checkout payload | Active paylink/account; reconciliation evidence | Buyer/clinic | **Built checkout intent + configured paylink; settlement remains separate** |
 | Commercial payment verification | Manual evidence/reconciliation today; future processor/webhook/API verification | Keep PHI out of processor metadata | Evidence source, account access, processor contract | Buyer/clinic transaction | **Built internal evidence/activation model; Manual fallback available** |
 | Direct card/payment processor | Stripe or equivalent | Keep PHI out of metadata | Production account, webhook/API credentials, security/commercial review | Clinic/transaction economics | **Adapter ready / Pending connection** |
 | Grid marketplace payouts | Stripe Connect or equivalent platform rail | Keep PHI out of payout metadata | Platform terms, connected-account onboarding, credentials, legal/commercial review | Transaction economics/platform fee | **Pending connection** |
-| AI Gateway / Klinikos Intelligence | Provider-neutral; approved OpenAI/Anthropic/Azure/Gemini/self-hosted provider as configured | PHI prohibited unless exact provider/workload is approved | Provider account, approved model/config, contract/BAA where needed, PHI egress approval | Prefer plan allowance/customer-funded measured usage | **Gateway built; exact production provider state must be verified per environment** |
+| AI Gateway / Klinikos Intelligence | Provider-neutral; Cloudflare Workers AI, approved OpenAI configuration, or self-hosted provider as configured | PHI prohibited unless exact provider/workload is approved | Provider account, approved model/config, contract/BAA where needed, PHI egress approval | Prefer plan allowance/customer-funded measured usage | **Gateway and Cloudflare adapter built; production health reported `liveIntegrations: false`, so live inference is not verified** |
 | Public web research/tooling | Approved research-capable provider/tool | Public data only by default | Tool/provider configuration and policy | Klinikos or customer-funded intelligence usage | **Architecture built; external availability environment-specific** |
 | Grid browser geolocation | Browser Geolocation API | Raw visitor location should not become public inventory/analytics by default | User permission + secure context | No direct API COGS | **Built: explicit opt-in only** |
 | Grid keyless map rendering | OpenStreetMap embed/fallback | Avoid PHI; public resource coords are privacy-reduced | Public map availability/terms | Minimal/shared infrastructure | **Built fallback** |

@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-16.2`
+Version: `2026-08-16.3`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -14,6 +14,17 @@ Klinikos is the operating and opportunity infrastructure for the healthcare life
 It is not reducible to an EHR, CRM, clinic app, staffing marketplace, education product, patient portal, billing product, or AI assistant.
 
 The detailed newest ecosystem model is authoritative in `docs/KLINIKOS_ECOSYSTEM_CANON.md`.
+
+Specialist law is defined in:
+
+- `docs/GRID_CANON.md`;
+- `docs/ZUMI_CANON.md`;
+- `docs/EDU_CANON.md`;
+- `docs/CLINIC_OS_CANON.md`;
+- `docs/PORTAL_AND_ROLE_CANON.md`;
+- `docs/FINANCIAL_OS_CANON.md`.
+
+Repository-history and recovery decisions are recorded in `docs/BRANCH_LEDGER.md`; roadmap state is recorded in `docs/RECOVERY_AND_COMPLETION_ROADMAP.md`.
 
 ## 2. Wiring law
 
