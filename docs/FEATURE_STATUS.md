@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@5b47da0fb36bcde8dd249f3446281706ec5c2f6b`
-Latest local candidate: neutral Grid provider fixtures on current main with type-check, lint, and 86 test files / 633 tests green; exact-head CI pending.
+Current audited main: `main@cf4130b3ce4db5effde76d61d368b135da01c715`
+Latest local candidate: neutral Grid provider fixtures reconciled with current main with type-check, lint (one unrelated warning), and 87 test files / 636 tests green; exact-head CI pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
