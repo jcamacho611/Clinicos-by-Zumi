@@ -3,6 +3,7 @@ export const navigation = [
     label: "Home",
     items: [
       { href: "/dashboard", label: "Home", icon: "LayoutDashboard", description: "Your daily overview, priorities, and shortcuts." },
+      { href: "/zumi", label: "Zumi", icon: "Sparkles", description: "Talk, research, brief, and coordinate governed work with Klinikos Intelligence." },
       { href: "/front-desk", label: "Front desk", icon: "Headphones", description: "Appointments, arrivals, readiness, and patient requests." },
       { href: "/provider", label: "Provider workspace", icon: "Stethoscope", description: "Clinical priorities, encounters, and review work." },
     ],
@@ -62,8 +63,6 @@ export const navigation = [
       { href: "/tasks", label: "Tasks", icon: "ListChecks", description: "See assigned work and what needs action next." },
       { href: "/escalations", label: "Escalations", icon: "Siren", description: "Review work that requires human attention." },
       { href: "/inventory", label: "Inventory", icon: "Boxes", description: "Track supplies, stock, and custody." },
-      { href: "/ai-assistants", label: "Zumi Copilot", icon: "Sparkles", description: "Use governed assistance across clinic workflows." },
-      { href: "/voice-assistant", label: "Talk to Zumi", icon: "AudioLines", description: "Use voice to navigate and work with Klinikos." },
     ],
   },
   {
@@ -87,6 +86,7 @@ export const navigation = [
 
 export const workspaceMeta: Record<string, { title: string; eyebrow: string }> = {
   dashboard: { title: "Home", eyebrow: "Your Klinikos workspace" },
+  zumi: { title: "Zumi", eyebrow: "Klinikos Intelligence" },
   "front-desk": { title: "Front desk", eyebrow: "Today at a glance" },
   provider: { title: "Provider workspace", eyebrow: "Clinical priority queue" },
   patients: { title: "Patient charts", eyebrow: "Unified record" },
