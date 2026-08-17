@@ -140,7 +140,7 @@ export function SalesIntakeForm({ defaultOffer = "private_workflow_demo" }: { de
         {submission.checkoutUrl ? (
           <div className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.06] p-5">
             <p className="text-xs font-black text-emerald-100">Your selected $500 analysis is locked to this checkout intent.</p>
-            <p className="mt-2 text-[11px] leading-5 text-slate-400">Opening GoDaddy does not mark the purchase paid. Klinikos waits for verified or reconciled payment evidence before treating the engagement as paid.</p>
+            <p className="mt-2 text-[11px] leading-5 text-slate-400">Opening or returning from the secure payment page does not mark the purchase paid. Klinikos waits for signed processor evidence or authorized reconciliation before treating the engagement as paid.</p>
             <a className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-xs font-black text-slate-950 transition hover:bg-emerald-200" href={submission.checkoutUrl}>Continue to secure payment <ArrowRight className="size-4" /></a>
           </div>
         ) : (

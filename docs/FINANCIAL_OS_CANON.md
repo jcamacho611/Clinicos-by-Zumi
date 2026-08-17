@@ -42,7 +42,7 @@ Do not hard-code one universal Grid percentage. Fee and payout policy varies by 
 
 ## 5. Commercial entry
 
-Current paid-entry truth supports server-owned commercial intent and GoDaddy checkout launch with manual evidence/reconciliation. Returning from GoDaddy does not activate paid status. Implementation and recurring software entitlement are separate from an analysis purchase unless the offer says otherwise.
+Current paid-entry truth supports server-owned commercial intent and the existing GoDaddy checkout with manual evidence/reconciliation. The current candidate adds Stripe-hosted Checkout for the one-time Clinic Operating Analysis only when signed live-webhook verification is configured. Returning from either rail does not activate paid status. Implementation and recurring software entitlement are separate from an analysis purchase unless the offer says otherwise.
 
 ## 6. Grid economics
 
@@ -60,7 +60,7 @@ Unknown vendor cost must not be labeled zero-cost or unlimited.
 
 ## 8. Current truth
 
-Repository evidence includes commercial checkout intents, payment evidence/entitlement separation, manual reconciliation, Grid fee policies, obligations, transaction/fulfillment state, platform finance views, and automated truth tests. Direct processor settlement and marketplace payouts remain pending connection.
+Repository evidence includes commercial checkout intents, payment evidence/entitlement separation, manual reconciliation, Grid fee policies, obligations, transaction/fulfillment state, platform finance views, and automated truth tests. The current candidate implements direct Stripe customer-payment verification, failure and refund evidence; production endpoint configuration and a real live exercise remain pending. Marketplace payouts remain a separate Stripe Connect dependency.
 
 ## 9. Reporting and audit
 

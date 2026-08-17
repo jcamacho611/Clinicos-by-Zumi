@@ -1,8 +1,8 @@
 # KLINIKOS — RECOVERY & COMPLETION ROADMAP
 
-Version: `2026-08-16.4`
+Version: `2026-08-17.1`
 Status: `ACTIVE EXECUTION ROADMAP`
-Canonical base: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
+Canonical base: `main@a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
 
 ## 1. Recovery outcome so far
 
@@ -12,7 +12,7 @@ Canonical base: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
 - PR #74 was confirmed already merged; its local divergent commits were not force-pushed.
 - PR #95 was independently reviewed, verified against the provider contract, and merged.
 - PR #96 was corrected, updated with latest main, connected to the actual design archive, passed the full gate, and merged.
-- Current main is `d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`, including independently merged native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, native internal messaging, neutral Grid fixtures, stored billing truth, Zumi/Cloudflare privacy hardening, and Grid Marble/map plus universal professional-intake corrections through PR #111.
+- Current main is `a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`, including independently merged native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, native internal messaging, neutral Grid fixtures, stored billing truth, Zumi/Cloudflare privacy hardening, Grid Marble/map plus universal professional-intake corrections, the production-environment truth index, the approved Living Home reference lock, and OpenFreeMap primary Grid mapping through PR #114.
 - Current main's `verify` and `deploy-contract` checks completed successfully.
 - Every remote branch present during the audit is classified in `docs/BRANCH_LEDGER.md`.
 - PR #97's commercial and federal-evidence blockers were remediated in focused follow-up PR #100 and are now on main.
@@ -29,7 +29,7 @@ Canonical base: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
 | Scope and complexity | 4/10 | RED | The product spans 45 logical engines, healthcare operations, Grid, EDU, portals, finance, AI, network, and 100+ historical branches. Completion risk is dominated by breadth and integration debt. |
 | Context hygiene | 7/10 | YELLOW | Source precedence and status vocabulary are explicit, but the feature/external baselines were stale and specialist canons/branch ledger were missing before this recovery. |
 | Safety and truth | 8/10 | GREEN | Tenant/RBAC, PHI-egress, payment truth, eligibility, concurrency, audit, and adversarial journeys are unusually strong. Real-PHI posture and external vendor approval remain external gates. |
-| Workflow and verification | 8.5/10 | GREEN | CI validates fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current main contains 52 migrations and the Living Home candidate passes all 643 tests plus five responsive viewport checks. Deploy-SHA evidence remains a gap. |
+| Workflow and verification | 8.5/10 | GREEN | CI validates fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current main contains 52 migrations and the Stripe candidate contains a 53rd additive migration plus 11 journeys. Exact-head CI and deploy-SHA evidence remain gates. |
 
 Overall: **6.6/10 — YELLOW.** The application has real governed depth and strong verification. The highest risk is not missing concept work; it is breadth, branch drift, stale truth indexes, and partially connected end-user journeys.
 
@@ -41,7 +41,7 @@ Overall: **6.6/10 — YELLOW.** The application has real governed depth and stro
 | Provider/participant enrollment | Built/partial: future-role credential-aware professional path, generalized external participant/resource enrollment, and neutral role-labeled contractor fixtures. | Remove approved-network-code dependence for independent production enrollment, unify readiness/status UX, and connect external verification. |
 | Location/resource owner | Built/partial: capacity/resource intake, review, availability, public browse, request/offer path. | Stronger publication/readiness guidance, richer map/origin UX, real pilot inventory. |
 | Organization demand | Built/partial: need creation, matching/offers, transaction state. | Effortless same-surface demand completion and auto/recurring match behavior. |
-| Grid money | Built internal truth: fee policy, obligations, fulfillment holds, manual payment evidence, payout state rules. | Regulated processor/connected-account onboarding and settlement evidence. |
+| Grid money | Built internal truth: fee policy, obligations, fulfillment holds, manual payment evidence, payout state rules. The current Stripe candidate adds verified customer-payment evidence only. | Stripe live webhook registration/exercise and separate Stripe Connect connected-account/payout onboarding. |
 | Zumi | Gateway, safety, Cloudflare/OpenAI/self-hosted adapter architecture built. | Production non-PHI provider activation, quality evaluation, streaming/latency UX. |
 | Clinic OS | Broad real internal workflows; partial specialty/operator depth. | External clinical/claims/communications connections and focused sellable journey polish. |
 | EDU | Foundation, scenarios, submissions, grading/release rules built/partial. | Instructor UX, competency/certificate write path, placement composition, institutional/legal gates. |

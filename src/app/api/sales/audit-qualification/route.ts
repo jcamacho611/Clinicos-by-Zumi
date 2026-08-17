@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
-import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
+import { createPreferredCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { buildSalesAuditNotes, evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
           organizationId: session.organizationId,
           category: "lead_follow_up",
           title: `Confirm audit payment · ${input.clinic}`,
-          details: `lead:${lead.id} Confirm GoDaddy payment externally, then reconcile it into the Klinikos commercial ledger before beginning the audit. Do not infer payment from checkout launch.`,
+          details: `lead:${lead.id} Confirm verified payment evidence reached the Klinikos commercial ledger before beginning the audit. Do not infer payment from checkout launch or browser return.`,
           ownerId: session.userId,
           priority: "high",
           riskLevel: "NEEDS_STAFF",
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
           actorId: session.userId,
           eventType: "audit_checkout_started",
           toStatus: lead.status,
-          note: "Qualified prospect saved before external GoDaddy checkout.",
+          note: "Qualified prospect saved before external checkout.",
           metadata: { score: input.score, auditPrice: input.auditPrice, paymentStatus: "pending_external_confirmation", taskId: task.id },
         },
       });
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       return { leadId: lead.id, taskId: task.id };
     });
 
-    const checkout = await createGoDaddyCommercialCheckout({
+    const checkout = await createPreferredCommercialCheckout({
       organizationId: session.organizationId,
       email: input.email,
       productKey: "operational_audit",
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         leadId: result.leadId,
         actorId: session.userId,
         eventType: "audit_checkout_intent_created",
-        note: "Klinikos created a server-owned commercial checkout intent before opening the GoDaddy payment rail.",
+        note: "Klinikos created a server-owned commercial checkout intent before opening the selected payment rail.",
         metadata: {
           checkoutIntentId: checkout.intentId,
           provider: checkout.provider,

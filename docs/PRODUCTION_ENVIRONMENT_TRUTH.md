@@ -1,8 +1,8 @@
 # KLINIKOS — PRODUCTION ENVIRONMENT TRUTH
 
 Status: `AUTHORITATIVE RUNTIME-CONFIGURATION INDEX`
-Updated: `2026-08-16T23:52:00-04:00`
-Repository baseline: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
+Updated: `2026-08-17 America/New_York`
+Repository baseline: `main@a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
 
 This file records what is known about production environment configuration without storing or exposing secret values.
 
@@ -21,9 +21,10 @@ This file records what is known about production environment configuration witho
 | Capability | Environment variables / evidence | Current truth | Next gate |
 | --- | --- | --- | --- |
 | Application/database runtime | `DATABASE_URL`, `AUTH_SECRET`, seed/demo credentials were previously present in the Render service UI; exact values are secret | `OPERATOR-REPORTED / PREVIOUSLY OBSERVED PRESENT` | Continue runtime health, auth, backup, and security verification |
-| Stripe live API access | `STRIPE_SECRET_KEY` | `OPERATOR-REPORTED CONFIGURED WITH LIVE-MODE SECRET` on 2026-08-16 | Build/verify real Stripe checkout + webhook evidence before calling direct processor flow live |
-| Stripe test API access | `STRIPE_TEST_SECRET_KEY` | Founder reported deployment after instruction to preserve the test credential separately; do not rely on it unless runtime/config verification confirms presence | Add explicit test-mode use only where needed; production code must never silently fall back to test mode |
-| Stripe webhook verification | `STRIPE_WEBHOOK_SECRET` | `PENDING` | Implement webhook endpoint, register live endpoint in Stripe, store `whsec_...` only in Render, verify signatures/idempotency/events |
+| Stripe live API access | `STRIPE_SECRET_KEY` | `OPERATOR-REPORTED CONFIGURED WITH LIVE-MODE SECRET` on 2026-08-16 | Current candidate uses it only when the signed live-webhook secret is also configured; do not call the rail verified live until an actual payment is exercised |
+| Stripe test API access | `STRIPE_TEST_SECRET_KEY` | Founder reported deployment after instruction to preserve the test credential separately; do not rely on it unless runtime/config verification confirms presence | Test mode is explicit and cannot fall back into the live checkout or webhook path |
+| Stripe test webhook verification | `STRIPE_TEST_WEBHOOK_SECRET` | `PENDING / OPTIONAL FOR EXPLICIT TEST-MODE WORK` | Register a separate Stripe test-mode endpoint only when end-to-end test-mode webhook work is needed; never reuse the live signing secret |
+| Stripe webhook verification | `STRIPE_WEBHOOK_SECRET` | Endpoint code is `BUILT IN CURRENT CANDIDATE`; production secret remains `PENDING` | Register `https://klinikos.io/api/webhooks/stripe` for only the supported live events, store its signing secret only in Render, then exercise signature/idempotency/amount/currency/mode evidence |
 | Stripe Connect / Grid payouts | `STRIPE_CONNECT_CLIENT_ID` plus Connect platform configuration | `PENDING` | Platform onboarding, legal/commercial review, connected-account flow, payout evidence/reconciliation |
 | Stripe publishable key | No current required production variable in the existing server-owned payment contract | `NOT REQUIRED YET` | Add a dedicated public variable only if/when Stripe.js/Elements requires it; never expose `sk_...` |
 | Cloudflare Workers AI | `ZUMI_PROVIDER=cloudflare`; `ZUMI_CLOUDFLARE_ACCOUNT_ID`; `ZUMI_CLOUDFLARE_API_TOKEN`; model configured as `@cf/meta/llama-3.1-8b-instruct-fast`; gateway ID may remain blank and use gateway `default` | `OPERATOR-REPORTED CONFIGURED`; PR #110 hardening merged; live inference still requires runtime proof | Run deliberate non-PHI production inference test and verify provider/model/failure behavior |
@@ -44,7 +45,9 @@ Required live-money chain:
 
 `SERVER-OWNED PRODUCT / AMOUNT → STRIPE CHECKOUT OR PAYMENT INTENT → CUSTOMER PAYMENT → SIGNED STRIPE WEBHOOK / APPROVED PROCESSOR EVIDENCE → IDEMPOTENT PAYMENT-EVIDENCE RECORD → ENTITLEMENT / BOOKING POLICY → AUDIT / RECONCILIATION`
 
-Until the webhook/evidence chain is implemented and verified, current manual GoDaddy/Stripe reconciliation paths remain manual-but-truthful rather than automated settlement truth.
+The current candidate implements dynamic-method Stripe-hosted Checkout for the one-time Clinic Operating Analysis, raw-body signature verification, pending and asynchronous completion/failure evidence, byte-identical replay enforcement, amount/currency/tenant/live-mode correlation, out-of-order refund truth, and a truthful payment-return page through the shared Financial OS. It deliberately keeps using the GoDaddy/manual-reconciliation path until the live webhook signing secret is configured.
+
+Repository and CI evidence do not establish live settlement. The Stripe rail remains `BUILT / PENDING CONNECTION`, not `VERIFIED LIVE`, until the candidate is deployed, the live endpoint is registered, the Render signing secret is configured, and one intentional live-mode payment plus signed webhook is observed and reconciled.
 
 ## Communications law
 

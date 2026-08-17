@@ -86,9 +86,9 @@ export default function FoundingClinicPage() {
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <Card dark>
             <Badge tone="mapping">Payment rail</Badge>
-            <h2 className="mt-4 text-xl font-extrabold">GoDaddy checkout is available after the correct commercial intent exists.</h2>
+            <h2 className="mt-4 text-xl font-extrabold">Secure checkout is available after the correct commercial intent exists.</h2>
             <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>
-              Klinikos first captures the clinic, buyer, selected engagement, and expected amount. The server then creates an auditable checkout intent before the configured GoDaddy payment rail opens. Opening or returning from checkout is never proof of payment.
+              Klinikos first captures the clinic, buyer, selected engagement, and expected amount. The server then creates an auditable checkout intent before the configured payment rail opens. Stripe is used only with signed-webhook verification; the existing GoDaddy path remains available with authorized reconciliation. Opening or returning from checkout is never proof of payment.
             </p>
             <Link className="mt-5 inline-flex min-h-11 items-center gap-2 px-5 text-xs font-extrabold" href="/sales" style={{ background: "var(--gold-300)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}>
               Start qualification <ArrowRight className="size-4" aria-hidden="true" />

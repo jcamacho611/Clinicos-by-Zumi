@@ -32,26 +32,29 @@ Each journey owns its fixtures, cleans up after itself where applicable, and exi
 
 ## Current automated journeys
 
-The current runner executes **10** journeys in this order:
+The current candidate runner executes **11** journeys in this order:
 
 | Order | File | Proves |
 | --- | --- | --- |
 | 1 | `fresh-deploy-journey.ts` | An empty PostgreSQL database can receive every committed migration, the required tables exist, `migrate deploy` is idempotent, first real work succeeds, and restarted code can read persisted state. |
 | 2 | `commercial-journey.mts` | Checkout/payment evidence and entitlement are separate facts; unverified evidence cannot activate service; verified evidence can be reconciled idempotently; browser-return truth is insufficient. |
-| 3 | `activation-journey.mts` | A paid buyer can progress through verified commercial evidence, subscription/entitlement, organization provisioning, role/session setup, and first useful Klinikos entry without treating payment alone as authorization. |
-| 4 | `operations-journey.mts` | Appointment/operational risk produces real work, no unavailable communication connector is falsely represented as having sent anything, human resolution closes the action, and the lifecycle is audited. |
-| 5 | `grid-journey.mts` | Need → match/offer → acceptance → reservation → fulfillment/financial state respects eligibility and ownership; reservations cannot precede acceptance or be duplicated. |
-| 6 | `grid-trust-journey.mts` | Disputes and safety incidents are distinct governed records, both can hold a reservation, duplicates/cross-tenant misuse are refused, and resolution language never invents payout/suspension facts. |
-| 7 | `zumi-journey.ts` | Zumi degrades truthfully when a provider is unavailable; deterministic prohibitions and RBAC survive provider availability; founder breadth does not widen authorization; PHI does not cross an unapproved boundary; unevidenced governed recommendations are dropped. |
-| 8 | `tenant-isolation-journey.mts` | Adversarial tenant A cannot read or mutate tenant B patient/list/audit/commercial/Grid state; tenant A cleanup does not damage tenant B. |
-| 9 | `role-routing-journey.ts` | Owner/admin/front desk/provider/clinical/case/viewer/patient/Grid/student roles reach useful allowed surfaces while route guards/session audiences prevent privilege crossover. |
-| 10 | `failure-recovery-journey.ts` | Retries, duplicate requests, interrupted flows, and simultaneous reservations fail safely; a scarce resource gets one winner; the loser leaves no partial state; an idempotent retry returns the same durable result. |
+| 3 | `stripe-payment-journey.mts` | Signed-normalized Stripe evidence reaches the real provider-neutral tables; amount, currency, tenant, Checkout Session and live/test mode mismatches fail; an identical replay is idempotent while an event-ID collision with different evidence is refused; failure remains unpaid; refund-before-success ordering preserves final reversal truth; migration 53 accepts populated legacy processor evidence without inventing a historical mode. |
+| 4 | `activation-journey.mts` | A paid buyer can progress through verified commercial evidence, subscription/entitlement, organization provisioning, role/session setup, and first useful Klinikos entry without treating payment alone as authorization. |
+| 5 | `operations-journey.mts` | Appointment/operational risk produces real work, no unavailable communication connector is falsely represented as having sent anything, human resolution closes the action, and the lifecycle is audited. |
+| 6 | `grid-journey.mts` | Need → match/offer → acceptance → reservation → fulfillment/financial state respects eligibility and ownership; reservations cannot precede acceptance or be duplicated. |
+| 7 | `grid-trust-journey.mts` | Disputes and safety incidents are distinct governed records, both can hold a reservation, duplicates/cross-tenant misuse are refused, and resolution language never invents payout/suspension facts. |
+| 8 | `zumi-journey.ts` | Zumi degrades truthfully when a provider is unavailable; deterministic prohibitions and RBAC survive provider availability; founder breadth does not widen authorization; PHI does not cross an unapproved boundary; unevidenced governed recommendations are dropped. |
+| 9 | `tenant-isolation-journey.mts` | Adversarial tenant A cannot read or mutate tenant B patient/list/audit/commercial/Grid state; tenant A cleanup does not damage tenant B. |
+| 10 | `role-routing-journey.ts` | Owner/admin/front desk/provider/clinical/case/viewer/patient/Grid/student roles reach useful allowed surfaces while route guards/session audiences prevent privilege crossover. |
+| 11 | `failure-recovery-journey.ts` | Retries, duplicate requests, interrupted flows, and simultaneous reservations fail safely; a scarce resource gets one winner; the loser leaves no partial state; an idempotent retry returns the same durable result. |
 
 ## What is not fully automated here
 
 Production readiness is not a single journey because some facts live outside the repository: deployment host state, DNS/TLS, BAAs/contracts, external vendor credentials, real settlement/payouts, production monitoring, and independent browser/device behavior.
 
 Browser/mobile QA is therefore still a separate release gate even though responsive code is covered by build/tests.
+
+Stripe signature verification is covered separately at the Next.js webhook boundary with the official Stripe library and raw request bodies. The database journey starts only after that normalization boundary and proves the durable financial consequences; neither layer substitutes for the other.
 
 Likewise, a green journey does not establish regulatory compliance or that an external vendor connection is production-approved.
 
