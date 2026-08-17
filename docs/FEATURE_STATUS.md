@@ -1,8 +1,9 @@
 # Klinikos Feature Status
 
-Status: `IMPLEMENTATION TRUTH INDEX`  
-Last verified merged baseline: `main@4b2a5dc89f3dae7a175b2f8eda9f83f866b77de6`  
-Verified: 2026-08-14
+Status: `IMPLEMENTATION TRUTH INDEX`
+Current audited main: `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
+Latest exact green candidate: PR #96 head `31592d05e46e3c37bd91e5f3044ebd8595ab9f0c`
+Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
 
@@ -39,6 +40,8 @@ The exact final candidate for PR #74 passed before merge:
 | Exact Render deploy-contract | Green |
 
 PR #72’s exact final head also passed the same Quality gate before merge.
+
+PR #96's exact final head passed Prisma generation/validation, all 51 fresh PostgreSQL migrations, TypeScript, lint, 604 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as current main. The merge commit's push Quality gate also completed successfully.
 
 ## Public / customer entry
 
@@ -202,7 +205,8 @@ Redirect state is never payment evidence.
 | Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |
 | Missing `.next` preflight | **BUILT** | Startup fails with actionable contract message. |
 | Exact deploy-contract CI | **BUILT** | Production install/build/start path runs before merge. |
-| External production deployment of newest `main` | **VERIFY EXTERNALLY** | Must be checked from actual host/domain/login/browser journey. |
+| External production service health | **VERIFIED LIVE — DEMO MODE** | On 2026-08-16, `www.klinikos.io/api/health` and `zumi.onrender.com/api/health` returned HTTP 200. Payload reported `mode: demo`, `databaseConfigured: true`, `liveIntegrations: false`. |
+| Exact deployed commit equals newest `main` | **VERIFY EXTERNALLY** | Health does not expose a deploy SHA; repository/GitHub success is not proof Render is serving the same commit. |
 
 ## External infrastructure truth
 
@@ -210,7 +214,8 @@ Redirect state is never payment evidence.
 | --- | --- | --- |
 | Production database migrations after Aug 12 incident | **RECOVERED** | Failed Grid migration record was rolled back and corrected migration subsequently applied. |
 | Neon HIPAA project mode | **NOT VERIFIED AS ENABLED** | Last infrastructure inspection reported `hipaa: false`; do not infer legal compliance from code. |
-| Production app latest release | **VERIFY EXTERNALLY** | Repository status is not deploy proof. |
+| Production service availability | **VERIFIED LIVE — DEMO MODE** | Domain and Render health returned HTTP 200 on 2026-08-16. |
+| Production app exact latest release | **VERIFY EXTERNALLY** | No deployment SHA was exposed by the health contract. |
 
 ## Claims Klinikos does not make
 
