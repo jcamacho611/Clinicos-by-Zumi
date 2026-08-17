@@ -1,6 +1,6 @@
 # KLINIKOS — ECOSYSTEM CANON
 
-Version: `2026-08-16.1`
+Version: `2026-08-16.2`
 Status: `AUTHORITATIVE PRODUCT-DIRECTION CANON`
 
 This document captures the newest product architecture and supersedes narrower interpretations of Klinikos as clinic software, a marketplace, an education product, or an AI assistant. Runtime/code/schema/tests remain authoritative for what is actually implemented today.
@@ -27,6 +27,8 @@ Major engines include:
 - Events / Audit / Provenance
 
 These are not separate products glued together. They are interoperating engines of one ecosystem.
+
+Specialist boundaries are defined in `GRID_CANON.md`, `ZUMI_CANON.md`, `EDU_CANON.md`, `CLINIC_OS_CANON.md`, `PORTAL_AND_ROLE_CANON.md`, and `FINANCIAL_OS_CANON.md`.
 
 ## 2. Wiring definition
 

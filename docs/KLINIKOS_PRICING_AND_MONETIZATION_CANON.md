@@ -1,9 +1,11 @@
 # KLINIKOS — PRICING & MONETIZATION CANON
 
-Version: `2026-08-16.1`
+Version: `2026-08-16.2`
 Status: `AUTHORITATIVE COMMERCIAL DIRECTION`
 
 This document defines the current commercial architecture. It does **not** assert that every product, connector, fee model, or price is live. Code/runtime/payment evidence governs actual sellability. If public pricing code conflicts with this document, fix the conflict deliberately rather than silently claiming one is current.
+
+Shared payment, obligation, payout, settlement, and reconciliation law is defined in `docs/FINANCIAL_OS_CANON.md`.
 
 ## 1. Commercial thesis
 

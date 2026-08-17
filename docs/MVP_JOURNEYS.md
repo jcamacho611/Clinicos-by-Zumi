@@ -88,3 +88,5 @@ On 2026-08-14, the exact final Grid MVP candidate (`740721959cbd3aa180763ebc7725
 The exact final public Living Home candidate (`4f6d5f464f8ce85f15ce1a6ae9548105f058e950`) also passed the full Quality gate before merging as `2b570dd912633290f63cb7e412b56e3c7d107c7b`.
 
 These checks prove the repository candidates. They do not by themselves prove that the newest `main` commit has completed deployment on the external production host.
+
+On 2026-08-16 America/New_York, PR #96 exact head `31592d05e46e3c37bd91e5f3044ebd8595ab9f0c` also passed the complete Quality workflow: fresh database migration, type-check, lint, 604 automated tests, all ten PostgreSQL-backed MVP journeys, production build/start smoke, and the exact Render deploy contract. It merged as `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`; that merge commit's push Quality gate also completed successfully.

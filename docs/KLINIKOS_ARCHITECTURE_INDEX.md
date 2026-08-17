@@ -18,9 +18,10 @@ When sources conflict, use this order:
 7. `docs/FEATURE_STATUS.md` for capability status.
 8. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
 9. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
-10. Current specialist specifications.
-11. Constitution/Master Canon for deeper invariants not superseded above.
-12. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
+10. `docs/GRID_CANON.md`, `docs/ZUMI_CANON.md`, `docs/EDU_CANON.md`, `docs/CLINIC_OS_CANON.md`, `docs/PORTAL_AND_ROLE_CANON.md`, and `docs/FINANCIAL_OS_CANON.md` for specialist domain law.
+11. Current specialist specifications.
+12. Constitution/Master Canon for deeper invariants not superseded above.
+13. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
 
 A more detailed old document does not outrank a newer authoritative correction.
 
@@ -34,7 +35,8 @@ A more detailed old document does not outrank a newer authoritative correction.
 6. Read `FEATURE_STATUS.md` and relevant code/tests before claiming something is built.
 7. Read `EXTERNAL_DEPENDENCY_MATRIX.md` before claiming an external rail is connected.
 8. Read the relevant specialist spec and journey evidence.
-9. Resolve conflicts explicitly rather than silently choosing old material.
+9. For recovery work, read `BRANCH_LEDGER.md` and `RECOVERY_AND_COMPLETION_ROADMAP.md`.
+10. Resolve conflicts explicitly rather than silently choosing old material.
 
 ## Current canonical thesis
 
@@ -169,6 +171,41 @@ No new strategic canon changes a feature's implementation status automatically.
 - `src/lib/grid/`
 - Grid repositories/APIs/migrations
 
+Authority: `docs/GRID_CANON.md`.
+
+### Zumi / Klinikos Intelligence
+
+- `src/features/zumi/`
+- `src/app/api/zumi/`
+- governed provider, conversation, memory, redaction, entitlement, and audit services
+
+Authority: `docs/ZUMI_CANON.md`.
+
+### EDU
+
+- `src/app/edu/`
+- `src/app/api/edu/`
+- `src/lib/edu/`
+- education models and journeys
+
+Authority: `docs/EDU_CANON.md`.
+
+### Clinic OS, portals, and roles
+
+- `src/app/(platform)/`
+- `src/app/portal/`
+- `src/lib/auth/`
+- clinic/patient/domain repositories and APIs
+
+Authority: `docs/CLINIC_OS_CANON.md` and `docs/PORTAL_AND_ROLE_CANON.md`.
+
+### Financial OS
+
+- commercial/payment/entitlement services
+- Grid fee, obligation, settlement, and payout repositories
+
+Authority: `docs/FINANCIAL_OS_CANON.md`.
+
 ### Patient / Clinic / EDU / Intelligence
 
 Follow the current route/component/repository/service families. Do not infer external production connectivity from the existence of an adapter or internal model.
@@ -222,5 +259,7 @@ Use adapters, route definitions, shared services and events to evolve toward eco
 - Implementation changes → `FEATURE_STATUS`.
 - External connection changes → `EXTERNAL_DEPENDENCY_MATRIX`.
 - End-to-end evidence → `MVP_JOURNEYS`.
+- Branch/recovery classification → `BRANCH_LEDGER`.
+- Prioritized completion order → `RECOVERY_AND_COMPLETION_ROADMAP`.
 
 Preserve git history. Do not rewrite roadmap work as completed.
