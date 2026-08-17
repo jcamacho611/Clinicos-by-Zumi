@@ -202,14 +202,15 @@ export async function POST(request: Request) {
     );
   }
 
-  if (parsed.data.conversationId && !(await zumiConversationOwnedBy(session, parsed.data.conversationId))) {
+  const activeConversationId = parsed.data.conversationId ?? previous?.conversationId ?? null;
+  if (activeConversationId && !(await zumiConversationOwnedBy(session, activeConversationId))) {
     await recordSecurityEvent({
       organizationId: session.organizationId,
       actorId: session.userId,
       action: "zumi.conversation_access_denied",
       risk: "MEDIUM",
       resourceType: "ai_conversation",
-      resourceId: parsed.data.conversationId,
+      resourceId: activeConversationId,
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
     });
@@ -224,11 +225,11 @@ export async function POST(request: Request) {
   // Private conversation history never rides into the public-web Research path. For
   // ordinary Talk/Command/Brief turns, merge only the bounded decrypted recent turns
   // belonging to this exact tenant + user into the existing governed/redacted context
-  // boundary. New threads can still use the bounded in-shell client context until the
-  // first successful turn has a durable Klinikos conversation ID.
+  // boundary. New threads can still use bounded in-shell client context until the
+  // first successful turn receives signed provider-neutral continuation state.
   let invocationContext = parsed.data.webResearch === true ? undefined : parsed.data.context;
-  if (parsed.data.conversationId && parsed.data.webResearch !== true) {
-    const recentConversation = await getRecentZumiConversationContext(session, parsed.data.conversationId);
+  if (activeConversationId && parsed.data.webResearch !== true) {
+    const recentConversation = await getRecentZumiConversationContext(session, activeConversationId);
     invocationContext = {
       ...(parsed.data.context ?? {}),
       recentConversation: recentConversation ?? [],
@@ -255,20 +256,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.message, reason: result.reason }, { status: result.status, headers: NO_STORE });
   }
 
-  const conversationToken = result.continuation?.responseId
-    ? sealZumiConversation({
-        responseId: result.continuation.responseId,
-        organizationId: session.organizationId,
-        userId: session.userId,
-      })
-    : null;
-
-  let durableConversationId = parsed.data.conversationId ?? null;
+  let durableConversationId = activeConversationId;
   let conversationHistory: "saved" | "unavailable" = "unavailable";
   try {
     const persisted = await appendZumiConversationTurn({
       session,
-      conversationId: parsed.data.conversationId,
+      conversationId: activeConversationId,
       question: parsed.data.question,
       answer: result.response.answer,
       interactionMode: presence.mode,
@@ -285,12 +278,19 @@ export async function POST(request: Request) {
       action: "zumi.conversation_persistence_failed",
       risk: "MEDIUM",
       resourceType: "ai_conversation",
-      resourceId: parsed.data.conversationId ?? "new",
+      resourceId: activeConversationId ?? "new",
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
       metadata: { mode: presence.mode },
     }).catch(() => undefined);
   }
+
+  const conversationToken = sealZumiConversation({
+    responseId: result.continuation?.responseId ?? null,
+    conversationId: durableConversationId,
+    organizationId: session.organizationId,
+    userId: session.userId,
+  });
 
   return NextResponse.json({
     data: {
