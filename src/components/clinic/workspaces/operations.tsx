@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
-  AlertTriangle, ArrowRight, CalendarClock, CalendarPlus, Check, CheckCircle2,
+  AlertTriangle, ArrowRight, CalendarPlus, Check, CheckCircle2,
   Clock3, CreditCard, FileText, HeartPulse, MessageSquareText, MonitorPlay,
-  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck, Users, Video,
+  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck, Video,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { AppointmentStatusControl } from "@/components/clinic/appointment-status-control";
 import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
 import { PatientListSearch } from "@/components/clinic/patient-list-search";
+import { ScheduleWorkspaceInteractive } from "@/components/clinic/schedule-workspace-interactive";
 import { tasks } from "@/lib/clinic-data";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -71,21 +72,7 @@ export function PatientsWorkspace({ patients }: { patients: Patient[] }) {
 }
 
 export function ScheduleWorkspace({ appointments }: { appointments: Appointment[] }) {
-  const referenceDate = appointments[0] ? new Date(appointments[0].startsAt) : new Date();
-  const monday = new Date(referenceDate);
-  const day = monday.getUTCDay();
-  monday.setUTCDate(monday.getUTCDate() - (day === 0 ? 6 : day - 1));
-  const days = Array.from({ length: 5 }, (_, index) => {
-    const date = new Date(monday);
-    date.setUTCDate(monday.getUTCDate() + index);
-    return date;
-  });
-  const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-  const readinessRisk = appointments.filter((appointment) => !appointment.formsComplete || !appointment.insuranceVerified).length;
-  return <div className="space-y-6"><PageIntro title="A schedule built around clinical flow." description="See provider availability, appointment readiness, telemedicine, no-show risk, and waitlist demand across every location." action={<Button variant="primary"><CalendarPlus className="size-4" /> New appointment</Button>} aside={<Button variant="secondary">Today</Button>} />
-    <div className="grid gap-4 sm:grid-cols-3"><StatCard accent="teal" detail="Loaded from PostgreSQL" icon={<CalendarClock className="size-4" />} label="Booked this week" value={String(appointments.length)} /><StatCard accent="amber" detail="Forms or eligibility" icon={<Clock3 className="size-4" />} label="Readiness risk" value={String(readinessRisk)} /><StatCard accent="sky" detail="Waitlist workflow is next" icon={<Users className="size-4" />} label="Waitlist" value="0" /></div>
-    <Card className="overflow-hidden"><div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4"><div><p className="text-sm font-extrabold text-slate-950">Week of {new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: "UTC" }).format(monday)}</p><p className="mt-1 text-[10px] text-slate-400">All locations · All providers</p></div><div className="ml-auto flex gap-2"><Button size="sm" variant="secondary">Provider</Button><Button size="sm" variant="secondary">Location</Button></div></div><div className="overflow-x-auto p-4"><div className="grid min-w-[850px] grid-cols-5 gap-3">{days.map((date) => { const dayAppointments = appointments.filter((appointment) => dateKey(new Date(appointment.startsAt)) === dateKey(date)); return <div key={dateKey(date)}><div className={`rounded-xl px-3 py-2 text-center text-[10px] font-extrabold ${dayAppointments.length > 0 ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600"}`}>{new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", timeZone: "UTC" }).format(date)}</div><div className="mt-3 min-h-[500px] space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-2">{dayAppointments.map((appointment) => { const durationMinutes = Math.max(30, (new Date(appointment.endsAt).getTime() - new Date(appointment.startsAt).getTime()) / 60000); const color = appointment.telemedicine ? "bg-amber-100 border-amber-200 text-amber-950" : appointment.status === "In Room" ? "bg-sky-100 border-sky-200 text-sky-950" : "bg-teal-100 border-teal-200 text-teal-950"; return <Link className={`block rounded-xl border p-3 ${color}`} href={`/patients/${appointment.patientId}`} key={appointment.id} style={{ minHeight: Math.round(durationMinutes * 1.7) }}><div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold">{appointment.time}</p><StatusBadge status={appointment.status} /></div><p className="mt-2 text-xs font-extrabold">{appointment.patient}</p><p className="mt-1 text-[9px] opacity-65">{appointment.type} · {appointment.provider}</p></Link>; })}</div></div>; })}</div></div></Card>
-  </div>;
+  return <ScheduleWorkspaceInteractive appointments={appointments} />;
 }
 
 export function EncountersWorkspace({ canCreate, encounters, options }: { canCreate: boolean; encounters: Encounter[]; options: EncounterCreationOptions }) {
