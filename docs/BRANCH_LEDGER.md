@@ -23,7 +23,7 @@ This ledger classifies every remote branch present during the audit plus local-o
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
 | `origin/main` | `008847b` | `CANONICAL` | Current merge base after PRs #95–#98. |
-| `origin/fix/ecosystem-wiring-truth-2026-08-16` | `515a0a7` | `ACTIVE_RECOVERY` | Follow-up to PR #97: enforces the exact $500 checkout amount, bounds/caches public credential evidence, removes clearance-like UI, and neutralizes fixtures. |
+| `origin/fix/ecosystem-wiring-truth-2026-08-16` | `current PR head` | `ACTIVE_RECOVERY` | Follow-up to PR #97: enforces the exact $500 checkout amount, bounds/caches public credential evidence, removes clearance-like UI, and neutralizes fixtures. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 | `origin/feat/patient-search-wiring` | `3283d9f` | `ACTIVE_RECOVERY` | Open PR #99. Tenant-scoped patient-index search over the already authorized list; review exact-head CI and final diff before merge. |
 
