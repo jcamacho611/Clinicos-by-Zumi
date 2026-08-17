@@ -75,7 +75,7 @@ export async function listInsuranceWorkspace(session: ClinicSession) {
   });
 
   return {
-    canRecordVerification: can(session.role, "insurance", "create") || can(session.role, "insurance", "update"),
+    canRecordVerification: can(session.role, "insurance", "create"),
     coverages: coverageRows,
     verificationHistory: verifications.map((verification) => {
       const patient = patientsById.get(verification.patientId);
@@ -112,7 +112,7 @@ export async function listInsuranceWorkspace(session: ClinicSession) {
 export type InsuranceWorkspaceData = Awaited<ReturnType<typeof listInsuranceWorkspace>>;
 
 export async function recordManualInsuranceVerification(session: ClinicSession, input: RecordInsuranceVerificationInput) {
-  if (!can(session.role, "insurance", "create") && !can(session.role, "insurance", "update")) {
+  if (!can(session.role, "insurance", "create")) {
     throw new NetworkAccessError("Insurance verification evidence cannot be recorded by this role.", 403);
   }
 
