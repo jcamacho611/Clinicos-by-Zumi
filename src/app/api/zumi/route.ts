@@ -9,6 +9,7 @@ import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/fea
 import { registerProvider, zumiGatewayStatus } from "@/features/zumi/providers";
 import { createOpenAIResponsesAdapter, openAIResponsesRequested } from "@/features/zumi/adapters/openai-responses";
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
+import { appendZumiConversationTurn, getRecentZumiConversationContext, zumiConversationOwnedBy } from "@/features/zumi/conversation-history";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
 import { resolvedZumiToolCatalog } from "@/features/zumi/tool-catalog";
@@ -25,11 +26,13 @@ const MAX_ZUMI_BODY_BYTES = 64 * 1024;
 if (openAIResponsesRequested()) registerProvider(createOpenAIResponsesAdapter());
 
 const domainSchema = z.string().trim().min(3).max(200).regex(/^[a-z0-9.-]+$/i);
+const conversationIdSchema = z.string().trim().min(8).max(100).regex(/^[a-z0-9-]+$/i);
 
 const requestSchema = z.object({
   capability: z.string().trim().min(2).max(80).default("conversation"),
   question: z.string().trim().min(3).max(8_000),
   context: z.record(z.string(), z.unknown()).optional(),
+  conversationId: conversationIdSchema.optional(),
   conversationToken: z.string().trim().max(4_000).optional(),
   webResearch: z.boolean().optional(),
   knowledgeSearch: z.boolean().default(true),
@@ -87,13 +90,14 @@ export async function GET() {
         interactionModes: ["conversation", "research", "command", "briefing"],
         autonomyModes: ["answer_only", "suggest_actions", "prepare_actions"],
         durablePreferenceMemory: true,
+        durableConversationHistory: true,
         multimodalContract: true,
         trustedPathEngine: true,
       },
       conversation: {
         supported: true,
         profile: conversationPolicy.profile,
-        continuation: "signed_provider_response",
+        continuation: "encrypted_klinikos_history_plus_optional_signed_provider_response",
         automaticResearch: true,
         publicWebSeparatedFromPrivateContext: true,
         founderModeIsNotAuthorizationBypass: true,
@@ -198,17 +202,46 @@ export async function POST(request: Request) {
     );
   }
 
+  if (parsed.data.conversationId && !(await zumiConversationOwnedBy(session, parsed.data.conversationId))) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.conversation_access_denied",
+      risk: "MEDIUM",
+      resourceType: "ai_conversation",
+      resourceId: parsed.data.conversationId,
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    });
+    return NextResponse.json({ error: "Conversation not found." }, { status: 404, headers: NO_STORE });
+  }
+
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
   const capability = parsed.data.webResearch === true ? "public_research" : parsed.data.capability;
   const presence = zumiPresenceSchema.parse(parsed.data.presence ?? {});
   const accessibility = zumiAccessibilitySchema.parse(parsed.data.accessibility ?? {});
+
+  // Private conversation history never rides into the public-web Research path. For
+  // ordinary Talk/Command/Brief turns, merge only the bounded decrypted recent turns
+  // belonging to this exact tenant + user into the existing governed/redacted context
+  // boundary. New threads can still use the bounded in-shell client context until the
+  // first successful turn has a durable Klinikos conversation ID.
+  let invocationContext = parsed.data.webResearch === true ? undefined : parsed.data.context;
+  if (parsed.data.conversationId && parsed.data.webResearch !== true) {
+    const recentConversation = await getRecentZumiConversationContext(session, parsed.data.conversationId);
+    invocationContext = {
+      ...(parsed.data.context ?? {}),
+      recentConversation: recentConversation ?? [],
+    };
+  }
+
   const result = await invokeZumi({
     session,
     capability,
     organizationId: session.organizationId,
     entitlements,
     question: parsed.data.question,
-    context: parsed.data.context,
+    context: invocationContext,
     previousResponseId: previous?.responseId ?? null,
     allowWebResearch: parsed.data.webResearch,
     allowKnowledgeSearch: parsed.data.knowledgeSearch,
@@ -230,9 +263,40 @@ export async function POST(request: Request) {
       })
     : null;
 
+  let durableConversationId = parsed.data.conversationId ?? null;
+  let conversationHistory: "saved" | "unavailable" = "unavailable";
+  try {
+    const persisted = await appendZumiConversationTurn({
+      session,
+      conversationId: parsed.data.conversationId,
+      question: parsed.data.question,
+      answer: result.response.answer,
+      interactionMode: presence.mode,
+    });
+    durableConversationId = persisted.conversationId;
+    conversationHistory = "saved";
+  } catch {
+    // Do not throw away a valid Zumi answer solely because the transcript store is
+    // temporarily unavailable. Keep the current in-shell thread usable and record only
+    // bounded operational failure metadata, never the plaintext prompt/answer.
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.conversation_persistence_failed",
+      risk: "MEDIUM",
+      resourceType: "ai_conversation",
+      resourceId: parsed.data.conversationId ?? "new",
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: { mode: presence.mode },
+    }).catch(() => undefined);
+  }
+
   return NextResponse.json({
     data: {
       ...result.response,
+      conversationId: durableConversationId,
+      conversationHistory,
       conversationToken,
       sources: result.continuation?.sources ?? [],
       toolsUsed: result.continuation?.toolsUsed ?? [],
