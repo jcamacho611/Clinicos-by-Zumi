@@ -1,16 +1,15 @@
 import Link from "next/link";
 import {
-  AlertTriangle, ArrowRight, CalendarClock, CalendarPlus, Check, CheckCircle2,
-  Clock3, CreditCard, FileText, HeartPulse, MessageSquareText, MonitorPlay,
-  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck, Users, Video,
+  AlertTriangle, ArrowRight, CalendarPlus, Check, CheckCircle2,
+  CreditCard, FileText, PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppointmentStatusControl } from "@/components/clinic/appointment-status-control";
 import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
 import { PatientListSearch } from "@/components/clinic/patient-list-search";
-import { tasks } from "@/lib/clinic-data";
+import { ScheduleWorkspaceInteractive } from "@/components/clinic/schedule-workspace-interactive";
+import { TelemedicineWorkspaceInteractive } from "@/components/clinic/telemedicine-workspace-interactive";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 
@@ -42,24 +41,30 @@ export function FrontDeskWorkspace({ appointments }: { appointments: Appointment
 }
 
 export function ProviderWorkspace({ appointments, encounters }: { appointments: Appointment[]; encounters: Encounter[] }) {
-  const draftEncounter = encounters.find((encounter) => encounter.status === "Draft");
-  const clinicalTasks = tasks.filter((task) => task.category === "Clinical" || task.category === "Quality");
+  const draftEncounters = encounters.filter((encounter) => encounter.status === "Draft");
+  const reviewEncounters = encounters.filter((encounter) => encounter.status === "Ready for Review" || encounter.status === "Addendum Needed");
+  const todayAppointments = appointments.filter((appointment) => appointment.date === "Today" && !["Completed", "Cancelled", "No Show", "Rescheduled"].includes(appointment.status));
+  const readyForReview = encounters.filter((encounter) => encounter.status === "Ready for Review").length;
+  const addendumNeeded = encounters.filter((encounter) => encounter.status === "Addendum Needed").length;
+  const draftEncounter = draftEncounters[0];
+
   return <div className="space-y-6">
-    <PageIntro title="Clinical work, prioritized safely." description="Review results, messages, encounters, and care gaps in one provider-focused queue. No AI draft can become a final clinical response without review." action={draftEncounter ? <Button asChild variant="primary"><Link href={`/encounters/${draftEncounter.id}`}><Stethoscope className="size-4" /> Resume encounter</Link></Button> : <Button disabled variant="primary"><Stethoscope className="size-4" /> No open draft</Button>} />
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard accent="rose" detail="Held from patient release" icon={<HeartPulse className="size-4" />} label="Results to review" value="2" /><StatCard accent="amber" detail="1 refill · 1 lab question" icon={<MessageSquareText className="size-4" />} label="Clinical messages" value="2" /><StatCard accent="sky" detail="Database-backed worklist" icon={<FileText className="size-4" />} label="Open notes" value={String(encounters.filter((encounter) => encounter.status === "Draft").length)} /><StatCard accent="teal" detail="Across today's panel" icon={<CheckCircle2 className="size-4" />} label="Care gaps addressed" value="5" /></div>
+    <PageIntro title="Clinical work, prioritized from stored records." description="Appointments and encounter state drive this provider workspace. External results and messages appear only when their real governed repositories are connected here." action={draftEncounter ? <Button asChild variant="primary"><Link href={`/encounters/${draftEncounter.id}`}><Stethoscope className="size-4" /> Resume encounter</Link></Button> : <Button asChild variant="secondary"><Link href="/encounters">Open encounters <ArrowRight className="size-4" /></Link></Button>} />
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatCard accent="teal" detail="Active appointments labeled Today" icon={<CalendarPlus className="size-4" />} label="Today’s visits" value={String(todayAppointments.length)} />
+      <StatCard accent="sky" detail="Database-backed encounter drafts" icon={<FileText className="size-4" />} label="Draft notes" value={String(draftEncounters.length)} />
+      <StatCard accent="amber" detail="Prepared for human clinical review" icon={<UserCheck className="size-4" />} label="Ready for review" value={String(readyForReview)} />
+      <StatCard accent="rose" detail="Existing signed note requires follow-through" icon={<AlertTriangle className="size-4" />} label="Addendum needed" value={String(addendumNeeded)} />
+    </div>
     <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
-      <SectionCard title="Needs your review" description="Clinical safety rules determine queue position; staff can never auto-release these items." action={<Badge tone="rose">3 held</Badge>}>
-        <div className="divide-y divide-slate-100">{[
-          { icon: <HeartPulse className="size-4" />, tone: "bg-rose-50 text-rose-700", title: "Abnormal A1C result", patient: "Maya Thompson", detail: "A1C 8.1% · Quest demo · resulted Jul 11", label: "Result review", href: "/patients/pt-1001" },
-          { icon: <MessageSquareText className="size-4" />, tone: "bg-amber-50 text-amber-700", title: "Patient asked about lab result", patient: "Maya Thompson", detail: "Portal message · classified as provider-only", label: "Draft blocked", href: "/messages" },
-          { icon: <FileText className="size-4" />, tone: "bg-sky-50 text-sky-700", title: "Medication refill request", patient: "Darius Coleman", detail: "Atorvastatin · pharmacy on file", label: "Provider review", href: "/messages" },
-        ].map((item) => <Link className="flex items-center gap-4 p-5 transition hover:bg-slate-50" href={item.href} key={item.title}><span className={`grid size-10 place-items-center rounded-xl ${item.tone}`}>{item.icon}</span><div className="min-w-0 flex-1"><p className="text-xs font-extrabold text-slate-950">{item.title}</p><p className="mt-1 text-[10px] text-slate-400">{item.patient} · {item.detail}</p></div><StatusBadge status={item.label} /><ArrowRight className="size-4 text-slate-300" /></Link>)}</div>
+      <SectionCard title="Encounter review queue" description="Only stored encounters requiring review or addendum work appear here." action={<Link className="text-xs font-extrabold text-sky-700 hover:text-sky-900" href="/encounters">Open all encounters</Link>}>
+        <div className="divide-y divide-slate-100">{reviewEncounters.map((encounter) => <Link className="flex items-center gap-4 p-5 transition hover:bg-slate-50" href={`/encounters/${encounter.id}`} key={encounter.id}><span className={`grid size-10 place-items-center rounded-xl ${encounter.status === "Addendum Needed" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}><FileText className="size-4" /></span><div className="min-w-0 flex-1"><p className="text-xs font-extrabold text-slate-950">{encounter.patientName}</p><p className="mt-1 text-[10px] text-slate-400">{encounter.date} · {encounter.type} · {encounter.provider}</p></div><StatusBadge status={encounter.status} /><ArrowRight className="size-4 text-slate-300" /></Link>)}{reviewEncounters.length === 0 && <p className="p-5 text-xs text-slate-500">No encounters currently require review or addendum work.</p>}</div>
       </SectionCard>
-      <SectionCard title="Today’s clinical panel" description="Prepared from chart history, readiness, and open clinical work.">
-        <div className="space-y-2 p-3">{appointments.map((appointment, index) => { const encounter = encounters.find((item) => item.patientId === appointment.patientId); return <Link className="block rounded-2xl border border-transparent p-3 transition hover:border-slate-200 hover:bg-slate-50" href={encounter ? `/encounters/${encounter.id}` : `/patients/${appointment.patientId}`} key={appointment.id}><div className="flex items-center gap-3"><Person color={index === 0 ? "rose" : "teal"} detail={`${appointment.time} · ${appointment.type}`} initials={appointment.initials} name={appointment.patient} /><StatusBadge status={appointment.status} /></div><div className="mt-3 grid grid-cols-3 gap-2 text-center"><div className="rounded-lg bg-slate-50 p-2"><p className="text-[8px] font-bold text-slate-400">RESULTS</p><p className="mt-1 text-[10px] font-extrabold text-slate-800">{index === 0 ? "1 review" : "Clear"}</p></div><div className="rounded-lg bg-slate-50 p-2"><p className="text-[8px] font-bold text-slate-400">GAPS</p><p className="mt-1 text-[10px] font-extrabold text-slate-800">{index < 2 ? "1 open" : "None"}</p></div><div className="rounded-lg bg-slate-50 p-2"><p className="text-[8px] font-bold text-slate-400">NOTE</p><p className="mt-1 text-[10px] font-extrabold text-slate-800">{encounter?.status ?? "Start"}</p></div></div></Link>; })}</div>
+      <SectionCard title="Today’s clinical panel" description="Real appointments from the tenant schedule linked to the patient or existing encounter.">
+        <div className="space-y-2 p-3">{todayAppointments.map((appointment, index) => { const encounter = encounters.find((item) => item.patientId === appointment.patientId); return <Link className="block rounded-2xl border border-transparent p-3 transition hover:border-slate-200 hover:bg-slate-50" href={encounter ? `/encounters/${encounter.id}` : `/patients/${appointment.patientId}`} key={appointment.id}><div className="flex items-center gap-3"><Person color={index === 0 ? "rose" : "teal"} detail={`${appointment.time} · ${appointment.type}`} initials={appointment.initials} name={appointment.patient} /><StatusBadge status={appointment.status} /></div><div className="mt-3 grid grid-cols-2 gap-2 text-center"><div className="rounded-lg bg-slate-50 p-2"><p className="text-[8px] font-bold text-slate-400">READINESS</p><p className="mt-1 text-[10px] font-extrabold text-slate-800">{appointment.formsComplete && appointment.insuranceVerified ? "Ready" : "Review"}</p></div><div className="rounded-lg bg-slate-50 p-2"><p className="text-[8px] font-bold text-slate-400">NOTE</p><p className="mt-1 text-[10px] font-extrabold text-slate-800">{encounter?.status ?? "Not started"}</p></div></div></Link>; })}{todayAppointments.length === 0 && <p className="p-3 text-xs text-slate-500">No active appointments are labeled Today.</p>}</div>
       </SectionCard>
     </div>
-    <SectionCard title="Clinical follow-through" description="Tasks assigned to you or your quality team."><div className="grid gap-3 p-4 md:grid-cols-2">{clinicalTasks.map((task) => <div className="rounded-xl border border-slate-200 p-4" key={task.id}><div className="flex items-center gap-2"><StatusBadge status={task.priority} /><span className="text-[10px] text-slate-400">{task.due}</span></div><p className="mt-3 text-xs font-extrabold text-slate-900">{task.title}</p><p className="mt-1 text-[10px] text-slate-500">{task.patient}</p></div>)}</div></SectionCard>
+    <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-extrabold text-slate-950">Clinical follow-through belongs in the tenant task queue.</p><p className="mt-1 text-xs text-slate-500">Klinikos does not invent provider tasks on this surface. Use the real Tasks workspace for owned follow-through.</p></div><Button asChild variant="secondary"><Link href="/tasks">Open tasks <ArrowRight className="size-4" /></Link></Button></Card>
   </div>;
 }
 
@@ -71,21 +76,7 @@ export function PatientsWorkspace({ patients }: { patients: Patient[] }) {
 }
 
 export function ScheduleWorkspace({ appointments }: { appointments: Appointment[] }) {
-  const referenceDate = appointments[0] ? new Date(appointments[0].startsAt) : new Date();
-  const monday = new Date(referenceDate);
-  const day = monday.getUTCDay();
-  monday.setUTCDate(monday.getUTCDate() - (day === 0 ? 6 : day - 1));
-  const days = Array.from({ length: 5 }, (_, index) => {
-    const date = new Date(monday);
-    date.setUTCDate(monday.getUTCDate() + index);
-    return date;
-  });
-  const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-  const readinessRisk = appointments.filter((appointment) => !appointment.formsComplete || !appointment.insuranceVerified).length;
-  return <div className="space-y-6"><PageIntro title="A schedule built around clinical flow." description="See provider availability, appointment readiness, telemedicine, no-show risk, and waitlist demand across every location." action={<Button variant="primary"><CalendarPlus className="size-4" /> New appointment</Button>} aside={<Button variant="secondary">Today</Button>} />
-    <div className="grid gap-4 sm:grid-cols-3"><StatCard accent="teal" detail="Loaded from PostgreSQL" icon={<CalendarClock className="size-4" />} label="Booked this week" value={String(appointments.length)} /><StatCard accent="amber" detail="Forms or eligibility" icon={<Clock3 className="size-4" />} label="Readiness risk" value={String(readinessRisk)} /><StatCard accent="sky" detail="Waitlist workflow is next" icon={<Users className="size-4" />} label="Waitlist" value="0" /></div>
-    <Card className="overflow-hidden"><div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4"><div><p className="text-sm font-extrabold text-slate-950">Week of {new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: "UTC" }).format(monday)}</p><p className="mt-1 text-[10px] text-slate-400">All locations · All providers</p></div><div className="ml-auto flex gap-2"><Button size="sm" variant="secondary">Provider</Button><Button size="sm" variant="secondary">Location</Button></div></div><div className="overflow-x-auto p-4"><div className="grid min-w-[850px] grid-cols-5 gap-3">{days.map((date) => { const dayAppointments = appointments.filter((appointment) => dateKey(new Date(appointment.startsAt)) === dateKey(date)); return <div key={dateKey(date)}><div className={`rounded-xl px-3 py-2 text-center text-[10px] font-extrabold ${dayAppointments.length > 0 ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600"}`}>{new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", timeZone: "UTC" }).format(date)}</div><div className="mt-3 min-h-[500px] space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-2">{dayAppointments.map((appointment) => { const durationMinutes = Math.max(30, (new Date(appointment.endsAt).getTime() - new Date(appointment.startsAt).getTime()) / 60000); const color = appointment.telemedicine ? "bg-amber-100 border-amber-200 text-amber-950" : appointment.status === "In Room" ? "bg-sky-100 border-sky-200 text-sky-950" : "bg-teal-100 border-teal-200 text-teal-950"; return <Link className={`block rounded-xl border p-3 ${color}`} href={`/patients/${appointment.patientId}`} key={appointment.id} style={{ minHeight: Math.round(durationMinutes * 1.7) }}><div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold">{appointment.time}</p><StatusBadge status={appointment.status} /></div><p className="mt-2 text-xs font-extrabold">{appointment.patient}</p><p className="mt-1 text-[9px] opacity-65">{appointment.type} · {appointment.provider}</p></Link>; })}</div></div>; })}</div></div></Card>
-  </div>;
+  return <ScheduleWorkspaceInteractive appointments={appointments} />;
 }
 
 export function EncountersWorkspace({ canCreate, encounters, options }: { canCreate: boolean; encounters: Encounter[]; options: EncounterCreationOptions }) {
@@ -98,8 +89,5 @@ export function EncountersWorkspace({ canCreate, encounters, options }: { canCre
 }
 
 export function TelemedicineWorkspace() {
-  return <div className="space-y-6"><PageIntro title="Virtual care, ready before the call." description="Consent, payment, documentation, and waiting-room status stay visible around the visit. A compliant video vendor attaches here later." action={<Button variant="primary"><Video className="size-4" /> Start demo room</Button>} />
-    <section className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]"><Card className="relative overflow-hidden bg-slate-950 p-7 text-white"><div className="absolute right-[-80px] top-[-80px] size-64 rounded-full border-[46px] border-teal-300/10" /><Badge className="bg-lime-300 text-slate-950 ring-lime-300">Next virtual visit</Badge><div className="relative mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-3xl font-extrabold tracking-[-.05em]">Darius Coleman</p><p className="mt-2 text-sm text-slate-300">Annual wellness · 10:45 AM · Nadja R., NP</p><div className="mt-5 flex flex-wrap gap-2"><Badge className="bg-white/10 text-white ring-white/15">Consent signed</Badge><Badge className="bg-white/10 text-white ring-white/15">Identity confirmed</Badge><Badge className="bg-white/10 text-white ring-white/15">Copay due $30</Badge></div></div><Button className="bg-white text-slate-950 hover:bg-slate-100" variant="secondary"><MonitorPlay className="size-4" /> Open waiting room</Button></div></Card><SectionCard title="Visit readiness"><div className="space-y-4 p-5">{[["Telemedicine consent", true], ["Demographics confirmed", true], ["Payment collected", false], ["Pre-visit questionnaire", true]].map(([label, complete]) => <div className="flex items-center gap-3" key={String(label)}><span className={`grid size-7 place-items-center rounded-lg ${complete ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700"}`}>{complete ? <Check className="size-3.5" /> : <Clock3 className="size-3.5" />}</span><p className="flex-1 text-xs font-bold text-slate-700">{label}</p><span className="text-[10px] text-slate-400">{complete ? "Ready" : "Pending"}</span></div>)}</div></SectionCard></section>
-    <SectionCard title="Virtual visit queue" description="Video links are placeholders until a BAA-supported vendor is configured."><div className="grid gap-3 p-4 md:grid-cols-3">{[["10:45 AM", "Darius Coleman", "Ready", "Nadja R., NP"], ["1:15 PM", "Lena Morris", "Consent needed", "Dr. Samuel Lee"], ["4:00 PM", "Priya Shah", "Confirmed", "Nadja R., NP"]].map(([time, name, status, provider]) => <div className="rounded-2xl border border-slate-200 p-4" key={name}><div className="flex items-center justify-between"><p className="text-[10px] font-extrabold text-slate-400">{time}</p><StatusBadge status={status} /></div><p className="mt-5 text-sm font-extrabold text-slate-950">{name}</p><p className="mt-1 text-[10px] text-slate-500">{provider}</p><Button className="mt-4 w-full" size="sm" variant="secondary">Open visit</Button></div>)}</div></SectionCard>
-  </div>;
+  return <TelemedicineWorkspaceInteractive />;
 }
