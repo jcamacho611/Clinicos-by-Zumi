@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EscalationsWorkspaceReal } from "@/components/clinic/escalations-workspace-real";
 import { MessagesWorkspaceReal } from "@/components/clinic/messages-workspace-real";
 import { TasksWorkspaceReal } from "@/components/clinic/tasks-workspace-real";
 import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace-renderer";
@@ -26,6 +27,9 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
   }
   if (workspace === "messages") {
     return <MessagesWorkspaceReal />;
+  }
+  if (workspace === "escalations") {
+    return <EscalationsWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
   }
   return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />;
 }
