@@ -29,7 +29,7 @@ Canonical base: `main@cf4130b3ce4db5effde76d61d368b135da01c715`
 | Scope and complexity | 4/10 | RED | The product spans 45 logical engines, healthcare operations, Grid, EDU, portals, finance, AI, network, and 100+ historical branches. Completion risk is dominated by breadth and integration debt. |
 | Context hygiene | 7/10 | YELLOW | Source precedence and status vocabulary are explicit, but the feature/external baselines were stale and specialist canons/branch ledger were missing before this recovery. |
 | Safety and truth | 8/10 | GREEN | Tenant/RBAC, PHI-egress, payment truth, eligibility, concurrency, audit, and adversarial journeys are unusually strong. Real-PHI posture and external vendor approval remain external gates. |
-| Workflow and verification | 8.5/10 | GREEN | CI validates 51 fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current local verification covers 636 tests. Browser/device QA and deploy-SHA evidence remain gaps. |
+| Workflow and verification | 8.5/10 | GREEN | CI validates fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; the current candidate contains 52 migrations and local verification covers 636 tests. Browser/device QA and deploy-SHA evidence remain gaps. |
 
 Overall: **6.6/10 — YELLOW.** The application has real governed depth and strong verification. The highest risk is not missing concept work; it is breadth, branch drift, stale truth indexes, and partially connected end-user journeys.
 

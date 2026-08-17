@@ -202,7 +202,7 @@ Redirect state is never payment evidence.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Fresh empty-DB migration gate | **BUILT** | Current exact candidate applies all 51 migrations. |
+| Fresh empty-DB migration gate | **BUILT** | Current candidate contains 52 additive migrations; exact-head CI must apply all 52 to fresh PostgreSQL before merge. |
 | Repository Node pin | **BUILT** | `.node-version` resolves CI/runtime contract to Node 20.19.4. |
 | Render build contract | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
 | Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |

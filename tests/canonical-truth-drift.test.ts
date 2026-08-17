@@ -100,10 +100,15 @@ describe("canonical Klinikos truth", () => {
 
   it("keeps Grid contractor fixtures anchored to roles instead of personal identities", () => {
     const seed = read("prisma/seed.ts");
+    const migration = read("prisma/migrations/20260817025200_neutralize_grid_contractor_fixture_labels/migration.sql");
 
     expect(seed).toContain('name: "Independent Grid Provider"');
     expect(seed).toContain('name: "Grid Provider Applicant"');
     expect(seed).toContain('title: "Provider response requested"');
     expect(seed).toContain('id: "grid-request-provider-on-call"');
+    expect(migration).toContain("Primary keys stay unchanged");
+    expect(migration).toContain("'Independent Grid Provider'");
+    expect(migration).toContain("'Grid Provider Applicant'");
+    expect(migration).not.toContain('SET "id"');
   });
 });

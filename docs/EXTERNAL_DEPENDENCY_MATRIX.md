@@ -90,7 +90,7 @@ Do not describe straight-line distance as travel time and do not invent coordina
 
 ## Production database/security infrastructure note
 
-The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. The latest repository candidate also applies all 51 migrations to fresh PostgreSQL in CI.
+The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. The latest repository candidate contains 52 additive migrations; exact-head CI must apply all 52 to fresh PostgreSQL before merge.
 
 The last inspected Neon project setting reported HIPAA mode as disabled. This is an infrastructure configuration fact, not a legal conclusion. Real-PHI production approval remains a separate security/compliance decision and must not be inferred from application code.
 
