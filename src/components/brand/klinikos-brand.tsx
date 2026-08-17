@@ -1,25 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
 
-// These point at the files that actually ship in public/. The previous
-// "-transparent" names had no corresponding assets, so the mark and wordmark 404'd
-// on every surface that renders the brand — the public site, login, the sales shell
-// and every authenticated page.
-const MARK_SRC = "/klinikos-orbital-k-generated.webp";
-const WORDMARK_SRC = "/klinikos-wordmark-generated.webp";
+// Exact production artwork supplied in the approved 2026-08-16 design package.
+// The source images intentionally include a black field. The orbital mark retains
+// that field; the horizontal wordmark is center-cropped and screened into the
+// surrounding surface so its lettering remains faithful without a visible box.
+const MARK_SRC = "/klinikos-orbital-k-production.png";
+const WORDMARK_SRC = "/klinikos-wordmark-production.png";
 
 export function KlinikosMark({ className = "h-8 w-auto" }: { className?: string }) {
   return (
-    <span className={`relative inline-block ${className}`} aria-hidden="true">
+    <span className={`relative inline-block overflow-hidden ${className}`} aria-hidden="true">
       <Image
         alt=""
         aria-hidden="true"
-        className="h-full w-full object-contain"
-        height={640}
+        className="h-full w-full object-cover"
+        height={1254}
         priority
         src={MARK_SRC}
         unoptimized
-        width={640}
+        width={1254}
       />
     </span>
   );
@@ -27,15 +27,15 @@ export function KlinikosMark({ className = "h-8 w-auto" }: { className?: string 
 
 function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: string }) {
   return (
-    <span className={`relative inline-block ${className}`}>
+    <span className={`relative inline-block overflow-hidden ${className}`}>
       <Image
         alt="Klinikos"
-        className="h-full w-full object-contain"
-        height={400}
+        className="h-full w-full object-cover object-center mix-blend-screen"
+        height={724}
         priority
         src={WORDMARK_SRC}
         unoptimized
-        width={1200}
+        width={2172}
       />
     </span>
   );
@@ -45,6 +45,7 @@ export function KlinikosWordmark({
   className = "",
   markClassName = "h-7 w-7",
   textClassName = "h-[24px] w-[220px]",
+  frameClassName = "size-14",
   href,
   inverse = false,
   framed = false,
@@ -52,6 +53,7 @@ export function KlinikosWordmark({
   className?: string;
   markClassName?: string;
   textClassName?: string;
+  frameClassName?: string;
   href?: string;
   inverse?: boolean;
   framed?: boolean;
@@ -61,7 +63,7 @@ export function KlinikosWordmark({
       <span
         className={
           framed
-            ? "grid size-14 place-items-center rounded-[16px] border border-[#efaaa1]/16 bg-transparent shadow-[0_0_34px_rgba(232,126,121,.08)]"
+            ? `grid place-items-center ${frameClassName}`
             : "inline-grid place-items-center"
         }
       >
@@ -71,5 +73,5 @@ export function KlinikosWordmark({
     </span>
   );
 
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? <Link className="inline-flex" href={href}>{content}</Link> : content;
 }

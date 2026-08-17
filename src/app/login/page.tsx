@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="relative flex items-center justify-center p-6 sm:p-10 lg:p-14">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(139,35,42,.16),transparent_32%)]" />
         <div className="relative w-full max-w-md">
-          <KlinikosWordmark href="/" framed inverse markClassName="h-7 w-7" textClassName="h-[22px] w-auto" className="mb-12 gap-3" />
+          <KlinikosWordmark href="/" framed inverse markClassName="h-12 w-12" textClassName="h-[22px] w-[196px]" className="mb-12 gap-3" />
           <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#f8efed]">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos workspace. Every session remains bound to one authorized organization and role.</p>

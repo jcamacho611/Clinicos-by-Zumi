@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
+}
+
+function sha256(relative: string) {
+  return createHash("sha256").update(fs.readFileSync(path.join(process.cwd(), relative))).digest("hex");
 }
 
 describe("public Living Home intent", () => {
@@ -54,6 +59,8 @@ describe("public Living Home interaction contract", () => {
   const source = read("src/components/marketing/public-living-gateway.tsx");
   const page = read("src/app/page.tsx");
   const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
+  const brand = read("src/components/brand/klinikos-brand.tsx");
+  const homeStyles = read("src/app/cinematic-home-overrides.css");
 
   it("uses one continuous conversation surface rather than a split catalog", () => {
     expect(source).not.toContain("doorwayActions");
@@ -112,7 +119,7 @@ describe("public Living Home interaction contract", () => {
 
   it("keeps the reference composition responsive and command-first", () => {
     expect(source).toContain("min-h-screen");
-    expect(source).toContain("lg:grid-cols-[190px_minmax(0,1fr)_190px]");
+    expect(source).toContain("lg:grid-cols-[150px_minmax(0,1fr)_150px]");
     expect(source).toContain('id="public-klinikos-intent"');
     expect(source).toContain('placeholder="Ask Klinikos anything..."');
     expect(source).toContain("What needs");
@@ -122,7 +129,7 @@ describe("public Living Home interaction contract", () => {
 
   it("wires the reference navigation and cards to real product surfaces", () => {
     expect(source).toContain('protectedHref("/dashboard")');
-    expect(source).toContain('protectedHref("/grid")');
+    expect(source).toContain('{ label: "Grid", href: "/grid" }');
     expect(source).toContain('protectedHref("/provider")');
     expect(source).toContain('protectedHref("/billing")');
     expect(source).toContain('protectedHref("/quality")');
@@ -134,6 +141,34 @@ describe("public Living Home interaction contract", () => {
     expect(source).toContain("Team Workflow");
     expect(source).toContain("Grid Network");
     expect(source).toContain("workspaceActions");
+  });
+
+  it("ships the exact approved production artwork instead of broken substitutes", () => {
+    expect(sha256("public/klinikos-orbital-k-production.png")).toBe("16d58ca917d56b2a26549896193320c8c4b4cc803dadde3c30a95d5fa49f01ba");
+    expect(sha256("public/klinikos-wordmark-production.png")).toBe("dc584c56dd8ea9e420a505c00c78f4d3651405b023c539c4f469c2fe411a0c2d");
+    expect(sha256("public/klinikos-rose-hero-production.png")).toBe("f50f9b4cecfb67fba159b29a1375b6e9372497036585b5ab473430effb3ff8be");
+    expect(sha256("public/klinikos-rose-wide-production.png")).toBe("90482a6b122605d972ba46877dc3ce8fa537b3994190ba160f30220324687a93");
+    expect(brand).toContain('const MARK_SRC = "/klinikos-orbital-k-production.png"');
+    expect(brand).toContain('const WORDMARK_SRC = "/klinikos-wordmark-production.png"');
+    expect(homeStyles).toContain("url('/klinikos-rose-hero-production.png')");
+    expect(homeStyles).toContain("url('/klinikos-rose-wide-production.png')");
+    expect(homeStyles).not.toContain("transparent.webp");
+  });
+
+  it("keeps the approved full-width first-fold composition and state-bearing Zumi presence", () => {
+    const centerPosition = source.indexOf('className="reference-center');
+    const rightRailPosition = source.indexOf('className="reference-action-rail');
+    const bottomPosition = source.indexOf('className="reference-bottom-grid');
+
+    expect(centerPosition).toBeGreaterThan(0);
+    expect(rightRailPosition).toBeGreaterThan(centerPosition);
+    expect(bottomPosition).toBeGreaterThan(rightRailPosition);
+    expect(source).toContain("function LivingZumiOrb");
+    expect(source).toContain("data-zumi-state={state}");
+    expect(source).toContain('<LivingZumiOrb state="observing" />');
+    expect(source).toContain('<ArrowUp className="size-5" />');
+    expect(homeStyles).toContain("max-width: 1244px");
+    expect(homeStyles).toContain("grid-row: 2");
   });
 
   it("uses real document and voice destinations instead of dead decorative composer controls", () => {

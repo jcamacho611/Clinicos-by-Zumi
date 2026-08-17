@@ -1,9 +1,17 @@
-/* Reference-locked Living Home refinements loaded after the legacy stylesheet. */
+/*
+ * Reference-locked Living Home.
+ *
+ * Native comparison target: 1402 × 1122. This file is loaded after the legacy
+ * cinematic layer so the public first-visit screen can preserve the exact rose,
+ * rails, composer, card row, and lower-strip geometry without changing product
+ * behavior or the sustained-use Marble surfaces elsewhere in Klinikos.
+ */
 
 .rose-home {
   position: relative;
   isolation: isolate;
-  background: #050303;
+  min-height: 100vh;
+  background: #030202;
 }
 
 .rose-home .rose-vignette,
@@ -17,52 +25,131 @@
   z-index: 10;
 }
 
-.rose-home > header {
-  min-height: 88px !important;
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-
-/* Transparent production rose. The site background owns the black/cherry atmosphere now. */
+/* Exact clean production rose from the approved design package. */
 .rose-home .rose-atmosphere {
-  background-image: url('/klinikos-rose-wide-transparent.webp') !important;
+  background-image: url('/klinikos-rose-hero-production.png') !important;
   background-repeat: no-repeat !important;
-  background-position: center 30% !important;
-  background-size: min(84vw, 1280px) auto !important;
-  filter: saturate(.94) contrast(1.03) brightness(.92);
+  background-position: center 52px !important;
+  background-size: min(85vw, 1280px) auto !important;
+  filter: saturate(.84) contrast(1.035) brightness(.92);
   transform-origin: 50% 36%;
 }
 
 .rose-home .rose-vignette {
   background:
-    radial-gradient(circle at 50% 40%,rgba(126,25,31,.03) 0%,rgba(0,0,0,.01) 44%,rgba(0,0,0,.22) 72%,#050303 100%),
-    linear-gradient(90deg,#050303 0%,rgba(5,3,3,.24) 8%,rgba(5,3,3,0) 25%,rgba(5,3,3,0) 75%,rgba(5,3,3,.24) 92%,#050303 100%),
-    linear-gradient(180deg,rgba(5,3,3,.08) 0%,transparent 18%,transparent 70%,rgba(5,3,3,.72) 100%);
+    radial-gradient(ellipse at 50% 35%, transparent 0%, rgba(0,0,0,.01) 47%, rgba(0,0,0,.36) 76%, #030202 100%),
+    linear-gradient(90deg,#030202 0%,rgba(3,2,2,.42) 5%,transparent 19%,transparent 81%,rgba(3,2,2,.42) 95%,#030202 100%),
+    linear-gradient(180deg,rgba(3,2,2,.05) 0%,transparent 58%,rgba(3,2,2,.32) 70%,#030202 89%);
 }
 
 .rose-home .reference-header {
-  max-width: 1500px;
-  margin: 0 auto;
   width: 100%;
+  max-width: 1402px;
+  min-height: 102px !important;
+  margin: 0 auto;
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 
-.rose-home .reference-state-rail,
-.rose-home .reference-action-rail {
+.rose-home .living-home-brand {
+  flex: 0 0 auto;
+}
+
+.rose-home .reference-header nav {
+  gap: 48px;
+  margin-right: 80px;
+  margin-left: auto;
+}
+
+.rose-home .reference-auth {
+  flex: 0 0 auto;
+  margin-right: 12px;
+  margin-left: 0 !important;
+}
+
+.rose-home .reference-center {
   align-self: start;
-  padding-top: 255px;
+  min-width: 0;
+  padding-top: 72px;
 }
 
-.rose-home .reference-action-rail nav {
-  transform: translateX(-4px);
+.rose-home .reference-hero h1 {
+  font-weight: 200;
 }
 
-.rose-home .reference-zumi {
-  z-index: 3;
-}
-
-.rose-home .reference-card-row {
+.rose-home #living-composer {
   position: relative;
-  z-index: 2;
+}
+
+.rose-home .reference-composer-shell {
+  background:
+    radial-gradient(circle at 72% 100%,rgba(147,39,46,.17),transparent 33%),
+    rgba(24,9,12,.62);
+  box-shadow: 0 22px 72px rgba(39,5,8,.38), inset 0 1px 0 rgba(255,223,219,.015);
+}
+
+/* The visible wordmark orb is layered over the real state-bearing ZumiOrb. */
+.rose-home .reference-zumi {
+  top: calc(100% - 35px);
+  z-index: 5;
+  gap: 16px !important;
+}
+
+.rose-home .reference-zumi-orb {
+  position: relative;
+  display: grid;
+  width: 92px;
+  height: 92px;
+  place-items: center;
+}
+
+.rose-home .reference-zumi-state-layer {
+  position: absolute;
+  inset: -2px;
+  opacity: .38;
+}
+
+.rose-home .reference-zumi-core {
+  position: absolute;
+  inset: 1px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(239,124,119,.9);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 34%,rgba(93,24,31,.52),transparent 42%),
+    linear-gradient(150deg,rgba(34,9,13,.98),rgba(10,4,6,.98));
+  color: #fff5f2;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -.04em;
+  text-transform: lowercase;
+  box-shadow:
+    0 0 0 1px rgba(255,194,189,.08),
+    0 0 24px rgba(235,91,90,.45),
+    0 0 54px rgba(178,40,47,.32),
+    inset 0 0 22px rgba(160,41,47,.2);
+}
+
+.rose-home .reference-zumi-signal {
+  position: absolute;
+  top: 8px;
+  right: 5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ef7f79;
+  box-shadow: 0 0 16px rgba(239,127,121,.88);
+}
+
+.rose-home .reference-bottom-grid {
+  width: 100%;
+  max-width: 1244px;
+  margin: 112px auto 0;
+}
+
+.rose-home .reference-card {
+  height: 132px;
 }
 
 .rose-home .reference-lower-strip {
@@ -74,102 +161,289 @@
   position: relative;
   overflow: hidden;
   background:
-    url('/klinikos-rose-centered-transparent.webp') center 52% / min(58vw,760px) auto no-repeat,
-    radial-gradient(circle at 22% 48%, rgba(230,129,123,.18), transparent 17%),
-    linear-gradient(110deg,#080405 0%,#17090c 48%,#0a0506 100%) !important;
+    radial-gradient(circle at 21% 50%,rgba(222,94,88,.14),transparent 23%),
+    linear-gradient(110deg,#090405 0%,#16080b 47%,#080405 100%) !important;
+}
+
+.rose-home .reference-strip-art {
+  background:
+    linear-gradient(90deg,rgba(3,2,2,.08),rgba(3,2,2,.28) 72%,rgba(3,2,2,.82)),
+    url('/klinikos-rose-wide-production.png') center 47% / 125% auto no-repeat;
+  filter: saturate(.78) brightness(.58) contrast(1.08);
 }
 
 .rose-home .speedster-panel::before {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(90deg,rgba(5,3,3,.08),rgba(5,3,3,.22) 52%,rgba(5,3,3,.72));
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg,rgba(4,2,3,.04),rgba(4,2,3,.14) 45%,rgba(4,2,3,.36));
 }
 
 .rose-home .speedster-panel::after {
-  content:"";
-  position:absolute;
-  left:12%;
-  right:10%;
-  bottom:20%;
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(230,129,123,.34),transparent) !important;
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 48%;
+  bottom: 19%;
+  z-index: 1;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg,transparent,rgba(230,129,123,.32),transparent) !important;
+}
+
+.rose-home .reference-strip-content {
+  position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 1024px) {
   .rose-home .reference-home {
-    min-height: calc(100vh - 88px) !important;
-    padding-top: 0 !important;
-    padding-bottom: 1rem !important;
+    min-height: 1020px !important;
+  }
+
+  .rose-home .reference-state-rail,
+  .rose-home .reference-center,
+  .rose-home .reference-action-rail {
+    grid-row: 1;
+  }
+
+  .rose-home .reference-state-rail {
+    grid-column: 1;
+    padding-top: 134px;
+  }
+
+  .rose-home .reference-state-rail ol {
+    position: relative;
+    height: 374px;
+    margin-left: 19px;
+  }
+
+  .rose-home .reference-state-rail li {
+    position: absolute;
+    left: 23px;
+    margin: 0 !important;
+  }
+
+  .rose-home .reference-state-rail li > span:first-child {
+    left: -27px !important;
+  }
+
+  .rose-home .reference-state-rail li:nth-child(1) { top: 0; }
+  .rose-home .reference-state-rail li:nth-child(2) { top: 117px; }
+  .rose-home .reference-state-rail li:nth-child(3) { top: 204px; }
+  .rose-home .reference-state-rail li:nth-child(4) { top: 287px; }
+  .rose-home .reference-state-rail li:nth-child(5) { top: 368px; }
+
+  .rose-home .reference-state-rail li:first-child::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -15px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #f4a09a;
+    box-shadow: 0 0 13px #ef8d87;
   }
 
   .rose-home .reference-center {
+    grid-column: 2;
     min-height: 0 !important;
     justify-content: flex-start !important;
-    padding-top: clamp(2.4rem, 5.2vh, 4.7rem) !important;
+    padding-top: 90px !important;
+  }
+
+  .rose-home .reference-hero > p:first-child {
+    font-size: 11px;
+    letter-spacing: .5em;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: 1.35rem !important;
     max-width: 760px !important;
-    font-size: clamp(4.8rem, 6.55vw, 7rem) !important;
-    line-height: .87 !important;
-    letter-spacing: -.064em !important;
+    margin-top: 38px !important;
+    font-size: 104px !important;
+    line-height: .84 !important;
+    letter-spacing: -.067em !important;
   }
 
   .rose-home .reference-hero h1 + p {
-    margin-top: 1.25rem !important;
+    margin-top: 26px !important;
+    font-size: 15px;
+    line-height: 24px;
   }
 
   .rose-home #living-composer {
-    margin-top: 2.25rem !important;
-    max-width: 770px !important;
+    width: 100%;
+    max-width: 780px !important;
+    margin-top: 40px !important;
   }
 
   .rose-home #living-composer > div {
-    min-height: 108px !important;
+    min-height: 112px !important;
   }
 
-  .rose-home .reference-card-row {
-    margin-top: 4.7rem !important;
+  .rose-home .reference-action-rail {
+    grid-column: 3;
+    padding-top: 109px;
+  }
+
+  .rose-home .reference-action-rail nav {
+    display: grid;
+    gap: 28px;
+  }
+
+  .rose-home .reference-action-rail a {
+    gap: 5px;
+  }
+
+  .rose-home .reference-bottom-grid {
+    grid-row: 2;
+    margin-top: 35px;
   }
 }
 
-@media (min-width: 1024px) and (max-height: 940px) {
-  .rose-home .reference-state-rail,
-  .rose-home .reference-action-rail {
-    padding-top: 205px;
+@media (min-width: 1441px) {
+  .rose-home .rose-atmosphere {
+    background-size: min(66.7vw, 1280px) auto !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .rose-home .rose-atmosphere {
+    background-position: center 58px !important;
+    background-size: min(142vw,1085px) auto !important;
   }
 
   .rose-home .reference-center {
-    padding-top: 1.15rem !important;
+    padding-top: 68px;
   }
 
   .rose-home .reference-hero h1 {
-    margin-top: 1rem !important;
-    font-size: clamp(4.25rem, 5.75vw, 6.2rem) !important;
+    font-size: clamp(4.2rem,12vw,6.5rem);
   }
 
-  .rose-home .reference-hero h1 + p {
-    margin-top: .85rem !important;
-  }
-
-  .rose-home #living-composer {
-    margin-top: 1.55rem !important;
-  }
-
-  .rose-home .reference-card-row {
-    margin-top: 4rem !important;
+  .rose-home .reference-bottom-grid {
+    margin-top: 128px;
   }
 }
 
-@media(max-width:900px){
-  .rose-home .rose-atmosphere {
-    background-size:min(142vw,980px) auto !important;
-    background-position:center 11% !important;
+@media (max-width: 767px) {
+  .rose-home .reference-header {
+    min-height: 84px !important;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
-  .rose-home .reference-card-row {
-    margin-top: 4.5rem !important;
+  .rose-home .living-home-brand {
+    gap: 0;
+  }
+
+  .rose-home .living-home-brand > span:first-child {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .rose-home .living-home-brand > span:last-child {
+    display: none;
+  }
+
+  .rose-home .reference-auth {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 8px;
+  }
+
+  .rose-home .rose-atmosphere {
+    background-position: center 46px !important;
+    background-size: 930px auto !important;
+    filter: saturate(.76) contrast(1.04) brightness(.72);
+  }
+
+  .rose-home .reference-center {
+    padding-top: 52px;
+  }
+
+  .rose-home .reference-hero > p:first-child {
+    font-size: 9px;
+    letter-spacing: .36em;
+  }
+
+  .rose-home .reference-hero h1 {
+    margin-top: 26px !important;
+    font-size: clamp(3.35rem,16vw,4.6rem) !important;
+    line-height: .9 !important;
+  }
+
+  .rose-home .reference-hero h1 + p {
+    margin-top: 22px !important;
+    font-size: 13px;
+    line-height: 21px;
+  }
+
+  .rose-home #living-composer {
+    margin-top: 34px !important;
+  }
+
+  .rose-home .reference-composer-shell {
+    min-height: 100px !important;
+    grid-template-columns: 2.5rem minmax(0,1fr) 2.7rem 3rem;
+    gap: 5px;
+    padding-right: 12px;
+    padding-left: 12px;
+    border-radius: 26px;
+  }
+
+  .rose-home .reference-composer-shell textarea {
+    font-size: 13px;
+  }
+
+  .rose-home .reference-zumi {
+    top: calc(100% - 30px);
+  }
+
+  .rose-home .reference-zumi-orb {
+    width: 82px;
+    height: 82px;
+  }
+
+  .rose-home .reference-zumi-state-layer {
+    inset: -7px;
+    transform: scale(.9);
+  }
+
+  .rose-home .reference-bottom-grid {
+    margin-top: 118px;
+  }
+
+  .rose-home .reference-card {
+    height: auto;
+    min-height: 128px;
+  }
+
+  .rose-home .reference-lower-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .rose-home .reference-strip-art {
+    min-height: 112px;
+  }
+
+  .rose-home .reference-strip-content {
+    grid-template-columns: 1fr;
+    border-top: 1px solid rgba(208,131,125,.1);
+    border-left: 0;
+    padding: 24px;
+  }
+
+  .rose-home .reference-strip-content > span:last-child {
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rose-home .reference-zumi-state-layer {
+    opacity: .26;
   }
 }

@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `18175eed039aaced6eff49753c260fdceec60dea`
+Audited main: `d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,8 +22,8 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `18175ee` | `CANONICAL` | Current merge base after the exact-head-green neutral Grid fixture migration, stored billing truth, and Zumi/Cloudflare privacy hardening through PR #110. |
-| `fix/grid-marble-professional-enrollment-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Restores accessible Marble-mode map contrast and opens the existing professional enrollment path to future healthcare roles while preserving human credential and malpractice review. |
+| `origin/main` | `d62bc92` | `CANONICAL` | Current merge base after exact-head-green stored billing truth, Zumi/Cloudflare privacy hardening, and the Grid Marble/map plus universal professional-intake corrections through PR #111. |
+| `fix/living-home-reference-lock-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Exact approved Living Home production assets and 1402 × 1122 composition implemented with responsive and interaction evidence; exact-head CI and merge still required. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 
 ## Local preservation ledger
