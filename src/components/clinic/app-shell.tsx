@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import {
   Activity, Bell, Blocks, Boxes, BriefcaseMedical, Calculator, CalendarDays, ChartNoAxesCombined, ChevronDown, CircleDollarSign, Gauge,
-  AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Command, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
+  AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Search, Settings2, ShieldCheck, Siren, Sparkles,
   Stethoscope, Users, Video, X, Waypoints,
