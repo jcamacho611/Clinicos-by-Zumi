@@ -127,7 +127,7 @@ export async function listZumiConversations(session: ClinicSession, take = 30): 
   return rows.map((row) => ({ id: row.id, title: titleFromRow(row), createdAt: row.createdAt, lastMessageAt: row.lastMessageAt }));
 }
 
-export async function z​umiConversationOwnedBy(session: ClinicSession, conversationId: string) {
+export async function zumiConversationOwnedBy(session: ClinicSession, conversationId: string) {
   const rows = await db.$queryRaw<Array<{ id: string }>>(Prisma.sql`
     SELECT "id"
     FROM "zumi_conversations"
@@ -189,7 +189,7 @@ export async function getZumiConversation(session: ClinicSession, conversationId
 
 export async function getRecentZumiConversationContext(session: ClinicSession, conversationId: string, take = MAX_MESSAGES_PER_CONTEXT) {
   const boundedTake = Math.max(2, Math.min(take, MAX_MESSAGES_PER_CONTEXT));
-  if (!(await z​umiConversationOwnedBy(session, conversationId))) return null;
+  if (!(await zumiConversationOwnedBy(session, conversationId))) return null;
   const rows = await db.$queryRaw<MessageRow[]>(Prisma.sql`
     SELECT "id", "role", "interactionMode", "encryptedContent", "encryptionIv", "encryptionAuthTag", "checksumSha256", "createdAt"
     FROM "zumi_conversation_messages"
@@ -218,7 +218,7 @@ export async function appendZumiConversationTurn(input: {
   interactionMode: ZumiConversationMode;
 }) {
   const conversationId = input.conversationId?.trim() || randomUUID();
-  const existing = input.conversationId ? await z​umiConversationOwnedBy(input.session, conversationId) : false;
+  const existing = input.conversationId ? await zumiConversationOwnedBy(input.session, conversationId) : false;
   if (input.conversationId && !existing) throw new NetworkAccessError("Zumi conversation not found.", 404);
 
   const questionEncrypted = encryptSensitiveContent(Buffer.from(input.question, "utf8"));
