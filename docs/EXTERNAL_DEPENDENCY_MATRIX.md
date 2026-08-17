@@ -2,7 +2,7 @@
 
 Status: `AUTHORITATIVE EXTERNAL-TRUTH INDEX`
 Updated: 2026-08-17 America/New_York
-Repository baseline at update: `main@a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
+Repository baseline at update: `main@cc6162c9349e2ade8ec8a27cdd08a05296fb70a2`
 
 This is the operating inventory for services, APIs, healthcare networks, credentials, contracts, BAAs, cost ownership, and production-connection truth.
 
@@ -11,6 +11,7 @@ The purpose is to replace unnecessary clinic software with native Klinikos capab
 ## Status vocabulary
 
 - **Built** — Klinikos-side workflow/interface is implemented.
+- **Credential created / runtime unverified** — an external credential exists but complete deployment/runtime evidence is still missing.
 - **Manual fallback** — the Klinikos workflow is real, but an authorized human performs the external step.
 - **Adapter ready / Configurable** — an internal adapter/configuration boundary exists; production connection is not verified.
 - **Sandbox-ready** — usable in a non-production environment once sandbox credentials/configuration are supplied.
@@ -22,20 +23,26 @@ The purpose is to replace unnecessary clinic software with native Klinikos capab
 
 | Klinikos capability | Current/preferred rail | PHI posture | External gates | Variable-cost owner | Current truth |
 | --- | --- | --- | --- | --- | --- |
-| Public application hosting | Render | PHI depends on production approval/configuration | Hosting account, environment secrets, production security/BAA posture where required | Klinikos infrastructure | **Verified service health in demo mode on 2026-08-16; exact deployed SHA and PHI posture remain unverified** |
-| Public domain / DNS | GoDaddy + `klinikos.io` | No PHI by DNS itself | DNS/TLS/domain account | Klinikos | **`www.klinikos.io/api/health` returned HTTP 200 through Cloudflare/Render on 2026-08-16; exact deploy SHA remains unverified** |
-| Clinic Operating Analysis checkout | Preferred live Stripe-hosted Checkout when fully configured; existing GoDaddy paylink fallback | Keep PHI out of Stripe/checkout metadata | Stripe webhook registration/secret and live exercise; GoDaddy reconciliation remains available | Buyer/clinic | **Stripe Checkout code built in current candidate; GoDaddy checkout/manual fallback preserved** |
-| Commercial payment verification | Signed Stripe webhook evidence or authorized manual reconciliation | Keep PHI out of processor metadata and persisted webhook payloads | Deployed endpoint, signing secret, runtime evidence, account/security review | Buyer/clinic transaction | **Shared evidence/activation model built; Stripe signed-webhook code built in current candidate; live verification pending** |
-| Direct card/payment processor | Stripe | Keep PHI out of metadata | Live key is operator-reported configured; live endpoint registration, signing secret, security/commercial review, and real payment exercise remain | Clinic/transaction economics | **BUILT / OPERATOR-REPORTED KEY CONFIGURED / PENDING CONNECTION — not verified live** |
-| Stripe live webhook | `POST /api/webhooks/stripe` | Raw body is verified; persisted evidence is identifier/status-only | Register only `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `payment_intent.payment_failed`, and `charge.refunded`; store live endpoint secret in Render | Klinikos infrastructure | **Built in current candidate; signing secret pending; no live event yet observed** |
-| Grid marketplace payouts | Stripe Connect or equivalent platform rail | Keep PHI out of payout metadata | Platform terms, connected-account onboarding, credentials, legal/commercial review | Transaction economics/platform fee | **Pending connection** |
-| AI Gateway / Klinikos Intelligence | Provider-neutral; Cloudflare Workers AI, approved OpenAI configuration, or self-hosted provider as configured | PHI prohibited unless exact provider/workload is approved | Provider account, approved model/config, contract/BAA where needed, PHI egress approval | Prefer plan allowance/customer-funded measured usage | **Gateway and Cloudflare adapter built; production health reported `liveIntegrations: false`, so live inference is not verified** |
+| Public application hosting | Render | PHI depends on production approval/configuration | Hosting account, environment secrets, production security/BAA posture where required | Klinikos infrastructure | **Verified service health in demo mode on 2026-08-16; newest deployed SHA and PHI posture remain unverified** |
+| Public domain / DNS | GoDaddy + `klinikos.io` | No PHI by DNS itself | DNS/TLS/domain account | Klinikos | **`www.klinikos.io/api/health` returned HTTP 200 through Cloudflare/Render on 2026-08-16; newest deployed SHA remains unverified** |
+| GitHub Actions quality/deploy gates | GitHub Actions | Repository/code metadata only | GitHub billing/account spending allowance | Klinikos infrastructure | **Blocked before job startup on 2026-08-17 by GitHub account billing/spending-limit state; this is not a code-test failure** |
+| Clinic Operating Analysis checkout | Live Stripe-hosted Checkout when fully configured; GoDaddy exact-value fallback remains | Keep PHI out of Stripe/checkout metadata | Stripe live webhook endpoint registration/secret and controlled live exercise | Buyer/clinic | **Stripe hosted Checkout code merged in PR #117; GoDaddy/manual fallback preserved; external live verification pending** |
+| Commercial payment verification | Signed Stripe webhook evidence or authorized manual reconciliation | Keep PHI out of processor metadata and persisted webhook payloads | Deployed endpoint, signing secret, runtime evidence, account/security review | Buyer/clinic transaction | **Shared evidence/activation model + signed Stripe webhook implementation merged; external live verification pending** |
+| Direct card/payment processor | Stripe | Keep PHI out of metadata | Live API secret operator-reported configured; webhook registration/signing secret, deploy/runtime proof, and real payment exercise remain | Clinic/transaction economics | **BUILT / OPERATOR-REPORTED LIVE KEY / PENDING EXTERNAL CONNECTION — not verified live** |
+| Stripe live webhook | `POST /api/webhooks/stripe` | Raw body verified; persisted evidence is bounded identifier/status truth | Register only the five supported events and store the live endpoint secret in Render | Klinikos infrastructure | **Merged in PR #117; live signing secret/runtime event proof still pending** |
+| Stripe explicit test rail | Separate test API + webhook secrets | No production settlement truth | Deliberate test-mode selection and separate endpoint secret | Klinikos infrastructure | **Built contract; runtime configuration optional/pending; cannot silently satisfy live flow** |
+| Grid marketplace payouts | Stripe Connect or equivalent platform rail | Keep PHI out of payout metadata | Platform terms, connected-account onboarding, credentials, legal/commercial review, fulfillment/dispute policy | Transaction economics/platform fee | **Pending connection** |
+| AI Gateway / Klinikos Intelligence | Provider-neutral; Cloudflare Workers AI, approved OpenAI configuration, or self-hosted provider as configured | PHI prohibited unless exact provider/workload is approved | Provider account, approved model/config, contract/BAA where needed, PHI egress approval | Prefer plan allowance/customer-funded measured usage | **Gateway and Cloudflare adapter built; operator-reported configured; deliberate non-PHI production inference proof still required** |
 | Public web research/tooling | Approved research-capable provider/tool | Public data only by default | Tool/provider configuration and policy | Klinikos or customer-funded intelligence usage | **Architecture built; external availability environment-specific** |
-| Grid browser geolocation | Browser Geolocation API | Raw visitor location should not become public inventory/analytics by default | User permission + secure context | No direct API COGS | **Built: explicit opt-in only** |
-| Grid keyless map rendering | OpenStreetMap embed/fallback | Avoid PHI; public resource coords are privacy-reduced | Public map availability/terms | Minimal/shared infrastructure | **Built fallback** |
-| Grid Google map path | Google Maps Platform | Avoid PHI | API key, map ID, billing/project controls, vendor/security review | Klinikos COGS recovered in Grid/plan economics | **Adapter ready / Pending configuration** |
-| Geocoding / Places / travel routing | Google or approved alternative | Avoid PHI unless separately approved | API key/project controls/vendor review | Klinikos COGS or bounded usage allowance | **Pending connection** |
-| SMS / voice | Twilio, Telnyx, or approved HIPAA-capable rail | Potential PHI | BAA and approved configuration before PHI | Prefer clinic-owned or priced allowance | **Adapter/config surfaces; Pending connection** |
+| Grid browser geolocation | Browser Geolocation API | Raw visitor location should not become public inventory/analytics by default | User permission + secure HTTPS context | No direct API COGS | **Built: explicit opt-in only** |
+| Grid primary interactive map | MapLibre GL JS + OpenFreeMap | Public-display-safe coordinates only; public resource coords privacy-reduced | Public CDN/tile availability; no Klinikos API credential required | Minimal/shared infrastructure | **Built and merged in PR #114; Google billing is not required for core Grid** |
+| Grid emergency map fallback | OpenStreetMap embed | Avoid PHI; public resource coords privacy-reduced | Public OSM availability/terms | Minimal/shared infrastructure | **Built fallback** |
+| Optional geocoding / reverse geocoding / routing | Geoapify or another reviewed provider | Avoid PHI unless separately approved | API credential, provider/security review, usage/economics controls | Customer-funded allowance or Klinikos COGS when justified | **Optional / Pending connection; absence does not break Grid map/geolocation/Haversine matching** |
+| Optional Google Maps path | Google Maps Platform | Avoid PHI | Google billing/project/keys only if a future Google-specific capability is justified | Customer-funded allowance or Klinikos COGS | **Optional adapter only; NOT a launch dependency** |
+| SMS delivery | Twilio Messaging Service via restricted API-key auth | PHI blocked unless exact HIPAA/BAA posture is approved | `AC` account + restricted `SK` credential + `MG` Messaging Service/sender + applicable US messaging/A2P requirements | Prefer clinic-owned or priced allowance | **Server-side sender code merged in PR #119; restricted API key created/operator-reported; Messaging Service/runtime delivery proof pending** |
+| Phone verification | Twilio Verify via restricted API-key auth | Identity/contact data; no clinical content by design | Restricted API key + `VA` Verify Service + controlled verification proof | Klinikos or plan allowance | **Start/check adapter merged in PR #119; Verify Service/runtime proof pending** |
+| Twilio inbound webhook signatures | Twilio master Auth Token when an inbound webhook is implemented | Depends on webhook purpose | Build inbound webhook + retain master token only where signature validation requires it | Klinikos/clinic | **Not required by current outbound API-key rail** |
+| Twilio PHI messaging / voice | Approved HIPAA-capable Twilio relationship or other reviewed rail | Potential PHI | BAA/security/product eligibility, consent, minimum-necessary policy | Prefer clinic-owned or priced allowance | **Blocked / fail-closed until approved** |
 | AI voice | Reviewed voice vendor or composed stack | Potential PHI | BAA/security/model/vendor terms | Customer-funded/plan usage | **Pending connection** |
 | Transactional email | Approved provider | Potential PHI | PHI-specific terms/BAA where required | Klinikos or clinic-owned | **Configurable / Pending connection** |
 | Fax | HIPAA-capable provider or clinic-owned fax | Yes | BAA/credentials/vendor review | Prefer existing clinic account/pass-through | **Manual fallback / Pending connection** |
@@ -70,28 +77,50 @@ Redaction reduces exposure; it does not replace those gates.
 
 ## Payment rule
 
-Current candidate paid-entry truth is:
+Current merged paid-entry truth is:
 
-`server-owned intent/amount → Stripe-hosted Checkout when fully configured OR GoDaddy fallback → signed Stripe evidence OR authorized manual evidence → product policy / reconciliation`
+`server-owned intent/amount → Stripe-hosted Checkout when live API + live webhook verification are configured OR GoDaddy fallback → signed Stripe evidence OR authorized manual evidence → product policy / reconciliation`
 
-A redirect back to Klinikos is never payment evidence. The production Stripe route is live-only and rejects signed test-mode events. Grid payouts are separately gated: financial obligation, fee calculation, reservation, fulfillment, or customer payment do not prove external payout settlement.
+A redirect back to Klinikos is never payment evidence. The production Stripe route is live-only and rejects signed test-mode events. The merged rail handles the supported Checkout success/pending/failure/refund evidence through the shared Financial OS. Grid payouts are separately gated: financial obligation, fee calculation, reservation, fulfillment, or customer payment do not prove external payout settlement.
+
+Supported production Stripe events for the current rail are:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
+- `payment_intent.payment_failed`
+- `charge.refunded`
 
 ## Maps and location rule
 
-The current Grid MVP can function without Google credentials:
+The current Grid core works without Google credentials:
 
+- MapLibre + OpenFreeMap is the primary interactive map path;
 - explicit browser geolocation is built;
-- keyless OpenStreetMap is the working fallback;
+- OpenStreetMap embed is the emergency fallback;
 - only real reviewed/published supply creates inventory markers;
 - Haversine radius matching uses stored coordinate truth where available;
-- Google map rendering remains an optional adapter path pending actual key/map ID configuration;
-- geocoding, Places, travel routing, ETA, and contracted service guarantees remain separate external dependencies.
+- public coordinates remain privacy-reduced;
+- Geoapify or another reviewed provider may later enrich geocoding/routing without becoming eligibility authority;
+- Google is optional and must not block launch.
 
-Do not describe straight-line distance as travel time and do not invent coordinates for unmapped supply.
+Do not describe straight-line distance as travel time and do not invent coordinates, routes, ETAs, or supply.
+
+## Communications rule
+
+The merged Twilio outbound REST contract is:
+
+`TWILIO_ACCOUNT_SID + TWILIO_API_KEY_SID + TWILIO_API_KEY_SECRET`
+
+SMS additionally requires `TWILIO_MESSAGING_SERVICE_SID`. Verify additionally requires `TWILIO_VERIFY_SERVICE_SID`. The master Auth Token is not ordinary outbound authentication.
+
+A configured sender does not authorize PHI. PHI-bearing SMS/voice remains fail-closed until the exact account/product is eligible, the required BAA/security posture is approved, consent/policy is defined, and message content is minimum necessary.
 
 ## Production database/security infrastructure note
 
-The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. The latest repository candidate contains 53 additive migrations; exact-head CI must apply all 53 to fresh PostgreSQL before merge, and the Stripe journey probes migration 53 against populated legacy payment evidence.
+The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. Migration 53 for Stripe payment truth is merged. The Stripe candidate recorded successful local populated-legacy migration/journey evidence before merge.
+
+GitHub Actions could not independently rerun the post-convergence exact-head gates on 2026-08-17 because GitHub refused jobs before startup due the account billing/spending-limit state. Restore Actions billing/allowance and rerun current-main schema, migration, type, lint, test, MVP, production build/start and deploy-contract gates. Do not describe the infrastructure refusal as a code test failure.
 
 The last inspected Neon project setting reported HIPAA mode as disabled. This is an infrastructure configuration fact, not a legal conclusion. Real-PHI production approval remains a separate security/compliance decision and must not be inferred from application code.
 
@@ -112,12 +141,14 @@ The last inspected Neon project setting reported HIPAA mode as disabled. This is
 
 Prioritize external work by revenue and operational leverage:
 
-1. independently verify the newest production deployment/domain/login journey;
-2. deploy the Stripe candidate, register the live webhook endpoint, configure the signing secret, and deliberately exercise one real payment while preserving the GoDaddy/manual fallback;
-3. connect a production Klinikos Intelligence provider only under the correct data/contract posture;
-4. add production geocoding/routing only as real Grid supply makes it valuable;
-5. connect processor/payout rails when recurring subscriptions and Grid settlement justify them;
-6. connect communications with an approved PHI posture;
-7. advance eligibility/claims rails for clinics that need them;
-8. connect lab/imaging/eRx and other regulated clinical networks only with real clinic/vendor agreements;
-9. add customer connection onboarding and per-tenant usage/cost metering around every variable-cost rail.
+1. restore GitHub Actions billing/allowance and rerun exact-head quality/deploy gates on current main;
+2. independently verify the newest Render deployment SHA, domain, login and primary user journeys;
+3. register the live Stripe webhook endpoint, configure the signing secret, and exercise one controlled real payment plus refund while preserving the GoDaddy/manual fallback;
+4. finish Twilio Messaging Service/Verify service setup and run controlled non-PHI SMS/verification tests;
+5. run a deliberate non-PHI production Zumi/Cloudflare inference proof;
+6. connect Stripe Connect only when Grid payout onboarding/legal/policy is ready;
+7. add geocoding/routing only when real Grid supply makes it valuable;
+8. connect communications for PHI only after the exact approved contractual/security posture exists;
+9. advance eligibility/claims rails for clinics that need them;
+10. connect lab/imaging/eRx and other regulated clinical networks only with real clinic/vendor agreements;
+11. add customer connection onboarding and per-tenant usage/cost metering around variable-cost rails.
