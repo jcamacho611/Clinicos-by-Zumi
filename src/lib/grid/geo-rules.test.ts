@@ -5,6 +5,7 @@ import {
   isGridCoordinates,
   openStreetMapUrl,
   publicGridCoordinate,
+  rankGridCoordinatesByDistance,
 } from "@/lib/grid/geo-rules";
 
 describe("Grid geographic rules", () => {
@@ -45,6 +46,27 @@ describe("Grid geographic rules", () => {
       { latitude: 40.7, longitude: -74, radiusMiles: 25, state: "NY" },
       { state: "NY" },
     )).toEqual({ eligible: false, distanceMiles: null, mode: "radius" });
+  });
+
+  it("keeps public map results and the distance ledger on the same radius", () => {
+    const ranked = rankGridCoordinatesByDistance([
+      { id: "far", latitude: 41.2, longitude: -74 },
+      { id: "near", latitude: 40.71, longitude: -74.01 },
+      { id: "closest", latitude: 40.701, longitude: -74.001 },
+    ], { latitude: 40.7, longitude: -74 }, 10);
+
+    expect(ranked.map((candidate) => candidate.id)).toEqual(["closest", "near"]);
+    expect(ranked.every((candidate) => candidate.distanceMiles != null && candidate.distanceMiles <= 10)).toBe(true);
+  });
+
+  it("preserves published order and avoids fake distance without a permission-derived origin", () => {
+    expect(rankGridCoordinatesByDistance([
+      { id: "first", latitude: 40.7, longitude: -74 },
+      { id: "second", latitude: 41.2, longitude: -74 },
+    ], null, 25)).toEqual([
+      { id: "first", latitude: 40.7, longitude: -74, distanceMiles: null },
+      { id: "second", latitude: 41.2, longitude: -74, distanceMiles: null },
+    ]);
   });
 
   it("reduces coordinate precision for public discovery", () => {

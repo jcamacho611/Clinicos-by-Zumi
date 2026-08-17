@@ -70,7 +70,7 @@ Recovery rule: create a current-main implementation branch, compare each changed
 2. **In final verification:** PR #97 safe wiring reached main; its exact-price, connector-bound/cache, no-clearance-language, and neutral-fixture remediation is isolated in the follow-up branch after PR #97 merged concurrently at its older head.
 3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
 4. **Remove person-specific demo identity from Grid fixtures/tests/UI** and replace it with neutral provider/participant labels without weakening synthetic-data evidence.
-5. **Complete selected-resource and map/ledger continuity**: pin/list focus, preserved selected resource into governed request, manual city/ZIP/place origin, privacy-safe bounds behavior.
+5. **Complete the remaining manual-origin map UX**: pin/list focus, shared browser-location radius results, and selected-resource request continuity are complete; manual city/ZIP/place origin and privacy-safe interactive bounds remain.
 6. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
 7. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements.
 8. **Prove two end-to-end Grid transactions through the same engine**: one regulated workforce/space composition and one non-clinical business-service engagement, both operator-assisted and auditable.
