@@ -87,7 +87,7 @@ Dynamic workspaces may host/adapt Patients, Clinic OS operations, Grid, Care, Bi
 
 The approved cinematic Klinikos reference is the authoritative design destination for the converted experience. It is not a mood board.
 
-The detailed experience law is in `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+The uploaded design package authority is recorded in `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`. The detailed experience law is in `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
 
 ### Visual system
 

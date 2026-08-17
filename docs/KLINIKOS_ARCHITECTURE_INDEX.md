@@ -12,14 +12,15 @@ When sources conflict, use this order:
 1. **Current repository implementation, schema, migrations, tests, exact-head CI and verified runtime evidence** for what exists now.
 2. `docs/SOURCE_OF_TRUTH.md` for current operating law.
 3. `docs/KLINIKOS_ECOSYSTEM_CANON.md` for newest ecosystem/wiring/lifecycle direction.
-4. `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md` for newest frontend/reference/wiring acceptance law.
-5. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md` for current commercial/pricing architecture.
-6. `docs/FEATURE_STATUS.md` for capability status.
-7. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
-8. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
-9. Current specialist specifications.
-10. Constitution/Master Canon for deeper invariants not superseded above.
-11. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
+4. `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for the uploaded design package and pixel-reference authority.
+5. `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md` for newest frontend/reference/wiring acceptance law.
+6. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md` for current commercial/pricing architecture.
+7. `docs/FEATURE_STATUS.md` for capability status.
+8. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
+9. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
+10. Current specialist specifications.
+11. Constitution/Master Canon for deeper invariants not superseded above.
+12. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
 
 A more detailed old document does not outrank a newer authoritative correction.
 
@@ -28,7 +29,7 @@ A more detailed old document does not outrank a newer authoritative correction.
 1. Fetch latest `main`, open PRs, relevant branches and CI.
 2. Read `SOURCE_OF_TRUTH.md`.
 3. Read `KLINIKOS_ECOSYSTEM_CANON.md`.
-4. For frontend work read `KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+4. For frontend work read `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` and `KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
 5. For pricing/commercial work read `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
 6. Read `FEATURE_STATUS.md` and relevant code/tests before claiming something is built.
 7. Read `EXTERNAL_DEPENDENCY_MATRIX.md` before claiming an external rail is connected.
@@ -97,7 +98,7 @@ Approved transparent asset paths, where present:
 - `public/klinikos-rose-wide-transparent.png`
 - `public/klinikos-rose-centered-transparent.png`
 
-See `KLINIKOS_DESIGN_AND_WIRING_CANON.md` for functional acceptance, not just visual styling.
+See `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for the uploaded package authority and `KLINIKOS_DESIGN_AND_WIRING_CANON.md` for functional acceptance, not just visual styling.
 
 ## Grid scope
 

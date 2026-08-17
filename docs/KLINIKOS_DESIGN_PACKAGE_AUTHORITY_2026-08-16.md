@@ -1,11 +1,11 @@
 # KLINIKOS — DESIGN PACKAGE AUTHORITY
 
-Version: `2026-08-16.1`  
+Version: `2026-08-16.1`
 Status: `AUTHORITATIVE DESIGN SOURCE`
 
 ## 1. Authority
 
-The uploaded package **`Klinikos design screens(1).zip`** is the current authoritative design package for Klinikos.
+The uploaded package **`Klinikos design screens.zip`** is the current authoritative design package for Klinikos.
 
 It is not inspiration, a mood board, a loose direction, or a marketing-only concept. It defines the design system and reference surfaces that future Klinikos product work must be built around.
 

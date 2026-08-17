@@ -5,7 +5,7 @@ Status: `AUTHORITATIVE EXPERIENCE DIRECTION`
 
 This document defines the newest frontend, Living Home, design-system and wiring direction. It does not replace runtime truth or security boundaries.
 
-The approved page-by-page reference notes are recorded in `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md` and must be used together with this canon.
+The uploaded package authority is recorded in `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`. The approved page-by-page reference notes are recorded in `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md`. Both must be used together with this canon.
 
 ## 1. Core design law
 
