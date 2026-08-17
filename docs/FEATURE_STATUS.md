@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@075ff39deca80c08c1d726425c05632568e16b3d`
-Latest local candidate: Grid map Marble-mode contrast and future-role professional enrollment corrections; type-check, lint (one unrelated warning), and focused Grid/design tests are green; full exact-head verification pending.
+Current audited main: `main@18175eed039aaced6eff49753c260fdceec60dea`
+Latest local candidate: Grid map Marble-mode contrast and future-role professional enrollment corrections reconciled with stored billing truth and Zumi/Cloudflare privacy hardening; Prisma generation, type-check, lint (one unrelated warning), and all 641 tests are green; fresh exact-head CI verification pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -44,6 +44,8 @@ PR #72’s exact final head also passed the same Quality gate before merge.
 PR #96's exact final head passed Prisma generation/validation, all 51 fresh PostgreSQL migrations, TypeScript, lint, 604 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as current main. The merge commit's push Quality gate also completed successfully.
 
 PR #109's exact final head passed Prisma generation/validation, all 52 fresh PostgreSQL migrations, TypeScript, lint, 636 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as `075ff39`.
+
+PR #108's stored billing truth and PR #110's Zumi/Cloudflare privacy hardening passed their exact-head Quality and deploy-contract gates before merging as `76b24e1` and `18175ee` respectively.
 
 ## Public / customer entry
 

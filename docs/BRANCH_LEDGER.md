@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `075ff39deca80c08c1d726425c05632568e16b3d`
+Audited main: `18175eed039aaced6eff49753c260fdceec60dea`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,7 +22,7 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `075ff39` | `CANONICAL` | Current merge base after front-desk and insurance truth wiring plus the exact-head-green neutral Grid provider fixture migration through PR #109. |
+| `origin/main` | `18175ee` | `CANONICAL` | Current merge base after the exact-head-green neutral Grid fixture migration, stored billing truth, and Zumi/Cloudflare privacy hardening through PR #110. |
 | `fix/grid-marble-professional-enrollment-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Restores accessible Marble-mode map contrast and opens the existing professional enrollment path to future healthcare roles while preserving human credential and malpractice review. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 
