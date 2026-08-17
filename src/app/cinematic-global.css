@@ -156,6 +156,43 @@
   --tw-prose-code:#f2c0ba;
 }
 
+/* Grid discovery is a sustained reading and geographic task, so this section uses
+   the design constitution's Marble mode. Keep it intentionally light even while
+   the surrounding public shell is converted through the Obsidian compatibility
+   layer above. The extra scope prevents those legacy !important rules from
+   erasing text contrast or turning the map ledger dark. */
+.klinikos-cinematic-root .grid-marble-surface {
+  color-scheme:light;
+  background-color:#f5f7f8!important;
+  color:#0b1220!important;
+}
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-white"],
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-white/"] { background-color:#fff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-slate-50"] { background-color:#f8fafc!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-slate-100"] { background-color:#f1f5f9!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-teal-50"] { background-color:#f0fdfa!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-teal-700"] { background-color:#0f766e!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-sky-600"] { background-color:#0284c7!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="hover:bg-sky-500"]:hover { background-color:#0ea5e9!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-950"] { color:#020617!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-900"] { color:#0f172a!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-800"] { color:#1e293b!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-700"] { color:#334155!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-600"] { color:#475569!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-500"],
+.klinikos-cinematic-root .grid-marble-surface [class~="text-slate-400"] { color:#64748b!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-teal-700"] { color:#0f766e!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="text-[#0b1220]"] { color:#0b1220!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="text-[#5b6675]"] { color:#5b6675!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="text-[#174ea6]"] { color:#174ea6!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="border-slate-200"] { border-color:#e2e8f0!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="border-teal-200"] { border-color:#99f6e4!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="border-[#e6e9ee]"] { border-color:#e6e9ee!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="focus:border-teal-"]:focus { border-color:#2dd4bf!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="focus:border-sky-"]:focus { border-color:#38bdf8!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="ring-teal-"] { --tw-ring-color:#f0fdfa!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="ring-sky-"] { --tw-ring-color:#e0f2fe!important; }
+
 @media(max-width:767px){
   .klinikos-cinematic-root { background:radial-gradient(circle at 52% 0%,rgba(123,29,36,.16),transparent 28%),#050303; }
 }

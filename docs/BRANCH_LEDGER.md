@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `cf4130b3ce4db5effde76d61d368b135da01c715`
+Audited main: `18175eed039aaced6eff49753c260fdceec60dea`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,8 +22,8 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `cf4130b` | `CANONICAL` | Current merge base after native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, and native internal messaging through PR #105. |
-| `origin/fix/grid-neutral-provider-fixture-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Neutralizes person-specific Grid contractor/applicant fixture identities while preserving credential, availability, request, payout, and task relationships. |
+| `origin/main` | `18175ee` | `CANONICAL` | Current merge base after the exact-head-green neutral Grid fixture migration, stored billing truth, and Zumi/Cloudflare privacy hardening through PR #110. |
+| `fix/grid-marble-professional-enrollment-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Restores accessible Marble-mode map contrast and opens the existing professional enrollment path to future healthcare roles while preserving human credential and malpractice review. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 
 ## Local preservation ledger
@@ -111,6 +111,7 @@ origin/feature/zumi-command-experience
 origin/fix/brand-assets-404
 origin/fix/ecosystem-wiring-truth-2026-08-16
 origin/fix/grid-map-location-continuity-2026-08-16
+origin/fix/grid-neutral-provider-fixture-2026-08-16
 origin/fix/living-home-original-visual-match
 origin/fix/living-home-visual-corrections
 origin/fix/pin-node-version

@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@cf4130b3ce4db5effde76d61d368b135da01c715`
-Latest local candidate: neutral Grid provider fixtures reconciled with current main with type-check, lint (one unrelated warning), and 87 test files / 636 tests green; exact-head CI pending.
+Current audited main: `main@18175eed039aaced6eff49753c260fdceec60dea`
+Latest local candidate: Grid map Marble-mode contrast and future-role professional enrollment corrections reconciled with stored billing truth and Zumi/Cloudflare privacy hardening; Prisma generation, type-check, lint (one unrelated warning), and all 641 tests are green; fresh exact-head CI verification pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -42,6 +42,10 @@ The exact final candidate for PR #74 passed before merge:
 PR #72’s exact final head also passed the same Quality gate before merge.
 
 PR #96's exact final head passed Prisma generation/validation, all 51 fresh PostgreSQL migrations, TypeScript, lint, 604 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as current main. The merge commit's push Quality gate also completed successfully.
+
+PR #109's exact final head passed Prisma generation/validation, all 52 fresh PostgreSQL migrations, TypeScript, lint, 636 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as `075ff39`.
+
+PR #108's stored billing truth and PR #110's Zumi/Cloudflare privacy hardening passed their exact-head Quality and deploy-contract gates before merging as `76b24e1` and `18175ee` respectively.
 
 ## Public / customer entry
 
@@ -110,6 +114,9 @@ Redirect state is never payment evidence.
 | State name/code matching | **BUILT** | Public discovery can match e.g. California ↔ CA. |
 | Query-matched map/resource-ledger consistency | **BUILT** | Universal-resource map and ledger receive the same filtered result set. |
 | Public provider/location/resource browse | **BUILT / PARTIAL** | Real reviewed/published inventory only; supply density depends on actual participants. |
+| Public professional enrollment | **BUILT / PARTIAL** | The existing credential-aware path accepts future healthcare role and credential labels into pending human review without a nurse-only allow-list; the controlled pilot still requires an approved network/organization code. |
+| Public space/seller/service enrollment | **BUILT** | Space, organization capacity, permitted product, equipment, business-service, education, and referral lanes create a participant account plus a governed pending-review resource through the shared universal resource engine. |
+| Grid Marble map/enrollment contrast | **BUILT IN CURRENT CANDIDATE** | Geographic discovery and public enrollment remain intentionally light and restore scoped ink, forms, ledgers, borders, and accents inside the global Obsidian shell. |
 | Truthful provider-listing request action | **BUILT** | Generic request is labeled generic when selected listing is not yet bound into the transaction workflow. |
 | Same-origin sign-in continuation | **BUILT** | External redirect targets are not trusted. |
 | Explicit opt-in browser geolocation | **BUILT** | Location is requested only after visitor action. |
