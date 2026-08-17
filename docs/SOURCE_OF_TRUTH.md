@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-16.1`  
+Version: `2026-08-16.2`  
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -172,6 +172,10 @@ Economic routes should converge on shared financial truth:
 Use integer cents for financial state.
 
 **REDIRECT ≠ PAYMENT.**
+
+Browser redirect/return state does **not** establish payment.
+
+Payment evidence is recorded separately from entitlement.
 
 Browser return state cannot create entitlement, settlement or payout truth.
 
