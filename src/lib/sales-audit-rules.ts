@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
+
+export const CLINIC_OPERATING_ANALYSIS_PRICE_DOLLARS = clinicCommercialOffers.privateWorkflowReview.priceCents / 100;
 
 export const salesAuditQualificationSchema = z.object({
   clinic: z.string().trim().min(2).max(160),
@@ -50,12 +53,8 @@ export function salesAuditStatusForScore(score: number): SalesAuditStatus {
   return "DO NOT SELL AUDIT YET";
 }
 
-export function calculateSalesAuditPrice(input: SalesAuditQualificationInput) {
-  if (input.providers <= 1) return 750;
-  if (input.providers <= 5) return 1250;
-  if (input.providers <= 15) return 2500;
-  if (input.providers <= 30) return 4000;
-  return 5000;
+export function calculateSalesAuditPrice(_input: SalesAuditQualificationInput) {
+  return CLINIC_OPERATING_ANALYSIS_PRICE_DOLLARS;
 }
 
 export function evaluateSalesAuditQualification(input: SalesAuditQualificationInput): SalesAuditQualification {
@@ -70,7 +69,7 @@ export function evaluateSalesAuditQualification(input: SalesAuditQualificationIn
 
 export function buildSalesAuditNotes(input: SalesAuditQualification) {
   return [
-    "Klinikos Operational Audit qualification",
+    "Klinikos Clinic Operating Analysis qualification",
     `Decision maker: ${input.decisionMaker}`,
     `Buyer email: ${input.email}`,
     `Locations: ${input.locations}; providers: ${input.providers}; staff: ${input.staff}; encounters/month: ${input.encounters}`,
@@ -81,7 +80,7 @@ export function buildSalesAuditNotes(input: SalesAuditQualification) {
     `Workflow flags: referrals=${input.referrals}; labs=${input.labs}; claims=${input.claims}; multi-location=${input.multiLocation}`,
     `Biggest operating frustration: ${input.biggestPain || "not recorded"}`,
     `Qualification score: ${input.score}/100; status: ${input.status}`,
-    `Recommended audit price: $${input.auditPrice.toLocaleString()}`,
-    "Qualification score, status, and price are derived server-side from the saved prospect inputs. Checkout uses the official Klinikos GoDaddy payment connector. Checkout launch is not payment proof; payment must be independently reconciled before the audit is marked paid.",
+    `Clinic Operating Analysis price: $${input.auditPrice.toLocaleString()}`,
+    "Qualification score and status are derived server-side from the saved prospect inputs. The analysis price comes from the canonical commercial offer and must match the official Klinikos GoDaddy paylink. Checkout launch is not payment proof; payment must be independently reconciled before the analysis is marked paid.",
   ].join("\n");
 }

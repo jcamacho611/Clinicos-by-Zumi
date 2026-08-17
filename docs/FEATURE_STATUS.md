@@ -134,6 +134,8 @@ Redirect state is never payment evidence.
 | Dispute vs safety incident separation | **BUILT** | Separate problem types and governed holds/resolution. |
 | External provider-license verification | **PENDING CONNECTION** | Requires real authority/vendor access. |
 | External malpractice verification | **PENDING CONNECTION** | Internal review is not external verification. |
+| CMS NPPES public NPI/taxonomy evidence | **BUILT** | Authenticated credentialing users can run a bounded, time-limited public lookup; result evidence never establishes licensure, malpractice, privileges, or Grid eligibility. |
+| HHS OIG LEIE exact-NPI pre-screen | **BUILT** | Authenticated credentialing users can run a size-bounded, cached public dataset screen with source freshness and audit evidence; no-candidate results are not exclusion clearance. |
 | External marketplace payout settlement | **PENDING CONNECTION** | Internal ledger must not be represented as money moved. |
 
 ## Klinikos EDU
