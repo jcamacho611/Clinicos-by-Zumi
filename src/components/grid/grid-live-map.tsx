@@ -88,7 +88,7 @@ export function GridLiveMap({ locations, providers, resources }: { locations: Ma
   }, []);
 
   return (
-    <section className="border-b border-[#dfe3e8] bg-[#f5f7f8]">
+    <section className="grid-marble-surface border-b border-[#dfe3e8] bg-[#f5f7f8]">
       <div className="mx-auto max-w-[1500px] px-5 py-14 sm:px-8 lg:py-20">
         <div className="mb-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-4xl">

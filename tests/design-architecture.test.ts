@@ -49,6 +49,29 @@ describe("surface classification", () => {
   });
 });
 
+describe("Grid Marble mode", () => {
+  const mapSource = readFileSync(join(process.cwd(), "src/components/grid/grid-live-map.tsx"), "utf8");
+  const cinematic = readFileSync(join(process.cwd(), "src/app/cinematic-global.css"), "utf8");
+  const enrollmentSources = [
+    "src/app/grid/join/page.tsx",
+    "src/app/grid/join/location/page.tsx",
+    "src/app/grid/join/seller/page.tsx",
+  ].map((path) => readFileSync(join(process.cwd(), path), "utf8"));
+
+  it("keeps the geographic reading surface light and legible inside the Obsidian shell", () => {
+    expect(mapSource).toContain('className="grid-marble-surface');
+    expect(cinematic).toContain(".klinikos-cinematic-root .grid-marble-surface");
+    expect(cinematic).toContain("color-scheme:light");
+    expect(cinematic.indexOf(".grid-marble-surface")).toBeGreaterThan(cinematic.indexOf("Legacy-page compatibility layer"));
+  });
+
+  it("keeps every public Grid enrollment workspace in the same Marble reading mode", () => {
+    for (const source of enrollmentSources) expect(source).toContain("grid-marble-surface");
+    expect(cinematic).toContain("color:#0b1220!important");
+    expect(cinematic).toContain('[class~="bg-white"]');
+  });
+});
+
 describe("the motion rule", () => {
   it("removes motion that teaches nothing, on any surface", () => {
     const decorative = { teaches: "", reportsStateChange: false, isInputFeedback: false };
