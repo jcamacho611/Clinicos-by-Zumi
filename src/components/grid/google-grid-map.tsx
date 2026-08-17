@@ -14,74 +14,111 @@ type GridMapPoint = {
   longitude: number;
 };
 
-type LatLngLiteral = { lat: number; lng: number };
+type LngLat = [number, number];
+type Bounds = [LngLat, LngLat];
 
-type MapBounds = {
-  extend(position: LatLngLiteral): void;
+type MapLibreMap = {
+  addControl(control: unknown, position?: string): void;
+  fitBounds(bounds: Bounds, options?: { padding?: number; maxZoom?: number }): void;
+  on(eventName: "error", handler: () => void): void;
+  once(eventName: "load", handler: () => void): void;
+  remove(): void;
 };
 
-type MapInstance = {
-  fitBounds(bounds: MapBounds, padding?: number): void;
+type MapLibreMarker = {
+  addTo(map: MapLibreMap): MapLibreMarker;
+  getElement(): HTMLElement;
+  remove(): void;
+  setLngLat(position: LngLat): MapLibreMarker;
 };
 
-type MarkerInstance = {
-  map: MapInstance | null;
-  addListener?: (eventName: "click", handler: () => void) => { remove(): void };
-};
-
-type GoogleMapsNamespace = {
-  Map: new (element: HTMLElement, options: Record<string, unknown>) => MapInstance;
-  LatLngBounds: new () => MapBounds;
-  marker: {
-    AdvancedMarkerElement: new (options: {
-      map: MapInstance;
-      position: LatLngLiteral;
-      title: string;
-    }) => MarkerInstance;
-  };
+type MapLibreNamespace = {
+  Map: new (options: {
+    container: HTMLElement;
+    style: string;
+    center: LngLat;
+    zoom: number;
+    attributionControl?: boolean;
+  }) => MapLibreMap;
+  Marker: new (options?: { color?: string }) => MapLibreMarker;
+  NavigationControl: new (options?: { showCompass?: boolean; showZoom?: boolean }) => unknown;
+  FullscreenControl: new () => unknown;
 };
 
 declare global {
   interface Window {
-    google?: { maps: GoogleMapsNamespace };
-    __klinikosGridMapReady?: () => void;
+    maplibregl?: MapLibreNamespace;
   }
 }
 
-const SCRIPT_ID = "klinikos-google-maps";
+const MAPLIBRE_VERSION = "5.24.0";
+const MAPLIBRE_SCRIPT_ID = "klinikos-maplibre-js";
+const MAPLIBRE_CSS_ID = "klinikos-maplibre-css";
+const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 const UNITED_STATES_CENTER = { latitude: 39.8283, longitude: -98.5795 };
 
-function loadGoogleMaps(apiKey: string) {
-  return new Promise<GoogleMapsNamespace>((resolve, reject) => {
-    if (window.google?.maps?.marker?.AdvancedMarkerElement) {
-      resolve(window.google.maps);
+function loadMapLibre() {
+  return new Promise<MapLibreNamespace>((resolve, reject) => {
+    if (window.maplibregl) {
+      resolve(window.maplibregl);
       return;
     }
 
-    const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-    const done = () => {
-      if (window.google?.maps?.marker?.AdvancedMarkerElement) resolve(window.google.maps);
-      else reject(new Error("Google Maps loaded without the marker library."));
+    if (!document.getElementById(MAPLIBRE_CSS_ID)) {
+      const stylesheet = document.createElement("link");
+      stylesheet.id = MAPLIBRE_CSS_ID;
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.css`;
+      document.head.appendChild(stylesheet);
+    }
+
+    const loaded = () => {
+      if (window.maplibregl) resolve(window.maplibregl);
+      else reject(new Error("MapLibre loaded without exposing its browser runtime."));
     };
 
-    window.__klinikosGridMapReady = done;
+    const existing = document.getElementById(MAPLIBRE_SCRIPT_ID) as HTMLScriptElement | null;
     if (existing) {
-      existing.addEventListener("error", () => reject(new Error("Google Maps could not be loaded.")), { once: true });
+      existing.addEventListener("load", loaded, { once: true });
+      existing.addEventListener("error", () => reject(new Error("MapLibre could not be loaded.")), { once: true });
       return;
     }
 
     const script = document.createElement("script");
-    script.id = SCRIPT_ID;
+    script.id = MAPLIBRE_SCRIPT_ID;
     script.async = true;
-    script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&v=weekly&libraries=marker&callback=__klinikosGridMapReady`;
-    script.addEventListener("error", () => reject(new Error("Google Maps could not be loaded.")), { once: true });
+    script.src = `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.js`;
+    script.addEventListener("load", loaded, { once: true });
+    script.addEventListener("error", () => reject(new Error("MapLibre could not be loaded.")), { once: true });
     document.head.appendChild(script);
   });
 }
 
-type LocationState = "idle" | "locating" | "found" | "denied" | "unavailable";
+function boundsFor(points: GridCoordinates[]) {
+  if (!points.length) return null;
+  let minLatitude = points[0].latitude;
+  let maxLatitude = points[0].latitude;
+  let minLongitude = points[0].longitude;
+  let maxLongitude = points[0].longitude;
 
+  for (const point of points.slice(1)) {
+    minLatitude = Math.min(minLatitude, point.latitude);
+    maxLatitude = Math.max(maxLatitude, point.latitude);
+    minLongitude = Math.min(minLongitude, point.longitude);
+    maxLongitude = Math.max(maxLongitude, point.longitude);
+  }
+
+  return [[minLongitude, minLatitude], [maxLongitude, maxLatitude]] as Bounds;
+}
+
+type LocationState = "idle" | "locating" | "found" | "denied" | "unavailable";
+type ProviderState = "fallback" | "loading" | "openfreemap";
+
+/**
+ * Legacy export name retained to avoid a destructive cross-file rename while Grid is
+ * under active convergence. The implementation is provider-neutral and uses
+ * MapLibre/OpenFreeMap as the primary map path. Google credentials are not required.
+ */
 export function GoogleGridMap({
   points,
   selectedPointId,
@@ -94,13 +131,10 @@ export function GoogleGridMap({
   onPointSelect?: (pointId: string) => void;
 }) {
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const markersRef = useRef<MarkerInstance[]>([]);
-  const [providerState, setProviderState] = useState<"fallback" | "loading" | "google">("fallback");
+  const [providerState, setProviderState] = useState<ProviderState>("loading");
   const [providerError, setProviderError] = useState(false);
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [userLocation, setUserLocation] = useState<GridCoordinates | null>(null);
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? "";
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() ?? "";
   const usablePoints = useMemo(
     () => points.filter((point) => Number.isFinite(point.latitude) && Number.isFinite(point.longitude)),
     [points],
@@ -113,60 +147,85 @@ export function GoogleGridMap({
   const fallbackHasMarker = Boolean(userLocation || selectedPoint || usablePoints[0]);
 
   useEffect(() => {
-    if (!apiKey || !mapId || !elementRef.current) {
-      setProviderState("fallback");
-      return;
-    }
+    if (!elementRef.current) return;
 
     let cancelled = false;
+    let loaded = false;
+    let map: MapLibreMap | null = null;
+    const markers: MapLibreMarker[] = [];
+    let loadTimer: ReturnType<typeof setTimeout> | null = null;
+
     setProviderState("loading");
     setProviderError(false);
 
-    loadGoogleMaps(apiKey)
-      .then((maps) => {
+    loadMapLibre()
+      .then((maplibre) => {
         if (cancelled || !elementRef.current) return;
-        for (const marker of markersRef.current) marker.map = null;
-        markersRef.current = [];
-
         const firstPoint = selectedPoint ?? usablePoints[0];
-        const center = userLocation
-          ? { lat: userLocation.latitude, lng: userLocation.longitude }
+        const center: LngLat = userLocation
+          ? [userLocation.longitude, userLocation.latitude]
           : firstPoint
-            ? { lat: firstPoint.latitude, lng: firstPoint.longitude }
-            : { lat: UNITED_STATES_CENTER.latitude, lng: UNITED_STATES_CENTER.longitude };
-        const map = new maps.Map(elementRef.current, {
+            ? [firstPoint.longitude, firstPoint.latitude]
+            : [UNITED_STATES_CENTER.longitude, UNITED_STATES_CENTER.latitude];
+
+        map = new maplibre.Map({
+          container: elementRef.current,
+          style: OPENFREEMAP_STYLE,
           center,
           zoom: userLocation || firstPoint ? 11 : 4,
-          mapId,
-          clickableIcons: false,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: true,
+          attributionControl: true,
         });
-        const bounds = new maps.LatLngBounds();
-        let boundCount = 0;
+        map.addControl(new maplibre.NavigationControl({ showCompass: true, showZoom: true }), "bottom-right");
+        map.addControl(new maplibre.FullscreenControl(), "bottom-right");
 
+        const failBeforeLoad = () => {
+          if (cancelled || loaded) return;
+          setProviderError(true);
+          setProviderState("fallback");
+        };
+        map.on("error", failBeforeLoad);
+        loadTimer = setTimeout(failBeforeLoad, 10_000);
+        map.once("load", () => {
+          if (cancelled) return;
+          loaded = true;
+          if (loadTimer) clearTimeout(loadTimer);
+          setProviderState("openfreemap");
+        });
+
+        const visibleCoordinates: GridCoordinates[] = [];
         if (userLocation) {
-          const position = { lat: userLocation.latitude, lng: userLocation.longitude };
-          bounds.extend(position);
-          boundCount += 1;
-          markersRef.current.push(new maps.marker.AdvancedMarkerElement({ map, position, title: "You are here" }));
+          visibleCoordinates.push(userLocation);
+          const marker = new maplibre.Marker({ color: "#174ea6" })
+            .setLngLat([userLocation.longitude, userLocation.latitude])
+            .addTo(map);
+          marker.getElement().setAttribute("title", "You are here");
+          markers.push(marker);
         }
 
         for (const point of usablePoints) {
-          const position = { lat: point.latitude, lng: point.longitude };
-          bounds.extend(position);
-          boundCount += 1;
-          const marker = new maps.marker.AdvancedMarkerElement({
-            map,
-            position,
-            title: `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`,
+          visibleCoordinates.push(point);
+          const marker = new maplibre.Marker({ color: point.id === selectedPointId ? "#7f1d1d" : "#b4234d" })
+            .setLngLat([point.longitude, point.latitude])
+            .addTo(map);
+          const element = marker.getElement();
+          element.setAttribute("title", `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`);
+          element.setAttribute("role", "button");
+          element.setAttribute("tabindex", "0");
+          const select = () => onPointSelect?.(point.id);
+          element.addEventListener("click", select);
+          element.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              select();
+            }
           });
-          marker.addListener?.("click", () => onPointSelect?.(point.id));
-          markersRef.current.push(marker);
+          markers.push(marker);
         }
-        if (boundCount > 1 && !selectedPoint) map.fitBounds(bounds, 72);
-        setProviderState("google");
+
+        const bounds = boundsFor(visibleCoordinates);
+        if (bounds && visibleCoordinates.length > 1 && !selectedPoint) {
+          map.fitBounds(bounds, { padding: 72, maxZoom: 13 });
+        }
       })
       .catch(() => {
         if (!cancelled) {
@@ -177,10 +236,11 @@ export function GoogleGridMap({
 
     return () => {
       cancelled = true;
-      for (const marker of markersRef.current) marker.map = null;
-      markersRef.current = [];
+      if (loadTimer) clearTimeout(loadTimer);
+      for (const marker of markers) marker.remove();
+      map?.remove();
     };
-  }, [apiKey, mapId, onPointSelect, selectedPoint, usablePoints, userLocation]);
+  }, [onPointSelect, selectedPoint, selectedPointId, usablePoints, userLocation]);
 
   function requestLocation() {
     if (!navigator.geolocation) {
@@ -224,18 +284,18 @@ export function GoogleGridMap({
     <div ref={elementRef} className={`absolute inset-0 ${providerState === "fallback" ? "invisible" : "visible"}`} aria-label="Klinikos Grid map showing your location and reviewed resources" />
 
     <div className="absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] flex-wrap gap-2">
-      <button className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-4 text-[11px] font-extrabold text-[#0b1220] shadow-sm hover:border-[#174ea6] disabled:cursor-wait" disabled={locationState === "locating"} onClick={requestLocation} type="button">
-        {locationState === "locating" ? <LoaderCircle className="size-4 animate-spin text-[#174ea6]" /> : <Crosshair className="size-4 text-[#174ea6]" />}
+      <button className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-4 text-[11px] font-extrabold text-[#0b1220] shadow-sm hover:border-[#8f213e] disabled:cursor-wait" disabled={locationState === "locating"} onClick={requestLocation} type="button">
+        {locationState === "locating" ? <LoaderCircle className="size-4 animate-spin text-[#8f213e]" /> : <Crosshair className="size-4 text-[#8f213e]" />}
         {locationState === "found" ? "Centered on you" : "Use my location"}
       </button>
       {providerState === "fallback" && <a className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-3 text-[10px] font-bold text-[#5b6675] shadow-sm hover:text-[#0b1220]" href={openStreetMapUrl(fallbackCenter, false, fallbackHasMarker)} rel="noreferrer" target="_blank">Open full map <ExternalLink className="size-3.5" /></a>}
     </div>
 
-    {providerState === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#174ea6]">Opening the connected Grid map…</p></div>}
+    {providerState === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#8f213e]">Opening the Grid map…</p></div>}
 
     <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
       <span className="inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm">
-        {locationState === "found" ? <Navigation className="size-3.5 text-[#174ea6]" /> : locationState === "denied" || locationState === "unavailable" ? <ShieldCheck className="size-3.5 text-[#9a7a1f]" /> : <MapPin className="size-3.5 text-[#174ea6]" />}
+        {locationState === "found" ? <Navigation className="size-3.5 text-[#8f213e]" /> : locationState === "denied" || locationState === "unavailable" ? <ShieldCheck className="size-3.5 text-[#9a7a1f]" /> : <MapPin className="size-3.5 text-[#8f213e]" />}
         {locationState === "found"
           ? "Real distance is now calculated from your location"
           : locationState === "denied"
@@ -246,7 +306,8 @@ export function GoogleGridMap({
                 ? "Choose location access for real distance"
                 : "No reviewed public Grid pins yet"}
       </span>
-      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">Connected map provider failed; geographic fallback is active.</span>}
+      {providerState === "openfreemap" && <span className="border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm">OpenFreeMap · no Google credential required</span>}
+      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
     </div>
   </div>;
 }
