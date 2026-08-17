@@ -2,42 +2,50 @@
 
 Audit date: `2026-08-17 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
+Audited main: `cc6162c9349e2ade8ec8a27cdd08a05296fb70a2`
 
-This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
+This ledger classifies remote and known local/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
 ## Status vocabulary
 
 | Status | Meaning |
 | --- | --- |
-| `CANONICAL` | Current merge base and source of integration truth. |
+| `CANONICAL` | Current merge base and source of implementation truth. |
 | `ACTIVE_RECOVERY` | Current valuable work to reconcile surgically onto latest main. |
-| `RECOVERY_REVIEW` | Contains potentially useful unique work; inspect file-by-file before deciding. |
+| `RECOVERY_REVIEW` | Contains potentially useful unique work; inspect file-by-file only after a named current-main gap is proven. |
 | `MERGED_PRESERVE` | The relevant PR/content reached main; retain as history, do not merge wholesale. |
-| `SUPERSEDED_PRESERVE` | Closed/older/variant work has newer equivalents or conflicts with current canon; keep history only unless a named gap is later recovered. |
+| `SUPERSEDED_PRESERVE` | Closed/older/variant work has newer equivalents or conflicts with current canon; keep history only unless a named gap is later proven. |
 | `ARCHIVE_OUT_OF_SCOPE` | Pre-Klinikos or unrelated product history; preserve but never import into Klinikos. |
 | `LOCAL_PRESERVE` | Local-only/divergent commits or stash that must not be lost or applied automatically. |
 
-## Canonical and active work
+## Canonical and convergence closeout
 
-| Ref | SHA | Status | Decision |
+| Ref | SHA / PR | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `a111ae4` | `CANONICAL` | Current merge base after the exact-head-green OpenFreeMap primary Grid mapping release through PR #114. |
-| `feat/live-stripe-payment-rail-2026-08-17` | `current candidate` | `ACTIVE_RECOVERY` | One-time live Stripe Checkout and signed-webhook evidence added through the existing Financial OS while preserving GoDaddy fallback; fresh exact-head DB/journey/build CI and merge still required. |
-| `origin/feat/stripe-live-checkout-webhook` | `faa9cad` | `RECOVERY_REVIEW` | Parallel partial Stripe implementation inspected on 2026-08-17. It is not wired to an API route, migration, or end-to-end journey and overlaps the fuller current candidate; preserve untouched and do not merge wholesale. |
-| `origin/feat/twilio-restricted-key-communications` | `current remote candidate` | `ACTIVE_RECOVERY` | Separate communications work in open PR #115. Keep outside the Stripe scope and let its own exact-head review decide integration. |
-| `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
+| `origin/main` | `cc6162c` | `CANONICAL` | Current source of implementation truth after OpenFreeMap, verified Stripe customer payment rail, restricted-key Twilio communications, and surgical Claude home/routing recovery. |
+| `origin/feat/grid-openfreemap-maplibre-primary` | PR #114 | `MERGED_PRESERVE` | MapLibre + OpenFreeMap is the primary zero-billing Grid map. Browser geolocation/Haversine truth preserved. Google is optional. Do not re-merge. |
+| `origin/feat/live-stripe-payment-rail-2026-08-17` | PR #117 | `MERGED_PRESERVE` | Authoritative Stripe hosted Checkout + signed webhook/evidence implementation merged through shared Financial OS. External webhook/runtime proof remains; code branch is history only. |
+| `origin/reconcile/twilio-after-stripe` | PR #119 | `MERGED_PRESERVE` | Authoritative restricted-key Twilio SMS/Verify implementation reconciled after Stripe. Runtime `MG`/`VA` service proof remains external. Do not re-merge. |
+| `origin/reconcile/claude-home-after-integrations` | PR #120 | `MERGED_PRESERVE` | Valuable Claude server-owned operating rail + launchpad deduplication recovered onto current design. Stale role-template Opportunity suppressed. Do not re-merge. |
+| `origin/feat/stripe-live-checkout-webhook` | closed PR #116 | `SUPERSEDED_PRESERVE` | Emergency parallel Stripe implementation preserved for provenance. Superseded by stronger merged PR #117; never merge alongside it. |
+| `origin/feat/twilio-restricted-key-communications` | closed PR #115 | `SUPERSEDED_PRESERVE` | Original Twilio branch conflicted after Stripe truth changes. Its valuable implementation was rebuilt and merged through PR #119. Preserve history only. |
+| `origin/reconcile/claude-operating-rail-current-design` | closed PR #118 | `SUPERSEDED_PRESERVE` | First surgical Claude recovery candidate. Rebuilt from post-integration main and merged through PR #120. Preserve history only. |
+| `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` historical candidate | `SUPERSEDED_PRESERVE` | Useful operating truth was recovered surgically; stale full-screen visual rewrite and superseded provider/route work were deliberately not revived. Do not mass-merge. |
+
+There are **no remote whole-branch recovery candidates authorized for merge after this closeout**. Future recovery starts only from a specific failing journey or named current-main gap and compares the smallest relevant historical patch against current main.
 
 ## Local preservation ledger
 
 | Local ref | State | Decision |
 | --- | --- | --- |
-| `feat/grid-exchange-mvp` at `51f4636` | Two commits ahead of its remote and behind current main; includes `51f4636` and merge commit `8ab2812`. | Preserve. Compare its selected-listing/request-continuity changes against current main before recovering any patch. Never force-push. |
-| `claude/whop-portal-grid-marketplace-wdw811` at `321dc35` | Local historical line diverged from force-updated remote. | Preserve as local history; use remote `f22a5c4` as the fresh recovery candidate. |
-| `agent/grid-contractor-preserve` at `c9a384a` | Local-only preservation branch. | Preserve; current universal Grid architecture supersedes the narrow workflow as architecture, but evidence may inform neutral provider enrollment. |
+| `feat/grid-exchange-mvp` at `51f4636` | Previously reported two local commits ahead of its remote and behind current main; local filesystem history is not accessible through the GitHub connector used for this closeout. | Preserve locally. Do not force-push or auto-apply. If this local ref still exists, push a preservation ref or provide the commit before any further recovery. Current remote Grid architecture remains authoritative. |
+| `claude/whop-portal-grid-marketplace-wdw811` at `321dc35` | Local historical line previously reported divergent from remote. | Preserve as local history; remote historical branch is now `SUPERSEDED_PRESERVE` after PR #120 recovery. |
+| `agent/grid-contractor-preserve` at `c9a384a` | Local-only preservation branch. | Preserve; current universal Grid architecture supersedes the narrow workflow as architecture. |
 | `agent/grid-contractor-finish` at `cbf7c6c` | Tracks old merged contractor work. | Preserve; no new wholesale merge. |
-| `main` at `169a883` | Local branch is stale; `origin/main` is canonical. | Do not build from it. Fast-forward only when intentionally switching local main. |
-| `stash@{0}` | `preserve/321dc35-pre-grid-exchange-mvp-2026-08-13` | Do not apply, pop, drop, or rewrite during recovery. |
+| `main` at `169a883` | Previously reported stale local branch. | `origin/main` is canonical. Fast-forward only when intentionally updating the local checkout. |
+| `stash@{0}` | `preserve/321dc35-pre-grid-exchange-mvp-2026-08-13` | Do not apply, pop, drop, or rewrite automatically. |
+
+Local-only refs are outside GitHub remote truth. Their preservation does not make them current architecture, and their existence is not permission to overwrite merged remote work.
 
 ## Recovery-review branches
 
@@ -45,9 +53,9 @@ These branches are not merge candidates as a unit.
 
 | Ref | SHA | Review result |
 | --- | --- | --- |
-| `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Two documentation/registry commits may contain useful wording, but current source hierarchy and engine registry must win. Review only against a named registry gap. |
-| `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with the current auth/session architecture and a configured mail rail; no automatic recovery. |
-| `origin/feat/ecosystem-wiring-pass-1-rebased` | `928d991` | Temporary current-main alignment ref created during concurrent recovery. It contains no unique implementation beyond merged PR #98 at the audited point; preserve without merging. |
+| `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Review only if a current registry/canon test names a concrete missing behavior. |
+| `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with current auth/session architecture and a configured communications rail; no automatic recovery. |
+| `origin/feat/ecosystem-wiring-pass-1-rebased` | `928d991` | Temporary alignment ref with no unique implementation beyond merged PR #98 at the audited point; preserve without merging. |
 
 ## Merged branches — preserve, do not re-merge
 
@@ -102,6 +110,9 @@ origin/feat/telemedicine-truth-wiring
 origin/recovery/repository-truth-convergence-2026-08-16
 origin/feat/grid-exchange-mvp
 origin/feat/grid-openfreemap-maplibre-primary
+origin/feat/live-stripe-payment-rail-2026-08-17
+origin/reconcile/twilio-after-stripe
+origin/reconcile/claude-home-after-integrations
 origin/feat/living-home-aegean-briefing
 origin/feat/mvp-convergence-frontend
 origin/feat/patient-portal-aegean-convergence
@@ -151,10 +162,13 @@ origin/agent/paid-portal-entry-grid
 origin/agent/public-grid-entry
 origin/agent/zumi-intelligence-foundation
 origin/archive/whop-portal-grid-marketplace-pre-rebase
+origin/claude/whop-portal-grid-marketplace-wdw811
 origin/codex/marketplace-website-truth
 origin/commercial/pricing-gates-v1
 origin/feat/grid-first-convergence
 origin/feat/living-home-briefing
+origin/feat/stripe-live-checkout-webhook
+origin/feat/twilio-restricted-key-communications
 origin/grid/complete-front-back
 origin/grid/final-front-back-completion
 origin/grid/final-front-back-completion-v2
@@ -168,6 +182,7 @@ origin/jcamacho611-patch-1
 origin/klinikos-hardening-2026-08-10
 origin/mvp/final-completion
 origin/reconcile/claude-design-grid-commercial
+origin/reconcile/claude-operating-rail-current-design
 origin/release/commercial-server-copy-consolidation
 origin/release/klinikos-commercial-consolidation-v2
 origin/release/klinikos-consolidation-final
@@ -187,16 +202,16 @@ origin/codex/build-mvp-web-app-local-growth-portal-3hty8e
 origin/codex/create-app-concepts-for-viral-revenue-generation
 ```
 
-## Integration order
+## Post-convergence integration order
 
-1. Keep `origin/main` as the only merge base.
-2. Put the current Stripe candidate through exact-head migration, journey, build/start, and deploy-contract gates.
-3. Preserve `origin/feat/stripe-live-checkout-webhook` without wholesale merge; recover only a specifically proven gap absent from the current candidate.
-4. Let the independent communications PR #115 complete its own exact-head review without mixing scopes.
-5. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto latest main.
-6. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
-7. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.
-8. Keep all remaining branches as history unless a specific failing journey names a recoverable behavior.
+1. Keep `origin/main` as the only implementation merge base.
+2. Do not reopen or re-merge PRs #115, #116, or #118; their valuable work is already represented by merged PRs #119, #117, and #120 respectively.
+3. Do not mass-merge the historical Claude branch; its valuable operating behavior is already recovered and its stale visual rewrite is intentionally superseded.
+4. Do not mass-merge any Stripe variant; PR #117 owns direct customer-payment implementation truth.
+5. Do not make Google Maps a Grid launch dependency; PR #114 owns core map implementation truth.
+6. Review local-only `51f4636` or stash history only if the user intentionally makes those commits available and a named current-main journey proves missing behavior.
+7. Review other `RECOVERY_REVIEW` branches only after a specific failing journey identifies a gap.
+8. External runtime connection work now outranks speculative branch recovery: GitHub Actions billing, Render deploy verification, Stripe webhook proof, Twilio service/runtime proof, Cloudflare non-PHI runtime proof, then later regulated rails.
 
 ## Destructive-action rule
 
