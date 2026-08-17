@@ -9,9 +9,19 @@ Start every material run with:
 1. `git status --short --branch`;
 2. `git remote get-url origin`;
 3. fetch current `main`, open PRs, and relevant branches without rewriting history;
-4. read `docs/SOURCE_OF_TRUTH.md` and `docs/KLINIKOS_ARCHITECTURE_INDEX.md`.
+4. read `docs/SOURCE_OF_TRUTH.md` and `docs/KLINIKOS_ARCHITECTURE_INDEX.md`;
+5. for any work involving production, vendors, secrets, payments, AI, maps, communications, healthcare rails, or deployment, read `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` and `docs/EXTERNAL_DEPENDENCY_MATRIX.md` before making claims or edits.
 
 For Grid, Zumi, EDU, Clinic OS, portal/role, finance, design, or pricing work, read the corresponding specialist canon before editing. For recovery work, read `docs/BRANCH_LEDGER.md` and preserve all listed local/remote history.
+
+## Environment truth law
+
+- `.env.example` is a configuration contract, never proof that a production value exists.
+- `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` records known production configuration state without storing secret values.
+- Treat `OPERATOR-REPORTED CONFIGURED` as weaker than `VERIFIED LIVE`.
+- Never log, print, commit, echo, screenshot, or copy secret values into source, documentation, PRs, issues, test fixtures, or reports.
+- A live API credential proves only that authentication may be possible; it does not prove the complete product journey, webhook, settlement, payout, PHI, or compliance posture.
+- If environment truth and runtime evidence disagree, preserve the discrepancy explicitly and investigate it rather than silently choosing the more optimistic state.
 
 ## Default completion condition
 
