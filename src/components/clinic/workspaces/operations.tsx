@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, CalendarPlus, Check, CheckCircle2,
-  Clock3, CreditCard, FileText, HeartPulse, MessageSquareText, MonitorPlay,
-  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck, Video,
+  CreditCard, FileText, HeartPulse, MessageSquareText,
+  PhoneCall, Plus, ShieldCheck, Stethoscope, UserCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { AppointmentStatusControl } from "@/components/clinic/appointment-status
 import { EncounterCreateForm, type EncounterCreationOptions } from "@/components/clinic/encounter-create-form";
 import { PatientListSearch } from "@/components/clinic/patient-list-search";
 import { ScheduleWorkspaceInteractive } from "@/components/clinic/schedule-workspace-interactive";
+import { TelemedicineWorkspaceInteractive } from "@/components/clinic/telemedicine-workspace-interactive";
 import { tasks } from "@/lib/clinic-data";
 import type { Appointment, Encounter, Patient } from "@/lib/types";
 import { PageIntro, Person, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -85,8 +86,5 @@ export function EncountersWorkspace({ canCreate, encounters, options }: { canCre
 }
 
 export function TelemedicineWorkspace() {
-  return <div className="space-y-6"><PageIntro title="Virtual care, ready before the call." description="Consent, payment, documentation, and waiting-room status stay visible around the visit. A compliant video vendor attaches here later." action={<Button variant="primary"><Video className="size-4" /> Start demo room</Button>} />
-    <section className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]"><Card className="relative overflow-hidden bg-slate-950 p-7 text-white"><div className="absolute right-[-80px] top-[-80px] size-64 rounded-full border-[46px] border-teal-300/10" /><Badge className="bg-lime-300 text-slate-950 ring-lime-300">Next virtual visit</Badge><div className="relative mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-3xl font-extrabold tracking-[-.05em]">Darius Coleman</p><p className="mt-2 text-sm text-slate-300">Annual wellness · 10:45 AM · Nadja R., NP</p><div className="mt-5 flex flex-wrap gap-2"><Badge className="bg-white/10 text-white ring-white/15">Consent signed</Badge><Badge className="bg-white/10 text-white ring-white/15">Identity confirmed</Badge><Badge className="bg-white/10 text-white ring-white/15">Copay due $30</Badge></div></div><Button className="bg-white text-slate-950 hover:bg-slate-100" variant="secondary"><MonitorPlay className="size-4" /> Open waiting room</Button></div></Card><SectionCard title="Visit readiness"><div className="space-y-4 p-5">{[["Telemedicine consent", true], ["Demographics confirmed", true], ["Payment collected", false], ["Pre-visit questionnaire", true]].map(([label, complete]) => <div className="flex items-center gap-3" key={String(label)}><span className={`grid size-7 place-items-center rounded-lg ${complete ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700"}`}>{complete ? <Check className="size-3.5" /> : <Clock3 className="size-3.5" />}</span><p className="flex-1 text-xs font-bold text-slate-700">{label}</p><span className="text-[10px] text-slate-400">{complete ? "Ready" : "Pending"}</span></div>)}</div></SectionCard></section>
-    <SectionCard title="Virtual visit queue" description="Video links are placeholders until a BAA-supported vendor is configured."><div className="grid gap-3 p-4 md:grid-cols-3">{[["10:45 AM", "Darius Coleman", "Ready", "Nadja R., NP"], ["1:15 PM", "Lena Morris", "Consent needed", "Dr. Samuel Lee"], ["4:00 PM", "Priya Shah", "Confirmed", "Nadja R., NP"]].map(([time, name, status, provider]) => <div className="rounded-2xl border border-slate-200 p-4" key={name}><div className="flex items-center justify-between"><p className="text-[10px] font-extrabold text-slate-400">{time}</p><StatusBadge status={status} /></div><p className="mt-5 text-sm font-extrabold text-slate-950">{name}</p><p className="mt-1 text-[10px] text-slate-500">{provider}</p><Button className="mt-4 w-full" size="sm" variant="secondary">Open visit</Button></div>)}</div></SectionCard>
-  </div>;
+  return <TelemedicineWorkspaceInteractive />;
 }
