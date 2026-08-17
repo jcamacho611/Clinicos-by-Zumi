@@ -6,8 +6,7 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { invokeZumi } from "@/features/zumi/gateway";
 import { resolveOrganizationEntitlements } from "@/features/zumi/entitlements";
 import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/features/zumi/schemas";
-import { registerProvider, zumiGatewayStatus } from "@/features/zumi/providers";
-import { createOpenAIResponsesAdapter, openAIResponsesRequested } from "@/features/zumi/adapters/openai-responses";
+import { zumiGatewayStatus } from "@/features/zumi/providers";
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
@@ -21,8 +20,6 @@ export const maxDuration = 120;
 
 const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 const MAX_ZUMI_BODY_BYTES = 64 * 1024;
-
-if (openAIResponsesRequested()) registerProvider(createOpenAIResponsesAdapter());
 
 const domainSchema = z.string().trim().min(3).max(200).regex(/^[a-z0-9.-]+$/i);
 

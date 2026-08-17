@@ -53,11 +53,31 @@ export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
     }))
     .filter((group) => group.items.length > 0);
 
-  const detailedGroups: LaunchGroup[] = [
-    ...groups,
-    ...(canOpen(role, "/grid") ? [{ label: "Grid", items: gridTools }] : []),
-    ...(canOpen(role, "/network") ? [{ label: "Care network", items: networkTools }] : []),
-  ];
+  // The deeper tool lists have to merge into the navigation group of the same name
+  // rather than sit beside it. Appending them produced two cards both titled "Grid" —
+  // one holding the single nav entry and one holding fourteen tools — which read as a
+  // duplicate to anyone looking at it and collided as a React key besides. Items are
+  // de-duplicated by href across the whole launchpad so the same destination is not
+  // offered from two different cards.
+  const merged = new Map<string, LaunchItem[]>();
+  const seenHrefs = new Set<string>();
+  const appendTo = (label: string, items: readonly LaunchItem[]) => {
+    const bucket = merged.get(label) ?? [];
+    for (const item of items) {
+      if (seenHrefs.has(item.href)) continue;
+      seenHrefs.add(item.href);
+      bucket.push(item);
+    }
+    merged.set(label, bucket);
+  };
+
+  for (const group of groups) appendTo(group.label, group.items);
+  if (canOpen(role, "/grid")) appendTo("Grid", gridTools);
+  if (canOpen(role, "/network")) appendTo("Care network", networkTools);
+
+  const detailedGroups: LaunchGroup[] = [...merged.entries()]
+    .map(([label, items]) => ({ label, items }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <DsSurface className="-mx-4 bg-[var(--surface-paper)] text-[var(--text-on-paper)] sm:-mx-6 lg:-mx-8">
@@ -82,7 +102,7 @@ export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
               <details className="group border border-[var(--line-light)] bg-[var(--surface-paper-2)]" key={group.label}>
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
                   <span className="text-sm font-semibold">{group.label}</span>
-                  <span className="text-[var(--text-on-paper-dim)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">{group.items.length} options</span>
+                  <span className="text-[var(--text-on-paper-dim)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">{group.items.length} {group.items.length === 1 ? "option" : "options"}</span>
                 </summary>
                 <div className="divide-y divide-[var(--line-light)] border-t border-[var(--line-light)] px-5 pb-2">
                   {group.items.map((item) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,21 +13,22 @@ import {
   GraduationCap,
   Network,
   Stethoscope,
+  X,
 } from "lucide-react";
 import { Badge, Button, DsSurface, Input, ZumiOrb, type BadgeTone, type ZumiState } from "@/components/ds";
 import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import type { ClinicRole } from "@/lib/auth/rbac";
+import type { HomeOpportunity, RailDestination } from "@/lib/home/operating-rail";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
 import { getKlinikosPath } from "@/lib/paths/catalog";
 import type { Appointment } from "@/lib/types";
 
-type DoorwayAction = {
-  label: string;
-  description: string;
-  href: string;
-  icon: typeof Stethoscope;
+/** What the server observed about the model provider. Copied, never inferred. */
+export type IntelligenceRailStatus = {
+  available: boolean;
+  detail: string;
 };
 
 type AttentionItem = {
@@ -52,33 +53,15 @@ type RibbonModel = {
 
 const terminalStatuses = new Set<Appointment["status"]>(["Completed", "Cancelled", "No Show"]);
 
-function doorwayActionsForRole(role: ClinicRole): DoorwayAction[] {
-  if (role === "clinic_owner" || role === "administrator") {
-    return [
-      { label: "Clinic operations", description: "Patients, schedule, staff work, follow-up, and revenue", href: "/front-desk", icon: Stethoscope },
-      { label: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid", icon: BriefcaseBusiness },
-      { label: "Klinikos EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", icon: GraduationCap },
-    ];
-  }
-  if (role === "provider") {
-    return [
-      { label: "Today's care", description: "Open the work that needs clinical attention", href: "/provider", icon: Stethoscope },
-      { label: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", icon: BriefcaseBusiness },
-      { label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", icon: GraduationCap },
-    ];
-  }
-  if (role === "clinical_staff" || role === "case_manager") {
-    return [
-      { label: "Today's care", description: "Open the work that needs care-team attention", href: "/tasks", icon: Stethoscope },
-      { label: "Care network", description: "Follow referrals, handoffs, and connected work", href: "/network/directory", icon: Network },
-      { label: "Klinikos EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", icon: GraduationCap },
-    ];
-  }
-  return [
-    { label: "My work", description: "Go directly to the work your role can act on", href: role === "front_desk" ? "/front-desk" : "/tasks", icon: ClipboardList },
-    { label: "Klinikos EDU", description: "Courses, scenarios, and professional learning", href: "/edu", icon: GraduationCap },
-  ];
-}
+const railIcons: Record<string, typeof Stethoscope> = {
+  operations: Stethoscope,
+  care: Stethoscope,
+  grid: BriefcaseBusiness,
+  network: Network,
+  billing: ClipboardList,
+  work: ClipboardList,
+  edu: GraduationCap,
+};
 
 function roleLabel(role: ClinicRole) {
   if (role === "clinic_owner") return "Clinic owner";
@@ -187,55 +170,6 @@ function briefingCopy(role: ClinicRole, attentionCount: number, appointmentCount
   };
 }
 
-function opportunityForRole(role: ClinicRole) {
-  if (role === "clinic_owner" || role === "administrator") {
-    return {
-      title: "Put unused capacity to work.",
-      body: "Publish a room, service, coverage need, or other healthcare resource through Grid when it is useful.",
-      href: "/grid",
-      action: "Explore Grid",
-    };
-  }
-  if (role === "front_desk") {
-    return {
-      title: "Protect the next appointment block.",
-      body: "Clear the readiness items that can still be resolved before the next arrivals.",
-      href: "/front-desk",
-      action: "Open front desk",
-    };
-  }
-  if (role === "provider") {
-    return {
-      title: "See the work that fits you.",
-      body: "Grid can surface eligible healthcare work, services, learning, and capacity without changing your clinical permissions.",
-      href: "/grid",
-      action: "View opportunities",
-    };
-  }
-  if (role === "clinical_staff" || role === "case_manager") {
-    return {
-      title: "Keep the next handoff moving.",
-      body: "Open the care network to see referrals, relationships, and governed handoffs already within your role.",
-      href: "/network/directory",
-      action: "Open care network",
-    };
-  }
-  if (role === "biller") {
-    return {
-      title: "Move readiness toward revenue.",
-      body: "Open billing work waiting on documentation, coverage, or human review.",
-      href: "/billing",
-      action: "Open billing",
-    };
-  }
-  return {
-    title: "Continue with the work your role can use.",
-    body: "Open the next workspace without exposing the rest of the product unless you need it.",
-    href: "/tasks",
-    action: "Open my work",
-  };
-}
-
 function relativeTime(iso: string, nowMs: number | null) {
   if (nowMs === null) return "recently";
   const delta = nowMs - new Date(iso).getTime();
@@ -264,11 +198,21 @@ function guidanceLabel(state: PathGuidanceView["state"]) {
   return "Recommended";
 }
 
-function intelligenceState(state: "idle" | "saving" | "error", message: string | null): ZumiState {
-  if (state === "saving") return "analyzing";
+/**
+ * The orb reports what is actually happening, in this order of truth:
+ *
+ * 1. a failed submission is a signal, regardless of anything else;
+ * 2. work in flight is analyzing;
+ * 3. otherwise the orb reflects whether a model provider is genuinely reachable.
+ *
+ * The orb previously idled at "observing" whether or not any provider was connected,
+ * which read as a live intelligence layer sitting attentively on a deployment where
+ * nothing was configured. A quiet, honest state is better than an attentive lie.
+ */
+function intelligenceState(state: "idle" | "saving" | "error", available: boolean): ZumiState {
   if (state === "error") return "signal";
-  if (message?.startsWith("Ready.")) return "resolved";
-  return "observing";
+  if (state === "saving") return "analyzing";
+  return available ? "observing" : "mapping";
 }
 
 function buildRibbon(appointments: Appointment[], role: ClinicRole): RibbonModel | null {
@@ -303,6 +247,127 @@ function buildRibbon(appointments: Appointment[], role: ClinicRole): RibbonModel
   return { min, max, laneCount: Math.max(1, laneRightEdges.length), blocks };
 }
 
+/**
+ * The inline workspace.
+ *
+ * Selecting a visit anywhere on Home opens it here rather than navigating to another
+ * route. Home stays the operating surface: the schedule, the exception list and the
+ * next block all stay on screen and in context while the selected visit expands in
+ * place. Every field shown is a field the server already loaded for this view — the
+ * panel reads state, it does not synthesize it — and the one control that leaves Home
+ * is an explicit link to the real record.
+ */
+function FocusPanel({
+  appointment,
+  canOpenPatientRecord,
+  onDismiss,
+  role,
+}: {
+  appointment: Appointment;
+  canOpenPatientRecord: boolean;
+  onDismiss: () => void;
+  role: ClinicRole;
+}) {
+  const reasons = attentionReasons(appointment, role);
+  const showsMoney = role === "clinic_owner" || role === "administrator" || role === "front_desk" || role === "biller";
+  const headingId = `focus-${appointment.id}`;
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="mt-7 border-y border-[var(--line-dark)] bg-[var(--surface-raised)] px-5 py-7 sm:px-7"
+    >
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="mt-2 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">
+            {appointment.date} · {appointment.time}–{appointment.endTime}
+          </p>
+          <h3 className="mt-2 text-xl font-semibold tracking-[var(--tracking-tight)]" id={headingId}>
+            {appointment.patient}
+          </h3>
+          <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">
+            {appointment.type} · {appointment.provider} · {appointment.telemedicine ? "Telemedicine" : appointment.location}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge tone={attentionTone(appointment, role)}>{reasons.length ? "Needs you" : appointment.status}</Badge>
+          <button
+            aria-label="Close this visit"
+            className="grid size-9 place-items-center border border-[var(--line-dark)] text-[var(--text-secondary)] transition-opacity hover:opacity-75"
+            onClick={onDismiss}
+            type="button"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-7 grid gap-7 lg:grid-cols-[1fr_1fr] lg:gap-12">
+        <div>
+          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Why</p>
+          {reasons.length ? (
+            <div className="mt-4 space-y-3">
+              {reasons.map((reason) => (
+                <p className="text-xs leading-6 text-[var(--text-secondary)]" key={reason}>{reason}</p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">
+              Nothing on this visit is currently waiting on a person. It is here because you opened it.
+            </p>
+          )}
+
+          <div className="mt-6 grid gap-2 text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)] sm:grid-cols-3">
+            <span>Source · schedule</span>
+            <span>Observed · {appointment.time}</span>
+            <span>Evidence · direct record</span>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--line-dark)] pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+          <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Readiness</p>
+          <dl className="mt-4 divide-y divide-[var(--line-dark)]">
+            <div className="flex items-baseline justify-between gap-4 py-3 first:pt-0">
+              <dt className="text-xs text-[var(--text-secondary)]">Status</dt>
+              <dd className="text-xs font-semibold">{appointment.status}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 py-3">
+              <dt className="text-xs text-[var(--text-secondary)]">Intake</dt>
+              <dd className="text-xs font-semibold">{appointment.formsComplete ? "Complete" : "Incomplete"}</dd>
+            </div>
+            {showsMoney ? (
+              <>
+                <div className="flex items-baseline justify-between gap-4 py-3">
+                  <dt className="text-xs text-[var(--text-secondary)]">Coverage</dt>
+                  <dd className="text-xs font-semibold">{appointment.insuranceVerified ? "Verified" : "Not verified"}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 py-3">
+                  <dt className="text-xs text-[var(--text-secondary)]">Balance</dt>
+                  <dd className="text-xs font-semibold">${appointment.paymentDue.toFixed(2)}</dd>
+                </div>
+              </>
+            ) : null}
+          </dl>
+
+          {canOpenPatientRecord ? (
+            <Link
+              className="mt-6 inline-flex min-h-11 items-center gap-2 border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
+              href={`/patients/${appointment.patientId}`}
+            >
+              Open the full record <ArrowUpRight className="size-3.5" />
+            </Link>
+          ) : (
+            <p className="mt-6 text-xs leading-6 text-[var(--text-secondary)]">
+              Your role can see this visit on the schedule but cannot open the patient record.
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function LivingHome({
   firstName,
   organizationName,
@@ -311,6 +376,10 @@ export function LivingHome({
   recentSignals,
   initialPaths,
   initialGuidance,
+  intelligence,
+  rail,
+  opportunity,
+  canOpenPatientRecord,
   onboardingComplete = false,
 }: {
   firstName: string;
@@ -320,16 +389,22 @@ export function LivingHome({
   recentSignals: LivingPathSignal[];
   initialPaths: PersistedPathSnapshot[];
   initialGuidance: PathGuidanceView[];
+  intelligence: IntelligenceRailStatus;
+  rail: RailDestination[];
+  opportunity: HomeOpportunity | null;
+  canOpenPatientRecord: boolean;
   onboardingComplete?: boolean;
 }) {
   const [intent, setIntent] = useState("");
   const [paths, setPaths] = useState(initialPaths);
   const [guidance, setGuidance] = useState(initialGuidance);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(initialPaths[0]?.instanceId ?? null);
+  const [focusedAppointmentId, setFocusedAppointmentId] = useState<string | null>(null);
   const [state, setState] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [greeting, setGreeting] = useState("Welcome");
   const [nowMs, setNowMs] = useState<number | null>(null);
+  const focusRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -341,7 +416,6 @@ export function LivingHome({
     return () => window.clearInterval(timer);
   }, []);
 
-  const doorwayActions = doorwayActionsForRole(role);
   const dayAppointments = useMemo(() => selectDay(appointments), [appointments]);
   const attentionItems = useMemo<AttentionItem[]>(
     () => dayAppointments
@@ -358,6 +432,18 @@ export function LivingHome({
     [dayAppointments],
   );
   const ribbon = useMemo(() => buildRibbon(dayAppointments, role), [dayAppointments, role]);
+  const focusedAppointment = useMemo(
+    () => dayAppointments.find((appointment) => appointment.id === focusedAppointmentId) ?? null,
+    [dayAppointments, focusedAppointmentId],
+  );
+
+  // Selecting a visit from the exception list or the next block scrolls the ribbon's
+  // inline workspace into view, so the surface visibly transforms instead of quietly
+  // changing something the reader cannot see from where they clicked.
+  useEffect(() => {
+    if (!focusedAppointmentId) return;
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [focusedAppointmentId]);
 
   const activeSnapshot = useMemo(
     () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
@@ -377,8 +463,11 @@ export function LivingHome({
     : null;
   const highRiskAttention = attentionItems.some(({ appointment }) => appointment.status === "No Show");
   const briefing = briefingCopy(role, attentionItems.length, dayAppointments.length);
-  const opportunity = opportunityForRole(role);
-  const orbState = intelligenceState(state, message);
+  const orbState = intelligenceState(state, intelligence.available);
+
+  function focusAppointment(appointmentId: string) {
+    setFocusedAppointmentId((current) => (current === appointmentId ? null : appointmentId));
+  }
 
   async function submitIntent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -448,7 +537,14 @@ export function LivingHome({
             <div>
               <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Klinikos Intelligence</p>
               <p className="mt-3 text-xl font-semibold tracking-[var(--tracking-tight)]">Ask. Find. Do. Open.</p>
-              <p className="mt-2 max-w-sm text-xs leading-6 text-[var(--text-secondary)]">Describe the outcome. Klinikos keeps permissions, payment, credentials, and human review in control underneath.</p>
+              <p className="mt-2 max-w-sm text-xs leading-6 text-[var(--text-secondary)]">
+                Describe the outcome. Klinikos keeps permissions, payment, credentials, and human review in control underneath.
+              </p>
+              {intelligence.available ? null : (
+                <p className="mt-3 max-w-sm text-xs leading-6 text-[var(--status-analyzing)]">
+                  Conversational intelligence is not connected on this deployment. The command below still works — it is resolved by deterministic Klinikos logic, not by a model.
+                </p>
+              )}
             </div>
             <ZumiOrb size={148} state={orbState} />
           </div>
@@ -502,10 +598,13 @@ export function LivingHome({
                   />
                 ))}
                 {ribbon.blocks.map(({ appointment, left, width, lane, tone }) => (
-                  <Link
-                    className="absolute h-14 overflow-hidden border border-[var(--line-dark)] px-3 py-2 transition-opacity hover:opacity-85 focus:z-30"
-                    href={`/patients/${appointment.patientId}`}
+                  <button
+                    aria-expanded={focusedAppointmentId === appointment.id}
+                    className={`absolute h-14 overflow-hidden border px-3 py-2 text-left transition-opacity hover:opacity-85 focus:z-30 ${
+                      focusedAppointmentId === appointment.id ? "border-[var(--accent-intelligence)]" : "border-[var(--line-dark)]"
+                    }`}
                     key={appointment.id}
+                    onClick={() => focusAppointment(appointment.id)}
                     style={{
                       left: `${left}%`,
                       top: `${20 + lane * 72}px`,
@@ -517,10 +616,11 @@ export function LivingHome({
                           ? "color-mix(in oklch, var(--status-analyzing) 16%, var(--surface-raised))"
                           : "var(--surface-raised)",
                     }}
+                    type="button"
                   >
                     <span className="block truncate text-xs font-semibold">{appointment.time}</span>
                     <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.initials} · {appointment.status}</span>
-                  </Link>
+                  </button>
                 ))}
                 {nowPosition !== null ? (
                   <div className="absolute inset-y-0 z-20 w-px bg-[var(--accent-intelligence)] shadow-[var(--glow-cyan)]" style={{ left: `${nowPosition}%` }}>
@@ -533,14 +633,20 @@ export function LivingHome({
                 {dayAppointments.slice(0, 5).map((appointment) => {
                   const reasons = attentionReasons(appointment, role);
                   return (
-                    <Link className="flex items-center gap-4 py-4" href={`/patients/${appointment.patientId}`} key={appointment.id}>
+                    <button
+                      aria-expanded={focusedAppointmentId === appointment.id}
+                      className="flex w-full items-center gap-4 py-4 text-left"
+                      key={appointment.id}
+                      onClick={() => focusAppointment(appointment.id)}
+                      type="button"
+                    >
                       <span className="w-20 shrink-0 text-sm font-semibold">{appointment.time}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold">{appointment.patient}</span>
                         <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type} · {appointment.status}</span>
                       </span>
                       <Badge tone={attentionTone(appointment, role)}>{reasons.length ? "Needs you" : appointment.status}</Badge>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
@@ -551,6 +657,17 @@ export function LivingHome({
               <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">Klinikos will keep this quiet until there is something useful to show.</p>
             </div>
           )}
+
+          <div ref={focusRef}>
+            {focusedAppointment ? (
+              <FocusPanel
+                appointment={focusedAppointment}
+                canOpenPatientRecord={canOpenPatientRecord}
+                onDismiss={() => setFocusedAppointmentId(null)}
+                role={role}
+              />
+            ) : null}
+          </div>
         </section>
 
         <div className="mt-16 grid gap-14 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
@@ -566,27 +683,20 @@ export function LivingHome({
             {attentionItems.length ? (
               <div className="mt-7 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)]">
                 {attentionItems.slice(0, 5).map(({ appointment, reasons }) => (
-                  <details className="group py-5" key={appointment.id}>
-                    <summary className="flex cursor-pointer list-none items-start gap-4 marker:hidden">
-                      <span className="mt-1 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold">{appointment.patient} · {appointment.time}</span>
-                        <span className="mt-2 block text-xs leading-6 text-[var(--text-secondary)]">{reasons[0]}</span>
-                      </span>
-                      <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">Why</span>
-                    </summary>
-                    <div className="ml-6 mt-4 border-l border-[var(--line-dark)] pl-5">
-                      {reasons.map((reason) => <p className="text-xs leading-6 text-[var(--text-secondary)]" key={reason}>{reason}</p>)}
-                      <div className="mt-4 grid gap-2 text-[var(--text-micro)] uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)] sm:grid-cols-3">
-                        <span>Source · schedule</span>
-                        <span>Observed · {appointment.time}</span>
-                        <span>Evidence · direct record</span>
-                      </div>
-                      <Link className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]" href={`/patients/${appointment.patientId}`}>
-                        Open patient <ArrowUpRight className="size-3.5" />
-                      </Link>
-                    </div>
-                  </details>
+                  <button
+                    aria-expanded={focusedAppointmentId === appointment.id}
+                    className="flex w-full items-start gap-4 py-5 text-left"
+                    key={appointment.id}
+                    onClick={() => focusAppointment(appointment.id)}
+                    type="button"
+                  >
+                    <span className="mt-1 size-2 shrink-0" style={{ background: attentionColor(appointment, role) }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">{appointment.patient} · {appointment.time}</span>
+                      <span className="mt-2 block text-xs leading-6 text-[var(--text-secondary)]">{reasons[0]}</span>
+                    </span>
+                    <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">Why</span>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -688,13 +798,19 @@ export function LivingHome({
             <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="coming-up-title">The next block.</h2>
             <div className="mt-5 divide-y divide-[var(--line-dark)]">
               {upcomingAppointments.slice(0, 3).map((appointment) => (
-                <Link className="flex items-start gap-4 py-3 first:pt-0" href={`/patients/${appointment.patientId}`} key={appointment.id}>
+                <button
+                  aria-expanded={focusedAppointmentId === appointment.id}
+                  className="flex w-full items-start gap-4 py-3 text-left first:pt-0"
+                  key={appointment.id}
+                  onClick={() => focusAppointment(appointment.id)}
+                  type="button"
+                >
                   <CalendarClock className="mt-0.5 size-4 shrink-0 text-[var(--accent-signal)]" />
                   <span className="min-w-0">
                     <span className="block text-xs font-semibold">{appointment.time} · {appointment.patient}</span>
                     <span className="mt-1 block truncate text-[var(--text-micro)] text-[var(--text-secondary)]">{appointment.type}</span>
                   </span>
-                </Link>
+                </button>
               ))}
               {!upcomingAppointments.length ? <p className="text-xs leading-6 text-[var(--text-secondary)]">Nothing else is scheduled in this view.</p> : null}
             </div>
@@ -702,11 +818,23 @@ export function LivingHome({
 
           <section className="lg:pl-8" aria-labelledby="opportunity-title">
             <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Opportunity</p>
-            <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="opportunity-title">{opportunity.title}</h2>
-            <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">{opportunity.body}</p>
-            <Link className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]" href={opportunity.href}>
-              {opportunity.action} <ArrowUpRight className="size-3.5" />
-            </Link>
+            {opportunity ? (
+              <>
+                <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="opportunity-title">{opportunity.title}</h2>
+                <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">{opportunity.body}</p>
+                <p className="mt-3 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">{opportunity.evidence}</p>
+                <Link className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]" href={opportunity.href}>
+                  {opportunity.action} <ArrowUpRight className="size-3.5" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-2 text-lg font-semibold tracking-[var(--tracking-tight)]" id="opportunity-title">Nothing is open right now.</h2>
+                <p className="mt-4 text-xs leading-6 text-[var(--text-secondary)]">
+                  Klinikos shows something here when a real record is waiting on a decision your role can make. It will stay empty rather than invent a reason to act.
+                </p>
+              </>
+            )}
           </section>
         </div>
 
@@ -719,17 +847,33 @@ export function LivingHome({
             <p className="max-w-md text-xs leading-6 text-[var(--text-secondary)]">Only the major destinations that make sense for this role stay visible here. Deeper tools remain available when context calls for them.</p>
           </div>
 
-          <div className={`mt-7 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)] ${doorwayActions.length >= 3 ? "lg:grid lg:grid-cols-3 lg:divide-x lg:divide-y-0" : "sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0"}`}>
-            {doorwayActions.map(({ label, description, href, icon: Icon }) => (
-              <Link className="group flex min-h-28 items-start gap-4 py-6 sm:px-6 sm:first:pl-0 sm:last:pr-0" href={href} key={label}>
-                <Icon className="mt-1 size-5 shrink-0 text-[var(--accent-signal)]" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">{label}</span>
-                  <span className="mt-2 block text-xs leading-5 text-[var(--text-secondary)]">{description}</span>
-                </span>
-                <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--text-secondary)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </Link>
-            ))}
+          <div className={`mt-7 divide-y divide-[var(--line-dark)] border-y border-[var(--line-dark)] ${rail.length >= 3 ? "lg:grid lg:grid-cols-3 lg:divide-x lg:divide-y-0" : "sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0"}`}>
+            {rail.map((destination) => {
+              const Icon = railIcons[destination.key] ?? ClipboardList;
+              return (
+                <Link className="group flex min-h-28 items-start gap-4 py-6 sm:px-6 sm:first:pl-0 sm:last:pr-0" href={destination.href} key={destination.key}>
+                  <Icon className="mt-1 size-5 shrink-0 text-[var(--accent-signal)]" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{destination.label}</span>
+                    <span className="mt-2 block text-xs leading-5 text-[var(--text-secondary)]">{destination.description}</span>
+                    {destination.live ? (
+                      // A counted zero is still worth stating — it separates "we looked
+                      // and there is nothing" from a destination we cannot count at all.
+                      // It just must not wear the accent colour, or an empty queue reads
+                      // from across the room like something demanding attention.
+                      <span
+                        className={`mt-3 block text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] ${
+                          destination.live.count > 0 ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"
+                        }`}
+                      >
+                        {destination.live.count} {destination.live.count === 1 ? destination.live.singular : destination.live.noun}
+                      </span>
+                    ) : null}
+                  </span>
+                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--text-secondary)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+              );
+            })}
           </div>
         </section>
       </section>

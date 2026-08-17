@@ -12,6 +12,7 @@
  */
 
 import { createCloudflareZumiAdapter, cloudflareZumiRequested } from "@/features/zumi/adapters/cloudflare";
+import { createOpenAIResponsesAdapter, openAIResponsesRequested } from "@/features/zumi/adapters/openai-responses";
 import { createSelfHostedZumiAdapter, selfHostedZumiRequested } from "@/features/zumi/adapters/self-hosted";
 import { REDACTION_LIMITATION_NOTICE } from "@/features/zumi/redaction";
 
@@ -125,6 +126,14 @@ function ensureEnvironmentProvidersRegistered(env: ZumiEnv) {
   }
   if (selfHostedZumiRequested(env) && !registry.has("self_hosted")) {
     registerProvider(createSelfHostedZumiAdapter(env));
+  }
+  // OpenAI used to be registered only as a module-level side effect inside the Zumi
+  // API route, which meant any other surface asking `zumiGatewayStatus()` saw an empty
+  // registry and reported Pending Connection while the API answered normally. Two
+  // parts of the product describing the same deployment differently is the failure
+  // mode this registry exists to prevent, so selection registers it like the others.
+  if (openAIResponsesRequested(env) && !registry.has("openai")) {
+    registerProvider(createOpenAIResponsesAdapter(env));
   }
 }
 
