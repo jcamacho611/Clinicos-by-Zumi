@@ -43,7 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         server-owned operating rail below is the sole surface allowed to represent a
         live opportunity because it is backed by persisted Grid/task/escalation truth.
       */}
-      <div className="[&_[aria-labelledby='opportunity-title']]:hidden">
+      <div className="[&_[aria-labelledby=opportunity-title]]:hidden">
         <LivingHome
           appointments={livingAppointments}
           firstName={firstName}
