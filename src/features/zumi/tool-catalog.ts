@@ -12,7 +12,10 @@ export type ZumiToolDescriptor = {
   sendsDataExternally: boolean;
   publicResearchTool?: boolean;
   implementation: "internal" | "provider" | "connector" | "available_to_wire" | "roadmap";
+  /** At least one value must be configured. */
   requiredEnvAny?: readonly string[];
+  /** Every value must be configured. */
+  requiredEnvAll?: readonly string[];
   requiresExplicitApprovalForWrite?: boolean;
 };
 
@@ -31,12 +34,13 @@ export const zumiToolCatalog = [
   { key: "clinic_records", family: "operations", label: "Clinic operations", description: "Read authorized clinic work queues, scheduling, tasks, operational signals, and workflow state.", actions: ["read", "draft"], risk: "HIGH", sendsDataExternally: false, implementation: "internal" },
   { key: "patient_records", family: "clinical", label: "Patient context", description: "Use minimum-necessary patient information through approved tenant-scoped loaders only.", actions: ["read", "draft"], risk: "CRITICAL", sendsDataExternally: false, implementation: "available_to_wire" },
   { key: "grid", family: "marketplace", label: "Klinikos Grid", description: "Find, compare, match, request, reserve, and coordinate healthcare people, places, products, equipment, services, education, and capacity.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: false, implementation: "internal", requiresExplicitApprovalForWrite: true },
+  { key: "grid_map", family: "location", label: "Grid interactive map", description: "Render reviewed Grid capacity and permission-derived user location through the primary MapLibre/OpenFreeMap path without a paid map credential.", actions: ["read", "compute"], risk: "MEDIUM", sendsDataExternally: true, implementation: "internal" },
   { key: "calendar", family: "productivity", label: "Calendar", description: "Inspect availability, propose meetings, and create or update events through an approved calendar connector.", actions: ["read", "draft", "write"], risk: "MEDIUM", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GOOGLE_CALENDAR_CONNECTED", "MICROSOFT_CALENDAR_CONNECTED"], requiresExplicitApprovalForWrite: true },
   { key: "email", family: "communications", label: "Email", description: "Read authorized mail context, draft messages, and send only with approved connector permissions.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GMAIL_CONNECTED", "OUTLOOK_CONNECTED", "RESEND_API_KEY"], requiresExplicitApprovalForWrite: true },
-  { key: "sms", family: "communications", label: "SMS", description: "Draft and send approved text communications with consent and policy controls.", actions: ["draft", "write"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["TWILIO_ACCOUNT_SID"], requiresExplicitApprovalForWrite: true },
+  { key: "sms", family: "communications", label: "SMS", description: "Draft and send approved text communications through the restricted-key Twilio Messaging Service rail with consent and policy controls.", actions: ["draft", "write"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAll: ["TWILIO_ACCOUNT_SID", "TWILIO_API_KEY_SID", "TWILIO_API_KEY_SECRET", "TWILIO_MESSAGING_SERVICE_SID"], requiresExplicitApprovalForWrite: true },
   { key: "voice", family: "communications", label: "Voice", description: "Support speech input/output, call workflows, transcripts, and approved voice-agent integrations.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["TWILIO_ACCOUNT_SID", "DAILY_API_KEY"], requiresExplicitApprovalForWrite: true },
   { key: "documents", family: "documents", label: "Documents", description: "Search, summarize, classify, draft, and route authorized documents with provenance and review status.", actions: ["read", "draft", "write"], risk: "HIGH", sendsDataExternally: false, implementation: "internal", requiresExplicitApprovalForWrite: true },
-  { key: "maps", family: "location", label: "Maps and routes", description: "Geocode permitted locations, compare travel distance, map capacity, and calculate routes.", actions: ["read", "compute"], risk: "MEDIUM", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"] },
+  { key: "maps", family: "location", label: "Geocoding and routes", description: "Geocode permitted locations, compare travel distance, and calculate routes through an optional reviewed provider. Core Grid mapping and browser geolocation do not depend on this connector.", actions: ["read", "compute"], risk: "MEDIUM", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["GEOAPIFY_API_KEY", "GOOGLE_MAPS_API_KEY"] },
   { key: "payments", family: "finance", label: "Payments", description: "Inspect payment state, prepare checkout/payment actions, and reconcile settlement truthfully.", actions: ["read", "draft", "write", "execute"], risk: "CRITICAL", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["STRIPE_SECRET_KEY"], requiresExplicitApprovalForWrite: true },
   { key: "marketplace_payouts", family: "finance", label: "Marketplace payouts", description: "Prepare and reconcile seller/provider payouts with platform-fee accounting.", actions: ["read", "draft", "write", "execute"], risk: "CRITICAL", sendsDataExternally: true, implementation: "connector", requiredEnvAny: ["STRIPE_CONNECT_CLIENT_ID"], requiresExplicitApprovalForWrite: true },
   { key: "billing", family: "revenue_cycle", label: "Billing readiness", description: "Explain billing readiness, missing information, claim state, and revenue-cycle workflow.", actions: ["read", "draft", "write"], risk: "CRITICAL", sendsDataExternally: false, implementation: "internal", requiresExplicitApprovalForWrite: true },
@@ -54,8 +58,16 @@ export const zumiToolCatalog = [
   { key: "device_presence", family: "ambient", label: "Device presence", description: "Receive approved device/surface context for hands-free and ambient assistance without covert monitoring.", actions: ["read"], risk: "HIGH", sendsDataExternally: false, implementation: "roadmap" },
 ] satisfies readonly ZumiToolDescriptor[];
 
+function configured(env: Record<string, string | undefined>, key: string) {
+  return typeof env[key] === "string" && env[key]!.trim().length > 0;
+}
+
 function anyConfigured(env: Record<string, string | undefined>, keys: readonly string[] | undefined) {
-  return Boolean(keys?.some((key) => typeof env[key] === "string" && env[key]!.trim().length > 0));
+  return Boolean(keys?.some((key) => configured(env, key)));
+}
+
+function allConfigured(env: Record<string, string | undefined>, keys: readonly string[] | undefined) {
+  return !keys?.length || keys.every((key) => configured(env, key));
 }
 
 export function resolveZumiToolReadiness(
@@ -65,8 +77,13 @@ export function resolveZumiToolReadiness(
   if (tool.implementation === "roadmap") return "roadmap";
   if (tool.implementation === "internal") return "active";
   if (tool.implementation === "available_to_wire") return "available_to_wire";
-  if (tool.implementation === "provider") return anyConfigured(env, tool.requiredEnvAny) ? "provider_capability" : "pending_connection";
-  if (tool.implementation === "connector") return anyConfigured(env, tool.requiredEnvAny) ? "configured" : "pending_connection";
+
+  const allSatisfied = allConfigured(env, tool.requiredEnvAll);
+  const anySatisfied = tool.requiredEnvAny?.length ? anyConfigured(env, tool.requiredEnvAny) : true;
+  const configuredForTool = allSatisfied && anySatisfied;
+
+  if (tool.implementation === "provider") return configuredForTool ? "provider_capability" : "pending_connection";
+  if (tool.implementation === "connector") return configuredForTool ? "configured" : "pending_connection";
   return "pending_connection";
 }
 
