@@ -1,218 +1,232 @@
-# KLINIKOS — BRANCH LEDGER
+# KLINIKOS — FINAL BRANCH CONVERGENCE LEDGER
 
 Audit date: `2026-08-17 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `cc6162c9349e2ade8ec8a27cdd08a05296fb70a2`
+Canonical implementation base before this closeout PR: `main@cc6162c9349e2ade8ec8a27cdd08a05296fb70a2`
 
-This ledger classifies remote and known local/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
+## Final repository rule
+
+`main` is the only source of implementation truth.
+
+There is **no remaining remote branch in ACTIVE_RECOVERY, RECOVERY_REVIEW, PRESERVE_FOR_LATER, or NEEDS_RECONCILIATION state** after this closeout.
+
+Historical branches may remain as Git refs for provenance, but they are not work queues, fallback implementations, alternate architecture, or authority. Their unique valuable behavior has either:
+
+1. already reached `main`;
+2. been surgically recovered into a newer merged implementation; or
+3. been reviewed and superseded by newer current-main systems.
+
+A historical branch must never be merged wholesale merely because it still exists.
 
 ## Status vocabulary
 
 | Status | Meaning |
 | --- | --- |
-| `CANONICAL` | Current merge base and source of implementation truth. |
-| `ACTIVE_RECOVERY` | Current valuable work to reconcile surgically onto latest main. |
-| `RECOVERY_REVIEW` | Contains potentially useful unique work; inspect file-by-file only after a named current-main gap is proven. |
-| `MERGED_PRESERVE` | The relevant PR/content reached main; retain as history, do not merge wholesale. |
-| `SUPERSEDED_PRESERVE` | Closed/older/variant work has newer equivalents or conflicts with current canon; keep history only unless a named gap is later proven. |
-| `ARCHIVE_OUT_OF_SCOPE` | Pre-Klinikos or unrelated product history; preserve but never import into Klinikos. |
-| `LOCAL_PRESERVE` | Local-only/divergent commits or stash that must not be lost or applied automatically. |
+| `CANONICAL` | Current `main`; sole implementation authority. |
+| `INTEGRATED_COMPLETE` | Unique valuable behavior reached `main`, directly or through a later reconciliation. No work remains on that ref. |
+| `SUPERSEDED_COMPLETE` | Newer current-main behavior replaces the branch. No recovery task remains. |
+| `OUT_OF_SCOPE` | Historical non-Klinikos or unrelated experiment. Never import into Klinikos. |
 
-## Canonical and convergence closeout
+There is intentionally no preservation/recovery status in this final ledger.
 
-| Ref | SHA / PR | Status | Decision |
-| --- | --- | --- | --- |
-| `origin/main` | `cc6162c` | `CANONICAL` | Current source of implementation truth after OpenFreeMap, verified Stripe customer payment rail, restricted-key Twilio communications, and surgical Claude home/routing recovery. |
-| `origin/feat/grid-openfreemap-maplibre-primary` | PR #114 | `MERGED_PRESERVE` | MapLibre + OpenFreeMap is the primary zero-billing Grid map. Browser geolocation/Haversine truth preserved. Google is optional. Do not re-merge. |
-| `origin/feat/live-stripe-payment-rail-2026-08-17` | PR #117 | `MERGED_PRESERVE` | Authoritative Stripe hosted Checkout + signed webhook/evidence implementation merged through shared Financial OS. External webhook/runtime proof remains; code branch is history only. |
-| `origin/reconcile/twilio-after-stripe` | PR #119 | `MERGED_PRESERVE` | Authoritative restricted-key Twilio SMS/Verify implementation reconciled after Stripe. Runtime `MG`/`VA` service proof remains external. Do not re-merge. |
-| `origin/reconcile/claude-home-after-integrations` | PR #120 | `MERGED_PRESERVE` | Valuable Claude server-owned operating rail + launchpad deduplication recovered onto current design. Stale role-template Opportunity suppressed. Do not re-merge. |
-| `origin/feat/stripe-live-checkout-webhook` | closed PR #116 | `SUPERSEDED_PRESERVE` | Emergency parallel Stripe implementation preserved for provenance. Superseded by stronger merged PR #117; never merge alongside it. |
-| `origin/feat/twilio-restricted-key-communications` | closed PR #115 | `SUPERSEDED_PRESERVE` | Original Twilio branch conflicted after Stripe truth changes. Its valuable implementation was rebuilt and merged through PR #119. Preserve history only. |
-| `origin/reconcile/claude-operating-rail-current-design` | closed PR #118 | `SUPERSEDED_PRESERVE` | First surgical Claude recovery candidate. Rebuilt from post-integration main and merged through PR #120. Preserve history only. |
-| `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` historical candidate | `SUPERSEDED_PRESERVE` | Useful operating truth was recovered surgically; stale full-screen visual rewrite and superseded provider/route work were deliberately not revived. Do not mass-merge. |
+## 2026-08-17 convergence closeout
 
-There are **no remote whole-branch recovery candidates authorized for merge after this closeout**. Future recovery starts only from a specific failing journey or named current-main gap and compares the smallest relevant historical patch against current main.
-
-## Local preservation ledger
-
-| Local ref | State | Decision |
+| Historical work | Final status | Resolution |
 | --- | --- | --- |
-| `feat/grid-exchange-mvp` at `51f4636` | Previously reported two local commits ahead of its remote and behind current main; local filesystem history is not accessible through the GitHub connector used for this closeout. | Preserve locally. Do not force-push or auto-apply. If this local ref still exists, push a preservation ref or provide the commit before any further recovery. Current remote Grid architecture remains authoritative. |
-| `claude/whop-portal-grid-marketplace-wdw811` at `321dc35` | Local historical line previously reported divergent from remote. | Preserve as local history; remote historical branch is now `SUPERSEDED_PRESERVE` after PR #120 recovery. |
-| `agent/grid-contractor-preserve` at `c9a384a` | Local-only preservation branch. | Preserve; current universal Grid architecture supersedes the narrow workflow as architecture. |
-| `agent/grid-contractor-finish` at `cbf7c6c` | Tracks old merged contractor work. | Preserve; no new wholesale merge. |
-| `main` at `169a883` | Previously reported stale local branch. | `origin/main` is canonical. Fast-forward only when intentionally updating the local checkout. |
-| `stash@{0}` | `preserve/321dc35-pre-grid-exchange-mvp-2026-08-13` | Do not apply, pop, drop, or rewrite automatically. |
+| OpenFreeMap / MapLibre Grid map | `INTEGRATED_COMPLETE` | PR #114 merged. Core Grid mapping no longer depends on Google billing. |
+| Codex Stripe live customer-payment work | `INTEGRATED_COMPLETE` | PR #117 merged as the authoritative Stripe implementation through the shared Financial OS. |
+| Parallel emergency Stripe branch / PR #116 | `SUPERSEDED_COMPLETE` | Stronger PR #117 owns Stripe customer-payment truth. No code remains to recover from #116. |
+| Original Twilio branch / PR #115 | `SUPERSEDED_COMPLETE` | Rebuilt on post-Stripe main and merged through PR #119. |
+| Twilio restricted-key communications | `INTEGRATED_COMPLETE` | PR #119 merged: restricted API-key outbound SMS + Verify adapter and readiness contract. |
+| Historical Claude marketplace/home branch | `SUPERSEDED_COMPLETE` | Follow-up automation was recovered through PR #54; latest operating-rail behavior was recovered through PR #120. Stale visual/provider/route variants are intentionally replaced by current main. |
+| First Claude operating-rail reconciliation / PR #118 | `SUPERSEDED_COMPLETE` | Rebuilt from the post-integration main and merged through PR #120. |
+| Claude operating truth + launchpad dedup | `INTEGRATED_COMPLETE` | PR #120 merged without reverting PR #112's approved Living Home design. |
+| Architecture-runtime convergence / PR #83 | `INTEGRATED_COMPLETE` | Its still-useful engine-registry truth is ported in this closeout branch. Its large stale canon rewrite is not an alternate architecture. |
+| Compliance-gating foundation | `SUPERSEDED_COMPLETE` | Current main has newer access verification, audit/security events, legal/compliance documentation, environment truth, tenant/RBAC controls, and governed migrations. The old unnumbered SQL/schema helpers must not be reintroduced. |
+| Ecosystem wiring pass rebased temp ref | `SUPERSEDED_COMPLETE` | No unique implementation beyond the merged ecosystem/current-main work. |
+| Local Growth Portal / NA Kit experiments | `OUT_OF_SCOPE` | Historical non-Klinikos product experiments; never import into Klinikos. |
 
-Local-only refs are outside GitHub remote truth. Their preservation does not make them current architecture, and their existence is not permission to overwrite merged remote work.
+## Merged / integrated historical refs
 
-## Recovery-review branches
-
-These branches are not merge candidates as a unit.
-
-| Ref | SHA | Review result |
-| --- | --- | --- |
-| `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Review only if a current registry/canon test names a concrete missing behavior. |
-| `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with current auth/session architecture and a configured communications rail; no automatic recovery. |
-| `origin/feat/ecosystem-wiring-pass-1-rebased` | `928d991` | Temporary alignment ref with no unique implementation beyond merged PR #98 at the audited point; preserve without merging. |
-
-## Merged branches — preserve, do not re-merge
-
-The relevant pull request or equivalent integration reached main. Some refs are no longer ancestors because branches were rebased, force-updated, or carried merge commits; PR history and current implementation are the authority.
+The following branch lines have no remaining work. Their relevant behavior is already represented by current `main` or a later merged reconciliation:
 
 ```text
-origin/agent/brand-truth-klinikos
-origin/agent/cinematic-rose-living-home
-origin/agent/grid-composition-engine-v2
-origin/agent/grid-contractor-finish
-origin/agent/grid-financial-settlement
-origin/agent/grid-financial-ui
-origin/agent/grid-intent-router
-origin/agent/grid-transaction-flow
-origin/agent/grid-universal-resources
-origin/agent/integrate-public-grid-dock
-origin/agent/living-home-conversation
-origin/agent/pixel-reference-reconstruction
-origin/agent/zumi-cortex-security
-origin/agent/zumi-everywhere-brand
-origin/agent/zumi-jarvis-cortex
-origin/agent/zumi-jarvis-cortex-v2
-origin/agent/zumi-jarvis-cortex-v3
-origin/agent/zumi-jarvis-cortex-v4
-origin/agent/zumi-jarvis-cortex-v5
-origin/backend/cross-domain-path-events-v3
-origin/backend/durable-path-grid-runtime-v2
-origin/backend/orchestration-engines-v1
-origin/backup/post-emergent-living-home-2026-08-13
-origin/backup/pre-emergent-2026-08-13
-origin/brand/klinikos-logo-refresh
-origin/chore/truth-sync-2026-08-12
-origin/ci/deploy-contract-gate
-origin/claude/klinikos-mvp-completion
-origin/claude/mvp-grid-journey
-origin/claude/mvp-operations-journey
-origin/claude/mvp-zumi-journey
-origin/codex/build-mvp-web-app-local-growth-portal
-origin/codex/clinicos-full-emr
-origin/commercial/clinic-os-revenue-integration-v2
-origin/commercial/customer-funded-access
-origin/docs/ecosystem-pricing-design-canon-2026-08-16
-origin/docs/klinikos-truth-sync-2026-08-14
-origin/feat/commercial-activation-experience
-origin/feat/commercial-qualification-convergence
-origin/feat/ecosystem-wiring-pass-1
-origin/feat/internal-messaging-truth
-origin/feat/native-task-creation
-origin/feat/schedule-native-wiring
-origin/feat/patient-search-wiring
-origin/feat/telemedicine-truth-wiring
-origin/recovery/repository-truth-convergence-2026-08-16
-origin/feat/grid-exchange-mvp
-origin/feat/grid-openfreemap-maplibre-primary
-origin/feat/live-stripe-payment-rail-2026-08-17
-origin/reconcile/twilio-after-stripe
-origin/reconcile/claude-home-after-integrations
-origin/feat/living-home-aegean-briefing
-origin/feat/mvp-convergence-frontend
-origin/feat/patient-portal-aegean-convergence
-origin/feat/pricing-commercial-convergence
-origin/feat/verified-first-login-launch
-origin/feat/zumi-cloudflare-inference
-origin/feature/klinikos-edu-foundation
-origin/feature/sales-audit-funnel
-origin/feature/zumi-command-experience
-origin/fix/brand-assets-404
-origin/fix/ecosystem-wiring-truth-2026-08-16
-origin/fix/grid-map-location-continuity-2026-08-16
-origin/fix/grid-neutral-provider-fixture-2026-08-16
-origin/fix/living-home-original-visual-match
-origin/fix/living-home-visual-corrections
-origin/fix/pin-node-version
-origin/fix/prisma-schema-restore
-origin/fix/production-asset-cleanup
-origin/fix/public-copy-jargon
-origin/fix/render-dashboard-compat
-origin/fix/render-production-build-deps
-origin/fix/transparent-production-assets
-origin/fix/zumi-cloudflare-default-gateway
-origin/frontend/path-move-signals-v4
-origin/grid/final-front-back-completion-v5
-origin/grid/post-booking-trust
-origin/integration/commercial-ledger-current-main
-origin/integration/operational-followup-current-main
-origin/mvp/final-completion-v2
-origin/orchestration/live-next-action-v6
-origin/reconcile/final-grid-design-commercial
-origin/ux/home-pathway-discovery-v2
-origin/zumi/full-agent-foundation
+agent/brand-truth-klinikos
+agent/cinematic-rose-living-home
+agent/grid-composition-engine-v2
+agent/grid-contractor-finish
+agent/grid-financial-settlement
+agent/grid-financial-ui
+agent/grid-intent-router
+agent/grid-transaction-flow
+agent/grid-universal-resources
+agent/integrate-public-grid-dock
+agent/living-home-conversation
+agent/pixel-reference-reconstruction
+agent/zumi-cortex-security
+agent/zumi-everywhere-brand
+agent/zumi-jarvis-cortex
+agent/zumi-jarvis-cortex-v2
+agent/zumi-jarvis-cortex-v3
+agent/zumi-jarvis-cortex-v4
+agent/zumi-jarvis-cortex-v5
+backend/cross-domain-path-events-v3
+backend/durable-path-grid-runtime-v2
+backend/orchestration-engines-v1
+backup/post-emergent-living-home-2026-08-13
+backup/pre-emergent-2026-08-13
+brand/klinikos-logo-refresh
+chore/truth-sync-2026-08-12
+ci/deploy-contract-gate
+claude/klinikos-mvp-completion
+claude/mvp-grid-journey
+claude/mvp-operations-journey
+claude/mvp-zumi-journey
+codex/build-mvp-web-app-local-growth-portal
+codex/clinicos-full-emr
+commercial/clinic-os-revenue-integration-v2
+commercial/customer-funded-access
+docs/ecosystem-pricing-design-canon-2026-08-16
+docs/klinikos-truth-sync-2026-08-14
+docs/production-environment-truth-2026-08-16
+feat/commercial-activation-experience
+feat/commercial-qualification-convergence
+feat/ecosystem-wiring-pass-1
+feat/grid-exchange-mvp
+feat/grid-openfreemap-maplibre-primary
+feat/insurance-truth-wiring
+feat/internal-messaging-truth
+feat/live-stripe-payment-rail-2026-08-17
+feat/living-home-aegean-briefing
+feat/mvp-convergence-frontend
+feat/native-task-creation
+feat/patient-portal-aegean-convergence
+feat/patient-search-wiring
+feat/pricing-commercial-convergence
+feat/schedule-native-wiring
+feat/telemedicine-truth-wiring
+feat/verified-first-login-launch
+feat/zumi-cloudflare-inference
+feature/klinikos-edu-foundation
+feature/sales-audit-funnel
+feature/zumi-command-experience
+fix/billing-stored-truth
+fix/brand-assets-404
+fix/ecosystem-wiring-truth-2026-08-16
+fix/front-desk-real-queue
+fix/grid-map-location-continuity-2026-08-16
+fix/grid-marble-professional-enrollment-2026-08-16
+fix/grid-neutral-provider-fixture-2026-08-16
+fix/living-home-original-visual-match
+fix/living-home-reference-lock-2026-08-16
+fix/living-home-visual-corrections
+fix/pin-node-version
+fix/prisma-schema-restore
+fix/production-asset-cleanup
+fix/public-copy-jargon
+fix/render-dashboard-compat
+fix/render-production-build-deps
+fix/transparent-production-assets
+fix/zumi-cloudflare-active-model-privacy-v2
+fix/zumi-cloudflare-default-gateway
+frontend/path-move-signals-v4
+grid/final-front-back-completion-v5
+grid/post-booking-trust
+integration/commercial-ledger-current-main
+integration/operational-followup-current-main
+mvp/final-completion-v2
+orchestration/live-next-action-v6
+reconcile/claude-home-after-integrations
+reconcile/final-grid-design-commercial
+reconcile/twilio-after-stripe
+recovery/repository-truth-convergence-2026-08-16
+ux/home-pathway-discovery-v2
+zumi/full-agent-foundation
 ```
 
-## Superseded or closed branches — preserve as history
+## Superseded historical refs
 
-These branches are older attempts, closed PRs, intermediate integration lines, or design/workflow variants. Current main contains newer governed equivalents, or the branch conflicts with current canon. Recover only a small named behavior after a current-main comparison and tests.
+These refs contain older variants, intermediate rebases, replaced UI, stale architecture, or work that was subsequently recovered through a newer merged line. They own **zero outstanding implementation requirements**:
 
 ```text
-origin/agent/frontend-cohesion-audit
-origin/agent/grid-composition-engine
-origin/agent/grid-first-public-entry
-origin/agent/klinicos-operating-system-foundation
-origin/agent/klinikos-core-foundation
-origin/agent/paid-portal-entry-grid
-origin/agent/public-grid-entry
-origin/agent/zumi-intelligence-foundation
-origin/archive/whop-portal-grid-marketplace-pre-rebase
-origin/claude/whop-portal-grid-marketplace-wdw811
-origin/codex/marketplace-website-truth
-origin/commercial/pricing-gates-v1
-origin/feat/grid-first-convergence
-origin/feat/living-home-briefing
-origin/feat/stripe-live-checkout-webhook
-origin/feat/twilio-restricted-key-communications
-origin/grid/complete-front-back
-origin/grid/final-front-back-completion
-origin/grid/final-front-back-completion-v2
-origin/grid/final-front-back-completion-v3
-origin/grid/final-front-back-completion-v4
-origin/integration/grid-eligibility
-origin/integration/grid-zumi-green-v5
-origin/integration/pristine-server-zumi
-origin/integration/recover-codex-network-context
-origin/jcamacho611-patch-1
-origin/klinikos-hardening-2026-08-10
-origin/mvp/final-completion
-origin/reconcile/claude-design-grid-commercial
-origin/reconcile/claude-operating-rail-current-design
-origin/release/commercial-server-copy-consolidation
-origin/release/klinikos-commercial-consolidation-v2
-origin/release/klinikos-consolidation-final
-origin/release/klinikos-final-integrated
-origin/release/klinikos-final-integration
-origin/release/klinikos-final-merged
-origin/ux/home-pathway-discovery
+agent/architecture-runtime-convergence
+agent/frontend-cohesion-audit
+agent/grid-composition-engine
+agent/grid-first-public-entry
+agent/klinicos-operating-system-foundation
+agent/klinikos-core-foundation
+agent/paid-portal-entry-grid
+agent/public-grid-entry
+agent/zumi-intelligence-foundation
+archive/whop-portal-grid-marketplace-pre-rebase
+claude/whop-portal-grid-marketplace-wdw811
+codex/marketplace-website-truth
+commercial/pricing-gates-v1
+feat/compliance-gating-foundation
+feat/ecosystem-wiring-pass-1-rebased
+feat/grid-first-convergence
+feat/living-home-briefing
+feat/stripe-live-checkout-webhook
+feat/twilio-restricted-key-communications
+fix/zumi-cloudflare-active-model-privacy-2026-08-16
+grid/complete-front-back
+grid/final-front-back-completion
+grid/final-front-back-completion-v2
+grid/final-front-back-completion-v3
+grid/final-front-back-completion-v4
+integration/grid-eligibility
+integration/grid-zumi-green-v5
+integration/pristine-server-zumi
+integration/recover-codex-network-context
+jcamacho611-patch-1
+klinikos-hardening-2026-08-10
+mvp/final-completion
+reconcile/claude-design-grid-commercial
+reconcile/claude-operating-rail-current-design
+reconcile/final-grid-design-commercial
+release/commercial-server-copy-consolidation
+release/klinikos-commercial-consolidation-v2
+release/klinikos-consolidation-final
+release/klinikos-final-integrated
+release/klinikos-final-integration
+release/klinikos-final-merged
+ux/home-pathway-discovery
 ```
 
-## Out-of-scope archive
+A branch appearing in both an old merge/integration history and a later superseded classification does not make it active: the later current-main implementation wins. PR history and current runtime evidence are authoritative.
 
-These refs predate or are unrelated to the Klinikos product. They are evidence only and must never be imported into the Klinikos application.
+## Out-of-scope historical refs
 
 ```text
-origin/archive/jeni-pre-clinicos-20260803
-origin/codex/build-mvp-web-app-local-growth-portal-3hty8e
-origin/codex/create-app-concepts-for-viral-revenue-generation
+archive/jeni-pre-clinicos-20260803
+codex/build-mvp-web-app-local-growth-portal-3hty8e
+codex/create-app-concepts-for-viral-revenue-generation
 ```
 
-## Post-convergence integration order
+These are not Klinikos completion work.
 
-1. Keep `origin/main` as the only implementation merge base.
-2. Do not reopen or re-merge PRs #115, #116, or #118; their valuable work is already represented by merged PRs #119, #117, and #120 respectively.
-3. Do not mass-merge the historical Claude branch; its valuable operating behavior is already recovered and its stale visual rewrite is intentionally superseded.
-4. Do not mass-merge any Stripe variant; PR #117 owns direct customer-payment implementation truth.
-5. Do not make Google Maps a Grid launch dependency; PR #114 owns core map implementation truth.
-6. Review local-only `51f4636` or stash history only if the user intentionally makes those commits available and a named current-main journey proves missing behavior.
-7. Review other `RECOVERY_REVIEW` branches only after a specific failing journey identifies a gap.
-8. External runtime connection work now outranks speculative branch recovery: GitHub Actions billing, Render deploy verification, Stripe webhook proof, Twilio service/runtime proof, Cloudflare non-PHI runtime proof, then later regulated rails.
+## Local-only refs and stashes
 
-## Destructive-action rule
+Previously reported local-only branches/commits/stashes are **not part of the remote product contract and are not an outstanding recovery queue**. GitHub cannot verify or mutate local-only state that was never pushed.
 
-No branch deletion, force push, stash mutation, mass merge, history rewrite, or archive import is authorized by this ledger.
+If an old local object is later surfaced, it starts with status `HISTORICAL_UNTRUSTED`, not `PRESERVE`. It may change current `main` only if a current failing journey proves a missing behavior and the proposed patch survives a fresh current-main implementation review.
+
+No current product journey, canon, release, or external-connection plan depends on a local-only preservation object.
+
+## Final merge law
+
+From this closeout forward:
+
+1. branch only from latest `main`;
+2. never build from a historical branch;
+3. never mass-merge an old branch;
+4. never use an old branch as fallback production code;
+5. if a historical idea is still desirable, implement it fresh against current architecture rather than reviving its branch;
+6. keep external runtime activation separate from repository branch recovery;
+7. when a feature is merged, the feature branch is immediately considered historical and carries no future work obligation.
+
+## Repository completion statement
+
+At this closeout, **there is no known remote Codex/Claude/agent branch with unrecovered work required to complete the current Klinikos implementation**.
+
+Remaining work belongs to normal product development or external runtime/regulated dependencies—not branch preservation.
