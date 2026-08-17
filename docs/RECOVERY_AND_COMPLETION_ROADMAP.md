@@ -66,8 +66,8 @@ Recovery rule: create a current-main implementation branch, compare each changed
 
 ## 5. Next ten execution items
 
-1. **Merge this repository-truth convergence** after exact-head Quality and review.
-2. **Resolve and merge the safe parts of PR #97**: keep server-owned qualification/auth intent/NPPES/LEIE work, align checkout price with the real paylink, bound/cache connector work, neutralize fixtures, and rebase on current main.
+1. **Completed:** repository-truth convergence merged through PR #98.
+2. **In final verification:** PR #97 safe wiring reached main; its exact-price, connector-bound/cache, no-clearance-language, and neutral-fixture remediation is isolated in the follow-up branch after PR #97 merged concurrently at its older head.
 3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
 4. **Remove person-specific demo identity from Grid fixtures/tests/UI** and replace it with neutral provider/participant labels without weakening synthetic-data evidence.
 5. **Complete selected-resource and map/ledger continuity**: pin/list focus, preserved selected resource into governed request, manual city/ZIP/place origin, privacy-safe bounds behavior.

@@ -43,7 +43,8 @@ The purpose is to replace unnecessary clinic software with native Klinikos capab
 | Claim status 276/277 | Stedi / clearinghouse alternative | Yes | BAA/enrollment | Clinic transaction cost | **Sandbox-ready / Pending production connection** |
 | ERA 835 | Stedi / clearinghouse alternative | Yes | BAA/enrollment | Clinic transaction cost | **Sandbox-ready / Pending production connection** |
 | Payer directory | Stedi / CMS / payer data | Usually no PHI | Terms/licensing | Low COGS/plan | **Configurable** |
-| NPI / taxonomy | CMS NPPES | No PHI | Public API/data terms | Minimal | **Configurable** |
+| NPI / taxonomy | CMS NPPES | No PHI | Public API/data terms and runtime availability | Minimal | **Built public-evidence adapter; never license or eligibility authority** |
+| Federal exclusion pre-screen | HHS OIG LEIE downloadable dataset | No PHI | Public dataset availability/schema/freshness; documented human/OIG online verification remains required | Minimal | **Built bounded/cached exact-NPI pre-screen; not exclusion clearance** |
 | Medicare patient-authorized claims | CMS Blue Button | Yes | CMS app approval/OAuth/security | Usually no separate markup by default | **Pending connection** |
 | CPT content | AMA-licensed source/vendor | No PHI by itself | License | Klinikos/revenue economics | **Blocked pending license** |
 | ICD-10-CM / HCPCS references | Official/licensed sources | No PHI by itself | Terms/license where applicable | Klinikos COGS | **Configurable/planned depending source** |

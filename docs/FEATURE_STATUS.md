@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
-Latest exact green candidate: PR #96 head `31592d05e46e3c37bd91e5f3044ebd8595ab9f0c`
+Current audited main: `main@008847b4c53ccc789cac9a7cdb168722587d6bc0`
+Latest local candidate: `c427375` with type-check, lint, 619 tests, and production build green; exact-head CI pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -134,6 +134,8 @@ Redirect state is never payment evidence.
 | Dispute vs safety incident separation | **BUILT** | Separate problem types and governed holds/resolution. |
 | External provider-license verification | **PENDING CONNECTION** | Requires real authority/vendor access. |
 | External malpractice verification | **PENDING CONNECTION** | Internal review is not external verification. |
+| CMS NPPES public NPI/taxonomy evidence | **BUILT** | Authenticated credentialing users can run a bounded, time-limited public lookup; result evidence never establishes licensure, malpractice, privileges, or Grid eligibility. |
+| HHS OIG LEIE exact-NPI pre-screen | **BUILT** | Authenticated credentialing users can run a size-bounded, cached public dataset screen with source freshness and audit evidence; no-candidate results are not exclusion clearance. |
 | External marketplace payout settlement | **PENDING CONNECTION** | Internal ledger must not be represented as money moved. |
 
 ## Klinikos EDU

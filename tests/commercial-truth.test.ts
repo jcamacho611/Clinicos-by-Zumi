@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allocateFundedUsage, evaluateCustomerFundedAccess } from "@/lib/commercial/customer-funded-access";
 import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
-import { getCommercialProduct } from "@/lib/commercial/product-catalog";
+import { getCommercialProduct, resolveCommercialCheckoutAmount } from "@/lib/commercial/product-catalog";
 import { evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
 
 describe("Klinikos commercial truth", () => {
@@ -66,8 +66,17 @@ describe("Klinikos commercial truth", () => {
 
   it("keeps the operational audit separate from production software activation", () => {
     const product = getCommercialProduct("operational_audit");
+    expect(product?.label).toBe("Clinic Operating Analysis");
+    expect(product?.priceCents).toBe(50_000);
     expect(product?.modules).toEqual([]);
     expect(product?.postPurchaseBoundary).toMatch(/does not activate production software/i);
+  });
+
+  it("refuses to pair a fixed checkout link with a conflicting recorded amount", () => {
+    const product = getCommercialProduct("operational_audit");
+    expect(product).toBeTruthy();
+    expect(resolveCommercialCheckoutAmount(product!, 50_000)).toBe(50_000);
+    expect(() => resolveCommercialCheckoutAmount(product!, 75_000)).toThrow(/server-owned price/i);
   });
 
   it("treats GoDaddy as checkout-only until independently reconciled", async () => {
@@ -148,6 +157,6 @@ describe("Klinikos commercial truth", () => {
     const evaluated = evaluateSalesAuditQualification(parsed);
     expect(evaluated.score).toBeGreaterThanOrEqual(70);
     expect(evaluated.status).toBe("QUALIFIED");
-    expect(evaluated.auditPrice).toBe(1250);
+    expect(evaluated.auditPrice).toBe(500);
   });
 });

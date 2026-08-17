@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
+Audited main: `008847b4c53ccc789cac9a7cdb168722587d6bc0`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,9 +22,10 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `7833eb7` | `CANONICAL` | Current merge base after PRs #95 and #96. |
-| `origin/recovery/repository-truth-convergence-2026-08-16` | `d8d0b13` | `ACTIVE_RECOVERY` | This audit/canon/recovery branch and PR #98. |
+| `origin/main` | `008847b` | `CANONICAL` | Current merge base after PRs #95–#98. |
+| `origin/fix/ecosystem-wiring-truth-2026-08-16` | `current PR head` | `ACTIVE_RECOVERY` | Follow-up to PR #97: enforces the exact $500 checkout amount, bounds/caches public credential evidence, removes clearance-like UI, and neutralizes fixtures. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
+| `origin/feat/patient-search-wiring` | `3283d9f` | `ACTIVE_RECOVERY` | Open PR #99. Tenant-scoped patient-index search over the already authorized list; review exact-head CI and final diff before merge. |
 
 ## Local preservation ledger
 
@@ -45,7 +46,8 @@ These branches are not merge candidates as a unit.
 | --- | --- | --- |
 | `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Two documentation/registry commits may contain useful wording, but current source hierarchy and engine registry must win. Review only against a named registry gap. |
 | `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with the current auth/session architecture and a configured mail rail; no automatic recovery. |
-| `origin/feat/ecosystem-wiring-pass-1` | `f314526` | Open PR #97. Preserve its auth-return fix, server-owned commercial qualification, governed NPPES evidence, and LEIE pre-screening. Do not merge until checkout amount truth, connector bounds/caching, negative-result language, neutral fixtures, and current-main reconciliation are fixed. |
+| `origin/feat/ecosystem-wiring-pass-1` | `2248ff5` | PR #97 was merged at `f314526` before the remediation commit reached the branch. Preserve the post-merge fix commit as evidence; its patch is recovered cleanly by `origin/fix/ecosystem-wiring-truth-2026-08-16`. |
+| `origin/feat/ecosystem-wiring-pass-1-rebased` | `928d991` | Temporary current-main alignment ref created during concurrent recovery. It contains no unique implementation beyond merged PR #98 at the audited point; preserve without merging. |
 
 ## Merged branches — preserve, do not re-merge
 
@@ -91,6 +93,7 @@ origin/docs/ecosystem-pricing-design-canon-2026-08-16
 origin/docs/klinikos-truth-sync-2026-08-14
 origin/feat/commercial-activation-experience
 origin/feat/commercial-qualification-convergence
+origin/recovery/repository-truth-convergence-2026-08-16
 origin/feat/grid-exchange-mvp
 origin/feat/living-home-aegean-briefing
 origin/feat/mvp-convergence-frontend
@@ -178,7 +181,7 @@ origin/codex/create-app-concepts-for-viral-revenue-generation
 
 1. Keep `origin/main` as the only merge base.
 2. Finish source-of-truth convergence and status corrections.
-3. Resolve PR #97's documented checkout/connector/current-main blockers and preserve its safe wiring improvements.
+3. Merge the focused PR #97 truth-remediation follow-up after exact-head gates.
 4. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto latest main.
 5. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
 6. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.

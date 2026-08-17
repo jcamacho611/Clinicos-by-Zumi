@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { createCommercialCheckoutIntent } from "@/lib/commercial/payment-evidence-repository";
-import { getCommercialProduct, type CommercialProductKey } from "@/lib/commercial/product-catalog";
+import { getCommercialProduct, resolveCommercialCheckoutAmount, type CommercialProductKey } from "@/lib/commercial/product-catalog";
 import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
 
 export async function createGoDaddyCommercialCheckout(input: {
@@ -16,10 +16,7 @@ export async function createGoDaddyCommercialCheckout(input: {
   const product = getCommercialProduct(input.productKey);
   if (!product) throw new Error("Unknown Klinikos commercial product.");
 
-  const expectedAmountCents = input.expectedAmountCents ?? null;
-  if (expectedAmountCents !== null && (!Number.isInteger(expectedAmountCents) || expectedAmountCents < 0)) {
-    throw new Error("Expected checkout amount must be a non-negative integer number of cents.");
-  }
+  const expectedAmountCents = resolveCommercialCheckoutAmount(product, input.expectedAmountCents);
 
   const intent = await createCommercialCheckoutIntent({
     organizationId: input.organizationId,
