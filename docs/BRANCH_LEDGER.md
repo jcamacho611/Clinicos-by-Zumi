@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
+Audited main: `81b234d961dd3833360ca5f9bf21f9711b374743`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,10 +22,10 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `035ebe7` | `CANONICAL` | Current merge base after repository recovery plus native scheduling and stored-truth telemedicine merges through PR #102. |
+| `origin/main` | `81b234d` | `CANONICAL` | Current merge base after repository recovery plus native scheduling, stored-truth telemedicine, and governed task creation through PR #103. |
 | `origin/fix/grid-map-location-continuity-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Public Grid map/result radius consistency, bidirectional Google pin/list focus, and preserved selected-resource request continuity. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
-| `origin/feat/native-task-creation` | `b8d3414` | `ACTIVE_RECOVERY` | Open PR #103. Governed task creation is independently owned; its exact-head `verify` check is failing, so do not duplicate or merge it through the Grid map branch. |
+| `origin/feat/internal-messaging-truth` | `9479eb4` | `ACTIVE_RECOVERY` | Open PR #105. Native internal messaging is independently owned and its exact-head checks are running; do not duplicate it through the Grid map branch. |
 
 ## Local preservation ledger
 
@@ -93,6 +93,7 @@ origin/docs/klinikos-truth-sync-2026-08-14
 origin/feat/commercial-activation-experience
 origin/feat/commercial-qualification-convergence
 origin/feat/ecosystem-wiring-pass-1
+origin/feat/native-task-creation
 origin/feat/schedule-native-wiring
 origin/feat/patient-search-wiring
 origin/feat/telemedicine-truth-wiring
