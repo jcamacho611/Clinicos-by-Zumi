@@ -41,6 +41,8 @@ A reviewed universal resource can continue through:
 
 Provider and universal-resource presentation is coordinated in the public map/result ledger, while each class retains its own eligibility policy.
 
+After a visitor explicitly grants browser location access, Grid can apply a 5, 10, 25, 50, 100 mile or unrestricted distance view. The displayed map pins and adjacent mapped-resource ledger use the same client-side radius result. Inventory without reviewed public coordinates is excluded from exact-radius mode and explained rather than assigned a fabricated distance. Result selection centers the map; a connected Google marker selects the corresponding ledger row; the keyless OpenStreetMap path retains list-to-map focus.
+
 ## Truth rules
 
 - Eligibility is a hard gate. Ranking cannot override it.
@@ -51,6 +53,7 @@ Provider and universal-resource presentation is coordinated in the public map/re
 - Reservation conflicts must prevent provider/location double booking.
 - A distance is shown or used for radius eligibility only when both sides have valid stored coordinates.
 - Browser location is requested only after a user action and is not converted into fake marketplace inventory.
+- Permission-derived location remains in the browser discovery surface; it is not persisted by public map browsing.
 - Public coordinate projection is less precise than governed server-side matching data.
 - Booking, payment, fulfillment, and settlement remain distinct states.
 - Payout cannot be represented as settled before fulfillment and a real external settlement reference.

@@ -26,6 +26,7 @@ type MapInstance = {
 
 type MarkerInstance = {
   map: MapInstance | null;
+  addListener?: (eventName: "click", handler: () => void) => { remove(): void };
 };
 
 type GoogleMapsNamespace = {
@@ -85,10 +86,12 @@ export function GoogleGridMap({
   points,
   selectedPointId,
   onLocationChange,
+  onPointSelect,
 }: {
   points: GridMapPoint[];
   selectedPointId?: string | null;
   onLocationChange?: (location: GridCoordinates | null) => void;
+  onPointSelect?: (pointId: string) => void;
 }) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const markersRef = useRef<MarkerInstance[]>([]);
@@ -154,11 +157,13 @@ export function GoogleGridMap({
           const position = { lat: point.latitude, lng: point.longitude };
           bounds.extend(position);
           boundCount += 1;
-          markersRef.current.push(new maps.marker.AdvancedMarkerElement({
+          const marker = new maps.marker.AdvancedMarkerElement({
             map,
             position,
             title: `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`,
-          }));
+          });
+          marker.addListener?.("click", () => onPointSelect?.(point.id));
+          markersRef.current.push(marker);
         }
         if (boundCount > 1 && !selectedPoint) map.fitBounds(bounds, 72);
         setProviderState("google");
@@ -175,7 +180,7 @@ export function GoogleGridMap({
       for (const marker of markersRef.current) marker.map = null;
       markersRef.current = [];
     };
-  }, [apiKey, mapId, selectedPoint, usablePoints, userLocation]);
+  }, [apiKey, mapId, onPointSelect, selectedPoint, usablePoints, userLocation]);
 
   function requestLocation() {
     if (!navigator.geolocation) {

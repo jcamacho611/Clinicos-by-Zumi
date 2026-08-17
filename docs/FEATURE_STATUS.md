@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@008847b4c53ccc789cac9a7cdb168722587d6bc0`
-Latest local candidate: `c427375` with type-check, lint, 619 tests, and production build green; exact-head CI pending.
+Current audited main: `main@035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
+Latest local candidate: Grid map/location continuity on current main with type-check, lint, 85 test files / 629 tests, and production build green; exact-head CI pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -116,11 +116,12 @@ Redirect state is never payment evidence.
 | Keyless OpenStreetMap fallback | **BUILT** | Interactive map context works without Google credentials. |
 | Optional Google map-provider path | **ADAPTER READY** | Requires actual key/map ID/configuration to claim connected. |
 | Exact coordinate-radius matching | **BUILT** | Real Haversine distance; radius is authoritative when a real origin/radius exists, including across state boundaries. |
+| Public distance-radius map filtering | **BUILT** | After explicit browser location permission, mapped pins and the adjacent result ledger share the same 5/10/25/50/100-mile or any-distance set; unpinned inventory is excluded rather than assigned fake distance. |
 | Coordinate integrity constraints | **BUILT** | Database rejects half-null/out-of-range coordinate pairs. |
 | Public coordinate minimization | **BUILT** | Public precision reduced; governed server-side matching retains stored values. |
 | Fake nearby inventory | **NOT BUILT BY DESIGN** | Empty market remains empty/truthful. |
 | Structured weekday/time interpretation into availability filters | **NOT BUILT** | Free-text handling exists; deterministic weekday initialization is a named next convergence target. |
-| Pin/ledger selected-result synchronization | **PARTIALLY BUILT** | Same result truth exists; richer bidirectional focus/selection remains. |
+| Pin/ledger selected-result synchronization | **BUILT** | Result selection centers the map; connected Google markers focus the matching ledger row; the selected resource ID continues through sign-in into the governed request. |
 | Manual city/ZIP/place origin + richer Search-this-area behavior | **PARTIALLY BUILT** | City/state discovery exists; complete map-origin UX remains future convergence. |
 
 ## Grid transaction / trust

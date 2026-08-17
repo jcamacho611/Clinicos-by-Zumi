@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `008847b4c53ccc789cac9a7cdb168722587d6bc0`
+Audited main: `035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,10 +22,10 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `008847b` | `CANONICAL` | Current merge base after PRs #95–#98. |
-| `origin/fix/ecosystem-wiring-truth-2026-08-16` | `current PR head` | `ACTIVE_RECOVERY` | Follow-up to PR #97: enforces the exact $500 checkout amount, bounds/caches public credential evidence, removes clearance-like UI, and neutralizes fixtures. |
+| `origin/main` | `035ebe7` | `CANONICAL` | Current merge base after repository recovery plus native scheduling and stored-truth telemedicine merges through PR #102. |
+| `origin/fix/grid-map-location-continuity-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Public Grid map/result radius consistency, bidirectional Google pin/list focus, and preserved selected-resource request continuity. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
-| `origin/feat/patient-search-wiring` | `3283d9f` | `ACTIVE_RECOVERY` | Open PR #99. Tenant-scoped patient-index search over the already authorized list; review exact-head CI and final diff before merge. |
+| `origin/feat/native-task-creation` | `b8d3414` | `ACTIVE_RECOVERY` | Open PR #103. Governed task creation is independently owned; its exact-head `verify` check is failing, so do not duplicate or merge it through the Grid map branch. |
 
 ## Local preservation ledger
 
@@ -46,7 +46,6 @@ These branches are not merge candidates as a unit.
 | --- | --- | --- |
 | `origin/agent/architecture-runtime-convergence` | `850d19e` | Closed PR #83. Two documentation/registry commits may contain useful wording, but current source hierarchy and engine registry must win. Review only against a named registry gap. |
 | `origin/feat/compliance-gating-foundation` | `9a173b9` | Early email-verification work. Re-evaluate only with the current auth/session architecture and a configured mail rail; no automatic recovery. |
-| `origin/feat/ecosystem-wiring-pass-1` | `2248ff5` | PR #97 was merged at `f314526` before the remediation commit reached the branch. Preserve the post-merge fix commit as evidence; its patch is recovered cleanly by `origin/fix/ecosystem-wiring-truth-2026-08-16`. |
 | `origin/feat/ecosystem-wiring-pass-1-rebased` | `928d991` | Temporary current-main alignment ref created during concurrent recovery. It contains no unique implementation beyond merged PR #98 at the audited point; preserve without merging. |
 
 ## Merged branches — preserve, do not re-merge
@@ -93,6 +92,10 @@ origin/docs/ecosystem-pricing-design-canon-2026-08-16
 origin/docs/klinikos-truth-sync-2026-08-14
 origin/feat/commercial-activation-experience
 origin/feat/commercial-qualification-convergence
+origin/feat/ecosystem-wiring-pass-1
+origin/feat/schedule-native-wiring
+origin/feat/patient-search-wiring
+origin/feat/telemedicine-truth-wiring
 origin/recovery/repository-truth-convergence-2026-08-16
 origin/feat/grid-exchange-mvp
 origin/feat/living-home-aegean-briefing
@@ -105,6 +108,7 @@ origin/feature/klinikos-edu-foundation
 origin/feature/sales-audit-funnel
 origin/feature/zumi-command-experience
 origin/fix/brand-assets-404
+origin/fix/ecosystem-wiring-truth-2026-08-16
 origin/fix/living-home-original-visual-match
 origin/fix/living-home-visual-corrections
 origin/fix/pin-node-version
