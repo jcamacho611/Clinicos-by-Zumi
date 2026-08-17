@@ -1,6 +1,6 @@
 # KLINIKOS — ECOSYSTEM CANON
 
-Version: `2026-08-16.1`  
+Version: `2026-08-16.1`
 Status: `AUTHORITATIVE PRODUCT-DIRECTION CANON`
 
 This document captures the newest product architecture and supersedes narrower interpretations of Klinikos as clinic software, a marketplace, an education product, or an AI assistant. Runtime/code/schema/tests remain authoritative for what is actually implemented today.
@@ -143,7 +143,7 @@ It may connect, where lawful and policy-permitted:
 
 The universal language is:
 
-**I NEED** → demand  
+**I NEED** → demand
 **I HAVE** → supply/resource
 
 Grid must support multi-party composition rather than fixed buyer/seller sides.

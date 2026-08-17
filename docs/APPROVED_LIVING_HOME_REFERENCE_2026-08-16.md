@@ -1,6 +1,6 @@
 # KLINIKOS — APPROVED LIVING HOME REFERENCE
 
-Date: `2026-08-16`  
+Date: `2026-08-16`
 Status: `AUTHORITATIVE VISUAL REFERENCE NOTES`
 
 This document records the visual hierarchy and composition represented by the approved Living Home reference supplied as `Design.pdf` on 2026-08-16. It complements, but does not replace, `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.

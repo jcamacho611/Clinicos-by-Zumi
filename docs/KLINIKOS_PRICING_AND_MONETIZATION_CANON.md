@@ -1,6 +1,6 @@
 # KLINIKOS — PRICING & MONETIZATION CANON
 
-Version: `2026-08-16.1`  
+Version: `2026-08-16.1`
 Status: `AUTHORITATIVE COMMERCIAL DIRECTION`
 
 This document defines the current commercial architecture. It does **not** assert that every product, connector, fee model, or price is live. Code/runtime/payment evidence governs actual sellability. If public pricing code conflicts with this document, fix the conflict deliberately rather than silently claiming one is current.

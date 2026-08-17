@@ -1,6 +1,6 @@
 # KLINIKOS — DESIGN & WIRING CANON
 
-Version: `2026-08-16.2`  
+Version: `2026-08-16.2`
 Status: `AUTHORITATIVE EXPERIENCE DIRECTION`
 
 This document defines the newest frontend, Living Home, design-system and wiring direction. It does not replace runtime truth or security boundaries.

@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-16.2`  
+Version: `2026-08-16.2`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -154,7 +154,7 @@ Grid is the healthcare resource orchestration network for people, work, capacity
 
 Universal expression:
 
-**I NEED** → demand  
+**I NEED** → demand
 **I HAVE** → resource/supply
 
 Grid may compose multi-party opportunities rather than assuming buyer/seller or employer/worker sides.
