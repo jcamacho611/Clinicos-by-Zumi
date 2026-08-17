@@ -1,5 +1,7 @@
 import "server-only";
 
+import { sendTwilioSms, twilioApiKeyCredentials } from "@/lib/communications/twilio";
+
 /**
  * The outbound communications port.
  *
@@ -12,8 +14,7 @@ import "server-only";
  *
  *   `no_connector`  — nothing is configured for this channel.
  *   `no_sender`     — a connector is configured, but Klinikos has no code that sends
- *                     on this channel. This is the state that used to be reported as
- *                     "done": readiness was mistaken for capability.
+ *                     on this channel.
  *   `provider_error`— a real send was attempted and the provider refused it.
  *   `accepted`      — a provider accepted the message and returned a reference.
  *
@@ -47,15 +48,7 @@ export type OutboundEnv = Record<string, string | undefined>;
 export type OutboundAdapter = {
   channel: OutboundChannel;
   provider: string;
-  /**
-   * The connector catalog entry this adapter actually sends through.
-   *
-   * Required, because compliance questions are asked about the rail a message will
-   * take, and only the adapter knows which rail that is. A gateway-wide answer — "some
-   * communication connector is approved for PHI" — is not an answer about this one:
-   * Twilio being approved would say nothing about Resend, which is what would carry
-   * the message.
-   */
+  /** The connector catalog entry this adapter actually sends through. */
   connectorId: string;
   configured: (env: OutboundEnv) => boolean;
   send: (message: OutboundMessage, env: OutboundEnv) => Promise<OutboundResult>;
@@ -66,26 +59,19 @@ let registered = false;
 
 export function registerOutboundAdapter(adapter: OutboundAdapter) {
   adapters.set(adapter.channel, adapter);
-  // An explicit registration also satisfies the lazy default, so the defaults can never
-  // be installed afterwards and silently replace it. Without this, registering an
-  // adapter before the first send is overwritten on that send — which looks like the
-  // adapter being ignored for no reason.
+  // An explicit registration also satisfies the lazy default, so defaults can never
+  // be installed afterwards and silently replace a test/specialized adapter.
   registered = true;
   return adapter;
 }
 
-/** Test seam. Production registers once at module load. */
+/** Test seam. Production registers lazily on first use. */
 export function resetOutboundAdapters() {
   adapters.clear();
   registered = false;
 }
 
-/**
- * Email, via Resend.
- *
- * This is a real sender: it performs an HTTP request and reports what the provider
- * said. It is the only channel with an implementation today.
- */
+/** Email via Resend. */
 const resendEmailAdapter: OutboundAdapter = {
   channel: "email",
   provider: "resend",
@@ -108,34 +94,53 @@ const resendEmailAdapter: OutboundAdapter = {
 
     if (!response) return { ok: false, reason: "provider_error", detail: "The email provider could not be reached." };
     if (!response.ok) {
-      // The provider's body is not forwarded; it echoes the message, which may name a
-      // patient. The status is enough to decide whether to retry.
+      // The provider body is not forwarded; it can echo patient/message content.
       return { ok: false, reason: "provider_error", detail: `The email provider returned ${response.status}.` };
     }
 
     const payload = (await response.json().catch(() => null)) as { id?: string } | null;
-    // No id means Klinikos cannot evidence the send, and an unevidenced send is not
-    // one this port is willing to call accepted.
     if (!payload?.id) return { ok: false, reason: "provider_error", detail: "The email provider accepted without a reference." };
     return { ok: true, providerReference: payload.id, provider: "resend" };
   },
 };
 
+/**
+ * SMS via Twilio Messaging Service using a restricted API-key SID/secret.
+ *
+ * The Twilio master Auth Token is not used for outbound API authentication. This
+ * adapter only proves the delivery rail exists. PHI/clinical message authorization is
+ * still a separate connector-policy decision upstream and remains fail-closed.
+ */
+const twilioSmsAdapter: OutboundAdapter = {
+  channel: "sms",
+  provider: "twilio",
+  connectorId: "twilio",
+  configured: (env) => Boolean(twilioApiKeyCredentials(env) && env.TWILIO_MESSAGING_SERVICE_SID?.trim()),
+  send: async (message, env) => {
+    const result = await sendTwilioSms({ to: message.to, body: message.body, env });
+    if (result.ok) return { ok: true, providerReference: result.sid, provider: "twilio" };
+    if (result.reason === "invalid_recipient") {
+      return { ok: false, reason: "invalid_recipient", detail: result.detail };
+    }
+    if (result.reason === "not_configured") {
+      return { ok: false, reason: "no_connector", detail: result.detail };
+    }
+    return { ok: false, reason: "provider_error", detail: result.detail };
+  },
+};
+
 export function ensureOutboundAdaptersRegistered() {
   if (registered) return;
+  // Register both before setting the lazy initialization complete state. The helper
+  // marks `registered` as well, but sequential explicit calls remain safe here.
   registerOutboundAdapter(resendEmailAdapter);
-  // There is deliberately no SMS adapter. Twilio appears in the connector catalog and
-  // a deployment may hold credentials for it, but no Klinikos code sends an SMS — so
-  // the port reports `no_sender` for that channel rather than letting credentials be
-  // mistaken for the ability to send.
+  registerOutboundAdapter(twilioSmsAdapter);
   registered = true;
 }
 
 /**
  * Whether this channel could deliver right now, and why not if it could not.
- *
- * Pure: reads the environment, never calls out. Callers that must decide a state
- * before attempting a send use this.
+ * Pure: reads the environment, never calls out.
  */
 export function outboundChannelStatus(channel: OutboundChannel, env: OutboundEnv = process.env) {
   ensureOutboundAdaptersRegistered();
@@ -144,8 +149,6 @@ export function outboundChannelStatus(channel: OutboundChannel, env: OutboundEnv
   if (!adapter.configured(env)) {
     return { deliverable: false as const, reason: "no_connector" as const, detail: `No ${channel} provider is configured for this deployment.` };
   }
-  // The connector id travels with the answer so a caller asking a compliance question
-  // asks it about this adapter rather than about the gateway it belongs to.
   return { deliverable: true as const, provider: adapter.provider, connectorId: adapter.connectorId };
 }
 
