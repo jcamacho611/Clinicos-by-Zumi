@@ -6,7 +6,7 @@ const configuredEnv = {
   ZUMI_PROVIDER: "cloudflare",
   ZUMI_CLOUDFLARE_ACCOUNT_ID: "account-123",
   ZUMI_CLOUDFLARE_API_TOKEN: "token-123",
-  ZUMI_CLOUDFLARE_MODEL: "@cf/meta/llama-3.1-8b-instruct",
+  ZUMI_CLOUDFLARE_MODEL: "@cf/meta/llama-3.1-8b-instruct-fast",
 };
 
 afterEach(() => {
@@ -31,14 +31,14 @@ describe("Cloudflare Zumi adapter", () => {
     if (selection.ok) {
       expect(selection.adapter.key).toBe("cloudflare");
       expect(selection.adapter.baaOnFile).toBe(false);
-      expect(selection.adapter.modelId).toBe("@cf/meta/llama-3.1-8b-instruct");
+      expect(selection.adapter.modelId).toBe("@cf/meta/llama-3.1-8b-instruct-fast");
     }
   });
 
-  it("always sends the required AI Gateway header and defaults it to default", async () => {
+  it("always sends the required AI Gateway header, defaults it to default, and suppresses payload logging", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({
-        model: "@cf/meta/llama-3.1-8b-instruct",
+        model: "@cf/meta/llama-3.1-8b-instruct-fast",
         choices: [{ message: { content: "{\"summary\":\"ready\"}" } }],
         usage: { prompt_tokens: 12, completion_tokens: 4 },
       }), { status: 200, headers: { "content-type": "application/json" } }),
@@ -59,6 +59,7 @@ describe("Cloudflare Zumi adapter", () => {
       authorization: "Bearer token-123",
       "content-type": "application/json",
       "cf-aig-gateway-id": "default",
+      "cf-aig-collect-log-payload": "false",
     });
   });
 
@@ -68,6 +69,9 @@ describe("Cloudflare Zumi adapter", () => {
     );
     const adapter = createCloudflareZumiAdapter({ ...configuredEnv, ZUMI_CLOUDFLARE_GATEWAY_ID: "klinikos" });
     await adapter.invoke({ system: "system", prompt: "prompt", maxOutputTokens: 32, timeoutMs: 10_000 });
-    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({ "cf-aig-gateway-id": "klinikos" });
+    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({
+      "cf-aig-gateway-id": "klinikos",
+      "cf-aig-collect-log-payload": "false",
+    });
   });
 });
