@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { recordCommercialPaymentEvidence } from "@/lib/commercial/payment-evidence-repository";
 import { stripeWebhookSecretForMode, type StripeProcessorMode } from "@/lib/commercial/payment-connectors/stripe";
+import { assertStripeCheckoutEvidence } from "@/lib/commercial/stripe-evidence-guard";
 
 const DEFAULT_TOLERANCE_SECONDS = 300;
 
@@ -144,7 +145,21 @@ export async function processVerifiedStripeEvent(input: {
 
   const amountCents = Number.isInteger(session.amount_total) && (session.amount_total ?? -1) >= 0 ? session.amount_total! : null;
   const currency = session.currency?.trim().toUpperCase() || null;
-  const paymentSucceeded = session.payment_status === "paid";
+
+  // Checkout completion alone is not enough: Stripe documents that processing can
+  // still be in progress for some sessions. Only an explicit paid payment_status can
+  // become payment evidence in this first live rail.
+  if (session.payment_status !== "paid") {
+    return { handled: true, eventType: event.type, status: "ignored" };
+  }
+
+  await assertStripeCheckoutEvidence({
+    checkoutState,
+    productKey,
+    amountCents,
+    currency,
+    mode: eventMode,
+  });
 
   const result = await recordCommercialPaymentEvidence({
     provider: "stripe",
@@ -161,8 +176,6 @@ export async function processVerifiedStripeEvent(input: {
     externalSubscriptionId: opaqueId(session.subscription),
     amountCents,
     currency,
-    processorMode: eventMode,
-    effect: paymentSucceeded ? "apply_payment" : "observe_only",
   });
 
   return {
