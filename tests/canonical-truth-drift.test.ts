@@ -97,4 +97,13 @@ describe("canonical Klinikos truth", () => {
     expect(ledger).toContain("stash@{0}");
     expect(ledger).toContain("No branch deletion, force push, stash mutation, mass merge");
   });
+
+  it("keeps Grid contractor fixtures anchored to roles instead of personal identities", () => {
+    const seed = read("prisma/seed.ts");
+
+    expect(seed).toContain('name: "Independent Grid Provider"');
+    expect(seed).toContain('name: "Grid Provider Applicant"');
+    expect(seed).toContain('title: "Provider response requested"');
+    expect(seed).toContain('id: "grid-request-provider-on-call"');
+  });
 });

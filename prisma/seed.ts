@@ -363,10 +363,10 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      id: "user-tiffany-grid",
+      id: "user-grid-provider",
       organizationId: luxe.id,
-      email: "tiffany.grid@example.test",
-      name: "Tiffany Lane",
+      email: "grid.provider@example.test",
+      name: "Independent Grid Provider",
       roleKey: "contractor",
       status: "active",
       authCredential: { create: { passwordHash } },
@@ -476,8 +476,8 @@ async function main() {
       { id: "provider-nadja", organizationId: bfm.id, userId: "user-nadja", name: "Nadja R.", displayName: "Nadja R.", legalName: "Nadja Rivera · synthetic", credential: "NP", providerType: "Nurse Practitioner", specialty: "Family Medicine", subspecialty: "Diabetes Care", taxonomy: "363L00000X", npi: "DEMO-NPI-BFM-NADJA", deaNumber: "DEMO-DEA-NOT-VALID", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), malpracticeCarrier: "Synthetic Clinical Coverage", malpracticePolicyNumber: "SYNTH-BFM-NP-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), malpracticeVerificationStatus: "verified", malpracticeVerifiedAt: new Date("2026-07-01T12:00:00.000Z"), malpracticeVerifiedBy: "user-nadja", certifications: ["Synthetic BLS record", "Synthetic primary care credential set"], servicesOffered: ["Primary care", "Annual wellness", "Diabetes follow-up"], experienceLevel: "OG / Master Provider", bio: "Synthetic founding-provider profile for primary care coordination and controlled provider consultations.", serviceLocations: ["Brooklyn Heights", "Crown Heights"], mobileServiceAllowed: false, chairRentalAllowed: false, atHomeAllowed: false, travelRadiusMiles: 0, verificationStatus: "verified", approvedBy: "user-nadja", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst", "Aetna"], services: ["Primary care", "Annual wellness", "Diabetes follow-up"], status: "active" },
       { id: "provider-lee", organizationId: bfm.id, name: "Samuel Lee", displayName: "Samuel Lee", legalName: "Samuel Lee · synthetic", credential: "MD", providerType: "Physician", specialty: "Family Medicine", taxonomy: "207Q00000X", npi: "DEMO-NPI-BFM-LEE", malpracticeCarrier: "Synthetic Clinical Coverage", malpracticePolicyNumber: "SYNTH-BFM-MD-002", malpracticeExpiration: new Date("2028-08-31T00:00:00.000Z"), malpracticeVerificationStatus: "verified", malpracticeVerifiedAt: new Date("2026-07-01T12:00:00.000Z"), malpracticeVerifiedBy: "user-nadja", certifications: ["Synthetic board record"], servicesOffered: ["Primary care", "Urgent sick visit", "Provider consultation"], experienceLevel: "Experienced", bio: "Synthetic physician profile available for controlled provider-to-provider consultation demonstrations.", serviceLocations: ["Brooklyn Heights"], verificationStatus: "verified", approvedBy: "user-nadja", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: true, prescribingEligible: true, acceptedInsurance: ["Healthfirst"], services: ["Primary care", "Urgent sick visit", "Provider consultation"], status: "active" },
       { id: "provider-nadja-luxe", organizationId: luxe.id, userId: "user-luxe-owner", name: "Nadja R.", displayName: "Nadja R.", legalName: "Nadja Rivera · synthetic", credential: "NP", providerType: "Nurse Injector", specialty: "Aesthetic Medicine", subspecialty: "Injectables", taxonomy: "363A00000X", npi: "DEMO-NPI-LUXE-NADJA", deaNumber: "DEMO-DEA-LUXE", deaExpiresAt: new Date("2027-12-31T00:00:00.000Z"), malpracticeCarrier: "Synthetic Aesthetic Coverage", malpracticePolicyNumber: "SYNTH-LUXE-NP-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), malpracticeVerificationStatus: "verified", malpracticeVerifiedAt: new Date("2026-07-01T12:00:00.000Z"), malpracticeVerifiedBy: "user-luxe-owner", certifications: ["Synthetic injectables training record", "Synthetic BLS record"], servicesOffered: ["Injectables", "IV hydration", "Weight management"], experienceLevel: "OG / Master Provider", bio: "Synthetic provider profile for controlled med-spa service, chair, and mobile-workflow demonstrations.", serviceLocations: ["Midtown Manhattan"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 25, verificationStatus: "verified", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-07-01T12:00:00.000Z"), renewalDueAt: new Date("2027-12-31T00:00:00.000Z"), telemedicineEligible: false, prescribingEligible: true, acceptedInsurance: [], services: ["Injectables", "IV hydration", "Weight management"], status: "active" },
-      { id: "provider-tiffany-grid", organizationId: luxe.id, userId: "user-tiffany-grid", name: "Tiffany Lane", displayName: "Tiffany Lane", legalName: "Tiffany Lane · synthetic", engagementType: "independent_contractor", contactEmail: "tiffany.grid@example.test", contactPhone: "(212) 555-0164", credential: "RN", providerType: "Nurse Injector", specialty: "Aesthetic services", malpracticeCarrier: "Synthetic Contractor Coverage", malpracticePolicyNumber: "SYNTH-TIFFANY-RN-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), malpracticeCoverageAmountCents: 100_000_000, malpracticeEvidenceReference: "SYNTHETIC-POLICY-TIFFANY-001", malpracticeVerificationStatus: "verified", malpracticeVerifiedAt: new Date("2026-08-09T16:00:00.000Z"), malpracticeVerifiedBy: "user-luxe-owner", malpracticeReviewNotes: "Synthetic demonstration policy reviewed by a human administrator.", certifications: ["Synthetic BLS record", "Synthetic injector training record"], servicesOffered: ["Injectable treatment support", "IV hydration support"], experienceLevel: "Experienced", bio: "Synthetic independent contractor nurse injector profile demonstrating approved mobile and clinic-chair work.", serviceLocations: ["Midtown Manhattan", "Brooklyn", "Partner locations"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 25, onCallNow: true, verificationStatus: "verified", applicationSubmittedAt: new Date("2026-08-08T14:00:00.000Z"), approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-09T16:15:00.000Z"), renewalDueAt: new Date("2028-06-30T00:00:00.000Z"), services: ["Injectable treatment support", "IV hydration support"], status: "active" },
-      { id: "provider-alex-grid", organizationId: luxe.id, name: "Alex Morgan", displayName: "Alex Morgan", legalName: "Alexis Morgan · synthetic", credential: "RN", providerType: "Nurse Injector", specialty: "Aesthetic services", malpracticeCarrier: "Synthetic Aesthetic Coverage", malpracticePolicyNumber: "SYNTH-LUXE-RN-004", malpracticeExpiration: new Date("2028-03-31T00:00:00.000Z"), certifications: ["Synthetic BLS record", "Synthetic injector training record"], servicesOffered: ["Injectable treatment support", "IV hydration support"], experienceLevel: "Intermediate", bio: "Synthetic contractor profile awaiting a documented human review of license evidence, scope, malpractice coverage, and location privileges.", serviceLocations: ["Midtown Manhattan", "Brooklyn"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 20, verificationStatus: "needs_review", services: ["Injectable treatment support", "IV hydration support"], status: "active" },
+      { id: "provider-grid-contractor", organizationId: luxe.id, userId: "user-grid-provider", name: "Independent Grid Provider", displayName: "Independent Grid Provider", legalName: "Independent Grid Provider · synthetic", engagementType: "independent_contractor", contactEmail: "grid.provider@example.test", contactPhone: "(212) 555-0164", credential: "RN", providerType: "Nurse Injector", specialty: "Aesthetic services", malpracticeCarrier: "Synthetic Contractor Coverage", malpracticePolicyNumber: "SYNTH-PROVIDER-RN-001", malpracticeExpiration: new Date("2028-06-30T00:00:00.000Z"), malpracticeCoverageAmountCents: 100_000_000, malpracticeEvidenceReference: "SYNTHETIC-POLICY-PROVIDER-001", malpracticeVerificationStatus: "verified", malpracticeVerifiedAt: new Date("2026-08-09T16:00:00.000Z"), malpracticeVerifiedBy: "user-luxe-owner", malpracticeReviewNotes: "Synthetic demonstration policy reviewed by a human administrator.", certifications: ["Synthetic BLS record", "Synthetic injector training record"], servicesOffered: ["Injectable treatment support", "IV hydration support"], experienceLevel: "Experienced", bio: "Synthetic independent contractor nurse injector profile demonstrating approved mobile and clinic-chair work.", serviceLocations: ["Midtown Manhattan", "Brooklyn", "Partner locations"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 25, onCallNow: true, verificationStatus: "verified", applicationSubmittedAt: new Date("2026-08-08T14:00:00.000Z"), approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-09T16:15:00.000Z"), renewalDueAt: new Date("2028-06-30T00:00:00.000Z"), services: ["Injectable treatment support", "IV hydration support"], status: "active" },
+      { id: "provider-grid-applicant", organizationId: luxe.id, name: "Grid Provider Applicant", displayName: "Grid Provider Applicant", legalName: "Grid Provider Applicant · synthetic", credential: "RN", providerType: "Nurse Injector", specialty: "Aesthetic services", malpracticeCarrier: "Synthetic Aesthetic Coverage", malpracticePolicyNumber: "SYNTH-LUXE-RN-004", malpracticeExpiration: new Date("2028-03-31T00:00:00.000Z"), certifications: ["Synthetic BLS record", "Synthetic injector training record"], servicesOffered: ["Injectable treatment support", "IV hydration support"], experienceLevel: "Intermediate", bio: "Synthetic contractor profile awaiting a documented human review of license evidence, scope, malpractice coverage, and location privileges.", serviceLocations: ["Midtown Manhattan", "Brooklyn"], mobileServiceAllowed: true, chairRentalAllowed: true, atHomeAllowed: false, travelRadiusMiles: 20, verificationStatus: "needs_review", services: ["Injectable treatment support", "IV hydration support"], status: "active" },
     ],
   });
 
@@ -487,8 +487,8 @@ async function main() {
       { id: "credential-nadja-license", organizationId: bfm.id, providerId: "provider-nadja", type: "STATE_LICENSE", number: "DEMO-NY-NP", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "credential-lee-license", organizationId: bfm.id, providerId: "provider-lee", type: "STATE_LICENSE", number: "DEMO-NY-MD", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
       { id: "credential-luxe-license", organizationId: luxe.id, providerId: "provider-nadja-luxe", type: "STATE_LICENSE", number: "DEMO-NY-NP-LUXE", state: "NY", expiresAt: new Date("2027-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic demo state license review", primarySourceVerifiedAt: new Date("2026-07-01T12:00:00.000Z") },
-      { id: "credential-tiffany-grid-license", organizationId: luxe.id, providerId: "provider-tiffany-grid", type: "STATE_LICENSE", number: "SYNTH-NY-RN-TIFFANY", state: "NY", expiresAt: new Date("2028-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic human primary-source review", primarySourceVerifiedAt: new Date("2026-08-09T16:00:00.000Z"), evidenceReference: "SYNTHETIC-LICENSE-TIFFANY-001", verifiedBy: "user-luxe-owner", reviewNotes: "Synthetic demonstration license approved by a human administrator." },
-      { id: "credential-alex-grid-license", organizationId: luxe.id, providerId: "provider-alex-grid", type: "STATE_LICENSE", number: "SYNTH-NY-RN-GRID", state: "NY", expiresAt: new Date("2028-12-31T00:00:00.000Z"), status: "active", verificationStatus: "pending", verificationSource: "Grid manual primary-source review queue" },
+      { id: "credential-grid-provider-license", organizationId: luxe.id, providerId: "provider-grid-contractor", type: "STATE_LICENSE", number: "SYNTH-NY-RN-PROVIDER", state: "NY", expiresAt: new Date("2028-12-31T00:00:00.000Z"), status: "active", verificationStatus: "verified", verificationSource: "Synthetic human primary-source review", primarySourceVerifiedAt: new Date("2026-08-09T16:00:00.000Z"), evidenceReference: "SYNTHETIC-LICENSE-PROVIDER-001", verifiedBy: "user-luxe-owner", reviewNotes: "Synthetic demonstration license approved by a human administrator." },
+      { id: "credential-grid-applicant-license", organizationId: luxe.id, providerId: "provider-grid-applicant", type: "STATE_LICENSE", number: "SYNTH-NY-RN-GRID", state: "NY", expiresAt: new Date("2028-12-31T00:00:00.000Z"), status: "active", verificationStatus: "pending", verificationSource: "Grid manual primary-source review queue" },
     ],
   });
 
@@ -497,9 +497,9 @@ async function main() {
       { id: "grid-availability-nadja-bfm", organizationId: bfm.id, providerId: "provider-nadja", locationId: "loc-brooklyn-heights", weekday: 2, startsAt: "09:00", endsAt: "15:00", locationType: "clinic_location", status: "active" },
       { id: "grid-availability-lee-bfm", organizationId: bfm.id, providerId: "provider-lee", locationId: "loc-crown-heights", weekday: 4, startsAt: "10:00", endsAt: "17:00", locationType: "clinic_location", status: "active" },
       { id: "grid-availability-nadja-luxe", organizationId: luxe.id, providerId: "provider-nadja-luxe", locationId: "loc-midtown", weekday: 6, startsAt: "12:00", endsAt: "18:00", locationType: "chair_rental", mobileRadius: 25, onCall: true, status: "active" },
-      { id: "grid-availability-tiffany-mobile", organizationId: luxe.id, providerId: "provider-tiffany-grid", weekday: 2, startsAt: "10:00", endsAt: "18:00", locationType: "mobile", mobileRadius: 25, onCall: true, status: "active" },
-      { id: "grid-availability-tiffany-chair", organizationId: luxe.id, providerId: "provider-tiffany-grid", locationId: "loc-midtown", weekday: 4, startsAt: "12:00", endsAt: "19:00", locationType: "chair_rental", mobileRadius: 25, onCall: true, status: "active" },
-      { id: "grid-availability-alex-draft", organizationId: luxe.id, providerId: "provider-alex-grid", locationId: "loc-midtown", weekday: 6, startsAt: "10:00", endsAt: "14:00", locationType: "chair_rental", mobileRadius: 20, onCall: true, status: "draft" },
+      { id: "grid-availability-provider-mobile", organizationId: luxe.id, providerId: "provider-grid-contractor", weekday: 2, startsAt: "10:00", endsAt: "18:00", locationType: "mobile", mobileRadius: 25, onCall: true, status: "active" },
+      { id: "grid-availability-provider-chair", organizationId: luxe.id, providerId: "provider-grid-contractor", locationId: "loc-midtown", weekday: 4, startsAt: "12:00", endsAt: "19:00", locationType: "chair_rental", mobileRadius: 25, onCall: true, status: "active" },
+      { id: "grid-availability-applicant-draft", organizationId: luxe.id, providerId: "provider-grid-applicant", locationId: "loc-midtown", weekday: 6, startsAt: "10:00", endsAt: "14:00", locationType: "chair_rental", mobileRadius: 20, onCall: true, status: "draft" },
     ],
   });
 
@@ -507,8 +507,8 @@ async function main() {
     data: [
       { id: "grid-service-primary-consult", organizationId: bfm.id, providerId: "provider-lee", serviceName: "Provider consultation", category: "Specialist Office", description: "Synthetic provider-to-provider consultation with a documented question, human response, and no autonomous clinical decision.", priceLowCents: 15000, priceHighCents: 25000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: false, mobileAllowed: false, clinicLocationAllowed: true, chairRentalAllowed: false, status: "active", createdBy: "user-nadja", approvedBy: "user-nadja", approvedAt: new Date("2026-08-01T12:00:00.000Z") },
       { id: "grid-service-injector-consult", organizationId: luxe.id, providerId: "provider-nadja-luxe", serviceName: "Injectables consultation request", category: "Nurse Injector", description: "Synthetic med-spa consultation request. Treatment eligibility and recommendations remain with a licensed provider after human review.", priceLowCents: 10000, priceHighCents: 25000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: true, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "active", createdBy: "user-luxe-owner", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-01T12:00:00.000Z") },
-      { id: "grid-service-tiffany-support", organizationId: luxe.id, providerId: "provider-tiffany-grid", serviceName: "Contract nurse injector support", category: "Nurse Injector", description: "Synthetic independent-contractor availability for mobile or clinic-chair support after clinic scope, consent, and location review.", priceLowCents: 35000, priceHighCents: 60000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: false, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "active", createdBy: "user-luxe-owner", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-09T16:20:00.000Z") },
-      { id: "grid-service-iv-support-draft", organizationId: luxe.id, providerId: "provider-alex-grid", serviceName: "IV hydration support", category: "IV Therapy Provider", description: "Synthetic draft listing held until provider license, malpractice coverage, scope, and location privileges receive human approval.", priceLowCents: 20000, priceHighCents: 35000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: true, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "draft", createdBy: "user-luxe-owner" },
+      { id: "grid-service-provider-support", organizationId: luxe.id, providerId: "provider-grid-contractor", serviceName: "Contract nurse injector support", category: "Nurse Injector", description: "Synthetic independent-contractor availability for mobile or clinic-chair support after clinic scope, consent, and location review.", priceLowCents: 35000, priceHighCents: 60000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: false, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "active", createdBy: "user-luxe-owner", approvedBy: "user-luxe-owner", approvedAt: new Date("2026-08-09T16:20:00.000Z") },
+      { id: "grid-service-iv-support-draft", organizationId: luxe.id, providerId: "provider-grid-applicant", serviceName: "IV hydration support", category: "IV Therapy Provider", description: "Synthetic draft listing held until provider license, malpractice coverage, scope, and location privileges receive human approval.", priceLowCents: 20000, priceHighCents: 35000, requiresMedicalReview: true, requiresConsent: true, requiresDeposit: true, mobileAllowed: true, clinicLocationAllowed: true, chairRentalAllowed: true, status: "draft", createdBy: "user-luxe-owner" },
     ],
   });
 
@@ -1991,14 +1991,14 @@ async function main() {
 
   await prisma.gridRequest.create({
     data: {
-      id: "grid-request-tiffany-on-call",
+      id: "grid-request-provider-on-call",
       organizationId: bfm.id,
       destinationOrganizationId: luxe.id,
       requesterId: "user-nadja",
       syntheticClientLabel: "Synthetic mobile support request",
-      syntheticClientReference: "GRID-TIFFANY-001",
-      serviceListingId: "grid-service-tiffany-support",
-      providerId: "provider-tiffany-grid",
+      syntheticClientReference: "GRID-PROVIDER-001",
+      serviceListingId: "grid-service-provider-support",
+      providerId: "provider-grid-contractor",
       requestedStartAt: new Date("2026-08-18T15:00:00.000Z"),
       requestedEndAt: new Date("2026-08-18T18:00:00.000Z"),
       locationType: "mobile",
@@ -2009,17 +2009,17 @@ async function main() {
       depositStatus: "not_required",
       paymentStatus: "not_started",
       status: "requested",
-      notes: "Synthetic contractor booking request for Tiffany to accept, counter, or decline before clinic review.",
+      notes: "Synthetic contractor booking request for the selected provider to accept, counter, or decline before clinic review.",
       events: {
         create: {
-          id: "grid-event-tiffany-requested",
+          id: "grid-event-provider-requested",
           organizationId: bfm.id,
           actorId: "user-nadja",
           actorType: "user",
           action: "request_created",
           fromStatus: "draft",
           toStatus: "requested",
-          note: "Synthetic contractor request created for a documented Tiffany workflow demonstration.",
+          note: "Synthetic contractor request created for a documented provider workflow demonstration.",
           metadata: { syntheticDemo: true, chartDataShared: false },
         },
       },
@@ -2028,10 +2028,10 @@ async function main() {
 
   await prisma.gridPayout.create({
     data: {
-      id: "grid-payout-tiffany-estimate",
+      id: "grid-payout-provider-estimate",
       organizationId: luxe.id,
-      providerId: "provider-tiffany-grid",
-      gridRequestId: "grid-request-tiffany-on-call",
+      providerId: "provider-grid-contractor",
+      gridRequestId: "grid-request-provider-on-call",
       grossAmountCents: 35_000,
       platformFeeCents: 0,
       netAmountCents: 35_000,
@@ -2044,7 +2044,7 @@ async function main() {
     data: [
       { id: "task-grid-maya-review", organizationId: luxe.id, patientId: null, category: "grid_request", title: "Review synthetic injectables consultation request", details: "Grid request grid-request-maya-injector. No chart was shared. Confirm provider scope, consent, location, and manual deposit status.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "grid_intake", createdBy: "user-nadja" },
       { id: "task-grid-luxe-consult", organizationId: bfm.id, patientId: null, category: "grid_request", title: "Complete synthetic consultation credential check", details: "Grid request grid-request-luxe-consult is ready for a human credential and consent decision.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "grid_intake", createdBy: "user-luxe-owner" },
-      { id: "task-grid-tiffany-request", organizationId: luxe.id, patientId: null, category: "grid_request", title: "Tiffany contractor response requested", details: "Grid request grid-request-tiffany-on-call is waiting for the independent contractor to accept, counter, or decline.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "provider-tiffany-grid", createdBy: "user-nadja" },
+      { id: "task-grid-provider-request", organizationId: luxe.id, patientId: null, category: "grid_request", title: "Provider response requested", details: "Grid request grid-request-provider-on-call is waiting for the independent contractor to accept, counter, or decline.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "provider-grid-contractor", createdBy: "user-nadja" },
     ],
   });
 
