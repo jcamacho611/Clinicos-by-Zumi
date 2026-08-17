@@ -1,9 +1,11 @@
 # KLINIKOS — DESIGN & WIRING CANON
 
-Version: `2026-08-16.1`  
+Version: `2026-08-16.2`  
 Status: `AUTHORITATIVE EXPERIENCE DIRECTION`
 
 This document defines the newest frontend, Living Home, design-system and wiring direction. It does not replace runtime truth or security boundaries.
+
+The approved page-by-page reference notes are recorded in `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md` and must be used together with this canon.
 
 ## 1. Core design law
 
@@ -318,6 +320,8 @@ At the target desktop viewport, compare against the approved reference for:
 - lower strip
 - darkness and rose/coral atmosphere
 - first-fold composition
+
+The current approved reference specifically includes a compact top-left orbital K + wordmark, centered DASHBOARDS/GRID/CARE/EDU/INTELLIGENCE navigation, a right-side circular profile control, a central rose-backed `What needs to happen?` hero, the vertical LISTENING→READY rail, PATIENTS/GRID/CARE/BILLING/INSIGHTS operating rail, the overlapping Zumi composer treatment, shallow operational cards, and the `Built for speed. Designed for care.` lower strip. See `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md`.
 
 Do not achieve similarity by baking UI into images or using fake static data.
 
