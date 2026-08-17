@@ -3,7 +3,7 @@
 Date: `2026-08-16`
 Status: `AUTHORITATIVE VISUAL REFERENCE NOTES`
 
-This document records the visual hierarchy and composition represented by the approved Living Home reference supplied as `Design.pdf` on 2026-08-16. It complements, but does not replace, `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+This document records the visual hierarchy and composition represented by the approved Living Home reference supplied in `Klinikos design screens.zip` on 2026-08-16. The canonical source frame is `klinikos-living-home-approved-reference-1402x1122.png`. It complements, but does not replace, `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
 
 ## Page 1 — Approved composition
 
@@ -110,14 +110,26 @@ Visual similarity must be achieved with the approved production assets, layout, 
 
 ## Approved asset requirement
 
-Use the approved transparent production assets where present:
+Use the approved production assets extracted from the design handoff:
 
-- `public/klinikos-orbital-k-transparent.png`
-- `public/klinikos-wordmark-transparent.png`
-- `public/klinikos-rose-wide-transparent.png`
-- `public/klinikos-rose-centered-transparent.png`
+- `public/klinikos-orbital-k-production.png`
+- `public/klinikos-wordmark-production.png`
+- `public/klinikos-rose-hero-production.png`
+- `public/klinikos-rose-wide-production.png`
 
-Do not substitute opaque black-box versions when transparent approved assets are available.
+Do not substitute generated placeholders, missing `transparent.webp` paths, or static screenshots for these component-ready assets.
+
+## Reference-lock verification
+
+The implemented desktop target is the reference's native `1402 × 1122` composition. At that viewport the live component geometry is locked to:
+
+- `102px` header;
+- centered `780 × 112px` composer at `y=535`;
+- overlapping `92 × 92px` Zumi orb;
+- one `1244 × 132px` four-card row;
+- one `1244 × 158px` lower cinematic strip.
+
+The implementation must also remain usable without horizontal overflow at 390, 768, 1024, 1440 and 1920 pixel widths. Desktop visual fidelity does not authorize inaccessible fixed-screen behavior on smaller devices.
 
 ## Functional acceptance
 

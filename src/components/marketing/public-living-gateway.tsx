@@ -4,14 +4,15 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUp,
   AudioLines,
   BarChart3,
   CalendarDays,
-  CornerDownLeft,
   HeartPulse,
   Network,
   Paperclip,
   ReceiptText,
+  UserRound,
   Users,
 } from "lucide-react";
 import { ZumiOrb, type ZumiState } from "@/components/ds";
@@ -38,15 +39,15 @@ const protectedHref = (href: string) => `/login?next=${encodeURIComponent(href)}
 
 const navItems = [
   { label: "Dashboards", href: protectedHref("/dashboard") },
-  { label: "Grid", href: protectedHref("/grid") },
+  { label: "Grid", href: "/grid" },
   { label: "Care", href: protectedHref("/provider") },
   { label: "EDU", href: "/edu" },
   { label: "Intelligence", href: "#living-composer" },
 ] as const;
 
 const actionItems = [
-  { label: "Patients", href: protectedHref("/patients"), icon: Users },
-  { label: "Grid", href: protectedHref("/grid"), icon: Network },
+  { label: "Patients", href: protectedHref("/patients"), icon: UserRound },
+  { label: "Grid", href: "/grid", icon: Network },
   { label: "Care", href: protectedHref("/provider"), icon: HeartPulse },
   { label: "Billing", href: protectedHref("/billing"), icon: ReceiptText },
   { label: "Insights", href: protectedHref("/quality"), icon: BarChart3 },
@@ -55,26 +56,26 @@ const actionItems = [
 const cards = [
   {
     title: "Today's Priorities",
-    body: "Open owned tasks, escalations, follow-ups, and work that needs attention now.",
+    body: "Follow-ups, tasks, and appointments that need you.",
     href: protectedHref("/tasks"),
     icon: CalendarDays,
   },
   {
     title: "Revenue Opportunities",
-    body: "Open the real CRM and revenue-recovery work behind missed conversion and follow-up.",
+    body: "Recover lost revenue and activate what's waiting.",
     href: protectedHref("/crm"),
     icon: BarChart3,
   },
   {
     title: "Team Workflow",
-    body: "See assigned work, handoffs, escalations, and where ownership needs attention.",
+    body: "See workloads, handoffs, and what's falling through.",
     href: protectedHref("/tasks"),
     icon: Users,
   },
   {
     title: "Grid Network",
-    body: "Find providers, services, space, work, and governed healthcare capacity.",
-    href: protectedHref("/grid"),
+    body: "Find providers, space, and real-time capacity.",
+    href: "/grid",
     icon: Network,
   },
 ] as const;
@@ -147,6 +148,16 @@ function orbState(stage: ProgressStage): ZumiState {
 function statusLabel(stage: ProgressStage) {
   if (stage === "complete") return "Ready";
   return progressSteps[stageIndex(stage)];
+}
+
+function LivingZumiOrb({ state }: { state: ZumiState }) {
+  return (
+    <span className="reference-zumi-orb" data-zumi-state={state} aria-hidden="true">
+      <span className="reference-zumi-state-layer"><ZumiOrb state={state} size={96} /></span>
+      <span className="reference-zumi-core">zumi</span>
+      <span className="reference-zumi-signal" />
+    </span>
+  );
 }
 
 export function PublicLivingGateway() {
@@ -246,13 +257,15 @@ export function PublicLivingGateway() {
           className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.03] opacity-25" : "scale-100 opacity-100"}`}
         />
 
-        <header className="reference-header relative z-30 flex min-h-[92px] items-center px-6 sm:px-9 lg:px-10">
+        <header className="reference-header relative z-30 flex min-h-[102px] items-center px-5 sm:px-9 lg:px-[38px]">
           <KlinikosWordmark
+            className="living-home-brand gap-[18px]"
+            frameClassName="size-[74px]"
             href="/"
             framed
             inverse
-            markClassName="h-8 w-8"
-            textClassName="h-[22px] w-[205px]"
+            markClassName="h-full w-full"
+            textClassName="h-[44px] w-[314px]"
           />
           <nav
             className="mx-auto hidden items-center gap-11 text-[10px] font-medium uppercase tracking-[0.3em] text-[#d8c7c4] lg:flex"
@@ -265,7 +278,7 @@ export function PublicLivingGateway() {
             ))}
           </nav>
           <Link
-            className="ml-auto grid size-12 place-items-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 text-[9px] font-bold uppercase tracking-[0.14em] text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)]"
+            className="reference-auth ml-auto grid size-14 place-items-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 text-[9px] font-bold uppercase tracking-[0.14em] text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)]"
             href="/login"
             aria-label="Sign in"
           >
@@ -274,9 +287,9 @@ export function PublicLivingGateway() {
         </header>
 
         {!conversationStarted ? (
-          <main className="reference-home relative z-10 mx-auto grid min-h-[calc(100vh-92px)] max-w-[1402px] grid-cols-1 px-6 pb-8 sm:px-9 lg:grid-cols-[190px_minmax(0,1fr)_190px] lg:px-10">
-            <aside className="reference-state-rail hidden items-center lg:flex">
-              <ol className="w-full space-y-[52px] border-l border-[#c7807b]/22 pl-7" aria-label="Klinikos intelligence states">
+          <main className="reference-home relative z-10 mx-auto grid min-h-[calc(100vh-102px)] max-w-[1402px] grid-cols-1 px-5 pb-8 sm:px-9 lg:grid-cols-[150px_minmax(0,1fr)_150px] lg:grid-rows-[627px_auto] lg:px-[54px] lg:pb-[43px]">
+            <aside className="reference-state-rail hidden items-start lg:flex">
+              <ol className="w-full border-l border-[#c7807b]/22 pl-7" aria-label="Klinikos intelligence states">
                 {progressSteps.map((step, index) => {
                   const active = index === 0;
                   return (
@@ -291,12 +304,12 @@ export function PublicLivingGateway() {
               </ol>
             </aside>
 
-            <section className="reference-center flex min-h-[980px] flex-col items-center justify-center pb-4 text-center lg:min-h-[1000px]">
+            <section className="reference-center flex flex-col items-center text-center">
               <div className="reference-hero flex w-full flex-col items-center">
                 <p className="text-[11px] font-medium uppercase tracking-[0.5em] text-[#e27d77]">Klinikos Intelligence</p>
                 <h1
                   id="public-living-title"
-                  className="mt-8 max-w-[760px] text-balance text-[clamp(4.5rem,7.7vw,7.7rem)] font-light leading-[0.87] tracking-[-0.065em] text-[#f5edeb]"
+                  className="mt-8 max-w-[760px] text-balance text-[clamp(4.5rem,7.7vw,7.7rem)] font-extralight leading-[0.87] tracking-[-0.065em] text-[#f5edeb]"
                 >
                   What needs
                   <br />
@@ -308,7 +321,7 @@ export function PublicLivingGateway() {
                 </p>
 
                 <form id="living-composer" className="mt-11 w-full max-w-[770px]" onSubmit={submit}>
-                  <div className="relative grid min-h-[112px] grid-cols-[3rem_minmax(0,1fr)_3.1rem_3.8rem] items-center gap-3 rounded-[31px] border border-[#d9918a]/35 bg-[#1b0d10]/68 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
+                  <div className="reference-composer-shell relative grid min-h-[112px] grid-cols-[3rem_minmax(0,1fr)_3.1rem_3.8rem] items-center gap-3 rounded-[31px] border border-[#d9918a]/35 bg-[#1b0d10]/68 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
                     <Link
                       href={protectedHref("/documents")}
                       className="grid size-10 place-items-center rounded-full text-[#cda39e] transition-colors hover:text-[#f2a19a]"
@@ -339,57 +352,64 @@ export function PublicLivingGateway() {
                       disabled={!intent.trim() || Boolean(activeTurn)}
                       type="submit"
                     >
-                      <CornerDownLeft className="size-5" />
+                      <ArrowUp className="size-5" />
                     </button>
-                    <div className="reference-zumi absolute -bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-3">
-                      <ZumiOrb state="dormant" size={48} />
+                    <div className="reference-zumi absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-2.5">
+                      <LivingZumiOrb state="observing" />
                       <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-[#9d7772]">Your AI Operating Partner</span>
                     </div>
                   </div>
                 </form>
-
-                <div className="reference-card-row mt-[74px] grid w-full max-w-[930px] gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {cards.map(({ title, body, href, icon: Icon }) => (
-                    <Link
-                      className="group rounded-[18px] border border-[#d0837d]/13 bg-[#100708]/64 p-5 text-left backdrop-blur-sm transition hover:border-[#e6817b]/26 hover:bg-[#170b0d]/76"
-                      href={href}
-                      key={title}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <Icon className="size-4 text-[#d98e87]" />
-                        <ArrowRight className="size-3.5 text-[#6e5552] transition group-hover:translate-x-1 group-hover:text-[#e6817b]" />
-                      </div>
-                      <h2 className="mt-5 text-sm font-semibold tracking-[-.03em] text-[#f6ece9]">{title}</h2>
-                      <p className="mt-2 text-[11px] leading-5 text-[#8f7773]">{body}</p>
-                    </Link>
-                  ))}
-                </div>
-
-                <Link
-                  className="reference-lower-strip speedster-panel mt-5 grid min-h-[138px] w-full max-w-[930px] grid-cols-[1.2fr_.8fr] overflow-hidden rounded-[22px] border border-[#d0837d]/12 text-left"
-                  href="/how-it-works"
-                >
-                  <div className="relative min-h-[138px]" />
-                  <div className="flex flex-col justify-center border-l border-[#d0837d]/10 bg-[#0d0607]/86 px-7 py-5">
-                    <p className="text-2xl font-light leading-tight tracking-[-.04em] text-[#f7ece9]">Built for speed. Designed for care.</p>
-                    <span className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.14em] text-[#e6817b]">Explore Klinikos <ArrowRight className="size-3.5" /></span>
-                  </div>
-                </Link>
               </div>
             </section>
 
-            <aside className="reference-action-rail hidden items-center justify-end lg:flex">
-              <nav className="space-y-7" aria-label="Operational shortcuts">
+            <aside className="reference-action-rail hidden items-start justify-end lg:flex">
+              <nav aria-label="Operational shortcuts">
                 {actionItems.map(({ label, href, icon: Icon }) => (
-                  <Link className="group flex items-center justify-end gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-[#806f6c]" href={href} key={label}>
-                    <span className="transition-colors group-hover:text-[#e6817b]">{label}</span>
-                    <span className="grid size-8 place-items-center rounded-full border border-[#d0837d]/12 bg-[#100708]/52 text-[#9e817d] transition group-hover:border-[#e6817b]/30 group-hover:text-[#e6817b]">
-                      <Icon className="size-3.5" />
+                  <Link className="group flex flex-col items-center gap-2 text-[10px] font-medium uppercase tracking-[0.15em] text-[#806f6c]" href={href} key={label}>
+                    <span className="grid size-12 place-items-center rounded-full border border-[#d0837d]/12 bg-[#100708]/52 text-[#9e817d] transition group-hover:border-[#e6817b]/30 group-hover:text-[#e6817b]">
+                      <Icon className="size-5" />
                     </span>
+                    <span className="transition-colors group-hover:text-[#e6817b]">{label}</span>
                   </Link>
                 ))}
               </nav>
             </aside>
+
+            <section className="reference-bottom-grid lg:col-span-3">
+              <div className="reference-card-row grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {cards.map(({ title, body, href, icon: Icon }) => (
+                  <Link
+                    className="reference-card group grid min-h-[132px] grid-cols-[42px_minmax(0,1fr)] gap-3 rounded-[18px] border border-[#d0837d]/13 bg-[#100708]/64 p-4 text-left backdrop-blur-sm transition hover:border-[#e6817b]/26 hover:bg-[#170b0d]/76"
+                    href={href}
+                    key={title}
+                  >
+                    <span className="grid size-10 place-items-center rounded-[10px] bg-[#2a1114]/70 text-[#e29790] shadow-[0_0_24px_rgba(222,116,109,.08)]">
+                      <Icon className="size-[18px]" />
+                    </span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-sm font-semibold tracking-[-.03em] text-[#f6ece9]">{title}</span>
+                      <span className="mt-2 text-[11px] leading-[1.7] text-[#9b827e]">{body}</span>
+                      <ArrowRight className="mt-auto size-3.5 text-[#c27d77] transition group-hover:translate-x-1 group-hover:text-[#e6817b]" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              <Link
+                className="reference-lower-strip speedster-panel mt-6 grid min-h-[158px] grid-cols-[.88fr_1.12fr] overflow-hidden rounded-[22px] border border-[#d0837d]/12 text-left"
+                href="/how-it-works"
+              >
+                <span className="reference-strip-art relative" aria-hidden="true" />
+                <span className="reference-strip-content grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 border-l border-[#d0837d]/10 bg-[#0d0607]/80 px-8 py-6">
+                  <span>
+                    <span className="block text-[28px] font-extralight leading-[1.08] tracking-[-.045em] text-[#f7ece9]">Built for speed. Designed for care.</span>
+                    <span className="mt-3 block max-w-[430px] text-[11px] leading-5 text-[#9b827e]">Klinikos helps healthcare teams move with clarity while keeping consequential decisions governed.</span>
+                  </span>
+                  <span className="inline-flex min-h-11 items-center gap-5 rounded-full border border-[#d0837d]/18 px-5 text-[11px] font-medium text-[#ead7d3]">Explore Klinikos <ArrowRight className="size-4 text-[#d68780]" /></span>
+                </span>
+              </Link>
+            </section>
           </main>
         ) : (
           <main className="relative z-10 mx-auto max-w-5xl px-6 pb-24 pt-8 sm:px-9 lg:px-10">

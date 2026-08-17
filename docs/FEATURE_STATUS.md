@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@18175eed039aaced6eff49753c260fdceec60dea`
-Latest local candidate: Grid map Marble-mode contrast and future-role professional enrollment corrections reconciled with stored billing truth and Zumi/Cloudflare privacy hardening; Prisma generation, type-check, lint (one unrelated warning), and all 641 tests are green; fresh exact-head CI verification pending.
+Current audited main: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
+Latest local candidate: Approved Living Home reference lock with the exact production brand/rose assets, reference geometry, responsive hierarchy, real public Grid routing, deterministic multi-turn intent handling, and accessible Zumi/composer behavior; type-check, lint (one unrelated warning), 60 focused design tests, all 643 repository tests, five responsive viewport checks, and a local conversational journey are green; fresh exact-head CI verification pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -47,13 +47,15 @@ PR #109's exact final head passed Prisma generation/validation, all 52 fresh Pos
 
 PR #108's stored billing truth and PR #110's Zumi/Cloudflare privacy hardening passed their exact-head Quality and deploy-contract gates before merging as `76b24e1` and `18175ee` respectively.
 
+PR #111's Grid Marble/map and universal professional-intake corrections passed Prisma generation/validation, all 52 fresh PostgreSQL migrations, TypeScript, lint, 641 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as `d62bc92`.
+
 ## Public / customer entry
 
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Canonical public brand: Klinikos | **BUILT** | `Clinicos` remains only where legacy compatibility/operational identifiers justify it. |
 | Canonical public identity: `https://klinikos.io` | **BUILT** | Product identity is canonical; newest external deployment still requires independent verification. |
-| Conversation-first public Living Home | **BUILT** | Full-screen goal-first root; continuous multi-turn thread; relevant destination surfaced progressively. |
+| Conversation-first public Living Home | **BUILT IN CURRENT CANDIDATE** | Approved 1402 × 1122 reference composition is implemented with exact production brand/rose assets, continuous multi-turn intent handling, and progressively surfaced destinations. |
 | Truthful Living Home progress | **BUILT** | Understanding → Preparing the next move → Ready describes deterministic interface processing, not external completion. |
 | Public follow-up context | **BUILT** | Safe prior resolution can inform short follow-ups without introducing authenticated Path IDs. |
 | Accessible progress/focus behavior | **BUILT** | Live status is outside the busy region, reduced motion respected, composer remains usable/refocused. |
@@ -89,6 +91,7 @@ Redirect state is never payment evidence.
 | Backend-vocabulary suppression | **BUILT** | Customer home avoids Path/capability/orchestration jargon. |
 | Aegean design foundation | **BUILT** | Shared design tokens/primitives and atmosphere system. |
 | Public Living Home appearance-control suppression | **BUILT** | Root conversation owns the screen; atmosphere behavior remains elsewhere. |
+| Local Living Home responsive/interaction QA | **BUILT IN CURRENT CANDIDATE** | No horizontal overflow at 390, 768, 1024, 1440 or 1920 pixels; desktop reference geometry, mobile hierarchy, Enter submission and governed Grid resolution were verified in-browser. |
 | Full post-deploy desktop/mobile visual QA of newest `main` | **VERIFY EXTERNALLY** | Repository/UI tests are not a substitute for checking the actual deployed browser experience. |
 
 ## Patient portal
@@ -209,7 +212,7 @@ Redirect state is never payment evidence.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Fresh empty-DB migration gate | **BUILT** | Current candidate contains 52 additive migrations; exact-head CI must apply all 52 to fresh PostgreSQL before merge. |
+| Fresh empty-DB migration gate | **BUILT** | Current main contains 52 additive migrations; each exact-head candidate must apply all 52 to fresh PostgreSQL before merge. |
 | Repository Node pin | **BUILT** | `.node-version` resolves CI/runtime contract to Node 20.19.4. |
 | Render build contract | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
 | Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |

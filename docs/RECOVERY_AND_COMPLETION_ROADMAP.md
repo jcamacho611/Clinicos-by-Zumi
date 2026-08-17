@@ -1,8 +1,8 @@
 # KLINIKOS — RECOVERY & COMPLETION ROADMAP
 
-Version: `2026-08-16.3`
+Version: `2026-08-16.4`
 Status: `ACTIVE EXECUTION ROADMAP`
-Canonical base: `main@18175eed039aaced6eff49753c260fdceec60dea`
+Canonical base: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
 
 ## 1. Recovery outcome so far
 
@@ -12,7 +12,7 @@ Canonical base: `main@18175eed039aaced6eff49753c260fdceec60dea`
 - PR #74 was confirmed already merged; its local divergent commits were not force-pushed.
 - PR #95 was independently reviewed, verified against the provider contract, and merged.
 - PR #96 was corrected, updated with latest main, connected to the actual design archive, passed the full gate, and merged.
-- Current main is `18175eed039aaced6eff49753c260fdceec60dea`, including independently merged native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, native internal messaging, neutral Grid fixtures, stored billing truth, and Zumi/Cloudflare privacy hardening through PR #110.
+- Current main is `d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`, including independently merged native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, native internal messaging, neutral Grid fixtures, stored billing truth, Zumi/Cloudflare privacy hardening, and Grid Marble/map plus universal professional-intake corrections through PR #111.
 - Current main's `verify` and `deploy-contract` checks completed successfully.
 - Every remote branch present during the audit is classified in `docs/BRANCH_LEDGER.md`.
 - PR #97's commercial and federal-evidence blockers were remediated in focused follow-up PR #100 and are now on main.
@@ -29,7 +29,7 @@ Canonical base: `main@18175eed039aaced6eff49753c260fdceec60dea`
 | Scope and complexity | 4/10 | RED | The product spans 45 logical engines, healthcare operations, Grid, EDU, portals, finance, AI, network, and 100+ historical branches. Completion risk is dominated by breadth and integration debt. |
 | Context hygiene | 7/10 | YELLOW | Source precedence and status vocabulary are explicit, but the feature/external baselines were stale and specialist canons/branch ledger were missing before this recovery. |
 | Safety and truth | 8/10 | GREEN | Tenant/RBAC, PHI-egress, payment truth, eligibility, concurrency, audit, and adversarial journeys are unusually strong. Real-PHI posture and external vendor approval remain external gates. |
-| Workflow and verification | 8.5/10 | GREEN | CI validates fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; the current candidate contains 52 migrations and local verification covers 641 tests. Browser/device QA and deploy-SHA evidence remain gaps. |
+| Workflow and verification | 8.5/10 | GREEN | CI validates fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current main contains 52 migrations and the Living Home candidate passes all 643 tests plus five responsive viewport checks. Deploy-SHA evidence remains a gap. |
 
 Overall: **6.6/10 — YELLOW.** The application has real governed depth and strong verification. The highest risk is not missing concept work; it is breadth, branch drift, stale truth indexes, and partially connected end-user journeys.
 
@@ -69,7 +69,7 @@ Recovery rule: create a current-main implementation branch, compare each changed
 
 1. **Completed:** repository-truth convergence merged through PR #98.
 2. **Completed:** PR #97 safe wiring reached main and its exact-price, connector-bound/cache, no-clearance-language remediation merged through focused follow-up PR #100.
-3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
+3. **In exact-head verification:** the approved Living Home reference is implemented with exact production assets, reference geometry, real operating destinations, deterministic multi-turn intent handling and responsive browser evidence; merge and production visual verification remain.
 4. **Completed and merged through PR #109:** person-specific Grid contractor/applicant fixtures and tests now use neutral provider-role labels without weakening synthetic-data evidence or relationships.
 5. **Complete the remaining manual-origin map UX**: pin/list focus, shared browser-location radius results, and selected-resource request continuity are complete; manual city/ZIP/place origin and privacy-safe interactive bounds remain.
 6. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
