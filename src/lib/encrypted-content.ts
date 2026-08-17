@@ -14,7 +14,9 @@ function resolveEncryptedContentKey() {
   if (process.env.DOCUMENT_ENCRYPTION_KEY) return decodeConfiguredKey(process.env.DOCUMENT_ENCRYPTION_KEY);
   if (process.env.NODE_ENV === "production") throw new NetworkAccessError("Encrypted content storage is not configured.", 503);
   if (!process.env.AUTH_SECRET) throw new NetworkAccessError("AUTH_SECRET is required for the encrypted development fallback.", 503);
-  return createHash("sha256").update(`clinicos-encrypted-development:${process.env.AUTH_SECRET}`).digest();
+  // Preserve the exact pre-existing development derivation used by document storage so
+  // extracting this primitive cannot make already-encrypted local content unreadable.
+  return createHash("sha256").update(`clinicos-document-development:${process.env.AUTH_SECRET}`).digest();
 }
 
 export function encryptSensitiveContent(content: Buffer) {
