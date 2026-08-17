@@ -1,8 +1,8 @@
 # KLINIKOS — RECOVERY & COMPLETION ROADMAP
 
-Version: `2026-08-16.2`
+Version: `2026-08-16.3`
 Status: `ACTIVE EXECUTION ROADMAP`
-Canonical base: `main@035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
+Canonical base: `main@5b47da0fb36bcde8dd249f3446281706ec5c2f6b`
 
 ## 1. Recovery outcome so far
 
@@ -12,11 +12,11 @@ Canonical base: `main@035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
 - PR #74 was confirmed already merged; its local divergent commits were not force-pushed.
 - PR #95 was independently reviewed, verified against the provider contract, and merged.
 - PR #96 was corrected, updated with latest main, connected to the actual design archive, passed the full gate, and merged.
-- Current main is `035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`, including the independently merged native scheduling and stored-truth telemedicine work from PRs #101–#102.
+- Current main is `5b47da0fb36bcde8dd249f3446281706ec5c2f6b`, including independently merged native scheduling, stored-truth telemedicine, governed task creation, and Grid map/location continuity through PR #104.
 - Current main's `verify` and `deploy-contract` checks completed successfully.
 - Every remote branch present during the audit is classified in `docs/BRANCH_LEDGER.md`.
 - PR #97's commercial and federal-evidence blockers were remediated in focused follow-up PR #100 and are now on main.
-- Open PR #103 remains independently owned and has a failing exact-head `verify` check; its task-creation work is not duplicated in Grid recovery.
+- Open PR #105 remains independently owned and exact-head Quality is green; its native internal-messaging work is not duplicated in Grid recovery.
 - Production domain and Render health returned HTTP 200 on 2026-08-16; health truth is `mode: demo`, database configured, live integrations false.
 
 ## 2. Repository audit scorecard
@@ -29,7 +29,7 @@ Canonical base: `main@035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
 | Scope and complexity | 4/10 | RED | The product spans 45 logical engines, healthcare operations, Grid, EDU, portals, finance, AI, network, and 100+ historical branches. Completion risk is dominated by breadth and integration debt. |
 | Context hygiene | 7/10 | YELLOW | Source precedence and status vocabulary are explicit, but the feature/external baselines were stale and specialist canons/branch ledger were missing before this recovery. |
 | Safety and truth | 8/10 | GREEN | Tenant/RBAC, PHI-egress, payment truth, eligibility, concurrency, audit, and adversarial journeys are unusually strong. Real-PHI posture and external vendor approval remain external gates. |
-| Workflow and verification | 8.5/10 | GREEN | CI validates 51 fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current local verification covers 629 tests. Browser/device QA and deploy-SHA evidence remain gaps. |
+| Workflow and verification | 8.5/10 | GREEN | CI validates 51 fresh migrations plus type, lint, DB-backed journeys, production build/start, and the exact Render contract; current local verification covers 633 tests. Browser/device QA and deploy-SHA evidence remain gaps. |
 
 Overall: **6.6/10 — YELLOW.** The application has real governed depth and strong verification. The highest risk is not missing concept work; it is breadth, branch drift, stale truth indexes, and partially connected end-user journeys.
 
@@ -38,7 +38,7 @@ Overall: **6.6/10 — YELLOW.** The application has real governed depth and stro
 | Area | Current truth | Next blocking gap |
 | --- | --- | --- |
 | Universal Grid core | Built/partial: demand, resource, policy, matching, offers, reservations, obligations, fulfillment, trust, opt-in geolocation, keyless map. | Same-surface operating UX, structured time/recurrence, richer origin/map focus, readiness convergence, real supply. |
-| Provider/participant enrollment | Built/partial: role-specific provider path and generalized external participant/resource enrollment. | Neutral participant language, unified readiness/status UX, external verification connection. |
+| Provider/participant enrollment | Built/partial: role-specific provider path, generalized external participant/resource enrollment, and neutral role-labeled contractor fixtures. | Unified readiness/status UX and external verification connection. |
 | Location/resource owner | Built/partial: capacity/resource intake, review, availability, public browse, request/offer path. | Stronger publication/readiness guidance, richer map/origin UX, real pilot inventory. |
 | Organization demand | Built/partial: need creation, matching/offers, transaction state. | Effortless same-surface demand completion and auto/recurring match behavior. |
 | Grid money | Built internal truth: fee policy, obligations, fulfillment holds, manual payment evidence, payout state rules. | Regulated processor/connected-account onboarding and settlement evidence. |
@@ -68,9 +68,9 @@ Recovery rule: create a current-main implementation branch, compare each changed
 ## 5. Next ten execution items
 
 1. **Completed:** repository-truth convergence merged through PR #98.
-2. **In final verification:** PR #97 safe wiring reached main; its exact-price, connector-bound/cache, no-clearance-language, and neutral-fixture remediation is isolated in the follow-up branch after PR #97 merged concurrently at its older head.
+2. **Completed:** PR #97 safe wiring reached main and its exact-price, connector-bound/cache, no-clearance-language remediation merged through focused follow-up PR #100.
 3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
-4. **Remove person-specific demo identity from Grid fixtures/tests/UI** and replace it with neutral provider/participant labels without weakening synthetic-data evidence.
+4. **Completed in the current candidate:** person-specific Grid contractor/applicant fixtures and tests now use neutral provider-role labels without weakening synthetic-data evidence or relationships.
 5. **Complete the remaining manual-origin map UX**: pin/list focus, shared browser-location radius results, and selected-resource request continuity are complete; manual city/ZIP/place origin and privacy-safe interactive bounds remain.
 6. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
 7. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements.
