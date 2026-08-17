@@ -1,8 +1,8 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
-Latest local candidate: Grid map/location continuity on current main with type-check, lint, 85 test files / 629 tests, and production build green; exact-head CI pending.
+Current audited main: `main@cf4130b3ce4db5effde76d61d368b135da01c715`
+Latest local candidate: neutral Grid provider fixtures reconciled with current main with type-check, lint (one unrelated warning), and 87 test files / 636 tests green; exact-head CI pending.
 Audited: 2026-08-16 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
@@ -202,7 +202,7 @@ Redirect state is never payment evidence.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Fresh empty-DB migration gate | **BUILT** | Current exact candidate applies all 51 migrations. |
+| Fresh empty-DB migration gate | **BUILT** | Current candidate contains 52 additive migrations; exact-head CI must apply all 52 to fresh PostgreSQL before merge. |
 | Repository Node pin | **BUILT** | `.node-version` resolves CI/runtime contract to Node 20.19.4. |
 | Render build contract | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
 | Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |

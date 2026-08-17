@@ -2,7 +2,7 @@
 
 Audit date: `2026-08-16 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `035ebe7c9f7b972d3ed00c0966faa4ab08b32a88`
+Audited main: `cf4130b3ce4db5effde76d61d368b135da01c715`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,10 +22,9 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `035ebe7` | `CANONICAL` | Current merge base after repository recovery plus native scheduling and stored-truth telemedicine merges through PR #102. |
-| `origin/fix/grid-map-location-continuity-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Public Grid map/result radius consistency, bidirectional Google pin/list focus, and preserved selected-resource request continuity. |
+| `origin/main` | `cf4130b` | `CANONICAL` | Current merge base after native scheduling, stored-truth telemedicine, governed task creation, Grid map/location continuity, and native internal messaging through PR #105. |
+| `origin/fix/grid-neutral-provider-fixture-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Neutralizes person-specific Grid contractor/applicant fixture identities while preserving credential, availability, request, payout, and task relationships. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
-| `origin/feat/native-task-creation` | `b8d3414` | `ACTIVE_RECOVERY` | Open PR #103. Governed task creation is independently owned; its exact-head `verify` check is failing, so do not duplicate or merge it through the Grid map branch. |
 
 ## Local preservation ledger
 
@@ -93,6 +92,8 @@ origin/docs/klinikos-truth-sync-2026-08-14
 origin/feat/commercial-activation-experience
 origin/feat/commercial-qualification-convergence
 origin/feat/ecosystem-wiring-pass-1
+origin/feat/internal-messaging-truth
+origin/feat/native-task-creation
 origin/feat/schedule-native-wiring
 origin/feat/patient-search-wiring
 origin/feat/telemedicine-truth-wiring
@@ -109,6 +110,7 @@ origin/feature/sales-audit-funnel
 origin/feature/zumi-command-experience
 origin/fix/brand-assets-404
 origin/fix/ecosystem-wiring-truth-2026-08-16
+origin/fix/grid-map-location-continuity-2026-08-16
 origin/fix/living-home-original-visual-match
 origin/fix/living-home-visual-corrections
 origin/fix/pin-node-version
