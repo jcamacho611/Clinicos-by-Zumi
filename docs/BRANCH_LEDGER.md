@@ -1,8 +1,8 @@
 # KLINIKOS — BRANCH LEDGER
 
-Audit date: `2026-08-16 America/New_York`
+Audit date: `2026-08-17 America/New_York`
 Remote: `https://github.com/jcamacho611/Clinicos-by-Zumi.git`
-Audited main: `d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
+Audited main: `a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
 
 This ledger classifies every remote branch present during the audit plus local-only/divergent work. Classification is an integration decision, not permission to delete a branch. No branch or stash was deleted, rewritten, or force-pushed.
 
@@ -22,8 +22,10 @@ This ledger classifies every remote branch present during the audit plus local-o
 
 | Ref | SHA | Status | Decision |
 | --- | --- | --- | --- |
-| `origin/main` | `d62bc92` | `CANONICAL` | Current merge base after exact-head-green stored billing truth, Zumi/Cloudflare privacy hardening, and the Grid Marble/map plus universal professional-intake corrections through PR #111. |
-| `fix/living-home-reference-lock-2026-08-16` | `current candidate` | `ACTIVE_RECOVERY` | Exact approved Living Home production assets and 1402 × 1122 composition implemented with responsive and interaction evidence; exact-head CI and merge still required. |
+| `origin/main` | `a111ae4` | `CANONICAL` | Current merge base after the exact-head-green OpenFreeMap primary Grid mapping release through PR #114. |
+| `feat/live-stripe-payment-rail-2026-08-17` | `current candidate` | `ACTIVE_RECOVERY` | One-time live Stripe Checkout and signed-webhook evidence added through the existing Financial OS while preserving GoDaddy fallback; fresh exact-head DB/journey/build CI and merge still required. |
+| `origin/feat/stripe-live-checkout-webhook` | `faa9cad` | `RECOVERY_REVIEW` | Parallel partial Stripe implementation inspected on 2026-08-17. It is not wired to an API route, migration, or end-to-end journey and overlaps the fuller current candidate; preserve untouched and do not merge wholesale. |
+| `origin/feat/twilio-restricted-key-communications` | `current remote candidate` | `ACTIVE_RECOVERY` | Separate communications work in open PR #115. Keep outside the Stripe scope and let its own exact-head review decide integration. |
 | `origin/claude/whop-portal-grid-marketplace-wdw811` | `f22a5c4` | `ACTIVE_RECOVERY` | Fresh Living Home operating-surface work: truthful phase rail, role-authorized destinations, real counts, inline workspace, and provider-registry correction. Reconcile onto latest main; do not merge the branch wholesale. |
 
 ## Local preservation ledger
@@ -99,6 +101,7 @@ origin/feat/patient-search-wiring
 origin/feat/telemedicine-truth-wiring
 origin/recovery/repository-truth-convergence-2026-08-16
 origin/feat/grid-exchange-mvp
+origin/feat/grid-openfreemap-maplibre-primary
 origin/feat/living-home-aegean-briefing
 origin/feat/mvp-convergence-frontend
 origin/feat/patient-portal-aegean-convergence
@@ -187,12 +190,13 @@ origin/codex/create-app-concepts-for-viral-revenue-generation
 ## Integration order
 
 1. Keep `origin/main` as the only merge base.
-2. Finish source-of-truth convergence and status corrections.
-3. Merge the focused PR #97 truth-remediation follow-up after exact-head gates.
-4. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto latest main.
-5. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
-6. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.
-7. Keep all remaining branches as history unless a specific failing journey names a recoverable behavior.
+2. Put the current Stripe candidate through exact-head migration, journey, build/start, and deploy-contract gates.
+3. Preserve `origin/feat/stripe-live-checkout-webhook` without wholesale merge; recover only a specifically proven gap absent from the current candidate.
+4. Let the independent communications PR #115 complete its own exact-head review without mixing scopes.
+5. Reconcile `origin/claude/whop-portal-grid-marketplace-wdw811` file-by-file onto latest main.
+6. Compare local `51f4636` selected-listing/request-continuity behavior with current main; recover only absent behavior.
+7. Review `origin/agent/architecture-runtime-convergence` only after current registry/canon drift is measured.
+8. Keep all remaining branches as history unless a specific failing journey names a recoverable behavior.
 
 ## Destructive-action rule
 

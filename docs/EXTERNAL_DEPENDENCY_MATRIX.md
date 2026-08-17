@@ -1,8 +1,8 @@
 # Klinikos External Dependency Matrix
 
 Status: `AUTHORITATIVE EXTERNAL-TRUTH INDEX`
-Updated: 2026-08-16 America/New_York
-Repository baseline at update: `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`
+Updated: 2026-08-17 America/New_York
+Repository baseline at update: `main@a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
 
 This is the operating inventory for services, APIs, healthcare networks, credentials, contracts, BAAs, cost ownership, and production-connection truth.
 
@@ -24,9 +24,10 @@ The purpose is to replace unnecessary clinic software with native Klinikos capab
 | --- | --- | --- | --- | --- | --- |
 | Public application hosting | Render | PHI depends on production approval/configuration | Hosting account, environment secrets, production security/BAA posture where required | Klinikos infrastructure | **Verified service health in demo mode on 2026-08-16; exact deployed SHA and PHI posture remain unverified** |
 | Public domain / DNS | GoDaddy + `klinikos.io` | No PHI by DNS itself | DNS/TLS/domain account | Klinikos | **`www.klinikos.io/api/health` returned HTTP 200 through Cloudflare/Render on 2026-08-16; exact deploy SHA remains unverified** |
-| Clinic Operating Analysis checkout | GoDaddy paylink | Keep PHI out of checkout payload | Active paylink/account; reconciliation evidence | Buyer/clinic | **Built checkout intent + configured paylink; settlement remains separate** |
-| Commercial payment verification | Manual evidence/reconciliation today; future processor/webhook/API verification | Keep PHI out of processor metadata | Evidence source, account access, processor contract | Buyer/clinic transaction | **Built internal evidence/activation model; Manual fallback available** |
-| Direct card/payment processor | Stripe or equivalent | Keep PHI out of metadata | Production account, webhook/API credentials, security/commercial review | Clinic/transaction economics | **Adapter ready / Pending connection** |
+| Clinic Operating Analysis checkout | Preferred live Stripe-hosted Checkout when fully configured; existing GoDaddy paylink fallback | Keep PHI out of Stripe/checkout metadata | Stripe webhook registration/secret and live exercise; GoDaddy reconciliation remains available | Buyer/clinic | **Stripe Checkout code built in current candidate; GoDaddy checkout/manual fallback preserved** |
+| Commercial payment verification | Signed Stripe webhook evidence or authorized manual reconciliation | Keep PHI out of processor metadata and persisted webhook payloads | Deployed endpoint, signing secret, runtime evidence, account/security review | Buyer/clinic transaction | **Shared evidence/activation model built; Stripe signed-webhook code built in current candidate; live verification pending** |
+| Direct card/payment processor | Stripe | Keep PHI out of metadata | Live key is operator-reported configured; live endpoint registration, signing secret, security/commercial review, and real payment exercise remain | Clinic/transaction economics | **BUILT / OPERATOR-REPORTED KEY CONFIGURED / PENDING CONNECTION — not verified live** |
+| Stripe live webhook | `POST /api/webhooks/stripe` | Raw body is verified; persisted evidence is identifier/status-only | Register only `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `payment_intent.payment_failed`, and `charge.refunded`; store live endpoint secret in Render | Klinikos infrastructure | **Built in current candidate; signing secret pending; no live event yet observed** |
 | Grid marketplace payouts | Stripe Connect or equivalent platform rail | Keep PHI out of payout metadata | Platform terms, connected-account onboarding, credentials, legal/commercial review | Transaction economics/platform fee | **Pending connection** |
 | AI Gateway / Klinikos Intelligence | Provider-neutral; Cloudflare Workers AI, approved OpenAI configuration, or self-hosted provider as configured | PHI prohibited unless exact provider/workload is approved | Provider account, approved model/config, contract/BAA where needed, PHI egress approval | Prefer plan allowance/customer-funded measured usage | **Gateway and Cloudflare adapter built; production health reported `liveIntegrations: false`, so live inference is not verified** |
 | Public web research/tooling | Approved research-capable provider/tool | Public data only by default | Tool/provider configuration and policy | Klinikos or customer-funded intelligence usage | **Architecture built; external availability environment-specific** |
@@ -69,11 +70,11 @@ Redaction reduces exposure; it does not replace those gates.
 
 ## Payment rule
 
-Current public paid-entry truth is:
+Current candidate paid-entry truth is:
 
-`server checkout intent → external GoDaddy payment attempt → verified/manual evidence → activation decision`
+`server-owned intent/amount → Stripe-hosted Checkout when fully configured OR GoDaddy fallback → signed Stripe evidence OR authorized manual evidence → product policy / reconciliation`
 
-A redirect back to Klinikos is never payment evidence. Grid payouts are separately gated: financial obligation, fee calculation, reservation, or fulfillment do not prove external payout settlement.
+A redirect back to Klinikos is never payment evidence. The production Stripe route is live-only and rejects signed test-mode events. Grid payouts are separately gated: financial obligation, fee calculation, reservation, fulfillment, or customer payment do not prove external payout settlement.
 
 ## Maps and location rule
 
@@ -90,7 +91,7 @@ Do not describe straight-line distance as travel time and do not invent coordina
 
 ## Production database/security infrastructure note
 
-The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. The latest repository candidate contains 52 additive migrations; exact-head CI must apply all 52 to fresh PostgreSQL before merge.
+The production Prisma migration failure from 2026-08-12 was recovered and no unresolved failed migration remained when the production database was last inspected. The latest repository candidate contains 53 additive migrations; exact-head CI must apply all 53 to fresh PostgreSQL before merge, and the Stripe journey probes migration 53 against populated legacy payment evidence.
 
 The last inspected Neon project setting reported HIPAA mode as disabled. This is an infrastructure configuration fact, not a legal conclusion. Real-PHI production approval remains a separate security/compliance decision and must not be inferred from application code.
 
@@ -112,7 +113,7 @@ The last inspected Neon project setting reported HIPAA mode as disabled. This is
 Prioritize external work by revenue and operational leverage:
 
 1. independently verify the newest production deployment/domain/login journey;
-2. keep GoDaddy checkout + evidence reconciliation dependable for the paid entry offer;
+2. deploy the Stripe candidate, register the live webhook endpoint, configure the signing secret, and deliberately exercise one real payment while preserving the GoDaddy/manual fallback;
 3. connect a production Klinikos Intelligence provider only under the correct data/contract posture;
 4. add production geocoding/routing only as real Grid supply makes it valuable;
 5. connect processor/payout rails when recurring subscriptions and Grid settlement justify them;

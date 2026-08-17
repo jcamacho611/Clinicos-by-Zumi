@@ -1,9 +1,9 @@
 # Klinikos Feature Status
 
 Status: `IMPLEMENTATION TRUTH INDEX`
-Current audited main: `main@d62bc928bd2f2b5d3cf596840546a6442ae7e3ff`
-Latest local candidate: Approved Living Home reference lock with the exact production brand/rose assets, reference geometry, responsive hierarchy, real public Grid routing, deterministic multi-turn intent handling, and accessible Zumi/composer behavior; type-check, lint (one unrelated warning), 60 focused design tests, all 643 repository tests, five responsive viewport checks, and a local conversational journey are green; fresh exact-head CI verification pending.
-Audited: 2026-08-16 America/New_York
+Current audited main: `main@a111ae4ec4c5dfc02bd2b4d376a5a1a60acffdc9`
+Latest local candidate: Production-safe one-time Stripe Checkout and signed live-webhook evidence through the shared Financial OS, with strict amount/currency/tenant/session/mode checks, byte-identical replay enforcement, payment-failure/refund truth, and GoDaddy fallback; Prisma generation/schema validation, type-check, lint, 56 focused commercial/Stripe tests, all 675 repository tests, and zero production dependency audit findings are green; the new PostgreSQL-backed Stripe journey and fresh exact-head CI remain pending.
+Audited: 2026-08-17 America/New_York
 
 If something is labeled **BUILT** here and the corresponding path does not actually work, the defect is in both the product and this document.
 
@@ -49,6 +49,10 @@ PR #108's stored billing truth and PR #110's Zumi/Cloudflare privacy hardening p
 
 PR #111's Grid Marble/map and universal professional-intake corrections passed Prisma generation/validation, all 52 fresh PostgreSQL migrations, TypeScript, lint, 641 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as `d62bc92`.
 
+PR #112's approved Living Home reference lock passed type-check, lint, 643 automated tests, all 10 DB-backed journeys, production build/start smoke, and the exact Render deploy contract before merging as `527110d` alongside the production-environment truth index from PR #113.
+
+PR #114's OpenFreeMap primary Grid mapping release passed exact-head verification and merged as `a111ae4`; the current Stripe candidate is rebased on that map/geolocation work rather than replacing or duplicating it.
+
 ## Public / customer entry
 
 | Capability | Status | Notes |
@@ -71,14 +75,18 @@ Redirect state is never payment evidence.
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Server-owned commercial products/amounts | **BUILT** | Browser cannot choose trusted price. |
-| Clinic Operating Analysis `$500` checkout intent | **BUILT** | Server-owned intent exists before configured GoDaddy paylink opens. |
+| Clinic Operating Analysis `$500` checkout intent | **BUILT** | Product, amount, currency, organization and mode are server-owned before either payment rail opens. |
 | Implementation Blueprint `$1,500` / Founding implementation `$8,000+` definitions | **BUILT / PARTIAL** | Product definitions and intake/review boundaries exist; not forced through the `$500` link. |
 | GoDaddy checkout launch | **BUILT** | Current configured rail for Clinic Operating Analysis. |
+| Stripe-hosted one-time Checkout | **BUILT IN CURRENT CANDIDATE** | Preferred only when both the live key and live signing secret are configured; otherwise the existing GoDaddy path remains active. Dynamic payment methods remain Dashboard-controlled and async completion/failure stays inside the same evidence boundary. |
+| Stripe raw-body signature verification | **BUILT IN CURRENT CANDIDATE / PENDING CONNECTION** | Live-only `POST /api/webhooks/stripe` supports synchronous/pending/async Checkout completion, payment failure and refunds; production endpoint registration/signing secret remain external. |
+| Stripe amount/currency/tenant/mode correlation | **BUILT IN CURRENT CANDIDATE** | Signed events must match one open opaque server-owned intent and its exact amount, currency, organization, Checkout Session and live/test mode. |
+| Stripe failure/refund truth | **BUILT IN CURRENT CANDIDATE** | Failure never becomes paid; full/partial refund evidence is distinct and auditable. Refund recording does not trigger a Grid payout. |
 | Browser redirect marks payment paid | **NOT BUILT BY DESIGN** | Redirect never establishes payment evidence. |
 | Payment evidence separated from entitlement | **BUILT** | Verification source/state is independent from activation. |
 | Manual reconciliation | **MANUAL FALLBACK** | Valid when authorized and evidence is recorded truthfully. |
 | Paid clinic activation/provisioning journey | **BUILT** | DB-backed journey covers buyer → evidence → subscription → organization provisioning → first useful entry. |
-| Stripe direct settlement | **ADAPTER READY** | Config surfaces exist; not the currently verified checkout rail. |
+| Stripe live customer-payment verification | **BUILT / OPERATOR-REPORTED KEY CONFIGURED / PENDING CONNECTION** | Repository evidence path is built in the current candidate; webhook secret, deployed endpoint registration and an intentional live-mode payment are still required before `VERIFIED LIVE`. This is not Stripe Connect settlement or payout proof. |
 | Marketplace payout movement | **PENDING CONNECTION** | Internal financial state does not mean external money moved. |
 | Customer-funded variable-usage policy | **BUILT** | Included allowance/prepaid/bounded-overage policy exists. |
 
@@ -212,7 +220,7 @@ Redirect state is never payment evidence.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Fresh empty-DB migration gate | **BUILT** | Current main contains 52 additive migrations; each exact-head candidate must apply all 52 to fresh PostgreSQL before merge. |
+| Fresh empty-DB migration gate | **BUILT** | Current candidate contains 53 additive migrations; exact-head CI must apply all 53 to fresh PostgreSQL before merge. |
 | Repository Node pin | **BUILT** | `.node-version` resolves CI/runtime contract to Node 20.19.4. |
 | Render build contract | **BUILT** | `npm ci --include=dev --ignore-scripts && npm run render:build`. |
 | Runtime start contract | **BUILT** | `npm start`; no build/migrations every wake. |

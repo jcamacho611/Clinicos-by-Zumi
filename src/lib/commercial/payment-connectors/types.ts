@@ -1,11 +1,19 @@
 import type { CommercialProduct } from "@/lib/commercial/product-catalog";
 
+export type CommercialProcessorMode = "manual" | "test" | "live";
+export type CommercialPaymentOutcome = "pending" | "succeeded" | "failed" | "refunded";
+
 export type CommercialCheckoutRequest = {
   product: CommercialProduct;
   organizationId: string;
   email: string;
   state: string;
   returnUrl: string;
+  expiresAt?: Date;
+  processorMode?: CommercialProcessorMode;
+  intentId?: string;
+  amountCents?: number | null;
+  currency?: string;
 };
 
 export type CommercialCheckoutResult = {
@@ -13,6 +21,7 @@ export type CommercialCheckoutResult = {
   checkoutUrl: string;
   externalCheckoutId: string | null;
   processorVerificationAvailable: boolean;
+  processorMode?: CommercialProcessorMode;
 };
 
 export type NormalizedCommercialWebhook = {

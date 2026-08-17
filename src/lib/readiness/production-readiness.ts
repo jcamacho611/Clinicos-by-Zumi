@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { connectorIntegritySummary } from "@/lib/connectors/status";
 import { goDaddyClinicPlanCheckoutStatus, goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
+import { stripeLivePaymentStatus } from "@/lib/commercial/payment-connectors/stripe";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 
 export const productionReadinessStates = ["READY", "DEGRADED", "MANUAL_FALLBACK", "PENDING_CONNECTION", "BLOCKED", "NOT_CONFIGURED"] as const;
@@ -18,6 +19,11 @@ export type ProductionReadinessItem = {
   detail: string;
   action: string | null;
 };
+
+export const STRIPE_LIVE_PAYMENT_SUCCESS_EVENTS = [
+  "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+] as const;
 
 function item(key: string, label: string, state: ProductionReadinessState, detail: string, action: string | null = null): ProductionReadinessItem {
   return { key, label, state, detail, action };
@@ -90,13 +96,62 @@ function backupReadiness() {
     : item("backups", "Backups", "DEGRADED", `The last recorded backup/restore evidence is ${Math.floor(ageDays)} days old.`, "Repeat and document the backup/restore exercise.");
 }
 
-function paymentsReadiness() {
-  const status = goDaddyPaymentConnector.status();
-  const planStatus = goDaddyClinicPlanCheckoutStatus();
-  if (!status.checkoutConfigured) return item("payments", "Payments", "NOT_CONFIGURED", "No current checkout rail is configured.", "Configure the approved payment connector.");
+async function verifiedLiveStripePaymentExists() {
+  if (!process.env.DATABASE_URL?.trim()) return false;
+  try {
+    const rows = await db.$queryRaw<Array<{ verified: boolean }>>(Prisma.sql`
+      SELECT EXISTS (
+        SELECT 1
+        FROM "commercial_payment_events"
+        WHERE "provider" = 'stripe'
+          AND "eventType" IN (${Prisma.join(STRIPE_LIVE_PAYMENT_SUCCESS_EVENTS)})
+          AND "verified" = TRUE
+          AND "verificationMethod" = 'webhook_signature'
+          AND "processorVerified" = TRUE
+          AND "processorMode" = 'live'
+          AND "outcome" = 'succeeded'
+          AND "processingStatus" = 'applied'
+          AND "productKey" = 'operational_audit'
+          AND "amountCents" > 0
+      ) AS "verified"
+    `);
+    return rows[0]?.verified === true;
+  } catch {
+    return false;
+  }
+}
+
+export function paymentReadinessFromSignals(input: {
+  goDaddy: ReturnType<typeof goDaddyPaymentConnector.status>;
+  stripe: ReturnType<typeof stripeLivePaymentStatus>;
+  planStatus: ReturnType<typeof goDaddyClinicPlanCheckoutStatus>;
+  verifiedLivePayment: boolean;
+}) {
+  const { goDaddy, stripe, planStatus, verifiedLivePayment } = input;
+  if (stripe.processorVerification) {
+    if (!verifiedLivePayment) {
+      return item("payments", "Payments", "PENDING_CONNECTION", "Live Stripe Checkout and signed-webhook configuration are present for the one-time Clinic Operating Analysis, but Klinikos has not recorded an applied signed live payment. Configuration alone is not live-payment proof.", "Run and reconcile one controlled live payment before calling the Stripe rail verified live.");
+    }
+    return planStatus.allConfigured
+      ? item("payments", "Payments", "READY", "Klinikos has recorded an applied signed live Stripe payment for the one-time Clinic Operating Analysis; exact-value GoDaddy subscription links remain available with manual reconciliation.")
+      : item("payments", "Payments", "DEGRADED", `Klinikos has recorded an applied signed live Stripe payment for the one-time Clinic Operating Analysis. Recurring plan automation is not part of this slice, and only ${planStatus.configuredPlanKeys.length} of 3 manual subscription paylinks are configured.`, "Keep recurring activation in the Commercial Activation desk until a separately verified recurring processor path exists.");
+  }
+  if (stripe.checkoutConfigured && !stripe.webhookConfigured) {
+    return item("payments", "Payments", "MANUAL_FALLBACK", "A live Stripe server key is operator-configured, but the signed webhook secret is missing. Klinikos will not open Stripe Checkout and continues using the existing GoDaddy/manual-reconciliation path.", "Register /api/webhooks/stripe in Stripe, store its live signing secret in Render, and exercise one real signed live payment before calling the rail verified live.");
+  }
+  if (!goDaddy.checkoutConfigured) return item("payments", "Payments", "NOT_CONFIGURED", "No current checkout rail is configured.", "Configure the approved payment connector.");
   if (!planStatus.allConfigured) return item("payments", "Payments", "DEGRADED", `GoDaddy checkout exists, but only ${planStatus.configuredPlanKeys.length} of 3 clinic subscription paylinks are configured. The $500 audit paylink is never reused for a subscription plan.`, `Configure: ${planStatus.missing.join(", ")}`);
-  if (!status.processorVerification) return item("payments", "Payments", "MANUAL_FALLBACK", "Exact-value Core, Growth, and Scale checkout links are configured, but processor verification is not connected. Klinikos requires explicit staff reconciliation before paid access changes.", "Use the Commercial Activation desk until authoritative processor verification is connected.");
-  return item("payments", "Payments", "READY", "Checkout and authoritative processor verification are available.");
+  return item("payments", "Payments", "MANUAL_FALLBACK", "Exact-value checkout links are configured, but processor verification is not connected. Klinikos requires explicit staff reconciliation before paid access changes.", "Use the Commercial Activation desk until authoritative processor verification is connected.");
+}
+
+async function paymentsReadiness() {
+  const goDaddy = goDaddyPaymentConnector.status();
+  const stripe = stripeLivePaymentStatus();
+  const planStatus = goDaddyClinicPlanCheckoutStatus();
+  const verifiedLivePayment = stripe.processorVerification
+    ? await verifiedLiveStripePaymentExists()
+    : false;
+  return paymentReadinessFromSignals({ goDaddy, stripe, planStatus, verifiedLivePayment });
 }
 
 function zumiReadiness() {
@@ -108,7 +163,7 @@ function zumiReadiness() {
 
 export async function buildProductionReadiness() {
   const connectors = connectorIntegritySummary();
-  const [database, migrations, audit] = await Promise.all([databaseReadiness(), migrationReadiness(), auditReadiness()]);
+  const [database, migrations, audit, payments] = await Promise.all([databaseReadiness(), migrationReadiness(), auditReadiness(), paymentsReadiness()]);
   const items = [
     item("app", "Application", "READY", "The readiness page is executing inside the current Klinikos application build."),
     database,
@@ -117,7 +172,7 @@ export async function buildProductionReadiness() {
     audit,
     backupReadiness(),
     connectorGroupStatus(["storage", "s3"], "Storage"),
-    paymentsReadiness(),
+    payments,
     connectorGroupStatus(["twilio", "resend", "communication"], "Communications"),
     zumiReadiness(),
     connectorGroupStatus(["google maps", "maps"], "Maps"),

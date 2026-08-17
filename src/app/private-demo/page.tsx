@@ -27,7 +27,7 @@ export default function PrivateDemoPage() {
             <div className="flex items-end justify-between gap-5"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-slate-500">Clinic Operating Analysis</p><p className="mt-3 text-6xl font-black tracking-[-.07em]">$500</p></div><Clock3 className="size-9 text-emerald-300" strokeWidth={1.3} /></div>
             <p className="mt-7 border-l border-emerald-300/40 pl-4 text-sm leading-7 text-slate-300">The full $500 is credited toward the Founding Clinic Evaluation if your clinic proceeds.</p>
             <a className="mt-8 inline-flex h-13 items-center justify-center gap-2 rounded-full bg-white px-6 text-xs font-black text-slate-950 transition hover:bg-emerald-200" href="#reserve">Start my analysis <ArrowDown className="size-4" /></a>
-            <p className="mt-5 max-w-md text-[10px] leading-5 text-slate-600">Your clinic and selected offer are saved before GoDaddy opens. Opening the payment page never marks the purchase paid; Klinikos waits for verified or manually reconciled payment evidence.</p>
+            <p className="mt-5 max-w-md text-[10px] leading-5 text-slate-600">Your clinic and selected offer are saved before the secure payment page opens. Opening or returning from checkout never marks the purchase paid; Klinikos waits for signed processor evidence or authorized reconciliation.</p>
           </div>
         </CinematicReveal>
 

@@ -119,7 +119,7 @@ export default function PricingPage() {
           <div className="mt-6 flex items-start gap-4 p-5" style={{ background: "var(--surface-paper)", border: "var(--border-hair-light)", borderRadius: "var(--radius-md)" }}>
             <ShieldCheck className="mt-0.5 size-5 shrink-0" style={{ color: "var(--accent-premium)" }} aria-hidden="true" />
             <p className="text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-              The Clinic Operating Analysis creates a server-owned commercial intent before the configured GoDaddy payment rail opens. Returning from checkout is never payment evidence, and payment never bypasses authentication, tenant, privacy, credentialing, clinical, or human-review controls.
+              The Clinic Operating Analysis creates a server-owned commercial intent before the configured payment rail opens. Returning from checkout is never payment evidence. Signed Stripe evidence or authorized manual reconciliation establishes payment truth, and payment never bypasses authentication, tenant, privacy, credentialing, clinical, or human-review controls.
             </p>
           </div>
         </section>
