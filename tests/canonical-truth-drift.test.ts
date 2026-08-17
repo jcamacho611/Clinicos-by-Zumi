@@ -86,16 +86,16 @@ describe("canonical Klinikos truth", () => {
     }
   });
 
-  it("keeps recovery work inside the Klinikos repository boundary", () => {
+  it("keeps product work inside the Klinikos repository boundary after recovery closeout", () => {
     const agentLaw = read("AGENTS.md");
     const ledger = read("docs/BRANCH_LEDGER.md");
 
     expect(agentLaw).toContain("jcamacho611/Clinicos-by-Zumi");
     expect(agentLaw).toContain("Never use, inspect, edit, merge, or copy LWA/IWA work");
     expect(agentLaw).toContain("Use neutral role language");
-    expect(ledger).toContain("origin/main");
-    expect(ledger).toContain("stash@{0}");
-    expect(ledger).toContain("No branch deletion, force push, stash mutation, mass merge");
+    expect(ledger).toContain("`main` is the only source of implementation truth");
+    expect(ledger).toContain("There is intentionally no preservation/recovery status");
+    expect(ledger).toContain("A historical branch must never be merged wholesale");
   });
 
   it("keeps Grid contractor fixtures anchored to roles instead of personal identities", () => {
