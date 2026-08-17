@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, LoaderCircle, MessageCircle, Plus, RefreshCcw, Send, ShieldAlert, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,16 +30,20 @@ export function MessagesWorkspaceReal() {
   const [search, setSearch] = useState("");
 
   const load = useCallback(async (preferredThreadId?: string) => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
       const response = await fetch("/api/messages", { headers: { Accept: "application/json" }, cache: "no-store" });
       const payload = await response.json().catch(() => null) as { error?: string; data?: WorkspaceState } | null;
       if (!response.ok || !payload?.data) throw new Error(payload?.error ?? "Internal messages could not be loaded.");
-      setWorkspace(payload.data);
-      setSelectedId((current) => preferredThreadId ?? current ?? payload.data.threads[0]?.id ?? null);
+      const data = payload.data;
+      setWorkspace(data);
+      setSelectedId((current) => preferredThreadId ?? current ?? data.threads[0]?.id ?? null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Internal messages could not be loaded.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { void load(); }, [load]);
@@ -53,7 +57,9 @@ export function MessagesWorkspaceReal() {
   const selected = workspace?.threads.find((thread) => thread.id === selectedId) ?? visibleThreads[0] ?? null;
 
   async function createThread(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError("");
+    event.preventDefault();
+    setBusy(true);
+    setError("");
     try {
       const response = await fetch("/api/messages", {
         method: "POST",
@@ -61,18 +67,22 @@ export function MessagesWorkspaceReal() {
         body: JSON.stringify({ patientId: patientId || null, subject, category, assignedTeam: assignedTeam || null, body: newBody }),
       });
       const payload = await response.json().catch(() => null) as { error?: string; data?: { threadId: string } } | null;
-      if (!response.ok || !payload?.data?.threadId) throw new Error(payload?.error ?? "The internal thread could not be created.");
+      const threadId = payload?.data?.threadId;
+      if (!response.ok || !threadId) throw new Error(payload?.error ?? "The internal thread could not be created.");
       setPatientId(""); setSubject(""); setCategory("internal_coordination"); setAssignedTeam("front_desk"); setNewBody(""); setNewOpen(false);
-      await load(payload.data.threadId);
+      await load(threadId);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The internal thread could not be created.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function createReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected || !reply.trim()) return;
-    setBusy(true); setError("");
+    setBusy(true);
+    setError("");
     try {
       const response = await fetch(`/api/messages/${encodeURIComponent(selected.id)}`, {
         method: "POST",
@@ -85,21 +95,27 @@ export function MessagesWorkspaceReal() {
       await load(selected.id);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The internal message could not be added.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
-  if (loading && !workspace) return <Card className="flex min-h-72 items-center justify-center"><p className="flex items-center gap-2 text-sm font-bold text-slate-500"><LoaderCircle className="size-5 animate-spin" /> Loading internal messages…</p></Card>;
-  if (!workspace) return <Card className="p-7"><p className="text-sm font-extrabold text-slate-950">Internal messaging is unavailable.</p><p className="mt-2 text-xs text-slate-500">{error || "The tenant message workspace could not be loaded."}</p><Button className="mt-4" onClick={() => void load()} size="sm" variant="secondary"><RefreshCcw className="size-3.5" /> Retry</Button></Card>;
+  if (loading && !workspace) {
+    return <Card className="flex min-h-72 items-center justify-center"><p className="flex items-center gap-2 text-sm font-bold text-slate-500"><LoaderCircle className="size-5 animate-spin" /> Loading internal messages…</p></Card>;
+  }
+  if (!workspace) {
+    return <Card className="p-7"><p className="text-sm font-extrabold text-slate-950">Internal messaging is unavailable.</p><p className="mt-2 text-xs text-slate-500">{error || "The tenant message workspace could not be loaded."}</p><Button className="mt-4" onClick={() => void load()} size="sm" variant="secondary"><RefreshCcw className="size-3.5" /> Retry</Button></Card>;
+  }
 
   return <div className="space-y-6">
     <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 lg:flex-row lg:items-end lg:justify-between">
-      <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Messages</p><h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-slate-950">Internal coordination is live. External delivery stays truthful.</h2><p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">Team members can create patient-linked or organization threads inside Klinikos now. SMS, email, voice, and patient-facing delivery remain separate connections and are not represented as sent.</p></div>
+      <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Messages</p><h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-slate-950">Internal coordination is live. External delivery stays truthful.</h2><p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">Create patient-linked or organization threads inside Klinikos now. SMS, email, voice, and patient-facing delivery remain separate connections and are never represented as sent here.</p></div>
       <div className="flex flex-wrap gap-2">{workspace.canCreate && <Button onClick={() => setNewOpen(true)} variant="primary"><Plus className="size-4" /> New internal thread</Button>}<Button asChild variant="secondary"><Link href="/integrations">External connections <ArrowRight className="size-4" /></Link></Button></div>
     </div>
 
-    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><div className="flex items-start gap-3"><ShieldAlert className="mt-0.5 size-4 shrink-0" /><p><strong>Delivery boundary:</strong> messages created on this surface use the `klinikos_internal` channel only. A Twilio, email, voice, or other external connector must pass its own contract, security, PHI, and configuration gates before patient delivery is enabled.</p></div></div>
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><div className="flex items-start gap-3"><ShieldAlert className="mt-0.5 size-4 shrink-0" /><p><strong>Delivery boundary:</strong> this surface writes only to the `klinikos_internal` channel. Patient delivery stays off until an approved connector passes its contract, security, PHI, and configuration gates.</p></div></div>
 
-    {newOpen && workspace.canCreate && <Card className="p-5"><form onSubmit={createThread}><div className="flex items-start gap-3"><div><p className="text-sm font-extrabold text-slate-950">New internal thread</p><p className="mt-1 text-[10px] text-slate-500">This stores coordination inside Klinikos. It does not contact the patient.</p></div><Button aria-label="Close new thread form" className="ml-auto" disabled={busy} onClick={() => setNewOpen(false)} size="icon" type="button" variant="ghost"><X className="size-4" /></Button></div><div className="mt-5 grid gap-4 md:grid-cols-2"><label className="text-xs font-bold text-slate-700">Patient<select className={`mt-2 ${selectClass}`} onChange={(event) => setPatientId(event.target.value)} value={patientId}><option value="">Organization thread</option>{workspace.patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.name} · {patient.mrn}</option>)}</select></label><label className="text-xs font-bold text-slate-700">Assigned team<Input className="mt-2" maxLength={80} onChange={(event) => setAssignedTeam(event.target.value)} value={assignedTeam} /></label><label className="text-xs font-bold text-slate-700">Subject<Input className="mt-2" maxLength={160} onChange={(event) => setSubject(event.target.value)} required value={subject} /></label><label className="text-xs font-bold text-slate-700">Category<Input className="mt-2" maxLength={80} onChange={(event) => setCategory(event.target.value)} required value={category} /></label><label className="text-xs font-bold text-slate-700 md:col-span-2">Internal message<textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50" maxLength={5000} onChange={(event) => setNewBody(event.target.value)} required value={newBody} /></label></div><div className="mt-5 flex justify-end"><Button disabled={busy || subject.trim().length < 3 || category.trim().length < 2 || !newBody.trim()} type="submit">{busy ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} Create internal thread</Button></div></form></Card>}
+    {newOpen && workspace.canCreate && <Card className="p-5"><form onSubmit={createThread}><div className="flex items-start gap-3"><div><p className="text-sm font-extrabold text-slate-950">New internal thread</p><p className="mt-1 text-[10px] text-slate-500">Stored inside Klinikos. The patient is not contacted.</p></div><Button aria-label="Close new thread form" className="ml-auto" disabled={busy} onClick={() => setNewOpen(false)} size="icon" type="button" variant="ghost"><X className="size-4" /></Button></div><div className="mt-5 grid gap-4 md:grid-cols-2"><label className="text-xs font-bold text-slate-700">Patient<select className={`mt-2 ${selectClass}`} onChange={(event) => setPatientId(event.target.value)} value={patientId}><option value="">Organization thread</option>{workspace.patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.name} · {patient.mrn}</option>)}</select></label><label className="text-xs font-bold text-slate-700">Assigned team<Input className="mt-2" maxLength={80} onChange={(event) => setAssignedTeam(event.target.value)} value={assignedTeam} /></label><label className="text-xs font-bold text-slate-700">Subject<Input className="mt-2" maxLength={160} onChange={(event) => setSubject(event.target.value)} required value={subject} /></label><label className="text-xs font-bold text-slate-700">Category<Input className="mt-2" maxLength={80} onChange={(event) => setCategory(event.target.value)} required value={category} /></label><label className="text-xs font-bold text-slate-700 md:col-span-2">Internal message<textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50" maxLength={5000} onChange={(event) => setNewBody(event.target.value)} required value={newBody} /></label></div><div className="mt-5 flex justify-end"><Button disabled={busy || subject.trim().length < 3 || category.trim().length < 2 || !newBody.trim()} type="submit">{busy ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} Create internal thread</Button></div></form></Card>}
 
     {error && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
 
