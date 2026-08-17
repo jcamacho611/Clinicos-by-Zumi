@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace-renderer";
+import { MessagesWorkspaceReal } from "@/components/clinic/messages-workspace-real";
 import { TasksWorkspaceReal } from "@/components/clinic/tasks-workspace-real";
+import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace-renderer";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
 import { workspaceMeta } from "@/lib/navigation";
@@ -22,6 +23,9 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
   if (!canAccessWorkspace(session.role, workspace)) return notFound();
   if (workspace === "tasks") {
     return <TasksWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+  }
+  if (workspace === "messages") {
+    return <MessagesWorkspaceReal />;
   }
   return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />;
 }
