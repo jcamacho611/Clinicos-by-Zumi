@@ -7,6 +7,7 @@ const shell = readFileSync(join(process.cwd(), "src/components/clinic/app-shell.
 const navigation = readFileSync(join(process.cwd(), "src/lib/navigation.ts"), "utf8");
 const surfaceSchema = readFileSync(join(process.cwd(), "src/features/zumi/presence.ts"), "utf8");
 const workspacePage = readFileSync(join(process.cwd(), "src/app/(platform)/zumi/page.tsx"), "utf8");
+const customerContext = readFileSync(join(process.cwd(), "docs/ZUMI_CUSTOMER_PRODUCT_CONTEXT.md"), "utf8");
 
 describe("Zumi conversation experience", () => {
   it("has one explicit full conversation workspace and primary navigation entry", () => {
@@ -51,5 +52,14 @@ describe("Zumi conversation experience", () => {
   it("makes completed voice recognition a conversational turn and requests speech back", () => {
     expect(presence).toContain('void sendQuestion(transcript, { voice: true })');
     expect(presence).toContain('if (speechOutput || options?.voice) speak(answer)');
+  });
+
+  it("gives customer-safe Zumi context the practical route and pricing anchors users ask about", () => {
+    expect(customerContext).toContain("**Zumi** — `/zumi`");
+    expect(customerContext).toContain("**Klinikos Core** — `$995/month`");
+    expect(customerContext).toContain("**Klinikos Growth** — `$1,995/month`");
+    expect(customerContext).toContain("**Klinikos Scale** — `$3,995/month`");
+    expect(customerContext).toContain("**Grid Professional** — `$0` basic profile; `$39/month Pro`");
+    expect(customerContext).toContain("MapLibre + OpenFreeMap");
   });
 });
