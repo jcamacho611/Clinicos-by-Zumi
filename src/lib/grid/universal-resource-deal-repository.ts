@@ -55,8 +55,8 @@ export async function getUniversalResourceDealRoom(session: ClinicSession) {
     FROM "GridOfferRecord" o
     JOIN "GridDemandRecord" d ON d."id" = o."demandId"
     JOIN "GridResourceRecord" resource ON resource."id" = o."resourceReference" AND resource."resourceType" = o."resourceKind"
-    LEFT JOIN "Organization" sender ON sender."id" = o."senderOrganizationId"
-    LEFT JOIN "Organization" recipient ON recipient."id" = o."recipientOrganizationId"
+    LEFT JOIN "organizations" sender ON sender."id" = o."senderOrganizationId"
+    LEFT JOIN "organizations" recipient ON recipient."id" = o."recipientOrganizationId"
     LEFT JOIN "GridReservationRecord" reservation ON reservation."offerId" = o."id"
     WHERE o."resourceReference" IS NOT NULL
       AND o."resourceKind" IS NOT NULL

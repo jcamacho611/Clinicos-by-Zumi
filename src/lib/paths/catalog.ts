@@ -46,7 +46,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
       { id: "learning", label: "Learning pathway", description: "Find the relevant Klinikos EDU courses and scenarios.", href: "/edu/courses", capabilityKey: "edu.learning.open", state: "current" },
       { id: "competency", label: "Competency", description: "Track demonstrated skills and remaining milestones.", href: "/edu/competencies", capabilityKey: "edu.competency.review", state: "upcoming" },
       { id: "readiness", label: "Professional readiness", description: "Review requirements that affect Grid eligibility.", href: "/provider-network", capabilityKey: "network.provider.review", state: "upcoming" },
-      { id: "grid", label: "Grid opportunities", description: "Move into the healthcare network when requirements are satisfied.", href: "/grid", capabilityKey: "grid.match.review", state: "upcoming" },
+      { id: "grid", label: "Grid opportunities", description: "Move into the healthcare network when requirements are satisfied.", href: "/grid/workspace", capabilityKey: "grid.match.review", state: "upcoming" },
     ],
   },
   {

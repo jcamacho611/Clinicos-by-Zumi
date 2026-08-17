@@ -19,19 +19,19 @@ const rules = [
   {
     pathId: "find-extra-work",
     actor: "professional" as const,
-    phrases: ["extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday"],
+    phrases: ["extra work", "healthcare work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday"],
     outcome: "Find eligible healthcare work that fits professional readiness and availability.",
   },
   {
     pathId: "become-grid-ready",
     actor: "learner" as const,
-    phrases: ["become an injector", "become grid ready", "grid-ready", "training", "learn aesthetics", "qualify for grid", "build my skills"],
+    phrases: ["become an injector", "become grid ready", "grid-ready", "training", "learn aesthetics", "learn next", "qualify for grid", "build my skills"],
     outcome: "Build the education, competency, and credential readiness needed for Grid participation.",
   },
   {
     pathId: "fill-staffing-need",
     actor: "clinic" as const,
-    phrases: ["need an injector", "need a nurse", "need staff", "need coverage", "staffing gap", "coverage saturday", "coverage friday"],
+    phrases: ["need an injector", "need a nurse", "need staff", "need coverage", "find coverage", "coverage for", "staffing gap", "coverage saturday", "coverage friday"],
     outcome: "Fill a clinic staffing or professional-capacity need with an eligible available match.",
   },
   {

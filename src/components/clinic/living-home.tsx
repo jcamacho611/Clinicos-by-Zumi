@@ -116,13 +116,20 @@ function orbStateFor(phase: Phase, failed: boolean, intelligenceAvailable: boole
 }
 
 /**
- * Which destination the resolved work belongs to, read from the governed link the
+ * Which Klinikos engine the resolved work belongs to, read from the governed link the
  * Path engine produced. Derived from where the work actually points — never guessed
  * from the words the person typed.
+ *
+ * Matching is on the leading path segment (the engine) rather than the destination's
+ * full href, because a destination and the step it leads to are routinely different
+ * surfaces inside the same engine — the rail points at `/grid/workspace` while a
+ * resolved step may land on `/grid/providers`.
  */
 function destinationForHref(href: string | null, destinations: RailDestination[]) {
   if (!href) return null;
-  const match = destinations.find((destination) => href === destination.href || href.startsWith(`${destination.href}/`));
+  const engine = href.split("/").filter(Boolean)[0];
+  if (!engine) return null;
+  const match = destinations.find((destination) => destination.href.split("/").filter(Boolean)[0] === engine);
   return match?.key ?? null;
 }
 

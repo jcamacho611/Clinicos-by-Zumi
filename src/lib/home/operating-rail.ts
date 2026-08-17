@@ -53,14 +53,14 @@ function candidatesForRole(role: ClinicRole): Candidate[] {
   if (role === "clinic_owner" || role === "administrator") {
     return [
       { key: "operations", label: "Clinic operations", short: "Operations", description: "Patients, schedule, staff work, follow-up, and revenue", href: "/front-desk", workspace: "front-desk" },
-      { key: "grid", label: "Grid", short: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "grid", label: "Grid", short: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid/workspace", workspace: "grid", counter: "grid_offers" },
       { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "provider") {
     return [
       { key: "care", label: "Today's care", short: "Care", description: "Open the work that needs clinical attention", href: "/provider", workspace: "provider" },
-      { key: "grid", label: "Grid", short: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "grid", label: "Grid", short: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid/workspace", workspace: "grid", counter: "grid_offers" },
       { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
@@ -165,7 +165,10 @@ export async function getHomeOperatingRail(session: ClinicSession): Promise<Home
       title: `${gridOffers} Grid ${plural(gridOffers, "offer is", "offers are")} waiting on your decision.`,
       body: "Each one is a live offer addressed to this organization that has not expired. Accepting, countering, or declining is a governed decision your role can make.",
       action: "Open Grid",
-      href: "/grid",
+      // `/grid` is the public marketplace entry and renders signed-out chrome with a
+      // "Sign in" button. A signed-in owner following an offer belongs in the
+      // authenticated Grid workspace.
+      href: "/grid/workspace",
       evidence: "Counted from Grid offer records addressed to this organization.",
     };
   } else if (openEscalations && canAccessWorkspace(session.role, "escalations")) {
