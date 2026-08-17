@@ -37,16 +37,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {verifiedFirstLogin && launchBriefing ? (
         <ClinicFirstLoginLaunch organizationName={session.organizationName} briefing={launchBriefing} />
       ) : null}
-      <LivingHome
-        appointments={livingAppointments}
-        firstName={firstName}
-        initialGuidance={pathGuidance}
-        initialPaths={activePaths}
-        onboardingComplete={verifiedFirstLogin}
-        organizationName={session.organizationName}
-        recentSignals={recentPathSignals}
-        role={session.role}
-      />
+      {/*
+        The approved Living Home reference still contains a historical role-template
+        Opportunity section. Hide only that stale section at composition time; the
+        server-owned operating rail below is the sole surface allowed to represent a
+        live opportunity because it is backed by persisted Grid/task/escalation truth.
+      */}
+      <div className="[&_[aria-labelledby='opportunity-title']]:hidden">
+        <LivingHome
+          appointments={livingAppointments}
+          firstName={firstName}
+          initialGuidance={pathGuidance}
+          initialPaths={activePaths}
+          onboardingComplete={verifiedFirstLogin}
+          organizationName={session.organizationName}
+          recentSignals={recentPathSignals}
+          role={session.role}
+        />
+      </div>
       <HomeOperatingRailPanel rail={operatingRail} />
       <WorkspaceLaunchpad role={session.role} />
     </div>
