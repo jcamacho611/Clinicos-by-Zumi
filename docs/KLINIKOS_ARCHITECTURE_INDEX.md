@@ -1,8 +1,7 @@
 # KLINIKOS Architecture & Source-of-Truth Index
 
 Status: `AUTHORITATIVE INDEX`  
-Date: 2026-08-14  
-Current merged baseline at update: `main@4b2a5dc89f3dae7a175b2f8eda9f83f866b77de6`
+Date: 2026-08-16
 
 This file tells humans and agents where to look. It is navigation, not a competing implementation ledger.
 
@@ -11,101 +10,155 @@ This file tells humans and agents where to look. It is navigation, not a competi
 When sources conflict, use this order:
 
 1. **Current repository implementation, schema, migrations, tests, exact-head CI and verified runtime evidence** for what exists now.
-2. `docs/SOURCE_OF_TRUTH.md` for current brand, product, deployment, commercial, Grid, intelligence, frontend, security and engineering law.
-3. `docs/FEATURE_STATUS.md` for capability status.
-4. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
-5. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
-6. Current specialist specifications and the product/website master scope.
-7. Constitution/Master Canon for deeper invariants and permanent historical scope not superseded above.
-8. Legacy briefs, old PR bodies, old SHAs/Render URLs, historical pricing/build notes and `Clinicos`/old Zumi brand hierarchy as history only.
+2. `docs/SOURCE_OF_TRUTH.md` for current operating law.
+3. `docs/KLINIKOS_ECOSYSTEM_CANON.md` for newest ecosystem/wiring/lifecycle direction.
+4. `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md` for newest frontend/reference/wiring acceptance law.
+5. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md` for current commercial/pricing architecture.
+6. `docs/FEATURE_STATUS.md` for capability status.
+7. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
+8. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
+9. Current specialist specifications.
+10. Constitution/Master Canon for deeper invariants not superseded above.
+11. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
 
 A more detailed old document does not outrank a newer authoritative correction.
 
-## Canonical product documents
-
-- `docs/SOURCE_OF_TRUTH.md` — operating law.
-- `docs/FEATURE_STATUS.md` — implementation/status truth.
-- `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md` — full public/authenticated/customer/product surface map.
-- `docs/MARKETPLACE_DESIGN_RESEARCH.md` — official-source marketplace research translated into original Klinikos design laws.
-- `docs/GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md` — current Grid discovery/location contract and next convergence targets.
-- `docs/EXTERNAL_DEPENDENCY_MATRIX.md` — external rails and blockers.
-- `docs/MVP_JOURNEYS.md` — DB-backed journey proof.
-- `docs/EXPOSED_UI_AUDIT.md` — exposed language/interaction review when current.
-
 ## Required read order before major implementation
 
-1. Read `SOURCE_OF_TRUTH` and `FEATURE_STATUS`.
-2. Fetch current `main`, open PRs, relevant code/schema/migrations/tests and CI.
-3. Read the relevant specialist spec and external-dependency truth.
-4. Consult Constitution/Master Canon for deeper invariants if needed.
-5. Resolve conflicts before implementation rather than silently choosing an older document.
+1. Fetch latest `main`, open PRs, relevant branches and CI.
+2. Read `SOURCE_OF_TRUTH.md`.
+3. Read `KLINIKOS_ECOSYSTEM_CANON.md`.
+4. For frontend work read `KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+5. For pricing/commercial work read `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
+6. Read `FEATURE_STATUS.md` and relevant code/tests before claiming something is built.
+7. Read `EXTERNAL_DEPENDENCY_MATRIX.md` before claiming an external rail is connected.
+8. Read the relevant specialist spec and journey evidence.
+9. Resolve conflicts explicitly rather than silently choosing old material.
 
 ## Current canonical thesis
 
-Klinikos is a universal, composable healthcare operating ecosystem. It must not be reduced to a single EHR/EMR, clinic-management product, staffing marketplace, AI assistant, patient portal, education product, billing product or med-spa tool. Those are domains or experiences within the larger system.
+Klinikos is the operating and opportunity infrastructure for the healthcare lifecycle. It connects education, careers, clinic operations, patient demand, workforce, facilities, resources, business ownership, networks, transactions, financial truth and intelligence through one persistent identity and governed ecosystem.
 
-## Core shared engines
+It is not merely an EHR/EMR, CRM, clinic-management product, staffing marketplace, AI assistant, patient portal, education product, billing product or med-spa tool.
 
-Reusable engines include identity, organizations/tenancy, relationships/memberships, authorization/policy, consent/delegation, credentials/eligibility, events/audit/provenance, workflows/automation, Klinikos Intelligence gateway, Grid matching/resource exchange, connectors, financial ledger/payments, communications, documents/storage, search/discovery, notifications, analytics/operational intelligence, security/governance, entitlements/configuration and observability/reliability.
+## Current wiring thesis
 
-A new reusable primitive may be added when the domain genuinely requires it. The list is not a ceiling.
+Wiring means:
 
-## Domain compositions
+`UI → ACTION → IDENTITY / CONTEXT → INTENT → ROUTE → AUTHORIZATION / ELIGIBILITY → ENGINE(S) → REAL DATA / WORKFLOW → PERSISTENCE / EVENT → TRUTHFUL RESULT → AUDIT / FINANCIAL STATE → NEXT ROUTE`
 
-Known compositions include Clinic, Patient, Provider, Grid, Education, Network, Revenue Cycle/Recovery, No-Fault, Workers’ Compensation, Medical Spa, Home Health, Telehealth, Remote Monitoring, Labs, Imaging, Pharmacy, Supply/Procurement, Credentialing, Referrals/Care Coordination, Research/Trials, Population Health, Healthcare Business Services, Facility/Capacity Exchange, Transportation and Language Access.
+A clickable link is not automatically wired. Pages are surfaces; routes are the product journeys.
+
+## Ecosystem engines
+
+Core engines include:
+
+- Living Home
+- Klinikos Intelligence / Zumi
+- Clinic OS
+- Grid
+- EDU
+- Care
+- Billing / Financial OS
+- Insights
+- Network / Capacity
+- Identity / Organizations / Roles
+- Credentials / Eligibility / Trust
+- Events / Audit / Provenance
+
+Shared services also include documents/storage, communications, search/discovery, connectors, configuration/entitlements, observability/reliability and security/governance.
+
+## Lifecycle model
+
+Representative individual route:
+
+`STUDENT → EDU → COMPETENCY → PLACEMENT → CREDENTIAL → GRID ELIGIBILITY → WORK → EXPERIENCE → REPUTATION → INDEPENDENT PRACTICE → CLINIC OWNER → CLINIC OS → NETWORK → EDUCATOR / EMPLOYER`
+
+Representative organization route:
+
+`NEW PRACTICE → CLINIC OS → OPERATIONAL MATURITY → REVENUE OPTIMIZATION → GRID → MORE CAPACITY → SECOND LOCATION → MULTI-SITE → NETWORK → ENTERPRISE`
 
 ## Front-door experience
 
-The intended experience is:
+Living Home is the operating front door. It asks:
 
-`IDENTITY → INTENT → PERMISSION-AWARE ROUTING → RELEVANT WORKSPACE → SAFE NEXT ACTION → PROGRESS/RESULT`
+> **WHAT NEEDS TO HAPPEN?**
 
-The public root is now a conversation-first Living Home. Authenticated Living Home is the role-aware operating briefing. The frontend must not expose backend architecture unnecessarily.
+Klinikos resolves intent into governed routes and dynamic workspaces rather than forcing users to understand the module architecture.
+
+## Design authority
+
+Converted surfaces follow the approved cinematic Living Home reference and the black/black-cherry/burgundy/dusty-rose/warm-ivory system.
+
+Approved transparent asset paths, where present:
+
+- `public/klinikos-orbital-k-transparent.png`
+- `public/klinikos-wordmark-transparent.png`
+- `public/klinikos-rose-wide-transparent.png`
+- `public/klinikos-rose-centered-transparent.png`
+
+See `KLINIKOS_DESIGN_AND_WIRING_CANON.md` for functional acceptance, not just visual styling.
 
 ## Grid scope
 
-Grid is a generalized healthcare resource/opportunity/capacity exchange, not a job board. It may combine people/provider time, work, rooms/chairs/facilities, appointment/diagnostic/referral capacity, equipment, services, training/placements/preceptors, permitted products/supplies and organization demand through the generalized transaction core.
+Grid is the generalized healthcare resource/opportunity/capacity/matching/transaction network. Its universal language is **I NEED / I HAVE**.
 
-Current public discovery uses the Exchange Field, explicit opt-in geolocation, real-only map inventory, a keyless OSM fallback and deterministic search/radius truth. See `GRID_DISCOVERY_GEOLOCATION_AND_MVP_SPEC.md`.
+It may compose people, work, space, services, equipment/resource capacity, education capacity, organizations, referrals and other policy-governed resource classes.
 
-Hard eligibility precedes ranking. Deterministic Klinikos state owns credential, payment, transaction, safety and settlement truth.
+Hard eligibility precedes ranking. AI interprets and explains; deterministic policy governs eligibility.
 
-## Klinikos Intelligence scope
+## Clinic OS / Grid / EDU connection
 
-Klinikos owns context, identity/permissions, tools, workflows, prompt/policy versions, redaction/PHI policy, audit/provenance, cost controls, safety and UX. Model providers provide reasoning only where authorized.
+Clinic OS may surface authorized staffing gaps, capacity, referrals and resource needs into Grid.
 
-AI may interpret, draft, research and coordinate. It does not become the source of truth for authentication, eligibility, credentialing, consent, payment, transaction, record release, clinical authority or safety holds.
+Grid outcomes may return to Clinic OS as real booking, assignment, fulfillment, issue, follow-up and financial/audit state.
+
+EDU may create competency, placement and credential evidence that contributes to eligibility only when governing policy permits.
+
+## Financial truth
+
+Economic routes converge on shared semantics:
+
+`OPPORTUNITY → AGREEMENT → BOOKING / RESERVATION → FULFILLMENT → FINANCIAL OBLIGATION → PAYMENT EVIDENCE → PAYOUT / RECONCILIATION`
+
+Use integer cents. Redirect is not payment. Internal obligation is not external settlement.
+
+## Commercial architecture
+
+Primary revenue routes are:
+
+- paid operational analysis;
+- paid implementation/onboarding;
+- recurring Clinic OS;
+- Grid economics where lawful;
+- EDU individual/institutional revenue;
+- multi-location/network/enterprise;
+- customer-funded variable usage/add-ons.
+
+Historical cost estimates are planning notes unless revalidated against real vendor usage. See `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
 
 ## Status truth
 
-Use the vocabulary in `SOURCE_OF_TRUTH` / `FEATURE_STATUS`:
+Use `FEATURE_STATUS.md` vocabulary:
 
-- Built / Ready;
-- Partially built;
-- Manual fallback;
-- Adapter ready / Configurable;
-- Pending connection;
-- Blocked;
-- Roadmap / Not built.
+- BUILT
+- PARTIALLY BUILT
+- MANUAL FALLBACK
+- ADAPTER READY
+- PENDING CONNECTION
+- BLOCKED
+- NOT BUILT
+- NOT BUILT BY DESIGN
 
-External-action state must reflect evidence. A redirect is not settlement, a queued message is not delivery, internal credential review is not external board verification and a ledger obligation is not payout movement.
+No new strategic canon changes a feature's implementation status automatically.
 
-## Core runtime orientation
+## Runtime orientation
 
-### Public Living Home
+### Living Home / public intent
 
 - `src/app/page.tsx`
-- `src/components/marketing/public-living-gateway.tsx`
-- `src/lib/orchestration/public-living-intent.ts`
-
-### Patient portal
-
-- `src/app/portal/`
-- `src/components/portal/`
-- portal session/auth libraries
-- `src/lib/repositories/portal-repository.ts`
-
-Patient identity/session remains separate from clinic staff identity.
+- current Living Home components
+- public/authenticated intent/routing services
 
 ### Grid
 
@@ -113,12 +166,11 @@ Patient identity/session remains separate from clinic staff identity.
 - `src/app/(platform)/grid/`
 - `src/components/grid/`
 - `src/lib/grid/`
-- Grid repositories/APIs
-- Grid migrations
+- Grid repositories/APIs/migrations
 
-### Clinic OS / Network / EDU / Intelligence
+### Patient / Clinic / EDU / Intelligence
 
-Follow the relevant route, component, repository/service and migration families; do not infer production external connectivity from an internal model or adapter.
+Follow the current route/component/repository/service families. Do not infer external production connectivity from the existence of an adapter or internal model.
 
 ### Database
 
@@ -126,7 +178,7 @@ Follow the relevant route, component, repository/service and migration families;
 - `prisma/migrations/`
 - `prisma.config.ts`
 
-Fresh-migration success is a merge gate. Do not rewrite applied production history casually or introduce clinical cascade deletion merely to simplify tests.
+Fresh migration success remains a merge gate.
 
 ### Deployment
 
@@ -134,57 +186,40 @@ Fresh-migration success is a merge gate. Do not rewrite applied production histo
 - `package.json`
 - `render.yaml`
 - GitHub Actions Quality workflow
-- production-start preflight/runtime scripts
+- production-start/deploy scripts
 
-Canonical host contract:
-
-```bash
-npm ci --include=dev --ignore-scripts && npm run render:build
-npm start
-```
-
-Build/generate/migrate during deploy; runtime serves the already-built application.
+Canonical public domain: `https://klinikos.io`.
 
 ## Verification law
 
-Quality covers Prisma generate/validate, fresh PostgreSQL migrations, TypeScript, lint, tests, DB-backed MVP journeys, production build, production startup smoke and exact deploy-contract. Repository green does **not** prove the external production host deployed that commit.
+Compilation does not prove user journeys. Quality must include schema/migration validation, type/lint/tests, DB-backed journeys, production build/startup and relevant browser/mobile QA.
 
-## Cost / founder-operability constraint
+Repository green does not prove the external host deployed the same commit.
 
-Prefer revenue-capable vertical slices and measured customer-funded variable usage while preserving long-term primitives. Cost-awareness never permits bypassing safety, authorization, tenant isolation, audit, privacy, credentialing or financial truth.
+## Migration posture
 
-## Repository migration posture
+Do not rewrite functioning architecture merely for naming purity. Prefer `KEEP / HARDEN / REFACTOR / MOVE / SPLIT / MERGE / DEPRECATE / REPLACE / BUILD NEW / DEFER` deliberately.
 
-Do not rewrite simply for naming purity. Use `KEEP / HARDEN / REFACTOR / MOVE / SPLIT / MERGE / DEPRECATE / REPLACE / BUILD NEW / DEFER` deliberately. Legacy `Clinicos` repository/env/database/migration identifiers may remain when renaming would introduce needless risk; public language remains Klinikos.
+Use adapters, route definitions, shared services and events to evolve toward ecosystem architecture without destructive rewrites.
 
 ## Handoff rules
 
 - Frontend consumes authorization but is never the security boundary.
-- APIs enforce canonical validation, authorization and tenant scope.
-- Events use minimum-necessary payloads and never become an uncontrolled PHI bus.
-- Workflows coordinate explicit state, retries, holds, failures and human review.
-- Grid discovers/composes opportunities; eligibility, agreements, payment, safety and fulfillment govern continuation.
-- Intelligence interprets/coordinates but cannot bypass deterministic controls.
-- Integrations normalize vendor-specific state before core domains depend on it.
-- External payment rails may move money; Klinikos owns its internal intent/evidence/entitlement/ledger semantics.
+- APIs enforce validation, authorization and tenant scope.
+- Events are minimum-necessary and never an uncontrolled PHI bus.
+- Grid discovers/composes; policy/eligibility/agreement/payment/safety/fulfillment govern continuation.
+- Intelligence coordinates but cannot bypass deterministic controls.
+- External payment rails may move money; Klinikos owns intent/evidence/entitlement/ledger semantics.
 - Analytics stays downstream of operational truth.
+- Pricing cannot force fake capabilities or unlimited unmeasured variable cost.
 
-## Acceptance journeys
+## Updating truth
 
-Core operation:
+- Major ecosystem/product decisions → `SOURCE_OF_TRUTH` + ecosystem canon.
+- Frontend/reference/wiring decisions → design/wiring canon.
+- Pricing/monetization decisions → pricing canon.
+- Implementation changes → `FEATURE_STATUS`.
+- External connection changes → `EXTERNAL_DEPENDENCY_MATRIX`.
+- End-to-end evidence → `MVP_JOURNEYS`.
 
-`IDENTITY → ORGANIZATION → AUTHORIZATION → ACTION → EVENT → WORKFLOW → RESULT/FALLBACK → AUDIT`
-
-Commerce/provisioning:
-
-`BUYER → SERVER CHECKOUT INTENT → EXTERNAL PAYMENT ATTEMPT → VERIFIED EVIDENCE → ENTITLEMENT → PROVISIONING → LOGIN → CORRECT ORGANIZATION → ACTIVE PRODUCT`
-
-Grid:
-
-`RESOURCE/DEMAND → MATCH → ELIGIBILITY → OFFER → ACCEPTANCE → RESERVATION → FINANCIAL OBLIGATION → FULFILLMENT → SETTLEMENT EVIDENCE/FALLBACK → AUDIT`
-
-The executable journey set is defined by the current `scripts/mvp/run-all.mjs` and documented in `docs/MVP_JOURNEYS.md`.
-
-## Updating source of truth
-
-Major decisions update `SOURCE_OF_TRUTH`; implementation changes update `FEATURE_STATUS`; external changes update `EXTERNAL_DEPENDENCY_MATRIX`; detailed interaction law belongs in specialist specs. Preserve git history instead of rewriting roadmap work as completed.
+Preserve git history. Do not rewrite roadmap work as completed.
