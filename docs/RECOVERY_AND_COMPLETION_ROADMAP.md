@@ -2,7 +2,7 @@
 
 Version: `2026-08-16.3`
 Status: `ACTIVE EXECUTION ROADMAP`
-Canonical base: `main@cf4130b3ce4db5effde76d61d368b135da01c715`
+Canonical base: `main@075ff39deca80c08c1d726425c05632568e16b3d`
 
 ## 1. Recovery outcome so far
 
@@ -38,7 +38,7 @@ Overall: **6.6/10 — YELLOW.** The application has real governed depth and stro
 | Area | Current truth | Next blocking gap |
 | --- | --- | --- |
 | Universal Grid core | Built/partial: demand, resource, policy, matching, offers, reservations, obligations, fulfillment, trust, opt-in geolocation, keyless map. | Same-surface operating UX, structured time/recurrence, richer origin/map focus, readiness convergence, real supply. |
-| Provider/participant enrollment | Built/partial: role-specific provider path, generalized external participant/resource enrollment, and neutral role-labeled contractor fixtures. | Unified readiness/status UX and external verification connection. |
+| Provider/participant enrollment | Built/partial: future-role credential-aware professional path, generalized external participant/resource enrollment, and neutral role-labeled contractor fixtures. | Remove approved-network-code dependence for independent production enrollment, unify readiness/status UX, and connect external verification. |
 | Location/resource owner | Built/partial: capacity/resource intake, review, availability, public browse, request/offer path. | Stronger publication/readiness guidance, richer map/origin UX, real pilot inventory. |
 | Organization demand | Built/partial: need creation, matching/offers, transaction state. | Effortless same-surface demand completion and auto/recurring match behavior. |
 | Grid money | Built internal truth: fee policy, obligations, fulfillment holds, manual payment evidence, payout state rules. | Regulated processor/connected-account onboarding and settlement evidence. |
@@ -70,10 +70,10 @@ Recovery rule: create a current-main implementation branch, compare each changed
 1. **Completed:** repository-truth convergence merged through PR #98.
 2. **Completed:** PR #97 safe wiring reached main and its exact-price, connector-bound/cache, no-clearance-language remediation merged through focused follow-up PR #100.
 3. **Recover Living Home operating-surface work** from `f22a5c4` file-by-file, including the provider-registry correction and real operating rail.
-4. **Completed in the current candidate:** person-specific Grid contractor/applicant fixtures and tests now use neutral provider-role labels without weakening synthetic-data evidence or relationships.
+4. **Completed and merged through PR #109:** person-specific Grid contractor/applicant fixtures and tests now use neutral provider-role labels without weakening synthetic-data evidence or relationships.
 5. **Complete the remaining manual-origin map UX**: pin/list focus, shared browser-location radius results, and selected-resource request continuity are complete; manual city/ZIP/place origin and privacy-safe interactive bounds remain.
 6. **Add deterministic time and recurrence interpretation**: weekday/time initialization, recurring demand/resource compatibility, and truthful missing-field prompts.
-7. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements.
+7. **Converge participant readiness** across provider, organization, location owner, seller/service provider, education participant, and non-clinical business service classes using shared status language and policy-specific requirements. The current candidate removes the nurse-only professional-role allow-list but does not yet remove the controlled pilot's approved-network-code dependency.
 8. **Prove two end-to-end Grid transactions through the same engine**: one regulated workforce/space composition and one non-clinical business-service engagement, both operator-assisted and auditable.
 9. **Connect/evaluate approved external rails**: processor/payout evidence when approved and non-PHI Zumi with spend, latency, error, and quality controls. Keep manual fallback until then.
 10. **Prepare a controlled pilot release**: exact deploy SHA in health/observability, production browser/mobile QA, backup/restore evidence, security/compliance sign-off, real pilot supply, support/runbook, and rollback.
