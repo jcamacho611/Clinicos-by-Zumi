@@ -45,7 +45,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ gap
     }, { status: result.created ? 201 : 200, headers: NO_STORE });
   } catch (error) {
     if (error instanceof QualityTaskMaterializationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status, headers: NO_STORE });
+      const safeMessage = error.message;
+      return NextResponse.json({ error: safeMessage }, { status: error.status, headers: NO_STORE });
     }
     return NextResponse.json({ error: "Quality follow-up work could not be prepared." }, { status: 503, headers: NO_STORE });
   }
