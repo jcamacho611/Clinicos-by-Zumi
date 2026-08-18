@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import { gridOfferEnrollmentHref, inferGridIntent, matchesGridSearchTerms } from "@/lib/grid/intent-rules";
 
 describe("Grid deterministic intent routing", () => {
-  it("routes a clinical coverage need to work", () => {
-    expect(inferGridIntent("I need an RN shift covered tomorrow in Brooklyn")).toMatchObject({ direction: "need", intent: "work", followUp: null });
+  it("routes a clinical coverage need to work and structures its time", () => {
+    expect(inferGridIntent("I need an RN shift covered Friday 9-5 in Brooklyn")).toMatchObject({ direction: "need", intent: "work", followUp: null, temporal: { weekdays: [5], startTime: "09:00", endTime: "17:00" } });
   });
 
   it("routes offered treatment space to the space-owner enrollment", () => {
@@ -19,6 +19,13 @@ describe("Grid deterministic intent routing", () => {
     expect(interpretation.searchTerms).toEqual(["nurse", "california"]);
     expect(matchesGridSearchTerms(["Registered nurse", "CA"], interpretation.searchTerms)).toBe(true);
     expect(matchesGridSearchTerms(["Registered nurse", "NY"], interpretation.searchTerms)).toBe(false);
+  });
+
+  it("does not require a listing to literally contain temporal words or clock digits", () => {
+    const interpretation = inferGridIntent("I need a nurse Friday 9-5 in California");
+    expect(interpretation.searchTerms).toEqual(["nurse", "california"]);
+    expect(interpretation.temporal.weekdays).toEqual([5]);
+    expect(matchesGridSearchTerms(["Registered nurse", "CA"], interpretation.searchTerms)).toBe(true);
   });
 
   it("requires all meaningful terms instead of filtering by only the first", () => {
