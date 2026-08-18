@@ -78,7 +78,9 @@ export async function configureTwilioSmsRouting(input: {
   return db.$transaction(async (tx) => {
     // The sender is a tenancy boundary. Serialize all assignments for this normalized
     // phone so two concurrent admins cannot both pass a check-then-write race.
-    await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${senderPhone}, 0))`);
+    await tx.$queryRaw<Array<{ pg_advisory_xact_lock: unknown }>>(Prisma.sql`
+      SELECT pg_advisory_xact_lock(hashtextextended(${senderPhone}, 0))
+    `);
 
     const conflict = await tx.$queryRaw<Array<{ organizationId: string }>>(Prisma.sql`
       SELECT "organizationId"
