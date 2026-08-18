@@ -8,6 +8,8 @@ import { createLeadMessageSchema, createLeadSchema, leadValueDollars, transition
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 function dateOrNull(value?: string | null) { return value ? new Date(value) : null; }
+function isCancellationObserved(lead: { bookingStatus: string }) { return lead.bookingStatus === "cancellation_observed"; }
+function countsAsBookedEstimate(lead: { status: string; bookingStatus: string }) { return !isCancellationObserved(lead) && ["booked", "completed"].includes(lead.status); }
 
 export async function listCRMWorkspace(session: ClinicSession) {
   if (!can(session.role, "crm", "read")) throw new NetworkAccessError("CRM access is not permitted for this role.", 403);
@@ -33,7 +35,7 @@ export async function listCRMWorkspace(session: ClinicSession) {
     status: lead.status,
     assignedTo: lead.assignedTo,
     followUpDueAt: lead.followUpDueAt?.toISOString() ?? null,
-    overdue: Boolean(lead.followUpDueAt && lead.followUpDueAt < now && !["lost", "completed", "booked"].includes(lead.status)),
+    overdue: Boolean(lead.followUpDueAt && lead.followUpDueAt < now && (isCancellationObserved(lead) || !["lost", "completed", "booked"].includes(lead.status))),
     contactAttempts: lead.contactAttempts,
     lastContactedAt: lead.lastContactedAt?.toISOString() ?? null,
     bookingStatus: lead.bookingStatus,
@@ -51,10 +53,11 @@ export async function listCRMWorkspace(session: ClinicSession) {
     metrics: {
       openLeads: leadViews.filter((lead) => !["lost", "completed"].includes(lead.status)).length,
       followUpsDue: leadViews.filter((lead) => lead.overdue || (lead.followUpDueAt && new Date(lead.followUpDueAt).toDateString() === now.toDateString())).length,
-      booked: leadViews.filter((lead) => ["booked", "completed"].includes(lead.status)).length,
+      booked: leadViews.filter(countsAsBookedEstimate).length,
       estimatedPipelineCents: leadViews.filter((lead) => !["lost", "completed"].includes(lead.status)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
-      bookedEstimatedCents: leadViews.filter((lead) => ["booked", "completed"].includes(lead.status)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
+      bookedEstimatedCents: leadViews.filter(countsAsBookedEstimate).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
       lostEstimatedCents: leadViews.filter((lead) => lead.status === "lost").reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
+      cancellationReviewEstimatedCents: leadViews.filter((lead) => isCancellationObserved(lead)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
     },
   };
 }
