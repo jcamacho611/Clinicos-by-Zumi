@@ -24,5 +24,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(destination, { status: 303, headers: { "Cache-Control": "no-store" } });
+  const response = NextResponse.redirect(destination, 303);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
