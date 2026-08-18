@@ -4,8 +4,13 @@ import { agreementSha256, buildGlobalAgreement } from "@/lib/legal/global-agreem
 import { assertLegalExecutionConfigured } from "@/lib/legal/legal-config";
 import { createAgreementReviewedToken, verifyLegalReviewToken } from "@/lib/legal/review-token";
 import { recordLegalEvent } from "@/lib/legal/legal-access";
+import { isSameOriginMutation } from "@/lib/security/same-origin-post";
 
 export async function POST(request: Request) {
+  if (!isSameOriginMutation(request)) {
+    return NextResponse.json({ error: "Same-origin request required." }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
+
   const session = await getAuthenticationSession();
   if (!session) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
