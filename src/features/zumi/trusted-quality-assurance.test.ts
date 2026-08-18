@@ -83,6 +83,7 @@ describe("trusted Zumi Quality Guardian bridge", () => {
       internalQualityCapabilityAvailable: false,
       jurisdictionKey: "US-NY",
       requiredExpertEvidenceKeys: ["quality-experience"],
+      requiredAgreementEvidenceKeys: ["approved-expert-services-agreement"],
     });
 
     expect(result.available).toBe(true);
@@ -95,7 +96,9 @@ describe("trusted Zumi Quality Guardian bridge", () => {
       },
     ]);
     expect(result.nextActions[0].capabilityKey).toBe("grid.request.create");
-    expect(JSON.stringify(result)).not.toContain("patient-secret");
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("patient-secret");
+    expect(serialized).not.toContain("approved-expert-services-agreement");
   });
 
   it("instructs the model not to reinterpret aggregate operational state as program compliance", () => {
