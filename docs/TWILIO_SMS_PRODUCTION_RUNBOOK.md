@@ -8,7 +8,7 @@ This document is operational truth, not evidence that Twilio is live, registered
 
 Klinikos currently models Twilio as a **platform-managed account with tenant-assigned sender routing**. Bring-your-own Twilio accounts are not a current production capability.
 
-The patient SMS rail permits only server-owned fixed **non-PHI** templates. There is no arbitrary patient SMS body parameter. There is no production marketing template. Clinical or PHI-bearing SMS is blocked independently of consent state.
+The patient SMS rail permits only server-owned fixed **non-PHI** templates. There is no arbitrary patient SMS body parameter. There is no production marketing template. The staff workflow cannot create marketing permission. Clinical or PHI-bearing SMS is blocked independently of consent state.
 
 Phone possession verification and messaging permission are separate and **both are required** for a patient send. Verification evidence must match the patient's current normalized phone number. Recipient STOP suppression is authoritative. START/UNSTOP removes suppression only; it does not invent transactional, operational, marketing, or clinical permission.
 
@@ -17,7 +17,8 @@ Phone possession verification and messaging permission are separate and **both a
 - `KLINIKOS_SMS_PRODUCTION_ENABLED` is blank/false by default.
 - Patient sends require exact message-class permission.
 - Patient sends require verification evidence for the exact current normalized phone number.
-- Marketing grants require patient-written evidence, but no marketing send template exists.
+- The staff workflow can create transactional/operational permission only from documented patient verbal authorization. Staff documentation can record denial/revocation but cannot manufacture permission.
+- Marketing grants and marketing sends are blocked until a dedicated patient-facing written communication-consent ceremony and reviewed production template policy exist.
 - Tenant sender, signed inbound routing, and an IANA timezone must exist before a patient send can proceed.
 - Ordinary product SMS is held outside the Klinikos 09:00-20:00 organization-local product window. Jurisdiction-specific policy may only narrow this guardrail.
 - Inbound callbacks require the canonical `NEXT_PUBLIC_APP_URL`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, form encoding, bounded request size, valid Twilio signature, matching signed AccountSid, unique tenant sender resolution, and unique tenant patient resolution.
@@ -80,6 +81,10 @@ Do not edit `package.json` without a matching lockfile change merely to satisfy 
 ## Verification-ceremony blocker
 
 The send rail now requires current phone verification. If the deployed product does not yet expose a governed Twilio Verify or patient-portal verification ceremony, patient SMS remains **BLOCKED** even when consent, sender routing, and credentials are present. Do not add a staff-only “mark verified” shortcut to bypass possession proof.
+
+## Marketing-consent blocker
+
+A generic signed form, network data-sharing consent, or staff-entered evidence string is **not** treated as marketing-SMS permission. Marketing remains blocked until Klinikos has a purpose-specific patient-facing communication-consent ceremony, evidence model, withdrawal flow, and reviewed marketing template policy.
 
 ## PHI / healthcare boundary
 
