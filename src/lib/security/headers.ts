@@ -12,6 +12,10 @@ export function klinikosSecurityHeaders(env: NodeJS.ProcessEnv = process.env): S
     { key: "X-Frame-Options", value: "DENY" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+    { key: "X-DNS-Prefetch-Control", value: "off" },
+    { key: "X-Download-Options", value: "noopen" },
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+    { key: "Cross-Origin-Resource-Policy", value: "same-site" },
     {
       key: "Permissions-Policy",
       value: "accelerometer=(), autoplay=(), camera=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(self), payment=(self), usb=()",
