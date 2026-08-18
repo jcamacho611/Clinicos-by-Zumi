@@ -27,15 +27,15 @@ const items: Array<{ title: string; status: Status; summary: string; evidence: s
   },
   {
     title: "Clinic commercial payment evidence",
-    status: "connected",
-    summary: "Klinikos has server-owned commercial intents, Stripe-hosted Checkout, signed webhook verification, replay protection, refunds/failure truth, and manual fallback boundaries.",
-    evidence: "The live Stripe webhook endpoint is configured for the supported one-time and recurring lifecycle event set. Controlled end-to-end production proofs still determine what may be called verified live.",
+    status: "pending",
+    summary: "The repository contains server-owned commercial intents, Stripe-hosted Checkout integration, signed webhook verification, replay protection, refunds/failure truth, and manual fallback boundaries.",
+    evidence: "Repository presence does not prove the deployed endpoint, live account configuration, or an end-to-end production payment. Controlled production evidence determines what may be called verified live.",
   },
   {
     title: "Recurring Clinic OS subscriptions",
     status: "pending",
-    summary: "Native monthly Stripe subscription code is merged behind an explicit production feature gate.",
-    evidence: "The gate remains off until the deployed application SHA is confirmed and a controlled subscription invoice lifecycle proves activation, renewal, failure, and cancellation behavior.",
+    summary: "The repository contains native monthly Stripe subscription code behind an explicit production feature gate.",
+    evidence: "The production gate should remain off until the deployed application SHA is confirmed and a controlled subscription invoice lifecycle proves activation, renewal, failure, and cancellation behavior.",
   },
   {
     title: "Grid discovery and geolocation",
