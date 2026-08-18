@@ -55,3 +55,14 @@ If a real external dependency blocks part of the work, finish every independent 
 - Do not anchor product architecture, UI copy, fixtures, or reports to a real person's name.
 - Grid is universal healthcare opportunity/capacity infrastructure, not a nurse marketplace.
 - Preserve working systems and recover branch work surgically; never mass-merge stale branches.
+
+## Competitive intelligence and outbound law
+
+- Read `docs/COMPETITOR_INTELLIGENCE_AND_SIMPLICITY_CANON.md` for competitor classification, competitor research, paid-product simplicity, paywall continuity, and outbound guardrails.
+- Before ordinary sales, pilot, audit, onboarding, or implementation outreach, classify the target as `BUYER`, `PARTNER`, `COMPETITOR`, or `UNKNOWN`.
+- Direct or near-direct healthcare software competitors are research-only by default. Do not pitch them as ordinary Klinikos buyers unless an explicit strategic partnership or interoperability reason has been approved.
+- Treat companies whose core commercial products substantially overlap EHR, practice management, billing/RCM, healthcare operations, embedded healthcare AI, patient engagement, or Grid-like orchestration as competitors for this purpose.
+- `UNKNOWN` targets must be researched before outreach. Do not send first and classify later.
+- Competitor research must use public, lawful information only. Never request, ingest, or rely on competitor credentials, confidential materials, leaked data, private customer information, or trade secrets.
+- The product should learn from public market patterns without copying proprietary UI, code, language, workflows, or protected materials.
+- Authenticated and paid Klinikos surfaces must remain simpler than the backend architecture: resume intent, show role-relevant work, progressively disclose complexity, and present upgrade boundaries only when a real entitlement boundary is reached.
