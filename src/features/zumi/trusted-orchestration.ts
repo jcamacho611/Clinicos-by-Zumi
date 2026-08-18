@@ -174,6 +174,7 @@ export function resolveTrustedZumiQualityAssurance(input: {
   internalQualityCapabilityAvailable: boolean;
   jurisdictionKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
+  requiredAgreementEvidenceKeys?: string[];
 }): ZumiTrustedQualityAssurance {
   const result = orchestrateQualityAssurance({
     context: trustedActorContext(input.session, "clinic"),
@@ -181,6 +182,7 @@ export function resolveTrustedZumiQualityAssurance(input: {
     internalQualityCapabilityAvailable: input.internalQualityCapabilityAvailable,
     jurisdictionKey: input.jurisdictionKey,
     requiredExpertEvidenceKeys: input.requiredExpertEvidenceKeys,
+    requiredAgreementEvidenceKeys: input.requiredAgreementEvidenceKeys,
     connectedConnectorIds: [],
   });
 
