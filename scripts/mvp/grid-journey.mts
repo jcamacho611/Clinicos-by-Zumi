@@ -1,11 +1,14 @@
 /**
- * MVP Journeys 3 and 4 — the Grid transaction, against a real database.
+ * Grid MVP journey — generalized Grid transactions against a real database.
  *
- *   NEED -> OFFER -> ACCEPTANCE -> RESERVATION -> FULFILLMENT
- *   and the post-booking path: DISPUTE / SAFETY INCIDENT
+ * Proves that the shared transaction primitives are not secretly a staffing-only
+ * marketplace by exercising both:
  *
- * Run through the real repository functions with a real session, so authorization,
- * tenant scoping and lifecycle validation are all exercised rather than bypassed.
+ *   PROVIDER CAPACITY: NEED -> OFFER -> ACCEPTANCE -> RESERVATION
+ *   HEALTHCARE SPACE:  NEED -> OFFER -> ACCEPTANCE -> RESERVATION
+ *
+ * Run through the real repositories with real sessions so authorization, tenant
+ * scoping, resource policy, availability and lifecycle validation are exercised.
  */
 import { PrismaClient } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
@@ -30,6 +33,10 @@ async function reset() {
   const orgs = await db.organization.findMany({ where: { slug: { in: [SLUG, SUPPLIER_SLUG] } }, select: { id: true } });
   const ids = orgs.map((o) => o.id);
   if (!ids.length) return;
+  await db.$executeRawUnsafe(
+    `DELETE FROM "GridResourceAvailabilityRecord" WHERE "resourceId" IN (SELECT "id" FROM "GridResourceRecord" WHERE "organizationId" = ANY($1))`,
+    ids,
+  ).catch(() => {});
   for (const table of [
     "GridReservationRecord", "GridOfferEventRecord", "GridOfferRecord", "GridDemandRecord",
     "GridResourceRecord",
@@ -43,8 +50,6 @@ async function reset() {
 async function main() {
   await reset();
   const org = await db.organization.create({
-    // demoMode is required by the Grid guard: real patient/provider data needs a
-    // production review this workflow deliberately has not had.
     data: { name: "MVP Grid Clinic", slug: SLUG, clinicType: "medspa", status: "active", demoMode: true },
     select: { id: true },
   });
@@ -61,56 +66,51 @@ async function main() {
     select: { id: true },
   });
   const session = { userId: user.id, organizationId: org.id, role: "clinic_owner" } as unknown as ClinicSession;
-  // The offer is made to the supplier, so only the supplier can decide on it. Using the
-  // requester's session here would be the authorization bug this journey should catch.
   const supplierSession = { userId: supplierUser.id, organizationId: supplier.id, role: "clinic_owner" } as unknown as ClinicSession;
 
-  // --- 0. I HAVE SOMETHING ------------------------------------------------
-  // The supply side. An offer can only name a resource that actually exists, is active
-  // and has been human-approved — inserted directly here because approving a resource is
-  // a reviewer's job, not something this journey should pretend to automate.
-  const resourceId = "res_mvp_injector_1";
+  // -----------------------------------------------------------------------
+  // CLASS 1 — PROVIDER CAPACITY
+  // -----------------------------------------------------------------------
+  const resourceId = "res_mvp_provider_1";
   await db.$executeRawUnsafe(
     `INSERT INTO "GridResourceRecord"
        ("id","organizationId","createdBy","resourceType","title","description","policyClass",
         "visibility","status","state","capacity","requiresHumanReview","reviewStatus","reviewedAt","updatedAt")
-     VALUES ($1,$2,$3,'provider','Aesthetic injector — day cover',
-             'Licensed injector available for full-day aesthetic clinics.','general',
+     VALUES ($1,$2,$3,'provider','Clinical professional — day cover',
+             'Reviewed professional capacity available for a full-day clinic.','general',
              'network','active','NY',1,true,'approved',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
-    resourceId, supplier.id, user.id,
+    resourceId, supplier.id, supplierUser.id,
   );
 
-  // --- 1. I NEED SOMETHING ------------------------------------------------
   let demandId = "";
   let demandError = "";
   try {
     const demand = await createSavedGridDemand(session, {
       kind: "provider",
-      title: "Cover a Friday injectables clinic",
-      description: "Need a licensed injector for one full day of aesthetic appointments.",
-      category: "Injectables",
+      title: "Cover a Friday clinic",
+      description: "Need an eligible clinical professional for one full day of appointments.",
+      category: "Clinical coverage",
       requestedStartAt: iso(7 * DAY),
       requestedEndAt: iso(7 * DAY + 8 * 3600 * 1000),
       state: "NY",
       quantity: 1,
       status: "open",
       visibility: "matched_only",
-      requirements: ["RN or NP", "Aesthetic injector experience"],
+      requirements: ["Required professional credential", "Clinic eligibility review"],
     });
     demandId = (demand as { id: string }).id;
   } catch (error) {
     demandError = error instanceof Error ? error.message : "unknown";
   }
-  check("a clinic can save a real Grid need", Boolean(demandId), demandError || `demand ${demandId.slice(0, 12)}…`);
+  check("provider class: a clinic can save a real Grid need", Boolean(demandId), demandError || `demand ${demandId.slice(0, 12)}…`);
 
   const savedDemands = await listSavedGridDemands(session);
   check(
-    "the saved need is readable back, scoped to the organization",
+    "provider class: the saved need is readable back only in its organization",
     savedDemands.some((d) => (d as { id: string }).id === demandId),
     `${savedDemands.length} demand(s) visible to this organization`,
   );
 
-  // --- 2. OFFER -----------------------------------------------------------
   let offerId = "";
   let offerError = "";
   try {
@@ -124,16 +124,15 @@ async function main() {
       grossAmountCents: 120_000,
       depositAmountCents: 20_000,
       locationPayableCents: 0,
-      note: "Offering a full-day injectables cover at the agreed day rate.",
+      note: "Offering reviewed professional capacity at the agreed day rate.",
       expiresAt: iso(2 * DAY),
     });
     offerId = (offer as { id: string }).id;
   } catch (error) {
     offerError = error instanceof Error ? error.message : "unknown";
   }
-  check("an offer can be made against the need", Boolean(offerId), offerError || `offer ${offerId.slice(0, 12)}…`);
+  check("provider class: an offer can be made against the need", Boolean(offerId), offerError || `offer ${offerId.slice(0, 12)}…`);
 
-  // --- 3. a reservation must not exist before acceptance ------------------
   let prematureRefused = false;
   let prematureReason = "";
   try {
@@ -143,18 +142,17 @@ async function main() {
     prematureReason = error instanceof Error ? error.message : "unknown";
   }
   check(
-    "a reservation cannot be created from an offer nobody accepted",
+    "provider class: reservation cannot precede acceptance",
     prematureRefused,
     prematureReason || "RESERVATION CREATED WITHOUT ACCEPTANCE",
   );
 
-  // --- 4. ACCEPTANCE ------------------------------------------------------
   let accepted = false;
   let acceptError = "";
   try {
     await transitionGridOffer(supplierSession, offerId, {
       targetStatus: "accepted",
-      note: "Accepting the offered cover for the Friday clinic.",
+      note: "Accepting the offered professional coverage.",
     });
     accepted = true;
   } catch (error) {
@@ -162,9 +160,8 @@ async function main() {
   }
   const offersAfter = await listGridOffers(session);
   const offerState = (offersAfter.find((o) => (o as { id: string }).id === offerId) as { status?: string } | undefined)?.status;
-  check("the offer can be accepted", accepted, acceptError || `offer status=${offerState}`);
+  check("provider class: the resource owner can accept the offer", accepted, acceptError || `offer status=${offerState}`);
 
-  // --- 5. RESERVATION -----------------------------------------------------
   let reservationId = "";
   let reservationError = "";
   try {
@@ -173,13 +170,8 @@ async function main() {
   } catch (error) {
     reservationError = error instanceof Error ? error.message : "unknown";
   }
-  check(
-    "an accepted offer becomes a reservation",
-    Boolean(reservationId),
-    reservationError || `reservation ${reservationId.slice(0, 12)}…`,
-  );
+  check("provider class: accepted offer becomes a reservation", Boolean(reservationId), reservationError || `reservation ${reservationId.slice(0, 12)}…`);
 
-  // --- 6. no double-booking ----------------------------------------------
   let doubleRefused = false;
   let doubleReason = "";
   try {
@@ -191,14 +183,106 @@ async function main() {
   const reservations = await listGridReservations(session);
   const forThisOffer = reservations.filter((r) => (r as { offerId?: string }).offerId === offerId);
   check(
-    "the same accepted offer cannot be reserved twice",
+    "provider class: the same offer cannot be reserved twice",
     doubleRefused || forThisOffer.length <= 1,
     doubleRefused ? `refused: ${doubleReason}` : `${forThisOffer.length} reservation(s) for this offer`,
   );
 
-  // --- 7. the transaction is auditable ------------------------------------
+  // -----------------------------------------------------------------------
+  // CLASS 2 — HEALTHCARE SPACE / CAPACITY
+  // -----------------------------------------------------------------------
+  const spaceResourceId = "res_mvp_space_1";
+  const spaceStart = iso(10 * DAY);
+  const spaceEnd = iso(10 * DAY + 5 * 3600 * 1000);
+  await db.$executeRawUnsafe(
+    `INSERT INTO "GridResourceRecord"
+       ("id","organizationId","createdBy","resourceType","title","description","policyClass",
+        "visibility","status","state","capacity","requiresHumanReview","reviewStatus","reviewedAt","updatedAt")
+     VALUES ($1,$2,$3,'space','Treatment room capacity',
+             'Reviewed treatment room capacity available for a defined time window.','healthcare_space',
+             'public','active','NY',1,true,'approved',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+    spaceResourceId, supplier.id, supplierUser.id,
+  );
+  await db.$executeRawUnsafe(
+    `INSERT INTO "GridResourceAvailabilityRecord"
+       ("id","resourceId","startsAt","endsAt","capacity","status","createdAt","updatedAt")
+     VALUES ('avail_mvp_space_1',$1,$2,$3,1,'active',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+    spaceResourceId, new Date(spaceStart), new Date(spaceEnd),
+  );
+
+  let spaceDemandId = "";
+  let spaceDemandError = "";
+  try {
+    const demand = await createSavedGridDemand(session, {
+      kind: "space",
+      title: "Treatment room for five hours",
+      description: "Need reviewed treatment-room capacity for an approved operational use.",
+      category: "Treatment room",
+      requestedStartAt: spaceStart,
+      requestedEndAt: spaceEnd,
+      state: "NY",
+      quantity: 1,
+      status: "open",
+      visibility: "matched_only",
+      requirements: ["Reviewed healthcare space"],
+    });
+    spaceDemandId = (demand as { id: string }).id;
+  } catch (error) {
+    spaceDemandError = error instanceof Error ? error.message : "unknown";
+  }
+  check("space class: a clinic can save a space demand through the same engine", Boolean(spaceDemandId), spaceDemandError || `demand ${spaceDemandId.slice(0, 12)}…`);
+
+  let spaceOfferId = "";
+  let spaceOfferError = "";
+  try {
+    const offer = await createGridOffer(session, {
+      demandId: spaceDemandId,
+      resourceKind: "space",
+      resourceReference: spaceResourceId,
+      recipientOrganizationId: supplier.id,
+      offeredStartAt: spaceStart,
+      offeredEndAt: spaceEnd,
+      grossAmountCents: 50_000,
+      depositAmountCents: 10_000,
+      locationPayableCents: 50_000,
+      note: "Offering the reviewed treatment-room availability window.",
+      expiresAt: iso(2 * DAY),
+    });
+    spaceOfferId = (offer as { id: string }).id;
+  } catch (error) {
+    spaceOfferError = error instanceof Error ? error.message : "unknown";
+  }
+  check("space class: an offer must pass the same reviewed-resource policy", Boolean(spaceOfferId), spaceOfferError || `offer ${spaceOfferId.slice(0, 12)}…`);
+
+  let spaceAccepted = false;
+  let spaceAcceptError = "";
+  try {
+    await transitionGridOffer(supplierSession, spaceOfferId, {
+      targetStatus: "accepted",
+      note: "Accepting the treatment-room offer.",
+    });
+    spaceAccepted = true;
+  } catch (error) {
+    spaceAcceptError = error instanceof Error ? error.message : "unknown";
+  }
+  check("space class: the space owner can accept through the same offer state machine", spaceAccepted, spaceAcceptError || "accepted");
+
+  let spaceReservationId = "";
+  let spaceReservationError = "";
+  try {
+    const reservation = await createReservationFromAcceptedOffer(session, spaceOfferId);
+    spaceReservationId = (reservation as { id: string }).id;
+  } catch (error) {
+    spaceReservationError = error instanceof Error ? error.message : "unknown";
+  }
+  check(
+    "space class: accepted space offer becomes a reservation only inside real availability",
+    Boolean(spaceReservationId),
+    spaceReservationError || `reservation ${spaceReservationId.slice(0, 12)}…`,
+  );
+
   const audits = await db.auditLog.count({ where: { organizationId: org.id } });
-  check("the Grid transaction leaves an audit trail", audits > 0, `${audits} audit records`);
+  check("both Grid transaction classes leave an audit trail", audits > 0, `${audits} audit records`);
 
   await reset();
   await db.$disconnect();
