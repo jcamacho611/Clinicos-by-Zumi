@@ -8,6 +8,14 @@ coverage/
 !.env.example
 *.log
 *.tsbuildinfo
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+*.bak
+*.orig
+*.sql.gz
 .DS_Store
 .codex/
 prisma/dev.db
