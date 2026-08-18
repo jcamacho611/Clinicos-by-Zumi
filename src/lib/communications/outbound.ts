@@ -12,6 +12,8 @@ export type OutboundMessage = {
   body: string;
   /** Explicit sender identity when the channel requires tenant-owned routing. */
   sender?: string;
+  /** Provider policy container associated with the explicit sender. */
+  messagingServiceSid?: string;
 };
 
 export type OutboundResult =
@@ -73,11 +75,17 @@ const twilioSmsAdapter: OutboundAdapter = {
   channel: "sms",
   provider: "twilio",
   connectorId: "twilio",
-  // Credentials answer only whether the provider rail exists. Sender truth is a
-  // separate per-message/tenant decision and must not be inferred from env alone.
+  // Credentials answer only whether the provider rail exists. Sender and Messaging
+  // Service truth remain separate per-tenant decisions and must not be inferred here.
   configured: (env) => Boolean(twilioApiKeyCredentials(env)),
   send: async (message, env) => {
-    const result = await sendTwilioSms({ to: message.to, body: message.body, from: message.sender, env });
+    const result = await sendTwilioSms({
+      to: message.to,
+      body: message.body,
+      from: message.sender,
+      messagingServiceSid: message.messagingServiceSid,
+      env,
+    });
     if (result.ok) return { ok: true, providerReference: result.sid, provider: "twilio" };
     if (result.reason === "invalid_recipient") return { ok: false, reason: "invalid_recipient", detail: result.detail };
     if (result.reason === "not_configured") return { ok: false, reason: "no_connector", detail: result.detail };
