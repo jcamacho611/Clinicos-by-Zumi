@@ -177,27 +177,14 @@ export async function POST(request: Request) {
   const accessibility = zumiAccessibilitySchema.parse(parsed.data.accessibility ?? {});
   const workspace = resolveZumiWorkspaceIntelligence(session, presence);
 
-  // The browser may contribute conversational context, but it cannot establish product truth.
-  // Server-owned workspace intelligence is placed in a separate namespace so the model can
-  // use current role/navigation context without treating arbitrary client JSON as authority.
-  const operationalContext = {
-    clientContext: parsed.data.context ?? null,
-    serverWorkspace: {
-      surfaceKey: workspace.surfaceKey,
-      title: workspace.title,
-      purpose: workspace.purpose,
-      primaryDestinations: workspace.primaryDestinations,
-      relatedDestinations: workspace.relatedDestinations,
-    },
-  };
-
   const result = await invokeZumi({
     session,
     capability,
     organizationId: session.organizationId,
     entitlements,
     question: parsed.data.question,
-    context: operationalContext,
+    context: parsed.data.context,
+    trustedWorkspaceIntelligence: workspace,
     previousResponseId: previous?.responseId ?? null,
     allowWebResearch: parsed.data.webResearch,
     allowKnowledgeSearch: parsed.data.knowledgeSearch,
