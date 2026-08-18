@@ -73,11 +73,15 @@ export async function loadPersistedActiveQualityGapEvaluations(
     }
 
     const measureIds = [...new Set(gaps.map((gap) => gap.measureId))];
+    // Only active definitions are treated as current governed mappings. A gap that
+    // points at an inactive/retired definition remains visible as an unmapped gap so
+    // historical data cannot silently authorize current operational interpretation.
     const measures = measureIds.length
       ? await db.qualityMeasure.findMany({
           where: {
             organizationId: session.organizationId,
             id: { in: measureIds },
+            status: "active",
           },
         })
       : [];
@@ -124,7 +128,7 @@ export async function loadPersistedActiveQualityGapEvaluations(
       "Coverage is limited to the current persisted active QualityGap backlog; population-wide versioned program evaluation is not yet connected.",
     ];
     if (unmappedMeasures > 0) {
-      warnings.push(`${unmappedMeasures} active quality gap record(s) reference a measure that is not mapped inside the active organization.`);
+      warnings.push(`${unmappedMeasures} active quality gap record(s) do not map to an active measure definition inside the active organization.`);
     }
 
     return {
