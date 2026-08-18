@@ -1,12 +1,16 @@
 # Luxe hosted conversion path
 
-Status: **LEAD CAPTURE MERGED / RENDER DEPLOYMENT UNPROVEN / BOOKING-INTENT ADAPTER IN PROGRESS**
+Status: **LEAD CAPTURE + BOOKING START MERGED / RENDER DEPLOYMENT UNPROVEN / EXTERNAL BOOKING OBSERVATION IN REVIEW**
 
 The lowest-cost path around the current GoDaddy Websites + Marketing write limitation is to let Klinikos host the short Luxe service inquiry while Luxe keeps owning the marketing pages.
 
 Lead-capture implementation merged to `main` in:
 
 `1d095a6280ca10918e03f1f1e1ee27ac7765b2e3`
+
+Booking-start continuation merged through PR #171 in:
+
+`2eaf4e9287cee7e40a035aec632c24fd4ade5fc3`
 
 A repository merge is not deployment evidence. Render is the production host, but no Render deployment-control connector is available in this environment. Do not mark the path LIVE until the deployed route and one controlled inquiry are verified.
 
@@ -97,8 +101,6 @@ Before material paid-traffic scale, add a distributed rate limiter and/or an app
 
 # Booking-intent continuation
 
-The next slice adds a server-owned continuation from an accepted Luxe inquiry into the existing external booking rail.
-
 Required environment configuration:
 
 - `LUXE_MEDI_BOOKING_URL` — approved HTTPS booking destination.
@@ -129,26 +131,27 @@ The encrypted browser token does not expose the internal lead ID in page source,
 
 > the customer opened the configured external booking flow from a valid acquisition journey.
 
-It does **not** mean:
+It does **not** mean an appointment exists, a deposit was paid, treatment is appropriate, or service was completed.
 
-- an appointment exists;
-- a provider accepted anything;
-- a deposit was paid;
-- treatment is appropriate;
-- service was completed.
+# External booking observation
 
-The external booking/provider evidence remains authoritative.
+GoDaddy Conversations notifications can sometimes contain a stable normalized customer contact, service, order reference, and appointment text. When those fields match the existing open Luxe lead, Klinikos may now record:
 
-A booking-start task is due after the configured review window. If authoritative completion cannot be verified, the lead becomes human verification/recovery work. The task wording explicitly requires evidence before staff mark the lead booked or paid.
+```text
+bookingStatus = observed
+booking_observed LeadEvent
+lead_booking verification task
+bookingVerified = false
+paymentVerified = false
+```
 
-Analytics may show:
+`observed` is deliberately stronger than `started` because an external booking source reported an apparent booking, but it remains weaker than `booked`.
 
-- booking started;
-- booking verification due;
-- booking in progress;
-- verify booking.
+A booking notification is **not** authoritative payment evidence and does not contribute to booked estimated value or collected revenue until a human/approved provider-side verification promotes the appropriate state.
 
-Those states remain separate from booked estimated value and evidence-backed collected revenue.
+If the observation cannot be safely linked, the adapter falls back to `manual_review` rather than guessing.
+
+Cancellation notifications remain manual-review-first until identity linkage can be made safely; do not mutate the wrong customer merely to automate recovery.
 
 ## Revenue-first failure behavior
 
@@ -176,10 +179,11 @@ After the exact merged SHA is deployed:
 12. verify `booking_started` exists but booking/payment remain unverified;
 13. verify a `lead_booking` human review task exists and cannot be pushed later by another booking-start event;
 14. verify the server redirects only to the configured HTTPS destination;
-15. mark the QA lead intentionally lost/test rather than deleting audit history;
-16. only then switch one real Luxe primary CTA to the hosted URL;
-17. browser-test the live Luxe → Klinikos handoff on mobile.
+15. inject one synthetic GoDaddy booking notification matching the QA identity and verify `bookingStatus=observed`, `booking_observed`, and a verification task without a booked/payment promotion;
+16. mark the QA lead intentionally lost/test rather than deleting audit history;
+17. only then switch one real Luxe primary CTA to the hosted URL;
+18. browser-test the live Luxe → Klinikos handoff on mobile.
 
 # Next conversion slice
 
-After live capture and booking-start are proven, connect authoritative booking/deposit completion evidence back to the originating lead and auto-close the booking verification task only from real evidence. A redirect or booking email remains insufficient proof of payment.
+After live capture and booking-start/observation are proven, connect authoritative booking/deposit completion evidence back to the originating lead and auto-close the booking verification task only from real evidence. A redirect or booking email remains insufficient proof of payment.

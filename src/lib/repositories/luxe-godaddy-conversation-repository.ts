@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
 import { ingestPublicLuxeLead } from "@/lib/repositories/luxe-acquisition-repository";
+import { recordLuxeBookingObservation } from "@/lib/repositories/luxe-booking-intent-repository";
 
 const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
 const GODADDY_RESOURCE_TYPE = "godaddy_conversation_notification";
@@ -150,6 +151,46 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
     website: "",
   });
 
+  let bookingObservation: Awaited<ReturnType<typeof recordLuxeBookingObservation>> | null = null;
+  if (isBookingObservation) {
+    try {
+      bookingObservation = await recordLuxeBookingObservation(result.leadId, {
+        source: "godaddy_conversations",
+        orderReference: parsed.orderReference,
+        appointmentText: parsed.appointmentText,
+      });
+    } catch {
+      await recordSourceEvent({
+        organizationId,
+        sourceMessageId: parsed.sourceMessageId,
+        status: "manual_review",
+        metadata: {
+          observedKind: parsed.kind,
+          conversationReference: parsed.conversationReference,
+          orderReference: parsed.orderReference,
+          leadId: result.leadId,
+          bodyStored: false,
+          bookingObservationLinked: false,
+          bookingVerified: false,
+          paymentVerified: false,
+          reviewReason: "booking_observation_link_failed",
+        },
+      });
+      return {
+        status: "manual_review" as const,
+        reason: "booking_observation_link_failed" as const,
+        leadId: result.leadId,
+        conversationReference: parsed.conversationReference,
+        orderReference: parsed.orderReference,
+        verifiedBooking: false,
+        verifiedPayment: false,
+      };
+    }
+  }
+
+  const bookingReviewTaskId = bookingObservation && bookingObservation.tracked ? bookingObservation.taskId : null;
+  const bookingObservationLinked = bookingReviewTaskId !== null;
+
   await recordSourceEvent({
     organizationId,
     sourceMessageId: parsed.sourceMessageId,
@@ -161,6 +202,8 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
       leadId: result.leadId,
       leadCreated: result.created,
       bodyStored: false,
+      bookingObservationLinked,
+      bookingReviewTaskId,
       bookingVerified: false,
       paymentVerified: false,
     },
@@ -174,6 +217,8 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
     leadId: result.leadId,
     created: result.created,
     followUpCreated: Boolean(result.taskId),
+    bookingObservationLinked,
+    bookingReviewTaskId,
     // Booking/payment remain observations only. Neither is promoted to a verified
     // transaction state from notification email content.
     verifiedBooking: false,
