@@ -37,28 +37,34 @@ export function ConnectionsWorkspaceReal() {
       <PageIntro
         title="Connection truth, not integration theater."
         description="A built adapter is not a connected vendor. A configured vendor is not a verified live workflow. Each row states the strongest claim Klinikos can currently defend."
-        action={<Button disabled title="Export is not wired yet" variant="secondary"><Blocks className="size-4" /> Export roadmap</Button>}
+        action={<Button disabled title="Export is not wired yet" variant="secondary"><Blocks aria-hidden="true" className="size-4" /> Export roadmap</Button>}
       />
 
       <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard accent="teal" detail="Product code exists; external proof remains separate" icon={<Check className="size-4" />} label="Adapter paths" value="2" />
-        <StatCard accent="sky" detail="External account or operator work remains" icon={<Webhook className="size-4" />} label="Pending connection" value={String(pending)} />
-        <StatCard accent="amber" detail="Requires heightened contractual or security review" icon={<ShieldAlert className="size-4" />} label="High-risk" value={String(highRisk)} />
-        <StatCard accent="slate" detail="Truthful manual or synthetic operating paths" icon={<Cloud className="size-4" />} label="Manual demo" value={String(manual)} />
+        <StatCard accent="teal" detail="Product code exists; external proof remains separate" icon={<Check aria-hidden="true" className="size-4" />} label="Adapter paths" value="2" />
+        <StatCard accent="sky" detail="External account or operator work remains" icon={<Webhook aria-hidden="true" className="size-4" />} label="Pending connection" value={String(pending)} />
+        <StatCard accent="amber" detail="Requires heightened contractual or security review" icon={<ShieldAlert aria-hidden="true" className="size-4" />} label="High-risk" value={String(highRisk)} />
+        <StatCard accent="slate" detail="Truthful manual or synthetic operating paths" icon={<Cloud aria-hidden="true" className="size-4" />} label="Manual demo" value={String(manual)} />
       </div>
 
       <SectionCard title="Connection capability matrix" description="No row below claims live connectivity solely because code, a credential field, or a vendor account exists.">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="Connection capability matrix" tabIndex={0}>
           <table className="w-full min-w-[980px] text-left">
+            <caption className="sr-only">Klinikos external connection capabilities, current truth state, risk, remaining proof requirements, and implementation phase.</caption>
             <thead>
               <tr className="border-b border-slate-100 text-xs font-extrabold uppercase tracking-[.08em] text-slate-500">
-                <th className="px-5 py-3">Connection</th><th className="px-3 py-3">Purpose</th><th className="px-3 py-3">Current state</th><th className="px-3 py-3">Risk</th><th className="px-3 py-3">What still proves it</th><th className="px-5 py-3">Phase</th>
+                <th className="px-5 py-3" scope="col">Connection</th>
+                <th className="px-3 py-3" scope="col">Purpose</th>
+                <th className="px-3 py-3" scope="col">Current state</th>
+                <th className="px-3 py-3" scope="col">Risk</th>
+                <th className="px-3 py-3" scope="col">What still proves it</th>
+                <th className="px-5 py-3" scope="col">Phase</th>
               </tr>
             </thead>
             <tbody>
               {connections.map((item) => (
                 <tr className="border-b border-slate-100 text-sm last:border-0" key={item.name}>
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{item.name}</td>
+                  <th className="px-5 py-4 font-extrabold text-slate-950" scope="row">{item.name}</th>
                   <td className="px-3 py-4 text-slate-700">{item.purpose}</td>
                   <td className="px-3 py-4"><StatusBadge status={item.state} /></td>
                   <td className="px-3 py-4"><StatusBadge status={item.risk} /></td>
