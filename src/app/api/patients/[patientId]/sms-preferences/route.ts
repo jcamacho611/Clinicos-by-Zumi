@@ -7,31 +7,28 @@ import {
   recordPatientSmsPermission,
 } from "@/lib/communications/patient-sms-service";
 
-const evidenceReferenceSchema = z.string().trim().regex(
-  /^(consent|form|document|portal|call|audit):[A-Za-z0-9._/-]{1,140}$/,
-  "Evidence references must be opaque internal references such as consent:abc123 or document:def456.",
-);
-
 const updateSchema = z.object({
   messageClass: z.enum(["transactional", "operational", "marketing"]),
   status: z.enum(["granted", "denied", "revoked"]),
-  source: z.enum(["patient_verbal", "patient_written", "staff_documented"]),
+  // This staff workflow can document a patient's verbal authorization or a staff
+  // denial/revocation. Written/marketing consent requires a future dedicated patient
+  // ceremony; a generic signed form is not silently reclassified as SMS authorization.
+  source: z.enum(["patient_verbal", "staff_documented"]),
   policyVersion: z.string().trim().min(1).max(80).optional(),
-  evidenceReference: evidenceReferenceSchema.optional(),
 }).superRefine((value, context) => {
-  if (value.source === "patient_written" && !value.evidenceReference) {
-    context.addIssue({ code: z.ZodIssueCode.custom, path: ["evidenceReference"], message: "Written consent requires an opaque evidence reference." });
-  }
-  if (value.status === "granted" && value.source === "staff_documented") {
-    context.addIssue({ code: z.ZodIssueCode.custom, path: ["source"], message: "Staff documentation cannot create SMS permission. Record the patient's verbal or written authorization instead." });
+  if (value.status === "granted" && value.source !== "patient_verbal") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["source"],
+      message: "This staff workflow can grant transactional or operational SMS only from documented patient verbal authorization.",
+    });
   }
   if (value.messageClass === "marketing" && value.status === "granted") {
-    if (value.source !== "patient_written") {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ["source"], message: "Marketing SMS permission requires patient-written authorization." });
-    }
-    if (!value.evidenceReference) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ["evidenceReference"], message: "Marketing SMS permission requires a written-consent evidence reference." });
-    }
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["messageClass"],
+      message: "Marketing SMS cannot be granted in the staff workflow. A dedicated patient-facing written-consent ceremony is required.",
+    });
   }
 });
 
@@ -67,7 +64,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
     status: parsed.data.status,
     source: parsed.data.source,
     policyVersion: parsed.data.policyVersion,
-    evidenceReference: parsed.data.evidenceReference,
   });
   if (!result.ok) {
     if (result.reason === "invalid_evidence") {
