@@ -1,11 +1,11 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 import { allKlinikosPaths } from "@/lib/paths/catalog";
-import { workspaceSlugs } from "@/components/clinic/workspace-renderer";
 
 const appRoot = join(process.cwd(), "src", "app");
 const genericWorkspacePage = join(appRoot, "(platform)", "[workspace]", "page.tsx");
+const workspaceRendererFile = join(process.cwd(), "src", "components", "clinic", "workspace-renderer.tsx");
 
 function walkPages(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,12 +36,15 @@ function internalPath(href: string) {
   return href.split("#", 1)[0]!.split("?", 1)[0]! || "/";
 }
 
-function isWhitelistedGenericWorkspace(target: string) {
-  const segments = target.split("/").filter(Boolean);
-  return segments.length === 1 && workspaceSlugs.includes(segments[0] as (typeof workspaceSlugs)[number]);
+function readWorkspaceSlugWhitelist() {
+  const source = readFileSync(workspaceRendererFile, "utf8");
+  const declaration = source.match(/export const workspaceSlugs = \[([\s\S]*?)\] as const;/);
+  if (!declaration?.[1]) throw new Error("workspaceSlugs declaration could not be read from workspace-renderer.tsx");
+  return new Set([...declaration[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]));
 }
 
 describe("Klinikos governed route registry", () => {
+  const workspaceSlugs = readWorkspaceSlugWhitelist();
   // The generic [workspace] page is real, but it may render only whitelisted
   // workspace slugs. Excluding it from generic pattern matching prevents an
   // arbitrary `/made-up-page` from being treated as a valid governed route.
@@ -50,7 +53,9 @@ describe("Klinikos governed route registry", () => {
     .map(routePatternFromPage);
 
   function routeExists(target: string) {
-    return concreteRoutePatterns.some((pattern) => pattern.test(target)) || isWhitelistedGenericWorkspace(target);
+    const segments = target.split("/").filter(Boolean);
+    const whitelistedWorkspace = segments.length === 1 && workspaceSlugs.has(segments[0]);
+    return concreteRoutePatterns.some((pattern) => pattern.test(target)) || whitelistedWorkspace;
   }
 
   it("only links route steps to real Next.js pages or whitelisted generic workspaces", () => {
