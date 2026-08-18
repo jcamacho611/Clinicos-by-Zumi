@@ -69,6 +69,8 @@ export function summarizeAcquisitionLeads(
   const open = leads.filter((lead) => !TERMINAL.has(lead.status));
   const unanswered = open.filter((lead) => !lead.lastContactedAt);
   const overdueFollowUps = open.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
+  const bookingStarted = open.filter((lead) => lead.bookingStatus === "started");
+  const bookingReviewDue = bookingStarted.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
   const atRisk = open.filter((lead) => {
     const overdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
     const unansweredPastSla = !lead.lastContactedAt && ageMinutes(lead.createdAt, now) >= slaMinutes;
@@ -125,10 +127,16 @@ export function summarizeAcquisitionLeads(
       const unansweredAgeMinutes = !lead.lastContactedAt ? ageMinutes(lead.createdAt, now) : null;
       const followUpOverdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
       const pastSla = unansweredAgeMinutes !== null && unansweredAgeMinutes >= slaMinutes;
-      const score = (followUpOverdue ? 100 : 0) + (pastSla ? 80 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
+      const bookingInProgress = lead.bookingStatus === "started";
+      const score = (followUpOverdue ? 100 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
       const latest = latestTouches.get(lead.id) ?? null;
       const evidence = collectedEvidenceByLead.get(lead.id);
       const collectedWithEvidenceCents = (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
+      const action = bookingInProgress
+        ? followUpOverdue ? "verify_booking" : "booking_in_progress"
+        : followUpOverdue || pastSla ? "contact_now"
+        : !lead.lastContactedAt ? "contact"
+        : "review_next_step";
       return {
         id: lead.id,
         name: lead.name,
@@ -140,6 +148,7 @@ export function summarizeAcquisitionLeads(
         estimatedOpportunity: dollars(lead.estimatedValueCents),
         collectedWithEvidenceCents,
         collectedWithEvidence: dollars(collectedWithEvidenceCents),
+        bookingStatus: lead.bookingStatus,
         paymentStatus: lead.paymentStatus,
         status: lead.status,
         pipelineStage: lead.pipelineStage,
@@ -150,7 +159,8 @@ export function summarizeAcquisitionLeads(
         unansweredAgeMinutes,
         followUpOverdue,
         pastSla,
-        action: followUpOverdue || pastSla ? "contact_now" : !lead.lastContactedAt ? "contact" : "review_next_step",
+        bookingInProgress,
+        action,
         score,
       };
     })
@@ -181,6 +191,8 @@ export function summarizeAcquisitionLeads(
       overdueFollowUps: overdueFollowUps.length,
       unassignedOpenLeads: unassigned.length,
       atRiskLeads: atRisk.length,
+      bookingStartedLeads: bookingStarted.length,
+      bookingReviewDueLeads: bookingReviewDue.length,
       medianSpeedToLeadMinutes: median(responseMinutes),
       openEstimatedOpportunityCents: sum(open),
       openEstimatedOpportunity: dollars(sum(open)),
@@ -204,6 +216,8 @@ export function summarizeAcquisitionLeads(
     actionQueue,
     definitions: {
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
+      bookingStarted: "The configured external booking rail was opened from a server-associated acquisition journey. This is intent evidence only, not booking or payment confirmation.",
+      bookingReviewDue: "A booking-start lead whose human verification/follow-up deadline is due. Staff must verify authoritative booking evidence before changing booking/payment state.",
       bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus. This is not collected revenue.",
       collectedRevenueWithEvidence: "Sum of processor-verified evidence plus authorized manual reconciliation evidence linked to leads. Manual reconciliation is labeled separately and is not processor verification.",
       recentVolume: "Lead records created during the rolling 24 hours ending at generatedAt; not a clinic-local calendar-day metric.",
