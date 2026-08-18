@@ -50,11 +50,13 @@ describe("patient SMS service architecture", () => {
     expect(route).toContain("session.organizationId");
   });
 
-  it("keeps clinical grant and weak marketing evidence out of the staff mutation route", () => {
+  it("keeps clinical, marketing and fake-written grants out of the staff mutation route", () => {
     expect(route).not.toContain('z.enum(["transactional", "operational", "marketing", "clinical"])');
     expect(route).toContain('z.enum(["transactional", "operational", "marketing"])');
-    expect(route).toContain("Marketing SMS permission requires patient-written authorization");
-    expect(route).toContain("Staff documentation cannot create SMS permission");
-    expect(route).toContain("opaque internal references");
+    expect(route).toContain('source: z.enum(["patient_verbal", "staff_documented"])');
+    expect(route).toContain("Marketing SMS cannot be granted in the staff workflow");
+    expect(route).toContain("dedicated patient-facing written-consent ceremony");
+    expect(service).toContain('input.messageClass === "marketing" && input.status === "granted"');
+    expect(service).not.toContain('source: StaffConsentSource;\n  policyVersion?: string | null;\n  evidenceReference?:');
   });
 });
