@@ -155,28 +155,44 @@ export function parseGridTemporalIntent(rawQuery: string): GridTemporalIntent {
   };
 }
 
-function localDateTimeValue(date: Date, time: string) {
+function localDateWithTime(date: Date, time: string) {
   const [hours, minutes] = time.split(":").map(Number);
   const copy = new Date(date);
   copy.setHours(hours, minutes, 0, 0);
-  return `${copy.getFullYear()}-${pad(copy.getMonth() + 1)}-${pad(copy.getDate())}T${pad(copy.getHours())}:${pad(copy.getMinutes())}`;
+  return copy;
+}
+
+function localDateTimeValue(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export function resolveGridTemporalWindow(intent: GridTemporalIntent, referenceDate = new Date()) {
   if (!intent.startTime) return { startsAt: "", endsAt: "" };
+  if (intent.relativeDayOffset === null && intent.weekdays.length === 0) {
+    return { startsAt: "", endsAt: "" };
+  }
+
   const target = new Date(referenceDate);
   target.setHours(0, 0, 0, 0);
 
   if (intent.relativeDayOffset !== null) {
     target.setDate(target.getDate() + intent.relativeDayOffset);
-  } else if (intent.weekdays.length) {
+  } else {
     const today = target.getDay();
     const offsets = intent.weekdays.map((weekday) => (weekday - today + 7) % 7);
     target.setDate(target.getDate() + Math.min(...offsets));
+
+    const candidateStart = localDateWithTime(target, intent.startTime);
+    if (candidateStart.getTime() <= referenceDate.getTime()) {
+      target.setDate(target.getDate() + 7);
+    }
   }
 
+  const startsAt = localDateWithTime(target, intent.startTime);
+  const endsAt = intent.endTime ? localDateWithTime(target, intent.endTime) : null;
+
   return {
-    startsAt: localDateTimeValue(target, intent.startTime),
-    endsAt: intent.endTime ? localDateTimeValue(target, intent.endTime) : "",
+    startsAt: localDateTimeValue(startsAt),
+    endsAt: endsAt ? localDateTimeValue(endsAt) : "",
   };
 }
