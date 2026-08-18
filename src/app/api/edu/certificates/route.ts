@@ -4,7 +4,12 @@ import { NextResponse } from "next/server";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { EDU_CERTIFICATE_DISCLAIMER, eduCertificateMutationSchema, validateEduCertificateEvidence } from "@/lib/edu/certificate-rules";
+import {
+  certificateCompetencyAreasFromAudit,
+  EDU_CERTIFICATE_DISCLAIMER,
+  eduCertificateMutationSchema,
+  validateEduCertificateEvidence,
+} from "@/lib/edu/certificate-rules";
 import { canEdu } from "@/lib/edu/edu-roles";
 import { eduInstitutionFilter, resolveEduIdentity, type EduIdentity } from "@/lib/edu/edu-session";
 
@@ -27,6 +32,39 @@ function accessibleEnrollmentWhere(identity: EduIdentity): Prisma.EducationEnrol
   return { ...eduInstitutionFilter(identity), cohortId: identity.cohortIds.length ? { in: identity.cohortIds } : "__no_cohort__" };
 }
 
+function normalizedEvidenceAreas(certificateType: string, areas: readonly string[]) {
+  if (certificateType !== "competency_evidence") return [];
+  return [...new Set(areas.map((area) => area.trim()).filter(Boolean))].sort();
+}
+
+function sameEvidenceAreas(left: readonly string[], right: readonly string[]) {
+  const a = [...left].sort();
+  const b = [...right].sort();
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+async function certificateEvidenceAreasById(certificateIds: readonly string[]) {
+  const result = new Map<string, string[]>();
+  if (!certificateIds.length) return result;
+
+  const audits = await db.auditLog.findMany({
+    where: {
+      action: "edu.certificate_issued",
+      resourceType: "education_certificate",
+      resourceId: { in: [...certificateIds] },
+    },
+    select: { resourceId: true, metadata: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  for (const audit of audits) {
+    if (!result.has(audit.resourceId)) {
+      result.set(audit.resourceId, certificateCompetencyAreasFromAudit(audit.metadata));
+    }
+  }
+  return result;
+}
+
 export async function GET() {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
@@ -37,14 +75,28 @@ export async function GET() {
   const certificates = await db.educationCertificate.findMany({
     where: { ...eduInstitutionFilter(identity), enrollment: accessibleEnrollmentWhere(identity) },
     select: {
-      id: true, enrollmentId: true, certificateType: true, title: true, disclaimer: true, serialNumber: true,
-      issuedByUserId: true, issuedAt: true, revokedAt: true, revokedReason: true,
+      id: true,
+      enrollmentId: true,
+      certificateType: true,
+      title: true,
+      disclaimer: true,
+      serialNumber: true,
+      issuedAt: true,
+      revokedAt: true,
+      revokedReason: true,
       enrollment: { select: { studentDisplayName: true, studentEmail: true, cohortId: true } },
     },
     orderBy: { issuedAt: "desc" },
     take: 250,
   });
-  return NextResponse.json({ data: certificates }, { headers: NO_STORE });
+
+  const evidenceAreas = await certificateEvidenceAreasById(certificates.map((certificate) => certificate.id));
+  return NextResponse.json({
+    data: certificates.map((certificate) => ({
+      ...certificate,
+      evidenceAreas: evidenceAreas.get(certificate.id) ?? [],
+    })),
+  }, { headers: NO_STORE });
 }
 
 export async function POST(request: Request) {
@@ -63,10 +115,25 @@ export async function POST(request: Request) {
     const existing = await db.educationCertificate.findFirst({ where: { id: body.certificateId, ...eduInstitutionFilter(identity) } });
     if (!existing) return deny("Certificate not found.", 404);
     if (existing.revokedAt) return deny("This certificate evidence is already revoked.", 409);
+
     const revokedAt = new Date();
-    const certificate = await db.educationCertificate.update({ where: { id: existing.id }, data: { revokedAt, revokedReason: body.reason } });
-    await db.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "edu.certificate_revoked", resourceType: "education_certificate", resourceId: certificate.id, metadata: { enrollmentId: existing.enrollmentId, serialNumber: existing.serialNumber, revokedAt: revokedAt.toISOString() } } });
-    return NextResponse.json({ data: certificate }, { headers: NO_STORE });
+    const certificate = await db.educationCertificate.update({
+      where: { id: existing.id },
+      data: { revokedAt, revokedReason: body.reason },
+    });
+    await db.auditLog.create({
+      data: {
+        organizationId: session.organizationId,
+        actorId: session.userId,
+        actorType: "user",
+        action: "edu.certificate_revoked",
+        resourceType: "education_certificate",
+        resourceId: certificate.id,
+        metadata: { enrollmentId: existing.enrollmentId, serialNumber: existing.serialNumber, revokedAt: revokedAt.toISOString() },
+      },
+    });
+    const evidenceAreas = await certificateEvidenceAreasById([certificate.id]);
+    return NextResponse.json({ data: { ...certificate, evidenceAreas: evidenceAreas.get(certificate.id) ?? [] } }, { headers: NO_STORE });
   }
 
   if (!canEdu(identity.role, "certificate", "create")) return deny("This EDU role cannot issue certificate evidence.", 403);
@@ -76,14 +143,64 @@ export async function POST(request: Request) {
   });
   if (!enrollment) return deny("Enrollment not found in your EDU scope.", 404);
 
-  const demonstratedCompetencyAreas = enrollment.competencies.filter((competency) => competency.status === "demonstrated").map((competency) => competency.competencyArea);
-  const problems = validateEduCertificateEvidence({ certificateType: body.certificateType, enrollmentStatus: enrollment.status, requestedCompetencyAreas: body.competencyAreas, demonstratedCompetencyAreas });
+  const demonstratedCompetencyAreas = enrollment.competencies
+    .filter((competency) => competency.status === "demonstrated")
+    .map((competency) => competency.competencyArea);
+  const evidenceAreas = normalizedEvidenceAreas(body.certificateType, body.competencyAreas);
+  const problems = validateEduCertificateEvidence({
+    certificateType: body.certificateType,
+    enrollmentStatus: enrollment.status,
+    requestedCompetencyAreas: evidenceAreas,
+    demonstratedCompetencyAreas,
+  });
   if (problems.length) return deny("Certificate evidence requirements are not satisfied.", 409, problems);
 
-  const activeDuplicate = await db.educationCertificate.findFirst({ where: { institutionId: enrollment.institutionId, enrollmentId: enrollment.id, certificateType: body.certificateType, title: body.title, revokedAt: null } });
-  if (activeDuplicate) return NextResponse.json({ data: activeDuplicate, idempotent: true }, { headers: NO_STORE });
+  const duplicateCandidates = await db.educationCertificate.findMany({
+    where: {
+      institutionId: enrollment.institutionId,
+      enrollmentId: enrollment.id,
+      certificateType: body.certificateType,
+      title: body.title,
+      revokedAt: null,
+    },
+    orderBy: { issuedAt: "desc" },
+    take: 50,
+  });
+  const duplicateAreas = await certificateEvidenceAreasById(duplicateCandidates.map((certificate) => certificate.id));
+  const activeDuplicate = duplicateCandidates.find((certificate) => sameEvidenceAreas(duplicateAreas.get(certificate.id) ?? [], evidenceAreas));
+  if (activeDuplicate) {
+    return NextResponse.json({
+      data: { ...activeDuplicate, evidenceAreas: duplicateAreas.get(activeDuplicate.id) ?? [] },
+      duplicate: true,
+    }, { headers: NO_STORE });
+  }
 
-  const certificate = await db.educationCertificate.create({ data: { institutionId: enrollment.institutionId, enrollmentId: enrollment.id, certificateType: body.certificateType, title: body.title, disclaimer: EDU_CERTIFICATE_DISCLAIMER, serialNumber: serialNumber(), issuedByUserId: session.userId } });
-  await db.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "edu.certificate_issued", resourceType: "education_certificate", resourceId: certificate.id, metadata: { enrollmentId: enrollment.id, certificateType: body.certificateType, competencyAreas: body.certificateType === "competency_evidence" ? body.competencyAreas : [], serialNumber: certificate.serialNumber } } });
-  return NextResponse.json({ data: certificate }, { status: 201, headers: NO_STORE });
+  const certificate = await db.educationCertificate.create({
+    data: {
+      institutionId: enrollment.institutionId,
+      enrollmentId: enrollment.id,
+      certificateType: body.certificateType,
+      title: body.title,
+      disclaimer: EDU_CERTIFICATE_DISCLAIMER,
+      serialNumber: serialNumber(),
+      issuedByUserId: session.userId,
+    },
+  });
+  await db.auditLog.create({
+    data: {
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      actorType: "user",
+      action: "edu.certificate_issued",
+      resourceType: "education_certificate",
+      resourceId: certificate.id,
+      metadata: {
+        enrollmentId: enrollment.id,
+        certificateType: body.certificateType,
+        competencyAreas: evidenceAreas,
+        serialNumber: certificate.serialNumber,
+      },
+    },
+  });
+  return NextResponse.json({ data: { ...certificate, evidenceAreas } }, { status: 201, headers: NO_STORE });
 }
