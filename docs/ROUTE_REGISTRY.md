@@ -67,6 +67,24 @@ Reading each signal is governed by the Clinic OS permission for the records behi
 
 Each signal that produces a draft links to `/grid/needs/new?from=<signal>`. The link carries **only the signal name** — never the demand. The composer page re-derives the draft from live records on open, so a link cannot carry a forged need into the form, and a gap that closed in the meantime yields an empty form with a plain note rather than a prefill for work nobody needs. An unrecognised signal name is ignored. Prefilled fields stay editable, the form says where they came from, and the demand is created only when a person submits it.
 
+### EDU → Grid
+
+`src/lib/ecosystem/edu-grid-bridge.ts` reads the signed-in learner's own competency determinations and reports what they mean for Grid — and what they do not.
+
+| Signal | Read from |
+| --- | --- |
+| `placement_ready` | Competency areas an instructor marked achieved |
+| `competency_in_progress` | Competency records not yet marked achieved |
+| `no_determination_yet` | An enrollment exists but no competency record does |
+
+**One rule dominates this bridge: an educational competency is not a licence.** `CREDENTIAL_DISCLAIMER` states it exactly — a Klinikos EDU credential is not professional licensure, board certification, clinical credentialing, authorisation to practise, or scope-of-practice approval. So the bridge may describe what EDU recorded and may help a learner ask for supervised placement, but it must never convert an education record into Grid eligibility for regulated work. Every placement draft therefore sets `requiresClinicalEligibility: true` and says in its own text that eligibility is verified against real credentials at match. Grid's eligibility enforcement remains the only thing that decides who may do regulated work.
+
+The disclaimer travels on the readiness object itself rather than being left to each caller, so a surface cannot render the encouraging half of this bridge without the limiting half. Competency areas are skills and may travel to Grid; the learner's name, email, institution and cohort do not — who is asking is carried by the demand record's ownership fields. Publishing a placement request needs the ordinary Grid create permission: being a learner does not confer it, and neither does passing an assessment.
+
+Competency determinations are read for the signed-in identity's own enrollments only, matched on email the same way `resolveEduIdentity` scopes EDU.
+
+**Two vocabularies, deliberately.** An instructor's *determination* is `demonstrated` / `needs_development`; the stored *status* is one of `not_assessed`, `developing`, `approaching`, `achieved`, `not_achieved`, fixed by a CHECK constraint in `20260810160000_klinikos_edu_foundation`. They were previously assumed identical and written straight through, so every determination was rejected by PostgreSQL while TypeScript, ESLint and the unit suite stayed green. `competencyStatusForDetermination` maps one to the other and `competencyIsDemonstrated` reads it back; `tests/competency-status-vocabulary.test.ts` derives the legal list from the migration rather than restating it.
+
 Bridge destinations are checked by the same route guard as route steps — `/grid/needs` has no page of its own, and pointing at it produced a 404 that browser QA caught.
 
 ## Adding a route

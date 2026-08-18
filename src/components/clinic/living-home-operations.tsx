@@ -7,6 +7,7 @@ import { Badge, type BadgeTone } from "@/components/ds";
 import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
+import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity } from "@/lib/home/operating-rail";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
@@ -275,6 +276,7 @@ export function LivingHomeOperations({
   appointments,
   canActOnGridSignals,
   canOpenPatientRecord,
+  eduReadiness,
   gridSignals,
   guidance,
   onCount,
@@ -286,6 +288,7 @@ export function LivingHomeOperations({
   appointments: Appointment[];
   canActOnGridSignals: boolean;
   canOpenPatientRecord: boolean;
+  eduReadiness: EduGridReadiness | null;
   gridSignals: ClinicGridSignal[];
   guidance: PathGuidanceView[];
   onCount?: (attentionCount: number) => void;
@@ -595,6 +598,48 @@ export function LivingHomeOperations({
               </div>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {eduReadiness ? (
+        <section aria-labelledby="edu-grid-title" className="mt-16">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Klinikos EDU · Grid</p>
+              <h2 className="mt-2 text-2xl font-light tracking-[var(--tracking-tight)]" id="edu-grid-title">Where your learning can take you.</h2>
+            </div>
+            <p className="max-w-md text-xs leading-6 text-[var(--text-secondary)]">
+              Read from competency determinations your instructor recorded.
+            </p>
+          </div>
+
+          <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {eduReadiness.signals.map((signal) => (
+              <div className="flex flex-col rounded-[18px] border border-[var(--line-dark)] px-5 py-6" key={signal.kind}>
+                <p
+                  className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]"
+                  style={{ color: signal.kind === "placement_ready" ? "var(--status-resolved)" : "var(--text-secondary)" }}
+                >
+                  {signal.kind === "placement_ready" ? "Ready to ask for placement" : "Still with your instructor"}
+                </p>
+                <h3 className="mt-3 text-sm font-semibold leading-6">{signal.title}</h3>
+                <p className="mt-3 text-xs leading-6 text-[var(--text-secondary)]">{signal.detail}</p>
+                <p className="mt-3 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">{signal.evidence}</p>
+                {signal.draft && !canActOnGridSignals ? (
+                  <p className="mt-5 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">
+                    Your role can see this but cannot publish to Grid.
+                  </p>
+                ) : (
+                  <Link className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]" href={signal.href}>
+                    {signal.actionLabel} <ArrowUpRight className="size-3.5" />
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* The limiting half of this bridge travels with the encouraging half. */}
+          <p className="mt-5 max-w-3xl text-xs leading-6 text-[var(--status-analyzing)]">{eduReadiness.boundary}</p>
         </section>
       ) : null}
 

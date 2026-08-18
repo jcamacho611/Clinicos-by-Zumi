@@ -3,7 +3,7 @@ import { z } from "zod";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { competencyAdvancesReadiness, competencyAreaAllowed, competencyDeterminationSchema } from "@/lib/edu/competency-determination";
+import { competencyAdvancesReadiness, competencyAreaAllowed, competencyDeterminationSchema, competencyStatusForDetermination } from "@/lib/edu/competency-determination";
 import { canEdu, canFinalizeCompetency } from "@/lib/edu/edu-roles";
 import { eduInstitutionFilter, resolveEduIdentity } from "@/lib/edu/edu-session";
 import {
@@ -133,13 +133,13 @@ export async function POST(request: Request) {
         institutionId: identity.institutionId ?? "",
         enrollmentId: submission.enrollmentId,
         competencyArea: body.competencyArea,
-        status: body.determination,
+        status: competencyStatusForDetermination(body.determination),
         determinedByUserId: session.userId,
         determinedAt,
         evidenceSummary: body.evidenceSummary,
       },
       update: {
-        status: body.determination,
+        status: competencyStatusForDetermination(body.determination),
         determinedByUserId: session.userId,
         determinedAt,
         evidenceSummary: body.evidenceSummary,

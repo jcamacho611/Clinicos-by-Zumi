@@ -115,11 +115,14 @@ describe("Klinikos route registry", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("lands every Clinic OS → Grid signal on a surface that exists", () => {
+  it("lands every cross-engine bridge signal on a surface that exists", () => {
     // The bridge offers an action per signal; an action that 404s is a dead control
     // on the one surface meant to carry Clinic OS state into Grid. `/grid/needs`
     // has no page of its own — only `/grid/needs/new` and `/grid/needs/[demandId]`.
-    const bridge = fs.readFileSync(path.join(process.cwd(), "src/lib/ecosystem/clinic-grid-bridge.ts"), "utf8");
+    const bridge = fs.readdirSync(path.join(process.cwd(), "src/lib/ecosystem"))
+      .filter((file) => file.endsWith("-bridge.ts"))
+      .map((file) => fs.readFileSync(path.join(process.cwd(), "src/lib/ecosystem", file), "utf8"))
+      .join("\n");
     const hrefs = [...bridge.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
     expect(hrefs.length).toBeGreaterThan(0);
     const broken = hrefs.filter((href) => !routeExists(href));

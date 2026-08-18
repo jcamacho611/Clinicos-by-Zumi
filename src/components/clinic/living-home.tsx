@@ -17,6 +17,7 @@ import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
 import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
+import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity, RailDestination } from "@/lib/home/operating-rail";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
@@ -146,6 +147,7 @@ export function LivingHome({
   rail,
   opportunity,
   gridSignals,
+  eduReadiness,
   canActOnGridSignals,
   canOpenPatientRecord,
   onboardingComplete = false,
@@ -161,6 +163,7 @@ export function LivingHome({
   rail: RailDestination[];
   opportunity: HomeOpportunity | null;
   gridSignals: ClinicGridSignal[];
+  eduReadiness: EduGridReadiness | null;
   canActOnGridSignals: boolean;
   canOpenPatientRecord: boolean;
   onboardingComplete?: boolean;
@@ -548,6 +551,7 @@ export function LivingHome({
                 appointments={appointments}
                 canActOnGridSignals={canActOnGridSignals}
                 canOpenPatientRecord={canOpenPatientRecord}
+                eduReadiness={eduReadiness}
                 gridSignals={gridSignals}
                 guidance={guidance}
                 onCount={setAttentionCount}

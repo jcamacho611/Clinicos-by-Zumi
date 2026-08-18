@@ -7,6 +7,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 import { getClinicLaunchBriefing } from "@/lib/commercial/clinic-launch-briefing";
 import { canActOnClinicGridSignal, detectClinicGridSignals } from "@/lib/ecosystem/clinic-grid-bridge";
+import { resolveEduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import { getHomeOperatingRail } from "@/lib/home/operating-rail";
 import { resolvePathGuidanceList } from "@/lib/orchestration/path-guidance-engine";
 import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
@@ -19,7 +20,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const query = await searchParams;
   const launchRequested = query.onboarding === "complete";
-  const [appointments, activePaths, recentPathSignals, launchBriefing, rail, gridSignals] = await Promise.all([
+  const [appointments, activePaths, recentPathSignals, launchBriefing, rail, gridSignals, eduReadiness] = await Promise.all([
     listAppointmentsForOrganization(
       session.organizationId,
       session.role === "provider" ? { providerUserId: session.userId } : {},
@@ -29,6 +30,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     launchRequested ? getClinicLaunchBriefing(session.organizationId) : Promise.resolve(null),
     getHomeOperatingRail(session),
     detectClinicGridSignals(session),
+    resolveEduGridReadiness(session),
   ]);
   const livingAppointments = appointments.filter((appointment) => appointment.status !== "Cancelled");
   const pathGuidance = resolvePathGuidanceList(session, activePaths);
@@ -55,6 +57,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         initialPaths={activePaths}
         intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
         onboardingComplete={verifiedFirstLogin}
+        eduReadiness={eduReadiness}
         gridSignals={gridSignals}
         opportunity={rail.opportunity}
         organizationName={session.organizationName}
