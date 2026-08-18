@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, Building2, GraduationCap, HeartHandshake, Network, PackageSearch, Sparkles, Stethoscope, Users, Wrench } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { GridExchangeField } from "@/components/grid/grid-exchange-field";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 export const metadata = {
   title: "Klinikos Grid — Universal healthcare exchange",
@@ -72,6 +73,13 @@ export default function GridGatewayPage() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-[1500px] px-5 py-12 sm:px-8"><p className="max-w-5xl text-[11px] leading-6 text-[#806965]">Grid is intentionally broader than any one profession or transaction type. Policy is applied by resource class: regulated clinical work, space, equipment, products, professional services, education, organizations, and referrals each get the eligibility and review rules they actually require. Regulated items and services remain subject to applicable law, contracts, licensing, credentialing, facility rules, and human review.</p></section>
+
+      <footer className="relative z-10 border-t border-[#e28b85]/10 bg-[#050303] px-5 py-8 sm:px-8">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="flex flex-wrap gap-5 text-[11px] font-semibold text-[#9f8985]"><Link className="hover:text-white" href="/legal/grid">Grid marketplace terms</Link><Link className="hover:text-white" href="/legal/terms">Website terms</Link><Link className="hover:text-white" href="/legal/acceptable-use">Acceptable use</Link><Link className="hover:text-white" href="/legal/privacy">Privacy</Link></div>
+          <p className="mt-5 max-w-5xl text-[10px] leading-5 text-[#725d59]">Use of public Grid is subject to the Website Terms of Use, version {WEBSITE_TERMS_VERSION}, and the Grid Marketplace Terms. Listings, matches, uploads, or account creation do not by themselves verify a participant or authorize regulated work. Participant-specific agreements may be required before activation or transaction.</p>
+        </div>
+      </footer>
     </main>
   );
 }
