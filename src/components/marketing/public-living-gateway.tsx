@@ -114,7 +114,7 @@ export function PublicLivingGateway() {
         </header>
 
         {!conversationStarted ? (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9" id="application-content">
+          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9">
             <section className="flex w-full flex-col items-center text-center">
               <div className="flex items-center gap-3" aria-hidden="true">
                 <ZumiOrb state="observing" size={62} />
@@ -161,7 +161,7 @@ export function PublicLivingGateway() {
             </section>
           </main>
         ) : (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9" id="application-content">
+          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
             <section className="flex-1 space-y-8 py-4" aria-label="Conversation with Zumi">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
