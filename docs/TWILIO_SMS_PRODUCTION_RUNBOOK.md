@@ -87,18 +87,7 @@ Do not set `KLINIKOS_SMS_PRODUCTION_ENABLED=true` until all of these have docume
 
 The current inbound signature primitive is intentionally isolated in `src/lib/communications/twilio-webhook.ts`. Klinikos still prefers migration to Twilio's maintained server SDK validator when the dependency can be introduced with a genuinely regenerated/tested lockfile.
 
-A **temporary bounded engineering security exception** is recorded at:
-
-`docs/security/TWILIO_WEBHOOK_VALIDATION_EXCEPTION.md`
-
-The exception is tracked by P0 issue **#160** and expires/requires explicit review on **2026-09-18**.
-
-The exception:
-
-- applies only to `POST /api/webhooks/twilio/sms`;
-- is backed by Twilio's published HMAC-SHA1 request-validation vector plus tamper tests;
-- depends on the route's fixed canonical HTTPS URL, form-only body, body-size limit, duplicate-key rejection, signed AccountSid match, tenant routing, replay protection, and body non-persistence;
-- may not be broadened to query-bearing/JSON/other-product webhook shapes.
+A **temporary bounded engineering security exception** is recorded at `docs/security/TWILIO_WEBHOOK_VALIDATION_EXCEPTION.md`. The exception is tracked by P0 issue **#160** and expires/requires explicit review on **2026-09-18**.
 
 Do not edit `package.json` without a matching lockfile generated through npm merely to satisfy the SDK migration checkbox.
 
@@ -125,8 +114,6 @@ A generic signed form, network data-sharing consent, or staff-entered evidence s
 Completing this runbook does **not** authorize PHI over SMS. Clinical or PHI-bearing SMS remains blocked until the exact infrastructure, provider products, contracts/BAA posture, minimum-necessary content policy, security controls, and healthcare compliance review are separately approved and implemented.
 
 ## Truth states
-
-Use these terms consistently:
 
 - **BUILT** — code exists.
 - **PENDING CONNECTION** — code exists but external configuration/proof is incomplete.
