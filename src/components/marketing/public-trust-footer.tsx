@@ -2,11 +2,11 @@ import Link from "next/link";
 
 const primary = [
   ["About", "/about"],
-  ["How it works", "/how-it-works"],
+  ["Clinics", "/founding-clinic"],
   ["Pricing", "/pricing"],
-  ["Trust & readiness", "/trust"],
   ["Grid", "/grid"],
   ["EDU", "/edu"],
+  ["Trust", "/trust"],
 ] as const;
 
 const legal = [
@@ -17,12 +17,12 @@ const legal = [
 
 export function PublicTrustFooter() {
   return (
-    <footer className="border-t border-[#e6817b]/14 bg-[#050303] px-5 py-10 text-[#f8efed] sm:px-8">
-      <div className="mx-auto grid max-w-[1500px] gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+    <footer className="border-t border-[#e6817b]/14 bg-[#050303] px-5 py-9 text-[#f8efed] sm:px-8">
+      <div className="mx-auto grid max-w-[1500px] gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-sm font-semibold">Klinikos</p>
           <p className="mt-2 max-w-2xl text-xs leading-6 text-[#ad928d]">
-            Healthcare operating infrastructure built around accountable state, human authority, and explicit production gates. Public surfaces are not production clinical environments.
+            Helping clinics, healthcare professionals, learners, and patients move the right work forward with clearer next steps.
           </p>
           <nav className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs font-semibold text-[#d8c1bd]" aria-label="Company">
             {primary.map(([label, href]) => <Link className="hover:text-white" href={href} key={href}>{label}</Link>)}

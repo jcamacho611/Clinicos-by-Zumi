@@ -27,76 +27,93 @@ describe("public Living Home intent", () => {
     ["Open the provider workspace", "care", "/provider"],
   ])("infers %s into a real product destination", (prompt, key, href) => {
     const resolution = resolvePublicLivingIntent(prompt);
+    expect(resolution.kind).toBe("route");
     expect(resolution.destination).toMatchObject({ key, href });
     expect(resolution.body.length).toBeGreaterThan(30);
   });
 
-  it("keeps an unknown request useful without forcing a category", () => {
-    const resolution = resolvePublicLivingIntent("Help me make this better");
+  it("handles a greeting like a conversation instead of a routing failure", () => {
+    const resolution = resolvePublicLivingIntent("hey");
+    expect(resolution.kind).toBe("conversation");
     expect(resolution.destination).toBeNull();
-    expect(resolution.title).toBe("I’m keeping this as the working goal.");
-    expect(resolution.body).toContain("instead of forcing it into the wrong product category");
+    expect(resolution.title).toBe("Hey.");
+    expect(resolution.body).toBe("What can I help you with?");
+  });
+
+  it("keeps an unknown request useful without exposing routing internals", () => {
+    const resolution = resolvePublicLivingIntent("Help me make this better");
+    expect(resolution.kind).toBe("conversation");
+    expect(resolution.destination).toBeNull();
+    expect(resolution.title).toBe("Tell me a little more.");
+    expect(resolution.body).toContain("What’s going on");
   });
 
   it("preserves a known destination when a short follow-up adds context", () => {
     const initial = resolvePublicLivingIntent("I need a treatment room");
     const followUp = resolvePublicLivingIntent("Saturday", initial);
 
+    expect(followUp.kind).toBe("conversation");
     expect(followUp.destination).toMatchObject({ key: "grid", href: "/grid" });
-    expect(followUp.title).toContain("Grid thread");
-    expect(followUp.assumption).toContain("refines the previous Grid request");
+    expect(followUp.title).toBe("Got it.");
+    expect(followUp.body).toContain("Grid request");
   });
 
   it("lets a clear new intent override the prior conversation destination", () => {
     const initial = resolvePublicLivingIntent("I need a treatment room");
     const changedGoal = resolvePublicLivingIntent("Actually I need injector training", initial);
 
+    expect(changedGoal.kind).toBe("route");
     expect(changedGoal.destination).toMatchObject({ key: "edu", href: "/edu" });
   });
 });
 
-describe("public Living Home truth and accessibility contract", () => {
+describe("public Living Home conversation and accessibility contract", () => {
   const source = read("src/components/marketing/public-living-gateway.tsx");
   const page = read("src/app/page.tsx");
   const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
   const brand = read("src/components/brand/klinikos-brand.tsx");
   const homeStyles = read("src/app/cinematic-home-overrides.css");
 
-  it("uses one continuous outcome-first routing surface", () => {
+  it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
     expect(source).toContain("What needs");
     expect(source).toContain("to happen?");
-    expect(source).toContain("Healthcare operating ecosystem");
-    expect(page).toContain("PublicConversionBridge");
+    expect(source).toContain("Talk to Zumi naturally");
+    expect(source).toContain('aria-label="Conversation with Zumi"');
+    expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
+    expect(page).not.toContain("PublicConversionBridge");
   });
 
-  it("labels the public experience as deterministic routing rather than model reasoning", () => {
-    expect(source).toContain("Public routing preview");
-    expect(source).toContain("This public preview uses deterministic routing rules in your browser.");
-    expect(source).toContain("It is not a model conversation");
-    expect(source).toContain("No records opened · no action executed");
-    expect(source).toContain("Deterministic public route");
-    expect(source).not.toContain("Your AI Operating Partner");
-    expect(source).not.toContain("schedule(");
+  it("keeps deterministic routing behind the conversation instead of exposing it as the product", () => {
+    expect(source).toContain("resolvePublicLivingIntent");
+    expect(source).not.toContain("Public routing preview");
+    expect(source).not.toContain("Deterministic public route");
+    expect(source).not.toContain("No records opened · no action executed");
+    expect(source).not.toContain("Assumption:");
+    expect(source).not.toContain("Proof before promises.");
+    expect(source).not.toContain("reference-state-rail");
+    expect(source).not.toContain("reference-action-rail");
+    expect(source).not.toContain("reference-card-row");
+  });
+
+  it("keeps route inference immediate without manufactured progress delays", () => {
+    const inferencePosition = source.indexOf("const resolution = resolvePublicLivingIntent");
+    const appendPosition = source.indexOf("setTurns((current)", inferencePosition);
+    expect(inferencePosition).toBeGreaterThan(0);
+    expect(appendPosition).toBeGreaterThan(inferencePosition);
     expect(source).not.toContain("setTimeout");
     expect(source).not.toContain("Listening");
     expect(source).not.toContain("Connecting");
     expect(source).not.toContain("Preparing");
   });
 
-  it("keeps real inference before rendering without manufactured progress delays", () => {
-    const inferencePosition = source.indexOf("const resolution = resolvePublicLivingIntent");
-    const appendPosition = source.indexOf("setTurns((current)", inferencePosition);
-    expect(inferencePosition).toBeGreaterThan(0);
-    expect(appendPosition).toBeGreaterThan(inferencePosition);
-  });
-
-  it("provides an explicit composer label, disclosure, live status, and keyboard submit", () => {
+  it("provides explicit composer labels, plain-language disclosure, live status, and keyboard submit", () => {
     expect(source).toContain('htmlFor="public-klinikos-intent"');
-    expect(source).toContain('aria-describedby="public-routing-disclosure"');
-    expect(source).toContain('id="public-routing-disclosure"');
+    expect(source).toContain('aria-describedby="public-conversation-disclosure"');
+    expect(source).toContain('id="public-conversation-disclosure"');
+    expect(source).toContain("does not open private clinic records or make changes");
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('role="status"');
     expect(source).toContain("onKeyDown={handleComposerKeyDown}");
@@ -109,7 +126,7 @@ describe("public Living Home truth and accessibility contract", () => {
     expect(source).toContain('"/grid", "/edu"');
     expect(source).toContain("publicActionPaths.has(href)");
     expect(source).toContain("return protectedHref(href)");
-    expect(source).toContain("destinationActionHref(action.href)");
+    expect(source).toContain("destinationActionHref(resolution.destination.href)");
   });
 
   it("provides equivalent mobile navigation rather than hiding the only primary nav", () => {
@@ -118,12 +135,7 @@ describe("public Living Home truth and accessibility contract", () => {
     expect(source).toContain('aria-label="Mobile navigation"');
     expect(source).toContain('{ label: "Trust", href: "/trust" }');
     expect(source).toContain('{ label: "Pricing", href: "/pricing" }');
-  });
-
-  it("surfaces buyer proof and legal/trust entry instead of hiding readiness boundaries", () => {
-    expect(source).toContain("Proof before promises.");
-    expect(source).toContain('href="/trust"');
-    expect(page).toContain("PublicTrustFooter");
+    expect(source).toContain('href="/portal/login"');
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {
