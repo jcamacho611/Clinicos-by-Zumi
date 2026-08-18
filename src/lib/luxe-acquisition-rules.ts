@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalizeLuxeServiceInterest } from "@/lib/luxe-service-interest";
 
 const boundedText = (max: number) => z.string().trim().max(max).optional().nullable();
 
@@ -25,7 +26,7 @@ export const publicLuxeLeadSchema = z.object({
   name: z.string().trim().min(2).max(160),
   email: z.string().trim().email().max(254).optional().nullable(),
   phone: z.string().trim().min(7).max(40).optional().nullable(),
-  serviceInterest: boundedText(160),
+  serviceInterest: boundedText(160).transform((value) => canonicalizeLuxeServiceInterest(value)),
   appointmentInterest: boundedText(160),
   preferredContactMethod: z.enum(["phone", "sms", "email", "either"]).optional().nullable(),
   preferredTiming: boundedText(160),
