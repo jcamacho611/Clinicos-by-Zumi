@@ -63,6 +63,9 @@ describe("Zumi client disclosure boundary", () => {
     expect(serialized).not.toContain("INTERNAL_SECRET_BLOCKER_CODE");
     expect(serialized).not.toContain("private warning");
     expect(serialized).not.toContain("999");
+    expect(serialized).not.toContain("capabilityKey");
+    expect(serialized).not.toContain("priority");
+    expect(serialized).not.toContain("canResolveNow");
   });
 
   it("allows only same-origin relative action hrefs", () => {
@@ -86,5 +89,21 @@ describe("Zumi client disclosure boundary", () => {
     expect(result.blockedMarkers.length).toBe(2);
     expect(result.answer).not.toContain("DATABASE_URL");
     expect(result.answer).not.toContain("ZUMI_CONVERSATION_SIGNING_SECRET");
+  });
+
+  it("fails closed on credential-shaped values even when their environment names are absent", () => {
+    const stripeLikeSecret = `sk_live_${"A".repeat(24)}`;
+    const databaseCredential = "postgresql://service-user:super-secret-password@db.example.test/klinikos";
+    const result = sanitizeZumiAnswerForClient(`Use ${stripeLikeSecret} and ${databaseCredential}`);
+
+    expect(result.blockedKinds).toContain("stripe_secret");
+    expect(result.blockedKinds).toContain("database_credential_uri");
+    expect(result.answer).not.toContain(stripeLikeSecret);
+    expect(result.answer).not.toContain(databaseCredential);
+  });
+
+  it("leaves ordinary user-facing text untouched", () => {
+    const answer = "There are 6 quality items that need authorized review.";
+    expect(sanitizeZumiAnswerForClient(answer)).toEqual({ answer, blockedMarkers: [], blockedKinds: [] });
   });
 });
