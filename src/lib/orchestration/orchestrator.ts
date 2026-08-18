@@ -100,6 +100,7 @@ function expertEscalations(input: {
   evaluations: readonly GovernedRuleEvaluation[];
   jurisdictionKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
+  requiredAgreementEvidenceKeys?: string[];
   connectedConnectorIds?: readonly string[];
   context: ActorContext;
   now: Date;
@@ -112,6 +113,7 @@ function expertEscalations(input: {
       internalCapabilityAvailable: false,
       jurisdictionKey: input.jurisdictionKey,
       requiredExpertEvidenceKeys: input.requiredExpertEvidenceKeys,
+      requiredAgreementEvidenceKeys: input.requiredAgreementEvidenceKeys,
       now: input.now,
     });
     if (!need) continue;
@@ -147,6 +149,7 @@ export function orchestrateQualityAssurance(input: {
   internalQualityCapabilityAvailable: boolean;
   jurisdictionKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
+  requiredAgreementEvidenceKeys?: string[];
   connectedConnectorIds?: readonly string[];
   now?: Date;
 }): EngineResult<QualityAssuranceExperience> {
@@ -201,6 +204,7 @@ export function orchestrateQualityAssurance(input: {
     evaluations: tenantEvaluations,
     jurisdictionKey: input.jurisdictionKey,
     requiredExpertEvidenceKeys: input.requiredExpertEvidenceKeys,
+    requiredAgreementEvidenceKeys: input.requiredAgreementEvidenceKeys,
     connectedConnectorIds: input.connectedConnectorIds,
     context: input.context,
     now,
