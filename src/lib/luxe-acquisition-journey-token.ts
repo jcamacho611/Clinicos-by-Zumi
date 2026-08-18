@@ -1,8 +1,8 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 export const LUXE_ACQUISITION_JOURNEY_COOKIE = "klinikos_luxe_journey";
+export const LUXE_ACQUISITION_JOURNEY_TTL_SECONDS = 30 * 24 * 60 * 60;
 const TOKEN_VERSION = 1;
-const DEFAULT_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 type JourneyPayload = {
   v: number;
@@ -23,7 +23,7 @@ export function luxeAcquisitionJourneyEnabled() {
   return Boolean(configuredSecret());
 }
 
-export function sealLuxeAcquisitionJourney(leadId: string, now = Date.now(), ttlSeconds = DEFAULT_TTL_SECONDS) {
+export function sealLuxeAcquisitionJourney(leadId: string, now = Date.now(), ttlSeconds = LUXE_ACQUISITION_JOURNEY_TTL_SECONDS) {
   const secret = configuredSecret();
   if (!secret) return null;
   const iv = randomBytes(12);
@@ -31,7 +31,7 @@ export function sealLuxeAcquisitionJourney(leadId: string, now = Date.now(), ttl
   const payload: JourneyPayload = {
     v: TOKEN_VERSION,
     leadId,
-    exp: Math.floor(now / 1000) + Math.max(300, Math.min(DEFAULT_TTL_SECONDS, ttlSeconds)),
+    exp: Math.floor(now / 1000) + Math.max(300, Math.min(LUXE_ACQUISITION_JOURNEY_TTL_SECONDS, ttlSeconds)),
   };
   const encrypted = Buffer.concat([cipher.update(JSON.stringify(payload), "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
