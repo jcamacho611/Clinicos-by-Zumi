@@ -14,7 +14,8 @@ export type LegalDocumentKey =
   | "grid_marketplace_terms"
   | "grid_provider_terms"
   | "grid_location_terms"
-  | "electronic_comms_consent";
+  | "electronic_comms_consent"
+  | "master_nda";
 
 export type LegalAudience = "public" | "evaluator" | "clinic" | "provider" | "location_partner" | "patient" | "staff";
 
@@ -45,6 +46,7 @@ export const legalDocumentRegistry: LegalDocumentDefinition[] = [
   { key: "grid_provider_terms", title: "GRID Provider Agreement & Acknowledgments", version: "2026-08-10.1", effectiveDate: "2026-08-10", route: "/legal/grid-provider", mandatoryFor: ["provider"], counselReviewRequired: true, productionApproved: false, notes: "Upload is not verification; contract label alone does not determine independent-contractor status." },
   { key: "grid_location_terms", title: "GRID Clinic & Location Partner Terms", version: "2026-08-10.1", effectiveDate: "2026-08-10", route: "/legal/grid-location", mandatoryFor: ["location_partner", "clinic"], counselReviewRequired: true, productionApproved: false, notes: "Covers facility authority, insurance, allowed services, safety, rental economics and incidents." },
   { key: "electronic_comms_consent", title: "Electronic Communications Consent", version: "2026-08-10.1", effectiveDate: "2026-08-10", route: "/legal/communications", mandatoryFor: ["patient", "provider", "clinic"], counselReviewRequired: true, productionApproved: false, notes: "Separate transactional operational communications from marketing consent and PHI-bearing communication approval." },
+  { key: "master_nda", title: "Universal NDA & Protection Package", version: "2026-08-18.1", effectiveDate: "2026-08-18", route: "/admin/legal", mandatoryFor: [], counselReviewRequired: true, productionApproved: false, notes: "Internal jurisdiction-aware generator. Drafting aid only; recipient-specific state law, venue, restrictive covenants and liquidated damages require review before signature." },
 ];
 
 export function getLegalDocument(key: LegalDocumentKey) {
