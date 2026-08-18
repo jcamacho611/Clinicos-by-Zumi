@@ -33,7 +33,6 @@ describe("adversarial buyer and accessibility baseline", () => {
   const layout = read("src/app/layout.tsx");
   const accessibility = read("src/app/accessibility.css");
   const home = read("src/components/marketing/public-living-gateway.tsx");
-  const bridge = read("src/components/marketing/public-conversion-bridge.tsx");
   const trust = read("src/app/trust/page.tsx");
   const legalStatus = read("src/app/legal/[document]/page.tsx");
   const legalRegistry = read("src/lib/legal/document-registry.ts");
@@ -69,8 +68,21 @@ describe("adversarial buyer and accessibility baseline", () => {
     expect(accessibility).toContain("color: #9a817c !important");
     expect(home).not.toContain("#806f6c");
     expect(home).not.toContain("#5d4b49");
-    expect(bridge).not.toContain("#806965");
-    expect(bridge).not.toContain("#655653");
+    // Pinning one file let this rule die quietly: the component was deleted and the
+    // tones reappeared on a sibling the guard never read, taking the whole suite file
+    // down with it. Sweep the public marketing surfaces instead, so the rule survives
+    // a component being renamed, split, or replaced.
+    const marketingDir = path.join(process.cwd(), "src/components/marketing");
+    const lowContrastOnDark = ["#806965", "#655653"];
+    const offenders: string[] = [];
+    for (const file of fs.readdirSync(marketingDir)) {
+      if (!file.endsWith(".tsx")) continue;
+      const source = fs.readFileSync(path.join(marketingDir, file), "utf8");
+      for (const tone of lowContrastOnDark) {
+        if (source.includes(tone)) offenders.push(`${file} uses ${tone}`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 
   it("publishes readiness as bounded status rather than compliance theater", () => {
@@ -109,6 +121,9 @@ describe("adversarial buyer and accessibility baseline", () => {
     const migrate = renderBuild.indexOf("Application build passed. Applying Klinikos database migrations");
     expect(build).toBeGreaterThan(0);
     expect(migrate).toBeGreaterThan(build);
-    expect(renderBuild).toContain("Migrations must still remain backward-compatible");
+    // The rule lives in a wrapped comment, so match the prose with comment markers and
+    // line breaks flattened rather than requiring it to sit on one physical line.
+    const prose = renderBuild.replace(/^\s*\/\/ ?/gm, "").replace(/\s+/g, " ");
+    expect(prose).toContain("must still remain backward-compatible with the previous app");
   });
 });

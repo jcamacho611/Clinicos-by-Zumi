@@ -28,7 +28,7 @@ export default async function LuxeConsultPage() {
       <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12 lg:py-16">
         <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-7">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-rose-200/70">Luxe Medi</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.24em] text-rose-200/70">Luxe Medi</p>
             <p className="mt-2 text-xl font-extrabold tracking-[-.04em]">Consultation request</p>
           </div>
           <Link className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 transition hover:text-white" href="https://luxe-medi.com">
@@ -38,7 +38,7 @@ export default async function LuxeConsultPage() {
 
         <section className="grid gap-12 py-12 lg:grid-cols-[.85fr_1.15fr] lg:items-start lg:gap-20 lg:py-20">
           <div className="lg:sticky lg:top-12">
-            <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/15 bg-rose-200/[.06] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.16em] text-rose-100">
+            <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/15 bg-rose-200/[.06] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-100">
               <Sparkles className="size-3" /> Start with five useful details
             </div>
             <h1 className="mt-7 max-w-xl text-balance text-4xl font-extrabold leading-[.98] tracking-[-.06em] sm:text-5xl lg:text-6xl">

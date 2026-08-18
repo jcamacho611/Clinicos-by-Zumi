@@ -17,12 +17,21 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(integration).toContain("sender_already_assigned");
     expect(integration).toContain("LIMIT 2");
     expect(integration).not.toContain("TWILIO_API_KEY_SECRET");
-    expect(configRoute).not.toContain("TWILIO_AUTH_TOKEN");
+    // The route may name the env var an operator has to set server-side — that is
+    // configuration guidance. What it must never do is read the token's value or put
+    // it on the wire, which is what actually leaks a credential to the browser.
+    expect(configRoute).not.toMatch(/process\.env\.TWILIO_AUTH_TOKEN/);
+    expect(configRoute).toContain('requiredServerSecret: "TWILIO_AUTH_TOKEN"');
     expect(configRoute).toContain('enforceApiPermission(session, "integrations", "manage"');
   });
 
   it("validates the Twilio signature before resolving or mutating a tenant", () => {
-    expect(webhook.indexOf("validateTwilioWebhookSignature")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization"));
+    // Compare the call sites, not the identifiers: matching the bare names compares the
+    // import statements, which reorder freely and prove nothing about execution order.
+    expect(webhook.indexOf("validateTwilioWebhookSignature({")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization({"));
+    // An unsigned request has to leave before any tenant is resolved, not merely be
+    // noted on the way past.
+    expect(webhook).toMatch(/if \(!validateTwilioWebhookSignature\(\{[\s\S]{0,200}?return NextResponse\.json\([\s\S]{0,120}?status: 403/);
     expect(webhook.indexOf("resolveInboundTwilioOrganization({")).toBeLessThan(webhook.indexOf("processInboundPatientSms({"));
     expect(webhook).toContain('request.headers.get("x-twilio-signature")');
     expect(webhook).toContain("TWILIO_AUTH_TOKEN");
@@ -44,7 +53,12 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(inbound).toContain("START removes the suppression state only");
     expect(inbound).toContain("consentGranted: false");
     expect(inbound).toContain("bodyStored: false");
-    expect(inbound).not.toContain("body: input.body");
+    // The body may be read in memory to classify STOP/START/HELP — that is why Twilio
+    // sends it. It must never reach a persisted row. Assert the single legitimate
+    // reader, so adding `body: input.body` to any metadata or data object fails here.
+    const bodyReads = inbound.split("\n").filter((line) => line.includes("input.body"));
+    expect(bodyReads).toHaveLength(1);
+    expect(bodyReads[0]).toContain("classifySignedTwilioOptOut({");
     expect(webhook).toContain("must not create a second reply here");
   });
 });

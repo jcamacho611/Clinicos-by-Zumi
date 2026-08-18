@@ -14,8 +14,17 @@ describe("payment return page", () => {
 
   it("is private from search indexing and offers recoverable next steps", () => {
     expect(source).toContain("robots: { index: false, follow: false }");
-    expect(source).toContain('href="/"');
-    expect(source).toContain('href="/private-demo"');
+    // "Recoverable" means the person can actually get somewhere from here. Pinning one
+    // specific destination made the guard fail when a better next step replaced it, so
+    // assert the property instead: more than one way out, and every one of them real.
+    const hrefs = [...source.matchAll(/href="(\/[^"]*)"/g)].map((match) => match[1]);
+    expect(new Set(hrefs).size).toBeGreaterThan(1);
+    expect(hrefs).toContain("/");
+    for (const href of new Set(hrefs)) {
+      const segments = href.split(/[?#]/)[0].split("/").filter(Boolean);
+      const dir = path.join(process.cwd(), "src/app", ...segments);
+      expect(fs.existsSync(path.join(dir, "page.tsx")), `${href} has no page`).toBe(true);
+    }
     expect(source).not.toMatch(/paymentStatus\s*=\s*["']paid/i);
   });
 });

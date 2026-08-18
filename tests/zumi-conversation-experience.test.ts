@@ -22,7 +22,14 @@ describe("Zumi conversation experience", () => {
   it("turns the shell composer into a real Zumi entry instead of decorative search state", () => {
     expect(shell).toContain('new CustomEvent("zumi:prompt"');
     expect(shell).toContain('placeholder="Ask Zumi or tell it what you want done…"');
-    expect(shell).toContain('aria-label="Open Zumi"');
+    // The critical interaction: with text, the control SENDS; empty, it focuses the
+    // conversation already mounted in the shell. It never navigates, so it can never
+    // surprise someone by throwing them into a different surface mid-sentence. The
+    // label follows the behaviour rather than announcing Zumi as a separate app.
+    expect(shell).toContain('aria-label={zumiPrompt.trim() ? "Send to Zumi" : "Focus Zumi chat"}');
+    expect(shell).toContain("onClick={sendOrFocusZumi}");
+    expect(shell).toContain('new Event("zumi:open")');
+    expect(shell).not.toMatch(/aria-label="Open Zumi"/);
     expect(shell).toContain("<span className=\"hidden text-xs font-semibold sm:inline\">{zumiPrompt.trim() ? \"Send\" : \"Zumi\"}</span>");
   });
 

@@ -54,6 +54,9 @@ describe("clinic revenue funnel convergence", () => {
     expect(salesGuide).toContain("Integrated Klinikos checkout — preferred");
     expect(salesGuide).toContain("Canonical shareable Stripe Payment Link — manual-service fallback");
     expect(salesGuide).toContain("never infer payment from browser return or checkout launch");
-    expect(salesGuide).toContain("does not create or unlock a Klinikos software entitlement");
+    // Markdown emphasis inside the sentence ("does **not** create") is presentation.
+    // Strip it before matching so the guard tracks the rule, not the styling.
+    const plainGuide = salesGuide.replace(/\*\*/g, "");
+    expect(plainGuide).toContain("does not create or unlock a Klinikos software entitlement");
   });
 });

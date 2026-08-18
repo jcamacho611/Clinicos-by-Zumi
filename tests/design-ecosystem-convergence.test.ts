@@ -33,23 +33,22 @@ describe("Klinikos design and ecosystem convergence", () => {
     expect(resolveIntentDeterministically("We have an empty room and want to monetize capacity").candidatePathIds).toContain("clinic-monetize-capacity");
   });
 
-  it("makes the dedicated Zumi surface a real browser using the existing governed API", () => {
-    const browser = source("src/components/clinic/zumi-browser-workspace.tsx");
+  it("expands the one mounted Zumi conversation instead of standing up a second product", () => {
     const page = source("src/app/(platform)/zumi/page.tsx");
-    expect(page).toContain("ZumiBrowserWorkspace");
-    expect(browser).toContain('fetch("/api/zumi"');
-    expect(browser).toContain("Previous session");
-    expect(browser).toContain("Next session");
-    expect(browser).toContain("Route registry");
-    expect(browser).toContain("klinikos-orbital-k-transparent.png");
+    const shell = source("src/components/clinic/app-shell.tsx");
+
+    // Zumi is ambient intelligence inside Klinikos, not a separate app with its own
+    // browser chrome. `/zumi` changes how the already-mounted conversation is
+    // presented; it must not mount a second assistant, which would silently reset
+    // the person's in-flight context.
+    expect(page).not.toContain("ZumiBrowserWorkspace");
+    expect(page).not.toMatch(/Klinikos Browser/i);
+    expect(page).toContain("requireClinicSession");
+    expect(page).toContain('can(session.role, "ai", "read")');
+    expect(page).toContain("notFound()");
+    expect(shell).toMatch(/zumi/i);
   });
 
-  it("does not create an ungoverned raw conversation transcript store in the browser", () => {
-    const browser = source("src/components/clinic/zumi-browser-workspace.tsx");
-    expect(browser).not.toContain("localStorage");
-    expect(browser).not.toContain("sessionStorage");
-    expect(browser).toContain("memory only");
-  });
 
   it("makes routes, ecosystem, account appearance, and explicit sign out discoverable", () => {
     const navigation = source("src/lib/navigation.ts");
