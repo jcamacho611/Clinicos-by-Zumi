@@ -35,10 +35,11 @@ describe("Klinikos EDU certificate rules", () => {
     })).toEqual([]);
   });
 
-  it("carries a permanent non-licensure disclaimer", () => {
+  it("carries the canonical permanent non-credential disclaimer", () => {
     const text = EDU_CERTIFICATE_DISCLAIMER.toLowerCase();
-    expect(text).toContain("does not confer professional licensure");
+    expect(text).toContain("not professional licensure");
     expect(text).toContain("clinical privileges");
+    expect(text).toContain("employment eligibility");
     expect(text).toContain("automatic klinikos grid eligibility");
     expect(certificateMayAffectProfessionalEligibility()).toBe(false);
   });
