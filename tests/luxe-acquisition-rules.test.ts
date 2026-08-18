@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   campaignSourceFromAttribution,
+  decideLuxeOpenLeadIdentityMatch,
   leadResponsePriority,
   normalizeAttribution,
   normalizeLuxeEmail,
@@ -56,6 +57,35 @@ describe("Luxe acquisition intake rules", () => {
     expect(normalizeLuxeEmail("  MARIA@EXAMPLE.COM ")).toBe("maria@example.com");
     expect(normalizeLuxePhone("(516) 555-0199")).toBe("+15165550199");
     expect(normalizeLuxePhone("1-516-555-0199")).toBe("+15165550199");
+  });
+
+  it("deduplicates only when exactly one open lead matches the supplied identity", () => {
+    expect(decideLuxeOpenLeadIdentityMatch([
+      { id: "lead-a", email: "maria@example.com", phone: "+15165550199" },
+      { id: "lead-b", email: "other@example.com", phone: "+16465550100" },
+    ], "maria@example.com", "+15165550199")).toEqual({ kind: "matched", id: "lead-a" });
+  });
+
+  it("refuses to auto-merge when email and phone resolve to different open leads", () => {
+    const decision = decideLuxeOpenLeadIdentityMatch([
+      { id: "lead-email", email: "maria@example.com", phone: "+15165550001" },
+      { id: "lead-phone", email: "different@example.com", phone: "+15165550199" },
+    ], "maria@example.com", "+15165550199");
+    expect(decision).toEqual({ kind: "ambiguous", candidateIds: ["lead-email", "lead-phone"] });
+  });
+
+  it("refuses to auto-merge duplicate open records sharing the same contact identifier", () => {
+    const decision = decideLuxeOpenLeadIdentityMatch([
+      { id: "lead-a", email: "maria@example.com", phone: null },
+      { id: "lead-b", email: "maria@example.com", phone: null },
+    ], "maria@example.com", null);
+    expect(decision.kind).toBe("ambiguous");
+  });
+
+  it("returns no identity match when none of the normalized identifiers match", () => {
+    expect(decideLuxeOpenLeadIdentityMatch([
+      { id: "lead-a", email: "other@example.com", phone: "+15165550000" },
+    ], "maria@example.com", "+15165550199")).toEqual({ kind: "none" });
   });
 
   it("keeps the original campaign as the canonical acquisition campaign on a later touch", () => {
