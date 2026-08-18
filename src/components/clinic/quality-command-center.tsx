@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, ListChecks, ShieldCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { QualityCommandCenterWorkspace } from "@/lib/repositories/quality-command-center-repository";
 
 function dueLabel(value: string | null) {
@@ -19,6 +20,15 @@ function timingLabel(value: "overdue" | "due_soon" | "open") {
 export function QualityCommandCenter({ workspace }: { workspace: QualityCommandCenterWorkspace }) {
   const [busyGapId, setBusyGapId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const summaryCards: Array<{ label: string; value: number; icon: LucideIcon }> = workspace.summary ? [
+    { label: "Open", value: workspace.summary.open, icon: ListChecks },
+    { label: "Overdue", value: workspace.summary.overdue, icon: AlertTriangle },
+    { label: "Due soon", value: workspace.summary.dueSoon, icon: Clock3 },
+    { label: "High impact", value: workspace.summary.highImpact, icon: AlertTriangle },
+    { label: "Tasks created", value: workspace.summary.materialized, icon: CheckCircle2 },
+    { label: "Unassigned", value: workspace.summary.unassigned, icon: ListChecks },
+    { label: "Human review", value: workspace.summary.humanReview, icon: ShieldCheck },
+  ] : [];
 
   async function prepareTask(gapId: string) {
     setBusyGapId(gapId);
@@ -62,19 +72,11 @@ export function QualityCommandCenter({ workspace }: { workspace: QualityCommandC
       </div>
     </section>
 
-    {workspace.summary && <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7" aria-label="Quality backlog summary">
-      {[
-        ["Open", workspace.summary.open, ListChecks],
-        ["Overdue", workspace.summary.overdue, AlertTriangle],
-        ["Due soon", workspace.summary.dueSoon, Clock3],
-        ["High impact", workspace.summary.highImpact, AlertTriangle],
-        ["Tasks created", workspace.summary.materialized, CheckCircle2],
-        ["Unassigned", workspace.summary.unassigned, ListChecks],
-        ["Human review", workspace.summary.humanReview, ShieldCheck],
-      ].map(([label, value, Icon]) => <article className="rounded-[20px] border border-white/8 bg-white/[.025] p-4" key={String(label)}>
+    {summaryCards.length > 0 && <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7" aria-label="Quality backlog summary">
+      {summaryCards.map(({ label, value, icon: Icon }) => <article className="rounded-[20px] border border-white/8 bg-white/[.025] p-4" key={label}>
         <Icon className="h-4 w-4 text-[#d98f93]" aria-hidden="true" />
-        <p className="mt-5 text-2xl font-semibold text-[#fff7f2]">{String(value)}</p>
-        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[.12em] text-[#9f8985]">{String(label)}</p>
+        <p className="mt-5 text-2xl font-semibold text-[#fff7f2]">{value}</p>
+        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[.12em] text-[#9f8985]">{label}</p>
       </article>)}
     </section>}
 
