@@ -10,16 +10,18 @@ Klinikos currently models Twilio as a **platform-managed account with tenant-ass
 
 The patient SMS rail permits only server-owned fixed **non-PHI** templates. There is no arbitrary patient SMS body parameter. There is no production marketing template. Clinical or PHI-bearing SMS is blocked independently of consent state.
 
-Phone possession verification and messaging permission are separate. Recipient STOP suppression is authoritative. START/UNSTOP removes suppression only; it does not invent transactional, operational, marketing, or clinical permission.
+Phone possession verification and messaging permission are separate and **both are required** for a patient send. Verification evidence must match the patient's current normalized phone number. Recipient STOP suppression is authoritative. START/UNSTOP removes suppression only; it does not invent transactional, operational, marketing, or clinical permission.
 
 ## Code gates that must remain in force
 
 - `KLINIKOS_SMS_PRODUCTION_ENABLED` is blank/false by default.
 - Patient sends require exact message-class permission.
+- Patient sends require verification evidence for the exact current normalized phone number.
 - Marketing grants require patient-written evidence, but no marketing send template exists.
 - Tenant sender, signed inbound routing, and an IANA timezone must exist before a patient send can proceed.
 - Ordinary product SMS is held outside the Klinikos 09:00-20:00 organization-local product window. Jurisdiction-specific policy may only narrow this guardrail.
 - Inbound callbacks require the canonical `NEXT_PUBLIC_APP_URL`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, form encoding, bounded request size, valid Twilio signature, matching signed AccountSid, unique tenant sender resolution, and unique tenant patient resolution.
+- Inbound patient-phone resolution uses the same conservative normalization expression indexed by migration `20260818114500_patient_sms_phone_lookup_index`; duplicate shared numbers remain valid data and fail closed for inbound identity resolution.
 - Inbound message bodies are not persisted to communication audit metadata.
 
 ## Required private deployment values
@@ -30,7 +32,7 @@ Never paste values into issues, pull requests, chat, screenshots, or Klinikos br
 - `TWILIO_API_KEY_SID`
 - `TWILIO_API_KEY_SECRET`
 - `TWILIO_AUTH_TOKEN` for inbound signature verification only
-- `TWILIO_VERIFY_SERVICE_SID` only if Verify is used
+- `TWILIO_VERIFY_SERVICE_SID` if Twilio Verify is the verification ceremony
 - optional `TWILIO_MESSAGING_SERVICE_SID` for non-tenant fallback seams
 - canonical production `NEXT_PUBLIC_APP_URL`
 
@@ -50,16 +52,19 @@ Do not set `KLINIKOS_SMS_PRODUCTION_ENABLED=true` until all of these have docume
 3. The tenant sender is actually owned/routable by the configured platform Twilio account and is assigned to only one Klinikos organization.
 4. Required messaging registration, sender registration, campaign registration, or equivalent provider/carrier requirements applicable to the deployment are complete.
 5. The tenant IANA timezone is recorded and reviewed.
-6. A fixed non-PHI template is sent to a controlled test recipient from the tenant-assigned sender.
-7. Twilio returns a real MessageSid and Klinikos records provider evidence without storing message content in audit metadata.
-8. The controlled recipient sends STOP. The signed callback reaches the exact production webhook and Klinikos records suppression for the correct patient and tenant.
-9. A second ordinary send attempt is blocked while suppression is active.
-10. The recipient sends START or another provider-supported resume command. Klinikos removes suppression but does **not** create any missing message-class permission.
-11. Replay the same signed provider event or otherwise exercise duplicate delivery. The state transition remains idempotent.
-12. Exercise a wrong signature, wrong AccountSid, wrong tenant sender, duplicate patient phone, and outside-quiet-hours attempt. Each fails closed.
-13. Review audit evidence and provider logs together; no redirect, credential presence, or UI badge is accepted as proof of delivery.
-14. Perform the dependency/security release review described below.
-15. Only after these checks pass may an authorized operator enable `KLINIKOS_SMS_PRODUCTION_ENABLED=true`.
+6. The controlled patient/test recipient's **current** phone is verified through an approved possession-verification ceremony, and the stored verification evidence matches the normalized patient phone exactly. A database edit or staff assertion is not verification.
+7. The required transactional or operational SMS permission is recorded independently from the verification event.
+8. A fixed non-PHI template is sent to the controlled verified recipient from the tenant-assigned sender.
+9. Twilio returns a real MessageSid and Klinikos records provider evidence without storing message content in audit metadata.
+10. The controlled recipient sends STOP. The signed callback reaches the exact production webhook and Klinikos records suppression for the correct patient and tenant.
+11. A second ordinary send attempt is blocked while suppression is active.
+12. The recipient sends START or another provider-supported resume command. Klinikos removes suppression but does **not** create any missing message-class permission.
+13. Replay the same signed provider event or otherwise exercise duplicate delivery. The state transition remains idempotent.
+14. Exercise a wrong signature, wrong AccountSid, wrong tenant sender, duplicate patient phone, stale/mismatched phone verification, and outside-quiet-hours attempt. Each fails closed.
+15. Apply and verify the normalized-phone expression index migration in the target database; do not infer migration success from source control alone.
+16. Review audit evidence and provider logs together; no redirect, credential presence, or UI badge is accepted as proof of delivery.
+17. Perform the dependency/security release review described below.
+18. Only after these checks pass may an authorized operator enable `KLINIKOS_SMS_PRODUCTION_ENABLED=true`.
 
 ## Dependency/security release blocker
 
@@ -71,6 +76,10 @@ The current inbound signature primitive is intentionally isolated in `src/lib/co
 - document and approve a security exception with vendor-compatible test vectors and a named owner/review date.
 
 Do not edit `package.json` without a matching lockfile change merely to satisfy this checkbox.
+
+## Verification-ceremony blocker
+
+The send rail now requires current phone verification. If the deployed product does not yet expose a governed Twilio Verify or patient-portal verification ceremony, patient SMS remains **BLOCKED** even when consent, sender routing, and credentials are present. Do not add a staff-only “mark verified” shortcut to bypass possession proof.
 
 ## PHI / healthcare boundary
 
