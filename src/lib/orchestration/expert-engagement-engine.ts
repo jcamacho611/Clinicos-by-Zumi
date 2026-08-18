@@ -24,8 +24,7 @@ export type ExpertEngagementTerms = {
   allowedResourceTypes: string[];
   dataAccessClass: ExpertDataAccessClass;
   minimumNecessaryFields: string[];
-  requiresBaaEvidence: boolean;
-  baaEvidenceRef?: string | null;
+  agreementEvidenceRefs: Record<string, string>;
   scopedAuthorizationApprovedBy?: string | null;
   scopedAuthorizationApprovedAt?: Date | null;
 };
@@ -85,8 +84,9 @@ export function evaluateExpertEngagementReadiness(input: {
     }
   }
 
-  if (engagement.terms.requiresBaaEvidence && !engagement.terms.baaEvidenceRef) {
-    blockers.push("Required BAA/contract evidence is missing.");
+  for (const agreementKey of need.requiredAgreementEvidenceKeys) {
+    const evidenceRef = engagement.terms.agreementEvidenceRefs[agreementKey];
+    if (!evidenceRef?.trim()) blockers.push(`Required agreement evidence is missing: ${agreementKey}.`);
   }
 
   return {
