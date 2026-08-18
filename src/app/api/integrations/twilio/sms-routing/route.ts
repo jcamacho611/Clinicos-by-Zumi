@@ -3,6 +3,7 @@ import { z } from "zod";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { configureTwilioSmsRouting, getTwilioSmsRoutingConfig } from "@/lib/communications/twilio-integration";
+import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const webhookPath = "/api/webhooks/twilio/sms";
 
@@ -52,6 +53,11 @@ export async function PATCH(request: Request) {
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const denied = await enforceApiPermission(session, "integrations", "manage", { request, resourceId: "twilio:sms-routing" });
   if (denied) return denied;
+
+  const originDecision = evaluateSameOriginMutation(request);
+  if (!originDecision.allowed) {
+    return NextResponse.json({ error: "Cross-origin mutation blocked." }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid Twilio SMS routing configuration." }, { status: 400 });
