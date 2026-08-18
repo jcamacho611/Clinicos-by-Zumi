@@ -5,6 +5,7 @@ import {
   normalizeStripeWebhookEvent,
   stripeLivePaymentStatus,
 } from "@/lib/commercial/payment-connectors/stripe";
+import { isKlinikosRecurringStripeEventCandidate } from "@/lib/commercial/stripe-recurring-event-candidate";
 import {
   processVerifiedStripeClinicSubscriptionEvent,
   StripeClinicSubscriptionError,
@@ -68,6 +69,9 @@ export async function POST(request: Request) {
   // after it matches the opaque server-owned clinic plan intent. Failed invoices
   // do not extend access; signed subscription deletion revokes the matching plan.
   if (["invoice.paid", "invoice.payment_failed", "customer.subscription.deleted"].includes(event.type)) {
+    if (!isKlinikosRecurringStripeEventCandidate(event)) {
+      return json({ received: true, supported: false, unrelatedRecurringEvent: true });
+    }
     try {
       const recurring = await processVerifiedStripeClinicSubscriptionEvent(event, rawBody);
       if (!recurring) {
