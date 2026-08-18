@@ -3,6 +3,7 @@ import {
   LUXE_ACQUISITION_JOURNEY_COOKIE,
   openLuxeAcquisitionJourney,
 } from "@/lib/luxe-acquisition-journey-token";
+import { normalizeCommercialReturnUrl } from "@/lib/commercial/checkout-service";
 import { createLuxeStripeDepositCheckout, luxeStripeDepositStatus } from "@/lib/luxe-stripe-deposit";
 import { recordLuxeDepositCheckoutStarted } from "@/lib/repositories/luxe-deposit-checkout-repository";
 import { resolveLuxeDepositCheckoutContext } from "@/lib/repositories/luxe-processor-payment-evidence-repository";
@@ -36,7 +37,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const returnUrl = new URL("/luxe/consult?deposit=returned", request.url).toString();
+    const returnUrl = normalizeCommercialReturnUrl(
+      new URL("/luxe/consult?deposit=returned", request.url).toString(),
+    );
     const checkout = await createLuxeStripeDepositCheckout({
       journeyToken,
       email: context.email,
