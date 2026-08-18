@@ -9,23 +9,30 @@ const inbound = read("src/lib/communications/inbound-sms-service.ts");
 const configRoute = read("src/app/api/integrations/twilio/sms-routing/route.ts");
 
 describe("Twilio inbound tenant routing contract", () => {
-  it("stores only non-secret sender routing in the tenant Integration record", () => {
+  it("stores only non-secret routing and serializes sender assignment", () => {
     expect(integration).toContain('type: "communications"');
     expect(integration).toContain('vendor: "Twilio"');
     expect(integration).toContain("senderPhone");
     expect(integration).toContain("messagingServiceSid");
+    expect(integration).toContain("timeZone");
     expect(integration).toContain("sender_already_assigned");
+    expect(integration).toContain("pg_advisory_xact_lock");
     expect(integration).toContain("LIMIT 2");
     expect(integration).not.toContain("TWILIO_API_KEY_SECRET");
-    expect(configRoute).not.toContain("TWILIO_AUTH_TOKEN");
+    expect(configRoute).not.toContain("process.env.TWILIO_AUTH_TOKEN");
     expect(configRoute).toContain('enforceApiPermission(session, "integrations", "manage"');
   });
 
-  it("validates the Twilio signature before resolving or mutating a tenant", () => {
+  it("hardens the public boundary before tenant resolution or mutation", () => {
+    expect(webhook.indexOf("content-type")).toBeLessThan(webhook.indexOf("request.text()"));
+    expect(webhook.indexOf("MAX_TWILIO_FORM_BYTES")).toBeLessThan(webhook.indexOf("request.text()"));
     expect(webhook.indexOf("validateTwilioWebhookSignature")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization"));
+    expect(webhook.indexOf("accountSid !== configuredAccountSid")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization"));
     expect(webhook.indexOf("resolveInboundTwilioOrganization({")).toBeLessThan(webhook.indexOf("processInboundPatientSms({"));
     expect(webhook).toContain('request.headers.get("x-twilio-signature")');
     expect(webhook).toContain("TWILIO_AUTH_TOKEN");
+    expect(webhook).toContain("TWILIO_ACCOUNT_SID");
+    expect(webhook).toContain("Canonical Twilio webhook URL is not configured");
     expect(webhook).toContain("<Response></Response>");
     expect(webhook).toContain('"Content-Type": "application/xml; charset=utf-8"');
   });
@@ -40,11 +47,11 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(inbound).toContain('state: "duplicate"');
   });
 
-  it("never treats START as new consent and never persists the inbound message body in audit metadata", () => {
+  it("never treats START as new consent and never persists inbound message content", () => {
     expect(inbound).toContain("START removes the suppression state only");
     expect(inbound).toContain("consentGranted: false");
     expect(inbound).toContain("bodyStored: false");
     expect(inbound).not.toContain("body: input.body");
-    expect(webhook).toContain("must not create a second reply here");
+    expect(webhook).toContain("deliberately emits empty TwiML");
   });
 });
