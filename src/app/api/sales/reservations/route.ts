@@ -7,6 +7,7 @@ import { createPreferredCommercialCheckout } from "@/lib/commercial/checkout-ser
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { createPublicDemoReservation, listSalesDemoWorkspace } from "@/lib/repositories/sales-demo-repository";
+import { normalizePublicSalesReservationInput } from "@/lib/sales/paid-analysis-checkout";
 
 export async function GET(request: Request) {
   const session = await getClinicSession();
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
   recordSalesIntakeAttempt(key);
 
   try {
-    const result = await createPublicDemoReservation(await request.json().catch(() => null), metadata);
+    const rawInput = await request.json().catch(() => null);
+    const normalizedInput = normalizePublicSalesReservationInput(rawInput);
+    const result = await createPublicDemoReservation(normalizedInput, metadata);
     let checkout: Awaited<ReturnType<typeof createPreferredCommercialCheckout>> | null = null;
     let checkoutNotice = "Your request is saved for human review before payment.";
 
