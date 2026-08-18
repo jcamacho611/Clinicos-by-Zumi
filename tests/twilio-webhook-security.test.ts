@@ -1,6 +1,10 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { classifyInboundSmsCommand, validateTwilioWebhookSignature } from "@/lib/communications/twilio-webhook";
+import {
+  classifyInboundSmsCommand,
+  classifySignedTwilioOptOut,
+  validateTwilioWebhookSignature,
+} from "@/lib/communications/twilio-webhook";
 
 function sign(url: string, params: URLSearchParams, token: string) {
   const valuesByKey = new Map<string, string[]>();
@@ -37,14 +41,20 @@ describe("Twilio inbound webhook security", () => {
     expect(validateTwilioWebhookSignature({ publicUrl: url, params, signature, authToken: "" })).toBe(false);
   });
 
-  it("classifies standard opt-out, resume and help commands without treating arbitrary messages as consent", () => {
-    for (const word of ["STOP", "stopall", "unsubscribe", "cancel", "end", "quit"]) {
+  it("classifies conservative fallback opt-out, resume and help commands", () => {
+    for (const word of ["STOP", "stopall", "unsubscribe", "cancel", "end", "quit", "revoke", "optout"]) {
       expect(classifyInboundSmsCommand(word)).toBe("stop");
     }
-    for (const word of ["START", "unstop", "yes"]) {
-      expect(classifyInboundSmsCommand(word)).toBe("start");
-    }
+    for (const word of ["START", "unstop"]) expect(classifyInboundSmsCommand(word)).toBe("start");
     for (const word of ["HELP", "info"]) expect(classifyInboundSmsCommand(word)).toBe("help");
+    expect(classifyInboundSmsCommand("yes")).toBe("other");
     expect(classifyInboundSmsCommand("please text me tomorrow")).toBe("other");
+  });
+
+  it("lets signed Twilio OptOutType override the conservative fallback", () => {
+    expect(classifySignedTwilioOptOut({ optOutType: "START", body: "yes" })).toBe("start");
+    expect(classifySignedTwilioOptOut({ optOutType: "STOP", body: "keep texting me" })).toBe("stop");
+    expect(classifySignedTwilioOptOut({ optOutType: "HELP", body: "anything" })).toBe("help");
+    expect(classifySignedTwilioOptOut({ optOutType: null, body: "YES" })).toBe("other");
   });
 });
