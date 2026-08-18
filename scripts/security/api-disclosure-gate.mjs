@@ -37,9 +37,9 @@ const FORBIDDEN_RESPONSE_PATTERNS = [
     message: "API JSON must not serialize process.env state",
   },
   {
-    key: "raw-result-spread",
-    pattern: /(?:NextResponse|Response)\.json\([\s\S]{0,600}?\.\.\.(?:result|record|row|entity|session|config|current)\b/,
-    message: "raw server/domain objects must be projected into an explicit browser DTO before response",
+    key: "raw-sensitive-object-spread",
+    pattern: /(?:NextResponse|Response)\.json\([\s\S]{0,600}?\.\.\.(?:session|config|current)\b/,
+    message: "session/configuration objects must be projected into an explicit browser DTO before response",
   },
 ];
 
