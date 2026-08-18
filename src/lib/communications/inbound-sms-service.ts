@@ -99,7 +99,17 @@ export async function processInboundPatientSms(input: {
     const patient = locked[0];
     if (!patient) return { ok: false as const, reason: "patient_not_found" as const };
 
-    if (hasProcessedInboundSmsEvent(patient.communicationPrefs, input.messageSid)) {
+    const durableReplay = await tx.integrationEvent.findFirst({
+      where: {
+        organizationId: input.organizationId,
+        integrationId: input.integrationId,
+        resourceType: "twilio_message",
+        resourceId: input.messageSid,
+        eventType: "sms.inbound",
+      },
+      select: { id: true },
+    });
+    if (durableReplay || hasProcessedInboundSmsEvent(patient.communicationPrefs, input.messageSid)) {
       return { ok: true as const, state: "duplicate" as const, command };
     }
 
@@ -125,6 +135,24 @@ export async function processInboundPatientSms(input: {
     }
 
     await tx.patient.update({ where: { id: patient.id }, data: { communicationPrefs: json(nextPrefs) } });
+    await tx.integrationEvent.create({
+      data: {
+        organizationId: input.organizationId,
+        integrationId: input.integrationId,
+        resourceType: "twilio_message",
+        resourceId: input.messageSid,
+        direction: "inbound",
+        eventType: "sms.inbound",
+        status: "processed",
+        metadata: {
+          provider: "twilio",
+          patientId: patient.id,
+          command,
+          bodyStored: false,
+          consentGranted: false,
+        },
+      },
+    });
     await tx.auditLog.create({
       data: {
         organizationId: input.organizationId,
