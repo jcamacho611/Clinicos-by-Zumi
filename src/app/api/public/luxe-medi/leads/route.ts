@@ -102,11 +102,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await ingestPublicLuxeLead(payload);
-    return NextResponse.json(
-      { received: true },
-      { status: result.created ? 201 : 200, headers },
-    );
+    await ingestPublicLuxeLead(payload);
+    return NextResponse.json({ received: true }, { status: 202, headers });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Lead request is invalid." }, { status: 400, headers });
