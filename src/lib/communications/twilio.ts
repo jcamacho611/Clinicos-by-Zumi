@@ -8,7 +8,7 @@ type TwilioApiKeyCredentials = {
   apiKeySecret: string;
 };
 
-function clean(value: string | undefined) {
+function clean(value: string | undefined | null) {
   return value?.trim() ?? "";
 }
 
@@ -16,12 +16,15 @@ function e164(value: string) {
   return /^\+[1-9]\d{7,14}$/.test(value);
 }
 
+function messagingServiceSid(value: string) {
+  return /^MG[0-9a-fA-F]{32}$/.test(value);
+}
+
 export function twilioApiKeyCredentials(env: TwilioEnv = process.env): TwilioApiKeyCredentials | null {
   const accountSid = clean(env.TWILIO_ACCOUNT_SID);
   const apiKeySid = clean(env.TWILIO_API_KEY_SID);
   const apiKeySecret = clean(env.TWILIO_API_KEY_SECRET);
-  if (!accountSid || !apiKeySid || !apiKeySecret) return null;
-  if (!accountSid.startsWith("AC") || !apiKeySid.startsWith("SK")) return null;
+  if (!/^AC[0-9a-fA-F]{32}$/.test(accountSid) || !/^SK[0-9a-fA-F]{32}$/.test(apiKeySid) || apiKeySecret.length < 20) return null;
   return { accountSid, apiKeySid, apiKeySecret };
 }
 
@@ -41,61 +44,71 @@ async function twilioFormRequest(input: {
       "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
     },
     body: input.body.toString(),
+    signal: AbortSignal.timeout(10_000),
   }).catch(() => null);
 }
 
 export type TwilioSendResult =
   | { ok: true; sid: string; status: string | null }
-  | { ok: false; reason: "not_configured" | "invalid_recipient" | "provider_error"; detail: string };
+  | { ok: false; reason: "not_configured" | "no_sender" | "invalid_recipient" | "provider_error"; detail: string };
 
 /**
- * Send a non-PHI SMS through a Twilio Messaging Service using a restricted API key.
+ * Send a bounded non-PHI SMS using restricted API-key credentials.
  *
- * The API-key SID/secret authenticate outbound REST calls. The Twilio master Auth Token
- * is intentionally not used here. Clinical/PHI messaging remains separately gated by
- * connector policy, BAA/security posture, minimum-necessary content, and human approval.
+ * A governed patient send supplies the tenant-assigned E.164 `from` number. The legacy
+ * Messaging Service fallback exists for other product seams but is never allowed to
+ * override an explicit tenant sender.
  */
 export async function sendTwilioSms(input: {
   to: string;
   body: string;
+  from?: string | null;
+  messagingServiceSid?: string | null;
   env?: TwilioEnv;
 }): Promise<TwilioSendResult> {
   const env = input.env ?? process.env;
   const credentials = twilioApiKeyCredentials(env);
-  const messagingServiceSid = clean(env.TWILIO_MESSAGING_SERVICE_SID);
-
-  if (!credentials || !messagingServiceSid) {
-    return {
-      ok: false,
-      reason: "not_configured",
-      detail: "Twilio restricted API-key credentials and a Messaging Service SID are required.",
-    };
+  if (!credentials) {
+    return { ok: false, reason: "not_configured", detail: "Twilio restricted API-key credentials are not configured." };
   }
   if (!e164(input.to)) {
     return { ok: false, reason: "invalid_recipient", detail: "SMS recipient must be a valid E.164 phone number." };
   }
-  if (!input.body.trim()) {
-    return { ok: false, reason: "provider_error", detail: "SMS body is empty." };
+
+  const bodyText = input.body.trim();
+  if (!bodyText || bodyText.length > 480) {
+    return { ok: false, reason: "provider_error", detail: "SMS body must contain 1 to 480 characters." };
   }
 
-  const body = new URLSearchParams({
-    To: input.to,
-    Body: input.body,
-    MessagingServiceSid: messagingServiceSid,
-  });
+  const explicitFrom = clean(input.from);
+  const explicitService = clean(input.messagingServiceSid);
+  const fallbackService = explicitFrom || explicitService ? "" : clean(env.TWILIO_MESSAGING_SERVICE_SID);
+  const serviceSid = explicitService || fallbackService;
+
+  if (explicitFrom && !e164(explicitFrom)) {
+    return { ok: false, reason: "no_sender", detail: "The configured tenant SMS sender is not valid E.164." };
+  }
+  if (!explicitFrom && !messagingServiceSid(serviceSid)) {
+    return { ok: false, reason: "no_sender", detail: "No valid tenant sender or Twilio Messaging Service is configured." };
+  }
+
+  const body = new URLSearchParams({ To: input.to, Body: bodyText });
+  if (explicitFrom) body.set("From", explicitFrom);
+  else body.set("MessagingServiceSid", serviceSid);
+
   const response = await twilioFormRequest({
     url: `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(credentials.accountSid)}/Messages.json`,
     body,
     credentials,
   });
 
-  if (!response) return { ok: false, reason: "provider_error", detail: "Twilio could not be reached." };
-  if (!response.ok) {
-    return { ok: false, reason: "provider_error", detail: `Twilio returned HTTP ${response.status}.` };
-  }
+  if (!response) return { ok: false, reason: "provider_error", detail: "Twilio could not be reached within the request timeout." };
+  if (!response.ok) return { ok: false, reason: "provider_error", detail: `Twilio returned HTTP ${response.status}.` };
 
   const payload = (await response.json().catch(() => null)) as { sid?: string; status?: string | null } | null;
-  if (!payload?.sid) return { ok: false, reason: "provider_error", detail: "Twilio accepted the request without an evidentiary message SID." };
+  if (!payload?.sid || !/^[A-Z]{2}[0-9a-fA-F]{32}$/.test(payload.sid)) {
+    return { ok: false, reason: "provider_error", detail: "Twilio accepted the request without a valid evidentiary message SID." };
+  }
   return { ok: true, sid: payload.sid, status: payload.status ?? null };
 }
 
@@ -105,17 +118,15 @@ export type TwilioVerifyResult =
 
 function verifyService(env: TwilioEnv) {
   const serviceSid = clean(env.TWILIO_VERIFY_SERVICE_SID);
-  return serviceSid.startsWith("VA") ? serviceSid : null;
+  return /^VA[0-9a-fA-F]{32}$/.test(serviceSid) ? serviceSid : null;
 }
 
-/** Start phone-possession verification. This is identity/contact verification, not clinical messaging. */
+/** Start phone-possession verification. This is identity/contact verification, not messaging permission. */
 export async function startTwilioPhoneVerification(input: { to: string; env?: TwilioEnv }): Promise<TwilioVerifyResult> {
   const env = input.env ?? process.env;
   const credentials = twilioApiKeyCredentials(env);
   const serviceSid = verifyService(env);
-  if (!credentials || !serviceSid) {
-    return { ok: false, reason: "not_configured", detail: "Twilio Verify is not fully configured." };
-  }
+  if (!credentials || !serviceSid) return { ok: false, reason: "not_configured", detail: "Twilio Verify is not fully configured." };
   if (!e164(input.to)) return { ok: false, reason: "invalid_recipient", detail: "Verification recipient must be a valid E.164 phone number." };
 
   const response = await twilioFormRequest({
@@ -135,9 +146,7 @@ export async function checkTwilioPhoneVerification(input: { to: string; code: st
   const env = input.env ?? process.env;
   const credentials = twilioApiKeyCredentials(env);
   const serviceSid = verifyService(env);
-  if (!credentials || !serviceSid) {
-    return { ok: false, reason: "not_configured", detail: "Twilio Verify is not fully configured." };
-  }
+  if (!credentials || !serviceSid) return { ok: false, reason: "not_configured", detail: "Twilio Verify is not fully configured." };
   if (!e164(input.to)) return { ok: false, reason: "invalid_recipient", detail: "Verification recipient must be a valid E.164 phone number." };
   if (!/^\d{4,10}$/.test(input.code.trim())) return { ok: false, reason: "invalid_code", detail: "Verification code format is invalid." };
 
