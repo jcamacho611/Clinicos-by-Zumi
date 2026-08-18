@@ -9,8 +9,17 @@ const CLIENT_FORBIDDEN_IMPORTS = [
   /^@\/lib\/db$/,
   /^@\/lib\/repositories(?:\/|$)/,
   /^@\/lib\/orchestration(?:\/|$)/,
-  /^@\/features\/zumi\/(?:gateway|master-directive|trusted-orchestration|quality-guardian-context|conversation-policy|providers|policy|redaction|tool-security|memory|canonical-context|entitlements|tool-catalog)(?:$|\/)/,
+  /^@\/features\/zumi\/(?:gateway|master-directive|trusted-orchestration|quality-guardian-context|conversation-policy|providers|policy|redaction|tool-security|memory|canonical-context|entitlements|tool-catalog|client-projection)(?:$|\/)/,
   /^@\/lib\/security\/(?:events|session-risk|step-up|secrets|server-env)(?:$|\/)/,
+  /^@\/docs(?:\/|$)/,
+];
+const CLIENT_FORBIDDEN_RESOLVED_PATHS = [
+  /^src\/lib\/db(?:\.[a-z]+)?$/i,
+  /^src\/lib\/repositories(?:\/|$)/,
+  /^src\/lib\/orchestration(?:\/|$)/,
+  /^src\/features\/zumi\/(?:gateway|master-directive|trusted-orchestration|quality-guardian-context|conversation-policy|providers|policy|redaction|tool-security|memory|canonical-context|entitlements|tool-catalog|client-projection)(?:\.|\/|$)/,
+  /^src\/lib\/security\/(?:events|session-risk|step-up|secrets|server-env)(?:\.|\/|$)/,
+  /^docs(?:\/|$)/,
 ];
 
 const CLIENT_FORBIDDEN_MARKERS = [
@@ -91,6 +100,18 @@ function importSpecifiers(text) {
   return values;
 }
 
+function resolvedClientTarget(file, specifier) {
+  if (!specifier.startsWith(".")) return null;
+  const absolute = path.resolve(path.dirname(file), specifier.replace(/[?#].*$/, ""));
+  return rel(absolute);
+}
+
+function forbiddenClientImport(file, specifier) {
+  if (CLIENT_FORBIDDEN_IMPORTS.some((pattern) => pattern.test(specifier))) return true;
+  const resolved = resolvedClientTarget(file, specifier);
+  return Boolean(resolved && CLIENT_FORBIDDEN_RESOLVED_PATHS.some((pattern) => pattern.test(resolved)));
+}
+
 function environmentNames(text) {
   const names = new Set();
   for (const match of text.matchAll(/\bNEXT_PUBLIC_[A-Z0-9_]+\b/g)) names.add(match[0]);
@@ -112,7 +133,7 @@ function scanClientModules() {
     if (!text || !isClientModule(text)) continue;
 
     for (const specifier of importSpecifiers(text)) {
-      if (CLIENT_FORBIDDEN_IMPORTS.some((pattern) => pattern.test(specifier))) {
+      if (forbiddenClientImport(file, specifier)) {
         fail(file, "client-import", `client module imports server-confidential module '${specifier}'`);
       }
     }
