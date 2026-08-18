@@ -10,7 +10,6 @@ const taskFindFirst = vi.fn();
 const taskCreate = vi.fn();
 const userFindFirst = vi.fn();
 const notificationCreate = vi.fn();
-const transaction = vi.fn(async (callback: (tx: unknown) => unknown) => callback(tx));
 
 const tx = {
   $queryRaw: (...args: unknown[]) => queryRaw(...args),
@@ -28,8 +27,10 @@ const tx = {
   notification: { create: (...args: unknown[]) => notificationCreate(...args) },
 };
 
+const transaction = vi.fn(async (callback: (client: typeof tx) => unknown) => callback(tx));
+
 vi.mock("@/lib/db", () => ({
-  db: { $transaction: (...args: unknown[]) => transaction(...args) },
+  db: { $transaction: (callback: (client: typeof tx) => unknown) => transaction(callback) },
 }));
 
 const { materializeQualityGapTask, QualityTaskMaterializationError } = await import(
