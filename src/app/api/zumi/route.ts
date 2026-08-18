@@ -4,6 +4,7 @@ import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { invokeZumi } from "@/features/zumi/gateway";
+import { loadZumiQualityGuardianContext } from "@/features/zumi/quality-guardian-context";
 import { resolveOrganizationEntitlements } from "@/features/zumi/entitlements";
 import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/features/zumi/schemas";
 import { registerProvider, zumiGatewayStatus } from "@/features/zumi/providers";
@@ -89,6 +90,7 @@ export async function GET() {
         durablePreferenceMemory: true,
         multimodalContract: true,
         trustedPathEngine: true,
+        trustedQualityGuardian: true,
       },
       conversation: {
         supported: true,
@@ -202,6 +204,15 @@ export async function POST(request: Request) {
   const capability = parsed.data.webResearch === true ? "public_research" : parsed.data.capability;
   const presence = zumiPresenceSchema.parse(parsed.data.presence ?? {});
   const accessibility = zumiAccessibilitySchema.parse(parsed.data.accessibility ?? {});
+
+  // Quality Guardian is server-loaded from tenant/RBAC-scoped persisted data. It is
+  // intentionally separate from client-supplied `context`, which is never trusted
+  // as quality/compliance truth.
+  const qualityGuardianContext = await loadZumiQualityGuardianContext({
+    session,
+    question: parsed.data.question,
+  });
+
   const result = await invokeZumi({
     session,
     capability,
@@ -209,6 +220,7 @@ export async function POST(request: Request) {
     entitlements,
     question: parsed.data.question,
     context: parsed.data.context,
+    trustedQualityAssurance: qualityGuardianContext?.quality ?? null,
     previousResponseId: previous?.responseId ?? null,
     allowWebResearch: parsed.data.webResearch,
     allowKnowledgeSearch: parsed.data.knowledgeSearch,
@@ -240,6 +252,7 @@ export async function POST(request: Request) {
       cognition: result.cognition,
       orchestration: result.orchestration,
       trustedOrchestration: result.trustedOrchestration,
+      trustedQualityAssurance: result.trustedQualityAssurance,
       presence,
       accessibility,
       rateLimitRemaining: limit.remaining,
