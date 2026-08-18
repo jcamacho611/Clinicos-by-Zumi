@@ -24,6 +24,10 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   "remote-monitoring": { all: [["remote_monitoring", "read"]] },
   inventory: { all: [["inventory", "read"]] },
   grid: { any: [["grid", "read"], ["network", "read"], ["credentialing", "read"]] },
+  /** Route and ecosystem discovery reveal no protected record data themselves. Each
+   * destination and consequential action still enforces its own role/domain rules. */
+  paths: {},
+  ecosystem: {},
   /**
    * EDU is its own enrollment/institution authorization domain. This rule grants only
    * discovery of the EDU entry point from the clinic shell; `resolveEduIdentity` and
