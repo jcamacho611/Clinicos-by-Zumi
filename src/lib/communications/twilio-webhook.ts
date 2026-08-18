@@ -44,8 +44,8 @@ export function validateTwilioWebhookSignature(input: {
 export type InboundSmsCommand = "stop" | "start" | "help" | "other";
 
 // These are conservative fallback keywords for deployments where Twilio does not send
-// OptOutType. When signed OptOutType is present, the inbound service trusts Twilio's
-// provider-side classification instead of re-interpreting the message body.
+// OptOutType. When signed OptOutType is present, Klinikos trusts Twilio's provider-side
+// classification instead of re-interpreting the body.
 const STOP_WORDS = new Set(["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT", "REVOKE", "OPTOUT"]);
 const START_WORDS = new Set(["START", "UNSTOP"]);
 const HELP_WORDS = new Set(["HELP", "INFO"]);
@@ -56,4 +56,15 @@ export function classifyInboundSmsCommand(body: string): InboundSmsCommand {
   if (START_WORDS.has(normalized)) return "start";
   if (HELP_WORDS.has(normalized)) return "help";
   return "other";
+}
+
+export function classifySignedTwilioOptOut(input: {
+  optOutType?: string | null;
+  body: string;
+}): InboundSmsCommand {
+  const declared = input.optOutType?.trim().toUpperCase();
+  if (declared === "STOP") return "stop";
+  if (declared === "START") return "start";
+  if (declared === "HELP") return "help";
+  return classifyInboundSmsCommand(input.body);
 }
