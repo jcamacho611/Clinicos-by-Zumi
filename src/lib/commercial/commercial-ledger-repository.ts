@@ -128,7 +128,7 @@ function allocationAmount(allocations: FundingAllocation[], source: FundingAlloc
 async function lockOrganization(tx: Prisma.TransactionClient, organizationId: string) {
   const rows = await tx.$queryRaw<OrganizationRow[]>(Prisma.sql`
     SELECT "id", "demoMode", "status"
-    FROM "Organization"
+    FROM "organizations"
     WHERE "id" = ${organizationId}
     FOR SHARE
   `);
