@@ -70,12 +70,8 @@ export async function recordPatientSmsPermission(input: {
   policyVersion?: string | null;
   evidenceReference?: string | null;
 }) {
-  if (input.source === "patient_written" && !input.evidenceReference) {
-    return { ok: false as const, reason: "invalid_evidence" as const };
-  }
-  if (input.status === "granted" && input.source === "staff_documented") {
-    return { ok: false as const, reason: "invalid_evidence" as const };
-  }
+  if (input.source === "patient_written" && !input.evidenceReference) return { ok: false as const, reason: "invalid_evidence" as const };
+  if (input.status === "granted" && input.source === "staff_documented") return { ok: false as const, reason: "invalid_evidence" as const };
   if (input.messageClass === "marketing" && input.status === "granted" && (input.source !== "patient_written" || !input.evidenceReference)) {
     return { ok: false as const, reason: "invalid_evidence" as const };
   }
@@ -122,7 +118,7 @@ export async function recordPatientPhoneVerification(input: {
   organizationId: string;
   patientId: string;
   actorId?: string | null;
-  source: string;
+  source: "twilio_verify" | "patient_portal_verified";
   verifiedAt?: string;
 }) {
   const patient = await patientForSms(input.organizationId, input.patientId);
@@ -192,6 +188,7 @@ export type PatientSmsSendResult =
       reason:
         | "patient_not_found"
         | "missing_phone"
+        | "phone_not_verified"
         | "template_not_allowed"
         | "production_disabled"
         | "routing_not_configured"
@@ -209,10 +206,8 @@ export type PatientSmsSendResult =
     };
 
 /**
- * Canonical patient SMS send path.
- *
- * The caller chooses only a reviewed template ID. Message class, subject and body are
- * server-owned. There is no arbitrary-body argument and no caller-supplied PHI boolean.
+ * Canonical patient SMS send path. The caller chooses only a reviewed template ID;
+ * class, subject, body, PHI posture and sender are all server-owned or tenant-owned.
  */
 export async function sendAuthorizedPatientSmsTemplate(input: {
   organizationId: string;
@@ -246,6 +241,19 @@ export async function sendAuthorizedPatientSmsTemplate(input: {
       metadata: { channel: "sms", messageClass: template.messageClass, templateId: template.id, reason: decision.reason },
     });
     return decision;
+  }
+
+  const smsState = readSmsPreferences(patient.communicationPrefs);
+  const verification = smsState.endpoint;
+  if (!verification?.verifiedAt || verification.normalizedPhone !== decision.normalizedPhone) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", messageClass: template.messageClass, templateId: template.id, reason: "phone_not_verified" },
+    });
+    return { ok: false, reason: "phone_not_verified", detail: "The patient's current phone number must be verified before Klinikos can send SMS." };
   }
 
   const env = input.env ?? process.env;
