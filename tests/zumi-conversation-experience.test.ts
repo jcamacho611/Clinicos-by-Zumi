@@ -11,18 +11,19 @@ const customerContext = readFileSync(join(process.cwd(), "docs/ZUMI_CUSTOMER_PRO
 const masterDirective = readFileSync(join(process.cwd(), "src/features/zumi/master-directive.ts"), "utf8");
 
 describe("Zumi conversation experience", () => {
-  it("has one explicit full conversation workspace and primary navigation entry", () => {
-    expect(navigation).toContain('{ href: "/zumi", label: "Zumi"');
-    expect(navigation).toContain('zumi: { title: "Zumi", eyebrow: "Klinikos Intelligence" }');
+  it("has one explicit full conversation workspace and a persistent shell entry", () => {
+    expect(navigation).toContain('zumi: { title: "Conversation", eyebrow: "Zumi" }');
     expect(workspacePage).toContain('can(session.role, "ai", "read")');
-    expect(workspacePage).toContain("data-zumi-workspace-anchor");
+    expect(workspacePage).toContain("The persistent Zumi instance lives in AppShell");
+    expect(workspacePage).toContain("return null");
+    expect(shell).toContain("<ZumiPresence userName={session.name}");
   });
 
   it("turns the shell composer into a real Zumi entry instead of decorative search state", () => {
     expect(shell).toContain('new CustomEvent("zumi:prompt"');
-    expect(shell).toContain('placeholder="Ask Zumi or search Klinikos…"');
+    expect(shell).toContain('placeholder="Ask Zumi or tell it what you want done…"');
     expect(shell).toContain('aria-label="Open Zumi"');
-    expect(shell).toContain("<span className=\"hidden text-xs font-semibold sm:inline\">Zumi</span>");
+    expect(shell).toContain("<span className=\"hidden text-xs font-semibold sm:inline\">{zumiPrompt.trim() ? \"Send\" : \"Zumi\"}</span>");
   });
 
   it("keeps trusted path navigation client-side so the active conversation is not destroyed", () => {
