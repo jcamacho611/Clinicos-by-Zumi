@@ -56,7 +56,6 @@ const intentResourceTypes: Record<string, string[]> = {
   referral: ["referral"],
 };
 
-
 export default async function GridBrowsePage({ searchParams }: { searchParams: Promise<{ intent?: string; q?: string }> }) {
   const { intent, q } = await searchParams;
   const activeIntent = intent && laneCopy[intent] ? intent : "all";
@@ -69,13 +68,17 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
   const safeQuery = q?.trim().slice(0, 240) ?? "";
   const interpretation = inferGridIntent(safeQuery, activeIntent as GridIntentKind);
   const searchTerms = interpretation.searchTerms;
+  const temporalWeekdays = interpretation.temporal.weekdays;
   const allowedResourceTypes = intentResourceTypes[activeIntent] ?? intentResourceTypes.all;
   const laneResources = resources.filter((resource) => allowedResourceTypes.includes(resource.resourceType));
   const laneListings = ["all", "work", "provider"].includes(activeIntent) ? listings : [];
   const matchingResources = laneResources.filter((resource) => matchesGridSearchTerms([resource.title, resource.description, resource.subtype, resource.city, resource.state], searchTerms));
   const matchingListings = laneListings.filter((listing) => matchesGridSearchTerms([listing.serviceName, listing.description, listing.category, listing.provider.displayName, listing.provider.providerType, listing.provider.specialty, ...listing.serviceAreas, ...listing.states], searchTerms));
   const visibleLocations = locations.filter((location) => ["all", "space", "organization"].includes(activeIntent) && matchesGridSearchTerms([location.name, location.city, location.state, location.locationType, ...location.roomTypes], searchTerms));
-  const mapProviders = matchingListings.map((listing) => ({ id: listing.id, serviceName: listing.serviceName, providerName: listing.provider.displayName, providerType: listing.provider.providerType, serviceAreas: listing.serviceAreas, states: listing.states, onCallNow: listing.provider.onCallNow }));
+  const mapListings = temporalWeekdays.length
+    ? matchingListings.filter((listing) => temporalWeekdays.some((day) => listing.availableWeekdays.includes(day)))
+    : matchingListings;
+  const mapProviders = mapListings.map((listing) => ({ id: listing.id, serviceName: listing.serviceName, providerName: listing.provider.displayName, providerType: listing.provider.providerType, serviceAreas: listing.serviceAreas, states: listing.states, onCallNow: listing.provider.onCallNow }));
   const mapResources = matchingResources.map((resource) => ({ id: resource.id, title: resource.title, resourceType: resource.resourceType, city: resource.city, state: resource.state, latitude: resource.latitude, longitude: resource.longitude }));
 
   return (
@@ -86,7 +89,7 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
 
       <GridLiveMap locations={visibleLocations} providers={mapProviders} resources={mapResources} />
       <UniversalResourceBrowser resources={matchingResources} intent={activeIntent} />
-      {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} listings={laneListings} />}
+      {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} initialWeekdays={temporalWeekdays} listings={laneListings} />}
 
       <footer className="border-t border-[#e6e9ee] bg-white"><div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8"><Link className="inline-flex items-center gap-2 text-xs font-bold text-[#5b6675] hover:text-[#0b1220]" href="/grid"><ArrowLeft aria-hidden="true" className="size-4" /> Back to Grid</Link><p className="mt-4 max-w-4xl text-[11px] leading-6 text-[#5b6675]">Grid does not employ listed participants or direct clinical care. Regulated opportunities require the applicable review and eligibility gates. A request starts a governed connection workflow and does not itself guarantee availability, authorize treatment, or prove that a transaction has settled.</p><div className="mt-5 flex flex-wrap gap-5 text-[11px] font-bold"><Link className="text-[#5b6675] hover:text-[#0b1220]" href="/legal/grid">Grid marketplace terms</Link><Link className="text-[#5b6675] hover:text-[#0b1220]" href="/legal/privacy">Privacy notice</Link></div></div></footer>
     </main>
