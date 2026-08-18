@@ -35,6 +35,27 @@ describe("Luxe acquisition operations analytics", () => {
     expect(result.actionQueue[0]?.action).toBe("contact_now");
   });
 
+  it("surfaces ambiguous identity records as resolve-identity work before commercial actions", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "identity-review",
+        pipelineStage: "identity_review",
+        followUpDueAt: new Date("2026-08-18T17:15:00.000Z"),
+        lastContactedAt: null,
+      }),
+      lead({
+        id: "booking-observed",
+        bookingStatus: "observed",
+        followUpDueAt: new Date("2026-08-18T17:10:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.identityReviewLeads).toBe(1);
+    expect(result.actionQueue[0]?.id).toBe("identity-review");
+    expect(result.actionQueue[0]?.identityReviewRequired).toBe(true);
+    expect(result.actionQueue[0]?.action).toBe("resolve_identity");
+  });
+
   it("separates booked estimated value from evidence-backed collected revenue", () => {
     const result = summarizeAcquisitionLeads([
       lead({ id: "booked", status: "booked", bookingStatus: "booked", estimatedValueCents: 85000, lastContactedAt: new Date("2026-08-18T16:35:00.000Z") }),
@@ -70,6 +91,21 @@ describe("Luxe acquisition operations analytics", () => {
     ], { now, slaMinutes: 15 });
     expect(result.metrics.bookingReviewDueLeads).toBe(1);
     expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.actionQueue[0]?.action).toBe("verify_booking");
+  });
+
+  it("treats an external booking observation as stronger evidence that still needs human verification", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "observed",
+        bookingStatus: "observed",
+        followUpDueAt: new Date("2026-08-18T17:10:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.bookingObservedLeads).toBe(1);
+    expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.actionQueue[0]?.bookingObservationPending).toBe(true);
     expect(result.actionQueue[0]?.action).toBe("verify_booking");
   });
 

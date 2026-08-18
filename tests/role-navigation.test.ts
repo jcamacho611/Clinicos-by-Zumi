@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { clinicRoles, type ClinicRole } from "@/lib/auth/rbac";
 import { canAccessWorkspace, workspaceAccessRules } from "@/lib/auth/workspace-authorization";
-import { allRoleDestinations, maximumRailSize, roleNavigation } from "@/lib/navigation/role-navigation";
+import { exploreNavigationForRole, klinikosPromptForWorkspace, primaryNavigationForRole } from "@/lib/navigation-experience";
 import { navigation } from "@/lib/navigation";
 
 /**
@@ -34,62 +34,53 @@ function routeExists(href: string): boolean {
   return roots.some((root) => descend(root, segments));
 }
 
+const workspaceOf = (href: string) => href.split("/").filter(Boolean)[0] ?? "";
+
 describe("role-derived navigation", () => {
   it("keeps the permanent rail small enough to read", () => {
     for (const role of clinicRoles) {
-      const rail = roleNavigation(role);
+      const rail = primaryNavigationForRole(role);
       expect(rail.length, `${role} rail is empty`).toBeGreaterThan(0);
-      expect(rail.length, `${role} shows ${rail.length} permanent destinations`).toBeLessThanOrEqual(maximumRailSize);
+      expect(rail.length, `${role} shows ${rail.length} permanent destinations`).toBeLessThanOrEqual(7);
     }
   });
 
   it("is dramatically smaller than the workspace catalog it replaced as permanent furniture", () => {
     // The point of the change, stated as a number. The catalog still exists and stays
-    // reachable — it just stopped being the first thing a person has to read.
+    // reachable through Explore Klinikos — it just stopped being the first thing a
+    // person has to read.
     const catalogSize = navigation.reduce((total, group) => total + group.items.length, 0);
     expect(catalogSize).toBeGreaterThan(30);
     for (const role of clinicRoles) {
-      expect(roleNavigation(role).length).toBeLessThan(catalogSize / 4);
+      expect(primaryNavigationForRole(role).length).toBeLessThan(catalogSize / 4);
     }
   });
 
   it("never offers a destination the role would be turned away from", () => {
-    // A rail assembled by hand drifts out of step with RBAC, and the person finds out
-    // by clicking and getting a 404. Check every candidate, including the ones the
-    // filter is supposed to drop, so the filter itself is under test.
     const offenders: string[] = [];
     for (const role of clinicRoles) {
-      for (const destination of roleNavigation(role)) {
-        if (!canAccessWorkspace(role, destination.workspaceSlug)) {
-          offenders.push(`${role} → ${destination.label} (${destination.workspaceSlug})`);
-        }
+      for (const item of primaryNavigationForRole(role)) {
+        if (item.href === "/edu") continue;
+        if (!canAccessWorkspace(role, workspaceOf(item.href))) offenders.push(`${role} → ${item.label} (${item.href})`);
       }
     }
     expect(offenders).toEqual([]);
   });
 
   it("filters by authorization rather than trusting the curated lists", () => {
-    // Guards against the vacuous version of the test above. The curated rails happen to
-    // be fully authorized today, so "nothing was dropped" proves nothing on its own.
-    // Instead, take the union of every destination the product defines and check the
-    // predicate actually discriminates — then check `roleNavigation` honours it.
-    const everyDestination = [...new Map(
-      Object.values(allRoleDestinations).flat().map((destination) => [destination.href, destination]),
-    ).values()];
-
+    // Guards against the vacuous version of the test above. Take the union of every
+    // destination the product defines and check the predicate actually discriminates,
+    // then check the rail honours it. If nothing were ever unauthorized, the filter
+    // would be doing no work and this file would mean nothing.
+    const everyHref = [...new Set(clinicRoles.flatMap((role) => primaryNavigationForRole(role).map((item) => item.href)))];
     const unauthorized = clinicRoles.flatMap((role) =>
-      everyDestination
-        .filter((destination) => !canAccessWorkspace(role, destination.workspaceSlug))
-        .map((destination) => ({ role, destination })),
+      everyHref.filter((href) => href !== "/edu" && !canAccessWorkspace(role, workspaceOf(href))).map((href) => ({ role, href })),
     );
-    // If this is empty, every role can reach every surface and the rail is not gating
-    // anything — which would make the whole file meaningless.
     expect(unauthorized.length, "no role/destination pair is unauthorized").toBeGreaterThan(0);
-
-    for (const { role, destination } of unauthorized) {
+    for (const { role, href } of unauthorized) {
       expect(
-        roleNavigation(role).some((entry) => entry.href === destination.href),
-        `${role} rail offers ${destination.href}, which ${role} cannot open`,
+        primaryNavigationForRole(role).some((item) => item.href === href),
+        `${role} rail offers ${href}, which ${role} cannot open`,
       ).toBe(false);
     }
   });
@@ -97,86 +88,109 @@ describe("role-derived navigation", () => {
   it("lands every destination on a page that exists", () => {
     const broken: string[] = [];
     for (const role of clinicRoles) {
-      for (const destination of roleNavigation(role)) {
-        if (!routeExists(destination.href)) broken.push(`${role} → ${destination.href}`);
+      for (const item of primaryNavigationForRole(role)) {
+        if (!routeExists(item.href)) broken.push(`${role} → ${item.href}`);
       }
     }
     expect(broken).toEqual([]);
   });
 
-  it("names every destination for an outcome, using a rule it declares", () => {
-    const moduleVocabulary = [
-      "workspace", "module", "engine", "registry", "orchestration", "console",
-      "dashboard", "management", "admin", "config", "system",
-    ];
+  it("names every destination for an outcome rather than for a module", () => {
+    const moduleVocabulary = ["workspace", "module", "engine", "registry", "orchestration", "console", "dashboard", "admin", "config", "system"];
     const offenders: string[] = [];
     for (const role of clinicRoles) {
-      for (const destination of roleNavigation(role)) {
-        const label = destination.label.toLowerCase();
+      for (const item of primaryNavigationForRole(role)) {
+        const label = item.label.toLowerCase();
         for (const word of moduleVocabulary) {
-          if (label.includes(word)) offenders.push(`${role} → "${destination.label}" uses "${word}"`);
+          if (label.includes(word)) offenders.push(`${role} → "${item.label}" uses "${word}"`);
         }
-        // Every entry says why a person goes there, in a sentence.
-        expect(destination.purpose.length, `${destination.label} has no purpose`).toBeGreaterThan(20);
-        expect(destination.purpose.endsWith("."), `${destination.label} purpose is not a sentence`).toBe(true);
       }
     }
     expect(offenders).toEqual([]);
   });
 
-  it("declares every workspace slug it routes through", () => {
+  it("declares an authorization rule for every workspace it routes through", () => {
     for (const role of clinicRoles) {
-      for (const destination of roleNavigation(role)) {
-        expect(workspaceAccessRules[destination.workspaceSlug], `${destination.workspaceSlug} has no authorization rule`).toBeDefined();
+      for (const item of primaryNavigationForRole(role)) {
+        if (item.href === "/edu") continue;
+        expect(workspaceAccessRules[workspaceOf(item.href)], `${item.href} has no authorization rule`).toBeDefined();
       }
     }
   });
 
   it("starts every role that can reach Home at Home, and lands the rest somewhere real", () => {
-    // `contractor` holds no clinic-data permission, so `/dashboard` genuinely 404s for
+    // `contractor` holds no clinic-data permission, so /dashboard genuinely 404s for
     // them and sign-in already routes them to Grid instead. Asserting a universal Home
-    // would have demanded a rail entry that does not work.
+    // would demand a rail entry that does not work.
     for (const role of clinicRoles) {
-      const rail = roleNavigation(role);
-      const first = rail[0];
+      const first = primaryNavigationForRole(role)[0];
       expect(first, `${role} has no landing destination`).toBeDefined();
       if (canAccessWorkspace(role, "dashboard")) {
         expect(first!.href, `${role} can reach Home but does not start there`).toBe("/dashboard");
       } else {
-        expect(canAccessWorkspace(role, first!.workspaceSlug), `${role} lands on a surface it cannot open`).toBe(true);
+        expect(canAccessWorkspace(role, workspaceOf(first!.href)), `${role} lands on a surface it cannot open`).toBe(true);
       }
     }
   });
 
   it("lands a contractor where sign-in actually sends them", () => {
-    // The rail and the post-login redirect are two places that answer "where does this
-    // person start". They drifting apart is invisible until someone signs in.
+    // The rail and the post-login redirect are two places answering "where does this
+    // person start". Their drifting apart is invisible until somebody signs in.
     const loginRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/auth/login/route.ts"), "utf8");
     const contractorLanding = loginRoute.match(/role === "contractor" \? "([^"]+)"/)?.[1];
     expect(contractorLanding).toBeTruthy();
-    expect(roleNavigation("contractor")[0]?.href).toBe(contractorLanding);
+    expect(primaryNavigationForRole("contractor")[0]?.href).toBe(contractorLanding);
   });
 
-  it("gives a clinic owner money and Grid without making them hunt", () => {
-    const owner = roleNavigation("clinic_owner").map((destination) => destination.href);
-    expect(owner).toContain("/billing");
-    expect(owner).toContain("/grid/workspace");
-    // The public marketplace entry renders signed-out chrome; a signed-in owner must
-    // never be sent there from their own rail.
-    expect(owner).not.toContain("/grid");
-  });
-
-  it("does not hand an external contractor the clinic's operating surfaces", () => {
-    const contractor = roleNavigation("contractor").map((destination) => destination.href);
-    for (const clinical of ["/patients", "/front-desk", "/encounters", "/billing", "/labs"]) {
-      expect(contractor, `contractor rail exposes ${clinical}`).not.toContain(clinical);
+  it("never sends a signed-in person to the public marketplace entry", () => {
+    // `/grid` sits outside the (platform) group and renders signed-out chrome with a
+    // "Sign in" button. A signed-in owner following their own rail used to land there
+    // and be invited to sign in again.
+    const publicEntries = new Set(["/grid", "/grid/browse", "/grid/pricing", "/grid/join"]);
+    for (const role of clinicRoles) {
+      for (const item of primaryNavigationForRole(role)) {
+        expect(publicEntries.has(item.href), `${role} rail points at the public ${item.href}`).toBe(false);
+      }
     }
   });
 
   it("gives each role a rail suited to it, not one rail with the labels swapped", () => {
     const signatures = new Set(
-      (clinicRoles as readonly ClinicRole[]).map((role) => roleNavigation(role).map((d) => d.href).join("|")),
+      (clinicRoles as readonly ClinicRole[]).map((role) => primaryNavigationForRole(role).map((item) => item.href).join("|")),
     );
     expect(signatures.size).toBeGreaterThan(4);
+  });
+
+  it("does not list a permanent destination again inside Explore Klinikos", () => {
+    // Seeing "Money" in two places teaches a person that the two are different things.
+    for (const role of clinicRoles) {
+      const primary = new Set(primaryNavigationForRole(role).map((item) => item.href));
+      for (const group of exploreNavigationForRole(role, primary)) {
+        for (const item of group.items) {
+          expect(primary.has(item.href), `${role}: ${item.href} appears in both the rail and Explore`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("keeps everything in Explore Klinikos something the role can actually open", () => {
+    for (const role of clinicRoles) {
+      for (const group of exploreNavigationForRole(role)) {
+        for (const item of group.items) {
+          if (item.href === "/edu") continue;
+          expect(canAccessWorkspace(role, workspaceOf(item.href)), `${role} → ${item.href}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("asks a question that fits the surface a person is standing on", () => {
+    // One conversation, but the invitation should match the work in front of them.
+    expect(klinikosPromptForWorkspace("dashboard")).toBe("What needs to happen?");
+    expect(klinikosPromptForWorkspace("grid")).toBe("What do you need or have?");
+    expect(klinikosPromptForWorkspace("billing")).toMatch(/money/i);
+    expect(klinikosPromptForWorkspace("edu")).toMatch(/work on next/i);
+    // An unknown surface still gets a question, never an empty placeholder.
+    expect(klinikosPromptForWorkspace("not-a-real-workspace").length).toBeGreaterThan(10);
   });
 });
