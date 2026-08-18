@@ -3,11 +3,11 @@ export const publicCompanyStory = {
     eyebrow: "Our mission",
     headline: "Make healthcare work visible, connected, owned, and finishable.",
     statement:
-      "Klinikos exists to close the operational gaps that appear between the systems healthcare organizations already use. We are building the operating layer that gives every follow-up, referral, result, task, resource, handoff, and revenue opportunity a visible state, a responsible owner, and a clear next action.",
+      "Klinikos exists to close the operational gaps that appear between the systems healthcare organizations already use. We are building the operating layer that gives follow-up, referrals, results, tasks, resources, handoffs, and revenue opportunities a visible state, a responsible owner, and a clear next action.",
   },
   why: [
     "Healthcare organizations do not fail because they lack software. They lose continuity when work crosses between systems, people, locations, and organizations without a reliable owner or state.",
-    "Klinikos is being built from the operator's point of view: make the invisible work visible, make responsibility explicit, preserve human authority where the stakes are high, and never manufacture certainty the system does not actually have.",
+    "Klinikos is being built from the operator's point of view: make invisible work visible, make responsibility explicit, preserve human authority where the stakes are high, and never manufacture certainty the system does not actually have.",
   ],
   ecosystem: [
     {
@@ -32,42 +32,30 @@ export const publicCompanyStory = {
     },
   ],
   founder: {
-    label: "Founder profile",
-    headline: "Operator first. Systems builder second. Credentials earned along the way.",
+    label: "Leadership approach",
+    headline: "Operator-led product development with security and systems discipline.",
     paragraphs: [
-      "Klinikos is founder-led by a New York-based healthcare operator and systems builder whose public identity is intentionally kept private during the build stage. The company story is centered on the work, not a personality brand.",
-      "The founder's background combines hands-on healthcare operations, business building, software engineering, security-focused technical study, workflow design, and direct exposure to the everyday fragmentation Klinikos is designed to solve.",
+      "Klinikos is founder-led and shaped by hands-on exposure to outpatient healthcare operations, staffing, follow-up, customer flow, revenue continuity, software engineering, and security-focused technical study.",
+      "Public company materials focus on the product, operating model, and evidence rather than turning the company into a personality brand. Qualified commercial diligence should verify the leadership team, contracting party, insurance, security posture, and applicable professional relationships before a production agreement is executed.",
       "The operating philosophy is simple: understand the real workflow before designing the software, make consequential actions attributable, keep clinical and regulated decisions under the right human authority, and build economic systems that can explain where every dollar and every responsibility goes.",
     ],
   },
   accolades: [
     {
-      title: "President's List",
-      detail: "Academic recognition earned while completing college-level computer security and technology studies.",
+      title: "Healthcare operations exposure",
+      detail: "Hands-on experience with outpatient clinic and medical-aesthetics operations, customer flow, staffing, follow-up, and revenue continuity informs the product model.",
     },
     {
-      title: "Dean's List",
-      detail: "Repeated academic recognition for high performance in a technical degree program.",
+      title: "Security-focused technical training",
+      detail: "Formal computer security and technology study informs the product's emphasis on tenant boundaries, auditability, least privilege, and fail-closed controls.",
     },
     {
-      title: "Phi Theta Kappa",
-      detail: "Member in good standing of the international honor society for two-year colleges.",
+      title: "Systems and workflow building",
+      detail: "Software, automation, backend, workflow, and systems-oriented projects are developed around real operating problems rather than isolated feature demonstrations.",
     },
     {
-      title: "3.8 GPA",
-      detail: "Maintained a high GPA across computer security, forensics, and technology coursework.",
-    },
-    {
-      title: "Healthcare operator experience",
-      detail: "Hands-on experience with outpatient clinic and medical-aesthetics operations, customer flow, staffing, follow-up, and revenue continuity.",
-    },
-    {
-      title: "Technical builder experience",
-      detail: "Built and evaluated software, automation, backend, workflow, and systems-oriented projects around real operating problems rather than classroom-only exercises.",
-    },
-    {
-      title: "Cross-functional founder discipline",
-      detail: "Works across product, engineering, operations, commercialization, UX, and systems architecture rather than treating them as separate problems.",
+      title: "Cross-functional operating discipline",
+      detail: "Product, engineering, operations, commercialization, UX, and systems architecture are treated as one operating problem with explicit handoffs and ownership.",
     },
   ],
   principles: [
