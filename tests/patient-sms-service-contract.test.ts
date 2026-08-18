@@ -34,12 +34,15 @@ describe("patient SMS service architecture", () => {
     expect(service).toContain('source: "twilio_verify" | "patient_portal_verified"');
   });
 
-  it("requires an explicit production gate, tenant sender, inbound STOP routing and timezone", () => {
+  it("requires production gate, tenant sender, Messaging Service, provider proof, inbound routing and timezone", () => {
     expect(service).toContain("KLINIKOS_SMS_PRODUCTION_ENABLED");
     expect(service).toContain("getTwilioSmsRoutingConfig(input.organizationId)");
-    expect(service).toContain("!routing?.senderPhone || !routing.inboundEnabled || !routing.timeZone");
+    expect(service).toContain("!routing?.senderPhone || !routing.messagingServiceSid || !routing.inboundEnabled || !routing.timeZone");
+    expect(service).toContain("routing_not_provider_verified");
+    expect(service).toContain("!routing.providerVerifiedAt || !routing.providerPhoneNumberSid");
     expect(service).toContain("evaluateSmsQuietHours");
     expect(service).toContain("sender: routing.senderPhone");
+    expect(service).toContain("messagingServiceSid: routing.messagingServiceSid");
   });
 
   it("keeps Twilio transport behind the governed service rather than the preference API", () => {
