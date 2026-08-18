@@ -57,23 +57,33 @@ export async function recordLuxeBookingStart(leadId: string, destinationHost: st
         category: "lead_booking",
         details: { contains: `lead:${lead.id}` },
       },
-      select: { id: true },
+      select: { id: true, dueAt: true, ownerId: true },
     });
 
-    const task = existingTask ?? await tx.task.create({
-      data: {
-        organizationId: organization.id,
-        category: "lead_booking",
-        title: `Verify booking completion for ${lead.name}`,
-        details: `lead:${lead.id} Booking flow was opened for ${lead.serviceInterest ?? "a Luxe service"}. Verify authoritative booking/deposit evidence before marking this lead booked or paid. If completion cannot be verified by the due time, review for human follow-up according to consent and channel rules.`,
-        ownerId: lead.assignedTo,
-        priority: "high",
-        riskLevel: RiskLevel.NEEDS_STAFF,
-        dueAt: reviewDueAt,
-        status: "open",
-        createdBy: null,
-      },
-    });
+    const task = existingTask
+      ? await tx.task.update({
+          where: { id: existingTask.id },
+          data: {
+            dueAt: !existingTask.dueAt || existingTask.dueAt > reviewDueAt ? reviewDueAt : existingTask.dueAt,
+            ownerId: existingTask.ownerId ?? lead.assignedTo,
+          },
+          select: { id: true },
+        })
+      : await tx.task.create({
+          data: {
+            organizationId: organization.id,
+            category: "lead_booking",
+            title: `Verify booking completion for ${lead.name}`,
+            details: `lead:${lead.id} Booking flow was opened for ${lead.serviceInterest ?? "a Luxe service"}. Verify authoritative booking/deposit evidence before marking this lead booked or paid. If completion cannot be verified by the due time, review for human follow-up according to consent and channel rules.`,
+            ownerId: lead.assignedTo,
+            priority: "high",
+            riskLevel: RiskLevel.NEEDS_STAFF,
+            dueAt: reviewDueAt,
+            status: "open",
+            createdBy: null,
+          },
+          select: { id: true },
+        });
 
     if (firstStart) {
       await tx.leadEvent.create({
