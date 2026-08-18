@@ -14,6 +14,7 @@ const owner: ClinicSession = {
   email: "owner@example.test",
   role: "clinic_owner",
   demo: false,
+  expiresAt: Date.now() + 60_000,
 };
 
 describe("Zumi workspace intelligence", () => {
