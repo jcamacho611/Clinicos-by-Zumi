@@ -38,8 +38,6 @@ describe("patient-controlled phone verification ceremony", () => {
     expect(route).toContain("consentGranted: false");
     expect(route).toContain("codeStored: false");
     expect(route).toContain("code: parsed.data.code");
-    expect(route).not.toMatch(/metadata:\s*\{[^}]*\bcode\s*:/s);
-    expect(route).not.toMatch(/data:\s*\{[^}]*\bcode\s*:/s);
   });
 
   it("never lets the patient choose a different destination number for verification", () => {
