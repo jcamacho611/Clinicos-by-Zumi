@@ -162,6 +162,10 @@ function isEvidenceCurrent(record: GovernedEvidenceRecord, now: Date, maxAgeDays
   return record.observedAt.getTime() >= oldestAllowed;
 }
 
+function evidenceBelongsToEvaluation(record: GovernedEvidenceRecord, organizationId?: string | null) {
+  return organizationId ? record.organizationId === organizationId : record.organizationId == null;
+}
+
 export function evaluateGovernedRule(input: {
   rule: GovernedRuleDefinition;
   subjectId: string;
@@ -205,11 +209,11 @@ export function evaluateGovernedRule(input: {
   const candidateEvidence = input.evidence.filter((record) =>
     record.subjectType === input.rule.subjectType
     && record.subjectId === input.subjectId
-    && (!input.organizationId || !record.organizationId || record.organizationId === input.organizationId));
+    && evidenceBelongsToEvaluation(record, input.organizationId));
 
   const matchedEvidenceRefs = new Set<string>();
   const expiredEvidenceRefs = new Set<string>();
-  const missingEvidenceKeys: string[] = [];
+  const unsatisfiedEvidenceKeys: string[] = [];
 
   for (const requirement of input.rule.evidenceRequirements) {
     const matchingType = candidateEvidence.filter((record) =>
@@ -220,13 +224,14 @@ export function evaluateGovernedRule(input: {
     current.forEach((record) => matchedEvidenceRefs.add(record.sourceRef));
     stale.forEach((record) => expiredEvidenceRefs.add(record.sourceRef));
 
-    if (current.length < Math.max(1, requirement.minCount ?? 1)) missingEvidenceKeys.push(requirement.key);
+    if (current.length < Math.max(1, requirement.minCount ?? 1)) unsatisfiedEvidenceKeys.push(requirement.key);
   }
 
   const requirementCount = input.rule.evidenceRequirements.length;
-  const satisfiedCount = requirementCount - missingEvidenceKeys.length;
+  const satisfiedCount = requirementCount - unsatisfiedEvidenceKeys.length;
   const evidenceSatisfied = requirementCount === 0
-    || (input.rule.closureMode === "all" ? missingEvidenceKeys.length === 0 : satisfiedCount > 0);
+    || (input.rule.closureMode === "all" ? unsatisfiedEvidenceKeys.length === 0 : satisfiedCount > 0);
+  const missingEvidenceKeys = evidenceSatisfied && input.rule.closureMode === "any" ? [] : unsatisfiedEvidenceKeys;
 
   const status: GovernedRuleEvaluationStatus = evidenceSatisfied
     ? input.rule.requiresHumanReview ? "review_required" : "satisfied"
