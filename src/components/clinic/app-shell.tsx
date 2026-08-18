@@ -8,7 +8,7 @@ import {
   AudioLines, BookOpenCheck, ClipboardCheck, ClipboardList, ClipboardPlus, Files, Fingerprint, FlaskConical, Headphones, HeartHandshake,
   LayoutDashboard, ListChecks, LockKeyhole, LogOut, Menu, MessagesSquare, MonitorSmartphone,
   Network, Orbit, Pill, ReceiptText, Route, ScanLine, ScanSearch, Settings2, ShieldCheck, Siren, Sparkles,
-  Stethoscope, Users, Video, X, Waypoints,
+  Stethoscope, Users, Video, X, Waypoints, CalendarClock, CalendarCheck, Radar, TrendingUp,
 } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
 import { roleLabel } from "@/lib/auth/rbac";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
+import { roleNavigation } from "@/lib/navigation/role-navigation";
 import type { ClinicSession } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ const icons = {
   FlaskConical, ScanLine, Pill, Files, ClipboardList, ReceiptText, ShieldCheck, BriefcaseMedical,
   ChartNoAxesCombined, CircleDollarSign, Calculator, MessagesSquare, ListChecks, Siren, Sparkles, MonitorSmartphone,
   Blocks, Boxes, Settings2, Gauge, Network, Orbit, Route, HeartHandshake, Fingerprint, ClipboardCheck,
-  AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints,
+  AudioLines, BookOpenCheck, LockKeyhole, ScanSearch, Waypoints, CalendarClock, CalendarCheck, Radar, TrendingUp,
 };
 
 function initials(name: string) {
@@ -67,8 +68,13 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
   const visibleNavigation = navigation
     .map((group) => ({ ...group, items: group.items.filter((item) => isVisibleDestination(session.role, item.href)) }))
     .filter((group) => group.items.length > 0);
-  const homeGroup = visibleNavigation.find((group) => group.label === "Home");
-  const deeperGroups = visibleNavigation.filter((group) => group.label !== "Home");
+  const primaryDestinations = roleNavigation(session.role);
+  const primaryHrefs = new Set(primaryDestinations.map((destination) => destination.href));
+  // A destination that is already permanent must not also appear in the catalog below:
+  // seeing "Money" twice teaches a person that the two are different things.
+  const deeperGroups = visibleNavigation
+    .map((group) => ({ ...group, items: group.items.filter((item) => !primaryHrefs.has(item.href)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <aside className="flex h-full w-[264px] flex-col border-r border-[#e28b85]/12 bg-[#070304]/98 text-[#f8efed] shadow-[20px_0_70px_rgba(0,0,0,.28)]">
@@ -81,22 +87,25 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
         <p className="mt-1 text-[12px] text-[#9f8985]">{roleLabel(session.role)}</p>
       </div>
 
-      <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-8" aria-label="Klinikos workspace navigation">
+      <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-8" aria-label="Klinikos navigation">
+        {/* The permanent rail is derived from the role and named for outcomes. It is
+            deliberately short: the full workspace catalog lives one keystroke away in
+            Explore Klinikos rather than greeting every person as a table of contents. */}
         <div className="border-y border-[#e28b85]/10 py-3">
-          <SidebarLink active={pathname === "/dashboard"} href="/dashboard" icon="LayoutDashboard" label="Home" onNavigate={onNavigate} />
-          {homeGroup?.items.filter((item) => item.href !== "/dashboard").map((item) => (
+          {primaryDestinations.map((destination) => (
             <SidebarLink
-              active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-              href={item.href}
-              icon={item.icon}
-              key={item.href}
-              label={item.label}
+              active={pathname === destination.href || pathname.startsWith(`${destination.href}/`)}
+              href={destination.href}
+              icon={destination.icon}
+              key={destination.href}
+              label={destination.label}
               onNavigate={onNavigate}
             />
           ))}
         </div>
 
         <div className="mt-4 space-y-1">
+          <p className="px-3 pb-1 text-[12px] font-semibold uppercase tracking-[.12em] text-[#6f5b58]">Explore Klinikos</p>
           {deeperGroups.map((group) => {
             const groupActive = group.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
             return (
