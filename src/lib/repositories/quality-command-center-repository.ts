@@ -127,6 +127,21 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
 
   const measureById = new Map(measures.map((measure) => [measure.id, measure]));
   const patientById = new Map(patients.map((patient) => [patient.id, patient]));
+  const missingPatientIds = patientIds.filter((patientId) => !patientById.has(patientId));
+  if (missingPatientIds.length) {
+    return {
+      complete: false,
+      coverage: "persisted_active_quality_gap_backlog",
+      canMaterializeTasks,
+      summary: null,
+      gaps: [],
+      warnings: [
+        `${missingPatientIds.length} quality subject(s) could not be resolved inside the active organization. No partial command-center totals are shown.`,
+        "Review data integrity before relying on this quality backlog.",
+      ],
+    };
+  }
+
   const taskIdByGapId = new Map<string, string>();
   for (const audit of materializationAudits) {
     if (taskIdByGapId.has(audit.resourceId)) continue;
@@ -154,14 +169,9 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
   const now = Date.now();
   const dueSoonBoundary = now + 7 * 24 * 60 * 60 * 1000;
   let unmappedMeasureCount = 0;
-  let missingPatientCount = 0;
 
-  const projected = gaps.flatMap<QualityCommandCenterGap>((gap) => {
-    const patient = patientById.get(gap.patientId);
-    if (!patient) {
-      missingPatientCount += 1;
-      return [];
-    }
+  const projected = gaps.map<QualityCommandCenterGap>((gap) => {
+    const patient = patientById.get(gap.patientId)!;
     const measure = measureById.get(gap.measureId);
     if (!measure) unmappedMeasureCount += 1;
     const linkedTaskId = taskIdByGapId.get(gap.id) ?? null;
@@ -174,7 +184,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
         : "open" as const;
     const owner = linkedTask?.ownerId ? ownerById.get(linkedTask.ownerId) ?? null : null;
 
-    return [{
+    return {
       id: gap.id,
       patient: {
         id: patient.id,
@@ -200,7 +210,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
         owner: owner ? { id: owner.id, name: owner.name } : null,
       } : null,
       requiresReview: highImpact(gap.impact) || !measure || Boolean(linkedTask && terminalTask(linkedTask.status)),
-    }];
+    };
   });
 
   const summary = {
@@ -218,10 +228,9 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
     "A task records operational follow-up. It is not evidence that a measure is satisfied or that the organization is compliant.",
   ];
   if (unmappedMeasureCount) warnings.push(`${unmappedMeasureCount} open gap(s) do not map to an active organization quality-measure record.`);
-  if (missingPatientCount) warnings.push(`${missingPatientCount} gap(s) were withheld because their patient could not be resolved inside the active organization.`);
 
   return {
-    complete: missingPatientCount === 0,
+    complete: true,
     coverage: "persisted_active_quality_gap_backlog",
     canMaterializeTasks,
     summary,
