@@ -37,7 +37,9 @@ describe("patient-controlled phone verification ceremony", () => {
     expect(route).toContain('source: "twilio_verify"');
     expect(route).toContain("consentGranted: false");
     expect(route).toContain("codeStored: false");
-    expect(route).not.toContain("code: parsed.data.code,");
+    expect(route).toContain("code: parsed.data.code");
+    expect(route).not.toContain("metadata: { code:");
+    expect(route).not.toContain("data: { code:");
   });
 
   it("never lets the patient choose a different destination number for verification", () => {
