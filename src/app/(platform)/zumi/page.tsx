@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ZumiPresence } from "@/components/clinic/zumi-presence";
 import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 
@@ -13,5 +12,8 @@ export default async function ZumiPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "ai", "read")) return notFound();
 
-  return <ZumiPresence userName={session.name} />;
+  // The persistent Zumi instance lives in AppShell. Visiting /zumi changes that
+  // same mounted conversation into its expanded presentation instead of creating
+  // a second assistant instance or resetting its in-memory context.
+  return null;
 }
