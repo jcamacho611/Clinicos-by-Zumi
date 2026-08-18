@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 const publicLinks = [
   ["/demo", "Demo"],
@@ -31,9 +32,12 @@ export function SalesSiteShell({ children }: { children: React.ReactNode }) {
       </header>
       <div className="relative z-10">{children}</div>
       <footer className="relative z-10 border-t border-[#e28b85]/10 px-5 py-10 sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 text-xs text-[#8f7773] lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3"><ShieldCheck className="size-5 text-[#d9948d]" /><p>Demonstrations use synthetic data. Do not enter real patient information unless production activation is explicitly approved.</p></div>
-          <div className="flex flex-wrap gap-5 font-semibold"><Link className="hover:text-[#f8efed]" href="/grid/browse">Grid</Link><Link className="hover:text-[#f8efed]" href="/legal/privacy">Privacy</Link><Link className="hover:text-[#f8efed]" href="/legal/terms">Terms</Link></div>
+        <div className="mx-auto max-w-[1500px]">
+          <div className="flex flex-col gap-5 text-xs text-[#8f7773] lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3"><ShieldCheck className="size-5 text-[#d9948d]" /><p>Demonstrations use synthetic data. Do not enter real patient information unless production activation is explicitly approved.</p></div>
+            <div className="flex flex-wrap gap-5 font-semibold"><Link className="hover:text-[#f8efed]" href="/grid/browse">Grid</Link><Link className="hover:text-[#f8efed]" href="/legal/privacy">Privacy</Link><Link className="hover:text-[#f8efed]" href="/legal/terms">Terms</Link><Link className="hover:text-[#f8efed]" href="/legal/acceptable-use">Acceptable use</Link></div>
+          </div>
+          <p className="mt-6 border-t border-white/[.07] pt-5 text-[10px] leading-5 text-[#725d59]">Use of these public surfaces is subject to the Website Terms of Use, version {WEBSITE_TERMS_VERSION}. Protected access, purchases, clinic activation, marketplace transactions, and production healthcare use may require additional affirmative agreements.</p>
         </div>
       </footer>
     </main>
