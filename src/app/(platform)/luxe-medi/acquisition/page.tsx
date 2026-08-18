@@ -35,7 +35,7 @@ export default async function LuxeAcquisitionPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <StatCard accent="violet" detail="Created since local day start" icon={<Route className="size-4" />} label="New today" value={String(data.metrics.leadsToday)} />
+        <StatCard accent="violet" detail="Created during the rolling 24 hours" icon={<Route className="size-4" />} label="New 24h" value={String(data.metrics.leadsLast24Hours)} />
         <StatCard accent="sky" detail="No recorded contact yet" icon={<MessageCircleMore className="size-4" />} label="Unanswered" value={String(data.metrics.unansweredLeads)} />
         <StatCard accent="amber" detail="Overdue follow-up or past SLA" icon={<AlarmClock className="size-4" />} label="At risk" value={String(data.metrics.atRiskLeads)} />
         <StatCard accent="rose" detail="Needs an explicit human owner" icon={<UserRoundCheck className="size-4" />} label="Unassigned" value={String(data.metrics.unassignedOpenLeads)} />
