@@ -12,6 +12,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:mvp": "node scripts/mvp/run-all.mjs",
+    "verify:code": "node scripts/release-proof.mjs --code-only",
+    "verify:release": "node scripts/release-proof.mjs --allow-database-migrations",
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
