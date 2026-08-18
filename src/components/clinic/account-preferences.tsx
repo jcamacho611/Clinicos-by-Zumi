@@ -47,10 +47,10 @@ export function AccountPreferences({ userName, organizationName, role }: { userN
   return (
     <div className="grid gap-6 lg:grid-cols-[.78fr_1.22fr]">
       <section className="rounded-[28px] border border-[#e6817b]/12 bg-[#0b0507] p-6 text-[#f8efed] sm:p-8">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Account</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Account</p>
         <h1 className="mt-4 text-4xl font-light tracking-[-.055em] text-[#fff8f6]">{userName}</h1>
         <div className="mt-7 border-y border-[#e6817b]/10 py-5">
-          <p className="text-[9px] font-extrabold uppercase tracking-[.15em] text-[#725d59]">Current organization</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[.15em] text-[#725d59]">Current organization</p>
           <p className="mt-2 text-sm font-semibold text-[#e9d8d5]">{organizationName}</p>
           <p className="mt-1 text-xs text-[#8f7773]">{role}</p>
         </div>
@@ -66,7 +66,7 @@ export function AccountPreferences({ userName, organizationName, role }: { userN
       </section>
 
       <section className="rounded-[28px] border border-[#e6817b]/12 bg-[#0d0608] p-6 text-[#f8efed] sm:p-8">
-        <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.06] text-[#e6817b]"><ShieldCheck className="size-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Preferences</p><h2 className="mt-2 text-2xl font-light tracking-[-.045em] text-[#fff8f6]">Appearance</h2></div></div>
+        <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.06] text-[#e6817b]"><ShieldCheck className="size-4" /></span><div><p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Preferences</p><h2 className="mt-2 text-2xl font-light tracking-[-.045em] text-[#fff8f6]">Appearance</h2></div></div>
         <p className="mt-5 max-w-2xl text-xs leading-6 text-[#9f8985]">Choose a simple system, light, or dark presentation. The more expressive Dawn and Golden atmospheres remain available from the global Appearance control if you want them.</p>
 
         <div className="mt-7 divide-y divide-[#e6817b]/10 border-y border-[#e6817b]/10">
