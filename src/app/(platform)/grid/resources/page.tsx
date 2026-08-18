@@ -19,7 +19,7 @@ export default async function GridResourcesPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_13%_0%,rgba(153,43,54,.23),transparent_38%),linear-gradient(135deg,rgba(230,129,123,.05),transparent_58%)]" />
       <div className="relative flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-4xl">
-          <div className="flex items-center gap-2 text-[#efaaa1]"><ShieldCheck className="size-4" /><p className="text-[10px] font-extrabold uppercase tracking-[.22em]">Universal Grid supply</p></div>
+          <div className="flex items-center gap-2 text-[#efaaa1]"><ShieldCheck className="size-4" /><p className="text-[12px] font-extrabold uppercase tracking-[.22em]">Universal Grid supply</p></div>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-.055em] sm:text-5xl lg:text-6xl">What do you have available?</h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-[#b59b97]">Create reusable healthcare resources once, then let Grid keep visibility, review, eligibility, availability, and capacity distinct. A listing never silently becomes permission to transact.</p>
         </div>

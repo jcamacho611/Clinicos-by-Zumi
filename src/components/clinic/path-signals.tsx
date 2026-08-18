@@ -22,9 +22,9 @@ export function PathSignals({ signals }: { signals: LivingPathSignal[] }) {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <MoveRight className="size-3.5 text-[#1677a8]" />
-            <h2 className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#0b1e3a]/55" id="moving-heading">Moving</h2>
+            <h2 className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#0b1e3a]/55" id="moving-heading">Moving</h2>
           </div>
-          <span className="text-[10px] font-semibold text-[#0b1e3a]/35">Recent Path changes</span>
+          <span className="text-[12px] font-semibold text-[#0b1e3a]/35">Recent Path changes</span>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -39,7 +39,7 @@ export function PathSignals({ signals }: { signals: LivingPathSignal[] }) {
                 <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-[#edf6fb] text-[#1677a8]"><Icon className="size-3.5" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-extrabold text-[#0b1e3a]">{signal.label}</span>
-                  <span className="mt-1 block text-[10px] leading-5 text-[#0b1e3a]/42">{signal.pathTitle} · {relativeTime(signal.occurredAt)}</span>
+                  <span className="mt-1 block text-[12px] leading-5 text-[#0b1e3a]/42">{signal.pathTitle} · {relativeTime(signal.occurredAt)}</span>
                 </span>
                 <ArrowUpRight className="mt-1 size-3.5 shrink-0 text-[#0b1e3a]/20 transition group-hover:text-[#1677a8]" />
               </Link>

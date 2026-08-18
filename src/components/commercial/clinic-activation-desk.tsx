@@ -184,8 +184,8 @@ export function ClinicActivationDesk({
                 </div>
                 <Badge tone={plan.checkoutConfigured ? "resolved" : "signal"}>{plan.checkoutConfigured ? "Rail ready" : "Not configured"}</Badge>
               </div>
-              <p className="mt-3 text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{railLabel(plan.railProvider)}</p>
-              <p className="mt-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+              <p className="mt-3 text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{railLabel(plan.railProvider)}</p>
+              <p className="mt-2 text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
                 {plan.railProvider === "stripe"
                   ? "Server-owned monthly price. Signed Stripe invoice evidence controls activation and renewal."
                   : plan.railProvider === "godaddy"
@@ -206,7 +206,7 @@ export function ClinicActivationDesk({
           <Card>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
+                <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
                 <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the exact plan before they pay.</h2>
               </div>
               <Badge tone="observing">Server-owned intent</Badge>
@@ -218,7 +218,7 @@ export function ClinicActivationDesk({
             </div>
 
             <label className="mt-6 flex flex-col gap-2">
-              <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Clinic plan</span>
+              <span className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Clinic plan</span>
               <select
                 className="min-h-11 bg-transparent px-1 text-sm outline-none"
                 style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}
@@ -237,7 +237,7 @@ export function ClinicActivationDesk({
             {!selectedPlan?.checkoutConfigured ? (
               <div className="mt-5 flex items-start gap-3 p-4" style={{ background: "color-mix(in oklch, var(--status-signal) 7%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-signal) 25%, transparent)", borderRadius: "var(--radius-md)" }}>
                 <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-signal)" }} aria-hidden="true" />
-                <p className="text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
+                <p className="text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
               </div>
             ) : null}
 
@@ -246,7 +246,7 @@ export function ClinicActivationDesk({
                 {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <ExternalLink className="size-4" aria-hidden="true" />}
                 Create checkout
               </Button>
-              <p className="max-w-md text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+              <p className="max-w-md text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
                 Creating the checkout does not grant access and does not establish that money moved.
               </p>
             </div>
@@ -276,7 +276,7 @@ export function ClinicActivationDesk({
                 : "For the GoDaddy fallback, confirm only after independently seeing the expected payment in real processor records. The first click arms the action; the second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link."}
             </p>
             <div className="mt-7 border-t pt-5" style={{ borderColor: "var(--line-dark)" }}>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
               <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>A browser return never activates software. Payment entitlement also does not enable production PHI, approve connectors, or certify deployment readiness.</p>
             </div>
           </Card>
@@ -306,7 +306,7 @@ export function ClinicActivationDesk({
         <section aria-labelledby="checkout-ledger-heading">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>03 · Activation ledger</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>03 · Activation ledger</p>
               <h2 id="checkout-ledger-heading" className="mt-2 text-2xl font-extrabold tracking-tight">Recent clinic checkouts</h2>
               <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkouts.length} recent records</p>
             </div>
@@ -326,7 +326,7 @@ export function ClinicActivationDesk({
                     <Badge tone={checkoutTone(checkout.status)}>{checkout.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkout.email} · {checkout.productLabel} · {money(checkout.expectedAmountCents)}</p>
-                  <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"} · {checkout.provider}</p>
+                  <p className="mt-2 text-[12px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"} · {checkout.provider}</p>
                 </div>
                 <div>
                   {checkout.status === "created" && checkout.provider === "godaddy" ? (

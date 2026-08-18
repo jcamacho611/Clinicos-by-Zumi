@@ -38,7 +38,7 @@ export function PatientListSearch({ patients }: { patients: Patient[] }) {
             </button>
           ) : null}
         </label>
-        <p className="text-[10px] font-bold text-slate-400" id="patient-search-result-count" aria-live="polite">
+        <p className="text-[12px] font-bold text-slate-400" id="patient-search-result-count" aria-live="polite">
           {hasQuery ? `${filteredPatients.length} of ${patients.length} patients` : `${patients.length} patients`}
         </p>
       </div>
@@ -47,7 +47,7 @@ export function PatientListSearch({ patients }: { patients: Patient[] }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left">
             <thead>
-              <tr className="border-b border-slate-100 text-[9px] font-extrabold uppercase tracking-[.14em] text-slate-400">
+              <tr className="border-b border-slate-100 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">
                 <th className="px-5 py-3">Patient</th>
                 <th className="px-3 py-3">DOB / MRN</th>
                 <th className="px-3 py-3">Coverage</th>
@@ -70,10 +70,10 @@ export function PatientListSearch({ patients }: { patients: Patient[] }) {
                       />
                     </Link>
                   </td>
-                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.dob}</p><p className="mt-1 text-[10px] text-slate-400">{patient.mrn}</p></td>
-                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.insurance}</p><p className="mt-1 text-[10px] text-slate-400">{patient.plan}</p></td>
+                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.dob}</p><p className="mt-1 text-[12px] text-slate-400">{patient.mrn}</p></td>
+                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.insurance}</p><p className="mt-1 text-[12px] text-slate-400">{patient.plan}</p></td>
                   <td className="px-3 py-4 text-slate-600">{patient.provider}</td>
-                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.nextAppointment}</p><p className="mt-1 text-[10px] text-slate-400">Last: {patient.lastVisit}</p></td>
+                  <td className="px-3 py-4"><p className="font-bold text-slate-700">{patient.nextAppointment}</p><p className="mt-1 text-[12px] text-slate-400">Last: {patient.lastVisit}</p></td>
                   <td className="px-3 py-4 font-extrabold text-slate-900">${patient.balance}</td>
                   <td className="px-5 py-4"><StatusBadge status={patient.riskLevel} /></td>
                 </tr>

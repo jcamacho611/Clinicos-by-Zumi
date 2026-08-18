@@ -6,19 +6,33 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { db } from "@/lib/db";
 
-/** A destination the current role is actually authorized to open. */
+/**
+ * A destination the operating rail is allowed to show.
+ *
+ * `live` is deliberately nullable. A destination only carries a number when this
+ * module actually counted real rows for it. Nothing here invents a zero, an
+ * estimate, or a placeholder metric so a card looks populated — a destination we
+ * cannot truthfully count renders as a plain doorway with no number attached.
+ */
 export type RailDestination = {
   key: string;
   label: string;
+  /** One or two words for the icon rail, where the full label does not fit. */
   short: string;
   description: string;
   href: string;
   workspace: string;
-  /** Present only when a real server-side count exists. */
   live: { count: number; noun: string; singular: string } | null;
 };
 
-/** A real actionable fact derived from persisted rows, never a role slogan. */
+/**
+ * A real, actionable fact — never a role-templated slogan.
+ *
+ * The previous Home rendered an "Opportunity" derived purely from the viewer's
+ * role, so it appeared identically whether or not anything was actually waiting.
+ * That is a fabricated state. This type only ever describes counted rows, and the
+ * resolver returns null when nothing real is open.
+ */
 export type HomeOpportunity = {
   kind: "grid_offer_decision" | "open_escalation" | "open_task";
   title: string;
@@ -39,14 +53,14 @@ function candidatesForRole(role: ClinicRole): Candidate[] {
   if (role === "clinic_owner" || role === "administrator") {
     return [
       { key: "operations", label: "Clinic operations", short: "Operations", description: "Patients, schedule, staff work, follow-up, and revenue", href: "/front-desk", workspace: "front-desk" },
-      { key: "grid", label: "Grid", short: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "grid", label: "Grid", short: "Grid", description: "Find or offer healthcare work, space, services, and capacity", href: "/grid/workspace", workspace: "grid", counter: "grid_offers" },
       { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Courses, scenarios, training, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
   if (role === "provider") {
     return [
       { key: "care", label: "Today's care", short: "Care", description: "Open the work that needs clinical attention", href: "/provider", workspace: "provider" },
-      { key: "grid", label: "Grid", short: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid", workspace: "grid", counter: "grid_offers" },
+      { key: "grid", label: "Grid", short: "Grid", description: "See eligible work, services, and healthcare opportunities", href: "/grid/workspace", workspace: "grid", counter: "grid_offers" },
       { key: "edu", label: "Klinikos EDU", short: "EDU", description: "Continue learning, scenarios, and readiness", href: "/edu", workspace: "edu" },
     ];
   }
@@ -79,10 +93,18 @@ function candidatesForRole(role: ClinicRole): Candidate[] {
 
 async function countOpenTasks(session: ClinicSession) {
   if (!can(session.role, "tasks", "read")) return null;
+  // A provider's rail should reflect the provider's own queue, not the whole clinic's,
+  // so the number on Home matches what they will find when they open it.
   const ownerScope = session.role === "provider" ? { ownerId: session.userId } : {};
   return db.task.count({ where: { organizationId: session.organizationId, status: "open", ...ownerScope } });
 }
 
+/**
+ * Grid offers this organization is the recipient of and has not decided on yet.
+ *
+ * Expired offers are excluded because `transitionGridOffer` refuses them — counting
+ * them would put a number on Home for work nobody can actually do.
+ */
 async function countGridOffersAwaitingDecision(session: ClinicSession) {
   if (!can(session.role, "grid", "read")) return null;
   const rows = await db.$queryRaw<Array<{ count: number }>>(Prisma.sql`
@@ -104,11 +126,16 @@ function plural(count: number, singular: string, noun: string) {
 }
 
 /**
- * Resolve only role-authorized destinations, attach only real counts, and select the
- * highest-signal real opportunity. If nothing real is waiting, opportunity is null.
+ * Resolve the destinations this role can actually reach, with real counts attached,
+ * plus the single highest-signal real opportunity — or none.
+ *
+ * Every destination is filtered through `canAccessWorkspace`, the same rule the app
+ * shell uses, so Home cannot render a doorway that would bounce the viewer at the
+ * route guard. A control that does nothing is worse than no control.
  */
 export async function getHomeOperatingRail(session: ClinicSession): Promise<HomeOperatingRail> {
   const candidates = candidatesForRole(session.role).filter((candidate) => canAccessWorkspace(session.role, candidate.workspace));
+
   const needsTasks = candidates.some((candidate) => candidate.counter === "tasks");
   const needsGrid = candidates.some((candidate) => candidate.counter === "grid_offers");
 
@@ -138,7 +165,10 @@ export async function getHomeOperatingRail(session: ClinicSession): Promise<Home
       title: `${gridOffers} Grid ${plural(gridOffers, "offer is", "offers are")} waiting on your decision.`,
       body: "Each one is a live offer addressed to this organization that has not expired. Accepting, countering, or declining is a governed decision your role can make.",
       action: "Open Grid",
-      href: "/grid",
+      // `/grid` is the public marketplace entry and renders signed-out chrome with a
+      // "Sign in" button. A signed-in owner following an offer belongs in the
+      // authenticated Grid workspace.
+      href: "/grid/workspace",
       evidence: "Counted from Grid offer records addressed to this organization.",
     };
   } else if (openEscalations && canAccessWorkspace(session.role, "escalations")) {

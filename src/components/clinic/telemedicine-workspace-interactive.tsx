@@ -53,7 +53,7 @@ export function TelemedicineWorkspaceInteractive() {
   return <div className="space-y-6">
     <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Telemedicine</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-teal-700">Telemedicine</p>
         <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-slate-950">Virtual care without pretending the video rail is connected.</h2>
         <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">Klinikos uses the real tenant schedule for virtual-visit readiness. Video launch remains unavailable until an approved BAA-supported connection is configured.</p>
       </div>
@@ -84,14 +84,14 @@ export function TelemedicineWorkspaceInteractive() {
           <ReadinessItem label="Forms" complete={nextVisit.formsComplete} incompleteLabel="Incomplete" />
           <ReadinessItem label="Insurance" complete={nextVisit.insuranceVerified} incompleteLabel="Needs review" />
           <ReadinessItem label="Balance" complete={nextVisit.paymentDue <= 0} incompleteLabel={`$${nextVisit.paymentDue.toFixed(2)} due`} />
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-5 text-amber-900">Consent and identity readiness are not inferred from appointment fields. They must come from their actual governed records before Klinikos labels them complete.</div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-5 text-amber-900">Consent and identity readiness are not inferred from appointment fields. They must come from their actual governed records before Klinikos labels them complete.</div>
         </div>
       </SectionCard>
     </section> : <Card className="p-8 text-center"><Video className="mx-auto size-6 text-slate-300" /><p className="mt-4 text-sm font-extrabold text-slate-800">No active virtual visits are on the tenant schedule.</p><p className="mt-2 text-xs text-slate-500">Create a telemedicine appointment from Schedule when the clinic needs one.</p><Button asChild className="mt-4" size="sm" variant="secondary"><Link href="/schedule">Open schedule <ArrowRight className="size-3.5" /></Link></Button></Card>}
 
     <SectionCard title="Virtual visit queue" description="Real telemedicine appointments from the tenant schedule. Video launch stays disabled until the external connection is approved.">
       <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
-        {ordered.map((appointment) => <article className="rounded-2xl border border-slate-200 p-4" key={appointment.id}><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-extrabold text-slate-400">{appointment.date} · {appointment.time}</p><StatusBadge status={appointment.status} /></div><p className="mt-5 text-sm font-extrabold text-slate-950">{appointment.patient}</p><p className="mt-1 text-[10px] text-slate-500">{appointment.provider} · {appointment.location}</p><div className="mt-4 flex gap-2"><Button asChild className="flex-1" size="sm" variant="secondary"><Link href={`/patients/${appointment.patientId}`}>Open chart</Link></Button><Button disabled size="sm" title="Video connection required" variant="ghost"><Video className="size-3.5" /></Button></div></article>)}
+        {ordered.map((appointment) => <article className="rounded-2xl border border-slate-200 p-4" key={appointment.id}><div className="flex items-center justify-between gap-2"><p className="text-[12px] font-extrabold text-slate-400">{appointment.date} · {appointment.time}</p><StatusBadge status={appointment.status} /></div><p className="mt-5 text-sm font-extrabold text-slate-950">{appointment.patient}</p><p className="mt-1 text-[12px] text-slate-500">{appointment.provider} · {appointment.location}</p><div className="mt-4 flex gap-2"><Button asChild className="flex-1" size="sm" variant="secondary"><Link href={`/patients/${appointment.patientId}`}>Open chart</Link></Button><Button disabled size="sm" title="Video connection required" variant="ghost"><Video className="size-3.5" /></Button></div></article>)}
         {ordered.length === 0 && <p className="p-2 text-xs text-slate-500">No telemedicine appointments are recorded for this organization.</p>}
       </div>
     </SectionCard>
@@ -99,5 +99,5 @@ export function TelemedicineWorkspaceInteractive() {
 }
 
 function ReadinessItem({ label, complete, incompleteLabel }: { label: string; complete: boolean; incompleteLabel: string }) {
-  return <div className="flex items-center gap-3"><span className={`grid size-7 place-items-center rounded-lg ${complete ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700"}`}>{complete ? <Check className="size-3.5" /> : <Clock3 className="size-3.5" />}</span><p className="flex-1 text-xs font-bold text-slate-700">{label}</p><span className="text-[10px] text-slate-400">{complete ? "Ready" : incompleteLabel}</span></div>;
+  return <div className="flex items-center gap-3"><span className={`grid size-7 place-items-center rounded-lg ${complete ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700"}`}>{complete ? <Check className="size-3.5" /> : <Clock3 className="size-3.5" />}</span><p className="flex-1 text-xs font-bold text-slate-700">{label}</p><span className="text-[12px] text-slate-400">{complete ? "Ready" : incompleteLabel}</span></div>;
 }

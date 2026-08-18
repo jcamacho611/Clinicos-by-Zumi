@@ -26,7 +26,7 @@ export function ZumiCommandShell({ children }: { children: React.ReactNode }) {
         <header className="relative" role="banner" style={{ borderBottom: "var(--border-hair-dark)" }}>
           <div className="mx-auto flex min-h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
             <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="text-xs" />
-            <p className="ml-auto flex items-center gap-2 text-[10px] font-bold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>
+            <p className="ml-auto flex items-center gap-2 text-[12px] font-bold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>
               <Radio aria-hidden="true" className="size-3.5" />
               Klinikos Intelligence ready
             </p>
@@ -80,7 +80,7 @@ export function MissionPhaseProgress({ current }: { current: MissionPhaseKey }) 
                 style={{ background: state === "current" ? "var(--cyan-300)" : state === "complete" ? "color-mix(in oklch, var(--cyan-300) 42%, transparent)" : "color-mix(in oklch, var(--text-primary) 20%, transparent)" }}
               />
               <span
-                className="text-[10px] font-bold uppercase"
+                className="text-[12px] font-bold uppercase"
                 style={{ color: state === "current" ? "var(--cyan-300)" : "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}
                 {...(state === "current" ? { "aria-current": "step" as const } : {})}
               >

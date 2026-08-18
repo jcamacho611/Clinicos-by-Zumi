@@ -40,7 +40,7 @@ async function audit(input: {
       action: input.action,
       resourceType: "patient",
       resourceId: input.patientId,
-      metadata: input.metadata ?? {},
+      metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
 }
@@ -218,7 +218,9 @@ export async function sendAuthorizedPatientSms(input: {
       patientId: patient.id,
       metadata: { channel: "sms", messageClass: input.messageClass, reason: decision.reason, containsPhi: Boolean(input.containsPhi) },
     });
-    return decision;
+    // The permission guard reports `allowed`; this function's result contract uses
+    // `ok`. Same refusal, same reason — only the field name differs.
+    return { ok: false as const, reason: decision.reason, detail: decision.detail };
   }
 
   const result = await deliverOutbound({

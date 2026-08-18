@@ -65,7 +65,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-4 border-t border-[#e8ded9] pt-4">
-          <span className="text-[9px] font-extrabold uppercase tracking-[.13em] text-[#9b8883]">Terms / rate</span>
+          <span className="text-[11px] font-extrabold uppercase tracking-[.13em] text-[#9b8883]">Terms / rate</span>
           <p className="text-right text-base font-extrabold tracking-[-.02em] text-[#241517]">{formatPriceRange(listing.priceLowCents, listing.priceHighCents)}</p>
         </div>
       </article>

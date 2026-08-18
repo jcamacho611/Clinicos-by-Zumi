@@ -19,8 +19,8 @@ export default async function GridTransactionsPage() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-400/15 via-blue-500/[.04] to-transparent" />
       <div className="relative flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-4xl">
-          <div className="flex flex-wrap items-center gap-2 text-[9px] font-extrabold uppercase tracking-[.14em]"><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-cyan-100">Grid transaction command</span><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-amber-100">Synthetic / human reviewed</span></div>
-          <p className="mt-7 text-[10px] font-black uppercase tracking-[.22em] text-cyan-200">One deal. Every state.</p>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em]"><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-cyan-100">Grid transaction command</span><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-amber-100">Synthetic / human reviewed</span></div>
+          <p className="mt-7 text-[12px] font-black uppercase tracking-[.22em] text-cyan-200">One deal. Every state.</p>
           <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-[-.065em] text-white sm:text-5xl lg:text-6xl">From “I need something” to economic truth.</h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-white/50">Create demand, discover eligible supply, negotiate an offer, hold capacity, reconcile required payment evidence, record fulfillment, and see what is actually owed. Nothing skips a state.</p>
         </div>
@@ -28,7 +28,7 @@ export default async function GridTransactionsPage() {
       </div>
     </section>
 
-    <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-amber-200/[.045] px-4 py-3 text-[10px] leading-5 text-amber-100/70"><ShieldCheck className="mr-2 inline size-4" /><strong className="font-extrabold text-amber-100">Current boundary:</strong> this surface remains synthetic/demo gated. Manual GoDaddy payment evidence is not processor verification, financial obligations are not automated payouts, and active disputes or safety incidents hold normal settlement.</div>
+    <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-amber-200/[.045] px-4 py-3 text-[12px] leading-5 text-amber-100/70"><ShieldCheck className="mr-2 inline size-4" /><strong className="font-extrabold text-amber-100">Current boundary:</strong> this surface remains synthetic/demo gated. Manual GoDaddy payment evidence is not processor verification, financial obligations are not automated payouts, and active disputes or safety incidents hold normal settlement.</div>
 
     <div className="mt-6"><GridTransactionCommand board={board} /></div>
   </main>;

@@ -29,6 +29,6 @@ export function PortalLoginForm({ clinic = "", demoCredentials }: { clinic?: str
     <label className="block text-xs font-bold text-[#213d37]">Password<Input autoComplete="current-password" className="mt-2 border-[#cadbd3] bg-white" minLength={8} name="password" onChange={(event) => setPassword(event.target.value)} required type="password" value={password} /></label>
     {error && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
     <Button className="w-full bg-[#153f37] text-white hover:bg-[#0e312b]" disabled={submitting} size="lg" type="submit">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Opening your portal...</> : <>Open my portal <ArrowRight className="size-4" /></>}</Button>
-    {demoCredentials && <p className="text-center text-[10px] leading-5 text-[#748b83]">Synthetic demo credentials are prefilled only outside production.</p>}
+    {demoCredentials && <p className="text-center text-[12px] leading-5 text-[#748b83]">Synthetic demo credentials are prefilled only outside production.</p>}
   </form>;
 }

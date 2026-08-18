@@ -61,7 +61,7 @@ export async function getGridResourceReviewQueue(session: ClinicSession) {
            r."title", r."description", r."policyClass", r."visibility", r."status", r."city", r."state",
            r."pricingModel", r."priceCents", r."capacity", r."reviewStatus", r."metadata", r."createdAt", r."updatedAt"
     FROM "GridResourceRecord" r
-    JOIN "Organization" o ON o."id" = r."organizationId"
+    JOIN "organizations" o ON o."id" = r."organizationId"
     WHERE r."status" IN ('pending_review', 'active', 'suspended')
        OR r."reviewStatus" IN ('in_review', 'approved', 'suspended')
     ORDER BY CASE WHEN r."reviewStatus" = 'in_review' THEN 0 ELSE 1 END, r."updatedAt" DESC

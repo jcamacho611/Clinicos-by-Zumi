@@ -39,7 +39,7 @@ export function ClinicSignalChips({ signals }: { signals: string[] }) {
   return (
     <ul aria-label="Clinic signals captured" className="flex flex-wrap gap-1.5">
       {signals.map((signal) => (
-        <li className="border border-[#e6817b]/25 bg-[#e6817b]/[.07] px-2.5 py-1 text-[10px] font-bold text-[#efaaa1]" key={signal}>
+        <li className="border border-[#e6817b]/25 bg-[#e6817b]/[.07] px-2.5 py-1 text-[12px] font-bold text-[#efaaa1]" key={signal}>
           {signal}
         </li>
       ))}
@@ -180,7 +180,7 @@ export function ZumiInterview({ analysisOffer }: { analysisOffer: PublicAnalysis
               <section aria-labelledby="engagement-heading" className="overflow-hidden border border-[#e6817b]/16 bg-[#100708]">
                 <div className="grid gap-7 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
                   <div>
-                    <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">Next paid step</p>
+                    <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">Next paid step</p>
                     <h2 className="mt-3 text-3xl font-semibold tracking-[-.045em] text-white" id="engagement-heading">{analysisOffer.name}</h2>
                     <p className="mt-3 text-4xl font-semibold tracking-[-.05em] text-[#d6b787]">{analysisOffer.priceLabel}</p>
                     <p className="mt-4 max-w-2xl text-xs leading-6 text-slate-400">

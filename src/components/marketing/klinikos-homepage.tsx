@@ -84,7 +84,7 @@ export function KlinikosHomepage() {
             <div className="grid min-w-[760px] grid-cols-5 py-7">
               {["Signal", "Owner", "Next action", "Human review", "Outcome"].map((item, index) => (
                 <div className={`${index ? "border-l pl-6" : ""} k-rule`} key={item}>
-                  <p className="k-muted text-[10px] font-semibold uppercase tracking-[.14em]">0{index + 1}</p>
+                  <p className="k-muted text-[12px] font-semibold uppercase tracking-[.14em]">0{index + 1}</p>
                   <p className="mt-3 text-sm font-semibold">{item}</p>
                 </div>
               ))}

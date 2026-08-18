@@ -75,7 +75,7 @@ export default function PricingPage() {
                   Start with the operation. Expand with the value.
                 </h1>
                 <p className="mt-5 max-w-3xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-                  Klinikos combines implementation with recurring operating software. Variable external usage is customer-funded instead of hidden inside an unlimited promise. Final scope can vary by locations, providers, migration, connections, volume, and governed workflows.
+                  Klinikos combines setup with recurring software. Your plan includes a usage allowance, and we always show you before anything extra applies. Final scope depends on your locations, providers, what needs migrating, and the connections you need.
                 </p>
               </div>
 
@@ -89,7 +89,7 @@ export default function PricingPage() {
 
         <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14" aria-labelledby="implementation-heading">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>Before the subscription</p>
+            <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>Before the subscription</p>
             <h2 id="implementation-heading" className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Implementation is a sequence, not a surprise fee.</h2>
             <p className="mt-4 text-sm leading-7" style={{ color: "var(--text-on-paper-dim)" }}>
               The first engagement is designed to understand what the clinic actually needs before committing to migration, connection, or launch scope.
@@ -99,15 +99,15 @@ export default function PricingPage() {
           <div className="mt-8 divide-y" style={{ borderTop: "var(--border-hair-light)", borderBottom: "var(--border-hair-light)", borderColor: "var(--line-light)" }}>
             {implementationSteps.map((step) => (
               <article className="grid gap-5 py-7 lg:grid-cols-[90px_.75fr_1fr_auto] lg:items-center" key={step.offer.key}>
-                <p className="text-[10px] font-extrabold" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{step.number}</p>
+                <p className="text-[12px] font-extrabold" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{step.number}</p>
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{step.eyebrow}</p>
+                  <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{step.eyebrow}</p>
                   <h3 className="mt-2 text-xl font-extrabold">{step.offer.name}</h3>
                   <p className="mt-2 text-3xl font-extrabold tracking-tight">{step.offer.priceLabel}</p>
                 </div>
                 <div>
                   <p className="text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{step.detail}</p>
-                  <p className="mt-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>{step.offer.creditForward}</p>
+                  <p className="mt-2 text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>{step.offer.creditForward}</p>
                 </div>
                 <Link className="inline-flex min-h-11 items-center gap-2 text-xs font-extrabold" href={step.href} style={{ color: "var(--accent-signal)" }}>
                   {step.action} <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -119,7 +119,7 @@ export default function PricingPage() {
           <div className="mt-6 flex items-start gap-4 p-5" style={{ background: "var(--surface-paper)", border: "var(--border-hair-light)", borderRadius: "var(--radius-md)" }}>
             <ShieldCheck className="mt-0.5 size-5 shrink-0" style={{ color: "var(--accent-premium)" }} aria-hidden="true" />
             <p className="text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-              The Clinic Operating Analysis creates a server-owned commercial intent before the configured payment rail opens. Returning from checkout is never payment evidence. Signed Stripe evidence or authorized manual reconciliation establishes payment truth, and payment never bypasses authentication, tenant, privacy, credentialing, clinical, or human-review controls.
+              Klinikos records what you asked to buy and sets the amount — the browser never decides it. Coming back from the payment page does not by itself mean you have paid; we confirm that with the payment provider. Paying never changes who can sign in, what your team can see, or what still needs a person to approve.
             </p>
           </div>
         </section>
@@ -127,8 +127,8 @@ export default function PricingPage() {
         <section className="py-12 sm:py-16" style={{ background: "var(--surface-paper)", borderTop: "var(--border-hair-light)", borderBottom: "var(--border-hair-light)" }} aria-labelledby="plans-heading">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <div className="max-w-3xl">
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>Recurring Klinikos</p>
-              <h2 id="plans-heading" className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Choose the operating depth, not a feature maze.</h2>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>Recurring Klinikos</p>
+              <h2 id="plans-heading" className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Choose how much of the clinic you want Klinikos running.</h2>
               <p className="mt-4 text-sm leading-7" style={{ color: "var(--text-on-paper-dim)" }}>These are the current public anchors. Final contracted scope can still vary where the clinic adds locations, providers, regulated workflows, custom connections, or materially different usage.</p>
             </div>
 
@@ -139,17 +139,17 @@ export default function PricingPage() {
                     <Badge tone={index === 0 ? "mapping" : "neutral"}>{index === 0 ? "Starting point" : plan.name}</Badge>
                     <h3 className="mt-4 text-2xl font-extrabold tracking-tight">{plan.name}</h3>
                     <p className="mt-3 text-4xl font-extrabold tracking-tight">{plan.monthlyPriceLabel}</p>
-                    <p className="mt-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>{plan.annualPriceLabel} · {plan.annualSavingsLabel}</p>
+                    <p className="mt-2 text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>{plan.annualPriceLabel} · {plan.annualSavingsLabel}</p>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Best fit</p>
+                    <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Best fit</p>
                     <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{plan.idealFor}</p>
                     <p className="mt-5 text-xs font-extrabold">Implementation {plan.implementationPriceLabel}</p>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Included operating scope</p>
+                    <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Included operating scope</p>
                     <ul className="mt-3 grid gap-3 sm:grid-cols-2">
                       {plan.includes.map((item) => (
                         <li className="flex items-start gap-2 text-xs leading-5" key={item} style={{ color: "var(--text-on-paper-dim)" }}>
@@ -184,7 +184,7 @@ export default function PricingPage() {
                 <article className="grid gap-3 py-6 sm:grid-cols-[1fr_auto] sm:items-start" key={addOn.name}>
                   <div>
                     <h3 className="text-sm font-extrabold">{addOn.name}</h3>
-                    {"setupLabel" in addOn ? <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>{addOn.setupLabel}</p> : null}
+                    {"setupLabel" in addOn ? <p className="mt-2 text-[12px]" style={{ color: "var(--text-on-paper-dim)" }}>{addOn.setupLabel}</p> : null}
                     {"rule" in addOn ? <p className="mt-2 max-w-2xl text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{addOn.rule}</p> : null}
                   </div>
                   <p className="text-lg font-extrabold" style={{ color: "var(--accent-signal)" }}>{addOn.priceLabel}</p>
@@ -197,9 +197,9 @@ export default function PricingPage() {
             <div className="flex items-start gap-4">
               <ShieldCheck className="mt-0.5 size-5 shrink-0" style={{ color: "var(--accent-premium)" }} aria-hidden="true" />
               <div>
-                <p className="text-sm font-extrabold">Commercial access never becomes clinical or integration authority.</p>
+                <p className="text-sm font-extrabold">Paying turns on software, not permission.</p>
                 <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-                  Paid integrations remain pending until their real external connection is ready. Variable vendor/API usage must be covered by an included allowance, prepaid customer funds, or explicitly authorized bounded overage before execution.
+                  An integration you have paid for stays switched off until its real connection is actually ready — we will tell you which ones those are. Usage runs against the allowance included in your plan; if you would go beyond it, we ask you first rather than billing you for it.
                 </p>
               </div>
             </div>
@@ -213,9 +213,9 @@ export default function PricingPage() {
 function PriceSignal({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <div className="p-5" style={{ background: "var(--surface-raised)", border: "var(--border-hair-dark)", borderRadius: "var(--radius-md)" }}>
-      <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>{label}</p>
+      <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wide)" }}>{label}</p>
       <p className="mt-3 text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-2 text-[10px] leading-5" style={{ color: "var(--text-secondary)" }}>{detail}</p>
+      <p className="mt-2 text-[12px] leading-5" style={{ color: "var(--text-secondary)" }}>{detail}</p>
     </div>
   );
 }

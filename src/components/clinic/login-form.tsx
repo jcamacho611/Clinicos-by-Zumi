@@ -56,7 +56,7 @@ export function LoginForm({ demoCredentials, returnTo }: LoginFormProps) {
       <Button className="w-full" disabled={submitting} size="lg" type="submit" variant="primary">
         {submitting ? <><LoaderCircle className="size-4 animate-spin" /> Signing in securely...</> : <>Continue to Klinikos <ArrowRight className="size-4" /></>}
       </Button>
-      {demoCredentials && <p className="text-center text-[10px] leading-5 text-slate-400">Development demo credentials are prefilled. Demo access is disabled automatically in production.</p>}
+      {demoCredentials && <p className="text-center text-[12px] leading-5 text-slate-400">Development demo credentials are prefilled. Demo access is disabled automatically in production.</p>}
     </form>
   );
 }

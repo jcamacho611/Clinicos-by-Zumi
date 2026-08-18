@@ -31,16 +31,62 @@ describe("Luxe acquisition operations analytics", () => {
     expect(result.metrics.unansweredLeads).toBe(1);
     expect(result.metrics.atRiskLeads).toBe(1);
     expect(result.metrics.atRiskEstimatedOpportunityCents).toBe(45000);
-    expect(result.metrics.verifiedCollectedRevenueCents).toBeNull();
+    expect(result.metrics.collectedRevenueWithEvidenceCents).toBe(0);
     expect(result.actionQueue[0]?.action).toBe("contact_now");
   });
 
-  it("separates booked estimated value from verified revenue", () => {
+  it("separates booked estimated value from evidence-backed collected revenue", () => {
     const result = summarizeAcquisitionLeads([
       lead({ id: "booked", status: "booked", bookingStatus: "booked", estimatedValueCents: 85000, lastContactedAt: new Date("2026-08-18T16:35:00.000Z") }),
     ], { now, slaMinutes: 15 });
     expect(result.metrics.bookedEstimatedValueCents).toBe(85000);
-    expect(result.metrics.verifiedCollectedRevenueCents).toBeNull();
+    expect(result.metrics.collectedRevenueWithEvidenceCents).toBe(0);
+  });
+
+  it("shows booking start as verification work without counting it as booked", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "started",
+        bookingStatus: "started",
+        followUpDueAt: new Date("2026-08-18T17:15:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.bookingStartedLeads).toBe(1);
+    expect(result.metrics.bookingReviewDueLeads).toBe(0);
+    expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.actionQueue[0]?.action).toBe("booking_in_progress");
+    expect(result.actionQueue[0]?.bookingInProgress).toBe(true);
+  });
+
+  it("turns an overdue booking-start review into verify-booking work, not a booked state", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "due",
+        bookingStatus: "started",
+        followUpDueAt: new Date("2026-08-18T16:59:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.bookingReviewDueLeads).toBe(1);
+    expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.actionQueue[0]?.action).toBe("verify_booking");
+  });
+
+  it("attributes manual and processor evidence separately and by source", () => {
+    const collectedEvidenceByLead = new Map([
+      ["manual", { manualReconciledCents: 15000, processorVerifiedCents: 0 }],
+      ["processor", { manualReconciledCents: 0, processorVerifiedCents: 45000 }],
+    ]);
+    const result = summarizeAcquisitionLeads([
+      lead({ id: "manual", source: "instagram", estimatedValueCents: 45000 }),
+      lead({ id: "processor", source: "google", estimatedValueCents: 45000 }),
+    ], { now, slaMinutes: 15, collectedEvidenceByLead });
+    expect(result.metrics.manualReconciledRevenueCents).toBe(15000);
+    expect(result.metrics.processorVerifiedRevenueCents).toBe(45000);
+    expect(result.metrics.collectedRevenueWithEvidenceCents).toBe(60000);
+    expect(result.bySource.find((item) => item.key === "instagram")?.collectedWithEvidenceCents).toBe(15000);
+    expect(result.bySource.find((item) => item.key === "google")?.collectedWithEvidenceCents).toBe(45000);
   });
 
   it("calculates median speed to lead only from recorded contact timestamps", () => {

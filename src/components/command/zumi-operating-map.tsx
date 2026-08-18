@@ -32,7 +32,7 @@ export function OperatingMapPanel({ signals }: { signals: OperatingSignal[] }) {
             <li className="bg-[#070d15] p-5" key={signal.key}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-sm font-extrabold text-white">{signal.label}</h3>
-                <span className={`border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.12em] ${presentation.className}`}>
+                <span className={`border px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-[.12em] ${presentation.className}`}>
                   {presentation.label}
                 </span>
               </div>
@@ -90,11 +90,11 @@ export function NextBestActionPanel({ summary }: { summary: OperatingSignalSumma
 
       <dl className="mt-6 grid gap-x-8 gap-y-4 border-t border-white/10 pt-5 sm:grid-cols-2">
         <div>
-          <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Recommended starting module</dt>
+          <dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Recommended starting module</dt>
           <dd className="mt-1 text-sm font-extrabold text-white">{summary.recommendedModule}</dd>
         </div>
         <div>
-          <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Next best action</dt>
+          <dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Next best action</dt>
           <dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-rose-100">
             <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             {nextBestAction}

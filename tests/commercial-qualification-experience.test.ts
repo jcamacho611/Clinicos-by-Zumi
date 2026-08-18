@@ -25,9 +25,17 @@ describe("commercial qualification experience", () => {
     const founding = read("src/app/founding-clinic/page.tsx");
 
     expect(sales).toContain("This analysis does not itself activate production access or external integrations.");
-    expect(founding).toContain("Browser return is never payment proof");
+
+    // These are facts a buyer must be told, not phrasings to preserve. The wording
+    // moved out of internal vocabulary ("payment proof", "payment evidence",
+    // "entitlement") into language an ordinary customer reads without a glossary;
+    // the guard follows the fact, and additionally fails if the jargon returns.
+    expect(founding).toMatch(/coming back from the payment page is not proof you paid/i);
     expect(founding).toContain("manual service payment does not create a Klinikos software entitlement");
     expect(founding).toContain("do not by themselves activate production PHI");
+    for (const jargon of ["payment rail", "payment evidence", "browser return"]) {
+      expect(founding.toLowerCase(), `"${jargon}" is internal vocabulary`).not.toContain(jargon);
+    }
   });
 
   it("presents founding commercial steps as a sequence rather than three parallel purchases", () => {

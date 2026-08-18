@@ -40,7 +40,7 @@ export function AppointmentStatusControl({
   }
 
   if (options.length === 0) {
-    return <span className="text-[9px] font-bold uppercase tracking-[.12em] text-slate-400">No action</span>;
+    return <span className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">No action</span>;
   }
 
   return (
@@ -48,7 +48,7 @@ export function AppointmentStatusControl({
       <div className="relative">
         <select
           aria-label="Update appointment status"
-          className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 pr-8 text-[10px] font-bold text-slate-700 outline-none transition hover:border-teal-300 focus:border-teal-400 focus:ring-4 focus:ring-teal-50 disabled:opacity-60"
+          className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 pr-8 text-[12px] font-bold text-slate-700 outline-none transition hover:border-teal-300 focus:border-teal-400 focus:ring-4 focus:ring-teal-50 disabled:opacity-60"
           disabled={pending}
           onChange={(event) => {
             if (event.target.value) void updateStatus(event.target.value);
@@ -61,7 +61,7 @@ export function AppointmentStatusControl({
         </select>
         {pending && <LoaderCircle className="pointer-events-none absolute right-2 top-2 size-4 animate-spin text-teal-600" />}
       </div>
-      {error && <p className="mt-1 max-w-40 text-[9px] leading-4 text-rose-600">{error}</p>}
+      {error && <p className="mt-1 max-w-40 text-[11px] leading-4 text-rose-600">{error}</p>}
     </div>
   );
 }

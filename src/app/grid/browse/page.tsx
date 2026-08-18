@@ -86,7 +86,7 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
       <header className="border-b border-[#e8ded9] bg-[#fffdf9]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
           <KlinikosWordmark href="/grid" framed markClassName="h-10 w-10" textClassName="h-[20px] w-[176px]" className="gap-3" />
-          <span className="hidden text-[9px] font-extrabold uppercase tracking-[.17em] text-[#a8474e] md:block">Grid discovery</span>
+          <span className="hidden text-[11px] font-extrabold uppercase tracking-[.17em] text-[#a8474e] md:block">Grid discovery</span>
           <Link className="ml-auto hidden text-xs font-semibold text-[#756461] hover:text-[#241517] sm:block" href="/grid">I have something</Link>
           <Link className="ml-4 flex min-h-[44px] items-center rounded-full bg-[#241517] px-4 text-xs font-semibold text-white hover:bg-[#47262b]" href="/login">Sign in</Link>
         </div>

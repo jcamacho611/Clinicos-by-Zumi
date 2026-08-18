@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(139,35,42,.16),transparent_32%)]" />
         <div className="relative w-full max-w-md">
           <KlinikosWordmark href="/" framed inverse markClassName="h-12 w-12" textClassName="h-[22px] w-[196px]" className="mb-12 gap-3" />
-          <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#f8efed]">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos workspace. Every session remains bound to one authorized organization and role.</p>
           <div className="rose-auth-form mt-8">
@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]">
             <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.
           </div>
-          <p className="mt-8 flex items-center gap-2 text-[10px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
+          <p className="mt-8 flex items-center gap-2 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
         </div>
       </section>
       <section className="relative hidden overflow-hidden border-l border-[#e28b85]/10 bg-[#080405] p-12 text-[#f8efed] lg:flex lg:flex-col lg:justify-end">

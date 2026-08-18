@@ -257,18 +257,18 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
       {railOpen ? (
         <aside className="hidden w-[248px] shrink-0 flex-col border-r border-[#e6817b]/11 bg-[#070304] lg:flex">
           <div className="border-b border-[#e6817b]/10 p-4">
-            <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[.18em] text-[#e6817b]">Klinikos Browser</p><p className="mt-1 text-[11px] text-[#8f7773]">Current browser session</p></div><button aria-label="New session" className="grid size-8 place-items-center rounded-full border border-[#e6817b]/14 text-[#d8c1bd] hover:bg-[#e6817b]/10" onClick={newSession} type="button"><Plus className="size-4" /></button></div>
+            <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#e6817b]">Klinikos Browser</p><p className="mt-1 text-[11px] text-[#8f7773]">Current browser session</p></div><button aria-label="New session" className="grid size-8 place-items-center rounded-full border border-[#e6817b]/14 text-[#d8c1bd] hover:bg-[#e6817b]/10" onClick={newSession} type="button"><Plus className="size-4" /></button></div>
             <label className="mt-4 flex items-center gap-2 rounded-xl border border-[#e6817b]/10 bg-[#100708] px-3 py-2"><Search className="size-3.5 text-[#725d59]" /><span className="sr-only">Search sessions</span><input className="min-w-0 flex-1 bg-transparent text-[11px] text-[#f8efed] outline-none placeholder:text-[#655653]" onChange={(event) => setHistorySearch(event.target.value)} placeholder="Search this session…" value={historySearch} /></label>
           </div>
 
           <nav className="grid grid-cols-3 gap-1 border-b border-[#e6817b]/10 p-3" aria-label="Klinikos surfaces">
-            {surfaces.map(({ label, href, icon: Icon }) => <Link className="flex min-h-[58px] flex-col items-center justify-center gap-1.5 rounded-xl text-[9px] font-semibold text-[#8f7773] hover:bg-[#e6817b]/[.07] hover:text-[#efaaa1]" href={href} key={href}><Icon className="size-4" /><span>{label}</span></Link>)}
+            {surfaces.map(({ label, href, icon: Icon }) => <Link className="flex min-h-[58px] flex-col items-center justify-center gap-1.5 rounded-xl text-[11px] font-semibold text-[#8f7773] hover:bg-[#e6817b]/[.07] hover:text-[#efaaa1]" href={href} key={href}><Icon className="size-4" /><span>{label}</span></Link>)}
           </nav>
 
           <div className="flex-1 overflow-y-auto p-3">
             <SessionGroup label="Today" sessions={today} activeId={activeSessionId} onSelect={selectSession} onRemove={removeSession} />
             {earlier.length ? <SessionGroup label="Earlier" sessions={earlier} activeId={activeSessionId} onSelect={selectSession} onRemove={removeSession} /> : null}
-            <p className="mt-5 border-t border-[#e6817b]/8 pt-4 text-[9px] leading-5 text-[#655653]">Raw conversation text is intentionally kept in memory only for this browser session until Klinikos has an approved governed transcript store.</p>
+            <p className="mt-5 border-t border-[#e6817b]/8 pt-4 text-[11px] leading-5 text-[#655653]">Raw conversation text is intentionally kept in memory only for this browser session until Klinikos has an approved governed transcript store.</p>
           </div>
         </aside>
       ) : null}
@@ -283,7 +283,7 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
           <div className="ml-1 flex min-w-0 flex-1 items-end gap-1 self-stretch overflow-x-auto pt-2">
             {sessions.map((session) => (
               <div className={cn("group flex h-[45px] min-w-[150px] max-w-[230px] items-center gap-2 rounded-t-xl border border-b-0 px-3", session.id === activeSessionId ? "border-[#e6817b]/18 bg-[#0d0608] text-[#fff8f6]" : "border-transparent bg-transparent text-[#806965] hover:bg-[#e6817b]/[.04]")} key={session.id}>
-                <button className="flex min-w-0 flex-1 items-center gap-2 text-left" onClick={() => selectSession(session.id)} type="button"><span className={cn("size-1.5 shrink-0 rounded-full", statusDot(session.status))} /><span className="truncate text-[10px] font-semibold">{session.title}</span></button>
+                <button className="flex min-w-0 flex-1 items-center gap-2 text-left" onClick={() => selectSession(session.id)} type="button"><span className={cn("size-1.5 shrink-0 rounded-full", statusDot(session.status))} /><span className="truncate text-[12px] font-semibold">{session.title}</span></button>
                 {sessions.length > 1 ? <button aria-label={`Close ${session.title}`} className="grid size-5 shrink-0 place-items-center rounded text-[#655653] hover:bg-[#e6817b]/10 hover:text-[#efaaa1]" onClick={() => removeSession(session.id)} type="button"><X className="size-3" /></button> : null}
               </div>
             ))}
@@ -294,8 +294,8 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
         <div className="border-b border-[#e6817b]/9 bg-[#0b0507] px-4 py-3 sm:px-6">
           <div className="mx-auto flex max-w-[1060px] items-center gap-3">
             <span className={cn("size-2 rounded-full", statusDot(active.status))} />
-            <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#f8efed]">{active.title}</p><p className="mt-0.5 text-[9px] uppercase tracking-[.13em] text-[#725d59]">{statusLabel(active.status)} · Klinikos Intelligence · {userName}</p></div>
-            <Link className="hidden items-center gap-1.5 text-[10px] font-semibold text-[#d6b787] sm:inline-flex" href="/paths"><Route className="size-3.5" />Route registry</Link>
+            <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#f8efed]">{active.title}</p><p className="mt-0.5 text-[11px] uppercase tracking-[.13em] text-[#725d59]">{statusLabel(active.status)} · Klinikos Intelligence · {userName}</p></div>
+            <Link className="hidden items-center gap-1.5 text-[12px] font-semibold text-[#d6b787] sm:inline-flex" href="/paths"><Route className="size-3.5" />Route registry</Link>
           </div>
         </div>
 
@@ -304,10 +304,10 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
             {active.messages.length === 0 ? (
               <div className="mx-auto max-w-3xl py-8 text-center sm:py-14">
                 <button aria-label="Focus the Zumi composer" className="group relative mx-auto grid size-28 place-items-center rounded-full border border-[#e6817b]/20 bg-[#14090c]/70 shadow-[0_0_70px_rgba(139,35,42,.25)]" onClick={() => inputRef.current?.focus()} type="button"><span className="absolute inset-3 rounded-full border border-[#e6817b]/14 transition group-hover:scale-105" /><KlinikosMark className="relative h-16 w-16" /></button>
-                <p className="mt-6 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">Klinikos Intelligence</p>
+                <p className="mt-6 text-[12px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">Klinikos Intelligence</p>
                 <h2 className="mt-4 text-4xl font-light tracking-[-.055em] text-[#fff8f6] sm:text-5xl">What do you want to make happen?</h2>
                 <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#9f8985]">Zumi understands the current state, desired outcome, missing requirements, and the governed Klinikos route. It can open the right working context without turning navigation into the product.</p>
-                <div className="mt-7 flex flex-wrap justify-center gap-2">{["I need an injector Saturday", "I just graduated nursing school and want to become an injector", "We have an empty room three days a week", "Why are we losing money?"].map((prompt) => <button className="rounded-full border border-[#e6817b]/12 bg-[#100708]/72 px-4 py-2.5 text-[10px] font-semibold text-[#b89f9b] hover:border-[#e6817b]/28 hover:text-[#fff8f6]" key={prompt} onClick={() => void sendQuestion(prompt)} type="button">{prompt}</button>)}</div>
+                <div className="mt-7 flex flex-wrap justify-center gap-2">{["I need an injector Saturday", "I just graduated nursing school and want to become an injector", "We have an empty room three days a week", "Why are we losing money?"].map((prompt) => <button className="rounded-full border border-[#e6817b]/12 bg-[#100708]/72 px-4 py-2.5 text-[12px] font-semibold text-[#b89f9b] hover:border-[#e6817b]/28 hover:text-[#fff8f6]" key={prompt} onClick={() => void sendQuestion(prompt)} type="button">{prompt}</button>)}</div>
               </div>
             ) : active.messages.map((message) => (
               <div className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")} key={message.id}>
@@ -321,9 +321,9 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
             {(actions.length || blockers.length || active.trusted?.path) ? (
               <section className="rounded-[20px] border border-[#d6b787]/18 bg-[#d6b787]/[.045] p-5" aria-label="Trusted Klinikos route">
                 <div className="flex items-center gap-2 text-[#efd8ad]"><ShieldCheck className="size-4" /><h3 className="text-xs font-extrabold">Trusted route</h3></div>
-                {active.trusted?.path ? <div className="mt-3"><p className="text-sm font-semibold text-[#fff8f6]">{active.trusted.path.title}</p><p className="mt-1 text-[10px] text-[#9f8985]">{active.trusted.path.status} · {Math.round(active.trusted.path.progress * 100)}% complete</p></div> : null}
-                {actions.length ? <div className="mt-4 divide-y divide-[#d6b787]/10 border-y border-[#d6b787]/10">{actions.slice(0, 5).map((action) => <div className="py-4" key={action.id}><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold text-[#fff8f6]">{action.title}</p><p className="mt-1 text-[10px] leading-5 text-[#9f8985]">{action.reason}</p></div><span className="shrink-0 text-[8px] font-extrabold uppercase tracking-[.12em] text-[#d6b787]">{action.state.replaceAll("_", " ")}</span></div>{action.href && action.state !== "blocked" ? <Link className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-[#efaaa1]" href={action.href}>Open working context <ArrowRight className="size-3" /></Link> : null}</div>)}</div> : null}
-                {blockers.length ? <div className="mt-4 space-y-2">{blockers.slice(0, 4).map((blocker) => <p className="text-[10px] leading-5 text-[#d9c2a1]" key={blocker.code}><strong>{blocker.title}:</strong> {blocker.explanation}</p>)}</div> : null}
+                {active.trusted?.path ? <div className="mt-3"><p className="text-sm font-semibold text-[#fff8f6]">{active.trusted.path.title}</p><p className="mt-1 text-[12px] text-[#9f8985]">{active.trusted.path.status} · {Math.round(active.trusted.path.progress * 100)}% complete</p></div> : null}
+                {actions.length ? <div className="mt-4 divide-y divide-[#d6b787]/10 border-y border-[#d6b787]/10">{actions.slice(0, 5).map((action) => <div className="py-4" key={action.id}><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold text-[#fff8f6]">{action.title}</p><p className="mt-1 text-[12px] leading-5 text-[#9f8985]">{action.reason}</p></div><span className="shrink-0 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#d6b787]">{action.state.replaceAll("_", " ")}</span></div>{action.href && action.state !== "blocked" ? <Link className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#efaaa1]" href={action.href}>Open working context <ArrowRight className="size-3" /></Link> : null}</div>)}</div> : null}
+                {blockers.length ? <div className="mt-4 space-y-2">{blockers.slice(0, 4).map((blocker) => <p className="text-[12px] leading-5 text-[#d9c2a1]" key={blocker.code}><strong>{blocker.title}:</strong> {blocker.explanation}</p>)}</div> : null}
               </section>
             ) : null}
           </div>
@@ -334,8 +334,8 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
             <textarea className="min-h-[68px] w-full resize-none bg-transparent px-3 py-3 text-sm leading-6 text-[#fff8f6] outline-none placeholder:text-[#725d59]" maxLength={8000} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Tell Zumi the outcome you want…" ref={inputRef} value={input} />
             <div className="flex items-center gap-2 px-1 pb-1">
               <Link aria-label="Open documents" className="grid size-9 place-items-center rounded-full text-[#8f7773] hover:bg-[#e6817b]/8 hover:text-[#efaaa1]" href="/documents"><Files className="size-4" /></Link>
-              <VoiceInputButton className="[&_button]:h-9 [&_button]:rounded-full [&_button]:border-[#e6817b]/10 [&_button]:bg-transparent [&_button]:px-3 [&_button]:text-[10px] [&_button]:text-[#9f8985]" onTranscript={(transcript) => void sendQuestion(transcript)} />
-              <span className="hidden text-[9px] text-[#655653] sm:inline">Enter sends · Shift+Enter adds a line</span>
+              <VoiceInputButton className="[&_button]:h-9 [&_button]:rounded-full [&_button]:border-[#e6817b]/10 [&_button]:bg-transparent [&_button]:px-3 [&_button]:text-[12px] [&_button]:text-[#9f8985]" onTranscript={(transcript) => void sendQuestion(transcript)} />
+              <span className="hidden text-[11px] text-[#655653] sm:inline">Enter sends · Shift+Enter adds a line</span>
               <button aria-label="Send to Zumi" className="group relative ml-auto grid size-12 place-items-center rounded-full border border-[#e6817b]/28 bg-[#1b0c0f] shadow-[0_0_28px_rgba(230,129,123,.12)] transition enabled:hover:border-[#efaaa1]/45 enabled:hover:bg-[#271014] disabled:cursor-not-allowed disabled:opacity-35" disabled={!input.trim() || loading} type="submit"><span className="absolute inset-1.5 rounded-full border border-[#e6817b]/13 transition group-enabled:group-hover:scale-105" /><KlinikosMark className="relative h-8 w-8" /></button>
             </div>
           </div>
@@ -355,8 +355,8 @@ function SessionGroup({ label, sessions, activeId, onSelect, onRemove }: {
   if (!sessions.length) return null;
   return (
     <section className="mb-5">
-      <p className="px-2 text-[9px] font-extrabold uppercase tracking-[.16em] text-[#655653]">{label}</p>
-      <div className="mt-2 space-y-1">{sessions.map((session) => <div className={cn("group flex items-center gap-1 rounded-xl", session.id === activeId ? "bg-[#e6817b]/[.08]" : "hover:bg-[#e6817b]/[.04]")} key={session.id}><button className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2.5 text-left" onClick={() => onSelect(session.id)} type="button"><span className={cn("size-1.5 shrink-0 rounded-full", statusDot(session.status))} /><span className={cn("truncate text-[10px] font-semibold", session.id === activeId ? "text-[#f8efed]" : "text-[#8f7773]")}>{session.title}</span></button><button aria-label={`Remove ${session.title}`} className="mr-1 grid size-7 shrink-0 place-items-center rounded-lg text-[#5f504d] opacity-0 hover:bg-[#e6817b]/10 hover:text-[#efaaa1] group-hover:opacity-100 focus:opacity-100" onClick={() => onRemove(session.id)} type="button"><X className="size-3" /></button></div>)}</div>
+      <p className="px-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#655653]">{label}</p>
+      <div className="mt-2 space-y-1">{sessions.map((session) => <div className={cn("group flex items-center gap-1 rounded-xl", session.id === activeId ? "bg-[#e6817b]/[.08]" : "hover:bg-[#e6817b]/[.04]")} key={session.id}><button className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2.5 text-left" onClick={() => onSelect(session.id)} type="button"><span className={cn("size-1.5 shrink-0 rounded-full", statusDot(session.status))} /><span className={cn("truncate text-[12px] font-semibold", session.id === activeId ? "text-[#f8efed]" : "text-[#8f7773]")}>{session.title}</span></button><button aria-label={`Remove ${session.title}`} className="mr-1 grid size-7 shrink-0 place-items-center rounded-lg text-[#5f504d] opacity-0 hover:bg-[#e6817b]/10 hover:text-[#efaaa1] group-hover:opacity-100 focus:opacity-100" onClick={() => onRemove(session.id)} type="button"><X className="size-3" /></button></div>)}</div>
     </section>
   );
 }

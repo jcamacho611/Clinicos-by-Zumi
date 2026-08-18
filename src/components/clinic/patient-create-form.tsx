@@ -43,7 +43,7 @@ export function PatientCreateForm() {
 
   return <form className="mx-auto max-w-3xl space-y-6" onSubmit={submit}>
     <div className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-cyan-700">New patient</p>
+      <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-cyan-700">New patient</p>
       <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-slate-950">Create a patient record</h2>
       <p className="mt-2 text-sm leading-6 text-slate-500">Start with the minimum identity information. Klinikos checks for a same-name/date-of-birth duplicate before creating a chart.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

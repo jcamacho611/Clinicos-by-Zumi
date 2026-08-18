@@ -45,7 +45,7 @@ export function RecordRequestDecision({ requestId }: { requestId: string }) {
         {pending === "deny" ? <LoaderCircle className="size-3.5 animate-spin" /> : <X className="size-3.5" />} Deny
       </Button>
     </div>
-    {error && <p className="text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
+    {error && <p className="text-[12px] font-bold text-rose-600" role="alert">{error}</p>}
   </div>;
 }
 
@@ -110,16 +110,16 @@ export function GrantControls({ grant }: { grant: {
         {pending === "revoke" ? <LoaderCircle className="size-3.5 animate-spin" /> : <ShieldOff className="size-3.5" />} Revoke
       </Button>}
     </div>
-    {error && <p className="mt-2 text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
+    {error && <p className="mt-2 text-[12px] font-bold text-rose-600" role="alert">{error}</p>}
     {record && <div className="mt-3 rounded-2xl border border-teal-200 bg-teal-50/60 p-4">
       <div className="flex items-center gap-2 text-teal-800"><Check className="size-4" /><p className="text-xs font-extrabold">Scoped record opened and audited</p></div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {Object.entries((record.data as Record<string, unknown> | undefined) ?? {}).filter(([, value]) => value !== undefined).map(([key, value]) => <div className="rounded-xl bg-white p-3" key={key}>
-          <p className="text-[9px] font-extrabold uppercase tracking-[.14em] text-slate-400">{key.replace(/([A-Z])/g, " $1")}</p>
-          <p className="mt-1 line-clamp-3 text-[10px] leading-5 text-slate-600">{Array.isArray(value) ? `${value.length} approved item${value.length === 1 ? "" : "s"}` : "Approved patient identity details"}</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">{key.replace(/([A-Z])/g, " $1")}</p>
+          <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-slate-600">{Array.isArray(value) ? `${value.length} approved item${value.length === 1 ? "" : "s"}` : "Approved patient identity details"}</p>
         </div>)}
       </div>
-      <p className="mt-3 text-[9px] text-teal-700">Download and printing remain disabled unless the grant explicitly permits them.</p>
+      <p className="mt-3 text-[11px] text-teal-700">Download and printing remain disabled unless the grant explicitly permits them.</p>
     </div>}
   </div>;
 }
@@ -153,12 +153,12 @@ export function BreakGlassControl({ sourceOrganizationId, patientId }: { sourceO
   }
 
   return <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4">
-    <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-700"><Siren className="size-4" /></span><div><p className="text-xs font-extrabold text-slate-950">Emergency break-glass</p><p className="mt-1 text-[10px] leading-5 text-slate-600">Requires a specific treatment reason. Access expires in 30 minutes, cannot be printed or downloaded, and alerts both organizations.</p></div></div>
+    <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-700"><Siren className="size-4" /></span><div><p className="text-xs font-extrabold text-slate-950">Emergency break-glass</p><p className="mt-1 text-[12px] leading-5 text-slate-600">Requires a specific treatment reason. Access expires in 30 minutes, cannot be printed or downloaded, and alerts both organizations.</p></div></div>
     <textarea className="mt-3 min-h-20 w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs text-slate-700 outline-none focus:border-rose-400" onChange={(event) => setReason(event.target.value)} placeholder="Describe the emergency treatment need..." value={reason} />
     <Button className="mt-2" disabled={pending || reason.trim().length < 20} onClick={activate} size="sm" variant="danger">
       {pending ? <LoaderCircle className="size-3.5 animate-spin" /> : <AlertTriangle className="size-3.5" />} Activate audited access
     </Button>
-    {message && <p className="mt-2 text-[10px] font-bold text-teal-700">{message}</p>}
-    {error && <p className="mt-2 text-[10px] font-bold text-rose-700" role="alert">{error}</p>}
+    {message && <p className="mt-2 text-[12px] font-bold text-teal-700">{message}</p>}
+    {error && <p className="mt-2 text-[12px] font-bold text-rose-700" role="alert">{error}</p>}
   </div>;
 }

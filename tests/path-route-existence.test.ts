@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { allKlinikosPaths } from "@/lib/paths/catalog";
+import { klinikosPathCatalog, type KlinikosPathDefinition, type KlinikosPathNode } from "@/lib/paths/catalog";
 
 const appRoot = join(process.cwd(), "src", "app");
 const genericWorkspacePage = join(appRoot, "(platform)", "[workspace]", "page.tsx");
@@ -59,7 +59,7 @@ describe("Klinikos governed route registry", () => {
   }
 
   it("only links route steps to real Next.js pages or whitelisted generic workspaces", () => {
-    const missing = allKlinikosPaths.flatMap((path) => path.nodes.flatMap((node) => {
+    const missing = klinikosPathCatalog.flatMap((path: KlinikosPathDefinition) => path.nodes.flatMap((node) => {
       if (!node.href?.startsWith("/")) return [];
       const target = internalPath(node.href);
       return routeExists(target) ? [] : [`${path.id}:${node.id} -> ${node.href}`];
@@ -69,7 +69,7 @@ describe("Klinikos governed route registry", () => {
   });
 
   it("keeps the clinic capacity readiness step on a real governance surface", () => {
-    const path = allKlinikosPaths.find((candidate) => candidate.id === "clinic-monetize-capacity");
+    const path = klinikosPathCatalog.find((candidate) => candidate.id === "clinic-monetize-capacity");
     const readiness = path?.nodes.find((node) => node.id === "readiness");
     expect(readiness?.href).toBe("/grid/trust");
     expect(routeExists("/grid/trust")).toBe(true);

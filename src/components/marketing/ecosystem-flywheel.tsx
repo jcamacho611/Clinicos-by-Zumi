@@ -54,7 +54,7 @@ export function EcosystemFlywheel() {
       <header className="relative z-20 border-b border-[#e6817b]/10 bg-[#050303]/88 backdrop-blur-2xl">
         <div className="mx-auto flex min-h-20 max-w-[1540px] items-center gap-5 px-5 sm:px-8">
           <KlinikosWordmark href="/" framed inverse markClassName="h-11 w-11" textClassName="h-[21px] w-[188px]" className="gap-3" />
-          <span className="hidden text-[9px] font-semibold uppercase tracking-[.18em] text-[#e6817b] sm:block">Ecosystem</span>
+          <span className="hidden text-[11px] font-semibold uppercase tracking-[.18em] text-[#e6817b] sm:block">Ecosystem</span>
           <Link className="ml-auto text-xs font-semibold text-[#b89f9b] hover:text-[#fff8f6]" href="/grid">Grid</Link>
           <Link className="text-xs font-semibold text-[#b89f9b] hover:text-[#fff8f6]" href="/edu">EDU</Link>
           <Link className="rounded-full border border-[#e6817b]/20 bg-[#e6817b]/10 px-4 py-2.5 text-xs font-semibold text-[#efaaa1] hover:bg-[#e6817b]/16" href="/login?next=%2Fpaths">Open my routes</Link>
@@ -64,7 +64,7 @@ export function EcosystemFlywheel() {
       <section className="relative z-10 mx-auto max-w-[1540px] px-5 py-16 sm:px-8 lg:py-24">
         <div className="grid gap-12 lg:grid-cols-[.86fr_1.14fr] lg:items-end">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-[#e6817b]">One healthcare lifecycle</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[.24em] text-[#e6817b]">One healthcare lifecycle</p>
             <h1 className="mt-5 max-w-4xl text-balance text-5xl font-light leading-[.92] tracking-[-.065em] sm:text-7xl lg:text-[84px]">The parts make more sense when you see how people move through them.</h1>
           </div>
           <p className="max-w-2xl text-sm leading-8 text-[#b89f9b] sm:text-base">Klinikos is not a pile of clinic software. Education can create readiness. Readiness can unlock opportunity. Work creates experience. Experience can support independence. Clinics create capacity. Capacity creates more opportunity. Zumi helps each person find their next governed route through that system.</p>
@@ -88,7 +88,7 @@ export function EcosystemFlywheel() {
               const activeStage = highlighted.has(stage.key);
               return (
                 <div className={cn("relative min-h-[136px] rounded-[18px] border p-5 transition", activeStage ? "border-[#e6817b]/30 bg-[#e6817b]/[.08] shadow-[0_0_36px_rgba(230,129,123,.05)]" : "border-white/[.06] bg-[#080405]/60 opacity-55")} key={stage.key}>
-                  <span className={cn("text-[9px] font-extrabold uppercase tracking-[.18em]", activeStage ? "text-[#e6817b]" : "text-[#655653]")}>{String(index + 1).padStart(2, "0")}</span>
+                  <span className={cn("text-[11px] font-extrabold uppercase tracking-[.18em]", activeStage ? "text-[#e6817b]" : "text-[#655653]")}>{String(index + 1).padStart(2, "0")}</span>
                   <h2 className={cn("mt-4 text-base font-semibold", activeStage ? "text-[#fff8f6]" : "text-[#9f8985]")}>{stage.label}</h2>
                   <p className="mt-2 text-[11px] leading-5 text-[#806965]">{stage.detail}</p>
                   {activeStage ? <span aria-hidden="true" className="absolute right-4 top-4 size-2 rounded-full bg-[#e6817b] shadow-[0_0_14px_rgba(230,129,123,.72)]" /> : null}
@@ -99,7 +99,7 @@ export function EcosystemFlywheel() {
 
           <aside className="flex flex-col justify-between border-t border-[#e6817b]/12 pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
             <div>
-              <p className="text-[9px] font-extrabold uppercase tracking-[.18em] text-[#e6817b]">Your route through the flywheel</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#e6817b]">Your route through the flywheel</p>
               <h2 className="mt-4 text-3xl font-light leading-tight tracking-[-.045em] text-[#fff8f6]">{active.statement}</h2>
               <p className="mt-5 text-xs leading-6 text-[#9f8985]">{active.description}</p>
             </div>
@@ -110,7 +110,7 @@ export function EcosystemFlywheel() {
 
       <section className="relative z-10 border-y border-[#e6817b]/10 bg-[#090506]">
         <div className="mx-auto grid max-w-[1540px] gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[.75fr_1.25fr] lg:py-16">
-          <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Why the ecosystem compounds</p><h2 className="mt-3 text-4xl font-light tracking-[-.055em] sm:text-5xl">Every real outcome can create useful context for the next one.</h2></div>
+          <div><p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Why the ecosystem compounds</p><h2 className="mt-3 text-4xl font-light tracking-[-.055em] sm:text-5xl">Every real outcome can create useful context for the next one.</h2></div>
           <div className="grid gap-4 sm:grid-cols-3">
             {[["For people","Progress can carry from learning to readiness to opportunity without pretending those states are interchangeable."],["For clinics","Operations can create real Grid demand and supply, while Financial OS keeps payment and payout truth separate."],["For the network","More verified capacity and completed work can make future matching more useful without weakening eligibility or privacy."]].map(([title, body]) => <div className="border-l border-[#e6817b]/18 pl-5" key={title}><h3 className="text-sm font-semibold text-[#fff8f6]">{title}</h3><p className="mt-3 text-xs leading-6 text-[#9f8985]">{body}</p></div>)}
           </div>

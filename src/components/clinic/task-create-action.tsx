@@ -74,7 +74,7 @@ export function TaskCreateAction() {
   if (!open) return <Button onClick={() => void openForm()} variant="primary"><Plus className="size-4" /> New task</Button>;
 
   return <form className="w-full max-w-2xl rounded-2xl border border-teal-200 bg-teal-50/70 p-5" onSubmit={submit}>
-    <div className="flex items-start gap-3"><div><p className="text-sm font-extrabold text-slate-950">Create task</p><p className="mt-1 text-[10px] leading-5 text-slate-500">Tasks stay inside this organization, create an audit receipt, and notify another assigned user when applicable.</p></div><Button aria-label="Close task form" className="ml-auto" disabled={submitting} onClick={() => setOpen(false)} size="icon" type="button" variant="ghost"><X className="size-4" /></Button></div>
+    <div className="flex items-start gap-3"><div><p className="text-sm font-extrabold text-slate-950">Create task</p><p className="mt-1 text-[12px] leading-5 text-slate-500">Tasks stay inside this organization, create an audit receipt, and notify another assigned user when applicable.</p></div><Button aria-label="Close task form" className="ml-auto" disabled={submitting} onClick={() => setOpen(false)} size="icon" type="button" variant="ghost"><X className="size-4" /></Button></div>
     {loading && <p className="mt-4 flex items-center gap-2 text-xs font-bold text-slate-500"><LoaderCircle className="size-4 animate-spin" /> Loading authorized task options…</p>}
     {options && <>
       <div className="mt-5 grid gap-4 md:grid-cols-2">

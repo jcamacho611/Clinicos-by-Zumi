@@ -28,12 +28,12 @@ describe("recurring clinic plan rail readiness", () => {
     expect(stripeRecurringSubscriptionStatus({
       STRIPE_SECRET_KEY: "sk_live_unit_test",
       STRIPE_WEBHOOK_SECRET: "whsec_unit_test",
-    } as NodeJS.ProcessEnv).processorVerification).toBe(false);
+    } as unknown as NodeJS.ProcessEnv).processorVerification).toBe(false);
     expect(stripeRecurringSubscriptionStatus({
       STRIPE_SECRET_KEY: "sk_live_unit_test",
       STRIPE_WEBHOOK_SECRET: "whsec_unit_test",
       KLINIKOS_STRIPE_RECURRING_ENABLED: "true",
-    } as NodeJS.ProcessEnv).processorVerification).toBe(true);
+    } as unknown as NodeJS.ProcessEnv).processorVerification).toBe(true);
   });
 
   it("keeps exact-plan GoDaddy readiness as the manual fallback", () => {
@@ -95,7 +95,7 @@ describe("recurring clinic plan rail readiness", () => {
   it("calculates fallback plan readiness from configuration presence without exposing secret values", () => {
     const status = goDaddyClinicPlanCheckoutStatus({
       KLINIKOS_GODADDY_CORE_PAYLINK: "https://payments.example/core",
-    } as NodeJS.ProcessEnv);
+    } as unknown as NodeJS.ProcessEnv);
 
     expect(status.configuredPlanKeys).toEqual(["clinic_core"]);
     expect(status.missing).toEqual([

@@ -113,7 +113,7 @@ export async function allocateGridFinancialObligations(session: ClinicSession, r
       FROM "GridReservationRecord" r
       JOIN "GridDemandRecord" d ON d."id" = r."demandId"
       JOIN "GridOfferRecord" o ON o."id" = r."offerId"
-      LEFT JOIN "Location" l ON l."id" = r."locationId"
+      LEFT JOIN "locations" l ON l."id" = r."locationId"
       WHERE r."id" = ${reservationId} AND r."organizationId" = ${session.organizationId}
       FOR UPDATE OF r
     `);

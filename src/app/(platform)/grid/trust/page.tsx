@@ -64,8 +64,8 @@ export default async function GridTrustPage() {
         <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-[#e6817b]/20 bg-[#e6817b]/10 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">Trust & readiness</span>
-              <span className="rounded-full border border-[#d6b787]/16 bg-[#d6b787]/[.055] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.14em] text-[#d6b787]">Grid governance</span>
+              <span className="rounded-full border border-[#e6817b]/20 bg-[#e6817b]/10 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">Trust & readiness</span>
+              <span className="rounded-full border border-[#d6b787]/16 bg-[#d6b787]/[.055] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[.14em] text-[#d6b787]">Grid governance</span>
             </div>
             <h1 className="mt-6 max-w-4xl text-4xl font-semibold tracking-[-.055em] sm:text-6xl">Know what can move forward — and what still needs proof.</h1>
             <p className="mt-5 max-w-3xl text-sm leading-7 text-[#b59b97]">Before publication, Grid keeps resource ownership, permitted use, review evidence, availability, and eligibility distinct. After a transaction begins, disputes and safety concerns stay separate from payment, payout, and clinical-quality judgments.</p>
@@ -76,7 +76,7 @@ export default async function GridTrustPage() {
 
       <section className="mt-6 rounded-[1.8rem] border border-[#e6817b]/12 bg-[#0d0608] p-5 text-[#fff8f6] sm:p-7" aria-labelledby="publication-readiness-title">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#efaaa1]">Before publication</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#efaaa1]">Before publication</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-[-.04em]" id="publication-readiness-title">Publication readiness is a governed path, not a checkbox.</h2>
           <p className="mt-3 text-xs leading-6 text-[#9f8985]">Klinikos can organize the evidence and route the next action. It does not turn an incomplete record into permission to offer, transact, or perform regulated work.</p>
         </div>
@@ -85,10 +85,10 @@ export default async function GridTrustPage() {
             const Icon = step.icon;
             return (
               <div className="grid gap-4 py-5 sm:grid-cols-[48px_28px_1fr_auto] sm:items-start" key={step.number}>
-                <span className="text-[10px] font-extrabold tracking-[.16em] text-[#d6b787]">{step.number}</span>
+                <span className="text-[12px] font-extrabold tracking-[.16em] text-[#d6b787]">{step.number}</span>
                 <Icon className="size-4 text-[#efaaa1]" />
                 <div><p className="text-sm font-semibold">{step.title}</p><p className="mt-2 max-w-2xl text-xs leading-6 text-[#9f8985]">{step.body}</p></div>
-                <Link className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#efaaa1]" href={step.href}>{step.action}<ArrowRight className="size-3" /></Link>
+                <Link className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#efaaa1]" href={step.href}>{step.action}<ArrowRight className="size-3" /></Link>
               </div>
             );
           })}
@@ -97,12 +97,12 @@ export default async function GridTrustPage() {
 
       <section className="mt-6" aria-labelledby="grid-issues-title">
         <div className="mb-4 max-w-3xl">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#d6b787]">After activity begins</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#d6b787]">After activity begins</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-[-.04em] text-[#fff8f6]" id="grid-issues-title">Transaction history, disputes, and safety issues stay governed separately.</h2>
         </div>
-        <div className="rounded-[1.35rem] border border-[#d6b787]/12 bg-[#d6b787]/[.045] px-4 py-3 text-[10px] leading-5 text-[#d9c2a1]"><TriangleAlert className="mr-2 inline size-4" /><strong className="font-extrabold text-[#efd8ad]">Safety boundary:</strong> this workflow records and routes concerns. It does not diagnose injury, determine malpractice, suspend a participant automatically, or prove that a refund or payout occurred.</div>
+        <div className="rounded-[1.35rem] border border-[#d6b787]/12 bg-[#d6b787]/[.045] px-4 py-3 text-[12px] leading-5 text-[#d9c2a1]"><TriangleAlert className="mr-2 inline size-4" /><strong className="font-extrabold text-[#efd8ad]">Safety boundary:</strong> this workflow records and routes concerns. It does not diagnose injury, determine malpractice, suspend a participant automatically, or prove that a refund or payout occurred.</div>
         <div className="mt-5"><GridTrustWorkspace workspace={workspace} /></div>
-        <div className="mt-5 rounded-[1.35rem] border border-[#e6817b]/10 bg-[#100708] px-4 py-3 text-[10px] leading-5 text-[#8f7773]"><ShieldCheck className="mr-2 inline size-4 text-[#efaaa1]" />Open disputes and safety incidents are settlement holds. Closing an issue is a governance record; processor refunds, payout reversals, participant restrictions, and resource suspensions require their own verified execution paths.</div>
+        <div className="mt-5 rounded-[1.35rem] border border-[#e6817b]/10 bg-[#100708] px-4 py-3 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="mr-2 inline size-4 text-[#efaaa1]" />Open disputes and safety incidents are settlement holds. Closing an issue is a governance record; processor refunds, payout reversals, participant restrictions, and resource suspensions require their own verified execution paths.</div>
       </section>
     </main>
   );

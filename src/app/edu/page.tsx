@@ -24,16 +24,16 @@ export default function KlinikosEduPage() {
   return (
     <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
       <header className="border-b border-slate-200 bg-white" role="banner">
-        <div className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
+        <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center gap-y-3 px-5 py-3 sm:px-8">
           <Link className="flex items-center gap-3" href="/">
             <BrandMark />
             <div>
               <p className="text-sm font-extrabold tracking-[-.03em]">Klinikos EDU</p>
-              <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#9a7a1f]">Virtual Clinic Lab</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9a7a1f]">Virtual Clinic Lab</p>
             </div>
           </Link>
           <Link className="ml-auto text-xs font-bold text-slate-600 hover:text-slate-950" href="/">Klinikos</Link>
-          <Button asChild className="ml-4" size="sm"><Link href="/sales">Request an education pilot <ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
+          <Button asChild className="ml-4 shrink-0" size="sm"><Link href="/sales">Request an education pilot <ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
         </div>
       </header>
 
@@ -62,12 +62,12 @@ export default function KlinikosEduPage() {
 
         <div className="border-y border-slate-300 bg-white py-4">
           <div className="border-b border-slate-200 px-5 pb-4 sm:px-7">
-            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9a7a1f]">Synthetic training environment</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#9a7a1f]">Synthetic training environment</p>
             <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Student simulation workspace</h2>
           </div>
           <div className="grid gap-0 sm:grid-cols-[.9fr_1.1fr]">
             <div className="border-b border-slate-200 p-5 sm:border-b-0 sm:border-r">
-              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-slate-400">Assigned seat</p>
+              <p className="text-[12px] font-bold uppercase tracking-[.12em] text-slate-400">Assigned seat</p>
               <p className="mt-2 text-lg font-extrabold">Medical Assistant</p>
               <ol className="mt-5 space-y-3 text-xs leading-5 text-slate-600">
                 <li>1. Confirm intake readiness</li>
@@ -178,7 +178,7 @@ export default function KlinikosEduPage() {
               <h2 className="text-2xl font-extrabold tracking-[-.04em]" id="safety-heading">What Klinikos EDU is not</h2>
               <ul aria-label="Data classification" className="mt-5 flex flex-wrap gap-2">
                 {SYNTHETIC_DATA_LABELS.map((label) => (
-                  <li className="border border-amber-300 bg-amber-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.12em] text-amber-900" key={label}>
+                  <li className="border border-amber-300 bg-amber-50 px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-[.12em] text-amber-900" key={label}>
                     {label}
                   </li>
                 ))}
