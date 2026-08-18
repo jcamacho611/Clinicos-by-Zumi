@@ -69,6 +69,7 @@ export function summarizeAcquisitionLeads(
   const open = leads.filter((lead) => !TERMINAL.has(lead.status));
   const unanswered = open.filter((lead) => !lead.lastContactedAt);
   const overdueFollowUps = open.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
+  const identityReview = open.filter((lead) => lead.pipelineStage === "identity_review");
   const bookingStarted = open.filter((lead) => lead.bookingStatus === "started");
   const bookingObserved = open.filter((lead) => lead.bookingStatus === "observed");
   const bookingPendingVerification = open.filter((lead) => ["started", "observed"].includes(lead.bookingStatus));
@@ -111,19 +112,22 @@ export function summarizeAcquisitionLeads(
       const unansweredAgeMinutes = !lead.lastContactedAt ? ageMinutes(lead.createdAt, now) : null;
       const followUpOverdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
       const pastSla = unansweredAgeMinutes !== null && unansweredAgeMinutes >= slaMinutes;
+      const identityReviewRequired = lead.pipelineStage === "identity_review";
       const bookingInProgress = lead.bookingStatus === "started";
       const bookingObservationPending = lead.bookingStatus === "observed";
-      const score = (followUpOverdue ? 100 : 0) + (bookingObservationPending ? 90 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
+      const score = (identityReviewRequired ? 120 : 0) + (followUpOverdue ? 100 : 0) + (bookingObservationPending ? 90 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
       const latest = latestTouches.get(lead.id) ?? null;
       const evidence = collectedEvidenceByLead.get(lead.id);
       const collectedWithEvidenceCents = (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
-      const action = bookingObservationPending
-        ? "verify_booking"
-        : bookingInProgress
-          ? followUpOverdue ? "verify_booking" : "booking_in_progress"
-          : followUpOverdue || pastSla ? "contact_now"
-          : !lead.lastContactedAt ? "contact"
-          : "review_next_step";
+      const action = identityReviewRequired
+        ? "resolve_identity"
+        : bookingObservationPending
+          ? "verify_booking"
+          : bookingInProgress
+            ? followUpOverdue ? "verify_booking" : "booking_in_progress"
+            : followUpOverdue || pastSla ? "contact_now"
+            : !lead.lastContactedAt ? "contact"
+            : "review_next_step";
       return {
         id: lead.id,
         name: lead.name,
@@ -146,6 +150,7 @@ export function summarizeAcquisitionLeads(
         unansweredAgeMinutes,
         followUpOverdue,
         pastSla,
+        identityReviewRequired,
         bookingInProgress,
         bookingObservationPending,
         action,
@@ -175,6 +180,7 @@ export function summarizeAcquisitionLeads(
       unansweredLeads: unanswered.length,
       overdueFollowUps: overdueFollowUps.length,
       unassignedOpenLeads: unassigned.length,
+      identityReviewLeads: identityReview.length,
       atRiskLeads: atRisk.length,
       bookingStartedLeads: bookingStarted.length,
       bookingObservedLeads: bookingObserved.length,
@@ -202,6 +208,7 @@ export function summarizeAcquisitionLeads(
     actionQueue,
     definitions: {
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
+      identityReview: "The submitted normalized contact identifiers matched multiple different open CRM records. Staff must resolve identity before merging records or relying on prior history.",
       bookingStarted: "The configured external booking rail was opened from a server-associated acquisition journey. This is intent evidence only, not booking or payment confirmation.",
       bookingObserved: "An external booking source reported a booking for the matched lead. Human verification remains required, and this does not prove payment.",
       bookingReviewDue: "A started/observed booking whose human verification/follow-up deadline is due. Staff must verify authoritative booking evidence before changing booking/payment state.",
