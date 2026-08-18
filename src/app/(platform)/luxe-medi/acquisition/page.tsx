@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AlarmClock, CircleDollarSign, Clock3, MessageCircleMore, Route, UserRoundCheck } from "lucide-react";
 import { LuxeMediNav } from "@/components/clinic/luxe-medi-nav";
+import { LuxePaymentEvidenceForm } from "@/components/clinic/luxe-payment-evidence-form";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageIntro, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -23,6 +24,7 @@ function elapsed(minutes: number | null) {
 export default async function LuxeAcquisitionPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "luxe_medi", "read") || !can(session.role, "crm", "read")) return notFound();
+  const canReconcilePayments = can(session.role, "luxe_medi", "manage") && can(session.role, "crm", "update");
   const data = await getLuxeAcquisitionOperations(session);
 
   return (
@@ -30,7 +32,7 @@ export default async function LuxeAcquisitionPage() {
       <LuxeMediNav />
       <PageIntro
         title="Turn Luxe demand into owned next actions."
-        description="One operational view for unanswered demand, speed-to-lead, attribution, at-risk opportunity, and follow-up. Estimated opportunity stays separate from verified collected revenue."
+        description="One operational view for unanswered demand, speed-to-lead, attribution, at-risk opportunity, follow-up, and collected payment evidence. Estimated opportunity stays separate from money backed by evidence."
         aside={<><Badge tone="violet">Luxe acquisition</Badge><Badge tone="amber">{data.slaMinutes}m response target</Badge><Badge tone="teal">CRM source of truth</Badge></>}
       />
 
@@ -40,7 +42,7 @@ export default async function LuxeAcquisitionPage() {
         <StatCard accent="amber" detail="Overdue follow-up or past SLA" icon={<AlarmClock className="size-4" />} label="At risk" value={String(data.metrics.atRiskLeads)} />
         <StatCard accent="rose" detail="Needs an explicit human owner" icon={<UserRoundCheck className="size-4" />} label="Unassigned" value={String(data.metrics.unassignedOpenLeads)} />
         <StatCard accent="teal" detail="Recorded contact timestamps only" icon={<Clock3 className="size-4" />} label="Median response" value={data.metrics.medianSpeedToLeadMinutes === null ? "No data" : `${data.metrics.medianSpeedToLeadMinutes}m`} />
-        <StatCard accent="violet" detail="Estimate, not collected revenue" icon={<CircleDollarSign className="size-4" />} label="At-risk value" value={data.metrics.atRiskEstimatedOpportunity} />
+        <StatCard accent="violet" detail="Manual reconciliation + processor verification" icon={<CircleDollarSign className="size-4" />} label="Collected w/ evidence" value={data.metrics.collectedRevenueWithEvidence} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
@@ -55,9 +57,11 @@ export default async function LuxeAcquisitionPage() {
                       <StatusBadge status={lead.status} />
                       <Badge tone={lead.routingStatus === "unassigned" ? "amber" : "teal"}>{lead.routingStatus}</Badge>
                       {(lead.followUpOverdue || lead.pastSla) && <Badge tone="rose">Needs attention</Badge>}
+                      {lead.collectedWithEvidenceCents > 0 && <Badge tone="teal">{lead.collectedWithEvidence} collected</Badge>}
                     </div>
-                    <p className="mt-1 text-[11px] text-slate-500">{lead.serviceInterest ?? "Service interest pending"} · {lead.estimatedOpportunity} estimated</p>
+                    <p className="mt-1 text-[11px] text-slate-500">{lead.serviceInterest ?? "Service interest pending"} · {lead.estimatedOpportunity} estimated · payment {lead.paymentStatus.replaceAll("_", " ")}</p>
                     <p className="mt-2 text-[12px] text-slate-400">First touch: {lead.firstTouchSource}{lead.firstCampaignSource ? ` · ${lead.firstCampaignSource}` : ""}{lead.latestTouch?.source ? ` · latest ${lead.latestTouch.source}` : ""}</p>
+                    {canReconcilePayments && <LuxePaymentEvidenceForm leadId={lead.id} />}
                   </div>
                   <div className="text-right">
                     <p className="text-[12px] font-extrabold uppercase tracking-[.12em] text-slate-500">{lead.action.replaceAll("_", " ")}</p>
@@ -74,14 +78,14 @@ export default async function LuxeAcquisitionPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-slate-100 bg-slate-950 p-5 text-white">
               <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-violet-300">Revenue truth</p>
-              <h3 className="mt-3 text-xl font-extrabold tracking-[-.04em]">Opportunity is not cash.</h3>
-              <p className="mt-2 text-xs leading-5 text-slate-400">The current view intentionally refuses to call estimated or booked value collected revenue until authoritative payment evidence is linked to the lead.</p>
+              <h3 className="mt-3 text-xl font-extrabold tracking-[-.04em]">Opportunity, booking, and cash stay separate.</h3>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Collected revenue appears only when a payment evidence event is linked to the lead. Manual reconciliation is never represented as processor verification.</p>
             </div>
             <div className="space-y-3 p-5 text-xs">
               <div className="flex justify-between gap-4"><span className="text-slate-500">Open estimated</span><strong className="text-slate-900">{data.metrics.openEstimatedOpportunity}</strong></div>
               <div className="flex justify-between gap-4"><span className="text-slate-500">Booked estimated</span><strong className="text-slate-900">{data.metrics.bookedEstimatedValue}</strong></div>
               <div className="flex justify-between gap-4"><span className="text-slate-500">Lost estimated</span><strong className="text-slate-900">{data.metrics.lostEstimatedOpportunity}</strong></div>
-              <div className="border-t border-slate-100 pt-3"><p className="font-extrabold text-slate-900">Verified collected revenue</p><p className="mt-1 text-slate-500">Pending authoritative payment-to-lead linkage.</p></div>
+              <div className="border-t border-slate-100 pt-3"><div className="flex justify-between gap-4"><span className="font-extrabold text-slate-900">Collected with evidence</span><strong className="text-emerald-700">{data.metrics.collectedRevenueWithEvidence}</strong></div><p className="mt-2 text-slate-500">Manual reconciled: {data.metrics.manualReconciledRevenue} · Processor verified: {data.metrics.processorVerifiedRevenue}</p></div>
             </div>
           </Card>
 
@@ -97,14 +101,14 @@ export default async function LuxeAcquisitionPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <SectionCard title="By source" description="Lead count and estimated opportunity by recorded first-touch source.">
-          <div className="divide-y divide-slate-100">{data.bySource.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open</p></div><strong className="text-xs text-slate-800">{item.estimatedOpportunity}</strong></div>)}</div>
+        <SectionCard title="By source" description="First-touch source now shows both estimated opportunity and collected money backed by payment evidence.">
+          <div className="divide-y divide-slate-100">{data.bySource.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open · {item.estimatedOpportunity} estimated</p></div><strong className="text-xs text-emerald-700">{item.collectedWithEvidence} collected</strong></div>)}</div>
         </SectionCard>
-        <SectionCard title="By campaign" description="Campaign attribution only where it was actually captured.">
-          <div className="divide-y divide-slate-100">{data.byCampaign.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open</p></div><strong className="text-xs text-slate-800">{item.estimatedOpportunity}</strong></div>)}</div>
+        <SectionCard title="By campaign" description="Campaign revenue appears only where both attribution and payment evidence exist.">
+          <div className="divide-y divide-slate-100">{data.byCampaign.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open · {item.estimatedOpportunity} estimated</p></div><strong className="text-xs text-emerald-700">{item.collectedWithEvidence} collected</strong></div>)}</div>
         </SectionCard>
-        <SectionCard title="By service" description="Current service intent mapped to the canonical Luxe catalog when possible.">
-          <div className="divide-y divide-slate-100">{data.byService.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open</p></div><strong className="text-xs text-slate-800">{item.estimatedOpportunity}</strong></div>)}</div>
+        <SectionCard title="By service" description="Service intent mapped to the canonical Luxe catalog, with evidence-backed collected revenue kept separate from estimates.">
+          <div className="divide-y divide-slate-100">{data.byService.slice(0, 10).map((item) => <div className="flex items-center justify-between gap-4 p-4" key={item.key}><div><p className="text-xs font-extrabold text-slate-900">{item.key}</p><p className="text-[12px] text-slate-500">{item.leads} leads · {item.openLeads} open · {item.estimatedOpportunity} estimated</p></div><strong className="text-xs text-emerald-700">{item.collectedWithEvidence} collected</strong></div>)}</div>
         </SectionCard>
       </div>
     </div>

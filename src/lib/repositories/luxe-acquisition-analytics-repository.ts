@@ -1,12 +1,18 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
-import { summarizeAcquisitionLeads, type LatestTouch } from "@/lib/luxe-acquisition-analytics";
+import { summarizeAcquisitionLeads, type LeadCollectedEvidence, type LatestTouch } from "@/lib/luxe-acquisition-analytics";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
+
+type PaymentAggregateRow = {
+  leadId: string;
+  manualReconciledCents: bigint;
+  processorVerifiedCents: bigint;
+};
 
 function configuredSlaMinutes() {
   const parsed = Number.parseInt(process.env.LUXE_MEDI_LEAD_SLA_MINUTES ?? "15", 10);
@@ -66,17 +72,38 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
   });
 
   const latestTouches = new Map<string, LatestTouch>();
+  const collectedEvidenceByLead = new Map<string, LeadCollectedEvidence>();
   if (leads.length) {
-    const events = await db.leadEvent.findMany({
-      where: { organizationId: session.organizationId, leadId: { in: leads.map((lead) => lead.id) } },
-      select: { leadId: true, metadata: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
-      take: 3000,
-    });
+    const leadIds = leads.map((lead) => lead.id);
+    const [events, paymentRows] = await Promise.all([
+      db.leadEvent.findMany({
+        where: { organizationId: session.organizationId, leadId: { in: leadIds } },
+        select: { leadId: true, metadata: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 5000,
+      }),
+      db.$queryRaw<PaymentAggregateRow[]>(Prisma.sql`
+        SELECT
+          "leadId",
+          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualReconciledCents",
+          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorVerifiedCents"
+        FROM "luxe_lead_payment_evidence"
+        WHERE "organizationId" = ${session.organizationId}
+          AND "leadId" IN (${Prisma.join(leadIds)})
+        GROUP BY "leadId"
+      `),
+    ]);
+
     for (const event of events) {
       if (latestTouches.has(event.leadId)) continue;
       const touch = latestTouchFromMetadata(event.metadata, event.createdAt);
       if (touch) latestTouches.set(event.leadId, touch);
+    }
+    for (const row of paymentRows) {
+      collectedEvidenceByLead.set(row.leadId, {
+        manualReconciledCents: Number(row.manualReconciledCents),
+        processorVerifiedCents: Number(row.processorVerifiedCents),
+      });
     }
   }
 
@@ -84,6 +111,7 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
     now: new Date(),
     slaMinutes: configuredSlaMinutes(),
     latestTouches,
+    collectedEvidenceByLead,
   });
 
   await db.auditLog.create({
@@ -98,7 +126,8 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
         leadCount: leads.length,
         openLeadCount: result.metrics.openLeads,
         atRiskLeadCount: result.metrics.atRiskLeads,
-        verifiedRevenueAvailable: false,
+        manualReconciledRevenueCents: result.metrics.manualReconciledRevenueCents,
+        processorVerifiedRevenueCents: result.metrics.processorVerifiedRevenueCents,
       },
     },
   });
