@@ -130,26 +130,36 @@ export type ExpertScopedAccessGrant = {
   validUntil: Date;
 };
 
-export function scopedAccessGrantForActiveEngagement(
-  engagement: ExpertEngagement,
-  now = new Date(),
-): ExpertScopedAccessGrant | null {
-  if (engagement.state !== "active") return null;
-  if (engagement.terms.startsAt > now || engagement.terms.endsAt <= now) return null;
-  if (requiresScopedAuthorization(engagement.terms.dataAccessClass)
-    && (!engagement.terms.scopedAuthorizationApprovedBy || !engagement.terms.scopedAuthorizationApprovedAt)) return null;
+export function scopedAccessGrantForActiveEngagement(input: {
+  engagement: ExpertEngagement;
+  need: ExpertEngagementNeed;
+  matchEligible: boolean;
+  now?: Date;
+}): ExpertScopedAccessGrant | null {
+  const now = input.now ?? new Date();
+  if (input.engagement.state !== "active") return null;
+
+  // Re-evaluate the same governed need/match/agreement/data-scope policy at the
+  // moment access is requested. Persisted `active` state alone is not authority.
+  const readiness = evaluateExpertEngagementReadiness({
+    engagement: input.engagement,
+    need: input.need,
+    matchEligible: input.matchEligible,
+    now,
+  });
+  if (!readiness.ready) return null;
 
   return {
-    engagementId: engagement.id,
-    organizationId: engagement.organizationId,
-    expertParticipantId: engagement.expertParticipantId,
-    purpose: engagement.terms.purpose,
-    capabilityKeys: [...engagement.terms.allowedCapabilityKeys],
-    resourceTypes: [...engagement.terms.allowedResourceTypes],
-    minimumNecessaryFields: [...engagement.terms.minimumNecessaryFields],
-    dataAccessClass: engagement.terms.dataAccessClass,
-    validFrom: engagement.terms.startsAt,
-    validUntil: engagement.terms.endsAt,
+    engagementId: input.engagement.id,
+    organizationId: input.engagement.organizationId,
+    expertParticipantId: input.engagement.expertParticipantId,
+    purpose: input.engagement.terms.purpose,
+    capabilityKeys: [...input.engagement.terms.allowedCapabilityKeys],
+    resourceTypes: [...input.engagement.terms.allowedResourceTypes],
+    minimumNecessaryFields: [...input.engagement.terms.minimumNecessaryFields],
+    dataAccessClass: input.engagement.terms.dataAccessClass,
+    validFrom: input.engagement.terms.startsAt,
+    validUntil: input.engagement.terms.endsAt,
   };
 }
 
