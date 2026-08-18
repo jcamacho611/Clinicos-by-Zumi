@@ -88,7 +88,8 @@ describe("public Living Home conversation and accessibility contract", () => {
 
   it("keeps deterministic routing behind a simple conversation without pretending it is model reasoning", () => {
     expect(source).toContain("resolvePublicLivingIntent");
-    expect(source).toContain("fixed guidance rules, not a generative model conversation");
+    expect(source).toContain("Public Zumi is a guided navigator");
+    expect(source).toContain("full governed Zumi experience is available inside Klinikos after sign-in");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
     expect(source).not.toContain("No records opened · no action executed");
