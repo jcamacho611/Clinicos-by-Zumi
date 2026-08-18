@@ -64,6 +64,35 @@ export function normalizeLuxePhone(value?: string | null) {
   return null;
 }
 
+export type LuxeIdentityCandidate = {
+  id: string;
+  email: string | null;
+  phone: string | null;
+};
+
+export type LuxeIdentityMatchDecision =
+  | { kind: "none" }
+  | { kind: "matched"; id: string }
+  | { kind: "ambiguous"; candidateIds: string[] };
+
+export function decideLuxeOpenLeadIdentityMatch(
+  candidates: LuxeIdentityCandidate[],
+  email: string | null,
+  phone: string | null,
+): LuxeIdentityMatchDecision {
+  const matchingIds = new Set<string>();
+  for (const candidate of candidates) {
+    const emailMatches = Boolean(email && normalizeLuxeEmail(candidate.email) === email);
+    const phoneMatches = Boolean(phone && normalizeLuxePhone(candidate.phone) === phone);
+    if (emailMatches || phoneMatches) matchingIds.add(candidate.id);
+  }
+
+  const ids = [...matchingIds];
+  if (ids.length === 0) return { kind: "none" };
+  if (ids.length === 1) return { kind: "matched", id: ids[0] };
+  return { kind: "ambiguous", candidateIds: ids.sort() };
+}
+
 export function normalizeAttribution(value: LuxeAttribution) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => typeof item === "string" && item.trim().length > 0));
 }

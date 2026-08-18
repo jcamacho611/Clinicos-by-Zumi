@@ -4,6 +4,7 @@ import { Prisma, RiskLevel } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
   campaignSourceFromAttribution,
+  decideLuxeOpenLeadIdentityMatch,
   leadResponsePriority,
   normalizeAttribution,
   normalizeLuxeEmail,
@@ -21,7 +22,7 @@ function configuredFollowUpMinutes() {
   return Math.min(1440, Math.max(5, parsed));
 }
 
-async function findMatchingOpenLead(
+async function resolveOpenLeadIdentity(
   tx: Prisma.TransactionClient,
   organizationId: string,
   email: string | null,
@@ -30,7 +31,7 @@ async function findMatchingOpenLead(
   const candidateOr: Prisma.LeadWhereInput[] = [];
   if (email) candidateOr.push({ email: { equals: email, mode: "insensitive" } });
   if (phone) candidateOr.push({ phone: { not: null } });
-  if (!candidateOr.length) return null;
+  if (!candidateOr.length) return { decision: { kind: "none" as const }, lead: null };
 
   const candidates = await tx.lead.findMany({
     where: {
@@ -42,11 +43,9 @@ async function findMatchingOpenLead(
     take: 200,
   });
 
-  return candidates.find((lead) => {
-    const emailMatches = Boolean(email && normalizeLuxeEmail(lead.email) === email);
-    const phoneMatches = Boolean(phone && normalizeLuxePhone(lead.phone) === phone);
-    return emailMatches || phoneMatches;
-  }) ?? null;
+  const decision = decideLuxeOpenLeadIdentityMatch(candidates, email, phone);
+  if (decision.kind !== "matched") return { decision, lead: null };
+  return { decision, lead: candidates.find((candidate) => candidate.id === decision.id) ?? null };
 }
 
 async function resolveService(tx: Prisma.TransactionClient, organizationId: string, serviceInterest?: string | null) {
@@ -99,6 +98,31 @@ async function ensureLeadFollowUpTask(
   return task.id;
 }
 
+async function createAmbiguousIdentityReviewTask(
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+  leadId: string,
+  leadName: string,
+  candidateCount: number,
+  dueAt: Date,
+) {
+  const task = await tx.task.create({
+    data: {
+      organizationId,
+      category: "luxe_identity_review",
+      title: `Resolve possible duplicate for ${leadName}`,
+      details: `lead:${leadId} This inquiry matched ${candidateCount} different open CRM records by normalized email and/or phone. Do not merge automatically. Staff must verify identity before consolidating records or relying on prior history.`,
+      ownerId: null,
+      priority: "high",
+      riskLevel: RiskLevel.NEEDS_STAFF,
+      dueAt,
+      status: "open",
+      createdBy: null,
+    },
+  });
+  return task.id;
+}
+
 export async function ingestPublicLuxeLead(rawInput: unknown) {
   const input = publicLuxeLeadSchema.parse(rawInput);
   const email = normalizeLuxeEmail(input.email);
@@ -121,7 +145,8 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
 
     const service = await resolveService(tx, organization.id, input.serviceInterest);
     const serviceName = service?.name ?? input.serviceInterest ?? null;
-    const existing = await findMatchingOpenLead(tx, organization.id, email, phone);
+    const identity = await resolveOpenLeadIdentity(tx, organization.id, email, phone);
+    const existing = identity.decision.kind === "matched" ? identity.lead : null;
 
     if (existing) {
       const followUpDueAt = existing.followUpDueAt && existing.followUpDueAt < dueAt ? existing.followUpDueAt : dueAt;
@@ -146,7 +171,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           eventType: "luxe_website_touch",
           fromStatus: existing.status,
           toStatus: lead.status,
-          note: "A returning Luxe website inquiry matched an existing open lead; first-touch attribution was preserved.",
+          note: "A returning Luxe website inquiry matched exactly one existing open lead; first-touch attribution was preserved.",
           metadata: {
             attribution,
             latestServiceInterest: serviceName,
@@ -155,6 +180,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
             contactConsent: input.contactConsent,
             marketingConsent: input.marketingConsent,
             duplicateOpenLead: true,
+            identityMatch: "unique",
             taskId,
           },
         },
@@ -166,7 +192,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           action: "luxe.public_lead_deduplicated",
           resourceType: "lead",
           resourceId: lead.id,
-          metadata: { taskId, serviceMatched: Boolean(service), estimatedValueCents: lead.estimatedValueCents },
+          metadata: { taskId, identityMatch: "unique", serviceMatched: Boolean(service), estimatedValueCents: lead.estimatedValueCents },
         },
       });
 
@@ -180,6 +206,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
       };
     }
 
+    const identityReviewRequired = identity.decision.kind === "ambiguous";
     const lead = await tx.lead.create({
       data: {
         organizationId: organization.id,
@@ -191,22 +218,27 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
         serviceInterest: serviceName,
         appointmentInterest: input.appointmentInterest ?? input.preferredTiming ?? "Website inquiry",
         estimatedValueCents: service?.priceCents ?? 0,
-        pipelineStage: "new",
+        pipelineStage: identityReviewRequired ? "identity_review" : "new",
         status: "new",
         followUpDueAt: dueAt,
         notes: input.message ?? null,
         consentStatus: "not_recorded",
       },
     });
-    const taskId = await ensureLeadFollowUpTask(tx, organization.id, lead.id, lead.name, serviceName, dueAt, priority);
+
+    const taskId = identity.decision.kind === "ambiguous"
+      ? await createAmbiguousIdentityReviewTask(tx, organization.id, lead.id, lead.name, identity.decision.candidateIds.length, dueAt)
+      : await ensureLeadFollowUpTask(tx, organization.id, lead.id, lead.name, serviceName, dueAt, priority);
 
     await tx.leadEvent.create({
       data: {
         organizationId: organization.id,
         leadId: lead.id,
-        eventType: "luxe_website_received",
+        eventType: identityReviewRequired ? "luxe_identity_match_review_required" : "luxe_website_received",
         toStatus: lead.status,
-        note: "Luxe website inquiry captured into the existing Klinikos CRM for human follow-up.",
+        note: identityReviewRequired
+          ? "The submitted contact identifiers matched multiple different open CRM records. A separate review record was captured without merging identities."
+          : "Luxe website inquiry captured into the existing Klinikos CRM for human follow-up.",
         metadata: {
           attribution,
           preferredContactMethod: input.preferredContactMethod ?? null,
@@ -217,6 +249,9 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           serviceMatched: Boolean(service),
           taskId,
           routingStatus: "unassigned",
+          identityMatch: identityReviewRequired ? "ambiguous" : "none",
+          ambiguousCandidateIds: identity.decision.kind === "ambiguous" ? identity.decision.candidateIds : [],
+          noAutomaticMerge: identityReviewRequired,
           noAppointmentConfirmation: true,
           noPaymentConfirmation: true,
           noClinicalEligibilityDecision: true,
@@ -227,12 +262,14 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
       data: {
         organizationId: organization.id,
         actorType: "system",
-        action: "luxe.public_lead_received",
+        action: identityReviewRequired ? "luxe.public_lead_identity_review_required" : "luxe.public_lead_received",
         resourceType: "lead",
         resourceId: lead.id,
         metadata: {
           taskId,
           routingStatus: "unassigned",
+          identityMatch: identityReviewRequired ? "ambiguous" : "none",
+          ambiguousCandidateCount: identity.decision.kind === "ambiguous" ? identity.decision.candidateIds.length : 0,
           serviceMatched: Boolean(service),
           estimatedValueCents: lead.estimatedValueCents,
           attributionPresent: Object.keys(attribution).length > 0,
@@ -246,7 +283,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
       taskId,
       serviceMatched: Boolean(service),
       estimatedOpportunityCents: lead.estimatedValueCents,
-      status: "captured" as const,
+      status: identityReviewRequired ? "identity_review_required" as const : "captured" as const,
     };
   });
 }

@@ -69,8 +69,11 @@ export function summarizeAcquisitionLeads(
   const open = leads.filter((lead) => !TERMINAL.has(lead.status));
   const unanswered = open.filter((lead) => !lead.lastContactedAt);
   const overdueFollowUps = open.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
+  const identityReview = open.filter((lead) => lead.pipelineStage === "identity_review");
   const bookingStarted = open.filter((lead) => lead.bookingStatus === "started");
-  const bookingReviewDue = bookingStarted.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
+  const bookingObserved = open.filter((lead) => lead.bookingStatus === "observed");
+  const bookingPendingVerification = open.filter((lead) => ["started", "observed"].includes(lead.bookingStatus));
+  const bookingReviewDue = bookingPendingVerification.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
   const atRisk = open.filter((lead) => {
     const overdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
     const unansweredPastSla = !lead.lastContactedAt && ageMinutes(lead.createdAt, now) >= slaMinutes;
@@ -83,24 +86,11 @@ export function summarizeAcquisitionLeads(
     .filter((lead) => lead.lastContactedAt && lead.lastContactedAt >= lead.createdAt)
     .map((lead) => Math.max(0, Math.round((lead.lastContactedAt!.getTime() - lead.createdAt.getTime()) / 60_000)));
 
-  const unansweredBuckets = {
-    under5: 0,
-    fiveTo15: 0,
-    fifteenTo60: 0,
-    oneTo24Hours: 0,
-    over24Hours: 0,
-  };
+  const unansweredBuckets = { under5: 0, fiveTo15: 0, fifteenTo60: 0, oneTo24Hours: 0, over24Hours: 0 };
   for (const lead of unanswered) unansweredBuckets[bucketUnanswered(ageMinutes(lead.createdAt, now))] += 1;
 
   const group = (keyFor: (lead: AcquisitionLeadFact) => string) => {
-    const grouped = new Map<string, {
-      key: string;
-      leads: number;
-      openLeads: number;
-      estimatedOpportunityCents: number;
-      bookedEstimatedCents: number;
-      collectedWithEvidenceCents: number;
-    }>();
+    const grouped = new Map<string, { key: string; leads: number; openLeads: number; estimatedOpportunityCents: number; bookedEstimatedCents: number; collectedWithEvidenceCents: number }>();
     for (const lead of leads) {
       const key = keyFor(lead) || "unknown";
       const current = grouped.get(key) ?? { key, leads: 0, openLeads: 0, estimatedOpportunityCents: 0, bookedEstimatedCents: 0, collectedWithEvidenceCents: 0 };
@@ -114,12 +104,7 @@ export function summarizeAcquisitionLeads(
     }
     return Array.from(grouped.values())
       .sort((a, b) => b.collectedWithEvidenceCents - a.collectedWithEvidenceCents || b.estimatedOpportunityCents - a.estimatedOpportunityCents || b.leads - a.leads)
-      .map((item) => ({
-        ...item,
-        estimatedOpportunity: dollars(item.estimatedOpportunityCents),
-        bookedEstimated: dollars(item.bookedEstimatedCents),
-        collectedWithEvidence: dollars(item.collectedWithEvidenceCents),
-      }));
+      .map((item) => ({ ...item, estimatedOpportunity: dollars(item.estimatedOpportunityCents), bookedEstimated: dollars(item.bookedEstimatedCents), collectedWithEvidence: dollars(item.collectedWithEvidenceCents) }));
   };
 
   const actionQueue = open
@@ -127,16 +112,22 @@ export function summarizeAcquisitionLeads(
       const unansweredAgeMinutes = !lead.lastContactedAt ? ageMinutes(lead.createdAt, now) : null;
       const followUpOverdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
       const pastSla = unansweredAgeMinutes !== null && unansweredAgeMinutes >= slaMinutes;
+      const identityReviewRequired = lead.pipelineStage === "identity_review";
       const bookingInProgress = lead.bookingStatus === "started";
-      const score = (followUpOverdue ? 100 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
+      const bookingObservationPending = lead.bookingStatus === "observed";
+      const score = (identityReviewRequired ? 120 : 0) + (followUpOverdue ? 100 : 0) + (bookingObservationPending ? 90 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
       const latest = latestTouches.get(lead.id) ?? null;
       const evidence = collectedEvidenceByLead.get(lead.id);
       const collectedWithEvidenceCents = (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
-      const action = bookingInProgress
-        ? followUpOverdue ? "verify_booking" : "booking_in_progress"
-        : followUpOverdue || pastSla ? "contact_now"
-        : !lead.lastContactedAt ? "contact"
-        : "review_next_step";
+      const action = identityReviewRequired
+        ? "resolve_identity"
+        : bookingObservationPending
+          ? "verify_booking"
+          : bookingInProgress
+            ? followUpOverdue ? "verify_booking" : "booking_in_progress"
+            : followUpOverdue || pastSla ? "contact_now"
+            : !lead.lastContactedAt ? "contact"
+            : "review_next_step";
       return {
         id: lead.id,
         name: lead.name,
@@ -159,7 +150,9 @@ export function summarizeAcquisitionLeads(
         unansweredAgeMinutes,
         followUpOverdue,
         pastSla,
+        identityReviewRequired,
         bookingInProgress,
+        bookingObservationPending,
         action,
         score,
       };
@@ -173,10 +166,7 @@ export function summarizeAcquisitionLeads(
   const lost = leads.filter((lead) => lead.status === "lost");
   const unassigned = open.filter((lead) => !lead.assignedTo);
   const paymentTotals = Array.from(collectedEvidenceByLead.values()).reduce(
-    (totals, evidence) => ({
-      manualReconciledCents: totals.manualReconciledCents + evidence.manualReconciledCents,
-      processorVerifiedCents: totals.processorVerifiedCents + evidence.processorVerifiedCents,
-    }),
+    (totals, evidence) => ({ manualReconciledCents: totals.manualReconciledCents + evidence.manualReconciledCents, processorVerifiedCents: totals.processorVerifiedCents + evidence.processorVerifiedCents }),
     { manualReconciledCents: 0, processorVerifiedCents: 0 },
   );
   const collectedWithEvidenceCents = paymentTotals.manualReconciledCents + paymentTotals.processorVerifiedCents;
@@ -190,8 +180,10 @@ export function summarizeAcquisitionLeads(
       unansweredLeads: unanswered.length,
       overdueFollowUps: overdueFollowUps.length,
       unassignedOpenLeads: unassigned.length,
+      identityReviewLeads: identityReview.length,
       atRiskLeads: atRisk.length,
       bookingStartedLeads: bookingStarted.length,
+      bookingObservedLeads: bookingObserved.length,
       bookingReviewDueLeads: bookingReviewDue.length,
       medianSpeedToLeadMinutes: median(responseMinutes),
       openEstimatedOpportunityCents: sum(open),
@@ -216,8 +208,10 @@ export function summarizeAcquisitionLeads(
     actionQueue,
     definitions: {
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
+      identityReview: "The submitted normalized contact identifiers matched multiple different open CRM records. Staff must resolve identity before merging records or relying on prior history.",
       bookingStarted: "The configured external booking rail was opened from a server-associated acquisition journey. This is intent evidence only, not booking or payment confirmation.",
-      bookingReviewDue: "A booking-start lead whose human verification/follow-up deadline is due. Staff must verify authoritative booking evidence before changing booking/payment state.",
+      bookingObserved: "An external booking source reported a booking for the matched lead. Human verification remains required, and this does not prove payment.",
+      bookingReviewDue: "A started/observed booking whose human verification/follow-up deadline is due. Staff must verify authoritative booking evidence before changing booking/payment state.",
       bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus. This is not collected revenue.",
       collectedRevenueWithEvidence: "Sum of processor-verified evidence plus authorized manual reconciliation evidence linked to leads. Manual reconciliation is labeled separately and is not processor verification.",
       recentVolume: "Lead records created during the rolling 24 hours ending at generatedAt; not a clinic-local calendar-day metric.",

@@ -53,8 +53,8 @@ export async function listCRMWorkspace(session: ClinicSession) {
       followUpsDue: leadViews.filter((lead) => lead.overdue || (lead.followUpDueAt && new Date(lead.followUpDueAt).toDateString() === now.toDateString())).length,
       booked: leadViews.filter((lead) => ["booked", "completed"].includes(lead.status)).length,
       estimatedPipelineCents: leadViews.filter((lead) => !["lost", "completed"].includes(lead.status)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
-      recoveredCents: leadViews.filter((lead) => ["booked", "completed"].includes(lead.status)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
-      lostCents: leadViews.filter((lead) => lead.status === "lost").reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
+      bookedEstimatedCents: leadViews.filter((lead) => ["booked", "completed"].includes(lead.status)).reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
+      lostEstimatedCents: leadViews.filter((lead) => lead.status === "lost").reduce((sum, lead) => sum + lead.estimatedValueCents, 0),
     },
   };
 }
