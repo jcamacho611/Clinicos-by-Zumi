@@ -7,9 +7,7 @@ const route = read("src/app/api/portal/phone-verification/route.ts");
 const component = read("src/components/portal/portal-phone-verification.tsx");
 const portalPage = read("src/app/portal/page.tsx");
 
-function index(value: string) {
-  return route.indexOf(value);
-}
+function index(value: string) { return route.indexOf(value); }
 
 describe("patient-controlled phone verification ceremony", () => {
   it("derives patient and organization identity only from the authenticated portal session", () => {
