@@ -64,7 +64,7 @@ export function qualityGuardianNextActions(
         : evaluation.reasons.join(" ") || "Applicable quality evidence remains incomplete.",
       sourceType: "system" as const,
       sourceId: evaluation.id,
-      capabilityKey: "work.task.manage",
+      capabilityKey: evaluation.status === "review_required" ? "quality.assurance.review" : "quality.assurance.manage",
       href: "/tasks",
       state: evaluation.status === "review_required" ? "review_required" as const : "recommended" as const,
       priority: Math.min(100, riskPriority[evaluation.riskClass] + duePriority(evaluation.dueAt, now)),
