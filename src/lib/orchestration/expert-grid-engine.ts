@@ -109,7 +109,7 @@ export function rankExpertGridMatches(input: {
   experts: readonly ExpertGridProfile[];
 }) {
   const dimensions: MatchDimension<ExpertGridProfile>[] = [
-    requiredEligibilityDimension((expert) => {
+    requiredEligibilityDimension<ExpertGridProfile>((expert) => {
       const result = evaluateExpertGridEligibility({ need: input.need, expert });
       return { eligible: result.eligible, reasons: result.blockers.length ? result.blockers : result.reasons };
     }),
