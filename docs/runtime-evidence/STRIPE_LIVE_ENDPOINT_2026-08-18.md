@@ -9,9 +9,10 @@ This evidence file records only non-secret production facts. It intentionally do
 - Account display name: `KLINIKOS.IO`
 - Production account-level webhook endpoint exists in live mode.
 - Endpoint status: `enabled`
-- URL: `https://klinikos.io/api/webhooks/stripe`
+- URL: `https://www.klinikos.io/api/webhooks/stripe`
 - Description: `Klinikos production customer-payment evidence`
 - Connect-wide delivery: disabled. This is the customer-payment account endpoint, not the Grid connected-account/payout webhook.
+- The endpoint was changed from the non-`www` hostname after production evidence showed that hostname redirects to `www`. Stripe documents 3xx webhook responses as failed deliveries and instructs operators to configure the resolved destination directly.
 
 ## Enabled events
 
@@ -45,7 +46,7 @@ The Stripe-side endpoint is no longer pending. The remaining customer-payment ac
 2. redeploy/restart the production application so the runtime sees the variable;
 3. verify the deployed application is the current webhook-capable `main`;
 4. initiate one controlled low-risk real Clinic Operating Analysis payment through the server-owned Checkout path;
-5. confirm Stripe reports successful delivery to the endpoint;
+5. confirm Stripe reports successful delivery to the final `www` endpoint without a redirect;
 6. confirm Klinikos records idempotent processor evidence with exact amount/currency/tenant/session/live-mode correlation;
 7. verify browser return alone never marks payment paid;
 8. perform a controlled refund and verify refund evidence updates truth without triggering Grid payout state.
