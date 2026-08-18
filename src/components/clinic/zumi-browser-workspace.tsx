@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { type FormEvent, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -18,10 +17,10 @@ import {
   Route,
   Search,
   ShieldCheck,
-  Stethoscope,
   Users,
   X,
 } from "lucide-react";
+import { KlinikosMark } from "@/components/brand/klinikos-brand";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { cn } from "@/lib/utils";
 
@@ -65,9 +64,9 @@ const surfaces = [
   { label: "Routes", href: "/paths", icon: Route },
 ] as const;
 
-function freshSession(): BrowserSession {
+function freshSession(id = crypto.randomUUID()): BrowserSession {
   return {
-    id: crypto.randomUUID(),
+    id,
     title: "New session",
     createdAt: Date.now(),
     status: "idle",
@@ -99,8 +98,9 @@ function statusDot(status: BrowserStatus) {
 }
 
 export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
-  const router = useRouter();
-  const initial = useMemo(() => freshSession(), []);
+  // The first ID is deterministic so server rendering and hydration agree. New
+  // sessions are created only after user interaction and can safely use random UUIDs.
+  const initial = useMemo(() => freshSession("zumi-browser-home"), []);
   const [sessions, setSessions] = useState<BrowserSession[]>([initial]);
   const [activeSessionId, setActiveSessionId] = useState(initial.id);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([initial.id]);
@@ -303,7 +303,7 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
           <div className="mx-auto max-w-[960px] space-y-6 px-4 py-8 sm:px-7 sm:py-12">
             {active.messages.length === 0 ? (
               <div className="mx-auto max-w-3xl py-8 text-center sm:py-14">
-                <button aria-label="Focus the Zumi composer" className="group relative mx-auto grid size-28 place-items-center rounded-full border border-[#e6817b]/20 bg-[#14090c]/70 shadow-[0_0_70px_rgba(139,35,42,.25)]" onClick={() => inputRef.current?.focus()} type="button"><span className="absolute inset-3 rounded-full border border-[#e6817b]/14 transition group-hover:scale-105" /><img alt="" className="relative h-16 w-16 object-contain" src="/klinikos-orbital-k-transparent.png" /></button>
+                <button aria-label="Focus the Zumi composer" className="group relative mx-auto grid size-28 place-items-center rounded-full border border-[#e6817b]/20 bg-[#14090c]/70 shadow-[0_0_70px_rgba(139,35,42,.25)]" onClick={() => inputRef.current?.focus()} type="button"><span className="absolute inset-3 rounded-full border border-[#e6817b]/14 transition group-hover:scale-105" /><KlinikosMark className="relative h-16 w-16" /></button>
                 <p className="mt-6 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">Klinikos Intelligence</p>
                 <h2 className="mt-4 text-4xl font-light tracking-[-.055em] text-[#fff8f6] sm:text-5xl">What do you want to make happen?</h2>
                 <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#9f8985]">Zumi understands the current state, desired outcome, missing requirements, and the governed Klinikos route. It can open the right working context without turning navigation into the product.</p>
@@ -336,7 +336,7 @@ export function ZumiBrowserWorkspace({ userName }: { userName: string }) {
               <Link aria-label="Open documents" className="grid size-9 place-items-center rounded-full text-[#8f7773] hover:bg-[#e6817b]/8 hover:text-[#efaaa1]" href="/documents"><Files className="size-4" /></Link>
               <VoiceInputButton className="[&_button]:h-9 [&_button]:rounded-full [&_button]:border-[#e6817b]/10 [&_button]:bg-transparent [&_button]:px-3 [&_button]:text-[10px] [&_button]:text-[#9f8985]" onTranscript={(transcript) => void sendQuestion(transcript)} />
               <span className="hidden text-[9px] text-[#655653] sm:inline">Enter sends · Shift+Enter adds a line</span>
-              <button aria-label="Send to Zumi" className="group relative ml-auto grid size-12 place-items-center rounded-full border border-[#e6817b]/28 bg-[#1b0c0f] shadow-[0_0_28px_rgba(230,129,123,.12)] transition enabled:hover:border-[#efaaa1]/45 enabled:hover:bg-[#271014] disabled:cursor-not-allowed disabled:opacity-35" disabled={!input.trim() || loading} type="submit"><span className="absolute inset-1.5 rounded-full border border-[#e6817b]/13 transition group-enabled:group-hover:scale-105" /><img alt="" className="relative h-8 w-8 object-contain" src="/klinikos-orbital-k-transparent.png" /></button>
+              <button aria-label="Send to Zumi" className="group relative ml-auto grid size-12 place-items-center rounded-full border border-[#e6817b]/28 bg-[#1b0c0f] shadow-[0_0_28px_rgba(230,129,123,.12)] transition enabled:hover:border-[#efaaa1]/45 enabled:hover:bg-[#271014] disabled:cursor-not-allowed disabled:opacity-35" disabled={!input.trim() || loading} type="submit"><span className="absolute inset-1.5 rounded-full border border-[#e6817b]/13 transition group-enabled:group-hover:scale-105" /><KlinikosMark className="relative h-8 w-8" /></button>
             </div>
           </div>
         </form>
