@@ -43,7 +43,7 @@ export default function GridContractorJoinPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.62fr_1.38fr]" id="professional">
+      <section className="grid-marble-surface mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.62fr_1.38fr]" id="professional">
         <aside className="lg:sticky lg:top-8 lg:self-start">
           <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-teal-700">Professional enrollment</p>
           <h2 className="mt-3 text-3xl font-black tracking-[-.05em] text-slate-950">For people whose work depends on professional eligibility.</h2>

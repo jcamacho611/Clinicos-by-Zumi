@@ -1,5 +1,6 @@
 import { ArrowRight, Banknote, Compass, TriangleAlert } from "lucide-react";
 import type { OperatingSignal, OperatingSignalSummary } from "@/lib/sales/zumi-command";
+import { canonicalizeSalesDisplayText } from "@/lib/sales/canonical-display";
 
 /**
  * The live operating map and its analysis panels.
@@ -10,14 +11,14 @@ import type { OperatingSignal, OperatingSignalSummary } from "@/lib/sales/zumi-c
 
 const statusPresentation: Record<OperatingSignal["status"], { label: string; className: string }> = {
   attention: { label: "Needs attention", className: "border-rose-400/40 bg-rose-500/[.08] text-rose-200" },
-  review: { label: "Review", className: "border-[#e6c55b]/40 bg-[#e6c55b]/[.08] text-[#f0dda0]" },
+  review: { label: "Review", className: "border-amber-300/40 bg-amber-300/[.08] text-amber-100" },
   stable: { label: "Not reported", className: "border-white/15 bg-white/[.03] text-slate-400" },
 };
 
 export function OperatingMapPanel({ signals }: { signals: OperatingSignal[] }) {
   return (
     <section aria-labelledby="operating-map-heading">
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-cyan-300" id="operating-map-heading">
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-rose-200" id="operating-map-heading">
         Live Clinic Operating Map
       </h2>
       <p className="mt-2 text-sm leading-6 text-slate-400">
@@ -39,7 +40,7 @@ export function OperatingMapPanel({ signals }: { signals: OperatingSignal[] }) {
               {signal.status !== "stable" && (
                 <>
                   <p className="mt-2 text-[12px] leading-5 text-slate-400">{signal.whyItMatters}</p>
-                  <p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-5 text-[#f0dda0]">{signal.humanReview}</p>
+                  <p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-5 text-amber-100">{signal.humanReview}</p>
                 </>
               )}
             </li>
@@ -66,7 +67,7 @@ export function RevenueSignalCard({ summary }: { summary: OperatingSignalSummary
   return (
     <article className="border border-white/10 bg-white/[.04] p-5">
       <h3 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-300">
-        <Banknote aria-hidden="true" className="size-4 text-[#e6c55b]" /> Possible revenue category
+        <Banknote aria-hidden="true" className="size-4 text-amber-200" /> Possible revenue category
       </h3>
       <p className="mt-3 text-lg font-extrabold tracking-[-.03em] text-white">{summary.leakageCategory}</p>
       <p className="mt-3 text-[12px] leading-6 text-slate-400">
@@ -77,12 +78,15 @@ export function RevenueSignalCard({ summary }: { summary: OperatingSignalSummary
 }
 
 export function NextBestActionPanel({ summary }: { summary: OperatingSignalSummary }) {
+  const narrative = canonicalizeSalesDisplayText(summary.narrative);
+  const nextBestAction = canonicalizeSalesDisplayText(summary.nextBestAction);
+
   return (
-    <section aria-labelledby="next-action-heading" className="border border-cyan-300/30 bg-cyan-400/[.06] p-6">
-      <h2 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-cyan-200" id="next-action-heading">
+    <section aria-labelledby="next-action-heading" className="border border-rose-300/30 bg-rose-400/[.06] p-6">
+      <h2 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="next-action-heading">
         <Compass aria-hidden="true" className="size-4" /> Zumi&apos;s Operating Signal
       </h2>
-      <p className="mt-4 text-sm leading-7 text-slate-200">{summary.narrative}</p>
+      <p className="mt-4 text-sm leading-7 text-slate-200">{narrative}</p>
 
       <dl className="mt-6 grid gap-x-8 gap-y-4 border-t border-white/10 pt-5 sm:grid-cols-2">
         <div>
@@ -91,9 +95,9 @@ export function NextBestActionPanel({ summary }: { summary: OperatingSignalSumma
         </div>
         <div>
           <dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Next best action</dt>
-          <dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-cyan-100">
+          <dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-rose-100">
             <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {summary.nextBestAction}
+            {nextBestAction}
           </dd>
         </div>
       </dl>
@@ -104,7 +108,7 @@ export function NextBestActionPanel({ summary }: { summary: OperatingSignalSumma
 export function QualificationSummary({ summary, answeredCount, totalCount }: { summary: OperatingSignalSummary; answeredCount: number; totalCount: number }) {
   return (
     <section aria-labelledby="qualification-heading" className="border border-white/10 bg-white/[.04] p-6">
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[.16em] text-cyan-300" id="qualification-heading">
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="qualification-heading">
         Founding Clinic Qualification
       </h2>
       <p className="mt-3 text-sm leading-6 text-slate-300">

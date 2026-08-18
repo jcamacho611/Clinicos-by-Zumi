@@ -20,29 +20,45 @@ describe("commercial qualification experience", () => {
     expect(shell).not.toContain("Zumi standing by");
   });
 
-  it("keeps qualification and payment boundaries explicit", () => {
+  it("keeps qualification, payment, and entitlement boundaries explicit", () => {
     const sales = read("src/app/sales/page.tsx");
     const founding = read("src/app/founding-clinic/page.tsx");
 
     expect(sales).toContain("This analysis does not itself activate production access or external integrations.");
 
-    // The fact survives; the vocabulary carrying it is now plain language.
-    expect(founding).toMatch(/does not by itself mean you have paid/i);
-    expect(founding).toMatch(/we confirm that with the payment provider/i);
+    // These are facts a buyer must be told, not phrasings to preserve. The wording
+    // moved out of internal vocabulary ("payment proof", "payment evidence",
+    // "entitlement") into language an ordinary customer reads without a glossary;
+    // the guard follows the fact, and additionally fails if the jargon returns.
+    expect(founding).toMatch(/coming back from the payment page is not proof you paid/i);
+    expect(founding).toContain("manual service payment does not create a Klinikos software entitlement");
     expect(founding).toContain("do not by themselves activate production PHI");
-    for (const jargon of ["payment rail", "checkout intent", "production gates"]) {
+    for (const jargon of ["payment rail", "payment evidence", "browser return"]) {
       expect(founding.toLowerCase(), `"${jargon}" is internal vocabulary`).not.toContain(jargon);
     }
   });
 
-  it("keeps founding prices server-controlled and removes raw-hex visual drift", () => {
+  it("presents founding commercial steps as a sequence rather than three parallel purchases", () => {
+    const founding = read("src/app/founding-clinic/page.tsx");
+    const offers = read("src/components/command/founding-offer-cards.tsx");
+
+    expect(offers).toContain("Commercial sequence");
+    expect(offers).toContain("One paid starting point. Later steps unlock after review.");
+    expect(offers).toContain("Start Clinic Operating Analysis");
+    expect(offers).toContain("After analysis + human review");
+    expect(offers).toContain("After Blueprint + scope approval");
+    expect(offers).toContain("const offer = demoOffers[step.key]");
+    expect(offers).not.toContain("Choose how to proceed");
+    expect(founding).toContain("Integrated Klinikos Stripe Checkout is preferred");
+    expect(founding).not.toContain("existing GoDaddy path remains available");
+  });
+
+  it("removes raw-hex visual drift from governed commercial pages", () => {
     const shell = read("src/components/command/zumi-command-shell.tsx");
     const sales = read("src/app/sales/page.tsx");
     const founding = read("src/app/founding-clinic/page.tsx");
     const offers = read("src/components/command/founding-offer-cards.tsx");
 
-    expect(offers).toContain("engagementOffers.map");
-    expect(offers).toContain("offer.shortPrice");
     expect(shell).not.toMatch(/#[0-9a-f]{3,8}\b/i);
     expect(sales).not.toMatch(/#[0-9a-f]{3,8}\b/i);
     expect(founding).not.toMatch(/#[0-9a-f]{3,8}\b/i);

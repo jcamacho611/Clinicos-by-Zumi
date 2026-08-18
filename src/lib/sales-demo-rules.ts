@@ -19,6 +19,11 @@ export const demoOfferKeys = [
 export const demoOfferSchema = z.enum(demoOfferKeys);
 export type DemoOfferKey = z.infer<typeof demoOfferSchema>;
 
+/**
+ * Compatibility keys remain stable for persisted sales history. Customer-facing
+ * labels mirror the current Klinikos commercial canon so historical/internal keys
+ * never leak legacy product names into UI or API projections.
+ */
 export const demoOffers: Record<DemoOfferKey, {
   name: string;
   priceCents: number;
@@ -27,24 +32,24 @@ export const demoOffers: Record<DemoOfferKey, {
   status: (typeof productStatusLabels)[number];
 }> = {
   private_workflow_demo: {
-    name: "Private Workflow Demo & Cost Review",
+    name: "Clinic Operating Analysis",
     priceCents: 50_000,
     shortPrice: "$500",
-    creditForward: "The full $500 is credited toward the Founding Clinic Evaluation if the clinic proceeds.",
+    creditForward: "100% credited toward an Implementation Blueprint or qualifying implementation when the clinic proceeds within 30 days.",
     status: "Demo",
   },
   founding_clinic_evaluation: {
-    name: "Founding Clinic Evaluation",
+    name: "Implementation Blueprint",
     priceCents: 150_000,
     shortPrice: "$1,500",
-    creditForward: "The full $1,500 is credited toward the Founding Clinic Program if the clinic proceeds.",
+    creditForward: "100% credited toward a qualifying Klinikos implementation when the clinic proceeds within 30 days.",
     status: "Human review required",
   },
   founding_clinic_program: {
-    name: "Founding Clinic Program",
+    name: "Founding Clinic Implementation",
     priceCents: 800_000,
-    shortPrice: "$8,000",
-    creditForward: "Prior eligible demo and evaluation fees are credited toward the founding contribution after human review.",
+    shortPrice: "from $8,000",
+    creditForward: "Eligible analysis and blueprint fees are credited after human review.",
     status: "Requires production review",
   },
 };
@@ -55,6 +60,7 @@ export const salesPainPoints = [
   ["paperwork", "Paperwork"],
   ["results", "Results"],
   ["billing_readiness", "Billing readiness"],
+  ["missed_calls", "Missed calls"],
   ["no_shows", "No-shows"],
   ["med_spa_leads", "Med spa leads"],
   ["owner_visibility", "Owner visibility"],
@@ -266,7 +272,7 @@ export function buildDemoRecapDraft(input: {
     painPoint: painPointLabel[input.biggestPainPoint],
     whatWasShown: [input.scenarioTitle, "Synthetic workflow command center", "Named owners and next actions", "Truthful integration and review states"],
     workflowGaps: selected.map((label) => `${label}: validate the current owner, handoff, and completion evidence.`),
-    recommendedNextStep: `Review the draft with ${input.clinicName}, confirm the actual workflow, then decide whether a Founding Clinic Evaluation is appropriate.`,
+    recommendedNextStep: `Review the draft with ${input.clinicName}, confirm the actual workflow, then decide whether an Implementation Blueprint is appropriate.`,
     estimatedValueAreas: ["Staff time recovered", "Fewer dropped follow-ups", "Faster billing readiness", "Clearer owner visibility"],
     productStatusSnapshot: [
       { label: "ClinicOS workflow foundation", status: "Live" },
@@ -275,7 +281,7 @@ export function buildDemoRecapDraft(input: {
       { label: "Clinical and financial decisions", status: "Human review required" },
     ],
     priceOption: { name: demoOffers.founding_clinic_evaluation.name, priceCents: demoOffers.founding_clinic_evaluation.priceCents, creditForward: demoOffers.founding_clinic_evaluation.creditForward },
-    callToAction: "Invite the clinic to a Founding Clinic Evaluation after a human reviews this draft.",
+    callToAction: "Invite the clinic to review an Implementation Blueprint after a human reviews this draft.",
     status: "draft" as const,
     reviewStatus: "human_review_required" as const,
     draftedBy: "deterministic_fallback" as const,

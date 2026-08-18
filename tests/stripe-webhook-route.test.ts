@@ -1,0 +1,345 @@
+import Stripe from "stripe";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { recordEvidence, processRecurring } = vi.hoisted(() => ({
+  recordEvidence: vi.fn(),
+  processRecurring: vi.fn(),
+}));
+
+vi.mock("@/lib/commercial/payment-evidence-repository", () => ({
+  recordCommercialPaymentEvidence: recordEvidence,
+}));
+
+vi.mock("@/lib/commercial/stripe-clinic-subscriptions", () => ({
+  StripeClinicSubscriptionError: class StripeClinicSubscriptionError extends Error {
+    constructor(message: string, readonly status = 400) {
+      super(message);
+    }
+  },
+  processVerifiedStripeClinicSubscriptionEvent: processRecurring,
+}));
+
+import { POST } from "@/app/api/webhooks/stripe/route";
+
+const webhookSecret = "whsec_unit_test_only";
+const signer = new Stripe("sk_test_unit_test_only");
+
+function signedRequest(payload: Record<string, unknown>, signatureOverride?: string) {
+  const raw = JSON.stringify(payload);
+  const signature = signatureOverride ?? signer.webhooks.generateTestHeaderString({ payload: raw, secret: webhookSecret });
+  return new Request("https://klinikos.io/api/webhooks/stripe", {
+    method: "POST",
+    body: raw,
+    headers: { "content-type": "application/json", "stripe-signature": signature },
+  });
+}
+
+function checkoutEvent(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "evt_checkout_paid",
+    object: "event",
+    type: "checkout.session.completed",
+    livemode: true,
+    data: {
+      object: {
+        id: "cs_live_checkout",
+        object: "checkout.session",
+        mode: "payment",
+        payment_status: "paid",
+        amount_total: 50_000,
+        currency: "usd",
+        client_reference_id: "intent_opaque",
+        metadata: {
+          klinikos_checkout_intent_id: "intent_opaque",
+          klinikos_checkout_state: "state_opaque",
+        },
+        payment_intent: "pi_live_payment",
+        customer: "cus_live_customer",
+        customer_details: { email: "private@example.test", name: "Private Buyer" },
+        description: "must never be persisted",
+      },
+    },
+    ...overrides,
+  };
+}
+
+function recurringInvoiceEvent(withKlinikosMetadata = true) {
+  return {
+    id: "evt_invoice_paid",
+    object: "event",
+    type: "invoice.paid",
+    livemode: true,
+    data: {
+      object: {
+        id: "in_live_paid",
+        object: "invoice",
+        customer: "cus_live_customer",
+        amount_paid: 79_900,
+        currency: "usd",
+        parent: {
+          type: "subscription_details",
+          subscription_details: {
+            subscription: "sub_live",
+            metadata: withKlinikosMetadata ? {
+              klinikos_checkout_intent_id: "intent_recurring",
+              klinikos_checkout_state: "state_recurring",
+              klinikos_product_key: "clinic_core",
+            } : {},
+          },
+        },
+      },
+    },
+  };
+}
+
+describe("Stripe live webhook boundary", () => {
+  beforeEach(() => {
+    process.env.STRIPE_SECRET_KEY = "sk_live_unit_test_only";
+    process.env.STRIPE_WEBHOOK_SECRET = webhookSecret;
+    recordEvidence.mockReset();
+    recordEvidence.mockResolvedValue({ status: "applied", idempotent: false });
+    processRecurring.mockReset();
+    processRecurring.mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    delete process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+  });
+
+  it("accepts a valid signed live Checkout event and records sanitized processor evidence", async () => {
+    const response = await POST(signedRequest(checkoutEvent()));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ received: true, supported: true, status: "applied" });
+    expect(recordEvidence).toHaveBeenCalledOnce();
+    const input = recordEvidence.mock.calls[0][0];
+    expect(input).toMatchObject({
+      provider: "stripe",
+      eventId: "evt_checkout_paid",
+      eventType: "checkout.session.completed",
+      verified: true,
+      processorVerified: true,
+      processorMode: "live",
+      outcome: "succeeded",
+      checkoutIntentId: "intent_opaque",
+      externalCheckoutId: "cs_live_checkout",
+      externalPaymentIntentId: "pi_live_payment",
+      amountCents: 50_000,
+      currency: "usd",
+    });
+    expect(JSON.stringify(input.payload)).not.toMatch(/private@example|Private Buyer|description/i);
+  });
+
+  it("acknowledges a tagged manual service Payment Link without granting an entitlement", async () => {
+    const event = checkoutEvent();
+    const session = event.data.object as Record<string, unknown>;
+    session.client_reference_id = null;
+    session.payment_link = "plink_manual_operating_analysis";
+    session.metadata = {
+      klinikos_sale_mode: "manual_service",
+      klinikos_product_key: "operational_audit",
+      klinikos_offer_key: "private_workflow_demo",
+    };
+
+    const response = await POST(signedRequest(event));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      received: true,
+      supported: false,
+      manualReconciliation: true,
+      productKey: "operational_audit",
+      offerKey: "private_workflow_demo",
+    });
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("acknowledges a tagged manual-service refund without entering the automatic entitlement rail", async () => {
+    const response = await POST(signedRequest({
+      id: "evt_manual_refund",
+      object: "event",
+      type: "charge.refunded",
+      livemode: true,
+      data: { object: {
+        id: "ch_manual_refund",
+        object: "charge",
+        amount_refunded: 50_000,
+        currency: "usd",
+        refunded: true,
+        payment_intent: "pi_manual_payment",
+        customer: "cus_manual_customer",
+        metadata: {
+          klinikos_sale_mode: "manual_service",
+          klinikos_product_key: "operational_audit",
+          klinikos_offer_key: "private_workflow_demo",
+        },
+      } },
+    }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ received: true, supported: false, manualReconciliation: true });
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("acknowledges unrelated Stripe invoice events without creating a retry storm", async () => {
+    const response = await POST(signedRequest(recurringInvoiceEvent(false)));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ received: true, supported: false, unrelatedRecurringEvent: true });
+    expect(processRecurring).not.toHaveBeenCalled();
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("routes a signed Klinikos recurring invoice into the isolated subscription processor", async () => {
+    processRecurring.mockResolvedValueOnce({
+      kind: "invoice_paid",
+      status: "applied",
+      organizationId: "org_paid",
+      productKey: "clinic_core",
+      subscriptionId: "subscription_internal",
+      idempotent: false,
+    });
+    const response = await POST(signedRequest(recurringInvoiceEvent(true)));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      received: true,
+      supported: true,
+      recurring: true,
+      kind: "invoice_paid",
+      status: "applied",
+      organizationId: "org_paid",
+    });
+    expect(processRecurring).toHaveBeenCalledOnce();
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid Stripe signature", async () => {
+    const response = await POST(signedRequest(checkoutEvent(), "t=1,v1=invalid"));
+    expect(response.status).toBe(400);
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unsigned browser-forged success payload", async () => {
+    const response = await POST(new Request("https://klinikos.io/api/webhooks/stripe", {
+      method: "POST",
+      body: JSON.stringify(checkoutEvent()),
+      headers: { "content-type": "application/json" },
+    }));
+    expect(response.status).toBe(400);
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("returns the idempotent repository result for a replayed Stripe event", async () => {
+    recordEvidence
+      .mockResolvedValueOnce({ status: "applied", idempotent: false })
+      .mockResolvedValueOnce({ status: "applied", idempotent: true });
+    expect((await POST(signedRequest(checkoutEvent()))).status).toBe(200);
+    const replay = await POST(signedRequest(checkoutEvent()));
+    expect(await replay.json()).toMatchObject({ received: true, status: "applied", idempotent: true });
+  });
+
+  it("rejects a correctly signed test-mode event at the live endpoint", async () => {
+    const response = await POST(signedRequest(checkoutEvent({ livemode: false })));
+    expect(response.status).toBe(409);
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("records payment failure as failure evidence rather than paid evidence", async () => {
+    recordEvidence.mockResolvedValue({ status: "failed", idempotent: false });
+    const response = await POST(signedRequest({
+      id: "evt_payment_failed",
+      object: "event",
+      type: "payment_intent.payment_failed",
+      livemode: true,
+      data: { object: {
+        id: "pi_live_failed",
+        object: "payment_intent",
+        amount: 50_000,
+        currency: "usd",
+        customer: null,
+        status: "requires_payment_method",
+        metadata: { klinikos_checkout_intent_id: "intent_opaque", klinikos_checkout_state: "state_opaque" },
+      } },
+    }));
+    expect(response.status).toBe(200);
+    expect(recordEvidence.mock.calls[0][0]).toMatchObject({ outcome: "failed", processorMode: "live" });
+  });
+
+  it("records a pending dynamic-method Checkout without representing it as paid", async () => {
+    recordEvidence.mockResolvedValue({ status: "ignored", idempotent: false });
+    const event = checkoutEvent();
+    (event.data.object as Record<string, unknown>).payment_status = "unpaid";
+    const response = await POST(signedRequest(event));
+    expect(response.status).toBe(200);
+    expect(recordEvidence.mock.calls[0][0]).toMatchObject({ outcome: "pending", externalCheckoutId: "cs_live_checkout" });
+  });
+
+  it("accepts the dynamic-method async success event through the same signed boundary", async () => {
+    const response = await POST(signedRequest(checkoutEvent({ type: "checkout.session.async_payment_succeeded" })));
+    expect(response.status).toBe(200);
+    expect(recordEvidence.mock.calls[0][0]).toMatchObject({
+      eventType: "checkout.session.async_payment_succeeded",
+      outcome: "succeeded",
+      checkoutIntentId: "intent_opaque",
+    });
+  });
+
+  it("keeps a dynamic-method async failure unpaid through the same signed boundary", async () => {
+    recordEvidence.mockResolvedValue({ status: "failed", idempotent: false });
+    const response = await POST(signedRequest(checkoutEvent({ type: "checkout.session.async_payment_failed" })));
+    expect(response.status).toBe(200);
+    expect(recordEvidence.mock.calls[0][0]).toMatchObject({
+      eventType: "checkout.session.async_payment_failed",
+      outcome: "failed",
+      checkoutIntentId: "intent_opaque",
+    });
+  });
+
+  it("records refund evidence without representing it as a new payment", async () => {
+    const response = await POST(signedRequest({
+      id: "evt_charge_refunded",
+      object: "event",
+      type: "charge.refunded",
+      livemode: true,
+      data: { object: {
+        id: "ch_live_refund",
+        object: "charge",
+        amount_refunded: 50_000,
+        currency: "usd",
+        refunded: true,
+        payment_intent: "pi_live_payment",
+        customer: "cus_live_customer",
+        metadata: {
+          klinikos_checkout_intent_id: "intent_opaque",
+          klinikos_checkout_state: "state_opaque",
+        },
+      } },
+    }));
+    expect(response.status).toBe(200);
+    expect(recordEvidence.mock.calls[0][0]).toMatchObject({
+      outcome: "refunded",
+      checkoutIntentId: "intent_opaque",
+      checkoutState: "state_opaque",
+      externalPaymentIntentId: "pi_live_payment",
+    });
+  });
+
+  it("asks Stripe to retry when signed evidence cannot yet be durably correlated", async () => {
+    recordEvidence.mockRejectedValueOnce(new Error("waiting for checkout intent"));
+    const response = await POST(signedRequest({
+      id: "evt_refund_retry",
+      object: "event",
+      type: "charge.refunded",
+      livemode: true,
+      data: { object: {
+        id: "ch_live_refund_retry",
+        object: "charge",
+        amount_refunded: 50_000,
+        currency: "usd",
+        refunded: true,
+        payment_intent: "pi_live_waiting",
+        customer: null,
+        metadata: {},
+      } },
+    }));
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({ error: "Stripe evidence could not be recorded." });
+  });
+});

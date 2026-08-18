@@ -32,7 +32,35 @@ export const gridVerificationStatuses = ["draft", "submitted", "needs_review", "
 export const gridExperienceLevels = ["Entry", "Intermediate", "Experienced", "OG / Master Provider"] as const;
 export const gridRequestStatuses = ["draft", "requested", "accepted", "countered", "provider_review", "location_review", "credential_check", "pending_deposit", "confirmed", "completed", "cancelled", "declined", "escalated"] as const;
 export const gridLocationTypes = ["clinic_location", "rental_room", "chair_rental", "mobile", "at_home", "virtual"] as const;
-export const gridContractorProviderTypes = ["Nurse Injector", "Registered Nurse", "Nurse Practitioner", "Physician Assistant"] as const;
+/**
+ * Suggestions for public professional enrollment, not an eligibility allow-list.
+ *
+ * Grid accepts future healthcare professions into a pending human-review state.
+ * Opportunity-specific policy and credential checks decide whether that person may
+ * receive regulated work; adding a new profession must not require rebuilding the
+ * enrollment engine.
+ */
+export const gridContractorProviderTypes = [
+  "Registered Nurse",
+  "Nurse Practitioner",
+  "Physician Assistant",
+  "Physician",
+  "Licensed Practical Nurse",
+  "Nurse Injector",
+  "Physical Therapist",
+  "Occupational Therapist",
+  "Speech Therapist",
+  "Behavioral Health Professional",
+  "Dentist",
+  "Dental Hygienist",
+  "Pharmacist",
+  "Paramedic",
+  "Home Health Professional",
+  "Imaging Professional",
+  "Laboratory Professional",
+  "Healthcare Technician",
+  "Other Healthcare Professional",
+] as const;
 export const gridPayoutStatuses = ["estimated", "approved", "paid", "hold", "void"] as const;
 
 /**
@@ -132,9 +160,9 @@ export const gridContractorEnrollmentSchema = z.object({
     .regex(/[A-Z]/, "Password must include an uppercase letter.")
     .regex(/[0-9]/, "Password must include a number.")
     .regex(/[^A-Za-z0-9]/, "Password must include a symbol."),
-  providerType: z.enum(gridContractorProviderTypes),
-  credential: z.enum(["RN", "NP", "PA"]),
-  specialty: z.string().trim().min(2).max(120).default("Aesthetic services"),
+  providerType: z.string().trim().min(2).max(120),
+  credential: z.string().trim().min(2).max(40),
+  specialty: z.string().trim().min(2).max(120),
   licenseType: z.string().trim().min(2).max(80).default("STATE_LICENSE"),
   licenseNumber: z.string().trim().min(2).max(120),
   licenseState: z.string().trim().min(2).max(40),

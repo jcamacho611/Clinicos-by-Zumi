@@ -6,17 +6,12 @@ const REQUIRED_ENV = [
   "ZUMI_CLOUDFLARE_MODEL",
 ] as const;
 
+const DEFAULT_GATEWAY_ID = "default";
+
 type ChatCompletionResponse = {
   model?: unknown;
-  choices?: Array<{
-    message?: {
-      content?: unknown;
-    };
-  }>;
-  usage?: {
-    prompt_tokens?: unknown;
-    completion_tokens?: unknown;
-  };
+  choices?: Array<{ message?: { content?: unknown } }>;
+  usage?: { prompt_tokens?: unknown; completion_tokens?: unknown };
 };
 
 function configuredValue(env: ZumiEnv, name: string) {
@@ -43,8 +38,13 @@ async function invokeCloudflare(
   const headers: Record<string, string> = {
     authorization: `Bearer ${config.apiToken}`,
     "content-type": "application/json",
+    // Workers AI requests through Cloudflare's AI REST API require a gateway ID.
+    // `default` is a documented first-use path and auto-creates the account gateway.
+    "cf-aig-gateway-id": config.gatewayId || DEFAULT_GATEWAY_ID,
+    // Preserve provider-side metadata while preventing raw prompts/completions from
+    // being persisted in AI Gateway logs by default.
+    "cf-aig-collect-log-payload": "false",
   };
-  if (config.gatewayId) headers["cf-aig-gateway-id"] = config.gatewayId;
 
   const response = await fetch(endpointFor(config.accountId), {
     method: "POST",
@@ -61,9 +61,7 @@ async function invokeCloudflare(
     }),
   });
 
-  if (!response.ok) {
-    throw new Error(`Cloudflare Workers AI returned HTTP ${response.status}.`);
-  }
+  if (!response.ok) throw new Error(`Cloudflare Workers AI returned HTTP ${response.status}.`);
 
   const payload = (await response.json()) as ChatCompletionResponse;
   const text = payload.choices?.[0]?.message?.content;
@@ -75,29 +73,17 @@ async function invokeCloudflare(
     text,
     inputTokens: integerUsage(payload.usage?.prompt_tokens),
     outputTokens: integerUsage(payload.usage?.completion_tokens),
-    // Workers AI billing is infrastructure/provider usage and may include free-tier
-    // allowance. Do not fabricate a per-request dollar amount from token counts.
     costMicroUsd: 0,
     modelId: typeof payload.model === "string" && payload.model.trim() ? payload.model : config.model,
   };
 }
 
-/**
- * Cloudflare Workers AI adapter for Zumi.
- *
- * Cloudflare exposes an OpenAI-compatible /ai/v1/chat/completions endpoint, so the
- * application can keep using native fetch and the existing governed Zumi boundary.
- * No Cloudflare or OpenAI SDK is required in the Next.js process.
- *
- * PHI remains disabled. A Cloudflare account/token and model connection do not by
- * themselves establish the legal, contractual, logging, retention, and deployment
- * controls required for protected health information.
- */
+/** Cloudflare Workers AI adapter behind the governed Zumi boundary. PHI remains disabled. */
 export function createCloudflareZumiAdapter(env: ZumiEnv = process.env): ProviderAdapter {
   const accountId = configuredValue(env, "ZUMI_CLOUDFLARE_ACCOUNT_ID");
   const apiToken = configuredValue(env, "ZUMI_CLOUDFLARE_API_TOKEN");
   const model = configuredValue(env, "ZUMI_CLOUDFLARE_MODEL");
-  const gatewayId = configuredValue(env, "ZUMI_CLOUDFLARE_GATEWAY_ID");
+  const gatewayId = configuredValue(env, "ZUMI_CLOUDFLARE_GATEWAY_ID") || DEFAULT_GATEWAY_ID;
 
   return {
     key: "cloudflare",

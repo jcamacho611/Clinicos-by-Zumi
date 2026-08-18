@@ -33,7 +33,7 @@ export default async function ActivatePage({ searchParams }: { searchParams: Pro
       <main className="min-h-screen" style={{ background: "var(--surface-paper-2)", color: "var(--text-on-paper)" }}>
         <header style={{ borderBottom: "var(--border-hair-light)", background: "var(--surface-paper)" }}>
           <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-            <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="text-xs" />
+            <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="h-[18px] w-[160px]" />
             <span className="hidden items-center gap-2 text-xs sm:flex" style={{ color: "var(--text-on-paper-dim)" }}>
               <LockKeyhole className="size-4" aria-hidden="true" />
               Signed paid-workspace activation

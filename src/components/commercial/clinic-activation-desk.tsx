@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { CheckCircle2, Copy, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { CheckCircle2, Copy, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Badge, Button, Card, DsSurface, Input, type BadgeTone } from "@/components/ds";
 
 type CheckoutView = {
@@ -21,7 +21,9 @@ type CheckoutView = {
   createdAt: string;
 };
 
-type Plan = { key: string; label: string; priceLabel: string };
+type RailProvider = "stripe" | "godaddy" | null;
+type Plan = { key: string; label: string; priceLabel: string; checkoutConfigured: boolean; railProvider: RailProvider };
+type RailSummary = { configuredPlanCount: number; totalPlanCount: number; nativeStripeReady: boolean };
 
 function money(cents: number | null) {
   if (cents === null) return "Review required";
@@ -34,16 +36,33 @@ function checkoutTone(status: string): BadgeTone {
   return "neutral";
 }
 
-export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheckouts: CheckoutView[]; plans: Plan[] }) {
+function railLabel(provider: RailProvider) {
+  if (provider === "stripe") return "Stripe recurring";
+  if (provider === "godaddy") return "GoDaddy manual";
+  return "Not configured";
+}
+
+export function ClinicActivationDesk({
+  initialCheckouts,
+  plans,
+  railSummary,
+}: {
+  initialCheckouts: CheckoutView[];
+  plans: Plan[];
+  railSummary: RailSummary;
+}) {
+  const firstConfiguredPlan = plans.find((plan) => plan.checkoutConfigured)?.key ?? "";
   const [checkouts, setCheckouts] = useState(initialCheckouts);
   const [clinicName, setClinicName] = useState("");
   const [email, setEmail] = useState("");
-  const [productKey, setProductKey] = useState(plans[0]?.key ?? "clinic_core");
+  const [productKey, setProductKey] = useState(firstConfiguredPlan);
   const [error, setError] = useState("");
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [activationUrl, setActivationUrl] = useState("");
   const [confirmIntentId, setConfirmIntentId] = useState("");
   const [pending, startTransition] = useTransition();
+  const selectedPlan = useMemo(() => plans.find((plan) => plan.key === productKey) ?? null, [plans, productKey]);
+  const allRailsReady = railSummary.configuredPlanCount === railSummary.totalPlanCount;
 
   async function refresh() {
     const response = await fetch("/api/admin/commercial/clinic-checkouts", { cache: "no-store" });
@@ -53,6 +72,10 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
   }
 
   function createCheckout() {
+    if (!selectedPlan?.checkoutConfigured) {
+      setError("This recurring plan does not have an approved checkout rail configured.");
+      return;
+    }
     setError("");
     setActivationUrl("");
     startTransition(async () => {
@@ -97,6 +120,26 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
     });
   }
 
+  function issueActivation(intentId: string) {
+    setError("");
+    setCheckoutUrl("");
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/commercial/clinic-checkouts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "issue_activation", intentId }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Activation link could not be issued.");
+        setActivationUrl(payload.result.activationUrl);
+        await refresh();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Activation link could not be issued.");
+      }
+    });
+  }
+
   async function copy(value: string) {
     await navigator.clipboard.writeText(value);
   }
@@ -110,17 +153,47 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
         >
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: "radial-gradient(circle at 82% 20%, color-mix(in oklch, var(--gold-500) 15%, transparent), transparent 28%), radial-gradient(circle at 16% 85%, color-mix(in oklch, var(--cyan-500) 18%, transparent), transparent 30%)" }}
+            style={{ background: "radial-gradient(circle at 82% 20%, color-mix(in oklch, var(--gold-500) 15%, transparent), transparent 28%), radial-gradient(circle at 16% 85%, color-mix(in oklch, var(--accent-signal) 16%, transparent), transparent 30%)" }}
           />
           <div className="relative max-w-4xl">
-            <Badge tone="mapping">Commercial activation</Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="mapping">Commercial activation</Badge>
+              <Badge tone={allRailsReady ? "resolved" : railSummary.configuredPlanCount ? "analyzing" : "signal"}>
+                {railSummary.configuredPlanCount}/{railSummary.totalPlanCount} recurring rails configured
+              </Badge>
+              {railSummary.nativeStripeReady ? <Badge tone="resolved">Native Stripe recurring</Badge> : <Badge tone="observing">Manual fallback</Badge>}
+            </div>
             <h1 className="mt-6 text-balance font-extrabold" style={{ fontSize: "var(--text-h1)", letterSpacing: "var(--tracking-tight)", lineHeight: "var(--leading-tight)" }}>
               Money first. Evidence second. Access only after both agree.
             </h1>
             <p className="mt-5 max-w-3xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              Create the server-owned clinic subscription checkout, send the official GoDaddy rail, then reconcile only after independently verifying the expected payment. Klinikos keeps checkout, evidence, entitlement, organization provisioning, and owner activation as separate facts.
+              {railSummary.nativeStripeReady
+                ? "Native Stripe recurring Checkout is the preferred clinic-plan rail. Only signed live invoice evidence can activate or renew access; browser return never does. Exact-plan GoDaddy links remain the operator-managed fallback when native recurring Stripe is not enabled."
+                : "Exact-plan GoDaddy paylinks remain the current operator-managed recurring fallback. A plan is sellable here only when its own approved rail is configured, and staff reconcile payment manually because this fallback has no processor webhook or authoritative verification API."}
             </p>
           </div>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Recurring plan checkout readiness">
+          {plans.map((plan) => (
+            <Card key={plan.key}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-extrabold">{plan.label}</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{plan.priceLabel}</p>
+                </div>
+                <Badge tone={plan.checkoutConfigured ? "resolved" : "signal"}>{plan.checkoutConfigured ? "Rail ready" : "Not configured"}</Badge>
+              </div>
+              <p className="mt-3 text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{railLabel(plan.railProvider)}</p>
+              <p className="mt-2 text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+                {plan.railProvider === "stripe"
+                  ? "Server-owned monthly price. Signed Stripe invoice evidence controls activation and renewal."
+                  : plan.railProvider === "godaddy"
+                    ? "Exact plan paylink is configured. Payment still requires human reconciliation before access changes."
+                    : "No approved recurring checkout rail is configured for this plan, so this desk will not create its checkout."}
+              </p>
+            </Card>
+          ))}
         </section>
 
         {error ? (
@@ -134,9 +207,9 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
-                <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the plan before they pay.</h2>
+                <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the exact plan before they pay.</h2>
               </div>
-              <Badge tone="observing">Server-owned</Badge>
+              <Badge tone="observing">Server-owned intent</Badge>
             </div>
 
             <div className="mt-7 grid gap-6 sm:grid-cols-2">
@@ -152,12 +225,24 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                 value={productKey}
                 onChange={(event) => setProductKey(event.target.value)}
               >
-                {plans.map((plan) => <option key={plan.key} value={plan.key}>{plan.label} · {plan.priceLabel}</option>)}
+                {!firstConfiguredPlan ? <option value="">No recurring plan rail configured</option> : null}
+                {plans.map((plan) => (
+                  <option disabled={!plan.checkoutConfigured} key={plan.key} value={plan.key}>
+                    {plan.label} · {plan.priceLabel}{plan.checkoutConfigured ? ` · ${railLabel(plan.railProvider)}` : " · not configured"}
+                  </option>
+                ))}
               </select>
             </label>
 
+            {!selectedPlan?.checkoutConfigured ? (
+              <div className="mt-5 flex items-start gap-3 p-4" style={{ background: "color-mix(in oklch, var(--status-signal) 7%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-signal) 25%, transparent)", borderRadius: "var(--radius-md)" }}>
+                <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-signal)" }} aria-hidden="true" />
+                <p className="text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
+              </div>
+            ) : null}
+
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Button disabled={pending || !clinicName.trim() || !email.trim()} onClick={createCheckout}>
+              <Button disabled={pending || !clinicName.trim() || !email.trim() || !selectedPlan?.checkoutConfigured} onClick={createCheckout}>
                 {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <ExternalLink className="size-4" aria-hidden="true" />}
                 Create checkout
               </Button>
@@ -169,7 +254,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             {checkoutUrl ? (
               <div className="mt-7 p-5" style={{ background: "color-mix(in oklch, var(--accent-signal) 8%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--accent-signal) 26%, transparent)", borderRadius: "var(--radius-md)" }}>
                 <Badge tone="mapping">Checkout ready</Badge>
-                <p className="mt-4 text-sm font-extrabold">Send or open the official payment rail.</p>
+                <p className="mt-4 text-sm font-extrabold">Send or open the exact plan payment rail.</p>
                 <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>Opening or returning from checkout is never payment evidence.</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <a className="inline-flex min-h-11 items-center gap-2 px-4 text-xs font-extrabold" href={checkoutUrl} target="_blank" rel="noreferrer" style={{ background: "var(--accent-signal)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}>
@@ -182,15 +267,17 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
           </Card>
 
           <Card dark>
-            <Badge tone="analyzing">02 · Human verification</Badge>
+            <Badge tone="analyzing">02 · Payment truth</Badge>
             <ShieldCheck className="mt-6 size-6" style={{ color: "var(--gold-300)" }} aria-hidden="true" />
-            <h2 className="mt-4 text-2xl font-extrabold tracking-tight">Reconciliation is consequential.</h2>
+            <h2 className="mt-4 text-2xl font-extrabold tracking-tight">Processor evidence is consequential.</h2>
             <p className="mt-4 text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              Confirm only after independently seeing the expected payment in the real GoDaddy payment records. The first click arms the action. The second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link.
+              {railSummary.nativeStripeReady
+                ? "For native Stripe recurring checkout, signed live invoice evidence activates or renews the paid plan and its configured allowances. Staff cannot manually mark a Stripe checkout paid. GoDaddy fallback checkouts remain a two-click human reconciliation process."
+                : "For the GoDaddy fallback, confirm only after independently seeing the expected payment in real processor records. The first click arms the action; the second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link."}
             </p>
             <div className="mt-7 border-t pt-5" style={{ borderColor: "var(--line-dark)" }}>
               <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
-              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>Processor verification remains false until a real processor verification connector exists.</p>
+              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>A browser return never activates software. Payment entitlement also does not enable production PHI, approve connectors, or certify deployment readiness.</p>
             </div>
           </Card>
         </section>
@@ -203,7 +290,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                 <Badge tone="resolved">Subscription activated</Badge>
                 <h2 className="mt-4 text-xl font-extrabold">The owner setup link is ready.</h2>
                 <p className="mt-2 max-w-3xl text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-                  This signed link expires automatically and cannot choose a different organization, email, plan, role, or price. Send it only to the intended clinic owner.
+                  Verified paid software access is active. This does not enable production PHI, approve connectors, or certify deployment readiness. The signed setup link expires automatically and cannot choose a different organization, email, plan, role, or price.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Button variant="gold" size="sm" onClick={() => copy(activationUrl)}>Copy activation link <Copy className="size-3.5" aria-hidden="true" /></Button>
@@ -239,17 +326,25 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                     <Badge tone={checkoutTone(checkout.status)}>{checkout.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkout.email} · {checkout.productLabel} · {money(checkout.expectedAmountCents)}</p>
-                  <p className="mt-2 text-[12px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"}</p>
+                  <p className="mt-2 text-[12px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"} · {checkout.provider}</p>
                 </div>
                 <div>
-                  {checkout.status === "created" ? (
+                  {checkout.status === "created" && checkout.provider === "godaddy" ? (
                     <Button
                       variant={confirmIntentId === checkout.id ? "gold" : "outline"}
                       size="sm"
                       disabled={pending}
                       onClick={() => reconcile(checkout.id)}
                     >
-                      {confirmIntentId === checkout.id ? "Confirm: payment verified" : "Record verified payment"}
+                      {confirmIntentId === checkout.id ? "Confirm: payment independently verified" : "Record reconciled payment"}
+                    </Button>
+                  ) : checkout.status === "created" && checkout.provider === "stripe" ? (
+                    <span className="inline-flex items-center gap-2 text-xs font-extrabold" style={{ color: "var(--status-analyzing)" }}>
+                      <ShieldCheck className="size-4" aria-hidden="true" /> Awaiting signed Stripe invoice
+                    </span>
+                  ) : checkout.status === "completed" && checkout.provider === "stripe" ? (
+                    <Button variant="gold" size="sm" disabled={pending} onClick={() => issueActivation(checkout.id)}>
+                      Issue owner activation link
                     </Button>
                   ) : (
                     <span className="inline-flex items-center gap-2 text-xs font-extrabold" style={{ color: "var(--status-resolved)" }}>

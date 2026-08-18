@@ -32,26 +32,29 @@ Each journey owns its fixtures, cleans up after itself where applicable, and exi
 
 ## Current automated journeys
 
-The current runner executes **10** journeys in this order:
+The current candidate runner executes **11** journeys in this order:
 
 | Order | File | Proves |
 | --- | --- | --- |
 | 1 | `fresh-deploy-journey.ts` | An empty PostgreSQL database can receive every committed migration, the required tables exist, `migrate deploy` is idempotent, first real work succeeds, and restarted code can read persisted state. |
 | 2 | `commercial-journey.mts` | Checkout/payment evidence and entitlement are separate facts; unverified evidence cannot activate service; verified evidence can be reconciled idempotently; browser-return truth is insufficient. |
-| 3 | `activation-journey.mts` | A paid buyer can progress through verified commercial evidence, subscription/entitlement, organization provisioning, role/session setup, and first useful Klinikos entry without treating payment alone as authorization. |
-| 4 | `operations-journey.mts` | Appointment/operational risk produces real work, no unavailable communication connector is falsely represented as having sent anything, human resolution closes the action, and the lifecycle is audited. |
-| 5 | `grid-journey.mts` | Need → match/offer → acceptance → reservation → fulfillment/financial state respects eligibility and ownership; reservations cannot precede acceptance or be duplicated. |
-| 6 | `grid-trust-journey.mts` | Disputes and safety incidents are distinct governed records, both can hold a reservation, duplicates/cross-tenant misuse are refused, and resolution language never invents payout/suspension facts. |
-| 7 | `zumi-journey.ts` | Zumi degrades truthfully when a provider is unavailable; deterministic prohibitions and RBAC survive provider availability; founder breadth does not widen authorization; PHI does not cross an unapproved boundary; unevidenced governed recommendations are dropped. |
-| 8 | `tenant-isolation-journey.mts` | Adversarial tenant A cannot read or mutate tenant B patient/list/audit/commercial/Grid state; tenant A cleanup does not damage tenant B. |
-| 9 | `role-routing-journey.ts` | Owner/admin/front desk/provider/clinical/case/viewer/patient/Grid/student roles reach useful allowed surfaces while route guards/session audiences prevent privilege crossover. |
-| 10 | `failure-recovery-journey.ts` | Retries, duplicate requests, interrupted flows, and simultaneous reservations fail safely; a scarce resource gets one winner; the loser leaves no partial state; an idempotent retry returns the same durable result. |
+| 3 | `stripe-payment-journey.mts` | Signed-normalized Stripe evidence reaches the real provider-neutral tables; amount, currency, tenant, Checkout Session and live/test mode mismatches fail; an identical replay is idempotent while an event-ID collision with different evidence is refused; failure remains unpaid; refund-before-success ordering preserves final reversal truth; migration 53 accepts populated legacy processor evidence without inventing a historical mode. |
+| 4 | `activation-journey.mts` | A paid buyer can progress through verified commercial evidence, subscription/entitlement, organization provisioning, role/session setup, and first useful Klinikos entry without treating payment alone as authorization. |
+| 5 | `operations-journey.mts` | Appointment/operational risk produces real work, no unavailable communication connector is falsely represented as having sent anything, human resolution closes the action, and the lifecycle is audited. |
+| 6 | `grid-journey.mts` | Need → match/offer → acceptance → reservation → fulfillment/financial state respects eligibility and ownership; reservations cannot precede acceptance or be duplicated. |
+| 7 | `grid-trust-journey.mts` | Disputes and safety incidents are distinct governed records, both can hold a reservation, duplicates/cross-tenant misuse are refused, and resolution language never invents payout/suspension facts. |
+| 8 | `zumi-journey.ts` | Zumi degrades truthfully when a provider is unavailable; deterministic prohibitions and RBAC survive provider availability; founder breadth does not widen authorization; PHI does not cross an unapproved boundary; unevidenced governed recommendations are dropped. |
+| 9 | `tenant-isolation-journey.mts` | Adversarial tenant A cannot read or mutate tenant B patient/list/audit/commercial/Grid state; tenant A cleanup does not damage tenant B. |
+| 10 | `role-routing-journey.ts` | Owner/admin/front desk/provider/clinical/case/viewer/patient/Grid/student roles reach useful allowed surfaces while route guards/session audiences prevent privilege crossover. |
+| 11 | `failure-recovery-journey.ts` | Retries, duplicate requests, interrupted flows, and simultaneous reservations fail safely; a scarce resource gets one winner; the loser leaves no partial state; an idempotent retry returns the same durable result. |
 
 ## What is not fully automated here
 
 Production readiness is not a single journey because some facts live outside the repository: deployment host state, DNS/TLS, BAAs/contracts, external vendor credentials, real settlement/payouts, production monitoring, and independent browser/device behavior.
 
 Browser/mobile QA is therefore still a separate release gate even though responsive code is covered by build/tests.
+
+Stripe signature verification is covered separately at the Next.js webhook boundary with the official Stripe library and raw request bodies. The database journey starts only after that normalization boundary and proves the durable financial consequences; neither layer substitutes for the other.
 
 Likewise, a green journey does not establish regulatory compliance or that an external vendor connection is production-approved.
 
@@ -88,3 +91,5 @@ On 2026-08-14, the exact final Grid MVP candidate (`740721959cbd3aa180763ebc7725
 The exact final public Living Home candidate (`4f6d5f464f8ce85f15ce1a6ae9548105f058e950`) also passed the full Quality gate before merging as `2b570dd912633290f63cb7e412b56e3c7d107c7b`.
 
 These checks prove the repository candidates. They do not by themselves prove that the newest `main` commit has completed deployment on the external production host.
+
+On 2026-08-16 America/New_York, PR #96 exact head `31592d05e46e3c37bd91e5f3044ebd8595ab9f0c` also passed the complete Quality workflow: fresh database migration, type-check, lint, 604 automated tests, all ten PostgreSQL-backed MVP journeys, production build/start smoke, and the exact Render deploy contract. It merged as `main@7833eb7f4469705e3b1aeb9fa645e96532d6ca45`; that merge commit's push Quality gate also completed successfully.

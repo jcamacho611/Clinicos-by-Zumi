@@ -330,22 +330,13 @@ export function interviewProgress(answers: InterviewAnswers) {
 // ---------------------------------------------------------------------------
 
 /**
- * Price of the paid Operational Audit, derived from reported provider scale.
+ * Price of the Clinic Operating Analysis from the canonical commercial offer.
  *
- * Server-derivable from the answers rather than carried in the request. A buyer
- * cannot name their own price, and an unanswered scale question falls to the lowest
- * tier rather than the highest — the failure mode is undercharging, not surprising
- * someone with a bill they did not agree to.
+ * The legacy helper remains for compatible call sites, but provider scale cannot
+ * change the price attached to the one configured GoDaddy paylink.
  */
-export function auditPriceForAnswers(answers: InterviewAnswers) {
-  switch (answers.provider_scale?.[0]) {
-    case "1": return 750;
-    case "2_5": return 1250;
-    case "6_15": return 2500;
-    case "16_30": return 4000;
-    case "30_plus": return 5000;
-    default: return 750;
-  }
+export function auditPriceForAnswers(_answers: InterviewAnswers) {
+  return demoOffers.private_workflow_demo.priceCents / 100;
 }
 
 /**

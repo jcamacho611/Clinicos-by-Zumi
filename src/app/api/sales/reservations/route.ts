@@ -3,7 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { checkSalesIntakeRateLimit, recordSalesIntakeAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { getClinicSession } from "@/lib/auth/session";
-import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
+import { createPreferredCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { createPublicDemoReservation, listSalesDemoWorkspace } from "@/lib/repositories/sales-demo-repository";
@@ -37,15 +37,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await createPublicDemoReservation(await request.json().catch(() => null), metadata);
-    let checkout: Awaited<ReturnType<typeof createGoDaddyCommercialCheckout>> | null = null;
+    let checkout: Awaited<ReturnType<typeof createPreferredCommercialCheckout>> | null = null;
     let checkoutNotice = "Your request is saved for human review before payment.";
 
-    // The $500 Clinic Operating Analysis has an exact configured GoDaddy paylink.
-    // Create the server-owned checkout intent before exposing that external link so
-    // a browser redirect can never be confused with verified payment.
+    // The $500 Clinic Operating Analysis has one server-owned amount. Stripe is used
+    // only when both live Checkout and signed-webhook verification are configured;
+    // otherwise the existing GoDaddy/manual-reconciliation rail remains available.
     if (result.reservation.selectedOffer === "private_workflow_demo") {
       try {
-        checkout = await createGoDaddyCommercialCheckout({
+        checkout = await createPreferredCommercialCheckout({
           organizationId: result.reservation.salesOwnerOrganizationId,
           email: result.reservation.contactEmail,
           productKey: "operational_audit",
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
               actorType: "system",
               eventType: "checkout_ready",
               toStatus: result.reservation.status,
-              note: "Klinikos created a server-owned checkout intent before exposing the configured GoDaddy payment page.",
+              note: "Klinikos created a server-owned checkout intent before exposing the configured payment page.",
               metadata: {
                 checkoutIntentId: checkout.intentId,
                 provider: checkout.provider,
@@ -73,7 +73,9 @@ export async function POST(request: Request) {
             },
           }),
         ]);
-        checkoutNotice = "Your $500 analysis is reserved. Continue to the secure GoDaddy payment page; access is not marked paid until payment is reconciled.";
+        checkoutNotice = checkout.provider === "stripe"
+          ? "Your $500 analysis is reserved. Continue to secure Stripe Checkout; payment is recognized only after Klinikos verifies Stripe's signed server event."
+          : "Your $500 analysis is reserved. Continue to the secure GoDaddy payment page; payment is recognized only after authorized reconciliation.";
       } catch {
         await db.$transaction([
           db.demoReservation.update({

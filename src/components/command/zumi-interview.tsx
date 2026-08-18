@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   HumanReviewBanner,
@@ -18,33 +18,28 @@ import {
   RevenueSignalCard,
   WorkflowLeakageCard,
 } from "@/components/command/zumi-operating-map";
+import { buildPaidAnalysisHandoffHref } from "@/lib/sales/intake-handoff";
 import {
   deriveOperatingMap,
   deriveSignalSummary,
-  engagementOffers,
   guidedQuestions,
   interviewProgress,
   type InterviewAnswers,
   type MissionPhaseKey,
 } from "@/lib/sales/zumi-command";
 
-/**
- * The Zumi interview.
- *
- * One focused question at a time. Each answer becomes a clinic signal and the
- * operating map updates beside it, so the operator watches their own clinic being
- * organised rather than filling in a form.
- *
- * Everything here is client-side reasoning over the operator's own answers — no
- * clinical inference, and no PHI is requested at any point.
- */
+export type PublicAnalysisOffer = {
+  name: string;
+  priceLabel: string;
+  creditForward: string;
+};
 
 export function ClinicSignalChips({ signals }: { signals: string[] }) {
   if (!signals.length) return null;
   return (
     <ul aria-label="Clinic signals captured" className="flex flex-wrap gap-1.5">
       {signals.map((signal) => (
-        <li className="border border-cyan-300/30 bg-cyan-400/[.08] px-2.5 py-1 text-[12px] font-bold text-cyan-100" key={signal}>
+        <li className="border border-[#e6817b]/25 bg-[#e6817b]/[.07] px-2.5 py-1 text-[12px] font-bold text-[#efaaa1]" key={signal}>
           {signal}
         </li>
       ))}
@@ -81,16 +76,16 @@ export function GuidedQuestionCard({
           return (
             <button
               aria-pressed={isSelected}
-              className={`flex min-h-[44px] items-center gap-2 border px-4 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${
+              className={`flex min-h-[44px] items-center gap-2 border px-4 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6817b] ${
                 isSelected
-                  ? "border-cyan-300 bg-cyan-400/15 text-white"
+                  ? "border-[#e6817b]/45 bg-[#e6817b]/12 text-white"
                   : "border-white/15 bg-white/[.02] text-slate-300 hover:border-white/40 hover:text-white"
               }`}
               key={option.value}
               onClick={() => onToggle(option.value)}
               type="button"
             >
-              {isSelected && <Check aria-hidden="true" className="size-4 text-cyan-300" />}
+              {isSelected && <Check aria-hidden="true" className="size-4 text-[#efaaa1]" />}
               {option.label}
             </button>
           );
@@ -103,7 +98,7 @@ export function GuidedQuestionCard({
   );
 }
 
-export function ZumiInterview() {
+export function ZumiInterview({ analysisOffer }: { analysisOffer: PublicAnalysisOffer }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<InterviewAnswers>({});
 
@@ -122,6 +117,7 @@ export function ZumiInterview() {
 
   const map = useMemo(() => deriveOperatingMap(answers), [answers]);
   const summary = useMemo(() => deriveSignalSummary(answers), [answers]);
+  const paidAnalysisHref = useMemo(() => buildPaidAnalysisHandoffHref(answers), [answers]);
 
   const phase: MissionPhaseKey = progress.complete ? "signal" : progress.answered > 0 ? "map" : "interview";
 
@@ -181,26 +177,33 @@ export function ZumiInterview() {
               </div>
               <QualificationSummary answeredCount={progress.answered} summary={summary} totalCount={progress.total} />
 
-              <section aria-labelledby="engagement-heading">
-                <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-cyan-300" id="engagement-heading">
-                  Choose how to proceed
-                </h2>
-                <div className="mt-5 grid gap-5 lg:grid-cols-3">
-                  {engagementOffers.map((offer) => (
-                    <article className="flex flex-col border border-white/10 bg-white/[.04] p-6" key={offer.key}>
-                      <h3 className="text-lg font-extrabold tracking-[-.03em] text-white">{offer.name}</h3>
-                      <p className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-[#e6c55b]">{offer.shortPrice}</p>
-                      <p className="mt-4 text-[12px] leading-6 text-slate-400"><strong className="font-bold text-slate-200">Best for:</strong> {offer.bestFor}</p>
-                      <p className="mt-3 text-[12px] leading-6 text-slate-400"><strong className="font-bold text-slate-200">What happens:</strong> {offer.whatHappens}</p>
-                      <p className="mt-3 text-[11px] leading-5 text-slate-500">{offer.creditForward}</p>
-                      <div className="mt-auto pt-6">
-                        <Button asChild className="w-full" variant="primary"><Link href="/private-demo">{offer.cta}</Link></Button>
-                      </div>
-                    </article>
-                  ))}
+              <section aria-labelledby="engagement-heading" className="overflow-hidden border border-[#e6817b]/16 bg-[#100708]">
+                <div className="grid gap-7 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+                  <div>
+                    <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">Next paid step</p>
+                    <h2 className="mt-3 text-3xl font-semibold tracking-[-.045em] text-white" id="engagement-heading">{analysisOffer.name}</h2>
+                    <p className="mt-3 text-4xl font-semibold tracking-[-.05em] text-[#d6b787]">{analysisOffer.priceLabel}</p>
+                    <p className="mt-4 max-w-2xl text-xs leading-6 text-slate-400">
+                      Save the clinic and buyer details, create the server-owned checkout intent, then continue to the configured secure payment rail. This purchases the analysis only; it does not activate production software.
+                    </p>
+                    <p className="mt-3 max-w-2xl text-[11px] leading-5 text-slate-500">{analysisOffer.creditForward}</p>
+                  </div>
+                  <Button asChild className="min-w-[230px]" variant="primary">
+                    <Link href={paidAnalysisHref}>Continue to paid analysis <ArrowRight className="size-4" /></Link>
+                  </Button>
                 </div>
-                <div className="mt-5"><HumanReviewBanner /></div>
+                <div className="grid gap-4 border-t border-white/10 bg-black/15 px-6 py-5 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="flex items-start gap-3 text-[11px] leading-5 text-slate-400">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#efaaa1]" />
+                    Only matching operating-map categories are carried into the next screen. Contact details, patient data, exact counts, vendor names, and financial values are not placed in the continuation URL.
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-[11px] font-bold">
+                    <Link className="text-[#efaaa1] hover:text-white" href="/pricing">See current pricing</Link>
+                    <Link className="text-[#efaaa1] hover:text-white" href="/founding-clinic">Review implementation path</Link>
+                  </div>
+                </div>
               </section>
+              <HumanReviewBanner />
             </div>
           )}
         </div>
@@ -208,7 +211,7 @@ export function ZumiInterview() {
         <aside className="lg:sticky lg:top-8">
           <ZumiBriefingPanel active={!progress.complete}>
             {progress.complete
-              ? "Your operating map is built. Review the signal below, then choose how you want to proceed. A human reviews every request before anything is activated."
+              ? "Your operating map is built. Review the signal below, then continue to the paid Clinic Operating Analysis if you want Klinikos to validate the map with you. A human reviews the work before any later implementation decision."
               : "I ask one operational question at a time and turn each answer into a clinic signal. Your operating map builds beside this as we go. Do not enter patient names, records, diagnoses, or any PHI."}
           </ZumiBriefingPanel>
           <div className="mt-6">

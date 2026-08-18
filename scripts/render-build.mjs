@@ -19,8 +19,17 @@ function run(command, args, options = {}) {
 
 const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 
+// Compile the exact application candidate before any production schema mutation.
+// This prevents a TypeScript/Next build failure from advancing the database while
+// the prior application release remains the only deployable artifact. Migrations
+// must still remain backward-compatible with the previous app during rollout.
+console.log("Building Klinikos for production before database migration...");
+run(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"], {
+  env: process.env,
+});
+
 if (databaseUrl) {
-  console.log("Applying Klinikos database migrations before deployment...");
+  console.log("Application build passed. Applying Klinikos database migrations for deployment...");
   run(
     process.execPath,
     ["node_modules/prisma/build/index.js", "migrate", "deploy"],
@@ -33,11 +42,6 @@ if (databaseUrl) {
   );
 } else {
   console.warn(
-    "DATABASE_URL is not configured during the Render build. Building the public Klinikos shell without applying database migrations.",
+    "DATABASE_URL is not configured during the Render build. The application was built without applying database migrations.",
   );
 }
-
-console.log("Building Klinikos for production...");
-run(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"], {
-  env: process.env,
-});

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 import {
   buildDemoRecapDraft,
   buildSyntheticDemoScenario,
@@ -28,18 +29,52 @@ const validIntake = {
   acknowledgesSyntheticData: true,
 };
 
-describe("Private Workflow Demo safety and lifecycle rules", () => {
+describe("Clinic Operating Analysis safety and lifecycle rules", () => {
   it("validates a complete clinic intake without accepting tenant identifiers", () => {
     expect(salesIntakeSchema.parse(validIntake).clinicName).toBe("Northstar Family Practice");
     expect(salesIntakeSchema.safeParse({ ...validIntake, organizationId: "org-other" }).success).toBe(false);
     expect(salesIntakeSchema.safeParse({ ...validIntake, acknowledgesSyntheticData: false }).success).toBe(false);
   });
 
-  it("keeps prices server-controlled and preserves credit-forward language", () => {
-    expect(demoOffers.private_workflow_demo.priceCents).toBe(50_000);
-    expect(demoOffers.founding_clinic_evaluation.priceCents).toBe(150_000);
-    expect(demoOffers.founding_clinic_program.priceCents).toBe(800_000);
-    expect(demoOffers.private_workflow_demo.creditForward).toContain("credited");
+  it("accepts missed calls as the same exact bottleneck used by the guided operating map", () => {
+    const parsed = salesIntakeSchema.parse({
+      ...validIntake,
+      biggestPainPoint: "missed_calls",
+      painPoints: ["missed_calls", "follow_ups"],
+    });
+    expect(parsed.biggestPainPoint).toBe("missed_calls");
+    expect(parsed.painPoints).toContain("missed_calls");
+
+    const scenario = buildSyntheticDemoScenario({
+      clinicType: "Primary care",
+      biggestPainPoint: "missed_calls",
+      painPoints: ["missed_calls"],
+    });
+    expect(scenario.primaryPainPoint).toBe("missed_calls");
+    expect(scenario.syntheticTask.title).toContain("missed calls");
+    expect(scenario.syntheticRevenueLeak.category).toBe("Missed calls workflow delay");
+    expect(scenario.syntheticRevenueLeak.estimateStatus).toBe("Illustrative only");
+  });
+
+  it("keeps compatibility offer display truth aligned with the canonical commercial catalog", () => {
+    expect(demoOffers.private_workflow_demo).toMatchObject({
+      name: clinicCommercialOffers.privateWorkflowReview.name,
+      priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
+      shortPrice: clinicCommercialOffers.privateWorkflowReview.priceLabel,
+      creditForward: clinicCommercialOffers.privateWorkflowReview.creditForward,
+    });
+    expect(demoOffers.founding_clinic_evaluation).toMatchObject({
+      name: clinicCommercialOffers.foundingEvaluation.name,
+      priceCents: clinicCommercialOffers.foundingEvaluation.priceCents,
+      shortPrice: clinicCommercialOffers.foundingEvaluation.priceLabel,
+      creditForward: clinicCommercialOffers.foundingEvaluation.creditForward,
+    });
+    expect(demoOffers.founding_clinic_program).toMatchObject({
+      name: clinicCommercialOffers.foundingImplementation.name,
+      priceCents: clinicCommercialOffers.foundingImplementation.priceCents,
+      shortPrice: clinicCommercialOffers.foundingImplementation.priceLabel,
+      creditForward: clinicCommercialOffers.foundingImplementation.creditForward,
+    });
   });
 
   it("generates an explicitly synthetic, human-reviewed scenario", () => {
@@ -59,10 +94,12 @@ describe("Private Workflow Demo safety and lifecycle rules", () => {
     expect(canTransitionDemoReservation("moved_to_founding", "inquiry")).toBe(false);
   });
 
-  it("marks generated recaps as drafts requiring human review", () => {
+  it("marks generated recaps as drafts requiring human review and uses canonical next-step language", () => {
     const recap = buildDemoRecapDraft({ clinicName: "Northstar", clinicType: "Primary care", biggestPainPoint: "referrals", painPoints: ["referrals"], scenarioTitle: "Referral command" });
     expect(recap.status).toBe("draft");
     expect(recap.reviewStatus).toBe("human_review_required");
+    expect(recap.callToAction).toContain("Implementation Blueprint");
     expect(recap.callToAction).toContain("human reviews");
+    expect(recap.recommendedNextStep).not.toContain("Founding Clinic Evaluation");
   });
 });

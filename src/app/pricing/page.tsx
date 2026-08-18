@@ -44,7 +44,7 @@ export default function PricingPage() {
       <main className="min-h-screen" style={{ background: "var(--surface-paper-2)", color: "var(--text-on-paper)" }}>
         <header style={{ background: "var(--surface-paper)", borderBottom: "var(--border-hair-light)" }}>
           <div className="mx-auto flex min-h-20 max-w-7xl items-center gap-5 px-5 sm:px-8">
-            <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="text-xs" />
+            <KlinikosWordmark href="/" markClassName="h-8 w-8" textClassName="h-[18px] w-[160px]" />
             <nav className="ml-auto flex items-center gap-5" aria-label="Pricing navigation">
               <Link className="hidden text-xs font-bold underline-offset-4 hover:underline sm:inline" href="/" style={{ color: "var(--text-on-paper-dim)" }}>
                 Living Home

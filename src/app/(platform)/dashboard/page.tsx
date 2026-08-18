@@ -1,4 +1,5 @@
 import { ClinicFirstLoginLaunch } from "@/components/commercial/clinic-first-login-launch";
+import { HomeOperatingRailPanel } from "@/components/clinic/home-operating-rail";
 import { LivingHome } from "@/components/clinic/living-home";
 import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";

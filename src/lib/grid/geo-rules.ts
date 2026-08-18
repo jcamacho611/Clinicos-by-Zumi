@@ -46,6 +46,29 @@ export function calculateDistanceMiles(origin: GridCoordinates, destination: Gri
   return EARTH_RADIUS_MILES * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
+export function rankGridCoordinatesByDistance<T extends GridCoordinates>(
+  candidates: readonly T[],
+  origin: GridCoordinates | null,
+  radiusMiles: number | null,
+) {
+  const boundedRadius = origin && radiusMiles != null && Number.isFinite(radiusMiles) && radiusMiles >= 0
+    ? radiusMiles
+    : null;
+
+  return candidates
+    .map((candidate, originalIndex) => ({
+      ...candidate,
+      originalIndex,
+      distanceMiles: origin ? calculateDistanceMiles(origin, candidate) : null,
+    }))
+    .filter((candidate) => boundedRadius == null || candidate.distanceMiles! <= boundedRadius)
+    .sort((left, right) => {
+      if (left.distanceMiles == null || right.distanceMiles == null) return left.originalIndex - right.originalIndex;
+      return left.distanceMiles - right.distanceMiles || left.originalIndex - right.originalIndex;
+    })
+    .map(({ originalIndex: _originalIndex, ...candidate }) => candidate);
+}
+
 /**
  * Geographic hard-gate selection for saved Grid demand.
  *

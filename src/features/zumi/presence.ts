@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const zumiSurfaces = [
   "platform",
+  "intelligence",
   "grid",
   "clinic_portal",
   "provider_portal",

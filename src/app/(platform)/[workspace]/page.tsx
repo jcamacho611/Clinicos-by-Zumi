@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { EscalationsWorkspaceReal } from "@/components/clinic/escalations-workspace-real";
+import { InsuranceWorkspaceReal } from "@/components/clinic/insurance-workspace-real";
+import { MessagesWorkspaceReal } from "@/components/clinic/messages-workspace-real";
+import { TasksWorkspaceReal } from "@/components/clinic/tasks-workspace-real";
 import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace-renderer";
+import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
 import { workspaceMeta } from "@/lib/navigation";
+import { listCareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
+import { listInsuranceWorkspace } from "@/lib/repositories/insurance-repository";
 
 export function generateStaticParams() {
   return workspaceSlugs.map((workspace) => ({ workspace }));
@@ -15,5 +23,18 @@ export async function generateMetadata({ params }: { params: Promise<{ workspace
 export default async function WorkspacePage({ params }: { params: Promise<{ workspace: string }> }) {
   const { workspace } = await params;
   const session = await requireClinicSession();
+  if (!canAccessWorkspace(session.role, workspace)) return notFound();
+  if (workspace === "tasks") {
+    return <TasksWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+  }
+  if (workspace === "messages") {
+    return <MessagesWorkspaceReal />;
+  }
+  if (workspace === "escalations") {
+    return <EscalationsWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+  }
+  if (workspace === "insurance") {
+    return <InsuranceWorkspaceReal workspace={await listInsuranceWorkspace(session)} />;
+  }
   return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />;
 }

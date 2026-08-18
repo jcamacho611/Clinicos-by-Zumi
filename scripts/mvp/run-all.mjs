@@ -11,6 +11,7 @@ const nodePath = [stubRoot, process.env.NODE_PATH].filter(Boolean).join(delimite
 const journeys = [
   "fresh-deploy-journey.ts",
   "commercial-journey.mts",
+  "stripe-payment-journey.mts",
   "activation-journey.mts",
   "operations-journey.mts",
   "grid-journey.mts",

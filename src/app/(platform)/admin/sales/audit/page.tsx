@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 
-const steps = ["Prospect", "Qualify", "Find pain", "Quantify", "Sell audit", "Collect payment", "Audit", "Prove value", "Founding clinic", "Implement"];
+const steps = ["Prospect", "Qualify", "Find pain", "Quantify", "Offer analysis", "Collect payment", "Analyze", "Prove value", "Founding clinic", "Implement"];
 
 type Form = {
   clinic: string; decisionMaker: string; email: string; locations: number; providers: number; staff: number;
@@ -11,13 +12,28 @@ type Form = {
   labs: boolean; claims: boolean; multiLocation: boolean;
 };
 
+type CheckoutResult = {
+  checkoutUrl: string;
+  provider: string;
+  processorVerificationAvailable: boolean;
+  expiresAt: string | null;
+  expectedAmountCents: number | null;
+};
+
 const initial: Form = { clinic:"", decisionMaker:"", email:"", locations:1, providers:1, staff:1, encounters:0, revenueBand:"unknown", insuranceMix:"mixed", billing:"unknown", monthlyTech:0, knownLeakage:0, ehr:"", biggestPain:"", afterHours:0, referrals:false, labs:false, claims:false, multiLocation:false };
 
 export default function SalesQualificationPage() {
   const [form, setForm] = useState<Form>(initial);
   const [checkoutState, setCheckoutState] = useState<"idle"|"saving"|"error">("idle");
   const [checkoutError, setCheckoutError] = useState("");
-  const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm(v => ({...v,[key]:value}));
+  const [checkout, setCheckout] = useState<CheckoutResult | null>(null);
+  const [copyState, setCopyState] = useState<"idle"|"copied"|"error">("idle");
+  const set = <K extends keyof Form>(key: K, value: Form[K]) => {
+    setForm(v => ({...v,[key]:value}));
+    setCheckout(null);
+    setCopyState("idle");
+    setCheckoutError("");
+  };
   const score = useMemo(() => {
     let s=0;
     s += Math.min(20, form.providers*3 + form.locations*4);
@@ -32,26 +48,57 @@ export default function SalesQualificationPage() {
     return Math.min(100,s);
   },[form]);
   const status = score >= 70 ? "QUALIFIED" : score >= 45 ? "MORE INFORMATION REQUIRED" : "DO NOT SELL AUDIT YET";
-  const auditPrice = form.providers <= 1 ? 750 : form.providers <= 5 ? 1250 : form.providers <= 15 ? 2500 : form.providers <= 30 ? 4000 : 5000;
+  const auditPrice = clinicCommercialOffers.privateWorkflowReview.priceCents / 100;
   const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
   const checkoutReady = score >= 70 && form.clinic.trim().length >= 2 && form.decisionMaker.trim().length >= 2 && emailReady;
 
   async function startCheckout() {
     if (!checkoutReady || checkoutState === "saving") return;
-    setCheckoutState("saving"); setCheckoutError("");
+    setCheckoutState("saving");
+    setCheckoutError("");
+    setCheckout(null);
+    setCopyState("idle");
     try {
       const response = await fetch("/api/sales/audit-qualification", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({...form, score, status, auditPrice}) });
       const payload = await response.json().catch(()=>null);
       if (!response.ok) throw new Error(payload?.error || "Unable to save this qualification before checkout.");
-      const checkoutUrl = payload?.data?.checkout?.checkoutUrl;
+      const payment = payload?.data?.checkout;
+      const checkoutUrl = payment?.checkoutUrl;
       if (typeof checkoutUrl !== "string" || !checkoutUrl.startsWith("https://")) {
         throw new Error("Klinikos did not receive a valid checkout destination from the payment connector.");
       }
-      window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+      setCheckout({
+        checkoutUrl,
+        provider: typeof payment?.provider === "string" ? payment.provider : "payment provider",
+        processorVerificationAvailable: payment?.processorVerificationAvailable === true,
+        expiresAt: typeof payment?.expiresAt === "string" ? payment.expiresAt : null,
+        expectedAmountCents: typeof payment?.expectedAmountCents === "number" ? payment.expectedAmountCents : null,
+      });
       setCheckoutState("idle");
     } catch (error) {
-      setCheckoutState("error"); setCheckoutError(error instanceof Error ? error.message : "Unable to start checkout.");
+      setCheckoutState("error");
+      setCheckoutError(error instanceof Error ? error.message : "Unable to start checkout.");
     }
+  }
+
+  async function copyCheckoutLink() {
+    if (!checkout) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(checkout.checkoutUrl);
+      } else {
+        window.prompt("Copy this secure payment link:", checkout.checkoutUrl);
+      }
+      setCopyState("copied");
+    } catch {
+      setCopyState("error");
+      window.prompt("Copy this secure payment link:", checkout.checkoutUrl);
+    }
+  }
+
+  function openCheckout() {
+    if (!checkout) return;
+    window.open(checkout.checkoutUrl, "_blank", "noopener,noreferrer");
   }
 
   return <main className="min-h-screen bg-[#f6f5f1] text-[#171714] p-6 md:p-10"><div className="max-w-6xl mx-auto space-y-8">
@@ -64,8 +111,22 @@ export default function SalesQualificationPage() {
       <div className="bg-[#171714] text-white rounded-[24px] p-6"><p className="text-xs uppercase tracking-[.2em] text-white/55">Best discovery question</p><p className="text-2xl mt-2">“When you’re done seeing your last patient, how much work is still waiting for you?”</p></div>
     </div><aside className="space-y-5 lg:sticky lg:top-6 self-start">
       <div className="bg-[#171714] text-white rounded-[28px] p-7"><p className="text-xs uppercase tracking-[.2em] text-white/55">Qualification score</p><div className="text-7xl font-semibold mt-2">{score}</div><p className="mt-3 font-semibold">{status}</p><p className="text-sm text-white/60 mt-2">Scores guide the associate. They do not establish guaranteed savings or ROI.</p></div>
-      <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="text-xs uppercase tracking-[.2em] text-black/50">Recommended audit</p><p className="text-4xl font-semibold mt-2">${auditPrice.toLocaleString()}</p><p className="text-sm text-black/60 mt-2">AI-assisted operational analysis + specialist review. Price is based on provider scale.</p></div>
-      {score>=70 && <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="font-semibold">Close script</p><p className="mt-3 text-sm leading-6 text-black/70">“Based on what you’ve shared, your practice qualifies for a Klinikos Operational Audit. We analyze your operating costs, workflows, patient follow-through, revenue leakage and opportunities for consolidation or automation. You receive the findings whether or not you implement Klinikos. For a practice your size, the audit is <strong>${auditPrice.toLocaleString()}</strong>. Would you like me to secure your audit and get the process started?”</p><button type="button" disabled={!checkoutReady || checkoutState==="saving"} onClick={startCheckout} className="mt-5 w-full rounded-full bg-black text-white py-3 px-5 text-center font-medium disabled:opacity-40">{checkoutState==="saving"?"Creating secure checkout…":"Save prospect & start secure checkout"}</button>{!checkoutReady&&<p className="mt-3 text-xs text-amber-800">Clinic name, decision maker, and a valid buyer email are required before checkout.</p>}{checkoutError&&<p className="mt-3 text-xs text-red-700">{checkoutError}</p>}<p className="mt-3 text-xs text-black/50">Klinikos saves the qualification and creates a server-owned checkout intent before the official GoDaddy payment page opens. Checkout launch is not proof of payment. Staff must reconcile verified payment evidence before beginning the audit.</p></div>}
+      <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="text-xs uppercase tracking-[.2em] text-black/50">Clinic Operating Analysis</p><p className="text-4xl font-semibold mt-2">${auditPrice.toLocaleString()}</p><p className="text-sm text-black/60 mt-2">AI-assisted operating analysis plus specialist review. The server-owned price matches the configured checkout.</p></div>
+      {score>=70 && <div className="bg-white rounded-[28px] p-7 shadow-sm"><p className="font-semibold">Close script</p><p className="mt-3 text-sm leading-6 text-black/70">“Based on what you’ve shared, your practice qualifies for a Klinikos Clinic Operating Analysis. We analyze your operating costs, workflows, patient follow-through, reported revenue leakage and opportunities for consolidation or automation. You receive the findings whether or not you implement Klinikos. The analysis is <strong>${auditPrice.toLocaleString()}</strong>. Would you like me to secure it and get the process started?”</p>
+        {!checkout && <button type="button" disabled={!checkoutReady || checkoutState==="saving"} onClick={startCheckout} className="mt-5 w-full rounded-full bg-black text-white py-3 px-5 text-center font-medium disabled:opacity-40">{checkoutState==="saving"?"Creating secure checkout…":"Save prospect & create secure checkout"}</button>}
+        {!checkoutReady&&<p className="mt-3 text-xs text-amber-800">Clinic name, decision maker, and a valid buyer email are required before checkout.</p>}
+        {checkoutError&&<p className="mt-3 text-xs text-red-700">{checkoutError}</p>}
+        {checkout && <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm font-semibold text-emerald-950">Buyer checkout is ready</p>
+          <p className="mt-1 text-xs leading-5 text-emerald-900/75">Send this secure checkout to the buyer. Do not pay it on the buyer’s behalf and do not call the sale paid until Klinikos receives the applicable payment confirmation.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <button type="button" onClick={copyCheckoutLink} className="rounded-full bg-black px-4 py-3 text-sm font-medium text-white">{copyState==="copied"?"Copied ✓":"Copy secure payment link"}</button>
+            <button type="button" onClick={openCheckout} className="rounded-full border border-black/20 px-4 py-3 text-sm font-medium text-black">Open payment page</button>
+          </div>
+          {copyState==="error"&&<p className="mt-2 text-xs text-amber-800">Clipboard access was blocked. A manual copy prompt was opened instead.</p>}
+          <p className="mt-3 text-[11px] leading-5 text-emerald-950/65">Payment confirmation: <strong>{checkout.processorVerificationAvailable?"signed processor verification":"authorized manual reconciliation required"}</strong>. Provider: {checkout.provider}. {checkout.expectedAmountCents!==null?`Expected amount: $${(checkout.expectedAmountCents/100).toLocaleString()}. `:""}{checkout.expiresAt?`Checkout reference expires ${new Date(checkout.expiresAt).toLocaleString()}.`:""}</p>
+        </div>}
+        <p className="mt-3 text-xs text-black/50">Klinikos saves the qualification and creates a server-owned checkout intent before the secure payment destination is returned. Creating, copying, opening, or returning from checkout is not proof of payment.</p></div>}
       <div className="border border-black/15 rounded-[28px] p-7"><p className="font-semibold">Guardrails</p><ul className="mt-3 text-sm text-black/65 space-y-2"><li>• Never describe Klinikos as HIPAA compliant.</li><li>• Never invent savings, revenue, losses, vendor data, or authority.</li><li>• Label clinic-provided numbers as reported.</li><li>• Human review remains required for clinical and financially sensitive actions.</li><li>• Checkout launch does not establish successful payment.</li><li>• Only demonstrate verified production-ready workflows.</li></ul></div>
     </aside></section>
   </div></main>;

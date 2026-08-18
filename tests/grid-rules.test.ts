@@ -16,8 +16,8 @@ const future = new Date("2028-12-31T00:00:00.000Z");
 describe("ClinicOS Grid rules", () => {
   it("requires a complete credential and malpractice profile before review", () => {
     const result = gridProviderProfileSchema.safeParse({
-      displayName: "Alex Morgan",
-      legalName: "Alexis Morgan",
+      displayName: "Grid Provider Applicant",
+      legalName: "Grid Provider Applicant · synthetic",
       providerType: "Nurse Injector",
       credential: "RN",
       specialty: "Aesthetic services",
@@ -59,27 +59,27 @@ describe("ClinicOS Grid rules", () => {
   it("validates the complete independent-contractor enrollment", () => {
     const enrollment = {
       organizationSlug: "luxe-medi",
-      fullName: "Tiffany Lane",
-      email: "TIFFANY.GRID@EXAMPLE.TEST",
+      fullName: "Independent Grid Provider",
+      email: "GRID.PROVIDER@EXAMPLE.TEST",
       phone: "212-555-0164",
       password: "Synthetic!Pass123",
-      providerType: "Nurse Injector",
-      credential: "RN",
-      specialty: "Aesthetic services",
+      providerType: "Physical Therapist",
+      credential: "PT",
+      specialty: "Orthopedic rehabilitation",
       licenseType: "STATE_LICENSE",
-      licenseNumber: "SYNTH-NY-RN-TIFFANY",
+      licenseNumber: "SYNTH-NY-RN-PROVIDER",
       licenseState: "NY",
       licenseExpiration: future.toISOString(),
-      licenseEvidenceReference: "SYNTHETIC-LICENSE-TIFFANY-001",
+      licenseEvidenceReference: "SYNTHETIC-LICENSE-PROVIDER-001",
       malpracticeCarrier: "Synthetic Contractor Coverage",
-      malpracticePolicyNumber: "SYNTH-TIFFANY-RN-001",
+      malpracticePolicyNumber: "SYNTH-PROVIDER-RN-001",
       malpracticeExpiration: future.toISOString(),
       malpracticeCoverageAmountCents: 100_000_000,
-      malpracticeEvidenceReference: "SYNTHETIC-POLICY-TIFFANY-001",
+      malpracticeEvidenceReference: "SYNTHETIC-POLICY-PROVIDER-001",
       certifications: ["Synthetic BLS record"],
-      servicesOffered: ["Injectable treatment support"],
+      servicesOffered: ["Post-operative rehabilitation"],
       experienceLevel: "Experienced",
-      bio: "Synthetic contractor nurse profile used only for a controlled demonstration.",
+      bio: "Synthetic professional profile used only for a controlled Grid demonstration.",
       serviceArea: "New York City",
       travelRadiusMiles: 25,
       mobileServiceAllowed: true,
@@ -91,7 +91,9 @@ describe("ClinicOS Grid rules", () => {
     } as const;
     const parsed = gridContractorEnrollmentSchema.safeParse(enrollment);
     expect(parsed.success).toBe(true);
-    if (parsed.success) expect(parsed.data.email).toBe("tiffany.grid@example.test");
+    if (parsed.success) expect(parsed.data.email).toBe("grid.provider@example.test");
+    expect(gridContractorEnrollmentSchema.safeParse({ ...enrollment, providerType: "Cardiac Sonographer", credential: "RCS" }).success).toBe(true);
+    expect(gridContractorEnrollmentSchema.safeParse({ ...enrollment, providerType: "" }).success).toBe(false);
     expect(gridContractorEnrollmentSchema.safeParse({ ...enrollment, password: "SyntheticPass123" }).success).toBe(false);
     expect(gridContractorEnrollmentSchema.safeParse({ ...enrollment, mobileServiceAllowed: false, chairRentalAllowed: false, partnerLocationAllowed: false }).success).toBe(false);
   });

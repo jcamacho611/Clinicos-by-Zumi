@@ -7,6 +7,8 @@ import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
 import "./cinematic-command-overrides.css";
 import "./cinematic-home-overrides.css";
+import "./experience-convergence.css";
+import "./accessibility.css";
 
 const siteUrl = "https://klinikos.io";
 
@@ -45,7 +47,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: klinikosAtmosphereBootstrap }} />
       </head>
       <body className="klinikos-cinematic-root">
-        {children}
+        <a className="klinikos-skip-link" href="#klinikos-page-content">Skip to main content</a>
+        <div id="klinikos-page-content" tabIndex={-1}>{children}</div>
         <KlinikosAtmosphereController />
       </body>
     </html>
