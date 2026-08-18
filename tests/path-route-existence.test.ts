@@ -2,8 +2,10 @@ import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 import { allKlinikosPaths } from "@/lib/paths/catalog";
+import { workspaceSlugs } from "@/components/clinic/workspace-renderer";
 
 const appRoot = join(process.cwd(), "src", "app");
+const genericWorkspacePage = join(appRoot, "(platform)", "[workspace]", "page.tsx");
 
 function walkPages(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -34,15 +36,28 @@ function internalPath(href: string) {
   return href.split("#", 1)[0]!.split("?", 1)[0]! || "/";
 }
 
-describe("Klinikos governed route registry", () => {
-  const appRoutePatterns = walkPages(appRoot).map(routePatternFromPage);
+function isWhitelistedGenericWorkspace(target: string) {
+  const segments = target.split("/").filter(Boolean);
+  return segments.length === 1 && workspaceSlugs.includes(segments[0] as (typeof workspaceSlugs)[number]);
+}
 
-  it("only links route steps to real Next.js pages", () => {
+describe("Klinikos governed route registry", () => {
+  // The generic [workspace] page is real, but it may render only whitelisted
+  // workspace slugs. Excluding it from generic pattern matching prevents an
+  // arbitrary `/made-up-page` from being treated as a valid governed route.
+  const concreteRoutePatterns = walkPages(appRoot)
+    .filter((page) => page !== genericWorkspacePage)
+    .map(routePatternFromPage);
+
+  function routeExists(target: string) {
+    return concreteRoutePatterns.some((pattern) => pattern.test(target)) || isWhitelistedGenericWorkspace(target);
+  }
+
+  it("only links route steps to real Next.js pages or whitelisted generic workspaces", () => {
     const missing = allKlinikosPaths.flatMap((path) => path.nodes.flatMap((node) => {
       if (!node.href?.startsWith("/")) return [];
       const target = internalPath(node.href);
-      const exists = appRoutePatterns.some((pattern) => pattern.test(target));
-      return exists ? [] : [`${path.id}:${node.id} -> ${node.href}`];
+      return routeExists(target) ? [] : [`${path.id}:${node.id} -> ${node.href}`];
     }));
 
     expect(missing, `Dead governed route destinations:\n${missing.join("\n")}`).toEqual([]);
@@ -52,6 +67,13 @@ describe("Klinikos governed route registry", () => {
     const path = allKlinikosPaths.find((candidate) => candidate.id === "clinic-monetize-capacity");
     const readiness = path?.nodes.find((node) => node.id === "readiness");
     expect(readiness?.href).toBe("/grid/trust");
-    expect(appRoutePatterns.some((pattern) => pattern.test("/grid/trust"))).toBe(true);
+    expect(routeExists("/grid/trust")).toBe(true);
+  });
+
+  it("does not let the generic workspace route legitimize arbitrary slugs", () => {
+    expect(routeExists("/patient-navigation")).toBe(true);
+    expect(routeExists("/claim-readiness")).toBe(true);
+    expect(routeExists("/provider-network")).toBe(true);
+    expect(routeExists("/totally-made-up-page")).toBe(false);
   });
 });
