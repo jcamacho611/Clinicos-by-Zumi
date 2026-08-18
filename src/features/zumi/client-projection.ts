@@ -49,6 +49,20 @@ const CONFIDENTIAL_OUTPUT_MARKERS = [
   "Klinikos repository context selected for this question",
 ] as const;
 
+const CONFIDENTIAL_OUTPUT_PATTERNS = [
+  { kind: "private_key", pattern: /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/i },
+  { kind: "github_token", pattern: /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/ },
+  { kind: "stripe_secret", pattern: /\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/ },
+  { kind: "openai_secret", pattern: /\bsk-proj-[A-Za-z0-9_-]{20,}\b/ },
+  { kind: "aws_access_key", pattern: /\bAKIA[0-9A-Z]{16}\b/ },
+  { kind: "database_credential_uri", pattern: /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s/:@]+:[^\s@]+@[^\s]+/i },
+  { kind: "bearer_jwt", pattern: /\bBearer\s+eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/i },
+  {
+    kind: "secret_assignment",
+    pattern: /\b(?:AUTH_SECRET|DATABASE_URL|STRIPE_SECRET_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_AI_API_KEY|TWILIO_AUTH_TOKEN|DOCUMENT_ENCRYPTION_KEY|ZUMI_CONVERSATION_SIGNING_SECRET)\s*[=:]\s*[^\s,;]+/i,
+  },
+] as const;
+
 function safeInternalHref(value: string | null | undefined) {
   if (!value) return null;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
@@ -129,12 +143,25 @@ export function projectZumiSourcesForClient(sources: readonly ZumiExternalSource
   return projected;
 }
 
+/**
+ * Final server-side output DLP before model text reaches the browser. This is defense
+ * in depth, not permission for upstream prompts/tools to contain secrets. It blocks
+ * both known internal markers and credential-shaped values without echoing the value
+ * into telemetry.
+ */
 export function sanitizeZumiAnswerForClient(answer: string) {
   const blockedMarkers = CONFIDENTIAL_OUTPUT_MARKERS.filter((marker) => answer.includes(marker));
-  if (blockedMarkers.length === 0) return { answer, blockedMarkers: [] as string[] };
+  const blockedKinds = CONFIDENTIAL_OUTPUT_PATTERNS
+    .filter(({ pattern }) => pattern.test(answer))
+    .map(({ kind }) => kind);
+
+  if (blockedMarkers.length === 0 && blockedKinds.length === 0) {
+    return { answer, blockedMarkers: [] as string[], blockedKinds: [] as string[] };
+  }
 
   return {
     answer: "I can explain the outcome, evidence, and available actions, but I can’t expose Klinikos internal security, orchestration, credential, or proprietary implementation instructions.",
     blockedMarkers: [...blockedMarkers],
+    blockedKinds,
   };
 }
