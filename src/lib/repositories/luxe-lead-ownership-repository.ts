@@ -34,33 +34,53 @@ export async function claimLuxeLead(session: ClinicSession, leadId: string) {
     const decision = luxeLeadClaimDecision(lead.assignedTo, session.userId);
     if (decision === "owned_by_other") throw new NetworkAccessError("This lead is already assigned to another staff member.", 409);
 
+    let claimed = false;
     const now = new Date();
     if (decision === "claim") {
-      await tx.lead.update({ where: { id: lead.id }, data: { assignedTo: session.userId } });
-      await tx.leadEvent.create({
-        data: {
+      const write = await tx.lead.updateMany({
+        where: {
+          id: lead.id,
           organizationId: session.organizationId,
-          leadId: lead.id,
-          actorId: session.userId,
-          eventType: "luxe_lead_claimed",
-          fromStatus: "unassigned",
-          toStatus: "assigned",
-          note: "Lead ownership claimed from Luxe acquisition operations.",
-          metadata: { assignedTo: session.userId, claimedAt: now.toISOString() },
+          assignedTo: null,
+          status: { notIn: ["lost", "completed"] },
         },
+        data: { assignedTo: session.userId },
       });
-      await tx.auditLog.create({
-        data: {
-          organizationId: session.organizationId,
-          actorId: session.userId,
-          actorType: "user",
-          action: "luxe.lead_claimed",
-          resourceType: "lead",
-          resourceId: lead.id,
-          changes: { assignedTo: { from: null, to: session.userId } },
-          metadata: { claimedAt: now.toISOString() },
-        },
-      });
+      if (write.count !== 1) {
+        const current = await tx.lead.findFirst({
+          where: { id: lead.id, organizationId: session.organizationId },
+          select: { assignedTo: true },
+        });
+        if (current?.assignedTo !== session.userId) {
+          throw new NetworkAccessError("Another staff member claimed this lead first.", 409);
+        }
+      } else {
+        claimed = true;
+        await tx.leadEvent.create({
+          data: {
+            organizationId: session.organizationId,
+            leadId: lead.id,
+            actorId: session.userId,
+            eventType: "luxe_lead_claimed",
+            fromStatus: "unassigned",
+            toStatus: "assigned",
+            note: "Lead ownership claimed from Luxe acquisition operations.",
+            metadata: { assignedTo: session.userId, claimedAt: now.toISOString() },
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            organizationId: session.organizationId,
+            actorId: session.userId,
+            actorType: "user",
+            action: "luxe.lead_claimed",
+            resourceType: "lead",
+            resourceId: lead.id,
+            changes: { assignedTo: { from: null, to: session.userId } },
+            metadata: { claimedAt: now.toISOString() },
+          },
+        });
+      }
     }
 
     const taskUpdate = await tx.task.updateMany({
@@ -77,7 +97,7 @@ export async function claimLuxeLead(session: ClinicSession, leadId: string) {
     return {
       leadId: lead.id,
       assignedTo: session.userId,
-      claimed: decision === "claim",
+      claimed,
       tasksOwned: taskUpdate.count,
     };
   });
