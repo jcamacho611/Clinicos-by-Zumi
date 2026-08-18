@@ -68,13 +68,17 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
   const safeQuery = q?.trim().slice(0, 240) ?? "";
   const interpretation = inferGridIntent(safeQuery, activeIntent as GridIntentKind);
   const searchTerms = interpretation.searchTerms;
+  const temporalWeekdays = interpretation.temporal.weekdays;
   const allowedResourceTypes = intentResourceTypes[activeIntent] ?? intentResourceTypes.all;
   const laneResources = resources.filter((resource) => allowedResourceTypes.includes(resource.resourceType));
   const laneListings = ["all", "work", "provider"].includes(activeIntent) ? listings : [];
   const matchingResources = laneResources.filter((resource) => matchesGridSearchTerms([resource.title, resource.description, resource.subtype, resource.city, resource.state], searchTerms));
   const matchingListings = laneListings.filter((listing) => matchesGridSearchTerms([listing.serviceName, listing.description, listing.category, listing.provider.displayName, listing.provider.providerType, listing.provider.specialty, ...listing.serviceAreas, ...listing.states], searchTerms));
   const visibleLocations = locations.filter((location) => ["all", "space", "organization"].includes(activeIntent) && matchesGridSearchTerms([location.name, location.city, location.state, location.locationType, ...location.roomTypes], searchTerms));
-  const mapProviders = matchingListings.map((listing) => ({ id: listing.id, serviceName: listing.serviceName, providerName: listing.provider.displayName, providerType: listing.provider.providerType, serviceAreas: listing.serviceAreas, states: listing.states, onCallNow: listing.provider.onCallNow }));
+  const mapListings = temporalWeekdays.length
+    ? matchingListings.filter((listing) => temporalWeekdays.some((day) => listing.availableWeekdays.includes(day)))
+    : matchingListings;
+  const mapProviders = mapListings.map((listing) => ({ id: listing.id, serviceName: listing.serviceName, providerName: listing.provider.displayName, providerType: listing.provider.providerType, serviceAreas: listing.serviceAreas, states: listing.states, onCallNow: listing.provider.onCallNow }));
   const mapResources = matchingResources.map((resource) => ({ id: resource.id, title: resource.title, resourceType: resource.resourceType, city: resource.city, state: resource.state, latitude: resource.latitude, longitude: resource.longitude }));
 
   return (
@@ -115,7 +119,7 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
 
       <GridLiveMap locations={visibleLocations} providers={mapProviders} resources={mapResources} />
       <UniversalResourceBrowser resources={matchingResources} intent={activeIntent} />
-      {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} listings={laneListings} />}
+      {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} initialWeekdays={temporalWeekdays} listings={laneListings} />}
 
       <footer className="border-t border-[#e8ded9] bg-[#fffdf9]">
         <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8">

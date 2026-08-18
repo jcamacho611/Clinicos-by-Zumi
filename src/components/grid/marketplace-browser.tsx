@@ -73,8 +73,20 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   );
 }
 
-export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: MarketplaceListing[]; initialQuery?: string }) {
-  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({ ...emptyMarketplaceFilters, q: initialQuery }));
+export function MarketplaceBrowser({
+  listings,
+  initialQuery = "",
+  initialWeekdays = [],
+}: {
+  listings: MarketplaceListing[];
+  initialQuery?: string;
+  initialWeekdays?: number[];
+}) {
+  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({
+    ...emptyMarketplaceFilters,
+    q: initialQuery,
+    weekdays: [...new Set(initialWeekdays.filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))],
+  }));
   const [showFilters, setShowFilters] = useState(false);
 
   const results = useMemo(() => applyMarketplaceFilters(listings, filters), [listings, filters]);

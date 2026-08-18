@@ -25,6 +25,7 @@ export type EduNavGroup = {
 const ALL_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student", "edu_observer"];
 const STAFF: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant"];
 const TEACHING: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor"];
+const CERTIFICATE_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_student"];
 
 export const eduNavigation: readonly EduNavGroup[] = [
   {
@@ -41,6 +42,7 @@ export const eduNavigation: readonly EduNavGroup[] = [
       { href: "/edu/scenarios", label: "Scenario library", icon: "FlaskConical", roles: ALL_ROLES },
       { href: "/edu/grading", label: "Grading", icon: "ClipboardCheck", roles: STAFF },
       { href: "/edu/competencies", label: "Competencies", icon: "Target", roles: ALL_ROLES },
+      { href: "/edu/certificates", label: "Certificates", icon: "Award", roles: CERTIFICATE_ROLES },
     ],
   },
   {
@@ -66,6 +68,7 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
   "/edu/competencies": ALL_ROLES,
+  "/edu/certificates": CERTIFICATE_ROLES,
   "/edu/settings": TEACHING,
 };
 
