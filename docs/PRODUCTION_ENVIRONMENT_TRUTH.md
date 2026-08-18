@@ -1,8 +1,8 @@
 # KLINIKOS — PRODUCTION ENVIRONMENT TRUTH
 
 Status: `AUTHORITATIVE RUNTIME-CONFIGURATION INDEX`
-Updated: `2026-08-17 America/New_York`
-Repository baseline: `main@cc6162c9349e2ade8ec8a27cdd08a05296fb70a2`
+Updated: `2026-08-18 America/New_York`
+Repository baseline at authoring: `main@f9ed11d15992b332abf17ee81d24e6ca34b00f17`
 
 This file records what is known about production environment configuration without storing or exposing secret values.
 
@@ -24,7 +24,8 @@ This file records what is known about production environment configuration witho
 | Application/database runtime | `DATABASE_URL`, `AUTH_SECRET`, seed/demo credentials were previously observed in the Render service UI; exact values are secret | `OPERATOR-REPORTED / PREVIOUSLY OBSERVED PRESENT` | Continue runtime health, auth, backup, deployment-SHA, and security verification |
 | Stripe live API access | `STRIPE_SECRET_KEY` | `OPERATOR-REPORTED CONFIGURED WITH LIVE-MODE SECRET` | Keep server-owned Checkout live-only; complete signed live-webhook setup and controlled real-money proof |
 | Stripe test API access | `STRIPE_TEST_SECRET_KEY` | Founder reported preserving a separate test credential; runtime presence has not been independently verified | Keep explicit test mode isolated from production; never silently fall back |
-| Stripe live webhook verification | `STRIPE_WEBHOOK_SECRET` + `POST /api/webhooks/stripe` | **CODE MERGED / PENDING EXTERNAL CONNECTION**. PR #117 is merged. The live endpoint secret is not yet independently verified in Render and no intentional live event has yet been observed by this truth index | Register the canonical production endpoint in Stripe Workbench, store only its live `whsec_...` in Render, then perform a controlled live payment/refund proof |
+| Stripe live webhook verification | `STRIPE_WEBHOOK_SECRET` + `POST /api/webhooks/stripe` | **CODE MERGED / PENDING EXTERNAL CONNECTION** for the established one-time rail. The live endpoint secret and intentional live-event proof remain separate runtime gates | Register the canonical production endpoint in Stripe Workbench, store only its live `whsec_...` in Render, then perform controlled live payment/refund proof |
+| Stripe recurring Clinic OS subscriptions | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `KLINIKOS_STRIPE_RECURRING_ENABLED=true` | **BUILT / FEATURE-GATED / NOT VERIFIED LIVE**. Native monthly Checkout, signed `invoice.paid` renewal/activation, failed-invoice no-extension behavior, and signed subscription-deletion revocation are implemented. The explicit recurring gate defaults off | Configure the existing live webhook endpoint for `invoice.paid`, `invoice.payment_failed`, and `customer.subscription.deleted`; deploy the recurring code; run a controlled live subscription proof; only then set the recurring gate true in production |
 | Stripe test webhook verification | `STRIPE_TEST_WEBHOOK_SECRET` | `PENDING / OPTIONAL FOR EXPLICIT TEST-MODE WORK` | Configure only for deliberate test-mode webhook work; never reuse the live endpoint secret |
 | Stripe Connect / Grid payouts | `STRIPE_CONNECT_CLIENT_ID` plus Connect platform/account configuration | `PENDING CONNECTION` | Finish platform onboarding, connected-account flow, legal/commercial policy, fulfillment gating, payout evidence and reconciliation |
 | Stripe publishable key | No public Stripe key is required by the current server-owned hosted Checkout implementation | `NOT REQUIRED` for current rail | Add a public key only if a future Stripe.js/Elements flow actually requires it; never expose an `sk_...` or restricted server key |
@@ -44,17 +45,15 @@ This file records what is known about production environment configuration witho
 | Healthcare transactions | `STEDI_API_KEY`, `STEDI_MODE` | `SANDBOX CONTRACT EXISTS IN REPO / PRODUCTION PENDING` | BAA, payer enrollment/testing, and production credentials for eligibility/claims |
 | Object storage | `OBJECT_STORAGE_*` | `PENDING PRODUCTION STORAGE` | Choose approved encrypted private storage, IAM, retention, backup/restore, and BAA posture if PHI |
 | Production database HIPAA posture | Neon project | Last inspected setting reported HIPAA mode disabled | Resolve before production PHI approval; do not infer compliance from application code |
-| GitHub Actions verification | Repository Actions | `EXTERNAL INFRASTRUCTURE BLOCKED` on 2026-08-17: jobs were refused before startup because of the GitHub account billing/spending-limit state | Restore GitHub billing/Actions allowance, rerun current-main quality/deploy gates, and record the resulting exact-head evidence |
+| GitHub Actions verification | Repository Actions | `EXTERNAL INFRASTRUCTURE BLOCKED`: recent jobs have repeatedly been refused before step 1 with `steps:null` and no repository logs | Restore GitHub billing/Actions allowance, rerun current-main quality/deploy gates, and record the resulting exact-head evidence |
 
 ## Stripe activation law
 
-PR #117 is merged and is the authoritative direct customer-payment implementation. It uses the official Stripe SDK and the shared Klinikos Financial OS rather than a parallel payment ledger.
-
-The implemented chain is:
+The existing one-time customer-payment rail uses the official Stripe SDK and the shared Klinikos Financial OS rather than a parallel payment ledger. Its chain remains:
 
 `SERVER-OWNED PRODUCT / AMOUNT → COMMERCIAL CHECKOUT INTENT → STRIPE-HOSTED CHECKOUT → CUSTOMER PAYMENT → SIGNED STRIPE WEBHOOK → LIVE/TEST + TENANT + PRODUCT + AMOUNT + CURRENCY + SESSION/PAYMENT-INTENT CORRELATION → IDEMPOTENT PAYMENT EVIDENCE → PRODUCT POLICY / RECONCILIATION`
 
-The supported Stripe evidence set in the merged rail includes:
+The one-time Stripe evidence set includes:
 
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
@@ -62,9 +61,25 @@ The supported Stripe evidence set in the merged rail includes:
 - `payment_intent.payment_failed`
 - `charge.refunded`
 
-The production webhook is live-only. A browser return, success URL, query string, or Checkout Session creation cannot create payment truth. Stripe Connect payouts remain a separate dependency and cannot outrun customer payment, fulfillment, disputes/holds, or payout policy.
+The recurring Clinic OS rail is deliberately separate from the one-time Clinic Operating Analysis connector. It uses server-owned monthly prices and this lifecycle:
 
-The Stripe rail remains `BUILT / PENDING EXTERNAL CONNECTION`, not `VERIFIED LIVE`, until the newest application is deployed, the canonical live endpoint is registered, the live signing secret is stored in Render, and a controlled real-money payment plus signed webhook is observed and reconciled. A controlled refund should be proven before broad automated entitlement use.
+`SERVER-OWNED CLINIC PLAN → STRIPE SUBSCRIPTION CHECKOUT → SIGNED invoice.paid → OPAQUE INTENT / STATE / PRODUCT / SUBSCRIPTION / CUSTOMER / AMOUNT / CURRENCY / PERIOD CORRELATION → CLINIC ORGANIZATION SHELL → VERIFIED COMMERCIAL PAYMENT EVIDENCE → SUBSCRIPTION ACTIVATION / RENEWAL → PERIOD ALLOWANCES → OWNER ACTIVATION LINK`
+
+Recurring safety rules:
+
+- `KLINIKOS_STRIPE_RECURRING_ENABLED` defaults off and must not be enabled merely because an `sk_live_...` key exists.
+- The recurring webhook endpoint must be configured for `invoice.paid`, `invoice.payment_failed`, and `customer.subscription.deleted` before production enablement.
+- Subscription metadata contains only opaque Klinikos correlation references and a product key; it must not contain PHI, clinic free text, or buyer contact data.
+- `invoice.paid` is the money event that can activate or renew a monthly entitlement. `checkout.session.completed` alone does not.
+- A failed invoice does not create a clinic organization and does not extend the paid period.
+- Cancellation/deletion requires signed Stripe subscription evidence correlated to the existing external subscription.
+- Unrelated Stripe account invoice/subscription events are acknowledged and ignored rather than causing retry storms.
+- A Stripe checkout in `created` state never exposes the manual GoDaddy reconciliation control.
+- Payment can activate software entitlement, but it cannot approve PHI, credentials, clinical authority, connectors, or deployment readiness.
+
+The production webhook remains live-only. A browser return, success URL, query string, or Checkout Session creation cannot create payment truth. Stripe Connect payouts remain a separate dependency and cannot outrun customer payment, fulfillment, disputes/holds, or payout policy.
+
+Neither Stripe rail is `VERIFIED LIVE` merely because the code is merged. Runtime verification requires the deployed canonical endpoint, correct live signing secret, intended event subscriptions, and controlled real-money evidence. For recurring billing, prove at least initial subscription payment, activation, a subsequent invoice lifecycle event, failed-payment behavior, and cancellation before calling automated recurring entitlement production-proven.
 
 ## Communications law
 
