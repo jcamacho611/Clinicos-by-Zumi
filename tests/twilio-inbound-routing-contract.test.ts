@@ -25,7 +25,8 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(webhook.indexOf("resolveInboundTwilioOrganization({")).toBeLessThan(webhook.indexOf("processInboundPatientSms({"));
     expect(webhook).toContain('request.headers.get("x-twilio-signature")');
     expect(webhook).toContain("TWILIO_AUTH_TOKEN");
-    expect(webhook).toContain("new NextResponse(null, { status: 204 })");
+    expect(webhook).toContain("<Response></Response>");
+    expect(webhook).toContain('"Content-Type": "application/xml; charset=utf-8"');
   });
 
   it("fails closed on ambiguous patients and processes each provider event under a row lock", () => {
