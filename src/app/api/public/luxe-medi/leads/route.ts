@@ -43,6 +43,11 @@ function requestIsAuthorized(request: Request) {
   return Boolean(origin && allowedOrigins().has(origin));
 }
 
+function withHeaders(response: NextResponse, headers: Record<string, string>) {
+  for (const [key, value] of Object.entries(headers)) response.headers.set(key, value);
+  return response;
+}
+
 export async function OPTIONS(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin || !allowedOrigins().has(origin)) {
@@ -104,6 +109,6 @@ export async function POST(request: Request) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Lead request is invalid.", issues: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })) }, { status: 400, headers });
     }
-    return networkAccessErrorResponse(error, headers);
+    return withHeaders(networkAccessErrorResponse(error), headers);
   }
 }
