@@ -1,3 +1,5 @@
+import { parseGridTemporalIntent, stripGridTemporalLanguage } from "@/lib/grid/temporal-intent";
+
 export const gridIntentKinds = [
   "all",
   "work",
@@ -51,7 +53,7 @@ function contains(value: string, patterns: readonly string[]) {
 }
 
 export function gridSearchTerms(rawQuery: string) {
-  return rawQuery.trim().toLowerCase().split(/[^a-z0-9]+/)
+  return stripGridTemporalLanguage(rawQuery).trim().toLowerCase().split(/[^a-z0-9]+/)
     .filter((term) => term.length >= 2 && !commonWords.has(term))
     .slice(0, 12);
 }
@@ -103,6 +105,7 @@ export function inferGridIntent(rawQuery: string, fallback: GridIntentKind = "al
       ? "What city is the space in?"
       : "What city should Grid search?"
     : null;
+  const temporal = parseGridTemporalIntent(query);
 
   return {
     direction,
@@ -110,6 +113,7 @@ export function inferGridIntent(rawQuery: string, fallback: GridIntentKind = "al
     label: intentLabels[intent],
     followUp,
     searchTerms: gridSearchTerms(query),
+    temporal,
   };
 }
 
