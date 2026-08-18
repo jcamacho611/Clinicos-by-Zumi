@@ -21,6 +21,7 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(integration).not.toContain("TWILIO_API_KEY_SECRET");
     expect(configRoute).not.toContain("process.env.TWILIO_AUTH_TOKEN");
     expect(configRoute).toContain('enforceApiPermission(session, "integrations", "manage"');
+    expect(configRoute).toContain("evaluateSameOriginMutation(request)");
   });
 
   it("hardens the public boundary before tenant resolution or mutation", () => {
@@ -39,18 +40,22 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(webhook).toContain('"Content-Type": "application/xml; charset=utf-8"');
   });
 
-  it("fails closed on ambiguous patients and persists replay evidence under a row lock", () => {
+  it("treats STOP/START as endpoint-level state but ordinary text as patient-specific", () => {
+    expect(inbound).toContain("STOP and START are endpoint-level suppression events");
+    expect(inbound).toContain("for (const patient of patients)");
+    expect(inbound).toContain("affectedPatientCount: patients.length");
+    expect(inbound).toContain("endpointScoped: true");
     expect(inbound).toContain('reason: "ambiguous_patient"');
+    expect(inbound).toContain("patients.length !== 1");
     expect(inbound).toContain("FOR UPDATE");
-    expect(inbound).toContain("hasProcessedInboundSmsEvent");
+  });
+
+  it("serializes provider replay before state mutation and never persists inbound content", () => {
+    expect(inbound).toContain("hashtextextended(${input.messageSid}, 0)");
     expect(inbound).toContain("tx.integrationEvent.findFirst");
     expect(inbound).toContain("tx.integrationEvent.create");
     expect(inbound).toContain('resourceType: "twilio_message"');
     expect(inbound).toContain('state: "duplicate"');
-  });
-
-  it("never treats START as new consent and never persists inbound message content", () => {
-    expect(inbound).toContain("START removes the suppression state only");
     expect(inbound).toContain("consentGranted: false");
     expect(inbound).toContain("bodyStored: false");
     expect(inbound).not.toContain("body: input.body");
