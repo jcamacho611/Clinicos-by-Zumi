@@ -87,6 +87,55 @@ describe("Stripe live webhook boundary", () => {
     expect(JSON.stringify(input.payload)).not.toMatch(/private@example|Private Buyer|description/i);
   });
 
+  it("acknowledges a tagged manual service Payment Link without granting an entitlement", async () => {
+    const event = checkoutEvent();
+    const session = event.data.object as Record<string, unknown>;
+    session.client_reference_id = null;
+    session.payment_link = "plink_manual_operating_analysis";
+    session.metadata = {
+      klinikos_sale_mode: "manual_service",
+      klinikos_product_key: "operational_audit",
+      klinikos_offer_key: "private_workflow_demo",
+    };
+
+    const response = await POST(signedRequest(event));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      received: true,
+      supported: false,
+      manualReconciliation: true,
+      productKey: "operational_audit",
+      offerKey: "private_workflow_demo",
+    });
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("acknowledges a tagged manual-service refund without entering the automatic entitlement rail", async () => {
+    const response = await POST(signedRequest({
+      id: "evt_manual_refund",
+      object: "event",
+      type: "charge.refunded",
+      livemode: true,
+      data: { object: {
+        id: "ch_manual_refund",
+        object: "charge",
+        amount_refunded: 50_000,
+        currency: "usd",
+        refunded: true,
+        payment_intent: "pi_manual_payment",
+        customer: "cus_manual_customer",
+        metadata: {
+          klinikos_sale_mode: "manual_service",
+          klinikos_product_key: "operational_audit",
+          klinikos_offer_key: "private_workflow_demo",
+        },
+      } },
+    }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ received: true, supported: false, manualReconciliation: true });
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
   it("rejects an invalid Stripe signature", async () => {
     const response = await POST(signedRequest(checkoutEvent(), "t=1,v1=invalid"));
     expect(response.status).toBe(400);
