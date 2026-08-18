@@ -53,6 +53,11 @@ function bucketUnanswered(age: number) {
   return "over24Hours" as const;
 }
 
+function countsAsBookedEstimate(lead: AcquisitionLeadFact) {
+  if (lead.bookingStatus === "cancellation_observed") return false;
+  return ["booked", "completed"].includes(lead.status) || lead.bookingStatus === "booked";
+}
+
 export function summarizeAcquisitionLeads(
   leads: AcquisitionLeadFact[],
   options: {
@@ -70,6 +75,7 @@ export function summarizeAcquisitionLeads(
   const unanswered = open.filter((lead) => !lead.lastContactedAt);
   const overdueFollowUps = open.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
   const identityReview = open.filter((lead) => lead.pipelineStage === "identity_review");
+  const cancellationReview = open.filter((lead) => lead.bookingStatus === "cancellation_observed" || lead.pipelineStage === "cancellation_review");
   const bookingStarted = open.filter((lead) => lead.bookingStatus === "started");
   const bookingObserved = open.filter((lead) => lead.bookingStatus === "observed");
   const bookingPendingVerification = open.filter((lead) => ["started", "observed"].includes(lead.bookingStatus));
@@ -99,7 +105,7 @@ export function summarizeAcquisitionLeads(
       current.estimatedOpportunityCents += lead.estimatedValueCents;
       current.collectedWithEvidenceCents += (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
       if (!TERMINAL.has(lead.status)) current.openLeads += 1;
-      if (["booked", "completed"].includes(lead.status) || lead.bookingStatus === "booked") current.bookedEstimatedCents += lead.estimatedValueCents;
+      if (countsAsBookedEstimate(lead)) current.bookedEstimatedCents += lead.estimatedValueCents;
       grouped.set(key, current);
     }
     return Array.from(grouped.values())
@@ -113,21 +119,24 @@ export function summarizeAcquisitionLeads(
       const followUpOverdue = Boolean(lead.followUpDueAt && lead.followUpDueAt <= now);
       const pastSla = unansweredAgeMinutes !== null && unansweredAgeMinutes >= slaMinutes;
       const identityReviewRequired = lead.pipelineStage === "identity_review";
+      const cancellationReviewPending = lead.bookingStatus === "cancellation_observed" || lead.pipelineStage === "cancellation_review";
       const bookingInProgress = lead.bookingStatus === "started";
       const bookingObservationPending = lead.bookingStatus === "observed";
-      const score = (identityReviewRequired ? 120 : 0) + (followUpOverdue ? 100 : 0) + (bookingObservationPending ? 90 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
+      const score = (identityReviewRequired ? 120 : 0) + (cancellationReviewPending ? 110 : 0) + (followUpOverdue ? 100 : 0) + (bookingObservationPending ? 90 : 0) + (pastSla ? 80 : 0) + (bookingInProgress ? 60 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
       const latest = latestTouches.get(lead.id) ?? null;
       const evidence = collectedEvidenceByLead.get(lead.id);
       const collectedWithEvidenceCents = (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
       const action = identityReviewRequired
         ? "resolve_identity"
-        : bookingObservationPending
-          ? "verify_booking"
-          : bookingInProgress
-            ? followUpOverdue ? "verify_booking" : "booking_in_progress"
-            : followUpOverdue || pastSla ? "contact_now"
-            : !lead.lastContactedAt ? "contact"
-            : "review_next_step";
+        : cancellationReviewPending
+          ? "review_cancellation"
+          : bookingObservationPending
+            ? "verify_booking"
+            : bookingInProgress
+              ? followUpOverdue ? "verify_booking" : "booking_in_progress"
+              : followUpOverdue || pastSla ? "contact_now"
+              : !lead.lastContactedAt ? "contact"
+              : "review_next_step";
       return {
         id: lead.id,
         name: lead.name,
@@ -151,6 +160,7 @@ export function summarizeAcquisitionLeads(
         followUpOverdue,
         pastSla,
         identityReviewRequired,
+        cancellationReviewPending,
         bookingInProgress,
         bookingObservationPending,
         action,
@@ -162,7 +172,7 @@ export function summarizeAcquisitionLeads(
     .map(({ score: _score, ...lead }) => lead);
 
   const sum = (items: AcquisitionLeadFact[]) => items.reduce((total, lead) => total + lead.estimatedValueCents, 0);
-  const booked = leads.filter((lead) => ["booked", "completed"].includes(lead.status) || lead.bookingStatus === "booked");
+  const booked = leads.filter(countsAsBookedEstimate);
   const lost = leads.filter((lead) => lead.status === "lost");
   const unassigned = open.filter((lead) => !lead.assignedTo);
   const paymentTotals = Array.from(collectedEvidenceByLead.values()).reduce(
@@ -170,6 +180,7 @@ export function summarizeAcquisitionLeads(
     { manualReconciledCents: 0, processorVerifiedCents: 0 },
   );
   const collectedWithEvidenceCents = paymentTotals.manualReconciledCents + paymentTotals.processorVerifiedCents;
+  const cancellationRecoverableEstimatedCents = sum(cancellationReview);
 
   return {
     generatedAt: now.toISOString(),
@@ -181,6 +192,9 @@ export function summarizeAcquisitionLeads(
       overdueFollowUps: overdueFollowUps.length,
       unassignedOpenLeads: unassigned.length,
       identityReviewLeads: identityReview.length,
+      cancellationReviewLeads: cancellationReview.length,
+      cancellationRecoverableEstimatedCents,
+      cancellationRecoverableEstimated: dollars(cancellationRecoverableEstimatedCents),
       atRiskLeads: atRisk.length,
       bookingStartedLeads: bookingStarted.length,
       bookingObservedLeads: bookingObserved.length,
@@ -209,10 +223,12 @@ export function summarizeAcquisitionLeads(
     definitions: {
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
       identityReview: "The submitted normalized contact identifiers matched multiple different open CRM records. Staff must resolve identity before merging records or relying on prior history.",
+      cancellationReview: "An external booking source reported a cancellation linked to this lead. Human review is required before outreach, rebooking, or reactivation. Cancellation is not assumed to be a no-show or payment failure.",
+      cancellationRecoverableEstimated: "Estimated service opportunity attached to cancellation-review leads. This is potential recoverable opportunity, not recovered or collected revenue.",
       bookingStarted: "The configured external booking rail was opened from a server-associated acquisition journey. This is intent evidence only, not booking or payment confirmation.",
       bookingObserved: "An external booking source reported a booking for the matched lead. Human verification remains required, and this does not prove payment.",
       bookingReviewDue: "A started/observed booking whose human verification/follow-up deadline is due. Staff must verify authoritative booking evidence before changing booking/payment state.",
-      bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus. This is not collected revenue.",
+      bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus, excluding cancellation-observed records. This is not collected revenue.",
       collectedRevenueWithEvidence: "Sum of processor-verified evidence plus authorized manual reconciliation evidence linked to leads. Manual reconciliation is labeled separately and is not processor verification.",
       recentVolume: "Lead records created during the rolling 24 hours ending at generatedAt; not a clinic-local calendar-day metric.",
     },
