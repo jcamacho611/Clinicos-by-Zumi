@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, LoaderCircle, ShieldCheck } from "lucide-react";
+import {
+  boundedAttributionText,
+  captureLuxeFirstTouch,
+  sanitizeAttributionUrl,
+  sourceFromReferrer,
+  type LuxeFirstTouchAttribution,
+} from "@/lib/luxe-public-attribution";
 
 type PublicLuxeServiceOption = {
   name: string;
@@ -10,60 +17,18 @@ type PublicLuxeServiceOption = {
 
 const FIRST_TOUCH_KEY = "klinikos:luxe:first-touch:v1";
 
-type FirstTouch = {
-  source?: string;
-  medium?: string;
-  campaign?: string;
-  term?: string;
-  content?: string;
-  landingPage?: string;
-  referrer?: string;
-};
-
-function bounded(value: string | null, max: number) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.slice(0, max) : undefined;
-}
-
-function sourceFromReferrer(referrer: string) {
-  if (!referrer) return "direct";
-  try {
-    const host = new URL(referrer).hostname.replace(/^www\./, "");
-    if (host.includes("instagram.com")) return "instagram";
-    if (host.includes("facebook.com") || host.includes("fb.com")) return "facebook";
-    if (host.includes("tiktok.com")) return "tiktok";
-    if (host.includes("google.")) return "google";
-    if (host.includes("luxe-medi.com")) return "luxe_website";
-    return host || "referral";
-  } catch {
-    return "referral";
-  }
-}
-
-function readFirstTouch(params: URLSearchParams, referrer: string, landingPage: string): FirstTouch {
-  return {
-    source: bounded(params.get("utm_source") ?? params.get("source"), 120) ?? sourceFromReferrer(referrer),
-    medium: bounded(params.get("utm_medium"), 120),
-    campaign: bounded(params.get("utm_campaign"), 160),
-    term: bounded(params.get("utm_term"), 160),
-    content: bounded(params.get("utm_content"), 160),
-    landingPage: bounded(landingPage, 500),
-    referrer: bounded(referrer, 500),
-  };
-}
-
-function readStoredFirstTouch(): FirstTouch | null {
+function readStoredFirstTouch(): LuxeFirstTouchAttribution | null {
   try {
     const raw = window.localStorage.getItem(FIRST_TOUCH_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as FirstTouch;
+    const parsed = JSON.parse(raw) as LuxeFirstTouchAttribution;
     return parsed && typeof parsed === "object" ? parsed : null;
   } catch {
     return null;
   }
 }
 
-function storeFirstTouch(value: FirstTouch) {
+function storeFirstTouch(value: LuxeFirstTouchAttribution) {
   try {
     window.localStorage.setItem(FIRST_TOUCH_KEY, JSON.stringify(value));
   } catch {
@@ -76,17 +41,17 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState("");
   const [initialService, setInitialService] = useState("");
-  const [firstTouch, setFirstTouch] = useState<FirstTouch>({});
+  const [firstTouch, setFirstTouch] = useState<LuxeFirstTouchAttribution>({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setInitialService(bounded(params.get("service"), 160) ?? "");
+    setInitialService(boundedAttributionText(params.get("service"), 160) ?? "");
     const stored = readStoredFirstTouch();
     if (stored) {
       setFirstTouch(stored);
       return;
     }
-    const captured = readFirstTouch(params, document.referrer, window.location.href);
+    const captured = captureLuxeFirstTouch(params, document.referrer, window.location.href);
     storeFirstTouch(captured);
     setFirstTouch(captured);
   }, []);
@@ -116,8 +81,8 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
 
     const currentUrl = new URL(window.location.href);
     const params = currentUrl.searchParams;
-    const currentSource = bounded(params.get("utm_source") ?? params.get("source"), 120) ?? sourceFromReferrer(document.referrer);
-    const currentCampaign = bounded(params.get("utm_campaign"), 160);
+    const currentSource = boundedAttributionText(params.get("utm_source") ?? params.get("source"), 120) ?? sourceFromReferrer(document.referrer);
+    const currentCampaign = boundedAttributionText(params.get("utm_campaign"), 160);
 
     const payload = {
       name: form.get("name"),
@@ -140,20 +105,20 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
         firstTouchReferrer: firstTouch.referrer,
         lastTouchSource: currentSource,
         lastTouchCampaign: currentCampaign,
-        landingPage: bounded(window.location.href, 500),
-        referrer: bounded(document.referrer, 500),
-        utmSource: bounded(params.get("utm_source"), 120),
-        utmMedium: bounded(params.get("utm_medium"), 120),
+        landingPage: sanitizeAttributionUrl(window.location.href),
+        referrer: sanitizeAttributionUrl(document.referrer),
+        utmSource: boundedAttributionText(params.get("utm_source"), 120),
+        utmMedium: boundedAttributionText(params.get("utm_medium"), 120),
         utmCampaign: currentCampaign,
-        utmTerm: bounded(params.get("utm_term"), 160),
-        utmContent: bounded(params.get("utm_content"), 160),
-        campaignId: bounded(params.get("campaign_id"), 160),
-        originatingPage: bounded(params.get("originating_page"), 500),
-        cta: bounded(params.get("cta"), 160) ?? "Luxe consultation request",
+        utmTerm: boundedAttributionText(params.get("utm_term"), 160),
+        utmContent: boundedAttributionText(params.get("utm_content"), 160),
+        campaignId: boundedAttributionText(params.get("campaign_id"), 160),
+        originatingPage: sanitizeAttributionUrl(params.get("originating_page")),
+        cta: boundedAttributionText(params.get("cta"), 160) ?? "Luxe consultation request",
         bookingSource: "klinikos_hosted_luxe",
         referralSource: firstTouch.referrer,
         socialSource: ["instagram", "facebook", "tiktok"].includes(currentSource) ? currentSource : undefined,
-        qrSource: bounded(params.get("qr"), 160),
+        qrSource: boundedAttributionText(params.get("qr"), 160),
       },
       website: form.get("website") || "",
     };
