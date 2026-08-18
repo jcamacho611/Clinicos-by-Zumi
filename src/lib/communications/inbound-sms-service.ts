@@ -10,18 +10,10 @@ import {
   suppressSms,
   writeSmsPreferences,
 } from "@/lib/communications/sms-policy";
-import { classifyInboundSmsCommand, type InboundSmsCommand } from "@/lib/communications/twilio-webhook";
+import { classifySignedTwilioOptOut } from "@/lib/communications/twilio-webhook";
 
 function json(value: unknown) {
   return value as Prisma.InputJsonValue;
-}
-
-function commandFromSignedPayload(optOutType: string | null | undefined, body: string): InboundSmsCommand {
-  const declared = optOutType?.trim().toUpperCase();
-  if (declared === "STOP") return "stop";
-  if (declared === "START") return "start";
-  if (declared === "HELP") return "help";
-  return classifyInboundSmsCommand(body);
 }
 
 async function auditIntegrationEvent(input: {
@@ -93,7 +85,7 @@ export async function processInboundPatientSms(input: {
     return resolved;
   }
 
-  const command = commandFromSignedPayload(input.optOutType, input.body);
+  const command = classifySignedTwilioOptOut({ optOutType: input.optOutType, body: input.body });
 
   return db.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<Array<{ id: string; communicationPrefs: Prisma.JsonValue | null }>>(Prisma.sql`
