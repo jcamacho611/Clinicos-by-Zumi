@@ -67,28 +67,19 @@ interface CreateAcceptanceInput {
   userAgent?: string;
 }
 
+export interface CreateLegalAcceptanceResult {
+  acceptance: LegalAcceptanceRecord;
+  created: boolean;
+}
+
 export async function ensureAgreementVersionRegistered(
   agreement: AgreementPresentation,
   requiredAcknowledgments: AgreementAcknowledgment[],
 ) {
   const snapshot = agreementPlainText(agreement);
   const sha256 = agreementSha256(agreement);
-  const existing = await db.$queryRaw<StoredAgreementVersion[]>(Prisma.sql`
-    SELECT "id", "documentSha256", "documentSnapshot", "status"
-    FROM "legal_agreement_versions"
-    WHERE "documentKey" = ${agreement.documentKey}
-      AND "documentVersion" = ${agreement.documentVersion}
-    LIMIT 1
-  `);
-
-  if (existing[0]) {
-    if (existing[0].documentSha256 !== sha256 || existing[0].documentSnapshot !== snapshot) {
-      throw new Error("Published legal agreement version is immutable and does not match the current source text.");
-    }
-    return { id: existing[0].id, documentSha256: sha256, documentSnapshot: snapshot };
-  }
-
   const id = randomUUID();
+
   await db.$executeRaw(Prisma.sql`
     INSERT INTO "legal_agreement_versions" (
       "id", "documentKey", "documentVersion", "title", "effectiveAt",
@@ -98,9 +89,23 @@ export async function ensureAgreementVersionRegistered(
       ${new Date(`${agreement.effectiveDate}T00:00:00.000Z`)}, ${sha256}, ${snapshot},
       CAST(${JSON.stringify(requiredAcknowledgments)} AS JSONB), 'published'
     )
+    ON CONFLICT ("documentKey", "documentVersion") DO NOTHING
   `);
 
-  return { id, documentSha256: sha256, documentSnapshot: snapshot };
+  const registered = await db.$queryRaw<StoredAgreementVersion[]>(Prisma.sql`
+    SELECT "id", "documentSha256", "documentSnapshot", "status"
+    FROM "legal_agreement_versions"
+    WHERE "documentKey" = ${agreement.documentKey}
+      AND "documentVersion" = ${agreement.documentVersion}
+    LIMIT 1
+  `);
+
+  if (!registered[0]) throw new Error("Legal agreement version could not be registered.");
+  if (registered[0].documentSha256 !== sha256 || registered[0].documentSnapshot !== snapshot) {
+    throw new Error("Published legal agreement version is immutable and does not match the current source text.");
+  }
+
+  return { id: registered[0].id, documentSha256: sha256, documentSnapshot: snapshot };
 }
 
 export async function hasCurrentAgreementAcceptance(
@@ -199,11 +204,37 @@ export async function recordLegalEvidenceEvent({
   }).catch(() => undefined);
 }
 
-export async function createLegalAcceptance(input: CreateAcceptanceInput): Promise<LegalAcceptanceRecord> {
+function assertIdempotentAcceptanceMatches(
+  record: LegalAcceptanceRecord,
+  input: CreateAcceptanceInput,
+  sha256: string,
+) {
+  if (
+    record.userId !== input.session.userId ||
+    record.organizationId !== input.session.organizationId ||
+    record.documentKey !== input.agreement.documentKey ||
+    record.documentVersion !== input.agreement.documentVersion ||
+    record.documentSha256 !== sha256
+  ) {
+    throw new Error("Idempotency key is already bound to different legal evidence.");
+  }
+}
+
+export async function createLegalAcceptance(input: CreateAcceptanceInput): Promise<CreateLegalAcceptanceResult> {
   const snapshot = agreementPlainText(input.agreement);
   const sha256 = agreementSha256(input.agreement);
 
   return db.$transaction(async (tx) => {
+    const duplicate = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
+      SELECT * FROM "access_gate_acceptances"
+      WHERE "idempotencyKey" = ${input.idempotencyKey}
+      LIMIT 1
+    `);
+    if (duplicate[0]) {
+      assertIdempotentAcceptanceMatches(duplicate[0], input, sha256);
+      return { acceptance: duplicate[0], created: false };
+    }
+
     const current = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
       SELECT *
       FROM "access_gate_acceptances"
@@ -216,25 +247,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
         AND "signedAt" IS NOT NULL
       LIMIT 1
     `);
-    if (current[0]) return current[0];
-
-    const duplicate = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
-      SELECT * FROM "access_gate_acceptances"
-      WHERE "idempotencyKey" = ${input.idempotencyKey}
-      LIMIT 1
-    `);
-    if (duplicate[0]) {
-      if (
-        duplicate[0].userId !== input.session.userId ||
-        duplicate[0].organizationId !== input.session.organizationId ||
-        duplicate[0].documentKey !== input.agreement.documentKey ||
-        duplicate[0].documentVersion !== input.agreement.documentVersion ||
-        duplicate[0].documentSha256 !== sha256
-      ) {
-        throw new Error("Idempotency key is already bound to different legal evidence.");
-      }
-      return duplicate[0];
-    }
+    if (current[0]) return { acceptance: current[0], created: false };
 
     const id = randomUUID();
     const inserted = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
@@ -255,11 +268,59 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
         CAST(${JSON.stringify(input.acknowledgments)} AS JSONB), ${input.session.sessionId}, ${input.idempotencyKey},
         ${input.sourceRoute ?? null}, 'active'
       )
+      ON CONFLICT DO NOTHING
       RETURNING *
     `);
 
-    if (!inserted[0]) throw new Error("Legal acceptance could not be recorded.");
-    return inserted[0];
+    if (inserted[0]) {
+      const signatureEventId = randomUUID();
+      const acceptedEventId = randomUUID();
+      await tx.$executeRaw(Prisma.sql`
+        INSERT INTO "legal_agreement_events" (
+          "id", "acceptanceId", "userId", "organizationId", "eventType",
+          "documentKey", "documentVersion", "metadata"
+        ) VALUES (
+          ${signatureEventId}, ${inserted[0].id}, ${input.session.userId}, ${input.session.organizationId},
+          'legal.signature.created', ${input.agreement.documentKey}, ${input.agreement.documentVersion},
+          CAST(${JSON.stringify({ signatureMethod: "typed", signerCapacity: input.signerCapacity, documentSha256: sha256 })} AS JSONB)
+        )
+      `);
+      await tx.$executeRaw(Prisma.sql`
+        INSERT INTO "legal_agreement_events" (
+          "id", "acceptanceId", "userId", "organizationId", "eventType",
+          "documentKey", "documentVersion", "metadata"
+        ) VALUES (
+          ${acceptedEventId}, ${inserted[0].id}, ${input.session.userId}, ${input.session.organizationId},
+          'legal.agreement.accepted', ${input.agreement.documentKey}, ${input.agreement.documentVersion},
+          CAST(${JSON.stringify({ acceptedAt: input.signedAt.toISOString(), documentSha256: sha256 })} AS JSONB)
+        )
+      `);
+      return { acceptance: inserted[0], created: true };
+    }
+
+    const concurrent = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
+      SELECT *
+      FROM "access_gate_acceptances"
+      WHERE (
+        "idempotencyKey" = ${input.idempotencyKey}
+        OR (
+          "userId" = ${input.session.userId}
+          AND "organizationId" = ${input.session.organizationId}
+          AND "documentKey" = ${input.agreement.documentKey}
+          AND "documentVersion" = ${input.agreement.documentVersion}
+          AND "documentSha256" = ${sha256}
+          AND "status" = 'active'
+          AND "signedAt" IS NOT NULL
+        )
+      )
+      ORDER BY "acceptedAt" DESC
+      LIMIT 1
+    `);
+    if (!concurrent[0]) throw new Error("Legal acceptance could not be recorded safely.");
+    if (concurrent[0].idempotencyKey === input.idempotencyKey) {
+      assertIdempotentAcceptanceMatches(concurrent[0], input, sha256);
+    }
+    return { acceptance: concurrent[0], created: false };
   });
 }
 
