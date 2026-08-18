@@ -33,9 +33,9 @@ describe("adversarial buyer and accessibility baseline", () => {
   const layout = read("src/app/layout.tsx");
   const accessibility = read("src/app/accessibility.css");
   const home = read("src/components/marketing/public-living-gateway.tsx");
-  const bridge = read("src/components/marketing/public-conversion-bridge.tsx");
   const trust = read("src/app/trust/page.tsx");
-  const legalStatus = read("src/app/legal/[document]/page.tsx");
+  const terms = read("src/app/legal/terms/page.tsx");
+  const acceptableUse = read("src/app/legal/acceptable-use/page.tsx");
   const legalRegistry = read("src/lib/legal/document-registry.ts");
   const story = read("src/lib/brand/public-company-story.ts");
   const about = read("src/app/about/page.tsx");
@@ -69,26 +69,25 @@ describe("adversarial buyer and accessibility baseline", () => {
     expect(accessibility).toContain("color: #9a817c !important");
     expect(home).not.toContain("#806f6c");
     expect(home).not.toContain("#5d4b49");
-    expect(bridge).not.toContain("#806965");
-    expect(bridge).not.toContain("#655653");
   });
 
-  it("publishes readiness as bounded status rather than compliance theater", () => {
-    expect(trust).toContain("Proof before promises.");
-    expect(trust).toContain("Production clinical use is not implied.");
-    expect(trust).toContain("Pending runtime proof");
-    expect(trust).toContain("Blocked until approved");
-    expect(trust).toContain("Counsel / diligence review");
-    expect(trust).toContain("not a certification");
+  it("publishes buyer-safe trust principles without revealing infrastructure readiness or vendor topology", () => {
+    expect(trust).toContain("Clear boundaries without publishing the security blueprint.");
+    expect(trust).toContain("Public surfaces are not PHI intake");
+    expect(trust).toContain("Human authority remains consequential");
+    expect(trust).not.toContain("GitHub Actions");
+    expect(trust).not.toContain("webhook endpoint");
+    expect(trust).not.toContain("feature gate");
+    expect(trust).not.toContain("deployed application SHA");
     expect(trust).not.toContain("HIPAA compliant");
     expect(trust).not.toContain("HIPAA-certified");
   });
 
-  it("resolves every governed legal route without inventing final legal language", () => {
-    expect(legalStatus).toContain("legalDocumentRegistry");
-    expect(legalStatus).toContain("counsel has approved");
-    expect(legalStatus).toContain("Production approved");
-    expect(legalStatus).toContain("not final contractual language");
+  it("publishes operative public terms and acceptable-use rules while keeping internal legal readiness private", () => {
+    expect(terms).toContain("Agreement to these Terms");
+    expect(terms).toContain("Ownership and intellectual property");
+    expect(acceptableUse).toContain("No implied permission to test security");
+    expect(fs.existsSync(path.join(process.cwd(), "src/app/legal/[document]/page.tsx"))).toBe(false);
     expect(legalRegistry).toContain("counselReviewRequired: true");
     expect(legalRegistry).toContain("productionApproved: false");
   });
