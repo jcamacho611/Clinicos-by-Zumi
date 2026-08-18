@@ -14,7 +14,7 @@ describe("public crawl foundation", () => {
     expect(paths).toContain("/founding-clinic");
 
     for (const path of paths) {
-      expect(privateRoutePrefixes.some((prefix) => path === prefix.slice(0, -1) || path.startsWith(prefix))).toBe(false);
+      expect(privateRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))).toBe(false);
     }
   });
 
@@ -24,13 +24,13 @@ describe("public crawl foundation", () => {
     const disallowed = rules.flatMap((rule) => rule.disallow ?? []);
 
     expect(disallowed).toEqual(expect.arrayContaining([
-      "/api/",
-      "/dashboard/",
-      "/billing/",
-      "/patients/",
-      "/payments/",
-      "/portal/",
-      "/grid/workspace/",
+      "/api",
+      "/dashboard",
+      "/billing",
+      "/patients",
+      "/payments",
+      "/portal",
+      "/grid/workspace",
     ]));
     expect(policy.sitemap).toBe("https://klinikos.io/sitemap.xml");
   });
