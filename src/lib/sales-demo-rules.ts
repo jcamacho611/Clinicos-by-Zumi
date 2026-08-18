@@ -108,8 +108,10 @@ export const salesIntakeSchema = z.object({
   contactEmail: z.string().trim().email().max(180),
   contactPhone: z.string().trim().min(7).max(40),
   clinicType: z.enum(clinicTypeOptions),
-  providerCount: z.number().int().min(1).max(10_000),
-  locationCount: z.number().int().min(1).max(1_000),
+  // Zero means the qualification detail was intentionally not collected before purchase.
+  // Real clinic sizing is gathered during post-payment discovery instead of blocking checkout.
+  providerCount: z.number().int().min(0).max(10_000),
+  locationCount: z.number().int().min(0).max(1_000),
   currentSystems: currentSystemsSchema,
   estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
   biggestPainPoint: painPointSchema,
