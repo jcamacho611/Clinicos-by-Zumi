@@ -246,7 +246,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
         "documentSnapshot", "acknowledgments", "sessionId", "idempotencyKey", "sourceRoute", "status"
       ) VALUES (
         ${id}, ${input.session.email}, ${input.agreement.documentKey}, ${input.agreement.documentVersion},
-        ${input.signedAt}, ${input.signedAt}, ${input.ipAddress ?? null}, ${input.userAgent ?? null},
+        ${input.signedAt}, NULL, ${input.ipAddress ?? null}, ${input.userAgent ?? null},
         'authenticated-legal-gate', ${input.session.userId}, ${input.session.organizationId}, ${input.legalName},
         ${input.signerTitle ?? null}, ${input.signerCapacity}, ${input.signerCountry}, ${input.signerRegion ?? null},
         'typed', NULL, ${input.authorityConfirmed}, ${input.signedAt}, ${input.presentedAt},
