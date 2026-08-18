@@ -56,9 +56,9 @@ ALTER TABLE "access_gate_acceptances"
 CREATE UNIQUE INDEX IF NOT EXISTS "access_gate_acceptances_idempotency_key"
   ON "access_gate_acceptances"("idempotencyKey")
   WHERE "idempotencyKey" IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS "access_gate_acceptances_user_active_version_key"
-  ON "access_gate_acceptances"("userId", "documentKey", "documentVersion")
-  WHERE "userId" IS NOT NULL AND "status" = 'active';
+CREATE UNIQUE INDEX IF NOT EXISTS "access_gate_acceptances_user_org_active_version_key"
+  ON "access_gate_acceptances"("userId", "organizationId", "documentKey", "documentVersion")
+  WHERE "userId" IS NOT NULL AND "organizationId" IS NOT NULL AND "status" = 'active';
 CREATE INDEX IF NOT EXISTS "access_gate_acceptances_user_idx"
   ON "access_gate_acceptances"("userId", "acceptedAt");
 CREATE INDEX IF NOT EXISTS "access_gate_acceptances_org_idx"
