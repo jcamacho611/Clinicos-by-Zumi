@@ -47,6 +47,7 @@ export type ExpertEngagementNeed = {
   remoteAllowed: boolean;
   onsiteLocationKey?: string | null;
   requiredEvidenceKeys: string[];
+  requiredAgreementEvidenceKeys: string[];
   requiredDataAccessClass: ExpertDataAccessClass;
   urgency: "routine" | "priority" | "urgent" | "critical";
   maxPriceCents?: number | null;
@@ -161,7 +162,7 @@ export function rankExpertGridMatches(input: {
 /**
  * Matching eligibility is not data-access authorization. A Grid match must still
  * proceed through engagement terms, purpose-bound authorization, minimum-
- * necessary access, any required BAA/contract evidence, and human approval before
+ * necessary access, governed agreement requirements, and human approval before
  * sensitive clinic or patient data becomes visible to an outside expert.
  */
 export function expertGridEngagementRequiresScopedAccess(need: ExpertEngagementNeed) {
