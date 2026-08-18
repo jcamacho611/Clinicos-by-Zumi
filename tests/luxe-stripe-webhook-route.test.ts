@@ -1,9 +1,10 @@
 import Stripe from "stripe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { recordCommercialEvidence, recordLuxeDeposit, processRecurring } = vi.hoisted(() => ({
+const { recordCommercialEvidence, recordLuxeDeposit, recordLuxeRefund, processRecurring } = vi.hoisted(() => ({
   recordCommercialEvidence: vi.fn(),
   recordLuxeDeposit: vi.fn(),
+  recordLuxeRefund: vi.fn(),
   processRecurring: vi.fn(),
 }));
 
@@ -13,6 +14,10 @@ vi.mock("@/lib/commercial/payment-evidence-repository", () => ({
 
 vi.mock("@/lib/repositories/luxe-processor-payment-evidence-repository", () => ({
   recordProcessorVerifiedLuxeStripeDeposit: recordLuxeDeposit,
+}));
+
+vi.mock("@/lib/repositories/luxe-refund-evidence-repository", () => ({
+  recordProcessorVerifiedLuxeStripeRefund: recordLuxeRefund,
 }));
 
 vi.mock("@/lib/commercial/stripe-clinic-subscriptions", () => ({
@@ -28,6 +33,12 @@ import { POST } from "@/app/api/webhooks/stripe/route";
 
 const webhookSecret = "whsec_luxe_unit_test_only";
 const signer = new Stripe("sk_test_luxe_unit_test_only");
+const luxeMetadata = {
+  klinikos_sale_mode: "luxe_deposit",
+  klinikos_luxe_journey: "opaque-journey-token",
+  klinikos_luxe_expected_amount_cents: "15000",
+  klinikos_luxe_payment_kind: "deposit",
+};
 
 function signedRequest(payload: Record<string, unknown>) {
   const raw = JSON.stringify(payload);
@@ -56,12 +67,29 @@ function luxeDepositEvent(overrides: Record<string, unknown> = {}) {
         currency: "usd",
         payment_intent: "pi_live_luxe_deposit",
         customer: null,
-        metadata: {
-          klinikos_sale_mode: "luxe_deposit",
-          klinikos_luxe_journey: "opaque-journey-token",
-          klinikos_luxe_expected_amount_cents: "15000",
-          klinikos_luxe_payment_kind: "deposit",
-        },
+        metadata: luxeMetadata,
+        ...overrides,
+      },
+    },
+  };
+}
+
+function luxeRefundEvent(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "evt_live_luxe_refund",
+    object: "event",
+    type: "charge.refunded",
+    livemode: true,
+    created: 1787079600,
+    data: {
+      object: {
+        id: "ch_live_luxe_deposit",
+        object: "charge",
+        amount: 15_000,
+        amount_refunded: 5_000,
+        currency: "usd",
+        payment_intent: "pi_live_luxe_deposit",
+        metadata: luxeMetadata,
         ...overrides,
       },
     },
@@ -74,6 +102,7 @@ describe("Luxe Stripe deposit webhook routing", () => {
     process.env.STRIPE_WEBHOOK_SECRET = webhookSecret;
     recordCommercialEvidence.mockReset();
     recordLuxeDeposit.mockReset();
+    recordLuxeRefund.mockReset();
     processRecurring.mockReset();
     recordLuxeDeposit.mockResolvedValue({
       recorded: true,
@@ -82,6 +111,14 @@ describe("Luxe Stripe deposit webhook routing", () => {
       paymentStatus: "processor_verified",
       bookingStatus: "started",
       taskId: "task-1",
+    });
+    recordLuxeRefund.mockResolvedValue({
+      recorded: true,
+      idempotent: false,
+      evidenceId: "refund-evidence-1",
+      amountRefundedCents: 5_000,
+      paymentStatus: "partially_refunded",
+      taskId: "task-refund-1",
     });
   });
 
@@ -111,6 +148,7 @@ describe("Luxe Stripe deposit webhook routing", () => {
       amountCents: 15_000,
       currency: "USD",
     });
+    expect(recordLuxeRefund).not.toHaveBeenCalled();
     expect(recordCommercialEvidence).not.toHaveBeenCalled();
     expect(processRecurring).not.toHaveBeenCalled();
   });
@@ -138,6 +176,67 @@ describe("Luxe Stripe deposit webhook routing", () => {
     const response = await POST(signedRequest(luxeDepositEvent()));
     expect(response.status).toBe(409);
     expect(await response.json()).toMatchObject({ error: "Luxe Stripe deposit evidence needs reconciliation before it can be attributed." });
+    expect(recordCommercialEvidence).not.toHaveBeenCalled();
+  });
+
+  it("routes a signed partial refund into the Luxe refund evidence processor only", async () => {
+    const response = await POST(signedRequest(luxeRefundEvent()));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      received: true,
+      supported: true,
+      luxeDepositRefund: true,
+      amountRefundedCents: 5_000,
+      paymentStatus: "partially_refunded",
+      idempotent: false,
+    });
+    expect(recordLuxeRefund).toHaveBeenCalledOnce();
+    expect(recordLuxeRefund.mock.calls[0][0]).toMatchObject({
+      journeyToken: "opaque-journey-token",
+      eventId: "evt_live_luxe_refund",
+      externalReference: "ch_live_luxe_deposit",
+      paymentExternalReference: "pi_live_luxe_deposit",
+      amountRefundedCents: 5_000,
+      originalAmountCents: 15_000,
+      currency: "USD",
+    });
+    expect(recordLuxeDeposit).not.toHaveBeenCalled();
+    expect(recordCommercialEvidence).not.toHaveBeenCalled();
+    expect(processRecurring).not.toHaveBeenCalled();
+  });
+
+  it("routes a full refund without claiming the booking was cancelled", async () => {
+    recordLuxeRefund.mockResolvedValueOnce({
+      recorded: true,
+      idempotent: false,
+      evidenceId: "refund-evidence-full",
+      amountRefundedCents: 15_000,
+      paymentStatus: "refunded",
+      taskId: "task-refund-full",
+    });
+    const response = await POST(signedRequest(luxeRefundEvent({ amount_refunded: 15_000 })));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ paymentStatus: "refunded", amountRefundedCents: 15_000 });
+    expect(recordCommercialEvidence).not.toHaveBeenCalled();
+  });
+
+  it("returns idempotent refund evidence truth for a replay", async () => {
+    recordLuxeRefund.mockResolvedValueOnce({
+      recorded: true,
+      idempotent: true,
+      evidenceId: "refund-evidence-1",
+      amountRefundedCents: 5_000,
+      paymentStatus: "partially_refunded",
+    });
+    const response = await POST(signedRequest(luxeRefundEvent()));
+    expect(await response.json()).toMatchObject({ luxeDepositRefund: true, idempotent: true });
+  });
+
+  it("rejects inconsistent signed refund amounts before the repository", async () => {
+    const response = await POST(signedRequest(luxeRefundEvent({ amount_refunded: 15_001 })));
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({ error: "Luxe Stripe refund evidence could not be processed." });
+    expect(recordLuxeRefund).not.toHaveBeenCalled();
     expect(recordCommercialEvidence).not.toHaveBeenCalled();
   });
 });
