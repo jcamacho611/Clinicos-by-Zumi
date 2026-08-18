@@ -7,28 +7,21 @@ export type ZumiClientAction = {
   id: string;
   title: string;
   reason: string;
-  capabilityKey: null;
   href: string | null;
   state: string;
-  priority: 0;
-  blockers: string[];
 };
 
 export type ZumiClientBlocker = {
   code: string;
   title: string;
   explanation: string;
-  owner: "user";
-  canResolveNow: boolean;
 };
 
 export type ZumiClientGuidance = {
   path: {
-    pathId: "current-route";
     title: string;
     status: string;
     progress: number;
-    blockers: string[];
   } | null;
   nextActions: ZumiClientAction[];
   blockers: ZumiClientBlocker[];
@@ -70,8 +63,8 @@ function safeProgress(value: number) {
 
 /**
  * Reduce trusted orchestration to the minimum browser contract. Internal path/action
- * identifiers, capability keys, priorities, blocker codes/owners, warnings, intent
- * candidates, and policy metadata never cross this boundary.
+ * identifiers, capability keys, priorities, action policy blockers, blocker codes,
+ * owners, warnings, intent candidates, and policy metadata never cross this boundary.
  */
 export function projectTrustedOrchestrationForClient(
   orchestration: ZumiTrustedOrchestration,
@@ -79,29 +72,22 @@ export function projectTrustedOrchestrationForClient(
   return {
     path: orchestration.path
       ? {
-          pathId: "current-route",
           title: orchestration.path.title,
           status: orchestration.path.status,
           progress: safeProgress(orchestration.path.progress),
-          blockers: [],
         }
       : null,
     nextActions: orchestration.nextActions.slice(0, 8).map((action, index) => ({
       id: `action-${index + 1}`,
       title: action.title,
       reason: action.reason,
-      capabilityKey: null,
       href: safeInternalHref(action.href),
       state: action.state,
-      priority: 0,
-      blockers: action.blockers.slice(0, 4),
     })),
     blockers: orchestration.blockers.slice(0, 8).map((blocker, index) => ({
       code: `blocker-${index + 1}`,
       title: blocker.title,
       explanation: blocker.explanation,
-      owner: "user",
-      canResolveNow: blocker.canResolveNow,
     })),
   };
 }
