@@ -6,6 +6,7 @@ import { ArrowRight, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck } from "l
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 type AccessState = "entry" | "verification-sent";
 
@@ -47,8 +48,9 @@ export default function AccessPage() {
       try {
         window.localStorage.setItem("klinikos-access-email", email.trim().toLowerCase());
         window.localStorage.setItem("klinikos-access-terms-version", result.documentVersion ?? "2026-08-10.1");
+        window.localStorage.setItem("klinikos-website-terms-version", WEBSITE_TERMS_VERSION);
       } catch {
-        // Server-side records remain authoritative.
+        // Server-side records remain authoritative for protected-access acceptance.
       }
       setState("verification-sent");
     } catch {
@@ -97,12 +99,22 @@ export default function AccessPage() {
           <div className="flex items-center gap-3 border-b border-slate-200 pb-5"><LockKeyhole className="size-5 text-[#9a7a1f]" /><div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#9a7a1f]">Evaluation access</p><h2 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">Verify a work email to continue.</h2></div></div>
           <form className="mt-6" onSubmit={continueIntoKlinikos}>
             <label className="text-xs font-bold text-slate-700">Work email<Input autoComplete="email" className="mt-2 h-12" onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" required type="email" value={email} /></label>
-            <label className="mt-5 flex cursor-pointer items-start gap-3 border border-slate-200 p-4 text-xs leading-6 text-slate-600"><input checked={accepted} className="mt-1 accent-slate-950" onChange={(event) => setAccepted(event.target.checked)} required type="checkbox" /><span><strong className="text-slate-950">I agree to the Klinikos Access, Confidentiality & Intellectual Property Terms</strong> and acknowledge the Privacy Notice. I understand access does not grant ownership, source-code rights, competitive-use rights or permission to reproduce proprietary Klinikos materials.</span></label>
+            <label className="mt-5 flex cursor-pointer items-start gap-3 border border-slate-200 p-4 text-xs leading-6 text-slate-600">
+              <input checked={accepted} className="mt-1 accent-slate-950" onChange={(event) => setAccepted(event.target.checked)} required type="checkbox" />
+              <span>
+                <strong className="text-slate-950">I agree to the Klinikos Access, Confidentiality &amp; Intellectual Property Terms, the Website Terms of Use, and the Acceptable Use Policy</strong>, and I acknowledge the Privacy Notice. I understand access does not grant ownership, source-code rights, competitive-use rights or permission to reproduce proprietary Klinikos materials.
+              </span>
+            </label>
             {error && <p className="mt-4 border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
-            <Button className="mt-5 w-full" disabled={!accepted || !email.trim() || submitting} size="lg" type="submit" variant="primary">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Recording and sending verification...</> : <>Agree & verify email <ArrowRight className="size-4" /></>}</Button>
+            <Button className="mt-5 w-full" disabled={!accepted || !email.trim() || submitting} size="lg" type="submit" variant="primary">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Recording and sending verification...</> : <>Agree &amp; verify email <ArrowRight className="size-4" /></>}</Button>
           </form>
-          <div className="mt-6 border-t border-slate-200 pt-5 text-[10px] leading-5 text-slate-500">Your acceptance is recorded server-side with the current agreement version and request metadata. A verified email is required before protected evaluation access is granted. Clinic, provider, GRID and production use require separate role-specific agreements and operational approvals.</div>
-          <div className="mt-4 flex gap-4 text-[10px] font-bold"><Link className="text-slate-700 hover:text-slate-950" href="/legal/access-terms">Access terms</Link><Link className="text-slate-700 hover:text-slate-950" href="/legal/privacy">Privacy notice</Link></div>
+          <div className="mt-6 border-t border-slate-200 pt-5 text-[10px] leading-5 text-slate-500">Your protected-access acceptance is recorded server-side with the current access agreement version and request metadata. Website Terms version {WEBSITE_TERMS_VERSION} also applies to public use. A verified email is required before protected evaluation access is granted. Clinic, provider, Grid and production use require separate role-specific agreements and operational approvals.</div>
+          <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-bold">
+            <Link className="text-slate-700 hover:text-slate-950" href="/legal/access-terms">Access terms</Link>
+            <Link className="text-slate-700 hover:text-slate-950" href="/legal/terms">Website terms</Link>
+            <Link className="text-slate-700 hover:text-slate-950" href="/legal/acceptable-use">Acceptable use</Link>
+            <Link className="text-slate-700 hover:text-slate-950" href="/legal/privacy">Privacy notice</Link>
+          </div>
         </section>
       </div>
     </main>
