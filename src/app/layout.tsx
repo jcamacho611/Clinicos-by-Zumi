@@ -3,12 +3,12 @@ import "@fontsource-variable/manrope";
 import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
-import "./accessibility.css";
 import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
 import "./cinematic-command-overrides.css";
 import "./cinematic-home-overrides.css";
 import "./experience-convergence.css";
+import "./accessibility.css";
 
 const siteUrl = "https://klinikos.io";
 
