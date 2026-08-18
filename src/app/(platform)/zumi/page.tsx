@@ -5,8 +5,8 @@ import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "Klinikos Browser | Klinikos",
-  description: "Klinikos Intelligence browser for conversations, governed routes, and working contexts.",
+  title: "Zumi | Klinikos",
+  description: "Expanded Zumi conversation for guided Klinikos work.",
 };
 
 export default async function ZumiPage() {
