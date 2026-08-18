@@ -7,6 +7,7 @@ const patientPage = read("src/app/(platform)/patients/[patientId]/page.tsx");
 const patientPanel = read("src/components/clinic/patient-sms-preferences-panel.tsx");
 const workspacePage = read("src/app/(platform)/[workspace]/page.tsx");
 const routingPanel = read("src/components/clinic/twilio-routing-panel.tsx");
+const connections = read("src/components/clinic/connections-workspace-real.tsx");
 
 describe("SMS consent UI contract", () => {
   it("mounts patient communication permissions behind the existing consents RBAC", () => {
@@ -20,11 +21,11 @@ describe("SMS consent UI contract", () => {
     expect(patientPanel).toContain('transactional: { label: "Transactional"');
     expect(patientPanel).toContain('operational: { label: "Operational"');
     expect(patientPanel).toContain('marketing: { label: "Marketing"');
-    expect(patientPanel).toContain("requires written authorization");
+    expect(patientPanel).toContain("Marketing grant is deliberately unavailable here");
     expect(patientPanel).toContain("Staff cannot clear suppression from this chart");
-    expect(patientPanel).toContain("Phone verification proves possession only; it never creates consent");
+    expect(patientPanel).toContain("Phone verification proves possession only and is independently required before a patient send");
     expect(patientPanel).toContain("Clinical SMS locked");
-    expect(patientPanel).toContain("Staff documentation can record denial or revocation, but it cannot create permission");
+    expect(patientPanel).toContain("Staff documentation may record denial or revocation, but it cannot create permission");
   });
 
   it("announces asynchronous status and gives repeated permission buttons contextual names", () => {
@@ -39,6 +40,7 @@ describe("SMS consent UI contract", () => {
   it("mounts platform-managed Twilio routing without accepting provider secrets", () => {
     expect(workspacePage).toContain('workspace === "integrations"');
     expect(workspacePage).toContain('can(session.role, "integrations", "manage")');
+    expect(workspacePage).toContain("ConnectionsWorkspaceReal");
     expect(routingPanel).toContain("/api/integrations/twilio/sms-routing");
     expect(routingPanel).toContain("platform-managed Twilio account");
     expect(routingPanel).toContain("Bring-your-own Twilio accounts are not a current production capability");
@@ -47,6 +49,15 @@ describe("SMS consent UI contract", () => {
     expect(routingPanel).toContain("Production SMS is not authorized by this panel");
     expect(routingPanel).toContain("America/New_York");
     expect(routingPanel).toContain("focus-visible:ring-2");
+  });
+
+  it("makes the capability matrix accessible and does not call pending Twilio live", () => {
+    expect(connections).toContain('<caption className="sr-only">');
+    expect(connections).toContain('scope="col"');
+    expect(connections).toContain('scope="row"');
+    expect(connections).toContain('name: "Twilio"');
+    expect(connections).toContain('state: "Pending Connection"');
+    expect(connections).not.toContain('name: "Twilio", purpose: "Voice and SMS", state: "Roadmap"');
   });
 
   it("never calls Twilio transport directly from either UI", () => {
