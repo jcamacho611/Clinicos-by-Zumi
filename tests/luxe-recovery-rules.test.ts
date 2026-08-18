@@ -54,15 +54,16 @@ describe("Luxe recovery review", () => {
     expect(result.metrics.suppressedEstimatedOpportunityCents).toBe(85000);
   });
 
-  it("suppresses obvious spam, duplicate, test, and invalid lost reasons", () => {
+  it("suppresses obvious invalid and explicit do-not-contact lost reasons", () => {
     const result = buildLuxeRecoveryReview([
       lead({ id: "spam", status: "lost", lostReason: "Spam submission" }),
       lead({ id: "duplicate", status: "lost", lostReason: "Duplicate record" }),
       lead({ id: "test", status: "lost", lostReason: "Test lead" }),
       lead({ id: "invalid", status: "lost", lostReason: "Invalid phone" }),
+      lead({ id: "dnc", status: "lost", lostReason: "Requested: do not contact again" }),
     ], { now, staleAfterDays: 7 });
     expect(result.metrics.reviewCandidates).toBe(0);
-    expect(result.metrics.suppressedCandidates).toBe(4);
+    expect(result.metrics.suppressedCandidates).toBe(5);
   });
 
   it("keeps estimated opportunity separate while ranking higher-value review candidates first", () => {
