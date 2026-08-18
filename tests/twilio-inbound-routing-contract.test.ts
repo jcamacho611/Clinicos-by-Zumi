@@ -15,6 +15,7 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(integration).toContain("senderPhone");
     expect(integration).toContain("messagingServiceSid");
     expect(integration).toContain("sender_already_assigned");
+    expect(integration).toContain("LIMIT 2");
     expect(integration).not.toContain("TWILIO_API_KEY_SECRET");
     expect(configRoute).not.toContain("TWILIO_AUTH_TOKEN");
     expect(configRoute).toContain('enforceApiPermission(session, "integrations", "manage"');
@@ -29,10 +30,13 @@ describe("Twilio inbound tenant routing contract", () => {
     expect(webhook).toContain('"Content-Type": "application/xml; charset=utf-8"');
   });
 
-  it("fails closed on ambiguous patients and processes each provider event under a row lock", () => {
+  it("fails closed on ambiguous patients and persists replay evidence under a row lock", () => {
     expect(inbound).toContain('reason: "ambiguous_patient"');
     expect(inbound).toContain("FOR UPDATE");
     expect(inbound).toContain("hasProcessedInboundSmsEvent");
+    expect(inbound).toContain("tx.integrationEvent.findFirst");
+    expect(inbound).toContain("tx.integrationEvent.create");
+    expect(inbound).toContain('resourceType: "twilio_message"');
     expect(inbound).toContain('state: "duplicate"');
   });
 
