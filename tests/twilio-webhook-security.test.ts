@@ -1,6 +1,10 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { classifyInboundSmsCommand, validateTwilioWebhookSignature } from "@/lib/communications/twilio-webhook";
+import {
+  classifyInboundSmsCommand,
+  classifySignedTwilioOptOut,
+  validateTwilioWebhookSignature,
+} from "@/lib/communications/twilio-webhook";
 
 function sign(url: string, params: URLSearchParams, token: string) {
   const valuesByKey = new Map<string, string[]>();
@@ -43,10 +47,14 @@ describe("Twilio inbound webhook security", () => {
     }
     for (const word of ["START", "unstop"]) expect(classifyInboundSmsCommand(word)).toBe("start");
     for (const word of ["HELP", "info"]) expect(classifyInboundSmsCommand(word)).toBe("help");
-
-    // YES may be classified by Twilio Advanced Opt-Out and arrive as signed OptOutType=START,
-    // but it is not safe as our provider-independent fallback because sender types differ.
     expect(classifyInboundSmsCommand("yes")).toBe("other");
     expect(classifyInboundSmsCommand("please text me tomorrow")).toBe("other");
+  });
+
+  it("lets signed Twilio OptOutType override the conservative fallback", () => {
+    expect(classifySignedTwilioOptOut({ optOutType: "START", body: "yes" })).toBe("start");
+    expect(classifySignedTwilioOptOut({ optOutType: "STOP", body: "keep texting me" })).toBe("stop");
+    expect(classifySignedTwilioOptOut({ optOutType: "HELP", body: "anything" })).toBe("help");
+    expect(classifySignedTwilioOptOut({ optOutType: null, body: "YES" })).toBe("other");
   });
 });
