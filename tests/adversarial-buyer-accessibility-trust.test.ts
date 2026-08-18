@@ -73,13 +73,15 @@ describe("adversarial buyer and accessibility baseline", () => {
     expect(bridge).not.toContain("#655653");
   });
 
-  it("publishes readiness as bounded status rather than compliance theater", () => {
+  it("publishes readiness as bounded status rather than compliance or integration theater", () => {
     expect(trust).toContain("Proof before promises.");
     expect(trust).toContain("Production clinical use is not implied.");
     expect(trust).toContain("Pending runtime proof");
     expect(trust).toContain("Blocked until approved");
     expect(trust).toContain("Counsel / diligence review");
     expect(trust).toContain("not a certification");
+    expect(trust).toContain("Repository presence does not prove the deployed endpoint");
+    expect(trust).not.toContain("live Stripe webhook endpoint is configured");
     expect(trust).not.toContain("HIPAA compliant");
     expect(trust).not.toContain("HIPAA-certified");
   });
