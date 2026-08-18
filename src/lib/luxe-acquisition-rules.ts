@@ -5,7 +5,14 @@ const boundedText = (max: number) => z.string().trim().max(max).optional().nulla
 
 export const luxeAttributionSchema = z.object({
   firstTouchSource: boundedText(120),
+  firstTouchMedium: boundedText(120),
+  firstTouchCampaign: boundedText(160),
+  firstTouchTerm: boundedText(160),
+  firstTouchContent: boundedText(160),
+  firstTouchLandingPage: boundedText(500),
+  firstTouchReferrer: boundedText(500),
   lastTouchSource: boundedText(120),
+  lastTouchCampaign: boundedText(160),
   landingPage: boundedText(500),
   referrer: boundedText(500),
   utmSource: boundedText(120),
@@ -62,10 +69,11 @@ export function normalizeAttribution(value: LuxeAttribution) {
 }
 
 export function campaignSourceFromAttribution(attribution: LuxeAttribution) {
-  return attribution.utmCampaign
+  return attribution.firstTouchCampaign
+    ?? attribution.utmCampaign
+    ?? attribution.firstTouchSource
     ?? attribution.utmSource
     ?? attribution.lastTouchSource
-    ?? attribution.firstTouchSource
     ?? "luxe-medi.com";
 }
 
