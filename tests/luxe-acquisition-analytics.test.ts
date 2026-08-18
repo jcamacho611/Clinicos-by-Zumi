@@ -64,6 +64,26 @@ describe("Luxe acquisition operations analytics", () => {
     expect(result.metrics.collectedRevenueWithEvidenceCents).toBe(0);
   });
 
+  it("removes cancellation-observed demand from booked estimate and moves it into recovery review", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "cancelled",
+        status: "booked",
+        pipelineStage: "cancellation_review",
+        bookingStatus: "cancellation_observed",
+        estimatedValueCents: 85000,
+        followUpDueAt: new Date("2026-08-18T17:10:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.cancellationReviewLeads).toBe(1);
+    expect(result.metrics.cancellationRecoverableEstimatedCents).toBe(85000);
+    expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.metrics.collectedRevenueWithEvidenceCents).toBe(0);
+    expect(result.actionQueue[0]?.cancellationReviewPending).toBe(true);
+    expect(result.actionQueue[0]?.action).toBe("review_cancellation");
+  });
+
   it("shows booking start as verification work without counting it as booked", () => {
     const result = summarizeAcquisitionLeads([
       lead({
