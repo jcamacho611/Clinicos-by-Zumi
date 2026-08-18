@@ -83,7 +83,7 @@ export default async function LegalDocumentStatusPage({ params }: { params: Prom
 function StatusCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white p-5">
-      <dt className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500">{label}</dt>
+      <dt className="text-[12px] font-extrabold uppercase tracking-[.14em] text-slate-500">{label}</dt>
       <dd className="mt-2 text-sm font-bold text-slate-950">{value}</dd>
     </div>
   );

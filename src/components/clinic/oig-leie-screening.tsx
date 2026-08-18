@@ -46,15 +46,15 @@ export function OigLeieScreening({ npi }: { npi: string | null }) {
   const hasPossibleMatch = Boolean(result?.possibleMatches.length);
   return <div className="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <div><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500">Free federal exclusion screening</p><p className="mt-1 text-[10px] text-slate-400">HHS OIG LEIE · public downloadable database</p></div>
+      <div><p className="text-[12px] font-extrabold uppercase tracking-[.14em] text-slate-500">Free federal exclusion screening</p><p className="mt-1 text-[12px] text-slate-400">HHS OIG LEIE · public downloadable database</p></div>
       <Button disabled={busy} onClick={screen} size="sm" variant="secondary">{busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Search className="size-3.5" />} Screen LEIE</Button>
     </div>
-    {result && <div className="mt-3 space-y-2 text-[10px] leading-5">
+    {result && <div className="mt-3 space-y-2 text-[12px] leading-5">
       <p className={`flex items-center gap-1.5 font-extrabold ${hasPossibleMatch ? "text-rose-700" : "text-amber-800"}`}>{hasPossibleMatch ? <AlertTriangle className="size-3.5" /> : <AlertCircle className="size-3.5" />}{hasPossibleMatch ? `${result.possibleMatches.length} exact-NPI exclusion candidate${result.possibleMatches.length === 1 ? "" : "s"}` : "No exact-NPI candidate found in this preliminary LEIE screen"}</p>
       {hasPossibleMatch && result.possibleMatches.slice(0, 3).map((match, index) => <div className="rounded-xl bg-rose-50 p-2 text-rose-900" key={`${match.npi}-${index}`}><strong>{match.businessName ?? [match.firstName, match.lastName].filter(Boolean).join(" ") ?? "Possible match"}</strong>{match.state ? ` · ${match.state}` : ""}{match.exclusionType ? ` · ${match.exclusionType}` : ""}{match.exclusionDate ? ` · ${match.exclusionDate}` : ""}</div>)}
       {result.sourceUpdatedAt && <p className="text-slate-500">Downloaded source updated {new Date(result.sourceUpdatedAt).toLocaleDateString()}.</p>}
       <p className="text-amber-800">{result.verificationNotice}</p>
     </div>}
-    {error && <p className="mt-3 text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
+    {error && <p className="mt-3 text-[12px] font-bold text-rose-600" role="alert">{error}</p>}
   </div>;
 }

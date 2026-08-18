@@ -57,8 +57,8 @@ export async function getGridTrustReviewQueue(session: ClinicSession) {
              owner."name" AS "ownerOrganizationName", opener."name" AS "openedByOrganizationName",
              demand."title" AS "demandTitle", d."updatedAt"
       FROM "GridDisputeRecord" d
-      JOIN "Organization" owner ON owner."id" = d."organizationId"
-      JOIN "Organization" opener ON opener."id" = d."openedByOrganizationId"
+      JOIN "organizations" owner ON owner."id" = d."organizationId"
+      JOIN "organizations" opener ON opener."id" = d."openedByOrganizationId"
       JOIN "GridReservationRecord" r ON r."id" = d."reservationId"
       JOIN "GridDemandRecord" demand ON demand."id" = r."demandId"
       ORDER BY CASE WHEN d."status" = 'closed' THEN 1 ELSE 0 END, d."updatedAt" DESC
@@ -69,8 +69,8 @@ export async function getGridTrustReviewQueue(session: ClinicSession) {
              owner."name" AS "ownerOrganizationName", reporter."name" AS "reportedByOrganizationName",
              demand."title" AS "demandTitle", s."updatedAt"
       FROM "GridSafetyIncidentRecord" s
-      JOIN "Organization" owner ON owner."id" = s."organizationId"
-      JOIN "Organization" reporter ON reporter."id" = s."reportedByOrganizationId"
+      JOIN "organizations" owner ON owner."id" = s."organizationId"
+      JOIN "organizations" reporter ON reporter."id" = s."reportedByOrganizationId"
       JOIN "GridReservationRecord" r ON r."id" = s."reservationId"
       JOIN "GridDemandRecord" demand ON demand."id" = r."demandId"
       ORDER BY CASE WHEN s."status" = 'closed' THEN 1 ELSE 0 END,

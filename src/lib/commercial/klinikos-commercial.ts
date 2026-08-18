@@ -90,6 +90,136 @@ export const commercialAddOns = {
   usagePacks: { name: "Usage packs", priceLabel: "Prepaid", rule: "Used only after included allowance is exhausted and before any unapproved overage." },
 } as const;
 
+/**
+ * Grid monetization.
+ *
+ * Grid's economics are deliberately asymmetric: being findable costs nothing, and a
+ * platform fee applies only when a lawful match is actually accepted. Listing,
+ * searching and declining stay free forever, because a marketplace that charges for
+ * presence prices out exactly the supply it needs.
+ *
+ * `priceLabel` is the customer-facing string and `monthlyPriceCents` the machine
+ * value; a range carries a null cents value because a range is not a charge.
+ */
+export const gridPlans = {
+  individual: {
+    key: "grid_individual",
+    name: "Grid Individual",
+    monthlyPriceCents: 0,
+    priceLabel: "Free",
+    unitLabel: "for clinicians and contractors",
+    idealFor: "Be findable, be eligible, receive offers.",
+    includes: ["Profile, credentials and availability", "Search and receive offers", "Eligibility screening"],
+    excludes: ["No priority matching"],
+  },
+  pro: {
+    key: "grid_pro",
+    name: "Grid Pro",
+    monthlyPriceCents: 4_900,
+    priceLabel: "$49/mo",
+    unitLabel: "per person",
+    idealFor: "People who work Grid regularly.",
+    includes: ["Priority matching", "Saved availability and searches", "Earnings and obligation history"],
+    excludes: ["Single-person account"],
+  },
+  proPlus: {
+    key: "grid_pro_plus",
+    name: "Grid Pro+",
+    monthlyPriceCents: null,
+    priceLabel: "$99–149/mo",
+    unitLabel: "per person",
+    idealFor: "Independent practitioners running their own book.",
+    includes: ["Everything in Pro", "Multi-site availability", "Client and rebooking continuity", "Agreement and payout records"],
+    excludes: [],
+  },
+  organization: {
+    key: "grid_organization",
+    name: "Grid for organizations",
+    monthlyPriceCents: 29_900,
+    priceLabel: "from $299/mo",
+    unitLabel: "per organization",
+    idealFor: "Publish capacity, receive eligible offers, run transactions.",
+    includes: ["Publish rooms, hours, services, placements", "Your eligibility rules enforced at match", "Offers, reservations, obligations", "Splits, payouts and settlement records"],
+    excludes: [],
+  },
+} as const;
+
+export const gridCommercialRule =
+  "Listing, searching and declining are always free. A platform fee applies only when a lawful match is accepted.";
+
+/**
+ * Klinikos EDU monetization.
+ *
+ * Nothing sold here certifies or licenses anyone — see `CREDENTIAL_DISCLAIMER` in
+ * `edu-safety`. A pathway maps requirements and records evidence; it does not
+ * guarantee placement, and buying one never creates Grid eligibility for regulated
+ * work. Institutional cohort and instructor licensing is contracted separately.
+ */
+export const eduPlans = {
+  free: {
+    key: "edu_free",
+    name: "Klinikos EDU",
+    priceLabel: "Free",
+    unitLabel: "to start",
+    idealFor: "Route mapping, requirements and basic simulation.",
+    includes: ["See the route and its requirements", "Basic simulation environment", "Progress record"],
+    excludes: ["No advanced pathway"],
+  },
+  plus: {
+    key: "edu_plus",
+    name: "EDU Plus",
+    priceLabel: "$19–39/mo",
+    unitLabel: "per learner",
+    idealFor: "Continuous learning while you work.",
+    includes: ["Full simulation library", "Competency tracking", "Placement readiness view"],
+    excludes: [],
+  },
+  course: {
+    key: "edu_course",
+    name: "Courses",
+    priceLabel: "$49–199",
+    unitLabel: "per course",
+    idealFor: "Specific skills, bought once.",
+    includes: ["Course plus simulation", "Evidence written on release", "Counts toward a route"],
+    excludes: [],
+  },
+  pathway: {
+    key: "edu_pathway",
+    name: "Pathways",
+    priceLabel: "$199–499",
+    unitLabel: "per pathway",
+    idealFor: "Multi-step advancement, such as RN to injector.",
+    includes: ["Full route with supervision requirements", "Grid eligibility review at the end", "Recorded competency evidence"],
+    excludes: ["Does not guarantee placement"],
+  },
+} as const;
+
+export const eduCommercialRule =
+  "Institutional cohort and instructor licensing is contracted separately. Nothing sold here certifies or licenses anyone.";
+
+/** Scoped professional engagements, quoted per practice. */
+export const serviceEngagements = {
+  audit: {
+    key: "service_audit",
+    name: "Operations or growth audit",
+    priceLabel: "$1,500–5,000",
+    unitLabel: "per engagement",
+    idealFor: "A workflow and revenue review with findings you can act on.",
+    includes: ["Workflow and revenue review", "Prioritized findings", "Implementation plan"],
+  },
+  retainer: {
+    key: "service_retainer",
+    name: "Optimization retainer",
+    priceLabel: "$1,500–5,000/mo",
+    unitLabel: "per practice",
+    idealFor: "Ongoing optimization, or fractional operations leadership.",
+    includes: ["Continuous workflow tuning", "Quarterly operating review", "Fractional engagement available"],
+  },
+} as const;
+
+export const serviceCommercialRule =
+  "Scoped engagements, quoted per practice. Analysis fees are credited toward implementation when you continue.";
+
 export const customerFundedCommercialPrinciples = {
   activation: "Production paid capability activates only after qualifying customer payment is confirmed.",
   variableCost: "Variable vendor/API spend must be backed by included allowance, prepaid customer funds, or explicitly authorized bounded overage before execution.",

@@ -90,8 +90,8 @@ export function VoiceInputButton({ onTranscript, className, language = "en-US" }
       {listening ? <MicOff className="size-3.5" /> : supported ? <Mic className="size-3.5" /> : <RotateCcw className="size-3.5" />}
       {listening ? "Stop" : "Speak"}
     </Button>
-    {listening && <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-rose-600"><Radio className="size-3 animate-pulse" /> Listening</span>}
-    {interim && <span aria-live="polite" className="max-w-48 truncate text-[10px] italic text-slate-500">{interim}</span>}
-    {error && <span aria-live="polite" className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-5 text-amber-900 shadow-xl">{error}</span>}
+    {listening && <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-[.12em] text-rose-600"><Radio className="size-3 animate-pulse" /> Listening</span>}
+    {interim && <span aria-live="polite" className="max-w-48 truncate text-[12px] italic text-slate-500">{interim}</span>}
+    {error && <span aria-live="polite" className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-5 text-amber-900 shadow-xl">{error}</span>}
   </div>;
 }

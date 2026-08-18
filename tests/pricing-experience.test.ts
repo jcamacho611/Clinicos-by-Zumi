@@ -18,13 +18,30 @@ describe("public pricing experience", () => {
     expect(page).not.toContain('const plans = [{');
   });
 
-  it("keeps payment and external usage truth explicit on the commercial surface", () => {
+  it("keeps payment and usage truth explicit on the commercial surface", () => {
     const page = read("src/app/pricing/page.tsx");
 
-    expect(page).toContain("Returning from checkout is never payment evidence");
-    expect(page).toContain("Commercial access never becomes clinical or integration authority.");
-    expect(page).toContain("prepaid customer funds");
-    expect(page).toContain("explicitly authorized bounded overage");
+    // These are facts a buyer must be told, not phrasings to preserve. The wording
+    // moved from internal vocabulary ("payment evidence", "bounded overage",
+    // "commercial access") to language an ordinary customer reads without a glossary;
+    // the guard follows the fact, not the jargon.
+
+    // 1. Coming back from the payment page is not proof of payment.
+    expect(page).toMatch(/coming back from the payment page does not by itself mean you have paid/i);
+    expect(page).toMatch(/we confirm that with the payment provider/i);
+
+    // 2. Paying buys capability, never authority.
+    expect(page).toMatch(/paying never changes who can sign in/i);
+    expect(page).toMatch(/still needs a person to approve/i);
+
+    // 3. Usage beyond the included allowance is never silent.
+    expect(page).toMatch(/usage allowance/i);
+    expect(page).toMatch(/before anything extra applies/i);
+
+    // And the internal vocabulary must not come back.
+    for (const jargon of ["payment evidence", "bounded overage", "commercial access", "payment rail", "operating depth"]) {
+      expect(page.toLowerCase(), `"${jargon}" is internal vocabulary`).not.toContain(jargon);
+    }
   });
 
   it("uses the current Klinikos design system without raw hex drift", () => {

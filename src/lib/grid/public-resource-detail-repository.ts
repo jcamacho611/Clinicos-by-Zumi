@@ -30,7 +30,7 @@ export async function getApprovedPublicGridResource(resourceId: string) {
            r."description", r."policyClass", r."city", r."state", r."timezone", r."pricingModel", r."priceCents",
            r."capacity", r."metadata"
     FROM "GridResourceRecord" r
-    JOIN "Organization" o ON o."id" = r."organizationId"
+    JOIN "organizations" o ON o."id" = r."organizationId"
     WHERE r."id" = ${resourceId} AND r."status" = 'active' AND r."reviewStatus" = 'approved' AND r."visibility" = 'public'
     LIMIT 1
   `);

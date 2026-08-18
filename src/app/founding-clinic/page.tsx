@@ -61,13 +61,13 @@ export default function FoundingClinicPage() {
 
       <section aria-labelledby="pathway-heading" id="pathway" style={{ borderBottom: "var(--border-hair-dark)" }}>
         <div className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-rose-200">The pathway</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-rose-200">The pathway</p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight" id="pathway-heading">Three reviewed stages before production.</h2>
           <ol className="mt-8 grid gap-4 sm:grid-cols-3">
             {pathway.map((step, index) => (
               <li key={step.title}>
                 <Card dark className="h-full">
-                  <p className="text-[10px] font-extrabold" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>0{index + 1}</p>
+                  <p className="text-[12px] font-extrabold" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>0{index + 1}</p>
                   <step.icon aria-hidden="true" className="mt-7 size-5 text-rose-200" />
                   <h3 className="mt-5 text-base font-extrabold">{step.title}</h3>
                   <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>{step.body}</p>
@@ -83,10 +83,10 @@ export default function FoundingClinicPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <Card dark>
-            <Badge tone="mapping">Payment rail</Badge>
+            <Badge tone="mapping">How payment works</Badge>
             <h2 className="mt-4 text-xl font-extrabold">The $500 analysis has two truthful payment modes.</h2>
             <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>
-              Integrated Klinikos Stripe Checkout is preferred because the buyer, amount, Checkout Session, PaymentIntent, and resulting payment evidence can be correlated server-side. When a qualified buyer needs a direct link outside the authorized sales screen, the canonical Stripe Payment Link is a manually reconciled service-sale fallback. Browser return is never payment proof, and the manual service payment does not create a Klinikos software entitlement.
+              Integrated Klinikos Stripe Checkout is preferred because the buyer, amount, Checkout Session, PaymentIntent, and resulting confirmation from the payment provider can be correlated server-side. When a qualified buyer needs a direct link outside the authorized sales screen, the canonical Stripe Payment Link is a manually reconciled service-sale fallback. Coming back from the payment page is not proof you paid, and the manual service payment does not create a Klinikos software entitlement.
             </p>
             <Link className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-200 px-5 text-xs font-extrabold text-slate-950 hover:bg-amber-100" href="/sales">
               Start Clinic Operating Analysis <ArrowRight className="size-4" aria-hidden="true" />
@@ -105,7 +105,7 @@ export default function FoundingClinicPage() {
 
         <div className="mt-10 grid gap-5 pt-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start" style={{ borderTop: "var(--border-hair-dark)" }}>
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-rose-200">Production boundary</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-rose-200">Production boundary</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Clear gates, not repeated fine print.</h2>
           </div>
           <p className="text-xs leading-6" style={{ color: "var(--text-secondary)" }}>

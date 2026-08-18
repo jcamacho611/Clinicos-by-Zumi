@@ -17,12 +17,12 @@ export default async function SalesAdminPage() {
       {canQualify && (
         <div className="grid gap-3 lg:grid-cols-2">
           <div className="flex items-center justify-between gap-5 border border-[#0b1e3a]/12 bg-[#faf9f5] px-5 py-4">
-            <div><p className="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Founding clinic qualification</p><p className="mt-1 text-sm font-bold text-[#0b1e3a]">Run the guided Clinic Operating Analysis qualification and open secure checkout.</p></div>
-            <Link className="shrink-0 bg-[#0b1e3a] px-5 py-3 text-[10px] font-extrabold uppercase tracking-[.14em] text-white transition hover:bg-[#1677a8]" href="/admin/sales/audit">Open audit desk</Link>
+            <div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Founding clinic qualification</p><p className="mt-1 text-sm font-bold text-[#0b1e3a]">Run the guided Clinic Operating Analysis qualification and open secure checkout.</p></div>
+            <Link className="shrink-0 bg-[#0b1e3a] px-5 py-3 text-[12px] font-extrabold uppercase tracking-[.14em] text-white transition hover:bg-[#1677a8]" href="/admin/sales/audit">Open audit desk</Link>
           </div>
           <div className="flex items-center justify-between gap-5 border border-[#0b1e3a]/12 bg-white px-5 py-4">
-            <div><p className="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#9a7a1f]">Paid clinic activation</p><p className="mt-1 text-sm font-bold text-[#0b1e3a]">Create a plan checkout, reconcile verified payment, and issue the signed owner setup link.</p></div>
-            <Link className="shrink-0 bg-[#174ea6] px-5 py-3 text-[10px] font-extrabold uppercase tracking-[.14em] text-white transition hover:bg-[#0b1e3a]" href="/admin/commercial">Open activation desk</Link>
+            <div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#9a7a1f]">Paid clinic activation</p><p className="mt-1 text-sm font-bold text-[#0b1e3a]">Create a plan checkout, reconcile verified payment, and issue the signed owner setup link.</p></div>
+            <Link className="shrink-0 bg-[#174ea6] px-5 py-3 text-[12px] font-extrabold uppercase tracking-[.14em] text-white transition hover:bg-[#0b1e3a]" href="/admin/commercial">Open activation desk</Link>
           </div>
         </div>
       )}

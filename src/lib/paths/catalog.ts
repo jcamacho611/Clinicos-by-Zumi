@@ -72,7 +72,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
       { id: "learning", label: "Learning pathway", description: "Find the relevant Klinikos EDU courses and scenarios.", href: "/edu/courses", capabilityKey: "edu.learning.open", state: "current" },
       { id: "competency", label: "Competency evidence", description: "Track demonstrated skills and remaining milestones.", href: "/edu/competencies", capabilityKey: "edu.competency.review", state: "upcoming" },
       { id: "readiness", label: "Professional readiness", description: "Review requirements that affect a specific Grid opportunity.", href: "/provider-network", capabilityKey: "network.provider.review", state: "upcoming" },
-      { id: "grid", label: "Eligible opportunities", description: "Enter Grid only where the opportunity requirements are satisfied.", href: "/grid", capabilityKey: "grid.match.review", state: "upcoming" },
+      { id: "grid", label: "Eligible opportunities", description: "Enter Grid only where the opportunity requirements are satisfied.", href: "/grid/workspace", capabilityKey: "grid.match.review", state: "upcoming" },
     ],
   },
   {
@@ -109,7 +109,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
       { id: "readiness", label: "Professional readiness", description: "Identify professional requirements relevant to the intended services.", href: "/provider-network", state: "current" },
       { id: "business", label: "Practice setup", description: "Map the organization, location, insurance, and operating requirements that need human confirmation.", href: "/founding-clinic", state: "upcoming" },
       { id: "operations", label: "Operating system", description: "Prepare Clinic OS around the workflows the practice will actually run.", href: "/activate", state: "upcoming" },
-      { id: "capacity", label: "Market capacity", description: "Publish only eligible, real capacity or seek appropriate Grid resources.", href: "/grid", state: "upcoming" },
+      { id: "capacity", label: "Market capacity", description: "Publish only eligible, real capacity or seek appropriate Grid resources.", href: "/grid/workspace", state: "upcoming" },
     ],
   },
   {
@@ -127,7 +127,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
       { id: "model", label: "Define the care model", description: "Clarify services, people, location, and operational objective.", href: "/founding-clinic", state: "current" },
       { id: "entity", label: "Entity and operating readiness", description: "Track the external professional, business, insurance, and facility setup that must be verified.", href: "/founding-clinic", state: "upcoming" },
       { id: "clinic-os", label: "Activate Clinic OS", description: "Configure the operating workflows around the real clinic.", href: "/activate", state: "upcoming" },
-      { id: "network", label: "Connect capacity", description: "Use Grid and Network when the clinic is ready to buy, sell, refer, or share governed capacity.", href: "/grid", state: "upcoming" },
+      { id: "network", label: "Connect capacity", description: "Use Grid and Network when the clinic is ready to buy, sell, refer, or share governed capacity.", href: "/grid/workspace", state: "upcoming" },
     ],
   },
   {
@@ -202,7 +202,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
     nodes: [
       { id: "service", label: "Define the service", description: "Clarify the service, patient/customer, professional, location, and operating model.", href: "/founding-clinic", state: "current" },
       { id: "requirements", label: "Requirements", description: "Identify what must be present or verified before launch.", href: "/integrations", state: "upcoming" },
-      { id: "capacity", label: "People and capacity", description: "Find or publish the professionals, space, equipment, or services needed.", href: "/grid", state: "upcoming" },
+      { id: "capacity", label: "People and capacity", description: "Find or publish the professionals, space, equipment, or services needed.", href: "/grid/workspace", state: "upcoming" },
       { id: "workflow", label: "Clinic workflow", description: "Configure scheduling, intake, care, follow-up, payment and reporting around the service.", href: "/dashboard", state: "upcoming" },
     ],
   },
@@ -241,7 +241,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
       { id: "scope", label: "Location scope", description: "Define what will be shared and what is location-specific.", href: "/founding-clinic", state: "current" },
       { id: "readiness", label: "Location readiness", description: "Track facility, professional, payer, insurance and operational prerequisites.", href: "/integrations", state: "upcoming" },
       { id: "configure", label: "Configure Clinic OS", description: "Add the location to the governed operating context.", href: "/settings", state: "upcoming" },
-      { id: "network", label: "Connect local capacity", description: "Use Grid and Network for real local demand, supply and partnerships.", href: "/grid", state: "upcoming" },
+      { id: "network", label: "Connect local capacity", description: "Use Grid and Network for real local demand, supply and partnerships.", href: "/grid/workspace", state: "upcoming" },
     ],
   },
   {
@@ -348,7 +348,7 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
     intentExamples: ["I need a service", "find me a clinic", "I need an appointment", "where should I go for care"],
     nodes: [
       { id: "need", label: "Describe what you need", description: "Start in plain language without requiring marketplace terminology.", href: "/portal", state: "current" },
-      { id: "destination", label: "Appropriate entry", description: "Guide toward an available clinic/service path when the required information exists.", href: "/grid", state: "upcoming" },
+      { id: "destination", label: "Appropriate entry", description: "Guide toward an available clinic/service path when the required information exists.", href: "/grid/workspace", state: "upcoming" },
       { id: "next", label: "Next step", description: "Move into the patient-safe appointment, intake, or contact experience offered by the destination.", href: "/portal", state: "upcoming" },
     ],
   },

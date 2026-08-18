@@ -20,7 +20,7 @@ export function SalesSiteShell({ children }: { children: React.ReactNode }) {
           <KlinikosWordmark href="/" framed inverse markClassName="h-7 w-7" textClassName="h-[21px] w-auto" className="gap-3" />
           <nav className="ml-auto hidden items-center gap-1 lg:flex">
             {publicLinks.map(([href, label]) => (
-              <Link className="rounded-full px-4 py-2 text-[10px] font-semibold uppercase tracking-[.13em] text-[#9f8985] transition hover:bg-[#e6817b]/[.06] hover:text-[#f8efed]" href={href} key={href}>{label}</Link>
+              <Link className="rounded-full px-4 py-2 text-[12px] font-semibold uppercase tracking-[.13em] text-[#9f8985] transition hover:bg-[#e6817b]/[.06] hover:text-[#f8efed]" href={href} key={href}>{label}</Link>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2 lg:ml-3">

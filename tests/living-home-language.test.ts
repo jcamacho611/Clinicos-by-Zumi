@@ -8,7 +8,10 @@ function read(relative: string) {
 
 describe("Living Home customer language", () => {
   it("keeps orchestration vocabulary in the backend while presenting an operating briefing", () => {
-    const home = read("src/components/clinic/living-home.tsx");
+    // Home is one surface across two files: the composer/rails shell and the standing
+    // operating picture it switches to when it is not working on a request. The guard
+    // reads both so moving a section between them cannot quietly drop the check.
+    const home = read("src/components/clinic/living-home.tsx") + read("src/components/clinic/living-home-operations.tsx");
 
     for (const leakedPhrase of [
       "Path started",

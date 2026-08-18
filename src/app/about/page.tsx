@@ -37,7 +37,7 @@ export default function AboutPage() {
             <BrandMark />
             <span>
               <span className="block text-sm font-black tracking-[-.03em]">Klinikos</span>
-              <span className="block text-[10px] font-extrabold uppercase tracking-[.16em] text-cyan-100">Mission & company story</span>
+              <span className="block text-[12px] font-extrabold uppercase tracking-[.16em] text-cyan-100">Mission & company story</span>
             </span>
           </Link>
           <nav className="ml-auto hidden items-center gap-6 text-[11px] font-extrabold uppercase tracking-[.12em] text-white/70 md:flex" aria-label="About navigation">
@@ -60,7 +60,7 @@ export default function AboutPage() {
               <p className="mt-8 max-w-4xl text-base leading-8 text-white/70 sm:text-lg">{story.mission.statement}</p>
             </div>
             <div className="border border-white/15 bg-white/[.04] p-6 sm:p-8">
-              <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-amber-100">Why this exists</p>
+              <p className="text-[12px] font-extrabold uppercase tracking-[.16em] text-amber-100">Why this exists</p>
               <div className="mt-5 space-y-5">{story.why.map((paragraph) => <p className="text-sm leading-7 text-white/70" key={paragraph}>{paragraph}</p>)}</div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link className="inline-flex min-h-11 items-center gap-2 bg-cyan-200 px-4 text-xs font-extrabold text-slate-950 hover:bg-cyan-100" href="/how-it-works">See how it works <ArrowRight className="size-4" aria-hidden="true" /></Link>
@@ -75,7 +75,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-[1500px]">
           <div className="max-w-4xl"><p className="text-[11px] font-black uppercase tracking-[.18em] text-cyan-100">One ecosystem</p><h2 className="mt-4 text-4xl font-black tracking-[-.055em] sm:text-5xl">Different surfaces. One continuity model underneath.</h2></div>
           <div className="mt-10 grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 xl:grid-cols-4">
-            {story.ecosystem.map((item, index) => <article className="bg-[#090e18] p-6" key={item.name}><span className="text-[10px] font-black uppercase tracking-[.16em] text-white/60">0{index + 1}</span><h3 className="mt-5 text-2xl font-black tracking-[-.04em]">{item.name}</h3><p className="mt-1 text-[10px] font-extrabold uppercase tracking-[.12em] text-cyan-100">{item.role}</p><p className="mt-5 text-xs leading-6 text-white/65">{item.description}</p></article>)}
+            {story.ecosystem.map((item, index) => <article className="bg-[#090e18] p-6" key={item.name}><span className="text-[12px] font-black uppercase tracking-[.16em] text-white/60">0{index + 1}</span><h3 className="mt-5 text-2xl font-black tracking-[-.04em]">{item.name}</h3><p className="mt-1 text-[12px] font-extrabold uppercase tracking-[.12em] text-cyan-100">{item.role}</p><p className="mt-5 text-xs leading-6 text-white/65">{item.description}</p></article>)}
           </div>
         </div>
       </section>
@@ -99,7 +99,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-[1500px]">
           <div className="grid gap-10 xl:grid-cols-[.75fr_1.25fr]">
             <div><p className="text-[11px] font-black uppercase tracking-[.18em] text-cyan-100">How we build</p><h2 className="mt-4 text-4xl font-black tracking-[-.055em] sm:text-5xl">Principles before promises.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-white/65">The system is deliberately broad in scope, but each resource class, regulated workflow, and consequential action keeps the boundary it actually requires.</p></div>
-            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2">{story.principles.map((principle, index) => <article className="bg-[#070b13] p-6" key={principle.title}><span className="text-[10px] font-black uppercase tracking-[.14em] text-white/60">0{index + 1}</span><h3 className="mt-4 text-lg font-black">{principle.title}</h3><p className="mt-3 text-xs leading-6 text-white/65">{principle.description}</p></article>)}</div>
+            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2">{story.principles.map((principle, index) => <article className="bg-[#070b13] p-6" key={principle.title}><span className="text-[12px] font-black uppercase tracking-[.14em] text-white/60">0{index + 1}</span><h3 className="mt-4 text-lg font-black">{principle.title}</h3><p className="mt-3 text-xs leading-6 text-white/65">{principle.description}</p></article>)}</div>
           </div>
         </div>
       </section>

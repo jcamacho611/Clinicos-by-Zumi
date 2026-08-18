@@ -59,8 +59,8 @@ export async function getGridPlatformFinanceBoard(session: ClinicSession) {
       FROM "GridFinancialObligationRecord" f
       JOIN "GridReservationRecord" r ON r."id" = f."reservationId"
       JOIN "GridDemandRecord" d ON d."id" = r."demandId"
-      JOIN "Organization" owner ON owner."id" = f."organizationId"
-      LEFT JOIN "Organization" beneficiary ON f."beneficiaryType" = 'organization' AND beneficiary."id" = f."beneficiaryReference"
+      JOIN "organizations" owner ON owner."id" = f."organizationId"
+      LEFT JOIN "organizations" beneficiary ON f."beneficiaryType" = 'organization' AND beneficiary."id" = f."beneficiaryReference"
       ORDER BY f."updatedAt" DESC
       LIMIT 500
     `),

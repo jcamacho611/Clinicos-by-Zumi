@@ -6,7 +6,12 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { ingestPublicLuxeLead } from "@/lib/repositories/luxe-acquisition-repository";
 
-const DEFAULT_ALLOWED_ORIGINS = ["https://luxe-medi.com", "https://www.luxe-medi.com"];
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://luxe-medi.com",
+  "https://www.luxe-medi.com",
+  "https://klinikos.io",
+  "https://www.klinikos.io",
+];
 const MAX_BODY_CHARACTERS = 16_000;
 
 function allowedOrigins() {
@@ -37,7 +42,7 @@ function tokenMatches(request: Request) {
   return expectedBytes.length === receivedBytes.length && timingSafeEqual(expectedBytes, receivedBytes);
 }
 
-function requestIsAuthorized(request: Request) {
+function requestSourceIsAccepted(request: Request) {
   if (tokenMatches(request)) return true;
   const origin = request.headers.get("origin");
   return Boolean(origin && allowedOrigins().has(origin));
@@ -64,8 +69,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Lead intake is temporarily unavailable." }, { status: 503, headers });
   }
 
-  if (!requestIsAuthorized(request)) {
-    return NextResponse.json({ error: "Lead intake source is not authorized." }, { status: 403, headers });
+  // This is a public acquisition surface. Origin allowlisting limits normal browser
+  // callers and CORS exposure, but it is not authentication because non-browser
+  // clients can forge Origin. Abuse resistance therefore relies on bounded input,
+  // honeypot, rate limiting, replay/idempotency controls where available, and any
+  // approved bot challenge added at the edge. Server-to-server callers use a secret.
+  if (!requestSourceIsAccepted(request)) {
+    return NextResponse.json({ error: "Lead intake is not available from this source." }, { status: 403, headers });
   }
 
   const metadata = requestMetadata(request);
@@ -92,22 +102,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await ingestPublicLuxeLead(payload);
-    return NextResponse.json(
-      {
-        data: {
-          leadId: result.leadId,
-          created: result.created,
-          status: result.status,
-          followUpCreated: Boolean(result.taskId),
-          serviceMatched: result.serviceMatched,
-        },
-      },
-      { status: result.created ? 201 : 200, headers },
-    );
+    await ingestPublicLuxeLead(payload);
+    return NextResponse.json({ received: true }, { status: 202, headers });
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: "Lead request is invalid.", issues: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })) }, { status: 400, headers });
+      return NextResponse.json({ error: "Lead request is invalid." }, { status: 400, headers });
     }
     return withHeaders(networkAccessErrorResponse(error), headers);
   }

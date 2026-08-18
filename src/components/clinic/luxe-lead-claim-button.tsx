@@ -24,8 +24,8 @@ export function LuxeLeadClaimButton({ leadId }: { leadId: string }) {
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
-      <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.1em] text-slate-700 hover:bg-slate-100 disabled:opacity-50" disabled={busy} onClick={claim} type="button">{busy ? "Claiming…" : "Claim this lead"}</button>
-      <p aria-live="polite" className="text-[10px] text-slate-500">{notice}</p>
+      <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[12px] font-extrabold uppercase tracking-[.1em] text-slate-700 hover:bg-slate-100 disabled:opacity-50" disabled={busy} onClick={claim} type="button">{busy ? "Claiming…" : "Claim this lead"}</button>
+      <p aria-live="polite" className="text-[12px] text-slate-500">{notice}</p>
     </div>
   );
 }

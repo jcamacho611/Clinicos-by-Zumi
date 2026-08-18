@@ -32,7 +32,7 @@ async function auditIntegrationEvent(input: {
       resourceType: input.patientId ? "patient" : "integration",
       resourceId: input.patientId ?? input.integrationId,
       patientId: input.patientId ?? undefined,
-      metadata: input.metadata ?? {},
+      metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
 }

@@ -16,12 +16,12 @@ export default function PaymentReturnPage() {
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col">
         <header className="flex items-center justify-between gap-4">
           <KlinikosWordmark href="/" framed inverse markClassName="h-10 w-10" textClassName="h-[19px] w-[170px]" className="gap-3" />
-          <span className="rounded-full border border-[#efaaa1]/20 px-3 py-2 text-[9px] font-extrabold uppercase tracking-[.16em] text-[#efaaa1]/70">Server verification</span>
+          <span className="rounded-full border border-[#efaaa1]/20 px-3 py-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#efaaa1]/70">Server verification</span>
         </header>
 
         <section className="my-auto grid gap-8 py-16 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[.28em] text-[#efaaa1]">Return received</p>
+            <p className="text-[12px] font-black uppercase tracking-[.28em] text-[#efaaa1]">Return received</p>
             <h1 className="mt-5 max-w-3xl text-5xl font-light leading-[.96] tracking-[-.065em] sm:text-6xl lg:text-7xl">
               We’re confirming this with the payment provider.
             </h1>
@@ -46,7 +46,7 @@ export default function PaymentReturnPage() {
         </section>
 
         <footer className="flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[10px] leading-5 text-white/35">Your saved request remains available for authorized follow-up. Do not create a second reservation for the same purchase.</p>
+          <p className="text-[12px] leading-5 text-white/35">Your saved request remains available for authorized follow-up. Do not create a second reservation for the same purchase.</p>
           <div className="flex flex-wrap gap-2">
             <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 text-xs font-extrabold text-white/70 hover:bg-white/[.04]" href="/">Return home</Link>
             <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#b66d69] px-5 text-xs font-extrabold text-[#170708] hover:bg-[#ca807a]" href="/pricing">See what comes after the analysis <ArrowRight className="size-4" aria-hidden="true" /></Link>

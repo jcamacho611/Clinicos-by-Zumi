@@ -78,7 +78,7 @@ export function InsuranceVerificationAction({ coverages }: { coverages: Insuranc
 
   return <form className="w-full max-w-4xl rounded-2xl border border-teal-200 bg-teal-50/70 p-5" onSubmit={submit}>
     <div className="flex items-start gap-3">
-      <div><p className="text-sm font-extrabold text-slate-950">Record manual eligibility evidence</p><p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-500">Use a real payer portal, phone response, card/evidence review, or other authorized source. This records what staff observed; it is not a live 270/271 transaction and never guarantees payment.</p></div>
+      <div><p className="text-sm font-extrabold text-slate-950">Record manual eligibility evidence</p><p className="mt-1 max-w-2xl text-[12px] leading-5 text-slate-500">Use a real payer portal, phone response, card/evidence review, or other authorized source. This records what staff observed; it is not a live 270/271 transaction and never guarantees payment.</p></div>
       <Button aria-label="Close verification form" className="ml-auto" disabled={busy} onClick={() => setOpen(false)} size="icon" type="button" variant="ghost"><X className="size-4" /></Button>
     </div>
     <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -93,6 +93,6 @@ export function InsuranceVerificationAction({ coverages }: { coverages: Insuranc
       <label className="text-xs font-bold text-slate-700 md:col-span-2 xl:col-span-3">Staff notes<textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50" maxLength={2000} onChange={(event) => setNotes(event.target.value)} placeholder="Optional context or limitations" value={notes} /></label>
     </div>
     {error && <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
-    <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="text-[10px] text-slate-500">Klinikos timestamps the record, attaches the staff user, and writes an audit receipt. It does not mark external electronic eligibility as connected.</p><Button disabled={busy || !insuranceId || source.trim().length < 3} type="submit">{busy ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} Save evidence</Button></div>
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="text-[12px] text-slate-500">Klinikos timestamps the record, attaches the staff user, and writes an audit receipt. It does not mark external electronic eligibility as connected.</p><Button disabled={busy || !insuranceId || source.trim().length < 3} type="submit">{busy ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} Save evidence</Button></div>
   </form>;
 }

@@ -19,25 +19,25 @@ const rules = [
   {
     pathId: "find-extra-work",
     actor: "professional" as const,
-    phrases: ["extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday"],
+    phrases: ["extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday", "healthcare work"],
     outcome: "Find eligible healthcare work that fits professional readiness and availability.",
   },
   {
     pathId: "become-grid-ready",
     actor: "learner" as const,
-    phrases: ["become an injector", "graduated nursing school", "new rn", "become grid ready", "grid-ready", "learn aesthetics", "qualify for grid", "injector training"],
+    phrases: ["become an injector", "graduated nursing school", "new rn", "become grid ready", "grid-ready", "learn aesthetics", "qualify for grid", "injector training", "learn next"],
     outcome: "Map learning, competency, professional readiness, and the requirements for eligible injector opportunities.",
   },
   {
     pathId: "student-clinical-placement",
     actor: "learner" as const,
-    phrases: ["clinical placement", "need a preceptor", "find a preceptor", "clinical hours", "get placed", "student placement"],
+    phrases: ["clinical placement", "need a preceptor", "find a preceptor", "clinical hours", "get placed", "student placement", "a preceptor"],
     outcome: "Move from learner readiness into governed clinical placement capacity without implying guaranteed placement.",
   },
   {
     pathId: "clinician-independent-practice",
     actor: "professional" as const,
-    phrases: ["work independently", "independent practitioner", "independent practice", "become independent"],
+    phrases: ["work independently", "independent practitioner", "independent practice", "become independent", "open my own practice", "my own practice"],
     outcome: "Map the professional, business, and operating requirements for independent practice.",
   },
   {
@@ -49,7 +49,7 @@ const rules = [
   {
     pathId: "fill-staffing-need",
     actor: "clinic" as const,
-    phrases: ["need an injector", "need a nurse", "need staff", "need coverage", "staffing gap", "coverage saturday", "coverage friday"],
+    phrases: ["need an injector", "need a nurse", "need staff", "need coverage", "staffing gap", "coverage saturday", "coverage friday", "find coverage", "coverage for"],
     outcome: "Fill a clinic staffing or professional-capacity need with an eligible available match.",
   },
   {
@@ -67,7 +67,7 @@ const rules = [
   {
     pathId: "clinic-add-service",
     actor: "clinic" as const,
-    phrases: ["add a service", "new service", "add a treatment", "expand what my clinic offers"],
+    phrases: ["add a service", "new service", "add a treatment", "expand what my clinic offers", "new treatment"],
     outcome: "Map a new clinic service through requirements, capacity, workflow, and launch readiness.",
   },
   {

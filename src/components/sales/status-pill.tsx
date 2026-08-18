@@ -14,5 +14,5 @@ const styles: Record<Status, string> = {
 };
 
 export function StatusPill({ status, className }: { status: Status; className?: string }) {
-  return <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[.13em]", styles[status], className)}>{status}</span>;
+  return <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[.13em]", styles[status], className)}>{status}</span>;
 }

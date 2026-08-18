@@ -189,7 +189,7 @@ export async function POST(request: Request) {
       return { kind: "ok" as const, certificate, evidenceAreas: evidenceAreas.get(certificate.id) ?? [] };
     });
 
-    if (result.kind === "error") return deny(result.message, result.status, result.problems);
+    if (result.kind === "error") return deny(result.message, result.status, "problems" in result ? result.problems as string[] : undefined);
     return NextResponse.json({ data: { ...result.certificate, evidenceAreas: result.evidenceAreas } }, { headers: NO_STORE });
   }
 
@@ -298,7 +298,7 @@ export async function POST(request: Request) {
     return { kind: "created" as const, certificate, evidenceAreas };
   });
 
-  if (result.kind === "error") return deny(result.message, result.status, result.problems);
+  if (result.kind === "error") return deny(result.message, result.status, "problems" in result ? result.problems as string[] : undefined);
   if (result.kind === "duplicate") {
     return NextResponse.json({
       data: { ...result.certificate, evidenceAreas: result.evidenceAreas },

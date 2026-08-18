@@ -288,13 +288,13 @@ export function GoogleGridMap({
         {locationState === "locating" ? <LoaderCircle className="size-4 animate-spin text-[#8f213e]" /> : <Crosshair className="size-4 text-[#8f213e]" />}
         {locationState === "found" ? "Centered on you" : "Use my location"}
       </button>
-      {providerState === "fallback" && <a className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-3 text-[10px] font-bold text-[#5b6675] shadow-sm hover:text-[#0b1220]" href={openStreetMapUrl(fallbackCenter, false, fallbackHasMarker)} rel="noreferrer" target="_blank">Open full map <ExternalLink className="size-3.5" /></a>}
+      {providerState === "fallback" && <a className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-3 text-[12px] font-bold text-[#5b6675] shadow-sm hover:text-[#0b1220]" href={openStreetMapUrl(fallbackCenter, false, fallbackHasMarker)} rel="noreferrer" target="_blank">Open full map <ExternalLink className="size-3.5" /></a>}
     </div>
 
     {providerState === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#8f213e]">Opening the Grid map…</p></div>}
 
     <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm">
+      <span className="inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[12px] font-bold text-[#5b6675] shadow-sm">
         {locationState === "found" ? <Navigation className="size-3.5 text-[#8f213e]" /> : locationState === "denied" || locationState === "unavailable" ? <ShieldCheck className="size-3.5 text-[#9a7a1f]" /> : <MapPin className="size-3.5 text-[#8f213e]" />}
         {locationState === "found"
           ? "Real distance is now calculated from your location"
@@ -306,8 +306,8 @@ export function GoogleGridMap({
                 ? "Choose location access for real distance"
                 : "No reviewed public Grid pins yet"}
       </span>
-      {providerState === "openfreemap" && <span className="border border-[#d5dae0] bg-white/95 px-3 py-2 text-[10px] font-bold text-[#5b6675] shadow-sm">OpenFreeMap · no Google credential required</span>}
-      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
+      {providerState === "openfreemap" && <span className="border border-[#d5dae0] bg-white/95 px-3 py-2 text-[12px] font-bold text-[#5b6675] shadow-sm">OpenFreeMap · no Google credential required</span>}
+      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
     </div>
   </div>;
 }

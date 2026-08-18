@@ -172,21 +172,21 @@ export function EduCertificateManager({
       {certificates.map((certificate) => <li className="rounded-[22px] border border-white/10 bg-white/[.025] p-5" key={certificate.id}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#e6817b]">{certificate.certificateType.replaceAll("_", " ")}</p>
+            <p className="text-[12px] font-bold uppercase tracking-[.14em] text-[#e6817b]">{certificate.certificateType.replaceAll("_", " ")}</p>
             <h2 className="mt-2 text-lg font-semibold text-[#f8efed]">{certificate.title}</h2>
             <p className="mt-1 text-sm text-[#bca5a1]">{certificate.enrollment.studentDisplayName}</p>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#a9c5b0]">{certificate.revokedAt ? "Revoked" : "Active evidence"}</span>
+          <span className="text-[12px] font-bold uppercase tracking-[.12em] text-[#a9c5b0]">{certificate.revokedAt ? "Revoked" : "Active evidence"}</span>
         </div>
         <p className="mt-4 text-xs text-[#9f8985]">Serial: {certificate.serialNumber} · Issued {new Date(certificate.issuedAt).toLocaleDateString()}</p>
         {certificate.evidenceAreas.length > 0 && <div className="mt-4">
-          <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#9f8985]">Evidence scope</p>
+          <p className="text-[12px] font-bold uppercase tracking-[.12em] text-[#9f8985]">Evidence scope</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {certificate.evidenceAreas.map((area) => <li className="rounded-full border border-[#e6817b]/20 bg-[#e6817b]/[.05] px-2.5 py-1 text-[11px] text-[#d7c1bd]" key={area}>{evidenceLabel(area)}</li>)}
           </ul>
         </div>}
         {certificate.revokedReason && <p className="mt-3 text-xs text-[#dba0a0]">Revoked: {certificate.revokedReason}</p>}
-        <p className="mt-4 border-t border-white/10 pt-4 text-[10px] leading-5 text-[#806c69]">{certificate.disclaimer}</p>
+        <p className="mt-4 border-t border-white/10 pt-4 text-[12px] leading-5 text-[#806c69]">{certificate.disclaimer}</p>
         {canRevoke && !certificate.revokedAt && <button
           className="mt-4 rounded-full border border-[#d97c7c]/30 px-3 py-2 text-[11px] font-bold text-[#dba0a0]"
           disabled={busy}

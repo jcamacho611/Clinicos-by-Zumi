@@ -110,8 +110,8 @@ export async function getGridTransactionBoard(session: ClinicSession) {
              o."depositAmountCents", o."locationPayableCents", o."offeredStartAt", o."offeredEndAt", o."expiresAt", o."note", o."updatedAt"
       FROM "GridOfferRecord" o
       JOIN "GridDemandRecord" d ON d."id" = o."demandId"
-      LEFT JOIN "Organization" sender ON sender."id" = o."senderOrganizationId"
-      LEFT JOIN "Organization" recipient ON recipient."id" = o."recipientOrganizationId"
+      LEFT JOIN "organizations" sender ON sender."id" = o."senderOrganizationId"
+      LEFT JOIN "organizations" recipient ON recipient."id" = o."recipientOrganizationId"
       WHERE o."organizationId" = ${session.organizationId}
          OR o."senderOrganizationId" = ${session.organizationId}
          OR o."recipientOrganizationId" = ${session.organizationId}
@@ -136,7 +136,7 @@ export async function getGridTransactionBoard(session: ClinicSession) {
       SELECT f."id", f."reservationId", f."obligationType", f."beneficiaryType", f."beneficiaryReference",
              beneficiary."name" AS "beneficiaryName", f."amountCents", f."status", f."externalReference", f."updatedAt"
       FROM "GridFinancialObligationRecord" f
-      LEFT JOIN "Organization" beneficiary
+      LEFT JOIN "organizations" beneficiary
         ON f."beneficiaryType" = 'organization' AND beneficiary."id" = f."beneficiaryReference"
       WHERE f."organizationId" = ${session.organizationId}
          OR (f."beneficiaryType" = 'organization' AND f."beneficiaryReference" = ${session.organizationId})

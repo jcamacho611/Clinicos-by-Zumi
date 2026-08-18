@@ -15,7 +15,7 @@ export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordin
     <div className="rounded-[26px] bg-rose-950 p-7 text-white">
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-rose-300">Human review queue</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-rose-300">Human review queue</p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-[-.05em]">{open.length} items are safely held.</h2>
           <p className="mt-3 max-w-2xl text-xs leading-6 text-rose-100/70">Urgent or sensitive work stays with an authorized human. Klinikos does not pretend an external callback was placed when no communications rail is connected.</p>
         </div>
@@ -40,9 +40,9 @@ export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordin
         <div className="grid gap-5 lg:grid-cols-[1.2fr_.7fr_.8fr] lg:items-start">
           <div className="flex items-start gap-4">
             <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${item.riskLevel === "URGENT" ? "bg-rose-100 text-rose-700" : "bg-amber-50 text-amber-700"}`}><ShieldAlert className="size-5" /></span>
-            <div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-extrabold text-slate-950">{item.category.replaceAll("_", " ")}</p><StatusBadge status={item.riskLevel.replaceAll("_", " ")} /></div><p className="mt-1 text-[10px] text-slate-400">{item.patientName} · {item.sourceType} · {new Date(item.createdAt).toLocaleString()}</p><p className="mt-2 text-[10px] leading-5 text-slate-600">Source: {item.sourceId} · Assigned team: {item.assignedTeam}</p></div>
+            <div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-extrabold text-slate-950">{item.category.replaceAll("_", " ")}</p><StatusBadge status={item.riskLevel.replaceAll("_", " ")} /></div><p className="mt-1 text-[12px] text-slate-400">{item.patientName} · {item.sourceType} · {new Date(item.createdAt).toLocaleString()}</p><p className="mt-2 text-[12px] leading-5 text-slate-600">Source: {item.sourceId} · Assigned team: {item.assignedTeam}</p></div>
           </div>
-          <div><p className="text-[8px] font-bold text-slate-400">STATUS</p><p className="mt-1 text-xs font-bold text-slate-700">{item.status}</p><p className="mt-2 text-[10px] leading-5 text-slate-500">{item.resolution ?? "No human resolution note yet."}</p></div>
+          <div><p className="text-[11px] font-bold text-slate-400">STATUS</p><p className="mt-1 text-xs font-bold text-slate-700">{item.status}</p><p className="mt-2 text-[12px] leading-5 text-slate-500">{item.resolution ?? "No human resolution note yet."}</p></div>
           <EscalationActions escalationId={item.id} status={item.status} />
         </div>
       </Card>)}

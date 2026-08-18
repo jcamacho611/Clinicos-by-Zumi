@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
 import { ingestPublicLuxeLead } from "@/lib/repositories/luxe-acquisition-repository";
@@ -43,7 +44,7 @@ async function recordSourceEvent(input: {
       direction: "inbound",
       eventType: GODADDY_EVENT_TYPE,
       status: input.status,
-      metadata: input.metadata,
+      metadata: input.metadata as Prisma.InputJsonValue,
     },
   });
 }

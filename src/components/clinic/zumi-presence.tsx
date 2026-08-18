@@ -520,7 +520,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
                     void sendQuestion(transcript, { voice: true });
                   }}
                 />
-                <span className="hidden text-[10px] text-[#725d59] sm:inline">Enter sends · Shift+Enter adds a line</span>
+                <span className="hidden text-[12px] text-[#725d59] sm:inline">Enter sends · Shift+Enter adds a line</span>
                 <Button className="ml-auto h-9 gap-1.5 px-3 text-[11px]" disabled={loading || !input.trim()} type="submit">
                   <Send className="size-3.5" aria-hidden="true" />
                   Send

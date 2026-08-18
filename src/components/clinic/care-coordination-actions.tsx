@@ -22,7 +22,7 @@ function ActionRow({ url, actions }: { url: string; actions: Array<{ action: str
     catch (reason) { setError(reason instanceof Error ? reason.message : "Transition failed."); }
     finally { setBusy(false); }
   }
-  return <div className="mt-4 border-t border-slate-100 pt-3"><Input aria-label="Transition note" onChange={(event) => setNote(event.target.value)} placeholder="Required human action note" value={note} /><div className="mt-2 flex flex-wrap gap-2">{actions.map((item) => <Button disabled={busy || note.trim().length < 8} key={item.action} onClick={() => run(item.action)} size="sm" variant={item.variant ?? "secondary"}>{busy ? <LoaderCircle className="size-3.5 animate-spin" /> : null}{item.label}</Button>)}</div>{error && <p className="mt-2 text-[10px] font-bold text-rose-600" role="alert">{error}</p>}</div>;
+  return <div className="mt-4 border-t border-slate-100 pt-3"><Input aria-label="Transition note" onChange={(event) => setNote(event.target.value)} placeholder="Required human action note" value={note} /><div className="mt-2 flex flex-wrap gap-2">{actions.map((item) => <Button disabled={busy || note.trim().length < 8} key={item.action} onClick={() => run(item.action)} size="sm" variant={item.variant ?? "secondary"}>{busy ? <LoaderCircle className="size-3.5 animate-spin" /> : null}{item.label}</Button>)}</div>{error && <p className="mt-2 text-[12px] font-bold text-rose-600" role="alert">{error}</p>}</div>;
 }
 
 export function HandoffActions({ handoffId, status }: { handoffId: string; status: string }) {

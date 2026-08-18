@@ -84,7 +84,7 @@ export default function AccessPage() {
     <main className="min-h-screen bg-[#07151c] text-white">
       <div className="mx-auto grid min-h-screen max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:items-center lg:py-16">
         <section>
-          <div className="flex items-center gap-3"><BrandMark /><div><p className="text-sm font-extrabold">Klinikos</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#e6c55b]">Private product access</p></div></div>
+          <div className="flex items-center gap-3"><BrandMark /><div><p className="text-sm font-extrabold">Klinikos</p><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#e6c55b]">Private product access</p></div></div>
           <p className="mt-14 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">The Clinic Operating System</p>
           <h1 className="mt-4 max-w-3xl text-5xl font-extrabold leading-[.98] tracking-[-.065em] sm:text-6xl">See the operating system. Protect the work.</h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-slate-300">Klinikos contains proprietary software architecture, workflows, interface concepts, commercial methods, implementation materials, product documentation and confidential operating knowledge. Detailed product access is provided for evaluation only.</p>
@@ -101,8 +101,8 @@ export default function AccessPage() {
             {error && <p className="mt-4 border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{error}</p>}
             <Button className="mt-5 w-full" disabled={!accepted || !email.trim() || submitting} size="lg" type="submit" variant="primary">{submitting ? <><LoaderCircle className="size-4 animate-spin" /> Recording and sending verification...</> : <>Agree & verify email <ArrowRight className="size-4" /></>}</Button>
           </form>
-          <div className="mt-6 border-t border-slate-200 pt-5 text-[10px] leading-5 text-slate-500">Your acceptance is recorded server-side with the current agreement version and request metadata. A verified email is required before protected evaluation access is granted. Clinic, provider, GRID and production use require separate role-specific agreements and operational approvals.</div>
-          <div className="mt-4 flex gap-4 text-[10px] font-bold"><Link className="text-slate-700 hover:text-slate-950" href="/legal/access-terms">Access terms</Link><Link className="text-slate-700 hover:text-slate-950" href="/legal/privacy">Privacy notice</Link></div>
+          <div className="mt-6 border-t border-slate-200 pt-5 text-[12px] leading-5 text-slate-500">Your acceptance is recorded server-side with the current agreement version and request metadata. A verified email is required before protected evaluation access is granted. Clinic, provider, GRID and production use require separate role-specific agreements and operational approvals.</div>
+          <div className="mt-4 flex gap-4 text-[12px] font-bold"><Link className="text-slate-700 hover:text-slate-950" href="/legal/access-terms">Access terms</Link><Link className="text-slate-700 hover:text-slate-950" href="/legal/privacy">Privacy notice</Link></div>
         </section>
       </div>
     </main>

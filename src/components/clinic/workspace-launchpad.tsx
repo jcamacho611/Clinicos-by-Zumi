@@ -53,9 +53,12 @@ export function WorkspaceLaunchpad({ role }: { role: ClinicRole }) {
     }))
     .filter((group) => group.items.length > 0);
 
-  // Merge deeper tools into an existing group of the same name instead of rendering
-  // duplicate Grid/Network cards. De-duplicate destinations by href across the whole
-  // launchpad so a role never sees the same route offered twice.
+  // The deeper tool lists have to merge into the navigation group of the same name
+  // rather than sit beside it. Appending them produced two cards both titled "Grid" —
+  // one holding the single nav entry and one holding fourteen tools — which read as a
+  // duplicate to anyone looking at it and collided as a React key besides. Items are
+  // de-duplicated by href across the whole launchpad so the same destination is not
+  // offered from two different cards.
   const merged = new Map<string, LaunchItem[]>();
   const seenHrefs = new Set<string>();
   const appendTo = (label: string, items: readonly LaunchItem[]) => {

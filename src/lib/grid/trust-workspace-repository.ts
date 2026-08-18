@@ -60,8 +60,8 @@ export async function getGridTrustWorkspace(session: ClinicSession) {
       FROM "GridReservationRecord" r
       JOIN "GridDemandRecord" d ON d."id" = r."demandId"
       JOIN "GridOfferRecord" o ON o."id" = r."offerId"
-      LEFT JOIN "Organization" sender ON sender."id" = o."senderOrganizationId"
-      LEFT JOIN "Organization" recipient ON recipient."id" = o."recipientOrganizationId"
+      LEFT JOIN "organizations" sender ON sender."id" = o."senderOrganizationId"
+      LEFT JOIN "organizations" recipient ON recipient."id" = o."recipientOrganizationId"
       WHERE r."organizationId" = ${session.organizationId}
          OR o."senderOrganizationId" = ${session.organizationId}
          OR o."recipientOrganizationId" = ${session.organizationId}

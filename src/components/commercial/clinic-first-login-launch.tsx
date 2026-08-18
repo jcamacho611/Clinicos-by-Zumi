@@ -23,7 +23,7 @@ export function ClinicFirstLoginLaunch({ organizationName, briefing }: { organiz
 
           <div className="mt-7 grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
             <div>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>First hour in Klinikos</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>First hour in Klinikos</p>
               <h2
                 id="clinic-launch-heading"
                 className="mt-4 max-w-4xl text-balance font-extrabold"
@@ -37,7 +37,7 @@ export function ClinicFirstLoginLaunch({ organizationName, briefing }: { organiz
             </div>
 
             <div className="border-l pl-5 sm:pl-7" style={{ borderColor: "var(--line-dark)" }}>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>Your activation goal</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>Your activation goal</p>
               <p className="mt-3 text-lg font-extrabold">{briefing.primaryGoal ?? "Bring the clinic into one operating workspace"}</p>
               <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>
                 {briefing.location ? `${briefing.location.name} · ${briefing.location.timezone}` : "Primary location configured"}

@@ -27,13 +27,13 @@ describe("Stripe recurring clinic subscription rules", () => {
     expect(stripeRecurringSubscriptionStatus({
       STRIPE_SECRET_KEY: "sk_live_test",
       STRIPE_WEBHOOK_SECRET: "whsec_test",
-    } as NodeJS.ProcessEnv).processorVerification).toBe(false);
+    } as unknown as NodeJS.ProcessEnv).processorVerification).toBe(false);
 
     const ready = stripeRecurringSubscriptionStatus({
       STRIPE_SECRET_KEY: "sk_live_test",
       STRIPE_WEBHOOK_SECRET: "whsec_test",
       KLINIKOS_STRIPE_RECURRING_ENABLED: "true",
-    } as NodeJS.ProcessEnv);
+    } as unknown as NodeJS.ProcessEnv);
     expect(ready.processorVerification).toBe(true);
     expect(ready.missing).toEqual([]);
   });
