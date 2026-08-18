@@ -15,7 +15,7 @@ import { VoiceInputButton } from "@/components/clinic/voice-input";
 import { ZumiPresence } from "@/components/clinic/zumi-presence";
 import { Button } from "@/components/ui/button";
 import { navigation, workspaceMeta } from "@/lib/navigation";
-import { can, roleLabel } from "@/lib/auth/rbac";
+import { roleLabel } from "@/lib/auth/rbac";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import type { ClinicSession } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,6 @@ function initials(name: string) {
 
 function isVisibleDestination(role: ClinicSession["role"], href: string) {
   if (href === "/edu") return true;
-  if (href === "/zumi") return can(role, "ai", "read");
   return canAccessWorkspace(role, href.slice(1));
 }
 
@@ -149,11 +148,11 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
   const meta = workspaceMeta[slug] ?? workspaceMeta.dashboard;
   const networkMode = ["grid", "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "injury-episodes", "health-passport", "intake-passport"].includes(slug);
   const designMode = networkMode ? "network" : session.organizationSlug === "luxe-medi" ? "luxe" : "medical";
-  const dedicatedZumiBrowser = pathname === "/zumi";
+  const expandedZumiConversation = pathname === "/zumi";
 
-  function summonZumi(question?: string, voice = false) {
+  function sendToZumi(question?: string, voice = false) {
     if (typeof window === "undefined") return;
-    if (dedicatedZumiBrowser) return;
+    if (expandedZumiConversation) return;
     if (question?.trim()) {
       window.dispatchEvent(new CustomEvent("zumi:prompt", { detail: { question: question.trim(), voice } }));
     } else {
@@ -164,13 +163,24 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
   function submitZumi(event: FormEvent) {
     event.preventDefault();
     const question = zumiPrompt.trim();
-    if (dedicatedZumiBrowser) return;
+    if (expandedZumiConversation) return;
     if (!question) {
-      summonZumi();
+      sendToZumi();
       return;
     }
     setZumiPrompt("");
-    summonZumi(question);
+    sendToZumi(question);
+  }
+
+  function sendOrFocusZumi() {
+    const question = zumiPrompt.trim();
+    if (expandedZumiConversation) return;
+    if (!question) {
+      sendToZumi();
+      return;
+    }
+    setZumiPrompt("");
+    sendToZumi(question);
   }
 
   return (
@@ -194,25 +204,25 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
             <h1 className="truncate text-xl font-light tracking-[-.035em] text-[#f8efed]">{meta.title}</h1>
           </div>
 
-          {!dedicatedZumiBrowser ? (
+          {!expandedZumiConversation ? (
             <form className="ml-auto hidden w-full max-w-[520px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex" onSubmit={submitZumi}>
               <Sparkles className="size-4 text-[#e6817b]" />
-              <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Ask Zumi or describe an outcome…" aria-label="Ask Zumi" onChange={(event) => setZumiPrompt(event.target.value)} value={zumiPrompt} />
-              <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={(transcript) => { setZumiPrompt(""); summonZumi(transcript, true); }} />
+              <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Ask Zumi or tell it what you want done…" aria-label="Ask Zumi" onChange={(event) => setZumiPrompt(event.target.value)} value={zumiPrompt} />
+              <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={(transcript) => { setZumiPrompt(""); sendToZumi(transcript, true); }} />
               <button aria-label="Send to Zumi" className="relative grid size-8 place-items-center rounded-full border border-[#e6817b]/18 bg-[#16090c] transition hover:border-[#efaaa1]/40 hover:bg-[#241014] disabled:opacity-35" disabled={!zumiPrompt.trim()} type="submit"><span className="absolute inset-1 rounded-full border border-[#e6817b]/10" /><img alt="" className="relative h-5 w-5 object-contain" src="/klinikos-orbital-k-transparent.png" /></button>
             </form>
-          ) : <div className="ml-auto hidden text-[9px] font-semibold uppercase tracking-[.15em] text-[#806965] md:block">Conversation + routes + working contexts</div>}
+          ) : <div className="ml-auto hidden text-[9px] font-semibold uppercase tracking-[.15em] text-[#806965] md:block">Expanded conversation</div>}
 
           <div className="flex items-center gap-2">
-            {dedicatedZumiBrowser ? <Link className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e6817b]/16 bg-[#e6817b]/[.07] px-3 text-xs font-semibold text-[#efaaa1]" href="/paths"><Route className="size-4" />Routes</Link> : <Button aria-label="Open Zumi" className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6]" onClick={() => summonZumi()} title="Open Zumi" type="button" variant="secondary"><Sparkles className="size-4" /><span className="hidden text-xs font-semibold sm:inline">Zumi</span></Button>}
+            {expandedZumiConversation ? <Link className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e6817b]/16 bg-[#e6817b]/[.07] px-3 text-xs font-semibold text-[#efaaa1]" href="/paths"><Route className="size-4" />Routes</Link> : <Button aria-label={zumiPrompt.trim() ? "Send to Zumi" : "Focus Zumi chat"} className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6]" onClick={sendOrFocusZumi} title={zumiPrompt.trim() ? "Send this to Zumi" : "Chat with Zumi"} type="button" variant="secondary"><Sparkles className="size-4" /><span className="hidden text-xs font-semibold sm:inline">{zumiPrompt.trim() ? "Send" : "Zumi"}</span></Button>}
             <Button asChild className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/dashboard#action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
           </div>
         </header>
 
-        <main className={cn("klinikos-workspace mx-auto w-full max-w-[1680px] text-[var(--k-text)]", dedicatedZumiBrowser ? "px-4 py-4 sm:px-7 sm:py-7 lg:px-10 lg:py-10 xl:px-14 xl:py-14" : "px-4 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-14")}>{children}</main>
+        <main className={cn("klinikos-workspace mx-auto w-full max-w-[1680px] text-[var(--k-text)]", expandedZumiConversation ? "px-4 py-4 sm:px-7 sm:py-7 lg:px-10 lg:py-10 xl:px-14 xl:py-14" : "px-4 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-14")}>{children}</main>
       </div>
 
-      {!dedicatedZumiBrowser ? <ZumiPresence userName={session.name} /> : null}
+      {!expandedZumiConversation ? <ZumiPresence userName={session.name} /> : null}
     </div>
   );
 }
