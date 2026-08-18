@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 export const productStatusLabels = [
   "Live",
@@ -121,10 +120,6 @@ export const salesIntakeSchema = z.object({
   wantsFoundingEvaluation: z.boolean().default(false),
   wantsFoundingProgram: z.boolean().default(false),
   acknowledgesSyntheticData: z.literal(true),
-  acceptsWebsiteTerms: z.literal(true),
-  acceptsAcceptableUse: z.literal(true),
-  acknowledgesPrivacyNotice: z.literal(true),
-  websiteTermsVersion: z.literal(WEBSITE_TERMS_VERSION),
   website: z.string().max(0).optional(),
 }).strict();
 
