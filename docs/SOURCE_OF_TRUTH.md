@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-16.3`
+Version: `2026-08-18.4`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -22,7 +22,9 @@ Specialist law is defined in:
 - `docs/EDU_CANON.md`;
 - `docs/CLINIC_OS_CANON.md`;
 - `docs/PORTAL_AND_ROLE_CANON.md`;
-- `docs/FINANCIAL_OS_CANON.md`.
+- `docs/FINANCIAL_OS_CANON.md`;
+- `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` for repository-wide client/server confidentiality, proprietary-logic, and browser-disclosure law;
+- `docs/KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` for Assurance / Rules & Evidence / Quality Guardian / Expert Grid specialist direction when present on the active candidate branch.
 
 Repository-history and recovery decisions are recorded in `docs/BRANCH_LEDGER.md`; roadmap state is recorded in `docs/RECOVERY_AND_COMPLETION_ROADMAP.md`.
 
@@ -37,6 +39,12 @@ The required chain is:
 A feature is not wired if a consequential part of that chain is fake, disconnected, unauthorized, non-persistent when persistence is required, or unable to produce a truthful next step.
 
 Pages are implementation surfaces. **Routes are the product journeys.** Klinikos Intelligence should reason about current state, desired state, missing requirements, available routes, authorized actions and next best step rather than merely choosing a URL.
+
+For confidential/proprietary execution, the implementation boundary is additionally:
+
+`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY PRESENTATION DTO → BROWSER`
+
+The browser receives approved operational truth and permitted actions, not the confidential machinery used to derive them.
 
 ## 3. Persistent identity and lifecycle
 
@@ -174,6 +182,8 @@ Core concepts include participant, capability, resource, demand, requirement/pol
 
 Hard eligibility precedes ranking. AI may interpret intent and explain matches; deterministic policy decides eligibility. No invented marketplace inventory, distances or fake empty-market markers. Browser geolocation requires explicit user action. Public coordinates remain precision-reduced while governed exact coordinates stay server-side.
 
+Internal Grid ranking weights, anti-gaming logic, trust/risk heuristics, proprietary matching rules, hidden marketplace economics, and other confidential competitive logic stay server-side by default. The browser receives only the minimum approved match/result projection.
+
 ## 10. Financial and payment law
 
 Economic routes should converge on shared financial truth:
@@ -189,6 +199,8 @@ Browser redirect/return state does **not** establish payment.
 Payment evidence is recorded separately from entitlement.
 
 Browser return state cannot create entitlement, settlement or payout truth.
+
+Private pricing formulas, margin logic, settlement rules, fraud/risk signals, and internal commercial economics are server-confidential unless intentionally published.
 
 ## 11. Pricing and monetization law
 
@@ -226,7 +238,9 @@ It is not authority for authentication, tenant access, RBAC, clinical release, c
 
 PHI/sensitive redaction must occur before unrestricted external planners/tools/providers receive content. Public web research is not a private-data destination.
 
-## 13. Product truth and security
+Zumi hidden prompts, system directives, security/policy prompts, proprietary orchestration logic, internal reasoning, private canonical context, connector credentials, and other confidential implementation details are server-confidential. Client-visible Zumi output must be a safe projection of answer, sources, permitted next actions, blockers, and user-relevant state.
+
+## 13. Product truth, security, confidentiality, and trade-secret boundary
 
 No design or ecosystem convergence may weaken:
 
@@ -242,7 +256,29 @@ No design or ecosystem convergence may weaken:
 - clinical governance;
 - same-origin redirect rules;
 - Grid location privacy;
-- AI egress controls.
+- AI egress controls;
+- server/client confidentiality boundaries;
+- proprietary implementation secrecy.
+
+`docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` is authoritative repository-wide law.
+
+Assume everything delivered to the browser can be inspected and retained. Minification, obfuscation, hidden elements, disabled UI, client feature flags, private routes, and a private repository are not secrecy controls.
+
+If information must remain confidential, it remains server-side. This includes, unless explicitly reviewed for disclosure:
+
+- secrets/credentials;
+- Zumi hidden prompts and private orchestration;
+- proprietary rules/evidence logic;
+- Grid/Expert Grid ranking and trust algorithms;
+- risk/anti-abuse/fraud heuristics;
+- private pricing/margin logic;
+- unreleased strategy/roadmap/business data;
+- privileged security and infrastructure details;
+- unnecessary PHI/PII and private operational state.
+
+The browser receives deliberate minimum-necessary DTO/view-model projections, never broad raw database/domain objects by default. Values passed from Server Components into Client Components count as browser disclosure. API responses, static assets, source maps, public env values, client logs, browser storage, telemetry, and errors are all disclosure surfaces.
+
+Frontend authorization is UX only. Server-side repositories/APIs enforce identity, tenant, role, permission, purpose, resource scope, and minimum necessary access.
 
 Demo data is acceptable only in explicit demo/sandbox contexts. Production surfaces prefer real state and truthful empty states.
 
@@ -278,11 +314,15 @@ Concurrent work follows:
 
 Do not force stale branches or destroy concurrent work.
 
+Material frontend/API/security changes additionally require, as applicable, response-minimization review, client/server DTO review, tenant/RBAC checks, cache/no-store verification, error sanitization, secret/public-env review, browser bundle/payload inspection, and third-party telemetry review.
+
 ## 16. Migration/architecture law
 
 Do not big-bang rewrite the repository to aesthetically match the target architecture.
 
 Prefer adapters, shared services, policy modules, route definitions, events, composition and gradual migration. Preserve working models and generalize only where the ecosystem requires it.
+
+Do not move confidential server authority into the frontend merely to simplify a refactor.
 
 ## 17. Acceptance gate
 
@@ -296,6 +336,8 @@ The newest Klinikos vision is not complete merely because the homepage looks rig
 - Tenant A never receives Tenant B data through cross-engine routes;
 - mobile, keyboard and accessibility behavior remain sound;
 - external disconnected states remain truthful;
+- confidential proprietary logic is not unnecessarily delivered to the browser;
+- sensitive browser-visible payloads are minimum necessary;
 - CI/build/journey/browser evidence passes.
 
 ## 18. Business test
@@ -308,6 +350,6 @@ If no, fix the first failure before expanding scope.
 
 ## 19. North star
 
-**Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events.**
+**Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events. Confidential intelligence stays server-side.**
 
-Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath.
+Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath and returns only the approved result necessary for the user's authorized experience.
