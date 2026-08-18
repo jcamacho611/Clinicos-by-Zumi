@@ -213,7 +213,7 @@ export async function POST(request: Request) {
     : null;
 
   const projectedAnswer = sanitizeZumiAnswerForClient(result.response.answer);
-  if (projectedAnswer.blockedMarkers.length > 0) {
+  if (projectedAnswer.blockedMarkers.length > 0 || projectedAnswer.blockedKinds.length > 0) {
     await recordSecurityEvent({
       organizationId: session.organizationId,
       actorId: session.userId,
@@ -223,7 +223,11 @@ export async function POST(request: Request) {
       resourceId: result.response.auditLogId ?? "zumi-response",
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
-      metadata: { markerCount: projectedAnswer.blockedMarkers.length },
+      metadata: {
+        markerCount: projectedAnswer.blockedMarkers.length,
+        patternCount: projectedAnswer.blockedKinds.length,
+        patternKinds: projectedAnswer.blockedKinds,
+      },
     });
   }
 
