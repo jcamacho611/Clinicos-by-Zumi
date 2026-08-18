@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   qualityExpertEscalationReason,
+  qualityExpertGridNextAction,
   qualityExpertNeedFromEvaluation,
 } from "@/lib/orchestration/quality-expert-routing-engine";
 import type { GovernedRuleEvaluation } from "@/lib/orchestration/rules-evidence-engine";
@@ -84,6 +85,22 @@ describe("Quality to Expert Grid routing", () => {
 
     expect(JSON.stringify(need)).not.toContain("secret:patient-document");
     expect(JSON.stringify(need)).not.toContain("patient-1");
+  });
+
+  it("wires expert escalation through the existing governed Grid request capability", () => {
+    const currentEvaluation = evaluation();
+    const need = qualityExpertNeedFromEvaluation({
+      evaluation: currentEvaluation,
+      internalCapabilityAvailable: false,
+      now,
+    });
+    expect(need).not.toBeNull();
+
+    const action = qualityExpertGridNextAction({ need: need!, evaluation: currentEvaluation });
+    expect(action.capabilityKey).toBe("grid.request.create");
+    expect(action.href).toBe("/grid/requests");
+    expect(action.organizationId).toBe("org-a");
+    expect(action.sourceType).toBe("grid");
   });
 
   it("explains why expert escalation exists", () => {
