@@ -10,6 +10,12 @@ import {
   processVerifiedStripeClinicSubscriptionEvent,
   StripeClinicSubscriptionError,
 } from "@/lib/commercial/stripe-clinic-subscriptions";
+import {
+  isLuxeStripeDepositEvent,
+  normalizeVerifiedLuxeStripeDepositEvent,
+} from "@/lib/luxe-stripe-deposit";
+import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import { recordProcessorVerifiedLuxeStripeDeposit } from "@/lib/repositories/luxe-processor-payment-evidence-repository";
 
 export const runtime = "nodejs";
 
@@ -46,6 +52,31 @@ export async function POST(request: Request) {
   // The production endpoint is intentionally live-only. Test-mode work uses an
   // explicit test key/secret outside this route and can never settle live intent.
   if (!event.livemode) return json({ error: "Test-mode Stripe events cannot enter the live payment rail." }, 409);
+
+  // Luxe deposits use the same signed Stripe ingress as Klinikos commercial
+  // payments, but their evidence belongs to the clinic's acquisition ledger.
+  // The opaque journey correlation never grants booking authority: a paid deposit
+  // verifies money only, while appointment confirmation remains a separate human/
+  // booking-provider state.
+  if (isLuxeStripeDepositEvent(event)) {
+    try {
+      const deposit = normalizeVerifiedLuxeStripeDepositEvent(event);
+      const result = await recordProcessorVerifiedLuxeStripeDeposit(deposit);
+      return json({
+        received: true,
+        supported: true,
+        luxeDeposit: true,
+        outcome: deposit.outcome,
+        recorded: result.recorded,
+        idempotent: "idempotent" in result ? result.idempotent : false,
+      });
+    } catch (error) {
+      if (error instanceof NetworkAccessError) {
+        return json({ error: "Luxe Stripe deposit evidence needs reconciliation before it can be attributed." }, error.status >= 500 ? error.status : 409);
+      }
+      return json({ error: "Luxe Stripe deposit evidence could not be processed." }, 500);
+    }
+  }
 
   // Sales may use a deliberately tagged Stripe Payment Link for a manually
   // fulfilled service such as the Clinic Operating Analysis. Those payments are
