@@ -63,15 +63,19 @@ export async function configureTwilioSmsRouting(input: {
     return { ok: false as const, reason: "invalid_messaging_service_sid" as const };
   }
 
-  // Routing metadata is not a secret, but the sender is a tenancy boundary. Refuse to
-  // configure one public sender for two organizations. This is checked again at webhook
-  // resolution time, which also fails closed if legacy data contains a duplicate.
-  const existingTwilio = await db.integration.findMany({
-    where: { type: "communications", vendor: "Twilio", NOT: { organizationId: input.organizationId } },
-    select: { organizationId: true, config: true },
-  });
-  const conflict = existingTwilio.find((row) => readTwilioSmsRoutingConfig(row.config)?.senderPhone === senderPhone);
-  if (conflict) return { ok: false as const, reason: "sender_already_assigned" as const };
+  // The sender is a tenancy boundary. Refuse to assign the same normalized destination
+  // to a second organization. The webhook resolver repeats this uniqueness check and
+  // fails closed if legacy/manual data ever violates the rule.
+  const conflict = await db.$queryRaw<Array<{ organizationId: string }>>(Prisma.sql`
+    SELECT "organizationId"
+      FROM "integrations"
+     WHERE "type" = 'communications'
+       AND "vendor" = 'Twilio'
+       AND "organizationId" <> ${input.organizationId}
+       AND "config"->'sms'->>'senderPhone' = ${senderPhone}
+     LIMIT 1
+  `);
+  if (conflict[0]) return { ok: false as const, reason: "sender_already_assigned" as const };
 
   const configuredAt = new Date().toISOString();
   return db.$transaction(async (tx) => {
@@ -136,19 +140,24 @@ export async function resolveInboundTwilioOrganization(input: {
   if (!senderPhone) return { ok: false as const, reason: "invalid_destination" as const };
   const serviceSid = input.messagingServiceSid?.trim() || null;
 
-  const rows = await db.integration.findMany({
-    where: { type: "communications", vendor: "Twilio" },
-    select: { id: true, organizationId: true, config: true },
-  });
-  const matches = rows.filter((row) => {
-    const routing = readTwilioSmsRoutingConfig(row.config);
-    if (!routing?.inboundEnabled || routing.senderPhone !== senderPhone) return false;
-    if (routing.messagingServiceSid && serviceSid && routing.messagingServiceSid !== serviceSid) return false;
-    if (routing.messagingServiceSid && !serviceSid) return false;
-    return true;
-  });
+  const rows = await db.$queryRaw<Array<{ id: string; organizationId: string; config: Prisma.JsonValue | null }>>(Prisma.sql`
+    SELECT "id", "organizationId", "config"
+      FROM "integrations"
+     WHERE "type" = 'communications'
+       AND "vendor" = 'Twilio'
+       AND "config"->'sms'->>'senderPhone' = ${senderPhone}
+       AND COALESCE("config"->'sms'->>'inboundEnabled', 'false') = 'true'
+     LIMIT 2
+  `);
 
-  if (matches.length === 0) return { ok: false as const, reason: "unmapped_destination" as const };
-  if (matches.length !== 1) return { ok: false as const, reason: "ambiguous_destination" as const };
-  return { ok: true as const, organizationId: matches[0].organizationId, integrationId: matches[0].id, senderPhone };
+  if (rows.length === 0) return { ok: false as const, reason: "unmapped_destination" as const };
+  if (rows.length !== 1) return { ok: false as const, reason: "ambiguous_destination" as const };
+
+  const routing = readTwilioSmsRoutingConfig(rows[0].config);
+  if (!routing?.inboundEnabled) return { ok: false as const, reason: "unmapped_destination" as const };
+  if (routing.messagingServiceSid && routing.messagingServiceSid !== serviceSid) {
+    return { ok: false as const, reason: "messaging_service_mismatch" as const };
+  }
+
+  return { ok: true as const, organizationId: rows[0].organizationId, integrationId: rows[0].id, senderPhone };
 }
