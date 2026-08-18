@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
+import { messageRequestsCancellation, parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
 import { canonicalizeLuxeServiceInterest } from "@/lib/luxe-service-interest";
 
 describe("GoDaddy Luxe conversation notification parser", () => {
@@ -59,7 +59,7 @@ https://conversations.godaddy.com/conversations/synthetic?conversation=123456789
     expect(canonicalizeLuxeServiceInterest("A future service not yet mapped")).toBe("A future service not yet mapped");
   });
 
-  it("recognizes a cancellation as an observed lifecycle event", () => {
+  it("recognizes clear cancellation language as an observed lifecycle event", () => {
     const parsed = parseGoDaddyConversationNotification({
       messageId: "synthetic-cancel-1",
       subject: "New message for LUXE Medical Spa",
@@ -77,6 +77,32 @@ This is a reminder.`,
     expect(parsed.customerName).toBe("Jamie Example");
     expect(parsed.messageText).toContain("please cancel");
     expect(parsed.messageText).not.toContain("This is a reminder");
+  });
+
+  it("does not create cancellation intent from negated language", () => {
+    expect(messageRequestsCancellation("Please do not cancel my appointment. I am still coming.")).toBe(false);
+    expect(messageRequestsCancellation("Don't cancel the booking, I just need a later time.")).toBe(false);
+    expect(messageRequestsCancellation("Please keep my appointment; I do not want to cancel.")).toBe(false);
+  });
+
+  it("recognizes common explicit cancellation requests", () => {
+    expect(messageRequestsCancellation("I need to cancel my appointment.")).toBe(true);
+    expect(messageRequestsCancellation("Please cancel the booking.")).toBe(true);
+    expect(messageRequestsCancellation("My appointment has been canceled.")).toBe(true);
+    expect(messageRequestsCancellation("Cancel my appointment for Saturday.")).toBe(true);
+  });
+
+  it("keeps a negated cancel message as an inquiry instead of a cancellation", () => {
+    const parsed = parseGoDaddyConversationNotification({
+      messageId: "synthetic-not-cancel-1",
+      subject: "New message for LUXE Medical Spa",
+      body: `LUXE Medical Spa received a new message.
+
+From Taylor Example:
+
+Please do not cancel my appointment. I only need to ask whether I can arrive 15 minutes later.`,
+    });
+    expect(parsed.kind).toBe("inquiry");
   });
 
   it("recognizes a generic customer inquiry", () => {
