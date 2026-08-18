@@ -12,7 +12,7 @@ import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 export const metadata = {
   title: "Clinic Operating Analysis — Klinikos",
   description:
-    "Klinikos maps where your clinic loses control — follow-ups, paperwork, referrals, results, billing readiness, staff ownership and revenue signals — then prepares a private workflow review for human approval.",
+    "Klinikos maps where your clinic loses control — follow-ups, paperwork, referrals, results, billing readiness, staff ownership and revenue signals — then prepares a human-reviewed operating recommendation.",
 };
 
 export default function ClinicOperatingAnalysisPage() {
@@ -34,20 +34,18 @@ export default function ClinicOperatingAnalysisPage() {
             <p className="mt-8 max-w-2xl text-base leading-8" style={{ color: "var(--text-secondary)" }}>
               Klinikos maps the work your clinic is losing track of — follow-ups, paperwork, referrals, results, billing readiness,
               staff tasks, med spa leads, and revenue opportunities — while Klinikos Intelligence guides the analysis and prepares
-              a private workflow review for human approval.
+              a human-reviewed recommendation for the next safe commercial step.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="#analysis"
-                className="inline-flex min-h-12 items-center justify-center gap-2 px-5 text-xs font-extrabold"
-                style={{ background: "#e6817b", color: "#19090b", borderRadius: "var(--radius-sm)" }}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-rose-200 px-5 text-xs font-extrabold text-slate-950 hover:bg-rose-100"
               >
                 Start Clinic Operating Analysis <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
               <Link
                 href="/pricing"
-                className="inline-flex min-h-12 items-center justify-center px-5 text-xs font-extrabold"
-                style={{ color: "var(--text-primary)", border: "var(--border-hair-dark)", borderRadius: "var(--radius-sm)" }}
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/15 px-5 text-xs font-extrabold text-white hover:border-rose-200/35"
               >
                 See current pricing
               </Link>
