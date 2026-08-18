@@ -4,7 +4,9 @@ import { EscalationsWorkspaceReal } from "@/components/clinic/escalations-worksp
 import { InsuranceWorkspaceReal } from "@/components/clinic/insurance-workspace-real";
 import { MessagesWorkspaceReal } from "@/components/clinic/messages-workspace-real";
 import { TasksWorkspaceReal } from "@/components/clinic/tasks-workspace-real";
+import { TwilioRoutingPanel } from "@/components/clinic/twilio-routing-panel";
 import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace-renderer";
+import { can } from "@/lib/auth/rbac";
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
 import { workspaceMeta } from "@/lib/navigation";
@@ -35,6 +37,14 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
   }
   if (workspace === "insurance") {
     return <InsuranceWorkspaceReal workspace={await listInsuranceWorkspace(session)} />;
+  }
+  if (workspace === "integrations") {
+    return (
+      <div className="space-y-6">
+        <TwilioRoutingPanel canManage={can(session.role, "integrations", "manage")} />
+        <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />
+      </div>
+    );
   }
   return <WorkspaceRenderer organizationId={session.organizationId} role={session.role} userId={session.userId} workspace={workspace} />;
 }
