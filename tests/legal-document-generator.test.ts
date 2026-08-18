@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { buildNdaPackage, type NdaGeneratorInput } from "@/lib/legal/nda-generator";
 import {
   buildLegalDocumentRecord,
+  canTransitionLegalDocument,
   executionGuard,
   signatureReadiness,
+  transitionLegalDocument,
   type LegalDocumentRecord,
 } from "@/lib/legal/legal-document-lifecycle";
 
@@ -61,16 +63,8 @@ describe("legal document lifecycle", () => {
   it("starts generated documents in review and blocks premature signature/execution", () => {
     const ndaPackage = buildNdaPackage(floridaPartner);
     const record = buildLegalDocumentRecord("legal_nda_001", floridaPartner, ndaPackage, [
-      {
-        role: "KLINIKOS",
-        name: "Justin Camacho",
-        authorityConfirmed: true,
-      },
-      {
-        role: "RECIPIENT",
-        name: "Melissa Example",
-        authorityConfirmed: true,
-      },
+      { role: "KLINIKOS", name: "Justin Camacho", authorityConfirmed: true },
+      { role: "RECIPIENT", name: "Melissa Example", authorityConfirmed: true },
     ]);
 
     expect(record.status).toBe("NEEDS_REVIEW");
@@ -78,21 +72,14 @@ describe("legal document lifecycle", () => {
     expect(executionGuard(record).canRenderFinalPdf).toBe(false);
     expect(executionGuard(record).canSendForSignature).toBe(false);
     expect(executionGuard(record).canMarkExecuted).toBe(false);
+    expect(canTransitionLegalDocument(record, "EXECUTED")).toBe(false);
   });
 
   it("requires signer authority and a frozen artifact hash before sending", () => {
     const ndaPackage = buildNdaPackage(floridaPartner);
     const base = buildLegalDocumentRecord("legal_nda_002", floridaPartner, ndaPackage, [
-      {
-        role: "KLINIKOS",
-        name: "Justin Camacho",
-        authorityConfirmed: true,
-      },
-      {
-        role: "RECIPIENT",
-        name: "Melissa Example",
-        authorityConfirmed: true,
-      },
+      { role: "KLINIKOS", name: "Justin Camacho", authorityConfirmed: true },
+      { role: "RECIPIENT", name: "Melissa Example", authorityConfirmed: true },
     ]);
 
     const approved: LegalDocumentRecord = {
@@ -121,13 +108,67 @@ describe("legal document lifecycle", () => {
     };
 
     expect(executionGuard(frozen).canSendForSignature).toBe(true);
+    expect(canTransitionLegalDocument(frozen, "SENT_FOR_SIGNATURE")).toBe(true);
   });
 
-  it("never allows a draft or review-state record to be marked executed", () => {
+  it("requires verified signed-artifact evidence before execution", () => {
     const ndaPackage = buildNdaPackage(floridaPartner);
-    const record = buildLegalDocumentRecord("legal_nda_003", floridaPartner, ndaPackage);
+    const base = buildLegalDocumentRecord("legal_nda_003", floridaPartner, ndaPackage, [
+      { role: "KLINIKOS", name: "Justin Camacho", authorityConfirmed: true },
+      { role: "RECIPIENT", name: "Melissa Example", authorityConfirmed: true },
+    ]);
 
-    expect(executionGuard(record).canMarkExecuted).toBe(false);
-    expect(executionGuard(record).warning).toContain("verified signature-provider evidence");
+    const sent: LegalDocumentRecord = {
+      ...base,
+      status: "SENT_FOR_SIGNATURE",
+      package: {
+        ...base.package,
+        venueInstruction: "Venue confirmed in the signed jurisdiction schedule.",
+        warnings: base.package.warnings.filter((warning) => !warning.includes("state-specific review")),
+      },
+      artifact: {
+        fileName: "klinicos-nda-melissa-example-v1.pdf",
+        mimeType: "application/pdf",
+        sha256: "a".repeat(64),
+      },
+    };
+
+    expect(executionGuard(sent).canMarkExecuted).toBe(false);
+    expect(canTransitionLegalDocument(sent, "EXECUTED")).toBe(false);
+
+    const evidenced: LegalDocumentRecord = {
+      ...sent,
+      executionEvidence: {
+        source: "ESIGN_PROVIDER",
+        verified: true,
+        evidenceId: "envelope-proof-123",
+        providerEnvelopeId: "envelope-123",
+        signedArtifactSha256: "b".repeat(64),
+        verifiedAt: new Date().toISOString(),
+      },
+    };
+
+    expect(executionGuard(evidenced).canMarkExecuted).toBe(true);
+    expect(canTransitionLegalDocument(evidenced, "EXECUTED")).toBe(true);
+
+    const executed = transitionLegalDocument(evidenced, "EXECUTED", {
+      type: "EXECUTED",
+      occurredAt: new Date().toISOString(),
+      actor: "verified-esign-webhook",
+      evidenceId: "envelope-proof-123",
+    });
+
+    expect(executed.status).toBe("EXECUTED");
+    expect(executed.events.at(-1)?.evidenceId).toBe("envelope-proof-123");
+  });
+
+  it("throws on illegal state jumps", () => {
+    const ndaPackage = buildNdaPackage(floridaPartner);
+    const record = buildLegalDocumentRecord("legal_nda_004", floridaPartner, ndaPackage);
+
+    expect(() => transitionLegalDocument(record, "EXECUTED", {
+      type: "EXECUTED",
+      occurredAt: new Date().toISOString(),
+    })).toThrow("Illegal legal-document transition");
   });
 });
