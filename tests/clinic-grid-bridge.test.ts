@@ -16,7 +16,7 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-const { detectClinicGridSignals, canActOnClinicGridSignal } = await import("@/lib/ecosystem/clinic-grid-bridge");
+const { detectClinicGridSignals, canActOnClinicGridSignal, draftForClinicGridSignal } = await import("@/lib/ecosystem/clinic-grid-bridge");
 const { gridDemandSchema } = await import("@/lib/grid/demand-contract");
 
 const NOW = new Date("2026-08-17T12:00:00.000Z");
@@ -156,6 +156,53 @@ describe("Clinic OS → Grid bridge", () => {
     expect(canActOnClinicGridSignal(sessionFor("clinic_owner"))).toBe(true);
     expect(canActOnClinicGridSignal(sessionFor("viewer"))).toBe(false);
     expect(canActOnClinicGridSignal(sessionFor("quality"))).toBe(false);
+  });
+
+  it("re-derives a draft for the composer from live state", async () => {
+    appointmentFindMany.mockResolvedValue([
+      { startsAt: new Date("2026-08-20T14:00:00Z"), endsAt: new Date("2026-08-20T14:30:00Z"), locationId: "loc-1" },
+    ]);
+    locationFindFirst.mockResolvedValue({ city: "Brooklyn", state: "NY", locationType: "clinic" });
+
+    const draft = await draftForClinicGridSignal(sessionFor("clinic_owner"), "coverage_gap", NOW);
+    expect(draft?.kind).toBe("provider");
+    expect(draft?.city).toBe("Brooklyn");
+  });
+
+  it("returns nothing to prefill once the gap has closed", async () => {
+    // The composer link carries only the signal name. If the schedule was filled
+    // between Home rendering and the form opening, the honest answer is an empty
+    // form — not a prefilled need for work nobody has any more.
+    appointmentFindMany.mockResolvedValue([]);
+    expect(await draftForClinicGridSignal(sessionFor("clinic_owner"), "coverage_gap", NOW)).toBeNull();
+  });
+
+  it("cannot be made to prefill a signal this role may not read", async () => {
+    appointmentFindMany.mockResolvedValue([
+      { startsAt: new Date("2026-08-20T14:00:00Z"), endsAt: new Date("2026-08-20T14:30:00Z"), locationId: null },
+    ]);
+    // A contractor holds no appointments read. Naming the signal in the URL must not
+    // become a way to read clinic schedule state through the composer.
+    expect(await draftForClinicGridSignal(sessionFor("contractor"), "coverage_gap", NOW)).toBeNull();
+    expect(appointmentFindMany).not.toHaveBeenCalled();
+  });
+
+  it("sends drafted signals to the composer and undrafted ones elsewhere", async () => {
+    appointmentFindMany.mockResolvedValue([
+      { startsAt: new Date("2026-08-20T14:00:00Z"), endsAt: new Date("2026-08-20T14:30:00Z"), locationId: null },
+    ]);
+    referralCount.mockResolvedValue(2);
+    capacityCount.mockResolvedValue(1);
+
+    for (const signal of await detectClinicGridSignals(sessionFor("clinic_owner"), NOW)) {
+      if (signal.draft) {
+        // A signal that produced a draft must land where the draft can be used.
+        expect(signal.href, signal.kind).toContain("/grid/needs/new?from=");
+        expect(signal.href, signal.kind).toContain(signal.kind);
+      } else {
+        expect(signal.href, signal.kind).not.toContain("/grid/needs/new");
+      }
+    }
   });
 
   it("counts only future work, so a past gap is not offered as coverage", async () => {

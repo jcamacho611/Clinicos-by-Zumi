@@ -123,7 +123,7 @@ async function detectCoverageGap(session: ClinicSession, now: Date): Promise<Cli
     detail: "Grid can look for eligible coverage for this window. Eligibility, credentials, and jurisdiction are checked at match, not here.",
     evidence: `Counted from scheduled appointments between ${window} with no provider on the record.`,
     count,
-    href: "/grid/needs/new",
+    href: "/grid/needs/new?from=coverage_gap",
     actionLabel: "Review the coverage need",
     draft: draftDemand({
       kind: "provider",
@@ -162,8 +162,8 @@ async function detectReferralLeak(session: ClinicSession): Promise<ClinicGridSig
     detail: "Grid can look for partner capacity that accepts this kind of referral. Klinikos does not send a referral from this surface.",
     evidence: "Counted from open referral records with no destination organization recorded.",
     count: stranded,
-    href: "/referrals",
-    actionLabel: "Open referrals",
+    href: "/grid/needs/new?from=referral_leak",
+    actionLabel: "Review the capacity need",
     draft: draftDemand({
       kind: "referral",
       title: "Referral destination capacity needed",
@@ -223,4 +223,23 @@ export async function detectClinicGridSignals(session: ClinicSession, now = new 
 /** Whether this role may act on a signal, as opposed to merely seeing it. */
 export function canActOnClinicGridSignal(session: ClinicSession) {
   return can(session.role, "grid", "create") || can(session.role, "network", "create");
+}
+
+/**
+ * Re-derive one signal's draft at the moment the composer opens.
+ *
+ * The draft is deliberately NOT carried through the URL. Two reasons: a link is
+ * user-editable, and a demand assembled from an unverified query string is a demand
+ * this clinic never actually had; and a gap can close between Home rendering and the
+ * form opening, in which case the honest answer is an empty form, not a prefill for
+ * work that no longer needs doing. Re-detecting costs one query and cannot be stale
+ * or forged.
+ */
+export async function draftForClinicGridSignal(
+  session: ClinicSession,
+  kind: ClinicGridSignal["kind"],
+  now = new Date(),
+): Promise<SavedGridDemand | null> {
+  const signals = await detectClinicGridSignals(session, now);
+  return signals.find((signal) => signal.kind === kind)?.draft ?? null;
 }

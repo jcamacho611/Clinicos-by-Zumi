@@ -65,6 +65,8 @@ Three rules keep the bridge honest, each enforced by `tests/clinic-grid-bridge.t
 
 Reading each signal is governed by the Clinic OS permission for the records behind it, so a role without `appointments:read` never triggers the query. Acting on one additionally needs Grid create rights; a role that can see a gap but not publish is shown the gap without the action rather than a control that would fail.
 
+Each signal that produces a draft links to `/grid/needs/new?from=<signal>`. The link carries **only the signal name** — never the demand. The composer page re-derives the draft from live records on open, so a link cannot carry a forged need into the form, and a gap that closed in the meantime yields an empty form with a plain note rather than a prefill for work nobody needs. An unrecognised signal name is ignored. Prefilled fields stay editable, the form says where they came from, and the demand is created only when a person submits it.
+
 Bridge destinations are checked by the same route guard as route steps — `/grid/needs` has no page of its own, and pointing at it produced a 404 that browser QA caught.
 
 ## Adding a route

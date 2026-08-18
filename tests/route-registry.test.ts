@@ -18,7 +18,9 @@ import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engin
 const appDir = path.join(process.cwd(), "src/app");
 
 function routeExists(href: string): boolean {
-  const segments = href.split("/").filter(Boolean);
+  // A query string or fragment is not part of the route — `/grid/needs/new?from=…`
+  // resolves to the same page as `/grid/needs/new`.
+  const segments = href.split(/[?#]/)[0].split("/").filter(Boolean);
 
   // Next.js route groups — (platform), (clinic) — are invisible in the URL, so a
   // candidate may live under any of them, or at the app root.

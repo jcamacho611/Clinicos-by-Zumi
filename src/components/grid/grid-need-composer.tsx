@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Crosshair, LoaderCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { SavedGridDemand } from "@/lib/grid/transaction-flow";
 
 const kinds = [
   ["work", "Work / staffing"],
@@ -25,6 +26,19 @@ function toIso(value: string) {
   return value ? new Date(value).toISOString() : null;
 }
 
+/** ISO instant → the `YYYY-MM-DDTHH:mm` shape a datetime-local input accepts. */
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+}
+
+function centsToDollars(cents: number | null | undefined) {
+  return typeof cents === "number" ? (cents / 100).toFixed(2) : "";
+}
+
 function dollarsToCents(value: string) {
   if (!value.trim()) return null;
   const dollars = Number(value);
@@ -35,26 +49,42 @@ function split(value: string) {
   return value.split(/\n|,/).map((item) => item.trim()).filter(Boolean);
 }
 
-export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Kind }) {
+/**
+ * @param initialDraft A demand assembled server-side from this clinic's own records —
+ * an unassigned shift, a referral with nowhere to go. It seeds the form so nobody
+ * retypes what Klinikos already knows. It is a starting point, not a submission:
+ * every field stays editable, and the need is only created when a person submits.
+ */
+export function GridNeedComposer({
+  initialDraft = null,
+  initialKind = "service",
+}: {
+  initialDraft?: SavedGridDemand | null;
+  initialKind?: Kind;
+}) {
   const router = useRouter();
-  const [kind, setKind] = useState<Kind>(initialKind);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [serviceName, setServiceName] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("NY");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
+  const seededKind = (initialDraft?.kind as Kind | undefined) ?? initialKind;
+  const [kind, setKind] = useState<Kind>(seededKind);
+  const [title, setTitle] = useState(initialDraft?.title ?? "");
+  const [description, setDescription] = useState(initialDraft?.description ?? "");
+  const [category, setCategory] = useState(initialDraft?.category ?? "");
+  const [serviceName, setServiceName] = useState(initialDraft?.serviceName ?? "");
+  const [city, setCity] = useState(initialDraft?.city ?? "");
+  // "NY" is only a convenience default for a blank form. A seeded draft carries the
+  // clinic's real location, and a draft with no state must stay blank rather than
+  // inherit a state this organization may not practise in.
+  const [state, setState] = useState(initialDraft ? initialDraft.state ?? "" : "NY");
+  const [latitude, setLatitude] = useState<number | null>(initialDraft?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(initialDraft?.longitude ?? null);
   const [locating, setLocating] = useState(false);
-  const [radiusMiles, setRadiusMiles] = useState("25");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [budget, setBudget] = useState("");
-  const [locationType, setLocationType] = useState("");
-  const [requirements, setRequirements] = useState("");
-  const [clinical, setClinical] = useState(["work", "provider"].includes(initialKind));
+  const [radiusMiles, setRadiusMiles] = useState(initialDraft?.radiusMiles != null ? String(initialDraft.radiusMiles) : "25");
+  const [startsAt, setStartsAt] = useState(toLocalInput(initialDraft?.requestedStartAt));
+  const [endsAt, setEndsAt] = useState(toLocalInput(initialDraft?.requestedEndAt));
+  const [quantity, setQuantity] = useState(String(initialDraft?.quantity ?? 1));
+  const [budget, setBudget] = useState(centsToDollars(initialDraft?.maxPriceCents));
+  const [locationType, setLocationType] = useState(initialDraft?.locationType ?? "");
+  const [requirements, setRequirements] = useState((initialDraft?.requirements ?? []).join("\n"));
+  const [clinical, setClinical] = useState(initialDraft?.requiresClinicalEligibility ?? ["work", "provider"].includes(initialKind));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -166,6 +196,8 @@ export function GridNeedComposer({ initialKind = "service" }: { initialKind?: Ki
     <p className="mt-7 text-[10px] font-black uppercase tracking-[.2em] text-cyan-200">I need · {kindLabel}</p>
     <h2 className="mt-2 text-3xl font-black tracking-[-.05em] text-white">Describe the outcome. Grid structures the search.</h2>
     <p className="mt-3 max-w-3xl text-xs leading-6 text-white/45">Do not put patient names, diagnoses, records, or other PHI in a general Grid need. This object is for marketplace/resource requirements only.</p>
+
+    {initialDraft ? <div className="mt-5 rounded-[1.35rem] border border-cyan-300/20 bg-cyan-300/[.05] px-4 py-3 text-[10px] leading-5 text-cyan-100/80"><strong className="font-extrabold text-cyan-100">Started from your clinic records.</strong> Klinikos filled these fields from the gap it found on your own schedule — no patient information is included. Change anything before you save; nothing is posted to Grid until you do.</div> : null}
 
     <div className="mt-6 grid gap-3 md:grid-cols-2">
       <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/45 md:col-span-2">Need title<Input className="mt-2" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Example: RN coverage Friday 9–5" /></label>
