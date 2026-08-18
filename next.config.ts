@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         headers: [...privateNoStoreHeaders, privateRobotsHeader],
       },
       {
+        source: "/access",
+        headers: [...privateNoStoreHeaders, privateRobotsHeader],
+      },
+      {
         source: "/access/:path*",
         headers: [...privateNoStoreHeaders, privateRobotsHeader],
       },
@@ -32,6 +36,10 @@ const nextConfig: NextConfig = {
       {
         source: "/payments/:path*",
         headers: [...privateNoStoreHeaders, privateRobotsHeader],
+      },
+      {
+        source: "/private-demo",
+        headers: [privateRobotsHeader],
       },
     ];
   },
