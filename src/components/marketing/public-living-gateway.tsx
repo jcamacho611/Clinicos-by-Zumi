@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUp, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 import {
   resolvePublicLivingIntent,
   type PublicLivingResolution,
@@ -146,8 +147,8 @@ export function PublicLivingGateway() {
                     <ArrowUp className="size-5" aria-hidden="true" />
                   </button>
                 </div>
-                <p className="mx-auto mt-4 max-w-[680px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
-                  This public conversation can guide you to the right next step, but it does not open private clinic records or make changes. Do not enter patient information here.
+                <p className="mx-auto mt-4 max-w-[700px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
+                  This public conversation does not open private clinic records or make changes. Do not enter patient information. By sending a message, you agree to the <Link className="font-semibold text-[#d8c1bd] underline underline-offset-4 hover:text-white" href="/legal/terms">Website Terms</Link> and acknowledge the <Link className="font-semibold text-[#d8c1bd] underline underline-offset-4 hover:text-white" href="/legal/privacy">Privacy Notice</Link>. Terms version {WEBSITE_TERMS_VERSION}.
                 </p>
               </form>
 
@@ -213,7 +214,7 @@ export function PublicLivingGateway() {
                 </button>
               </div>
               <p className="mt-2 px-3 text-[10px] leading-4 text-[#8f7773]" id="public-follow-up-note">
-                Public Zumi does not access private clinic records or execute changes.
+                Public Zumi does not access private clinic records or execute changes. Continued use is subject to the <Link className="underline underline-offset-4" href="/legal/terms">Website Terms</Link>.
               </p>
             </form>
           </main>
