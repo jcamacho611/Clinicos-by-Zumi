@@ -147,7 +147,7 @@ export function PublicLivingGateway() {
                   </button>
                 </div>
                 <p className="mx-auto mt-4 max-w-[680px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
-                  Public Zumi on this page uses fixed guidance rules, not a generative model conversation. It cannot open private clinic records or make changes. Do not enter patient information here.
+                  Public Zumi is a guided navigator. The full governed Zumi experience is available inside Klinikos after sign-in. This page cannot open private clinic records or make changes. Do not enter patient information here.
                 </p>
               </form>
 
@@ -213,7 +213,7 @@ export function PublicLivingGateway() {
                 </button>
               </div>
               <p className="mt-2 px-3 text-[10px] leading-4 text-[#9a817c]" id="public-follow-up-note">
-                Public guidance here uses fixed rules and cannot access private clinic records or execute changes.
+                Public Zumi is a guided navigator and cannot access private clinic records or execute changes.
               </p>
             </form>
           </main>
