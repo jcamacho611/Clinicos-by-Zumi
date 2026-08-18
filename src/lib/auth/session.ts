@@ -14,6 +14,9 @@ import {
 import { normalizeClinicRole } from "@/lib/auth/rbac";
 import { signSessionToken, verifySessionToken } from "@/lib/auth/token";
 import type { AuthenticatedIdentity, ClinicSession } from "@/lib/auth/types";
+import { buildGlobalAgreement } from "@/lib/legal/global-agreement";
+import { getLegalConfigurationStatus, isLegalGateEnforcementEnabled } from "@/lib/legal/legal-config";
+import { hasCurrentAgreementAcceptance } from "@/lib/legal/legal-access";
 
 interface SessionMetadata {
   ipAddress?: string;
@@ -80,15 +83,43 @@ async function validateSession(token: string): Promise<ClinicSession | null> {
   }
 }
 
-export const getClinicSession = cache(async () => {
+// Authentication truth and contractual-access truth are intentionally separate.
+// Legal routes, logout, and account-recovery flows need to recognize an authenticated
+// session even when that session is not yet entitled to protected product access.
+export const getAuthenticationSession = cache(async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   return token ? validateSession(token) : null;
 });
 
-export async function requireClinicSession() {
-  const session = await getClinicSession();
+export const getClinicSession = cache(async () => {
+  const session = await getAuthenticationSession();
+  if (!session) return null;
+  if (!isLegalGateEnforcementEnabled()) return session;
+
+  const legal = getLegalConfigurationStatus();
+  if (!legal.ready) return null;
+
+  const accepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legal.config));
+  return accepted ? session : null;
+});
+
+export async function requireAuthenticationSession() {
+  const session = await getAuthenticationSession();
   if (!session) redirect("/login");
+  return session;
+}
+
+export async function requireClinicSession() {
+  const session = await getAuthenticationSession();
+  if (!session) redirect("/login");
+  if (!isLegalGateEnforcementEnabled()) return session;
+
+  const legal = getLegalConfigurationStatus();
+  if (!legal.ready) redirect("/legal/accept?blocked=configuration");
+
+  const accepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legal.config));
+  if (!accepted) redirect("/legal/accept");
   return session;
 }
 
