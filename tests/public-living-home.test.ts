@@ -79,15 +79,17 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("priorResolution");
     expect(source).toContain("What needs");
     expect(source).toContain("to happen?");
-    expect(source).toContain("Talk to Zumi naturally");
-    expect(source).toContain('aria-label="Conversation with Zumi"');
+    expect(source).toContain("Tell Zumi what is going on");
+    expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
     expect(page).not.toContain("PublicConversionBridge");
   });
 
-  it("keeps deterministic routing behind the conversation instead of exposing it as the product", () => {
+  it("keeps deterministic routing behind a simple conversation without pretending it is model reasoning", () => {
     expect(source).toContain("resolvePublicLivingIntent");
+    expect(source).toContain("Public Zumi is a guided navigator");
+    expect(source).toContain("full governed Zumi experience is available inside Klinikos after sign-in");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
     expect(source).not.toContain("No records opened · no action executed");
@@ -113,7 +115,7 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('htmlFor="public-klinikos-intent"');
     expect(source).toContain('aria-describedby="public-conversation-disclosure"');
     expect(source).toContain('id="public-conversation-disclosure"');
-    expect(source).toContain("does not open private clinic records or make changes");
+    expect(source).toContain("cannot open private clinic records or make changes");
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('role="status"');
     expect(source).toContain("onKeyDown={handleComposerKeyDown}");
