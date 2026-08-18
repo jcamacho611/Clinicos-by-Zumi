@@ -14,7 +14,7 @@ function iconFor(destination: RailDestination) {
 export function HomeOperatingRailPanel({ rail }: { rail: HomeOperatingRail }) {
   return (
     <DsSurface className="-mx-4 border-y border-[var(--line-dark)] bg-[var(--surface-primary)] text-[var(--text-primary)] sm:-mx-6 lg:-mx-8">
-      <section className="mx-auto max-w-[var(--container-max)] px-5 py-10 sm:px-8 lg:px-12" aria-labelledby="operating-rail-title">
+      <section className="mx-auto max-w-[var(--container-max)] scroll-mt-28 px-5 py-10 sm:px-8 lg:px-12" aria-labelledby="operating-rail-title" id="action-center">
         <div className="grid gap-8 lg:grid-cols-[.78fr_1.22fr] lg:items-start lg:gap-16">
           <div>
             <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Live operating rail</p>

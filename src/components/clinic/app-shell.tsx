@@ -205,7 +205,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
 
           <div className="flex items-center gap-2">
             {dedicatedZumiBrowser ? <Link className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e6817b]/16 bg-[#e6817b]/[.07] px-3 text-xs font-semibold text-[#efaaa1]" href="/paths"><Route className="size-4" />Routes</Link> : <Button aria-label="Open Zumi" className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6]" onClick={() => summonZumi()} title="Open Zumi" type="button" variant="secondary"><Sparkles className="size-4" /><span className="hidden text-xs font-semibold sm:inline">Zumi</span></Button>}
-            <Button className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary" aria-label="Notifications"><Bell className="size-4" /></Button>
+            <Button asChild className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/dashboard#action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
           </div>
         </header>
 
