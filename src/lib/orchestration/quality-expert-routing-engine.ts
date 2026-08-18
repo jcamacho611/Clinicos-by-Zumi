@@ -32,7 +32,10 @@ export function qualityExpertNeedFromEvaluation(input: {
 
   const now = input.now ?? new Date();
   return {
-    id: `expert-need:${evaluation.id}`,
+    // Grid demand identity is intentionally organization + rule scoped. The
+    // patient/subject identifier stays inside the clinic's governed evaluation
+    // and is not encoded into marketplace-facing identifiers.
+    id: `expert-need:${evaluation.organizationId}:${evaluation.ruleKey}:${evaluation.ruleVersion}`,
     organizationId: evaluation.organizationId,
     capabilityKey: input.expertCapabilityKey
       ?? (evaluation.status === "review_required" ? "quality.expert.review" : "quality.expert.remediation"),
