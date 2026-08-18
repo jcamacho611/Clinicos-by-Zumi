@@ -127,17 +127,49 @@ export function evaluateEduAiRequest(input: { capability: string; gatewayAvailab
 }
 
 /**
- * Snapshot used by the EDU dashboard. `available` means technically configured,
- * not approved for real clinical data and not autonomous authority.
+ * Whether the Klinikos AI Gateway is actually available.
+ *
+ * Delegates to the gateway's own registry rather than answering for it. EDU asked
+ * this question before the gateway existed and hardcoded false; now that the gateway
+ * is real, a second hardcoded answer here would be the thing that eventually
+ * disagrees with the truth. It still reports false in every environment today,
+ * because no provider is registered until an approved one is contracted.
  */
-export function eduAiStatus() {
-  const gateway = zumiGatewayStatus();
-  return {
-    available: gateway.available,
-    status: gateway.available ? "available_for_synthetic_drafts" : "pending_connection",
-    provider: gateway.provider,
-    message: gateway.available
-      ? "Klinikos Intelligence may assist with synthetic EDU drafts. Human instructor review remains required."
-      : "Klinikos Intelligence is Pending Connection for EDU. Core learning workflows remain available without it.",
-  } as const;
+export function eduAiGatewayStatus() {
+  return zumiGatewayStatus();
+}
+
+/**
+ * Human review is authoritative for anything that assesses a student.
+ * An AI suggestion is never a grade and never a competency determination.
+ */
+export const HUMAN_REVIEW_AUTHORITY =
+  "Instructor review is authoritative. AI output in Klinikos EDU is a draft suggestion for a human to accept, edit, or reject; it never sets a grade, marks a competency achieved, or certifies readiness to practice.";
+
+/**
+ * Text that must never appear in generated or authored student-facing scenario
+ * content, because it would represent the simulation as real care.
+ */
+export const FORBIDDEN_SCENARIO_ASSERTIONS = [
+  "real patient",
+  "actual patient",
+  "live patient",
+  "this is not a simulation",
+  "submit this claim to the payer",
+  "administer to the patient",
+] as const;
+
+/**
+ * Screen authored or generated scenario text for language that would present the
+ * simulation as real care. Case-insensitive, returns every match so an author can
+ * fix them in one pass rather than one at a time.
+ */
+export function findForbiddenScenarioAssertions(text: string): string[] {
+  const haystack = text.toLowerCase();
+  return FORBIDDEN_SCENARIO_ASSERTIONS.filter((phrase) => haystack.includes(phrase));
+}
+
+/** Convenience wrapper for validation call sites. */
+export function scenarioTextIsSafe(text: string) {
+  return findForbiddenScenarioAssertions(text).length === 0;
 }
