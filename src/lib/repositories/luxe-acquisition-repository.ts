@@ -81,26 +81,18 @@ async function ensureLeadFollowUpTask(
   });
   if (existing) return existing.id;
 
-  const owner = await tx.user.findFirst({
-    where: { organizationId, status: "active" },
-    orderBy: [{ roleKey: "asc" }, { createdAt: "asc" }],
-    select: { id: true },
-  });
-
-  if (!owner) return null;
-
   const task = await tx.task.create({
     data: {
       organizationId,
       category: "luxe_lead_follow_up",
       title: `Follow up with ${leadName}`,
-      details: `lead:${leadId} ${serviceName ?? "Luxe website inquiry"}. Human follow-up is required; no appointment, payment, or treatment eligibility is implied.`,
-      ownerId: owner.id,
+      details: `lead:${leadId} ${serviceName ?? "Luxe website inquiry"}. Human follow-up is required; no appointment, payment, or treatment eligibility is implied. Assign this task according to the clinic's lead-routing policy.`,
+      ownerId: null,
       priority,
       riskLevel: priority === "high" ? RiskLevel.NEEDS_STAFF : RiskLevel.NORMAL,
       dueAt,
       status: "open",
-      createdBy: owner.id,
+      createdBy: null,
     },
   });
 
@@ -224,6 +216,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           serviceId: service?.id ?? null,
           serviceMatched: Boolean(service),
           taskId,
+          routingStatus: "unassigned",
           noAppointmentConfirmation: true,
           noPaymentConfirmation: true,
           noClinicalEligibilityDecision: true,
@@ -239,6 +232,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
         resourceId: lead.id,
         metadata: {
           taskId,
+          routingStatus: "unassigned",
           serviceMatched: Boolean(service),
           estimatedValueCents: lead.estimatedValueCents,
           attributionPresent: Object.keys(attribution).length > 0,
