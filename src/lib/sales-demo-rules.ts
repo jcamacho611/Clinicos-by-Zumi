@@ -60,6 +60,7 @@ export const salesPainPoints = [
   ["paperwork", "Paperwork"],
   ["results", "Results"],
   ["billing_readiness", "Billing readiness"],
+  ["missed_calls", "Missed calls"],
   ["no_shows", "No-shows"],
   ["med_spa_leads", "Med spa leads"],
   ["owner_visibility", "Owner visibility"],

@@ -18,6 +18,7 @@ const clinicTypeByGuidedCode = {
 const reusableBottleneckCodes = [
   "follow_ups",
   "paperwork",
+  "missed_calls",
   "no_shows",
   "billing_readiness",
   "med_spa_leads",
