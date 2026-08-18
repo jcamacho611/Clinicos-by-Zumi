@@ -6,14 +6,17 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { invokeZumi } from "@/features/zumi/gateway";
 import { loadZumiQualityGuardianContext } from "@/features/zumi/quality-guardian-context";
 import { resolveOrganizationEntitlements } from "@/features/zumi/entitlements";
-import { ZUMI_BASELINE_PERMISSION, zumiCapabilities, zumiOrbStates } from "@/features/zumi/schemas";
+import { ZUMI_BASELINE_PERMISSION } from "@/features/zumi/schemas";
 import { registerProvider, zumiGatewayStatus } from "@/features/zumi/providers";
 import { createOpenAIResponsesAdapter, openAIResponsesRequested } from "@/features/zumi/adapters/openai-responses";
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
-import { resolveAuthenticatedConversationPolicy } from "@/features/zumi/conversation-policy";
-import { resolvedZumiToolCatalog } from "@/features/zumi/tool-catalog";
 import { zumiAccessibilitySchema, zumiPresenceSchema } from "@/features/zumi/presence";
+import {
+  projectTrustedOrchestrationForClient,
+  projectZumiSourcesForClient,
+  sanitizeZumiAnswerForClient,
+} from "@/features/zumi/client-projection";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
@@ -53,6 +56,11 @@ async function boundedJson(request: Request) {
   }
 }
 
+/**
+ * Browser-visible status is deliberately narrow. Provider identity, missing env names,
+ * entitlements, tool graph, prompt/cognition strategy, and internal policy profile are
+ * server-confidential and are not configuration-discovery API surface.
+ */
 export async function GET() {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
@@ -60,57 +68,19 @@ export async function GET() {
     return NextResponse.json({ error: "Access denied." }, { status: 403, headers: NO_STORE });
   }
 
-  const status = zumiGatewayStatus();
-  const entitlements = await resolveOrganizationEntitlements(session.organizationId);
-  const conversationPolicy = resolveAuthenticatedConversationPolicy(session);
-  const tools = resolvedZumiToolCatalog().map((tool) => ({
-    key: tool.key,
-    family: tool.family,
-    label: tool.label,
-    description: tool.description,
-    actions: tool.actions,
-    risk: tool.risk,
-    readiness: tool.readiness,
-    sendsDataExternally: tool.sendsDataExternally,
-    requiresExplicitApprovalForWrite: Boolean(tool.requiresExplicitApprovalForWrite),
-  }));
-
+  const gateway = zumiGatewayStatus();
   return NextResponse.json({
     data: {
-      status,
-      orbStates: zumiOrbStates,
+      available: gateway.available,
+      mode: gateway.available ? "connected" : "pending_connection",
       presence: {
         supported: true,
-        summonEverywhereInAuthenticatedPlatform: true,
         keyboardShortcut: "Ctrl/Cmd+J",
         browserVoiceInput: true,
         browserSpeechOutput: true,
         interactionModes: ["conversation", "research", "command", "briefing"],
         autonomyModes: ["answer_only", "suggest_actions", "prepare_actions"],
-        durablePreferenceMemory: true,
-        multimodalContract: true,
-        trustedPathEngine: true,
-        trustedQualityGuardian: true,
       },
-      conversation: {
-        supported: true,
-        profile: conversationPolicy.profile,
-        continuation: "signed_provider_response",
-        automaticResearch: true,
-        publicWebSeparatedFromPrivateContext: true,
-        founderModeIsNotAuthorizationBypass: true,
-        deterministicOrchestrationOutranksModelSuggestions: true,
-        deepCognition: "bounded_plan_investigate_critic_repair",
-      },
-      capabilities: zumiCapabilities.map((capability) => ({
-        key: capability.key,
-        label: capability.label,
-        tier: capability.tier,
-        produces: capability.produces,
-        entitled: capability.requiresEntitlement === null || entitlements.includes(capability.requiresEntitlement),
-        requiresEntitlement: capability.requiresEntitlement,
-      })),
-      toolGraph: tools,
     },
   }, { headers: NO_STORE });
 }
@@ -231,7 +201,7 @@ export async function POST(request: Request) {
   });
 
   if (!result.allowed) {
-    return NextResponse.json({ error: result.message, reason: result.reason }, { status: result.status, headers: NO_STORE });
+    return NextResponse.json({ error: result.message }, { status: result.status, headers: NO_STORE });
   }
 
   const conversationToken = result.continuation?.responseId
@@ -242,19 +212,31 @@ export async function POST(request: Request) {
       })
     : null;
 
+  const projectedAnswer = sanitizeZumiAnswerForClient(result.response.answer);
+  if (projectedAnswer.blockedMarkers.length > 0) {
+    await recordSecurityEvent({
+      organizationId: session.organizationId,
+      actorId: session.userId,
+      action: "zumi.client_disclosure_blocked",
+      risk: "HIGH",
+      resourceType: "ai_response",
+      resourceId: result.response.auditLogId ?? "zumi-response",
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: { markerCount: projectedAnswer.blockedMarkers.length },
+    });
+  }
+
+  // This is the browser disclosure boundary. Do not spread the internal gateway
+  // result here. Usage/cost telemetry, audit IDs, model/provider details, cognition
+  // traces, tool usage, capability keys, policy profiles, Quality Guardian internals,
+  // and trusted orchestration identifiers remain server-side.
   return NextResponse.json({
     data: {
-      ...result.response,
+      answer: projectedAnswer.answer,
       conversationToken,
-      sources: result.continuation?.sources ?? [],
-      toolsUsed: result.continuation?.toolsUsed ?? [],
-      research: result.research,
-      cognition: result.cognition,
-      orchestration: result.orchestration,
-      trustedOrchestration: result.trustedOrchestration,
-      trustedQualityAssurance: result.trustedQualityAssurance,
-      presence,
-      accessibility,
+      sources: projectZumiSourcesForClient(result.continuation?.sources ?? []),
+      trustedOrchestration: projectTrustedOrchestrationForClient(result.trustedOrchestration),
       rateLimitRemaining: limit.remaining,
     },
   }, { headers: NO_STORE });
