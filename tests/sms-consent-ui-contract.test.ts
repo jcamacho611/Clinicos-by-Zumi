@@ -20,20 +20,33 @@ describe("SMS consent UI contract", () => {
     expect(patientPanel).toContain('transactional: { label: "Transactional"');
     expect(patientPanel).toContain('operational: { label: "Operational"');
     expect(patientPanel).toContain('marketing: { label: "Marketing"');
-    expect(patientPanel).toContain("Never inferred from operational permission");
-    expect(patientPanel).toContain("Staff cannot clear it from this chart");
+    expect(patientPanel).toContain("requires written authorization");
+    expect(patientPanel).toContain("Staff cannot clear suppression from this chart");
     expect(patientPanel).toContain("Phone verification proves possession only; it never creates consent");
     expect(patientPanel).toContain("Clinical SMS locked");
+    expect(patientPanel).toContain("Staff documentation can record denial or revocation, but it cannot create permission");
   });
 
-  it("mounts Twilio routing in Connections without accepting provider secrets", () => {
+  it("announces asynchronous status and gives repeated permission buttons contextual names", () => {
+    expect(patientPanel).toContain('role="alert"');
+    expect(patientPanel).toContain('role="status"');
+    expect(patientPanel).toContain('aria-label={`Grant ${meta.label} SMS permission`}');
+    expect(patientPanel).toContain("focus-visible:ring-2");
+    expect(patientPanel).not.toContain("text-[8px]");
+    expect(patientPanel).not.toContain("text-[9px]");
+  });
+
+  it("mounts platform-managed Twilio routing without accepting provider secrets", () => {
     expect(workspacePage).toContain('workspace === "integrations"');
     expect(workspacePage).toContain('can(session.role, "integrations", "manage")');
     expect(routingPanel).toContain("/api/integrations/twilio/sms-routing");
-    expect(routingPanel).toContain("API keys and Auth Tokens never belong in the browser or database config");
+    expect(routingPanel).toContain("platform-managed Twilio account");
+    expect(routingPanel).toContain("Bring-your-own Twilio accounts are not a current production capability");
     expect(routingPanel).not.toContain("TWILIO_API_KEY_SECRET");
     expect(routingPanel).not.toContain('name="TWILIO_AUTH_TOKEN"');
     expect(routingPanel).toContain("Production SMS is not authorized by this panel");
+    expect(routingPanel).toContain("America/New_York");
+    expect(routingPanel).toContain("focus-visible:ring-2");
   });
 
   it("never calls Twilio transport directly from either UI", () => {
