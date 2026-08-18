@@ -76,10 +76,19 @@ describe("Twilio Verify", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ sid: `VE${"1".repeat(32)}`, status: "pending" }), { status: 201 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ sid: `VE${"2".repeat(32)}`, status: "approved" }), { status: 200 }));
 
-    await expect(startTwilioPhoneVerification({ to: "+12125550123", env })).resolves.toMatchObject({ ok: true, status: "pending" });
-    await expect(checkTwilioPhoneVerification({ to: "+12125550123", code: "123456", env })).resolves.toMatchObject({ ok: true, status: "approved" });
+    await expect(startTwilioPhoneVerification({ to: "+12125550123", env })).resolves.toEqual({ ok: true, sid: `VE${"1".repeat(32)}`, status: "pending" });
+    await expect(checkTwilioPhoneVerification({ to: "+12125550123", code: "123456", env })).resolves.toEqual({ ok: true, sid: `VE${"2".repeat(32)}`, status: "approved" });
 
     expect(String(request.mock.calls[0]?.[0])).toContain(`/Services/${env.TWILIO_VERIFY_SERVICE_SID}/Verifications`);
     expect(String(request.mock.calls[1]?.[0])).toContain(`/Services/${env.TWILIO_VERIFY_SERVICE_SID}/VerificationCheck`);
+  });
+
+  it("rejects malformed provider verification references instead of accepting them as evidence", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sid: "VE_not_valid", status: "pending" }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sid: "not-a-verification-sid", status: "approved" }), { status: 200 }));
+
+    await expect(startTwilioPhoneVerification({ to: "+12125550123", env })).resolves.toMatchObject({ ok: false, reason: "provider_error" });
+    await expect(checkTwilioPhoneVerification({ to: "+12125550123", code: "123456", env })).resolves.toMatchObject({ ok: false, reason: "provider_error" });
   });
 });
