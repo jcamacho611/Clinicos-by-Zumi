@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
+import { canonicalizeLuxeServiceInterest } from "@/lib/luxe-service-interest";
 
 describe("GoDaddy Luxe conversation notification parser", () => {
   it("extracts a booking notification without claiming payment", () => {
@@ -48,7 +49,14 @@ https://conversations.godaddy.com/conversations/synthetic?conversation=123456789
     expect(parsed.customerName).toBe("Alex Example");
     expect(parsed.phone).toBe("+15165550199");
     expect(parsed.email).toBe("alex@example.test");
-    expect(parsed.serviceInterest).toBe("Luxe Rejuvenation Infusion (Botox)");
+    expect(parsed.serviceInterest).toBe("Botox");
+  });
+
+  it("maps customer-facing service labels to the active Klinikos naming convention", () => {
+    expect(canonicalizeLuxeServiceInterest("Contour Chic (Dermal Fillers)")).toBe("Juvederm and fillers");
+    expect(canonicalizeLuxeServiceInterest("IV Therapy - hydration")).toBe("IV hydration");
+    expect(canonicalizeLuxeServiceInterest("Semaglutide consultation")).toBe("Weight-loss services");
+    expect(canonicalizeLuxeServiceInterest("A future service not yet mapped")).toBe("A future service not yet mapped");
   });
 
   it("recognizes a cancellation as an observed lifecycle event", () => {
