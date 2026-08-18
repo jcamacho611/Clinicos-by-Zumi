@@ -5,6 +5,11 @@ import {
   normalizeStripeWebhookEvent,
   stripeLivePaymentStatus,
 } from "@/lib/commercial/payment-connectors/stripe";
+import { isKlinikosRecurringStripeEventCandidate } from "@/lib/commercial/stripe-recurring-event-candidate";
+import {
+  processVerifiedStripeClinicSubscriptionEvent,
+  StripeClinicSubscriptionError,
+} from "@/lib/commercial/stripe-clinic-subscriptions";
 
 export const runtime = "nodejs";
 
@@ -57,6 +62,26 @@ export async function POST(request: Request) {
       productKey: manualSale.productKey,
       offerKey: manualSale.offerKey,
     });
+  }
+
+  // Recurring Clinic OS billing is intentionally isolated from the one-time
+  // Checkout evidence normalizer. A signed invoice.paid can activate/renew only
+  // after it matches the opaque server-owned clinic plan intent. Failed invoices
+  // do not extend access; signed subscription deletion revokes the matching plan.
+  if (["invoice.paid", "invoice.payment_failed", "customer.subscription.deleted"].includes(event.type)) {
+    if (!isKlinikosRecurringStripeEventCandidate(event)) {
+      return json({ received: true, supported: false, unrelatedRecurringEvent: true });
+    }
+    try {
+      const recurring = await processVerifiedStripeClinicSubscriptionEvent(event, rawBody);
+      if (!recurring) {
+        return json({ error: "Stripe subscription event is missing required Klinikos correlation metadata." }, 409);
+      }
+      return json({ received: true, supported: true, recurring: true, ...recurring });
+    } catch (error) {
+      if (error instanceof StripeClinicSubscriptionError) return json({ error: error.message }, error.status >= 500 ? error.status : 409);
+      return json({ error: "Stripe subscription evidence could not be processed." }, 500);
+    }
   }
 
   const evidence = normalizeStripeWebhookEvent(event, rawBody);
