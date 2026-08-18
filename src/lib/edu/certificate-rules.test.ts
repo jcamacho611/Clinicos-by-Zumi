@@ -53,12 +53,18 @@ describe("Klinikos EDU certificate rules", () => {
     expect(certificateMayAffectProfessionalEligibility()).toBe(false);
   });
 
-  it("keeps issuance and revocation server-owned and role-gated", () => {
+  it("keeps issuance and revocation server-owned, serialized, and role-gated", () => {
     const source = fs.readFileSync(path.join(process.cwd(), "src/app/api/edu/certificates/route.ts"), "utf8");
     expect(source).toContain('canEdu(identity.role, "certificate", "create")');
     expect(source).toContain('canEdu(identity.role, "certificate", "manage")');
     expect(source).toContain("EDU_CERTIFICATE_DISCLAIMER");
     expect(source).toContain("certificateCompetencyAreasFromAudit");
+    expect(source).toContain('FROM "education_enrollments"');
+    expect(source).toContain('FROM "education_certificates"');
+    expect(source).toContain("FOR UPDATE");
+    expect(source).toContain("organizationId: auditOrganizationId");
+    expect(source).toContain("must be linked to an active host Klinikos organization");
+    expect(source).not.toContain("organizationId: session.organizationId");
     expect(source).not.toContain("grid.eligibility");
   });
 });
