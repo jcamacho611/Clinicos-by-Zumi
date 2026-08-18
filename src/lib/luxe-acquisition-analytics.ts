@@ -64,9 +64,8 @@ export function summarizeAcquisitionLeads(
     return overdue || unansweredPastSla;
   });
 
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayLeads = leads.filter((lead) => lead.createdAt >= todayStart && lead.createdAt <= now);
+  const last24HoursStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const last24HoursLeads = leads.filter((lead) => lead.createdAt >= last24HoursStart && lead.createdAt <= now);
   const responseMinutes = leads
     .filter((lead) => lead.lastContactedAt && lead.lastContactedAt >= lead.createdAt)
     .map((lead) => Math.max(0, Math.round((lead.lastContactedAt!.getTime() - lead.createdAt.getTime()) / 60_000)));
@@ -138,7 +137,7 @@ export function summarizeAcquisitionLeads(
     generatedAt: now.toISOString(),
     slaMinutes,
     metrics: {
-      leadsToday: todayLeads.length,
+      leadsLast24Hours: last24HoursLeads.length,
       openLeads: open.length,
       unansweredLeads: unanswered.length,
       overdueFollowUps: overdueFollowUps.length,
@@ -165,6 +164,7 @@ export function summarizeAcquisitionLeads(
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
       bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus. This is not collected revenue.",
       verifiedRevenue: "Unavailable until authoritative payment evidence is linked to the originating lead.",
+      recentVolume: "Lead records created during the rolling 24 hours ending at generatedAt; not a clinic-local calendar-day metric.",
     },
   };
 }
