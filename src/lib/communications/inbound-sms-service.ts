@@ -21,14 +21,8 @@ type LockedPatientSmsRow = {
   communicationPrefs: Prisma.JsonValue | null;
 };
 
-function normalizedPatientPhoneExpression(normalizedPhone: string) {
-  return Prisma.sql`
-    "organizationId" = ${Prisma.raw("$organizationId$")}
-  `;
-}
-
 async function lockPatientsByPhone(
-  tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
+  tx: Prisma.TransactionClient,
   organizationId: string,
   normalizedPhone: string,
 ) {
