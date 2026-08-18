@@ -16,6 +16,7 @@ type FirstTouch = {
   campaign?: string;
   term?: string;
   content?: string;
+  landingPage?: string;
   referrer?: string;
 };
 
@@ -39,13 +40,14 @@ function sourceFromReferrer(referrer: string) {
   }
 }
 
-function readFirstTouch(params: URLSearchParams, referrer: string): FirstTouch {
+function readFirstTouch(params: URLSearchParams, referrer: string, landingPage: string): FirstTouch {
   return {
     source: bounded(params.get("utm_source") ?? params.get("source"), 120) ?? sourceFromReferrer(referrer),
     medium: bounded(params.get("utm_medium"), 120),
     campaign: bounded(params.get("utm_campaign"), 160),
     term: bounded(params.get("utm_term"), 160),
     content: bounded(params.get("utm_content"), 160),
+    landingPage: bounded(landingPage, 500),
     referrer: bounded(referrer, 500),
   };
 }
@@ -84,7 +86,7 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
       setFirstTouch(stored);
       return;
     }
-    const captured = readFirstTouch(params, document.referrer);
+    const captured = readFirstTouch(params, document.referrer, window.location.href);
     storeFirstTouch(captured);
     setFirstTouch(captured);
   }, []);
@@ -104,14 +106,23 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
     setMessage("");
 
     const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "").trim();
+    const phone = String(form.get("phone") ?? "").trim();
+    if (!email && !phone) {
+      setBusy(false);
+      setMessage("Enter a phone number or email so Luxe Medi can respond.");
+      return;
+    }
+
     const currentUrl = new URL(window.location.href);
     const params = currentUrl.searchParams;
     const currentSource = bounded(params.get("utm_source") ?? params.get("source"), 120) ?? sourceFromReferrer(document.referrer);
+    const currentCampaign = bounded(params.get("utm_campaign"), 160);
 
     const payload = {
       name: form.get("name"),
-      email: form.get("email") || null,
-      phone: form.get("phone") || null,
+      email: email || null,
+      phone: phone || null,
       serviceInterest: form.get("serviceInterest") || null,
       appointmentInterest: form.get("appointmentInterest") || null,
       preferredContactMethod: form.get("preferredContactMethod") || "either",
@@ -121,12 +132,19 @@ export function LuxeConsultationForm({ services }: { services: PublicLuxeService
       marketingConsent: form.get("marketingConsent") === "on",
       attribution: {
         firstTouchSource: firstTouch.source || "direct",
+        firstTouchMedium: firstTouch.medium,
+        firstTouchCampaign: firstTouch.campaign,
+        firstTouchTerm: firstTouch.term,
+        firstTouchContent: firstTouch.content,
+        firstTouchLandingPage: firstTouch.landingPage,
+        firstTouchReferrer: firstTouch.referrer,
         lastTouchSource: currentSource,
+        lastTouchCampaign: currentCampaign,
         landingPage: bounded(window.location.href, 500),
         referrer: bounded(document.referrer, 500),
         utmSource: bounded(params.get("utm_source"), 120),
         utmMedium: bounded(params.get("utm_medium"), 120),
-        utmCampaign: bounded(params.get("utm_campaign"), 160),
+        utmCampaign: currentCampaign,
         utmTerm: bounded(params.get("utm_term"), 160),
         utmContent: bounded(params.get("utm_content"), 160),
         campaignId: bounded(params.get("campaign_id"), 160),
