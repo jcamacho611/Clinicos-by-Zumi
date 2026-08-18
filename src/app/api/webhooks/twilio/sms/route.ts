@@ -35,6 +35,15 @@ function emptyTwiml() {
   });
 }
 
+function hasDuplicateFormKeys(params: URLSearchParams) {
+  const seen = new Set<string>();
+  for (const [key] of params.entries()) {
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
 export async function POST(request: Request) {
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
   const configuredAccountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
@@ -63,6 +72,10 @@ export async function POST(request: Request) {
   }
 
   const params = new URLSearchParams(rawBody);
+  if (hasDuplicateFormKeys(params)) {
+    return NextResponse.json({ error: "Ambiguous Twilio webhook form fields." }, { status: 400 });
+  }
+
   const signature = request.headers.get("x-twilio-signature");
   if (!validateTwilioWebhookSignature({ publicUrl: requestUrl, params, signature, authToken })) {
     return NextResponse.json({ error: "Invalid Twilio signature." }, { status: 403 });
