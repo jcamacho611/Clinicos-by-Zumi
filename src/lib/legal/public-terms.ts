@@ -2,8 +2,15 @@ export const WEBSITE_TERMS_KEY = "website_terms";
 export const WEBSITE_TERMS_VERSION = "2026-08-18.1";
 export const WEBSITE_TERMS_EFFECTIVE_DATE = "August 18, 2026";
 export const WEBSITE_TERMS_ROUTE = "/legal/terms";
+
+export const PRIVACY_POLICY_KEY = "privacy_policy";
+export const PRIVACY_POLICY_VERSION = "2026-08-18.1";
 export const PRIVACY_POLICY_ROUTE = "/legal/privacy";
+
+export const ACCEPTABLE_USE_KEY = "acceptable_use";
+export const ACCEPTABLE_USE_VERSION = "2026-08-18.1";
 export const ACCEPTABLE_USE_ROUTE = "/legal/acceptable-use";
+
 export const GRID_MARKETPLACE_TERMS_KEY = "grid_marketplace_terms";
 export const GRID_MARKETPLACE_TERMS_VERSION = "2026-08-18.1";
 export const GRID_MARKETPLACE_TERMS_ROUTE = "/legal/grid";
