@@ -25,16 +25,27 @@ type Autonomy = "answer_only" | "suggest_actions" | "prepare_actions";
 type ConversationMessage = { id: string; role: "user" | "assistant"; text: string };
 type Source = { title?: string; url?: string; domain?: string };
 type TrustedOrchestration = {
+  path?: { title: string; status: string; progress: number } | null;
   nextActions?: Array<{
     id: string;
     title: string;
     reason: string;
-    capabilityKey: string | null;
     href: string | null;
     state: string;
-    priority: number;
-    blockers: string[];
   }>;
+  blockers?: Array<{
+    id: string;
+    title: string;
+    explanation: string;
+  }>;
+};
+
+type WorkspaceIntelligence = {
+  title: string;
+  prompt: string;
+  suggestedQuestions: string[];
+  primaryDestinations: Array<{ label: string; href: string }>;
+  relatedDestinations: Array<{ label: string; href: string; description: string }>;
 };
 
 type ZumiApiResponse = {
@@ -43,8 +54,17 @@ type ZumiApiResponse = {
     conversationToken?: string | null;
     sources?: Source[];
     trustedOrchestration?: TrustedOrchestration;
+    workspace?: WorkspaceIntelligence;
   };
   error?: string;
+};
+
+type ZumiStatusResponse = {
+  data?: {
+    available?: boolean;
+    mode?: string;
+    workspace?: WorkspaceIntelligence;
+  };
 };
 
 type ZumiPromptEvent = CustomEvent<string | { question?: string; voice?: boolean }>;
@@ -75,6 +95,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [sources, setSources] = useState<Source[]>([]);
   const [trustedOrchestration, setTrustedOrchestration] = useState<TrustedOrchestration | null>(null);
+  const [workspace, setWorkspace] = useState<WorkspaceIntelligence | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [memoryNote, setMemoryNote] = useState("");
@@ -82,6 +103,27 @@ export function ZumiPresence({ userName }: { userName: string }) {
 
   const dedicatedPage = pathname === "/zumi";
   const visible = dedicatedPage || open;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch(`/api/zumi?pathname=${encodeURIComponent(pathname)}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as ZumiStatusResponse;
+      })
+      .then((payload) => {
+        if (payload?.data?.workspace) setWorkspace(payload.data.workspace);
+      })
+      .catch((caught) => {
+        if (!(caught instanceof DOMException && caught.name === "AbortError")) {
+          console.warn("[conversation] workspace context unavailable");
+        }
+      });
+    return () => controller.abort();
+  }, [pathname]);
 
   const sendQuestion = useCallback(async (rawQuestion: string, options?: { voice?: boolean }) => {
     const question = rawQuestion.trim();
@@ -118,7 +160,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
           knowledgeSearch: true,
           codeInterpreter: mode === "research" || mode === "command" ? true : undefined,
           presence: {
-            surface: pathname.startsWith("/grid") ? "grid" : pathname === "/zumi" ? "intelligence" : "platform",
+            surface: pathname.startsWith("/grid") ? "grid" : pathname.startsWith("/portal") ? "patient_portal" : pathname === "/zumi" ? "intelligence" : "platform",
             mode,
             autonomy,
             pathname,
@@ -143,7 +185,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
 
       const payload = (await response.json()) as ZumiApiResponse;
       if (!response.ok || !payload.data?.answer) {
-        throw new Error(payload.error || "Zumi could not answer this turn.");
+        throw new Error(payload.error || "Klinikos could not answer that right now. Nothing was changed.");
       }
 
       const answer = payload.data.answer;
@@ -151,10 +193,11 @@ export function ZumiPresence({ userName }: { userName: string }) {
       setConversationToken(payload.data.conversationToken ?? null);
       setSources(payload.data.sources ?? []);
       setTrustedOrchestration(payload.data.trustedOrchestration ?? null);
+      if (payload.data.workspace) setWorkspace(payload.data.workspace);
 
       if (speechOutput || options?.voice) speak(answer);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Zumi could not answer this turn.");
+      setError(caught instanceof Error ? caught.message : "Klinikos could not answer that right now. Nothing was changed.");
     } finally {
       setLoading(false);
       window.setTimeout(() => inputRef.current?.focus(), 30);
@@ -215,7 +258,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
     messageEndRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "end" });
   }, [messages, loading, visible]);
 
-  async function askZumi(event: FormEvent) {
+  async function askKlinikos(event: FormEvent) {
     event.preventDefault();
     await sendQuestion(input);
   }
@@ -232,11 +275,11 @@ export function ZumiPresence({ userName }: { userName: string }) {
         body: JSON.stringify({ kind: "preference", title: "User preference", content }),
       });
       const payload = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not save memory.");
+      if (!response.ok) throw new Error(payload.error || "Could not save that preference.");
       setMemoryNote("");
       setMemoryStatus("Remembered.");
     } catch (caught) {
-      setMemoryStatus(caught instanceof Error ? caught.message : "Could not save memory.");
+      setMemoryStatus(caught instanceof Error ? caught.message : "Could not save that preference.");
     }
   }
 
@@ -263,6 +306,9 @@ export function ZumiPresence({ userName }: { userName: string }) {
   const nextActions = (trustedOrchestration?.nextActions ?? [])
     .filter((action) => action.href && action.state !== "blocked")
     .slice(0, 3);
+  const blockers = (trustedOrchestration?.blockers ?? []).slice(0, 2);
+  const starterQuestions = workspace?.suggestedQuestions?.slice(0, 4) ?? [];
+  const conversationPrompt = workspace?.prompt || "Ask Klinikos about this work…";
 
   return (
     <>
@@ -271,7 +317,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
           aria-controls="zumi-presence-panel"
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={open ? "Hide Zumi" : "Open Zumi. Keyboard shortcut Control or Command J"}
+          aria-label={open ? "Hide conversation" : "Ask Klinikos. Keyboard shortcut Control or Command J"}
           className="fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full border border-[#e6817b]/35 bg-[#16090c] text-[#f0a39c] shadow-[0_16px_50px_rgba(0,0,0,.42)] transition hover:scale-[1.03] hover:border-[#efaaa1]/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] motion-reduce:transform-none"
           onClick={() => setOpen((value) => !value)}
           type="button"
@@ -283,12 +329,12 @@ export function ZumiPresence({ userName }: { userName: string }) {
 
       {visible && (
         <section
-          aria-label="Zumi conversation"
+          aria-label="Klinikos conversation"
           aria-modal={dedicatedPage ? undefined : false}
           className={cn(
             "flex flex-col overflow-hidden border border-[#e6817b]/15 bg-[#0b0507] text-[#f8efed] shadow-[0_30px_90px_rgba(0,0,0,.42)]",
             dedicatedPage
-              ? "fixed inset-x-0 bottom-0 top-[82px] z-20 border-x-0 border-b-0 lg:left-[264px]"
+              ? "fixed inset-x-0 bottom-0 top-[82px] z-20 border-x-0 border-b-0 lg:left-[240px]"
               : "fixed inset-x-3 bottom-20 z-40 max-h-[min(780px,calc(100vh-7rem))] rounded-[22px] sm:left-auto sm:right-5 sm:w-[500px]",
           )}
           id="zumi-presence-panel"
@@ -301,12 +347,12 @@ export function ZumiPresence({ userName }: { userName: string }) {
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold tracking-[-.02em]">Zumi</p>
-              <p className="truncate text-[11px] text-[#a88f8b]">With you across Klinikos · {userName}</p>
+              <p className="text-sm font-semibold tracking-[-.02em]">Conversation</p>
+              <p className="truncate text-[11px] text-[#a88f8b]">{workspace?.title ? `${workspace.title} · ` : ""}With you across Klinikos · {userName}</p>
             </div>
 
             <button
-              aria-label="Start a new Zumi conversation"
+              aria-label="Start a new conversation"
               className="grid size-9 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]"
               onClick={startNewConversation}
               title="New conversation"
@@ -317,10 +363,10 @@ export function ZumiPresence({ userName }: { userName: string }) {
 
             {!dedicatedPage && (
               <button
-                aria-label="Open full Zumi conversation"
+                aria-label="Expand conversation"
                 className="grid size-9 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]"
                 onClick={() => router.push("/zumi")}
-                title="Open full Zumi conversation"
+                title="Expand conversation"
                 type="button"
               >
                 <Maximize2 className="size-4" aria-hidden="true" />
@@ -328,7 +374,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
             )}
 
             <button
-              aria-label="Zumi preferences"
+              aria-label="Conversation preferences"
               aria-expanded={settingsOpen}
               className={cn("grid size-9 place-items-center rounded-lg", settingsOpen ? "bg-[#e6817b]/12 text-[#fff8f6]" : "text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]")}
               onClick={() => setSettingsOpen((value) => !value)}
@@ -338,7 +384,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
             </button>
 
             <button
-              aria-label={dedicatedPage ? "Return to dashboard" : "Hide Zumi"}
+              aria-label={dedicatedPage ? "Return to dashboard" : "Hide conversation"}
               className="grid size-9 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]"
               onClick={closeSurface}
               type="button"
@@ -416,12 +462,26 @@ export function ZumiPresence({ userName }: { userName: string }) {
           <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_50%_0%,rgba(92,22,29,.13),transparent_34%)]" aria-live="polite">
             <div className={cn("mx-auto space-y-6 px-4 py-6", dedicatedPage ? "max-w-[900px] sm:px-8 sm:py-10" : "max-w-full")}>
               {messages.length === 0 && (
-                <div className={cn("mx-auto py-10", dedicatedPage && "max-w-2xl py-16 text-center")}>
-                  <p className="text-[12px] font-semibold text-[#e7a49e]">Zumi</p>
-                  <h2 className={cn("mt-3 font-light tracking-[-.04em] text-[#fff8f6]", dedicatedPage ? "text-4xl sm:text-5xl" : "text-2xl")}>What needs to happen?</h2>
+                <div className={cn("mx-auto py-8", dedicatedPage && "max-w-2xl py-14 text-center")}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#a88f8b]">{workspace?.title ?? "Klinikos"}</p>
+                  <h2 className={cn("mt-3 font-light tracking-[-.04em] text-[#fff8f6]", dedicatedPage ? "text-4xl sm:text-5xl" : "text-2xl")}>{conversationPrompt}</h2>
                   <p className="mx-auto mt-4 max-w-xl text-[13px] leading-6 text-[#b89f9b]">
-                    Talk to me naturally. I can help you understand what is going on, answer questions, and move you toward the right next step.
+                    Ask naturally. Klinikos will use this workspace and your authorized context to help identify what matters and the safest next move.
                   </p>
+                  {starterQuestions.length > 0 && (
+                    <div className={cn("mt-6 grid gap-2 text-left", dedicatedPage && "sm:grid-cols-2")} aria-label="Useful questions for this workspace">
+                      {starterQuestions.map((question) => (
+                        <button
+                          className="min-h-11 rounded-xl border border-[#e6817b]/12 bg-[#12090b]/70 px-4 py-3 text-left text-[12px] leading-5 text-[#d8c1bd] transition hover:border-[#e6817b]/28 hover:bg-[#1b0b0e] hover:text-[#fff8f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]"
+                          key={question}
+                          onClick={() => void sendQuestion(question)}
+                          type="button"
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -443,28 +503,40 @@ export function ZumiPresence({ userName }: { userName: string }) {
               {loading && (
                 <div className="flex items-center gap-2 px-1 py-2 text-[12px] text-[#9f8985]">
                   <span className="inline-block size-1.5 rounded-full bg-[#e6817b] motion-safe:animate-pulse" aria-hidden="true" />
-                  Zumi is thinking…
+                  Working on that…
                 </div>
               )}
 
               {error && (
-                <div className="rounded-xl border border-[#a53e49]/35 bg-[#2b1015] p-3 text-[12px] leading-5 text-[#f5c3c0]">
+                <div className="rounded-xl border border-[#a53e49]/35 bg-[#2b1015] p-3 text-[12px] leading-5 text-[#f5c3c0]" role="alert">
                   {error}
                 </div>
               )}
 
               {nextActions.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1" aria-label="Suggested next actions">
+                <div className="space-y-2 pt-1" aria-label="Available next actions">
                   {nextActions.map((action) => (
                     <Link
-                      className="inline-flex min-h-10 items-center rounded-full border border-[#e6817b]/20 bg-[#15090b] px-4 text-[11px] font-semibold text-[#f5e6e3] hover:border-[#e6817b]/40 hover:text-white"
+                      className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[#e6817b]/16 bg-[#15090b] px-4 py-3 text-[12px] font-semibold text-[#f5e6e3] hover:border-[#e6817b]/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]"
                       href={action.href!}
                       key={action.id}
                       onClick={() => setOpen(true)}
-                      title="Open path without losing this conversation"
+                      title={action.reason || "Open without losing this conversation"}
                     >
-                      {action.title}
+                      <span>{action.title}</span>
+                      <span className="text-[10px] font-medium uppercase tracking-[.12em] text-[#8f7773]">Open</span>
                     </Link>
+                  ))}
+                </div>
+              )}
+
+              {blockers.length > 0 && (
+                <div className="space-y-2" aria-label="Current blockers">
+                  {blockers.map((blocker) => (
+                    <div className="rounded-xl border border-[#e6817b]/10 bg-[#100708]/70 px-4 py-3" key={blocker.id}>
+                      <p className="text-[12px] font-semibold text-[#e8d5d2]">{blocker.title}</p>
+                      <p className="mt-1 text-[11px] leading-5 text-[#9f8985]">{blocker.explanation}</p>
+                    </div>
                   ))}
                 </div>
               )}
@@ -490,9 +562,9 @@ export function ZumiPresence({ userName }: { userName: string }) {
             </div>
           </div>
 
-          <form className="border-t border-[#e6817b]/12 bg-[#080304]/98 p-3 sm:px-5 sm:py-4" onSubmit={askZumi}>
+          <form className="border-t border-[#e6817b]/12 bg-[#080304]/98 p-3 sm:px-5 sm:py-4" onSubmit={askKlinikos}>
             <div className={cn("mx-auto", dedicatedPage && "max-w-[900px]")}>
-              <label className="sr-only" htmlFor="zumi-presence-input">Message Zumi</label>
+              <label className="sr-only" htmlFor="zumi-presence-input">Ask Klinikos</label>
               <textarea
                 className={cn(
                   "w-full resize-none rounded-[18px] border border-[#e6817b]/16 bg-[#12090b] px-4 py-3 text-sm text-[#fff8f6] outline-none placeholder:text-[#725d59] focus:border-[#e6817b]/40 focus:ring-2 focus:ring-[#e6817b]/10",
@@ -507,7 +579,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
                     event.currentTarget.form?.requestSubmit();
                   }
                 }}
-                placeholder="Message Zumi…"
+                placeholder={conversationPrompt}
                 ref={inputRef}
                 value={input}
               />
@@ -521,7 +593,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
                   }}
                 />
                 <span className="hidden text-[12px] text-[#725d59] sm:inline">Enter sends · Shift+Enter adds a line</span>
-                <Button className="ml-auto h-9 gap-1.5 px-3 text-[11px]" disabled={loading || !input.trim()} type="submit">
+                <Button aria-label="Send" className="ml-auto h-9 gap-1.5 px-3 text-[11px]" disabled={loading || !input.trim()} type="submit">
                   <Send className="size-3.5" aria-hidden="true" />
                   Send
                 </Button>
