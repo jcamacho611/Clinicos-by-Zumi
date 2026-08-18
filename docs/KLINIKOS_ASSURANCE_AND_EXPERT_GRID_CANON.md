@@ -1,6 +1,6 @@
 # KLINIKOS — ASSURANCE, RULES & EVIDENCE, QUALITY GUARDIAN, AND EXPERT GRID CANON
 
-Version: `2026-08-18.3`
+Version: `2026-08-18.4`
 Status: `CANDIDATE SPECIALIST CANON — IMPLEMENTATION FOUNDATION`
 
 ## 1. Purpose
@@ -12,6 +12,8 @@ The shared architecture is:
 `AUTHORIZED DATA / EVENT → APPLICABLE VERSIONED RULE → EVIDENCE EVALUATION → GAP / SATISFIED / REVIEW REQUIRED → OWNER / NEXT ACTION → WORKFLOW → HUMAN REVIEW WHEN REQUIRED → EVIDENCE → RESOLUTION → AUDIT / OUTCOME → NEXT ROUTE`
 
 Zumi may understand, summarize, prioritize, explain, and coordinate this flow. Zumi does not establish clinical truth, legal compliance, quality-measure satisfaction, credential eligibility, payment truth, or professional authority.
+
+This specialist architecture is constrained by `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`. Confidential rule execution, evidence logic, proprietary prioritization, expert ranking/trust logic, private orchestration, private economics, and security details remain server-side by default. The frontend receives deliberate minimum-necessary presentation DTOs.
 
 ## 2. Rules & Evidence Engine
 
@@ -33,6 +35,8 @@ Every governed rule requires explicit identity, key, version, effective window, 
 
 Program-specific content is separate from the execution engine. Proprietary or licensed measure specifications must not be copied into the repository without appropriate rights. External regulatory/program rules must be sourced, versioned, reviewed, and activated through governance.
 
+Complete confidential rule definitions and implementation predicates are not browser contracts. Browser-visible rule results must be safe projections that explain the user's operational need without exposing protected logic unnecessarily.
+
 ## 3. Evidence law
 
 Evidence must remain attributable to a source and subject. Evidence may be current, stale, expired, insufficient, or conflicting.
@@ -42,6 +46,8 @@ AI-generated prose is not evidence merely because it sounds plausible.
 A rule can close automatically only where deterministic policy explicitly permits it. When policy requires authorized review, complete evidence produces `review_required`, not `satisfied`.
 
 Cross-organization or unscoped evidence must never silently satisfy another tenant's rule. Alternative evidence rules may use explicit `any` closure semantics; mandatory bundles use `all`.
+
+Evidence references, private provenance, and internal evaluation detail remain server-side unless a specific authorized workflow requires client display.
 
 ## 4. Existing persisted quality truth
 
@@ -80,6 +86,8 @@ Representative assurance families include:
 
 The current foundation provides deterministic plan/job/event contracts. Durable assurance-plan configuration and generalized cross-domain rule-package persistence remain later slices.
 
+Every Assurance family inherits the repository-wide server-confidential execution / safe-client-projection boundary unless an explicit reviewed exception exists.
+
 ## 6. Zumi Quality Guardian
 
 Quality Guardian consumes deterministic Rules & Evidence evaluations and the bounded adapter over the existing persisted active quality-gap backlog. It can produce:
@@ -95,9 +103,11 @@ Quality Guardian consumes deterministic Rules & Evidence evaluations and the bou
 
 Quality work reuses canonical RBAC permissions through `quality:read`, `quality:update`, and `quality:manage`. Regulated closure remains review-required even when the caller has management permission.
 
-The authenticated `/api/zumi` route now conditionally loads Quality Guardian context server-side for deterministic quality-related questions. The load is separate from client-supplied `context`. Client JSON is never accepted as quality/compliance truth.
+The authenticated `/api/zumi` route conditionally loads Quality Guardian context server-side for deterministic quality-related questions. The load is separate from client-supplied `context`. Client JSON is never accepted as quality/compliance truth.
 
 The trusted Zumi bridge rechecks tenant/permission boundaries and exposes only aggregate state plus safe action metadata. Subject identifiers and evidence references are not included in model-visible Quality Guardian context. When trusted operational quality context is present, public-web research is disabled for that turn so private operational state is not combined with the public-research path.
+
+Zumi hidden prompts, private orchestration, complete rule definitions, evidence references, and private quality heuristics are not intentionally returned to the browser. User-facing quality explanations are projections, not disclosure of internal evaluation machinery.
 
 `quality_guardian` is therefore an active internal Zumi capability for the bounded persisted unresolved backlog. That active status must not be misrepresented as a complete population-health or external quality-program engine.
 
@@ -137,6 +147,8 @@ An expert match is a potential engagement, not permission to access clinic or pa
 
 Hard match dimensions include requested capability/domain, availability, jurisdiction where applicable, required verified evidence, conflict-of-interest policy, compatible delivery mode, configured data-access compatibility, and configured price boundaries where used. Soft reputation, experience, outcome, or price scores can never override failed hard eligibility.
 
+Internal ranking weights, trust heuristics, anti-gaming controls, rejected-candidate internals, hidden fee/margin logic, and other proprietary marketplace intelligence remain server-side by default. The frontend receives only approved eligible matches and safe explanations.
+
 ## 9. Quality-to-Expert Grid escalation
 
 Klinikos should not create paid outside work when an authorized internal team can resolve the issue.
@@ -167,13 +179,15 @@ Agreement requirements come from the governed Expert Grid need/policy. An engage
 
 An active-state flag alone is not sufficient authority for data access. The scoped-access grant path revalidates current match, need, agreement, time-window, and data-scope policy before producing an authorization envelope. The envelope contains permission scope, not patient data. Canonical repositories must still enforce tenant, resource, consent/release, and minimum-necessary rules on every read.
 
-A production Expert Workbench should consume these same engagement-scoped, time-bounded, tenant-bound, purpose-bound, and capability-bound rules.
+A production Expert Workbench should consume these same engagement-scoped, time-bounded, tenant-bound, purpose-bound, and capability-bound rules through server-side repositories. Broad raw engagement/domain records are not Client Component props.
 
 ## 11. Business model direction
 
 This architecture supports Quality Readiness assessments, care-gap operations, monthly expert oversight, fractional quality/compliance/RCM leadership, denial and revenue rescue, credentialing cleanup, authorization backlog services, interoperability and migration specialists, implementation specialists, fixed-price expert packages, bounded expert review, expert subscriptions, organization/network consulting teams, governed expert-created templates, and expansion from an initial expert engagement into Clinic OS + Grid + Intelligence.
 
 Professional-services economics, referral arrangements, transaction fees, and compensation structures remain subject to legal/commercial review where healthcare law may apply.
+
+Private margins, unpublished commission rules, internal pricing formulas, and private commercial strategy are repository/server-confidential and are not automatically exposed to marketplace clients.
 
 ## 12. Knowledge-to-product flywheel
 
@@ -275,3 +289,15 @@ The target cross-engine wiring is:
 → `next route`
 
 This is additive convergence over the existing orchestration fabric. It must not replace functioning domain authority with AI or duplicate existing Clinic OS, Grid, Financial OS, identity, authorization, audit, or workflow systems.
+
+## 16. Frontend / proprietary-logic boundary
+
+For every Assurance, Quality Guardian, Expert Grid, or Expert Workbench surface:
+
+`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE RULE / MATCH / AUTHORIZATION / PROPRIETARY LOGIC → MINIMUM-NECESSARY PRESENTATION DTO → BROWSER`
+
+Never ship confidential rule packages, internal ranking weights, trust/anti-gaming logic, hidden prompts, private evidence references, raw ORM records, secret configuration, or private commercial logic merely because the UI needs a result.
+
+Safe explainability is required: the user should understand what needs attention and why without receiving enough hidden implementation detail to reconstruct Klinikos proprietary methods or weaken security controls.
+
+This boundary is a merge criterion, not an optional optimization.
