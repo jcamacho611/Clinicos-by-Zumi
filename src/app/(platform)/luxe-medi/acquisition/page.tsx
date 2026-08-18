@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AlarmClock, CircleDollarSign, Clock3, MessageCircleMore, Route, UserRoundCheck } from "lucide-react";
+import { LuxeMediNav } from "@/components/clinic/luxe-medi-nav";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageIntro, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -26,6 +27,7 @@ export default async function LuxeAcquisitionPage() {
 
   return (
     <div className="space-y-6">
+      <LuxeMediNav />
       <PageIntro
         title="Turn Luxe demand into owned next actions."
         description="One operational view for unanswered demand, speed-to-lead, attribution, at-risk opportunity, and follow-up. Estimated opportunity stays separate from verified collected revenue."
