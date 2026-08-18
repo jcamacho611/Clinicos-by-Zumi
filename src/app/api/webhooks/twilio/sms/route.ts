@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 function publicWebhookUrl(request: Request) {
   const incoming = new URL(request.url);
-  const configuredBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const configuredBase = process.env.TWILIO_WEBHOOK_BASE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (!configuredBase) return incoming.toString();
 
   try {
@@ -20,6 +20,16 @@ function publicWebhookUrl(request: Request) {
   } catch {
     return incoming.toString();
   }
+}
+
+function emptyTwiml() {
+  return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+    status: 200,
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 export async function POST(request: Request) {
@@ -51,14 +61,14 @@ export async function POST(request: Request) {
   const tenant = await resolveInboundTwilioOrganization({ to, messagingServiceSid });
   if (!tenant.ok) {
     // The request is genuinely signed by Twilio but no single Klinikos tenant owns the
-    // destination. Never guess. A 204 stops provider retries while guaranteeing no
-    // patient or organization state is touched.
+    // destination. Never guess and never touch patient state. Return empty TwiML so a
+    // legitimate provider callback is acknowledged without creating a reply message.
     console.warn("[twilio] signed inbound SMS had no unique tenant routing", {
       reason: tenant.reason,
       messageSid,
       hasMessagingServiceSid: Boolean(messagingServiceSid),
     });
-    return new NextResponse(null, { status: 204 });
+    return emptyTwiml();
   }
 
   await processInboundPatientSms({
@@ -72,5 +82,5 @@ export async function POST(request: Request) {
 
   // Twilio Advanced Opt-Out has already sent its own STOP/START/HELP confirmation.
   // Klinikos only mirrors the signed state and must not create a second reply here.
-  return new NextResponse(null, { status: 204 });
+  return emptyTwiml();
 }
