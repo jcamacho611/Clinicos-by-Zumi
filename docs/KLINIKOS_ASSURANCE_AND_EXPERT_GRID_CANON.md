@@ -1,6 +1,6 @@
 # KLINIKOS — ASSURANCE, RULES & EVIDENCE, QUALITY GUARDIAN, AND EXPERT GRID CANON
 
-Version: `2026-08-18.1`
+Version: `2026-08-18.2`
 Status: `CANDIDATE SPECIALIST CANON — IMPLEMENTATION FOUNDATION`
 
 ## 1. Purpose
@@ -41,7 +41,7 @@ AI-generated prose is not evidence merely because it sounds plausible.
 
 A rule can close automatically only where deterministic policy explicitly permits it. When policy requires authorized review, complete evidence produces `review_required`, not `satisfied`.
 
-Cross-organization evidence must never silently satisfy another tenant's rule.
+Cross-organization or unscoped evidence must never silently satisfy another tenant's rule. Alternative evidence rules may use explicit `any` closure semantics; mandatory bundles use `all`.
 
 ## 4. Assurance Monitor
 
@@ -49,7 +49,7 @@ Klinikos may monitor configured rule families on scheduled, event-driven, or hyb
 
 The monitor creates bounded workflow jobs and minimum-necessary domain events. It does not send private operational context to a public research provider and does not call a model to decide whether a rule is satisfied.
 
-Representative future monitors include:
+Representative assurance families include:
 
 - Quality Guardian;
 - Revenue Assurance;
@@ -77,6 +77,10 @@ Quality Guardian consumes deterministic Rules & Evidence evaluations and produce
 - prioritized Klinikos next actions;
 - human-review queue items where required;
 - a Zumi-ready operational brief.
+
+Quality work reuses canonical RBAC permissions through `quality:read`, `quality:update`, and `quality:manage`. Regulated closure remains review-required even when the caller has management permission.
+
+The trusted Zumi bridge accepts already-authorized evaluations, rechecks tenant/permission boundaries, strips subject identifiers and evidence references from model-visible quality context, and exposes only aggregate state plus safe action metadata. Quality Guardian is registered in the Zumi tool graph as `available_to_wire`, not `active`, until a durable server-side loader supplies real authorized evaluation state.
 
 Quality Guardian must not claim that Klinikos supports a specific HEDIS, CMS, NCQA, MIPS, ACO, Stars, or payer program merely because the generic engine exists. Program support requires a separately verified rule package, data contract, licensing posture where applicable, tests, human validation, and production evidence.
 
@@ -120,11 +124,17 @@ Soft reputation, experience, outcome, or price scores can never override failed 
 
 The safe sequence is:
 
-`NEED → MATCH → TERMS → CONFLICT CHECK → PURPOSE → REQUIRED AGREEMENTS / BAA EVIDENCE WHERE APPLICABLE → SCOPED AUTHORIZATION → MINIMUM-NECESSARY DATA ROOM → EXPERT WORK → EVIDENCE / DELIVERABLE → REVIEW → COMPLETION → FINANCIAL / AUDIT STATE`
+`NEED → MATCH → TERMS → CONFLICT CHECK → PURPOSE → GOVERNED AGREEMENT EVIDENCE → SCOPED AUTHORIZATION → MINIMUM-NECESSARY DATA ROOM → EXPERT WORK → EVIDENCE / DELIVERABLE → REVIEW → COMPLETION → FINANCIAL / AUDIT STATE`
 
 No matched expert receives PHI merely because Grid selected them.
 
-Future Expert Workbench access should be engagement-scoped, time-bounded, tenant-bound, purpose-bound, and capability-bound.
+The foundation now includes an expert-engagement state contract and deterministic readiness check. An engagement may activate only when the selected expert passed matching eligibility, both parties accepted terms, conflict review is clear, purpose is specific, the authorization window is valid, required capability is included, the configured data-access class exactly matches the governed need, minimum-necessary scope is defined, explicit scoped authorization exists when data access is required, and every agreement-evidence key required by the governed need is satisfied.
+
+Agreement requirements come from the governed Expert Grid need/policy. An engagement cannot bypass them by self-declaring that an agreement is unnecessary.
+
+An active-state flag alone is not sufficient authority for data access. The scoped-access grant path revalidates current match, need, agreement, time-window, and data-scope policy before producing an authorization envelope. The envelope contains permission scope, not patient data. Canonical repositories must still enforce tenant, resource, consent/release, and minimum-necessary rules on every read.
+
+A production Expert Workbench should consume these same engagement-scoped, time-bounded, tenant-bound, purpose-bound, and capability-bound rules.
 
 ## 8. Internal-first then Grid escalation
 
@@ -137,10 +147,10 @@ Preferred sequence:
 3. internal authorized staff receive the work first;
 4. if required capability/capacity is unavailable, create Grid expert demand;
 5. match eligible experts or expert organizations;
-6. complete engagement authorization before sensitive access;
+6. complete engagement terms, agreement evidence, and scoped authorization before sensitive access;
 7. route expert output back into the same evidence/audit workflow.
 
-The current quality-to-expert adapter creates only a Grid demand object and deliberately excludes patient facts and evidence references.
+The current quality-to-expert adapter creates organization/rule/version-scoped Grid demand, deliberately excludes patient identifiers, facts, and evidence references, and routes the user through the existing `grid.request.create` capability. Duplicate patient-level exceptions for the same organization/rule/version collapse into one expert demand opportunity for orchestration purposes rather than leaking subject identity into marketplace state.
 
 ## 9. Business model direction
 
@@ -194,7 +204,7 @@ License/certification/malpractice/privilege/enrollment evidence, expirations, sa
 Referral sent, accepted, scheduled, completed, result received, acknowledged, released where permitted, patient notified and loop closed.
 
 ### Compliance/privacy
-Training, policy evidence, access reviews, vendor/BAA evidence, incidents, retention/legal hold, consent and release requirements.
+Training, policy evidence, access reviews, vendor/agreement evidence, incidents, retention/legal hold, consent and release requirements.
 
 ### Inventory/supply
 Lot/serial/expiration, recalls, wastage, storage, required checks, reorder signals and patient/product traceability where appropriate.
@@ -210,15 +220,18 @@ Required control evidence, unresolved findings, incidents, recovery tests, acces
 
 ## 12. Current implementation boundary
 
-This candidate slice implements framework-level deterministic engines and tests for:
+This candidate slice implements framework-level deterministic engines and focused tests for:
 
-- governed rule evaluation;
-- evidence freshness and tenant boundary checks;
+- governed rule evaluation, version/effective windows, and applicability predicates;
+- evidence freshness, exact tenant scope, and `all`/`any` closure semantics;
 - human-review-required closure states;
-- Quality Guardian operational summaries and next actions;
-- scheduled/event-driven assurance job contracts;
-- expert capability matching with hard eligibility;
-- quality-to-expert Grid demand creation without patient/evidence leakage.
+- Quality Guardian summaries, priority/due-state handling, and permission-gated next actions;
+- scheduled/event-driven assurance job and minimum-necessary event contracts;
+- trusted Zumi quality orchestration and safe model-visible aggregate/action projection;
+- Expert Grid capability matching with hard eligibility;
+- quality-to-expert Grid demand creation without patient/evidence leakage;
+- governed agreement requirements carried from the Expert Grid need into engagement activation;
+- expert engagement readiness, scoped authorization envelopes, access-time policy revalidation, and attributable deliverable completion/review states.
 
 It does **not** yet establish:
 
@@ -227,9 +240,11 @@ It does **not** yet establish:
 - legal HIPAA compliance;
 - live payer/quality reporting connections;
 - external primary-source credential verification;
-- expert BAA automation;
-- persistent assurance-plan/rule/evidence database models;
-- a production Expert Workbench UI;
+- automatic generation/execution of BAAs or other legal agreements;
+- persistent assurance-plan/rule/evidence/expert-engagement database models;
+- a production server-side Quality Guardian data loader;
+- an active Quality Guardian call inside the main Zumi gateway;
+- a production Expert Workbench UI/data room;
 - external expert payment settlement;
 - autonomous clinical or compliance decisions.
 
@@ -244,12 +259,14 @@ The target cross-engine wiring is:
 → `Rules & Evidence Engine`
 → `Quality / Revenue / Credential / Authorization / Other Guardian`
 → `Next Action + Workflow + Human Review`
-→ `Zumi explanation/orchestration`
+→ `Trusted Zumi orchestration`
 → `Internal staff when capable`
 → `Expert Grid demand when capability/capacity is missing`
-→ `Engagement authorization + scoped access`
-→ `Expert Workbench`
-→ `Evidence / outcome`
+→ `Expert match`
+→ `Terms + conflict + governed agreement evidence`
+→ `Scoped authorization + minimum-necessary repository projection`
+→ `Expert Workbench / governed expert work`
+→ `Evidence / deliverable / organization review`
 → `Audit + Financial OS + Insights`
 → `next route`
 
