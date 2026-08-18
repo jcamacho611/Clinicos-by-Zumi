@@ -1,63 +1,34 @@
 import { isEduInstructorRole, type EduPlatformRole } from "@/lib/edu/edu-roles";
 
-/**
- * Klinikos EDU route architecture.
- *
- * Navigation is derived from the platform role so a student is never shown a
- * grading destination and an observer is never shown one they cannot open. The
- * server still enforces access on every route; this only keeps the interface from
- * offering something the server would refuse.
- */
-
-export type EduNavItem = {
-  href: string;
-  label: string;
-  icon: string;
-  /** Roles allowed to see and open this destination. */
-  roles: readonly EduPlatformRole[];
-};
-
-export type EduNavGroup = {
-  label: string;
-  items: readonly EduNavItem[];
-};
+export type EduNavItem = { href: string; label: string; icon: string; roles: readonly EduPlatformRole[] };
+export type EduNavGroup = { label: string; items: readonly EduNavItem[] };
 
 const ALL_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student", "edu_observer"];
 const STAFF: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant"];
 const TEACHING: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor"];
+const CERTIFICATE_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_student"];
 
 export const eduNavigation: readonly EduNavGroup[] = [
-  {
-    label: "Lab",
-    items: [
-      { href: "/edu/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: ALL_ROLES },
-      { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
-      { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
-    ],
-  },
-  {
-    label: "Simulation",
-    items: [
-      { href: "/edu/scenarios", label: "Scenario library", icon: "FlaskConical", roles: ALL_ROLES },
-      { href: "/edu/grading", label: "Grading", icon: "ClipboardCheck", roles: STAFF },
-      { href: "/edu/competencies", label: "Competencies", icon: "Target", roles: ALL_ROLES },
-    ],
-  },
-  {
-    label: "Administration",
-    items: [
-      { href: "/edu/settings", label: "Settings", icon: "Settings", roles: TEACHING },
-    ],
-  },
+  { label: "Lab", items: [
+    { href: "/edu/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: ALL_ROLES },
+    { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
+    { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
+  ] },
+  { label: "Simulation", items: [
+    { href: "/edu/scenarios", label: "Scenario library", icon: "FlaskConical", roles: ALL_ROLES },
+    { href: "/edu/grading", label: "Grading", icon: "ClipboardCheck", roles: STAFF },
+    { href: "/edu/competencies", label: "Competencies", icon: "Target", roles: ALL_ROLES },
+    { href: "/edu/certificates", label: "Certificates", icon: "Award", roles: CERTIFICATE_ROLES },
+  ] },
+  { label: "Administration", items: [
+    { href: "/edu/settings", label: "Settings", icon: "Settings", roles: TEACHING },
+  ] },
 ];
 
 export function eduNavigationForRole(role: EduPlatformRole): EduNavGroup[] {
-  return eduNavigation
-    .map((group) => ({ label: group.label, items: group.items.filter((item) => item.roles.includes(role)) }))
-    .filter((group) => group.items.length > 0);
+  return eduNavigation.map((group) => ({ label: group.label, items: group.items.filter((item) => item.roles.includes(role)) })).filter((group) => group.items.length > 0);
 }
 
-/** Route access contract. Every authenticated EDU route declares its allowed roles. */
 export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/dashboard": ALL_ROLES,
   "/edu/courses": ALL_ROLES,
@@ -66,18 +37,15 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
   "/edu/competencies": ALL_ROLES,
+  "/edu/certificates": CERTIFICATE_ROLES,
   "/edu/settings": TEACHING,
 };
 
 export function canAccessEduRoute(role: EduPlatformRole, route: string) {
-  const entry = Object.entries(eduRouteAccess)
-    .filter(([prefix]) => route === prefix || route.startsWith(`${prefix}/`))
-    // Longest prefix wins so /edu/lab/[id] resolves to /edu/lab, not a shorter match.
-    .sort((a, b) => b[0].length - a[0].length)[0];
+  const entry = Object.entries(eduRouteAccess).filter(([prefix]) => route === prefix || route.startsWith(`${prefix}/`)).sort((a, b) => b[0].length - a[0].length)[0];
   return entry ? entry[1].includes(role) : false;
 }
 
-/** Where a role lands after entering the EDU app. */
 export function eduLandingRoute(role: EduPlatformRole) {
   return isEduInstructorRole(role) ? "/edu/dashboard" : "/edu/dashboard";
 }
