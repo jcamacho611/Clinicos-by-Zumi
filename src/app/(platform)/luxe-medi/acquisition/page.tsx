@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AlarmClock, CircleDollarSign, Clock3, MessageCircleMore, Route, UserRoundCheck } from "lucide-react";
 import { LuxeMediNav } from "@/components/clinic/luxe-medi-nav";
+import { LuxePaymentEvidenceForm } from "@/components/clinic/luxe-payment-evidence-form";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageIntro, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -23,6 +24,7 @@ function elapsed(minutes: number | null) {
 export default async function LuxeAcquisitionPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "luxe_medi", "read") || !can(session.role, "crm", "read")) return notFound();
+  const canReconcilePayments = can(session.role, "luxe_medi", "manage") && can(session.role, "crm", "update");
   const data = await getLuxeAcquisitionOperations(session);
 
   return (
@@ -59,6 +61,7 @@ export default async function LuxeAcquisitionPage() {
                     </div>
                     <p className="mt-1 text-[11px] text-slate-500">{lead.serviceInterest ?? "Service interest pending"} · {lead.estimatedOpportunity} estimated · payment {lead.paymentStatus.replaceAll("_", " ")}</p>
                     <p className="mt-2 text-[10px] text-slate-400">First touch: {lead.firstTouchSource}{lead.firstCampaignSource ? ` · ${lead.firstCampaignSource}` : ""}{lead.latestTouch?.source ? ` · latest ${lead.latestTouch.source}` : ""}</p>
+                    {canReconcilePayments && <LuxePaymentEvidenceForm leadId={lead.id} />}
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-extrabold uppercase tracking-[.12em] text-slate-500">{lead.action.replaceAll("_", " ")}</p>
