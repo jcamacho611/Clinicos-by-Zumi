@@ -1,7 +1,5 @@
 import { ClinicFirstLoginLaunch } from "@/components/commercial/clinic-first-login-launch";
-import { HomeOperatingRailPanel } from "@/components/clinic/home-operating-rail";
 import { LivingHome } from "@/components/clinic/living-home";
-import { WorkspaceLaunchpad } from "@/components/clinic/workspace-launchpad";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
@@ -66,7 +64,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         recentSignals={recentPathSignals}
         role={session.role}
       />
-      <WorkspaceLaunchpad role={session.role} />
     </div>
   );
 }
