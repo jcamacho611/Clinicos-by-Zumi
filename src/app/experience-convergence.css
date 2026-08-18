@@ -1,0 +1,47 @@
+/* Klinikos 2026-08-18 experience convergence.
+ * Keep this layer narrow: it reconciles approved Living Home geometry with the newer
+ * interaction law without baking product UI into images or weakening domain truth. */
+
+/* The visible center Zumi orb is the public Living Home submit control. The old arrow
+ * becomes a transparent hit target over the approved orb instead of a second send icon. */
+#living-composer .reference-composer-shell > button[type="submit"] {
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:8;
+  width:96px;
+  height:96px;
+  transform:translate(-50%,-50%);
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  color:transparent;
+}
+#living-composer .reference-composer-shell > button[type="submit"] svg {display:none}
+#living-composer .reference-composer-shell > button[type="submit"]:focus-visible {
+  outline:2px solid #efaaa1;
+  outline-offset:5px;
+}
+#living-composer .reference-composer-shell > button[type="submit"]:disabled {opacity:.42}
+#living-composer .reference-zumi {z-index:6;pointer-events:none}
+
+/* Premium light-mode readability. Existing atmosphere logic remains the single theme
+ * authority; these rules simply prevent cinematic text treatments from becoming faint
+ * on the paper/day surfaces. */
+html[data-klinikos-atmosphere="day"] .klinikos-platform,
+html[data-klinikos-atmosphere="dawn"] .klinikos-platform,
+html[data-klinikos-atmosphere="golden"] .klinikos-platform {
+  --mode-background:#f6f2ed;
+  --mode-header:rgba(252,249,245,.94);
+}
+html[data-klinikos-atmosphere="day"] .k-muted,
+html[data-klinikos-atmosphere="dawn"] .k-muted,
+html[data-klinikos-atmosphere="golden"] .k-muted {color:color-mix(in srgb,var(--k-text) 68%,transparent)}
+
+@media (max-width: 640px) {
+  #living-composer .reference-composer-shell > button[type="submit"] {width:78px;height:78px}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #living-composer .reference-composer-shell > button[type="submit"] {transition:none}
+}
