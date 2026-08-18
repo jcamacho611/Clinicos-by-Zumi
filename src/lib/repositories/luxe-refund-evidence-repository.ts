@@ -137,8 +137,8 @@ export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedL
       };
     }
 
-    const evidenceId = existing?.id ?? randomUUID();
-    const previousAmountRefundedCents = existing?.amountRefundedCents ?? 0;
+    let evidenceId = existing?.id ?? randomUUID();
+    let previousAmountRefundedCents = existing?.amountRefundedCents ?? 0;
     if (existing) {
       await tx.$executeRaw(Prisma.sql`
         UPDATE "luxe_lead_refund_evidence"
@@ -176,6 +176,8 @@ export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedL
             paymentStatus: lead.paymentStatus,
           };
         }
+        evidenceId = concurrent.id;
+        previousAmountRefundedCents = concurrent.amountRefundedCents;
         await tx.$executeRaw(Prisma.sql`
           UPDATE "luxe_lead_refund_evidence"
           SET "paymentExternalReference" = ${input.paymentExternalReference},
