@@ -41,6 +41,15 @@ export type LegalDocumentEvent = {
   evidenceId?: string;
 };
 
+export type LegalExecutionEvidence = {
+  source: "ESIGN_PROVIDER" | "OPERATOR_VERIFIED_ARTIFACT";
+  verified: boolean;
+  evidenceId: string;
+  signedArtifactSha256: string;
+  verifiedAt: string;
+  providerEnvelopeId?: string;
+};
+
 export type LegalDocumentRecord = {
   id: string;
   documentKey: "master_nda";
@@ -58,9 +67,21 @@ export type LegalDocumentRecord = {
     storageKey?: string;
     renderedAt?: string;
   };
+  executionEvidence?: LegalExecutionEvidence;
   events: LegalDocumentEvent[];
   counselReviewRequired: true;
   productionApproved: false;
+};
+
+const allowedTransitions: Record<LegalDocumentStatus, LegalDocumentStatus[]> = {
+  DRAFT: ["NEEDS_REVIEW", "VOID"],
+  NEEDS_REVIEW: ["DRAFT", "APPROVED_FOR_SIGNATURE", "VOID"],
+  APPROVED_FOR_SIGNATURE: ["NEEDS_REVIEW", "SENT_FOR_SIGNATURE", "VOID"],
+  SENT_FOR_SIGNATURE: ["PARTIALLY_SIGNED", "EXECUTED", "VOID"],
+  PARTIALLY_SIGNED: ["SENT_FOR_SIGNATURE", "EXECUTED", "VOID"],
+  EXECUTED: ["SUPERSEDED", "VOID"],
+  SUPERSEDED: [],
+  VOID: [],
 };
 
 export function buildLegalDocumentRecord(
@@ -103,12 +124,49 @@ export function signatureReadiness(record: LegalDocumentRecord) {
   };
 }
 
+export function hasVerifiedExecutionEvidence(record: LegalDocumentRecord) {
+  const evidence = record.executionEvidence;
+  return Boolean(
+    evidence?.verified
+      && evidence.evidenceId.trim()
+      && /^[a-f0-9]{64}$/i.test(evidence.signedArtifactSha256)
+      && evidence.verifiedAt,
+  );
+}
+
+export function canTransitionLegalDocument(record: LegalDocumentRecord, nextStatus: LegalDocumentStatus) {
+  if (!allowedTransitions[record.status].includes(nextStatus)) return false;
+  if (nextStatus === "SENT_FOR_SIGNATURE") return executionGuard(record).canSendForSignature;
+  if (nextStatus === "EXECUTED") return hasVerifiedExecutionEvidence(record);
+  if (nextStatus === "APPROVED_FOR_SIGNATURE") return signatureReadiness({ ...record, status: "APPROVED_FOR_SIGNATURE" }).blockers.length === 0;
+  return true;
+}
+
+export function transitionLegalDocument(
+  record: LegalDocumentRecord,
+  nextStatus: LegalDocumentStatus,
+  event: LegalDocumentEvent,
+): LegalDocumentRecord {
+  if (!canTransitionLegalDocument(record, nextStatus)) {
+    throw new Error(`Illegal legal-document transition: ${record.status} -> ${nextStatus}`);
+  }
+
+  return {
+    ...record,
+    status: nextStatus,
+    updatedAt: event.occurredAt,
+    events: [...record.events, event],
+  };
+}
+
 export function executionGuard(record: LegalDocumentRecord) {
   const readiness = signatureReadiness(record);
   return {
     canRenderFinalPdf: readiness.ready,
-    canSendForSignature: readiness.ready && Boolean(record.artifact?.sha256),
-    canMarkExecuted: record.status === "PARTIALLY_SIGNED" || record.status === "SENT_FOR_SIGNATURE",
+    canSendForSignature: readiness.ready && Boolean(record.artifact?.sha256 && /^[a-f0-9]{64}$/i.test(record.artifact.sha256)),
+    canMarkExecuted:
+      (record.status === "PARTIALLY_SIGNED" || record.status === "SENT_FOR_SIGNATURE")
+      && hasVerifiedExecutionEvidence(record),
     warning: "Never mark a document executed from UI intent alone. Require verified signature-provider evidence or an operator-verified signed artifact and preserve the audit event.",
   };
 }
