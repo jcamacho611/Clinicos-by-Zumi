@@ -15,11 +15,11 @@ describe("Zumi ambient copilot contract", () => {
     expect(navigation).toContain('zumi: { title: "Conversation", eyebrow: "Zumi" }');
   });
 
-  it("makes the global Zumi control send a typed prompt instead of only opening another surface", () => {
+  it("makes the global Zumi control send a typed prompt or focus the mounted conversation", () => {
     expect(shell).toContain("function sendOrFocusZumi()");
     expect(shell).toContain('zumiPrompt.trim() ? "Send to Zumi" : "Focus Zumi chat"');
     expect(shell).toContain("onClick={sendOrFocusZumi}");
-    expect(shell).not.toContain('aria-label="Open Zumi"');
+    expect(shell).toContain('new CustomEvent("zumi:prompt"');
   });
 
   it("keeps one mounted conversation instance across normal and expanded routes", () => {
@@ -30,12 +30,12 @@ describe("Zumi ambient copilot contract", () => {
     expect(expandedPage).not.toContain("<ZumiPresence");
   });
 
-  it("keeps Zumi context-aware without advertising an intelligence subsystem to the user", () => {
+  it("keeps Zumi context-aware while allowing the same mounted thread to expand", () => {
     expect(presence).toContain("pathname,");
     expect(presence).toContain("pageTitle: document.title");
     expect(presence).toContain("recentConversation");
     expect(presence).not.toContain("Klinikos Intelligence");
-    expect(presence).not.toContain("Open full Zumi conversation");
+    expect(presence).toContain("Open full Zumi conversation");
     expect(presence).toContain("With you across Klinikos");
   });
 });
