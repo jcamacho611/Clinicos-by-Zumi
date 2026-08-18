@@ -22,6 +22,8 @@ type PaymentEvidenceRow = {
   processorVerified: boolean;
 };
 
+type LeadReferenceRow = { leadId: string };
+
 async function findExistingRefund(
   tx: Prisma.TransactionClient,
   organizationId: string,
@@ -57,10 +59,26 @@ async function findProcessorPayment(
   return rows[0] ?? null;
 }
 
-export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedLuxeStripeRefund) {
-  const journey = openLuxeAcquisitionJourney(input.journeyToken);
-  if (!journey) throw new NetworkAccessError("Luxe refund correlation is invalid or expired.", 409);
+async function findLeadFromProcessorPaymentEvent(
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+  paymentReference: string | null,
+) {
+  if (!paymentReference) return null;
+  const rows = await tx.$queryRaw<LeadReferenceRow[]>(Prisma.sql`
+    SELECT "leadId"
+    FROM "lead_events"
+    WHERE "organizationId" = ${organizationId}
+      AND "eventType" = 'payment_verified_processor'
+      AND "metadata"->>'provider' = 'stripe'
+      AND "metadata"->>'externalPaymentIntentId' = ${paymentReference}
+    ORDER BY "createdAt" DESC
+    LIMIT 1
+  `);
+  return rows[0]?.leadId ?? null;
+}
 
+export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedLuxeStripeRefund) {
   const organization = await db.organization.findUnique({
     where: { slug: LUXE_ORGANIZATION_SLUG },
     select: { id: true, status: true },
@@ -70,8 +88,20 @@ export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedL
   }
 
   return db.$transaction(async (tx) => {
+    // Refunds can occur long after the short-lived acquisition journey expires.
+    // Prefer durable processor/payment-event correlation. Use the encrypted journey
+    // only as an out-of-order fallback when a refund somehow arrives before the
+    // payment webhook has established durable lead evidence.
+    const processorPayment = await findProcessorPayment(tx, organization.id, input.paymentExternalReference);
+    const eventLeadId = processorPayment
+      ? processorPayment.leadId
+      : await findLeadFromProcessorPaymentEvent(tx, organization.id, input.paymentExternalReference);
+    const journeyLeadId = eventLeadId ? null : openLuxeAcquisitionJourney(input.journeyToken)?.leadId ?? null;
+    const leadId = eventLeadId ?? journeyLeadId;
+    if (!leadId) throw new NetworkAccessError("Luxe refund correlation could not be resolved.", 409);
+
     const lead = await tx.lead.findFirst({
-      where: { id: journey.leadId, organizationId: organization.id },
+      where: { id: leadId, organizationId: organization.id },
       select: {
         id: true,
         name: true,
@@ -84,7 +114,6 @@ export async function recordProcessorVerifiedLuxeStripeRefund(input: NormalizedL
     });
     if (!lead) throw new NetworkAccessError("Luxe refund lead correlation could not be resolved.", 409);
 
-    const processorPayment = await findProcessorPayment(tx, organization.id, input.paymentExternalReference);
     if (processorPayment) {
       if (processorPayment.leadId !== lead.id) {
         throw new NetworkAccessError("The refunded Stripe payment is linked to a different Luxe lead.", 409);
