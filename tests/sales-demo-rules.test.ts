@@ -36,6 +36,26 @@ describe("Clinic Operating Analysis safety and lifecycle rules", () => {
     expect(salesIntakeSchema.safeParse({ ...validIntake, acknowledgesSyntheticData: false }).success).toBe(false);
   });
 
+  it("accepts missed calls as the same exact bottleneck used by the guided operating map", () => {
+    const parsed = salesIntakeSchema.parse({
+      ...validIntake,
+      biggestPainPoint: "missed_calls",
+      painPoints: ["missed_calls", "follow_ups"],
+    });
+    expect(parsed.biggestPainPoint).toBe("missed_calls");
+    expect(parsed.painPoints).toContain("missed_calls");
+
+    const scenario = buildSyntheticDemoScenario({
+      clinicType: "Primary care",
+      biggestPainPoint: "missed_calls",
+      painPoints: ["missed_calls"],
+    });
+    expect(scenario.primaryPainPoint).toBe("missed_calls");
+    expect(scenario.syntheticTask.title).toContain("missed calls");
+    expect(scenario.syntheticRevenueLeak.category).toBe("Missed calls workflow delay");
+    expect(scenario.syntheticRevenueLeak.estimateStatus).toBe("Illustrative only");
+  });
+
   it("keeps compatibility offer display truth aligned with the canonical commercial catalog", () => {
     expect(demoOffers.private_workflow_demo).toMatchObject({
       name: clinicCommercialOffers.privateWorkflowReview.name,
