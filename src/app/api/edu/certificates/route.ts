@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
@@ -14,6 +14,13 @@ import { canEdu } from "@/lib/edu/edu-roles";
 import { eduInstitutionFilter, resolveEduIdentity, type EduIdentity } from "@/lib/edu/edu-session";
 
 const NO_STORE = { "Cache-Control": "private, no-store" } as const;
+
+type CertificateMutationError = {
+  kind: "error";
+  message: string;
+  status: 400 | 403 | 404 | 409;
+  problems?: string[];
+};
 
 function deny(message: string, status: 400 | 403 | 404 | 409, problems?: string[]) {
   return NextResponse.json({ error: message, problems }, { status, headers: NO_STORE });
@@ -43,26 +50,37 @@ function sameEvidenceAreas(left: readonly string[], right: readonly string[]) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-async function certificateEvidenceAreasById(certificateIds: readonly string[]) {
+function evidenceAreasByCertificate(audits: Array<{ resourceId: string; metadata: unknown }>) {
   const result = new Map<string, string[]>();
-  if (!certificateIds.length) return result;
-
-  const audits = await db.auditLog.findMany({
-    where: {
-      action: "edu.certificate_issued",
-      resourceType: "education_certificate",
-      resourceId: { in: [...certificateIds] },
-    },
-    select: { resourceId: true, metadata: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-
   for (const audit of audits) {
     if (!result.has(audit.resourceId)) {
       result.set(audit.resourceId, certificateCompetencyAreasFromAudit(audit.metadata));
     }
   }
   return result;
+}
+
+async function certificateEvidenceAreasById(certificateIds: readonly string[]) {
+  if (!certificateIds.length) return new Map<string, string[]>();
+  const audits = await db.auditLog.findMany({
+    where: {
+      action: "edu.certificate_issued",
+      resourceType: "education_certificate",
+      resourceId: { in: [...certificateIds] },
+    },
+    select: { resourceId: true, metadata: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return evidenceAreasByCertificate(audits);
+}
+
+async function certificateAuditOrganizationId(identity: EduIdentity) {
+  if (!identity.institutionId) return null;
+  const institution = await db.educationInstitution.findFirst({
+    where: { id: identity.institutionId, status: "active" },
+    select: { organizationId: true },
+  });
+  return institution?.organizationId?.trim() || null;
 }
 
 export async function GET() {
@@ -110,97 +128,182 @@ export async function POST(request: Request) {
   if (!parsed.success) return deny("Invalid certificate request.", 400);
   const body = parsed.data;
 
+  const auditOrganizationId = await certificateAuditOrganizationId(identity);
+  if (!auditOrganizationId) {
+    return deny("This EDU institution must be linked to an active host Klinikos organization before certificate evidence can be changed.", 409);
+  }
+
   if (body.action === "revoke") {
     if (!canEdu(identity.role, "certificate", "manage")) return deny("Only an EDU administrator may revoke certificate evidence.", 403);
-    const existing = await db.educationCertificate.findFirst({ where: { id: body.certificateId, ...eduInstitutionFilter(identity) } });
-    if (!existing) return deny("Certificate not found.", 404);
-    if (existing.revokedAt) return deny("This certificate evidence is already revoked.", 409);
 
-    const revokedAt = new Date();
-    const certificate = await db.educationCertificate.update({
-      where: { id: existing.id },
-      data: { revokedAt, revokedReason: body.reason },
+    const result = await db.$transaction(async (tx) => {
+      await tx.$queryRaw(Prisma.sql`
+        SELECT "id" FROM "education_certificates"
+        WHERE "id" = ${body.certificateId}
+          AND "institutionId" = ${identity.institutionId ?? "__no_institution__"}
+        FOR UPDATE
+      `);
+
+      const existing = await tx.educationCertificate.findFirst({
+        where: { id: body.certificateId, ...eduInstitutionFilter(identity) },
+      });
+      if (!existing) {
+        return { kind: "error", message: "Certificate not found.", status: 404 } satisfies CertificateMutationError;
+      }
+      if (existing.revokedAt) {
+        return { kind: "error", message: "This certificate evidence is already revoked.", status: 409 } satisfies CertificateMutationError;
+      }
+
+      const revokedAt = new Date();
+      const certificate = await tx.educationCertificate.update({
+        where: { id: existing.id },
+        data: { revokedAt, revokedReason: body.reason },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: auditOrganizationId,
+          actorId: session.userId,
+          actorType: "user",
+          action: "edu.certificate_revoked",
+          resourceType: "education_certificate",
+          resourceId: certificate.id,
+          metadata: {
+            institutionId: identity.institutionId,
+            enrollmentId: existing.enrollmentId,
+            serialNumber: existing.serialNumber,
+            revokedAt: revokedAt.toISOString(),
+          },
+        },
+      });
+
+      const issueAudits = await tx.auditLog.findMany({
+        where: {
+          action: "edu.certificate_issued",
+          resourceType: "education_certificate",
+          resourceId: certificate.id,
+        },
+        select: { resourceId: true, metadata: true },
+        orderBy: { createdAt: "asc" },
+      });
+      const evidenceAreas = evidenceAreasByCertificate(issueAudits);
+      return { kind: "ok" as const, certificate, evidenceAreas: evidenceAreas.get(certificate.id) ?? [] };
     });
-    await db.auditLog.create({
-      data: {
-        organizationId: session.organizationId,
-        actorId: session.userId,
-        actorType: "user",
-        action: "edu.certificate_revoked",
-        resourceType: "education_certificate",
-        resourceId: certificate.id,
-        metadata: { enrollmentId: existing.enrollmentId, serialNumber: existing.serialNumber, revokedAt: revokedAt.toISOString() },
-      },
-    });
-    const evidenceAreas = await certificateEvidenceAreasById([certificate.id]);
-    return NextResponse.json({ data: { ...certificate, evidenceAreas: evidenceAreas.get(certificate.id) ?? [] } }, { headers: NO_STORE });
+
+    if (result.kind === "error") return deny(result.message, result.status, result.problems);
+    return NextResponse.json({ data: { ...result.certificate, evidenceAreas: result.evidenceAreas } }, { headers: NO_STORE });
   }
 
   if (!canEdu(identity.role, "certificate", "create")) return deny("This EDU role cannot issue certificate evidence.", 403);
-  const enrollment = await db.educationEnrollment.findFirst({
-    where: { id: body.enrollmentId, ...accessibleEnrollmentWhere(identity) },
-    select: { id: true, institutionId: true, status: true, competencies: { select: { competencyArea: true, status: true } } },
-  });
-  if (!enrollment) return deny("Enrollment not found in your EDU scope.", 404);
 
-  const demonstratedCompetencyAreas = enrollment.competencies
-    .filter((competency) => competency.status === "demonstrated")
-    .map((competency) => competency.competencyArea);
-  const evidenceAreas = normalizedEvidenceAreas(body.certificateType, body.competencyAreas);
-  const problems = validateEduCertificateEvidence({
-    certificateType: body.certificateType,
-    enrollmentStatus: enrollment.status,
-    requestedCompetencyAreas: evidenceAreas,
-    demonstratedCompetencyAreas,
-  });
-  if (problems.length) return deny("Certificate evidence requirements are not satisfied.", 409, problems);
+  const result = await db.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT "id" FROM "education_enrollments"
+      WHERE "id" = ${body.enrollmentId}
+        AND "institutionId" = ${identity.institutionId ?? "__no_institution__"}
+      FOR UPDATE
+    `);
 
-  const duplicateCandidates = await db.educationCertificate.findMany({
-    where: {
-      institutionId: enrollment.institutionId,
-      enrollmentId: enrollment.id,
+    const enrollment = await tx.educationEnrollment.findFirst({
+      where: { id: body.enrollmentId, ...accessibleEnrollmentWhere(identity) },
+      select: {
+        id: true,
+        institutionId: true,
+        status: true,
+        competencies: { select: { competencyArea: true, status: true } },
+      },
+    });
+    if (!enrollment) {
+      return { kind: "error", message: "Enrollment not found in your EDU scope.", status: 404 } satisfies CertificateMutationError;
+    }
+
+    const demonstratedCompetencyAreas = enrollment.competencies
+      .filter((competency) => competency.status === "demonstrated")
+      .map((competency) => competency.competencyArea);
+    const evidenceAreas = normalizedEvidenceAreas(body.certificateType, body.competencyAreas);
+    const problems = validateEduCertificateEvidence({
       certificateType: body.certificateType,
-      title: body.title,
-      revokedAt: null,
-    },
-    orderBy: { issuedAt: "desc" },
-    take: 50,
+      enrollmentStatus: enrollment.status,
+      requestedCompetencyAreas: evidenceAreas,
+      demonstratedCompetencyAreas,
+    });
+    if (problems.length) {
+      return {
+        kind: "error",
+        message: "Certificate evidence requirements are not satisfied.",
+        status: 409,
+        problems,
+      } satisfies CertificateMutationError;
+    }
+
+    const duplicateCandidates = await tx.educationCertificate.findMany({
+      where: {
+        institutionId: enrollment.institutionId,
+        enrollmentId: enrollment.id,
+        certificateType: body.certificateType,
+        title: body.title,
+        revokedAt: null,
+      },
+      orderBy: { issuedAt: "desc" },
+      take: 50,
+    });
+    const duplicateAuditRows = duplicateCandidates.length
+      ? await tx.auditLog.findMany({
+          where: {
+            action: "edu.certificate_issued",
+            resourceType: "education_certificate",
+            resourceId: { in: duplicateCandidates.map((certificate) => certificate.id) },
+          },
+          select: { resourceId: true, metadata: true },
+          orderBy: { createdAt: "asc" },
+        })
+      : [];
+    const duplicateAreas = evidenceAreasByCertificate(duplicateAuditRows);
+    const activeDuplicate = duplicateCandidates.find((certificate) => sameEvidenceAreas(duplicateAreas.get(certificate.id) ?? [], evidenceAreas));
+    if (activeDuplicate) {
+      return {
+        kind: "duplicate" as const,
+        certificate: activeDuplicate,
+        evidenceAreas: duplicateAreas.get(activeDuplicate.id) ?? [],
+      };
+    }
+
+    const certificate = await tx.educationCertificate.create({
+      data: {
+        institutionId: enrollment.institutionId,
+        enrollmentId: enrollment.id,
+        certificateType: body.certificateType,
+        title: body.title,
+        disclaimer: EDU_CERTIFICATE_DISCLAIMER,
+        serialNumber: serialNumber(),
+        issuedByUserId: session.userId,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: auditOrganizationId,
+        actorId: session.userId,
+        actorType: "user",
+        action: "edu.certificate_issued",
+        resourceType: "education_certificate",
+        resourceId: certificate.id,
+        metadata: {
+          institutionId: identity.institutionId,
+          enrollmentId: enrollment.id,
+          certificateType: body.certificateType,
+          competencyAreas: evidenceAreas,
+          serialNumber: certificate.serialNumber,
+        },
+      },
+    });
+    return { kind: "created" as const, certificate, evidenceAreas };
   });
-  const duplicateAreas = await certificateEvidenceAreasById(duplicateCandidates.map((certificate) => certificate.id));
-  const activeDuplicate = duplicateCandidates.find((certificate) => sameEvidenceAreas(duplicateAreas.get(certificate.id) ?? [], evidenceAreas));
-  if (activeDuplicate) {
+
+  if (result.kind === "error") return deny(result.message, result.status, result.problems);
+  if (result.kind === "duplicate") {
     return NextResponse.json({
-      data: { ...activeDuplicate, evidenceAreas: duplicateAreas.get(activeDuplicate.id) ?? [] },
+      data: { ...result.certificate, evidenceAreas: result.evidenceAreas },
       duplicate: true,
     }, { headers: NO_STORE });
   }
-
-  const certificate = await db.educationCertificate.create({
-    data: {
-      institutionId: enrollment.institutionId,
-      enrollmentId: enrollment.id,
-      certificateType: body.certificateType,
-      title: body.title,
-      disclaimer: EDU_CERTIFICATE_DISCLAIMER,
-      serialNumber: serialNumber(),
-      issuedByUserId: session.userId,
-    },
-  });
-  await db.auditLog.create({
-    data: {
-      organizationId: session.organizationId,
-      actorId: session.userId,
-      actorType: "user",
-      action: "edu.certificate_issued",
-      resourceType: "education_certificate",
-      resourceId: certificate.id,
-      metadata: {
-        enrollmentId: enrollment.id,
-        certificateType: body.certificateType,
-        competencyAreas: evidenceAreas,
-        serialNumber: certificate.serialNumber,
-      },
-    },
-  });
-  return NextResponse.json({ data: { ...certificate, evidenceAreas } }, { status: 201, headers: NO_STORE });
+  return NextResponse.json({ data: { ...result.certificate, evidenceAreas: result.evidenceAreas } }, { status: 201, headers: NO_STORE });
 }
