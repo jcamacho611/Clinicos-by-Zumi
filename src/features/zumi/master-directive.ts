@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { ZumiConversationPolicy } from "@/features/zumi/conversation-policy";
 import type { ZumiContextPlan } from "@/features/zumi/context-router";
 
