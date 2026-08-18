@@ -6,6 +6,7 @@ import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 import { getClinicLaunchBriefing } from "@/lib/commercial/clinic-launch-briefing";
+import { canActOnClinicGridSignal, detectClinicGridSignals } from "@/lib/ecosystem/clinic-grid-bridge";
 import { getHomeOperatingRail } from "@/lib/home/operating-rail";
 import { resolvePathGuidanceList } from "@/lib/orchestration/path-guidance-engine";
 import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
@@ -18,7 +19,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const query = await searchParams;
   const launchRequested = query.onboarding === "complete";
-  const [appointments, activePaths, recentPathSignals, launchBriefing, rail] = await Promise.all([
+  const [appointments, activePaths, recentPathSignals, launchBriefing, rail, gridSignals] = await Promise.all([
     listAppointmentsForOrganization(
       session.organizationId,
       session.role === "provider" ? { providerUserId: session.userId } : {},
@@ -27,6 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listRecentPathSignals(session),
     launchRequested ? getClinicLaunchBriefing(session.organizationId) : Promise.resolve(null),
     getHomeOperatingRail(session),
+    detectClinicGridSignals(session),
   ]);
   const livingAppointments = appointments.filter((appointment) => appointment.status !== "Cancelled");
   const pathGuidance = resolvePathGuidanceList(session, activePaths);
@@ -46,12 +48,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ) : null}
       <LivingHome
         appointments={livingAppointments}
+        canActOnGridSignals={canActOnClinicGridSignal(session)}
         canOpenPatientRecord={can(session.role, "patients", "read")}
         firstName={firstName}
         initialGuidance={pathGuidance}
         initialPaths={activePaths}
         intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
         onboardingComplete={verifiedFirstLogin}
+        gridSignals={gridSignals}
         opportunity={rail.opportunity}
         organizationName={session.organizationName}
         rail={rail.destinations}

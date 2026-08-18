@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight, CalendarClock, CheckCircle2, CircleAlert, X }
 import { Badge, type BadgeTone } from "@/components/ds";
 import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import type { ClinicRole } from "@/lib/auth/rbac";
+import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { HomeOpportunity } from "@/lib/home/operating-rail";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
@@ -272,7 +273,9 @@ function FocusPanel({
  */
 export function LivingHomeOperations({
   appointments,
+  canActOnGridSignals,
   canOpenPatientRecord,
+  gridSignals,
   guidance,
   onCount,
   opportunity,
@@ -281,7 +284,9 @@ export function LivingHomeOperations({
   role,
 }: {
   appointments: Appointment[];
+  canActOnGridSignals: boolean;
   canOpenPatientRecord: boolean;
+  gridSignals: ClinicGridSignal[];
   guidance: PathGuidanceView[];
   onCount?: (attentionCount: number) => void;
   opportunity: HomeOpportunity | null;
@@ -550,6 +555,48 @@ export function LivingHomeOperations({
           )}
         </section>
       </div>
+
+      {gridSignals.length ? (
+        <section aria-labelledby="clinic-grid-title" className="mt-16">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Clinic operations · Grid</p>
+              <h2 className="mt-2 text-2xl font-light tracking-[var(--tracking-tight)]" id="clinic-grid-title">What the clinic could take to the network.</h2>
+            </div>
+            <p className="max-w-md text-xs leading-6 text-[var(--text-secondary)]">
+              Read from this clinic&rsquo;s own records. Nothing is published to Grid until a person reviews and confirms it.
+            </p>
+          </div>
+
+          <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {gridSignals.map((signal) => (
+              <div className="flex flex-col rounded-[18px] border border-[var(--line-dark)] px-5 py-6" key={signal.kind}>
+                <p
+                  className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]"
+                  style={{ color: signal.direction === "supply" ? "var(--status-resolved)" : "var(--accent-intelligence)" }}
+                >
+                  {signal.direction === "supply" ? "You have spare capacity" : "The clinic needs something"}
+                </p>
+                <h3 className="mt-3 text-sm font-semibold leading-6">{signal.title}</h3>
+                <p className="mt-3 text-xs leading-6 text-[var(--text-secondary)]">{signal.detail}</p>
+                <p className="mt-3 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">{signal.evidence}</p>
+                {canActOnGridSignals ? (
+                  <Link
+                    className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-intelligence)]"
+                    href={signal.href}
+                  >
+                    {signal.actionLabel} <ArrowUpRight className="size-3.5" />
+                  </Link>
+                ) : (
+                  <p className="mt-5 text-[var(--text-micro)] leading-5 text-[var(--text-secondary)]">
+                    Your role can see this but cannot publish to Grid.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-16 grid gap-10 rounded-[18px] border border-[var(--line-dark)] px-6 py-10 lg:grid-cols-3 lg:divide-x lg:divide-[var(--line-dark)]">
         <section className="lg:pr-8" aria-labelledby="handled-title">

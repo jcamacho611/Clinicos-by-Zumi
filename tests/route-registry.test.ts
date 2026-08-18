@@ -113,6 +113,17 @@ describe("Klinikos route registry", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("lands every Clinic OS → Grid signal on a surface that exists", () => {
+    // The bridge offers an action per signal; an action that 404s is a dead control
+    // on the one surface meant to carry Clinic OS state into Grid. `/grid/needs`
+    // has no page of its own — only `/grid/needs/new` and `/grid/needs/[demandId]`.
+    const bridge = fs.readFileSync(path.join(process.cwd(), "src/lib/ecosystem/clinic-grid-bridge.ts"), "utf8");
+    const hrefs = [...bridge.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    const broken = hrefs.filter((href) => !routeExists(href));
+    expect(broken).toEqual([]);
+  });
+
   it("crosses more than one Klinikos engine on the routes that claim to", () => {
     // The point of a route is that it spans engines. Each of these is asserted to
     // touch at least two distinct top-level surfaces, which is what makes it a

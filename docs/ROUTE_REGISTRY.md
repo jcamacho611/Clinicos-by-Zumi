@@ -41,6 +41,32 @@ Three of the four already cross more than one engine, which is what makes them r
 
 `tests/raw-sql-table-names.test.ts` guards the defect class that broke `/grid/transactions`: every Prisma model here is `@@map`ped to a snake_case table, so raw SQL naming the model compiles and type-checks but throws `42P01` at runtime.
 
+## Cross-engine bridges
+
+A route is one way engines connect: a person starts it. A **bridge** is the other: one engine notices something the other could act on, without anyone having to re-type it.
+
+### Clinic OS → Grid
+
+`src/lib/ecosystem/clinic-grid-bridge.ts` reads real Clinic OS records and reports what this clinic could take to the network.
+
+| Signal | Direction | Read from |
+| --- | --- | --- |
+| `coverage_gap` | demand | Scheduled, non-terminal appointments in the next 30 days with no provider on the record |
+| `referral_leak` | demand | Open referrals with no destination organization recorded |
+| `unused_capacity` | supply | Open capacity listings starting in the future |
+
+Three rules keep the bridge honest, each enforced by `tests/clinic-grid-bridge.test.ts`:
+
+1. **Nothing is posted here.** Detection returns a *draft*. Creating the demand goes through `POST /api/grid/demands`, which enforces RBAC, refuses organizations that have not passed production review, writes the audit record, and emits `grid.demand.created`. Every draft opens as `status: draft`, `visibility: matched_only`. A gap the clinic has not chosen to publish is not a Grid need.
+
+2. **No PHI crosses.** Grid demand records are visible outside the originating organization, so a coverage gap describes the shift — role, window, location — never the patient whose appointment exposed it. The appointment query selects only `startsAt`, `endsAt` and `locationId`; the patient relation is never read, because what is never selected cannot leak. A test asserts this against fixtures carrying a name, MRN, DOB, email, phone and reason for visit. Referral specialty is deliberately omitted from the draft: on a small panel, a specialty plus a count can narrow to a person.
+
+3. **Nothing is invented.** A signal is emitted only when rows were actually counted, and each carries the sentence describing what was counted. No estimated value, no projected fill rate, no "you could earn" figure — money here would be a claim about an outcome nobody has agreed to. A clinic with no gaps sees no section at all.
+
+Reading each signal is governed by the Clinic OS permission for the records behind it, so a role without `appointments:read` never triggers the query. Acting on one additionally needs Grid create rights; a role that can see a gap but not publish is shown the gap without the action rather than a control that would fail.
+
+Bridge destinations are checked by the same route guard as route steps — `/grid/needs` has no page of its own, and pointing at it produced a 404 that browser QA caught.
+
 ## Adding a route
 
 A route may be added when all of the following are true. Anything short of this produces a journey that dead-ends on a person.
