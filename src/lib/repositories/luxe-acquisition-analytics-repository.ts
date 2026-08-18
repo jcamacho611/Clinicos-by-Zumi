@@ -3,7 +3,8 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
-import { summarizeAcquisitionLeads, type LatestTouch } from "@/lib/luxe-acquisition-analytics";
+import { summarizeAcquisitionLeads, type LeadCollectedEvidence, type LatestTouch } from "@/lib/luxe-acquisition-analytics";
+import { LUXE_MANUAL_PAYMENT_EVENT, LUXE_PROCESSOR_PAYMENT_EVENT } from "@/lib/luxe-payment-evidence-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
@@ -22,6 +23,14 @@ function stringValue(value: Prisma.JsonValue | undefined) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
+function numberValue(value: Prisma.JsonValue | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function booleanValue(value: Prisma.JsonValue | undefined) {
+  return typeof value === "boolean" ? value : null;
+}
+
 function latestTouchFromMetadata(metadata: Prisma.JsonValue | null, occurredAt: Date): LatestTouch | null {
   const root = objectValue(metadata);
   const attribution = objectValue(root?.attribution);
@@ -31,6 +40,27 @@ function latestTouchFromMetadata(metadata: Prisma.JsonValue | null, occurredAt: 
   const cta = stringValue(attribution.cta);
   if (!source && !campaign && !cta) return null;
   return { source, campaign, cta, occurredAt };
+}
+
+function addPaymentEvidence(
+  map: Map<string, LeadCollectedEvidence>,
+  event: { leadId: string; eventType: string; metadata: Prisma.JsonValue | null },
+) {
+  if (![LUXE_MANUAL_PAYMENT_EVENT, LUXE_PROCESSOR_PAYMENT_EVENT].includes(event.eventType)) return;
+  const metadata = objectValue(event.metadata);
+  const amountCents = numberValue(metadata?.amountCents);
+  const verificationMethod = stringValue(metadata?.verificationMethod);
+  const processorVerified = booleanValue(metadata?.processorVerified);
+  if (!amountCents || amountCents <= 0) return;
+
+  const current = map.get(event.leadId) ?? { manualReconciledCents: 0, processorVerifiedCents: 0 };
+  if (event.eventType === LUXE_MANUAL_PAYMENT_EVENT && verificationMethod === "manual_reconciliation" && processorVerified === false) {
+    current.manualReconciledCents += amountCents;
+  }
+  if (event.eventType === LUXE_PROCESSOR_PAYMENT_EVENT && verificationMethod === "processor_verification" && processorVerified === true) {
+    current.processorVerifiedCents += amountCents;
+  }
+  map.set(event.leadId, current);
 }
 
 export async function getLuxeAcquisitionOperations(session: ClinicSession) {
@@ -66,17 +96,20 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
   });
 
   const latestTouches = new Map<string, LatestTouch>();
+  const collectedEvidenceByLead = new Map<string, LeadCollectedEvidence>();
   if (leads.length) {
     const events = await db.leadEvent.findMany({
       where: { organizationId: session.organizationId, leadId: { in: leads.map((lead) => lead.id) } },
-      select: { leadId: true, metadata: true, createdAt: true },
+      select: { leadId: true, eventType: true, metadata: true, createdAt: true },
       orderBy: { createdAt: "desc" },
-      take: 3000,
+      take: 5000,
     });
     for (const event of events) {
-      if (latestTouches.has(event.leadId)) continue;
-      const touch = latestTouchFromMetadata(event.metadata, event.createdAt);
-      if (touch) latestTouches.set(event.leadId, touch);
+      if (!latestTouches.has(event.leadId)) {
+        const touch = latestTouchFromMetadata(event.metadata, event.createdAt);
+        if (touch) latestTouches.set(event.leadId, touch);
+      }
+      addPaymentEvidence(collectedEvidenceByLead, event);
     }
   }
 
@@ -84,6 +117,7 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
     now: new Date(),
     slaMinutes: configuredSlaMinutes(),
     latestTouches,
+    collectedEvidenceByLead,
   });
 
   await db.auditLog.create({
@@ -98,7 +132,8 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
         leadCount: leads.length,
         openLeadCount: result.metrics.openLeads,
         atRiskLeadCount: result.metrics.atRiskLeads,
-        verifiedRevenueAvailable: false,
+        manualReconciledRevenueCents: result.metrics.manualReconciledRevenueCents,
+        processorVerifiedRevenueCents: result.metrics.processorVerifiedRevenueCents,
       },
     },
   });
