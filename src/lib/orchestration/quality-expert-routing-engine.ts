@@ -21,6 +21,7 @@ export function qualityExpertNeedFromEvaluation(input: {
   remoteAllowed?: boolean;
   onsiteLocationKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
+  requiredAgreementEvidenceKeys?: string[];
   requiredDataAccessClass?: ExpertDataAccessClass;
   maxPriceCents?: number | null;
   now?: Date;
@@ -44,6 +45,7 @@ export function qualityExpertNeedFromEvaluation(input: {
     remoteAllowed: input.remoteAllowed ?? true,
     onsiteLocationKey: input.onsiteLocationKey ?? null,
     requiredEvidenceKeys: input.requiredExpertEvidenceKeys ?? [],
+    requiredAgreementEvidenceKeys: input.requiredAgreementEvidenceKeys ?? [],
     requiredDataAccessClass: input.requiredDataAccessClass ?? "deidentified",
     urgency: urgencyFromEvaluation(evaluation, now),
     maxPriceCents: input.maxPriceCents ?? null,
