@@ -11,7 +11,7 @@ import {
   validateRequiredAcknowledgments,
 } from "@/lib/legal/global-agreement";
 import { assertLegalExecutionConfigured } from "@/lib/legal/legal-config";
-import { createLegalAcceptance, ensureAgreementVersionRegistered, recordLegalEvent } from "@/lib/legal/legal-access";
+import { createLegalAcceptance, ensureAgreementVersionRegistered } from "@/lib/legal/legal-access";
 import { verifyLegalReviewToken } from "@/lib/legal/review-token";
 import { isSameOriginMutation } from "@/lib/security/same-origin-post";
 
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     await ensureAgreementVersionRegistered(agreement, required);
     const signedAt = new Date();
     const metadata = requestMetadata(request);
-    const acceptance = await createLegalAcceptance({
+    const { acceptance } = await createLegalAcceptance({
       session,
       agreement,
       legalName: parsed.data.legalName,
@@ -97,21 +97,6 @@ export async function POST(request: Request) {
       sourceRoute: parsed.data.sourceRoute,
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
-    });
-
-    await recordLegalEvent({
-      session,
-      eventType: "legal.signature.created",
-      agreement,
-      acceptanceId: acceptance.id,
-      metadata: { signatureMethod: "typed", signerCapacity: parsed.data.signerCapacity },
-    });
-    await recordLegalEvent({
-      session,
-      eventType: "legal.agreement.accepted",
-      agreement,
-      acceptanceId: acceptance.id,
-      metadata: { acceptedAt: acceptance.acceptedAt.toISOString() },
     });
 
     const requestedReturnTo = safeReturnTo(parsed.data.returnTo);
