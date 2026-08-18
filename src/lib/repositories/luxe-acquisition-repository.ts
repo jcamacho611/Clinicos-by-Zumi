@@ -226,7 +226,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
       },
     });
 
-    const taskId = identityReviewRequired
+    const taskId = identity.decision.kind === "ambiguous"
       ? await createAmbiguousIdentityReviewTask(tx, organization.id, lead.id, lead.name, identity.decision.candidateIds.length, dueAt)
       : await ensureLeadFollowUpTask(tx, organization.id, lead.id, lead.name, serviceName, dueAt, priority);
 
@@ -250,7 +250,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           taskId,
           routingStatus: "unassigned",
           identityMatch: identityReviewRequired ? "ambiguous" : "none",
-          ambiguousCandidateIds: identityReviewRequired ? identity.decision.candidateIds : [],
+          ambiguousCandidateIds: identity.decision.kind === "ambiguous" ? identity.decision.candidateIds : [],
           noAutomaticMerge: identityReviewRequired,
           noAppointmentConfirmation: true,
           noPaymentConfirmation: true,
@@ -269,7 +269,7 @@ export async function ingestPublicLuxeLead(rawInput: unknown) {
           taskId,
           routingStatus: "unassigned",
           identityMatch: identityReviewRequired ? "ambiguous" : "none",
-          ambiguousCandidateCount: identityReviewRequired ? identity.decision.candidateIds.length : 0,
+          ambiguousCandidateCount: identity.decision.kind === "ambiguous" ? identity.decision.candidateIds.length : 0,
           serviceMatched: Boolean(service),
           estimatedValueCents: lead.estimatedValueCents,
           attributionPresent: Object.keys(attribution).length > 0,
