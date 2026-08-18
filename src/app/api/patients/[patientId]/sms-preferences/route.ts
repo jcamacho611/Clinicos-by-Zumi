@@ -13,8 +13,6 @@ const evidenceReferenceSchema = z.string().trim().regex(
 );
 
 const updateSchema = z.object({
-  // Clinical/PHI SMS has no staff grant path. A future approved clinical messaging
-  // policy must introduce its own explicit workflow rather than reusing office SMS.
   messageClass: z.enum(["transactional", "operational", "marketing"]),
   status: z.enum(["granted", "denied", "revoked"]),
   source: z.enum(["patient_verbal", "patient_written", "staff_documented"]),
@@ -22,37 +20,17 @@ const updateSchema = z.object({
   evidenceReference: evidenceReferenceSchema.optional(),
 }).superRefine((value, context) => {
   if (value.source === "patient_written" && !value.evidenceReference) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["evidenceReference"],
-      message: "Written consent requires an opaque evidence reference.",
-    });
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["evidenceReference"], message: "Written consent requires an opaque evidence reference." });
   }
-
   if (value.status === "granted" && value.source === "staff_documented") {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["source"],
-      message: "Staff documentation cannot create SMS permission. Record the patient's verbal or written authorization instead.",
-    });
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["source"], message: "Staff documentation cannot create SMS permission. Record the patient's verbal or written authorization instead." });
   }
-
-  // Promotional outreach is intentionally held to the strongest evidence path. This
-  // is a product safety rule, not a claim that it replaces jurisdiction-specific legal review.
   if (value.messageClass === "marketing" && value.status === "granted") {
     if (value.source !== "patient_written") {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["source"],
-        message: "Marketing SMS permission requires patient-written authorization.",
-      });
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["source"], message: "Marketing SMS permission requires patient-written authorization." });
     }
     if (!value.evidenceReference) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["evidenceReference"],
-        message: "Marketing SMS permission requires a written-consent evidence reference.",
-      });
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["evidenceReference"], message: "Marketing SMS permission requires a written-consent evidence reference." });
     }
   }
 });
@@ -91,7 +69,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
     policyVersion: parsed.data.policyVersion,
     evidenceReference: parsed.data.evidenceReference,
   });
-  if (!result.ok) return NextResponse.json({ error: "Patient not found." }, { status: 404 });
+  if (!result.ok) {
+    if (result.reason === "invalid_evidence") {
+      return NextResponse.json({ error: "SMS permission evidence does not satisfy the server policy." }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
+  }
 
   return NextResponse.json({ data: result.sms }, { headers: { "Cache-Control": "private, no-store" } });
 }
