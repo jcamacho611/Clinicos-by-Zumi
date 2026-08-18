@@ -135,11 +135,13 @@ describe("trusted quality assurance orchestration", () => {
       internalQualityCapabilityAvailable: false,
       jurisdictionKey: "US-NY",
       requiredExpertEvidenceKeys: ["quality-experience"],
+      requiredAgreementEvidenceKeys: ["approved-expert-services-agreement"],
       now,
     });
 
     expect(result.ok).toBe(true);
     expect(result.value?.expertNeeds).toHaveLength(1);
+    expect(result.value?.expertNeeds[0].requiredAgreementEvidenceKeys).toEqual(["approved-expert-services-agreement"]);
     expect(result.value?.nextActions).toHaveLength(1);
     expect(result.value?.nextActions[0]).toMatchObject({
       capabilityKey: "grid.request.create",
