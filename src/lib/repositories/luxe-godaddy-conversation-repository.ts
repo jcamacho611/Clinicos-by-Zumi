@@ -188,8 +188,8 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
     }
   }
 
-  const bookingObservationLinked = bookingObservation !== null && bookingObservation.tracked === true;
-  const bookingReviewTaskId = bookingObservationLinked && bookingObservation ? bookingObservation.taskId : null;
+  const bookingReviewTaskId = bookingObservation && bookingObservation.tracked ? bookingObservation.taskId : null;
+  const bookingObservationLinked = bookingReviewTaskId !== null;
 
   await recordSourceEvent({
     organizationId,
