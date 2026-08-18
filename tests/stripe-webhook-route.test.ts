@@ -92,6 +92,14 @@ function recurringInvoiceEvent(withKlinikosMetadata = true) {
   };
 }
 
+async function expectMinimalAcceptedResponse(response: Response) {
+  expect(response.status).toBe(200);
+  const payload = await response.json();
+  expect(payload).toEqual({ received: true });
+  const serialized = JSON.stringify(payload);
+  expect(serialized).not.toMatch(/supported|manualReconciliation|productKey|offerKey|organizationId|subscriptionId|status|idempotent|recurring/i);
+}
+
 describe("Stripe live webhook boundary", () => {
   beforeEach(() => {
     process.env.STRIPE_SECRET_KEY = "sk_live_unit_test_only";
@@ -107,10 +115,9 @@ describe("Stripe live webhook boundary", () => {
     delete process.env.STRIPE_WEBHOOK_SECRET;
   });
 
-  it("accepts a valid signed live Checkout event and records sanitized processor evidence", async () => {
+  it("accepts a valid signed live Checkout event, records sanitized evidence, and exposes only acknowledgement", async () => {
     const response = await POST(signedRequest(checkoutEvent()));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ received: true, supported: true, status: "applied" });
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence).toHaveBeenCalledOnce();
     const input = recordEvidence.mock.calls[0][0];
     expect(input).toMatchObject({
@@ -130,7 +137,7 @@ describe("Stripe live webhook boundary", () => {
     expect(JSON.stringify(input.payload)).not.toMatch(/private@example|Private Buyer|description/i);
   });
 
-  it("acknowledges a tagged manual service Payment Link without granting an entitlement", async () => {
+  it("acknowledges a tagged manual service without exposing internal product/reconciliation metadata", async () => {
     const event = checkoutEvent();
     const session = event.data.object as Record<string, unknown>;
     session.client_reference_id = null;
@@ -142,14 +149,7 @@ describe("Stripe live webhook boundary", () => {
     };
 
     const response = await POST(signedRequest(event));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
-      received: true,
-      supported: false,
-      manualReconciliation: true,
-      productKey: "operational_audit",
-      offerKey: "private_workflow_demo",
-    });
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
@@ -174,20 +174,18 @@ describe("Stripe live webhook boundary", () => {
         },
       } },
     }));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ received: true, supported: false, manualReconciliation: true });
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
-  it("acknowledges unrelated Stripe invoice events without creating a retry storm", async () => {
+  it("acknowledges unrelated recurring events without revealing why they were ignored", async () => {
     const response = await POST(signedRequest(recurringInvoiceEvent(false)));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ received: true, supported: false, unrelatedRecurringEvent: true });
+    await expectMinimalAcceptedResponse(response);
     expect(processRecurring).not.toHaveBeenCalled();
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
-  it("routes a signed Klinikos recurring invoice into the isolated subscription processor", async () => {
+  it("routes a signed Klinikos recurring invoice but never returns internal subscription state", async () => {
     processRecurring.mockResolvedValueOnce({
       kind: "invoice_paid",
       status: "applied",
@@ -197,15 +195,7 @@ describe("Stripe live webhook boundary", () => {
       idempotent: false,
     });
     const response = await POST(signedRequest(recurringInvoiceEvent(true)));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
-      received: true,
-      supported: true,
-      recurring: true,
-      kind: "invoice_paid",
-      status: "applied",
-      organizationId: "org_paid",
-    });
+    await expectMinimalAcceptedResponse(response);
     expect(processRecurring).toHaveBeenCalledOnce();
     expect(recordEvidence).not.toHaveBeenCalled();
   });
@@ -226,18 +216,18 @@ describe("Stripe live webhook boundary", () => {
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
-  it("returns the idempotent repository result for a replayed Stripe event", async () => {
+  it("does not expose idempotency state on a replayed Stripe event", async () => {
     recordEvidence
       .mockResolvedValueOnce({ status: "applied", idempotent: false })
       .mockResolvedValueOnce({ status: "applied", idempotent: true });
-    expect((await POST(signedRequest(checkoutEvent()))).status).toBe(200);
-    const replay = await POST(signedRequest(checkoutEvent()));
-    expect(await replay.json()).toMatchObject({ received: true, status: "applied", idempotent: true });
+    await expectMinimalAcceptedResponse(await POST(signedRequest(checkoutEvent())));
+    await expectMinimalAcceptedResponse(await POST(signedRequest(checkoutEvent())));
   });
 
   it("rejects a correctly signed test-mode event at the live endpoint", async () => {
     const response = await POST(signedRequest(checkoutEvent({ livemode: false })));
     expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "Webhook event was rejected." });
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
@@ -258,7 +248,7 @@ describe("Stripe live webhook boundary", () => {
         metadata: { klinikos_checkout_intent_id: "intent_opaque", klinikos_checkout_state: "state_opaque" },
       } },
     }));
-    expect(response.status).toBe(200);
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence.mock.calls[0][0]).toMatchObject({ outcome: "failed", processorMode: "live" });
   });
 
@@ -267,13 +257,13 @@ describe("Stripe live webhook boundary", () => {
     const event = checkoutEvent();
     (event.data.object as Record<string, unknown>).payment_status = "unpaid";
     const response = await POST(signedRequest(event));
-    expect(response.status).toBe(200);
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence.mock.calls[0][0]).toMatchObject({ outcome: "pending", externalCheckoutId: "cs_live_checkout" });
   });
 
   it("accepts the dynamic-method async success event through the same signed boundary", async () => {
     const response = await POST(signedRequest(checkoutEvent({ type: "checkout.session.async_payment_succeeded" })));
-    expect(response.status).toBe(200);
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence.mock.calls[0][0]).toMatchObject({
       eventType: "checkout.session.async_payment_succeeded",
       outcome: "succeeded",
@@ -284,7 +274,7 @@ describe("Stripe live webhook boundary", () => {
   it("keeps a dynamic-method async failure unpaid through the same signed boundary", async () => {
     recordEvidence.mockResolvedValue({ status: "failed", idempotent: false });
     const response = await POST(signedRequest(checkoutEvent({ type: "checkout.session.async_payment_failed" })));
-    expect(response.status).toBe(200);
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence.mock.calls[0][0]).toMatchObject({
       eventType: "checkout.session.async_payment_failed",
       outcome: "failed",
@@ -312,7 +302,7 @@ describe("Stripe live webhook boundary", () => {
         },
       } },
     }));
-    expect(response.status).toBe(200);
+    await expectMinimalAcceptedResponse(response);
     expect(recordEvidence.mock.calls[0][0]).toMatchObject({
       outcome: "refunded",
       checkoutIntentId: "intent_opaque",
@@ -340,6 +330,6 @@ describe("Stripe live webhook boundary", () => {
       } },
     }));
     expect(response.status).toBe(500);
-    expect(await response.json()).toMatchObject({ error: "Stripe evidence could not be recorded." });
+    expect(await response.json()).toEqual({ error: "Payment evidence could not be recorded." });
   });
 });
