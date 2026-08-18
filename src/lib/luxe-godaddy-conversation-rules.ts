@@ -12,6 +12,7 @@ export const godaddyConversationEnvelopeSchema = z.object({
 export type GoDaddyConversationEnvelope = z.infer<typeof godaddyConversationEnvelopeSchema>;
 
 export type ParsedGoDaddyConversation = {
+  sourceMessageId: string;
   kind: "booking_observed" | "cancellation_observed" | "inquiry" | "unknown";
   orderReference: string | null;
   conversationReference: string | null;
@@ -45,6 +46,7 @@ export function parseGoDaddyConversationNotification(rawEnvelope: unknown): Pars
   const bodyLooksRight = /LUXE Medical Spa received a new message\./i.test(envelope.body);
   if (!subjectLooksRight || !bodyLooksRight) {
     return {
+      sourceMessageId: envelope.messageId,
       kind: "unknown",
       orderReference: null,
       conversationReference: extractConversationReference(envelope.body),
@@ -74,6 +76,7 @@ export function parseGoDaddyConversationNotification(rawEnvelope: unknown): Pars
   const inquiryObserved = Boolean(normalizedMessage && !bookingObserved && !cancellationObserved);
 
   return {
+    sourceMessageId: envelope.messageId,
     kind: cancellationObserved ? "cancellation_observed" : bookingObserved ? "booking_observed" : inquiryObserved ? "inquiry" : "unknown",
     orderReference,
     conversationReference: extractConversationReference(envelope.body),
