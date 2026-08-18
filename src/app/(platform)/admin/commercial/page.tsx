@@ -1,15 +1,19 @@
 import { redirect } from "next/navigation";
 import { ClinicActivationDesk } from "@/components/commercial/clinic-activation-desk";
-import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
 import { goDaddyClinicPlanCheckoutStatus } from "@/lib/commercial/payment-connectors/godaddy";
 import { listClinicPlanCheckouts } from "@/lib/commercial/clinic-provisioning";
+import { requirePlatformSalesWorkspace } from "@/lib/commercial/platform-sales-access";
 import { stripeRecurringSubscriptionStatus } from "@/lib/commercial/stripe-clinic-subscriptions";
 
 export default async function CommercialActivationPage() {
   const session = await requireClinicSession();
-  if (!can(session.role, "sales", "read")) redirect("/dashboard");
+  try {
+    await requirePlatformSalesWorkspace(session, "read");
+  } catch {
+    redirect("/dashboard");
+  }
 
   const [initialCheckouts, goDaddyStatus, stripeStatus] = await Promise.all([
     listClinicPlanCheckouts(session),
