@@ -17,6 +17,7 @@ function need(overrides: Partial<ExpertEngagementNeed> = {}): ExpertEngagementNe
     remoteAllowed: true,
     onsiteLocationKey: "brooklyn",
     requiredEvidenceKeys: ["quality-experience"],
+    requiredAgreementEvidenceKeys: ["approved-data-services-agreement"],
     requiredDataAccessClass: "limited_phi",
     urgency: "priority",
     maxPriceCents: 150000,
