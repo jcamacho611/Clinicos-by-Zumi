@@ -1,7 +1,7 @@
 # Klinikos Clinic Operating Analysis Sales Funnel
 
 Status: `CURRENT COMMERCIAL OPERATING GUIDE`
-Date: 2026-08-12
+Date: 2026-08-18
 
 This document describes the current clinic-entry sales funnel. It supersedes the old public `$750–$5,000 Operational Audit` ladder.
 
@@ -27,7 +27,7 @@ Server-owned definitions in `src/lib/commercial/klinikos-commercial.ts` are auth
 
 ## Funnel
 
-`Prospect → Decision maker → Qualify → Find pain → Quantify clinic-reported facts → Sell $500 Clinic Operating Analysis → Create server-owned checkout intent → External checkout → Verify/reconcile payment evidence → Perform analysis → Recommend next step → Blueprint / implementation / recurring relationship`
+`Prospect → Decision maker → Qualify → Find pain → Quantify clinic-reported facts → Sell $500 Clinic Operating Analysis → Create server-owned checkout intent when using integrated checkout → External checkout → Verify/reconcile payment evidence → Perform analysis → Recommend next step → Blueprint / implementation / recurring relationship`
 
 Do not skip directly from “checkout page opened” to “paid.”
 
@@ -54,7 +54,7 @@ The product is broader than an EHR, CRM, staffing marketplace, billing app, educ
 7. Ask about missed calls, no-shows, referrals, labs/results, claims/denials, intake, follow-up, staffing/capacity, patient communication, and other relevant workflows.
 8. Do not manipulate inputs to force qualification.
 9. When the clinic is a fit, sell the **$500 Clinic Operating Analysis** as a real paid engagement, not a fake “free consultation.”
-10. If the buyer is ready, use the current system checkout path rather than inventing a payment method or price.
+10. If the buyer is ready, use the current integrated Klinikos checkout path when available. If a direct shareable link is needed, use only the canonical `$500` Stripe manual-service Payment Link documented below.
 11. Do not promise Blueprint, Founding Clinic acceptance, production activation, integration availability, or a guaranteed implementation date before the applicable review.
 12. Do not promise savings or revenue the evidence does not support.
 
@@ -103,21 +103,58 @@ The disposition is not permission to bypass payment, security, clinical, credent
 
 ## Checkout and payment truth
 
-The current `$500` Clinic Operating Analysis flow:
+There are now two truthful `$500` Clinic Operating Analysis checkout modes.
 
-1. persists the clinic's selected commercial intent server-side;
-2. creates a server-owned checkout intent with the trusted amount;
-3. opens the configured GoDaddy paylink;
-4. waits for independent payment evidence or authorized manual reconciliation;
-5. activates the next paid state only after qualifying evidence.
+### A. Integrated Klinikos checkout — preferred
 
-A browser redirect/return is not payment proof.
+When the seller is working inside the authorized Klinikos sales workflow:
 
-The `$1,500`, `$8,000+`, and recurring plan values must not be routed through the `$500` paylink merely because that link is available. Exact-value checkout or human-scoped commercial handling is required for those offers.
+1. persist the qualified clinic and selected commercial intent server-side;
+2. create a server-owned commercial checkout intent with the trusted `$500` amount;
+3. use Stripe Checkout when the production Stripe key and signed-webhook secret are configured; otherwise the legacy GoDaddy manual connector remains a compatibility fallback;
+4. bind the Stripe Checkout Session to opaque Klinikos intent/state references and the exact server-owned amount;
+5. wait for signed processor evidence before applying a paid state;
+6. never infer payment from browser return or checkout launch.
+
+This is the strongest path because the buyer, amount, Checkout Session, PaymentIntent, and resulting Klinikos payment evidence can be correlated without relying on a salesperson's statement.
+
+### B. Canonical shareable Stripe Payment Link — manual-service fallback
+
+Use this only when a qualified buyer needs a simple direct link outside the integrated sales screen:
+
+`https://buy.stripe.com/eVqbIU3mX8xi8l30VK0co00`
+
+Current Stripe object truth as of 2026-08-18:
+
+- product: **Clinic Operating Analysis**;
+- price: **$500.00 USD one time**;
+- quantity: `1`;
+- payment link ID: `plink_1U5j9N2K2jlPN40H3JqCkpnr`;
+- product ID: `prod_V5uterKDCuv7FW`;
+- price ID: `price_1U5j3h2K2jlPN40HwHWpxGr6`;
+- live mode: `true`;
+- promotion codes: off;
+- clinic / organization name: required;
+- tagged `klinikos_sale_mode=manual_service`.
+
+This Payment Link collects **real Stripe money for a manually fulfilled service**. It deliberately does **not** create or unlock a Klinikos software entitlement. Signed webhook events carrying the manual-service tag are acknowledged but excluded from the automatic entitlement/payment-evidence rail. Staff must reconcile the purchase against Stripe before beginning the paid analysis.
+
+The manual link is therefore a revenue fallback, not a shortcut around commercial truth.
+
+### Universal payment rules
+
+- `REDIRECT != PAYMENT`.
+- `PAYMENT != SOFTWARE ENTITLEMENT` unless the applicable entitlement rule is independently satisfied.
+- Do not alter the `$500` amount or promise a different deliverable while using the `$500` link.
+- Do not route the `$1,500` Blueprint, `$8,000+` implementation, or recurring plans through the `$500` link.
+- Refunds, disputes, tax treatment, and later commercial credits must be handled against the actual processor/customer record and current contract terms.
+- Stripe Automatic Tax is not enabled on the current manual Payment Link. Do not make tax-treatment claims; obtain the appropriate accounting/tax determination as the business expands.
 
 ## Credit-forward rule
 
 Use the exact server-owned commercial language. Current public anchors include credit-forward terms for the Clinic Operating Analysis and Implementation Blueprint when the clinic proceeds within the applicable 30-day window and qualifying implementation conditions.
+
+For the current Clinic Operating Analysis, the customer-facing Stripe confirmation states that the `$500` analysis fee is credited in full if the clinic proceeds with an Implementation Blueprint or qualifying implementation within 30 days.
 
 Do not invent a credit rule that differs from current code/contract terms.
 
@@ -147,8 +184,11 @@ The repo already contains substantial infrastructure that older versions of this
 
 - persisted sales reservation/intake state;
 - server-owned commercial pricing and checkout intents;
+- signed live Stripe webhook verification and supported payment/refund event normalization;
 - payment-evidence and entitlement separation;
-- GoDaddy `$500` checkout launch;
+- integrated Stripe Checkout when production Stripe verification is configured;
+- legacy GoDaddy compatibility fallback when integrated Stripe verification is unavailable;
+- canonical live `$500` Stripe manual-service Payment Link with explicit no-entitlement guard;
 - role/tenant controls around sales data;
 - commercial activation/provisioning architecture;
 - audit/event records;
@@ -156,6 +196,12 @@ The repo already contains substantial infrastructure that older versions of this
 - DB-backed commercial and activation journeys.
 
 Do not re-plan these as if they do not exist. Inspect the current implementation and improve the smallest remaining gap.
+
+## Current external verification boundary
+
+The live Stripe account and manual Payment Link have been verified through Stripe itself. Production application deployment remains a separate fact. The repository exposes non-secret release identity through `/api/health`, but do not claim a particular merge is live on Render until the public production endpoint or deployment system proves the exact deployed commit.
+
+GitHub Actions runner failures that occur before checkout/step 1 are infrastructure failures, not passing test evidence. Never describe such a run as CI-green.
 
 ## Next sales-system priorities
 
@@ -168,7 +214,8 @@ Prioritize work that increases truthful conversion and handoff quality:
 5. connect CRM/email/voice only under reviewed provider/privacy terms;
 6. measure source → qualification → paid analysis → blueprint → implementation → recurring conversion;
 7. capture real customer evidence and case studies without fabricating ROI;
-8. keep variable vendor/API cost visible so margins are based on measured economics.
+8. keep variable vendor/API cost visible so margins are based on measured economics;
+9. decide tax treatment with qualified accounting/tax guidance before enabling automated multi-jurisdiction collection assumptions.
 
 ## One-sentence sales principle
 
