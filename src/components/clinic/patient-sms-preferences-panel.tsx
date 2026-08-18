@@ -26,16 +26,14 @@ type SmsState = {
     permissions?: Partial<Record<"transactional" | "operational" | "marketing" | "clinical", PermissionEvidence>>;
   };
 };
-type ConsentSource = "patient_verbal" | "patient_written" | "staff_documented";
+type ConsentSource = "patient_verbal" | "staff_documented";
 
 const classes: MessageClass[] = ["transactional", "operational", "marketing"];
-const evidencePattern = /^(consent|form|document|portal|call|audit):[A-Za-z0-9._/-]{1,140}$/;
 const focusClass = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2";
-
 const classMeta: Record<MessageClass, { label: string; description: string }> = {
-  transactional: { label: "Transactional", description: "A specific non-clinical transaction or account event." },
+  transactional: { label: "Transactional", description: "A specific non-clinical transaction or secure-account event." },
   operational: { label: "Operational", description: "Office logistics and secure-account notices that contain no clinical detail." },
-  marketing: { label: "Marketing", description: "Promotional outreach. A grant requires written authorization and is never inferred from operational permission." },
+  marketing: { label: "Marketing", description: "Promotional outreach. Klinikos does not currently expose a staff grant or production send path for this class." },
 };
 
 function statusTone(status: PermissionStatus) {
@@ -60,17 +58,13 @@ function PermissionRow({
   evidence?: PermissionEvidence;
   canUpdate: boolean;
   disabled: boolean;
-  onSave: (messageClass: MessageClass, status: Exclude<PermissionStatus, "unknown">, source: ConsentSource, evidenceReference?: string) => Promise<void>;
+  onSave: (messageClass: MessageClass, status: Exclude<PermissionStatus, "unknown">, source: ConsentSource) => Promise<void>;
 }) {
-  const [source, setSource] = useState<ConsentSource>(messageClass === "marketing" ? "patient_written" : "patient_verbal");
-  const [evidenceReference, setEvidenceReference] = useState("");
+  const [source, setSource] = useState<ConsentSource>("patient_verbal");
   const status = evidence?.status ?? "unknown";
   const meta = classMeta[messageClass];
-  const hasReference = evidencePattern.test(evidenceReference.trim());
-  const writtenNeedsEvidence = source === "patient_written" && !hasReference;
-  const grantBlocked = disabled || source === "staff_documented" || writtenNeedsEvidence || (messageClass === "marketing" && source !== "patient_written");
-  const otherActionBlocked = disabled || writtenNeedsEvidence;
-  const evidenceHelpId = `sms-${messageClass}-evidence-help`;
+  const marketing = messageClass === "marketing";
+  const grantBlocked = disabled || marketing || source !== "patient_verbal";
 
   return (
     <section aria-labelledby={`sms-${messageClass}-heading`} className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -83,17 +77,17 @@ function PermissionRow({
           <p className="mt-1 text-xs leading-5 text-slate-600">{meta.description}</p>
           {evidence ? (
             <p className="mt-2 text-xs leading-5 text-slate-500">
-              Source: {pretty(evidence.source)} · {new Date(evidence.capturedAt).toLocaleString()}
-              {evidence.evidenceReference ? ` · Evidence: ${evidence.evidenceReference}` : ""}
+              Recorded source: {pretty(evidence.source)} · {new Date(evidence.capturedAt).toLocaleString()}
+              {evidence.evidenceReference ? " · Historical evidence reference present" : ""}
             </p>
           ) : null}
         </div>
       </div>
 
       {canUpdate ? (
-        <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 lg:grid-cols-[190px_1fr_auto] lg:items-end">
+        <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 lg:grid-cols-[260px_auto] lg:items-end">
           <label className="space-y-1.5 text-xs font-bold text-slate-700">
-            Evidence source
+            Capture basis
             <select
               className={`h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 ${focusClass}`}
               disabled={disabled}
@@ -101,33 +95,19 @@ function PermissionRow({
               value={source}
             >
               <option value="patient_verbal">Patient verbal authorization</option>
-              <option value="patient_written">Patient written authorization</option>
               <option value="staff_documented">Staff documentation only</option>
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-bold text-slate-700">
-            Evidence reference
-            <input
-              aria-describedby={evidenceHelpId}
-              className={`h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 placeholder:text-slate-500 disabled:bg-slate-50 ${focusClass}`}
-              disabled={disabled}
-              maxLength={160}
-              onChange={(event) => setEvidenceReference(event.target.value)}
-              placeholder="Example: consent:abc123"
-              value={evidenceReference}
-            />
-            <span className="block text-xs font-normal leading-5 text-slate-500" id={evidenceHelpId}>Use an opaque internal reference only. Do not type patient names, diagnoses, message content, or other PHI here.</span>
-          </label>
           <div aria-label={`${meta.label} SMS permission actions`} className="flex flex-wrap gap-2" role="group">
-            <Button aria-label={`Grant ${meta.label} SMS permission`} disabled={grantBlocked} onClick={() => onSave(messageClass, "granted", source, evidenceReference.trim() || undefined)} size="sm" type="button" variant="primary"><Check className="size-4" /> Grant</Button>
-            <Button aria-label={`Deny ${meta.label} SMS permission`} disabled={otherActionBlocked} onClick={() => onSave(messageClass, "denied", source, evidenceReference.trim() || undefined)} size="sm" type="button" variant="secondary"><X className="size-4" /> Deny</Button>
-            <Button aria-label={`Revoke ${meta.label} SMS permission`} disabled={otherActionBlocked} onClick={() => onSave(messageClass, "revoked", source, evidenceReference.trim() || undefined)} size="sm" type="button" variant="secondary">Revoke</Button>
+            <Button aria-label={`Grant ${meta.label} SMS permission`} disabled={grantBlocked} onClick={() => onSave(messageClass, "granted", source)} size="sm" type="button" variant="primary"><Check aria-hidden="true" className="size-4" /> Grant</Button>
+            <Button aria-label={`Deny ${meta.label} SMS permission`} disabled={disabled} onClick={() => onSave(messageClass, "denied", source)} size="sm" type="button" variant="secondary"><X aria-hidden="true" className="size-4" /> Deny</Button>
+            <Button aria-label={`Revoke ${meta.label} SMS permission`} disabled={disabled} onClick={() => onSave(messageClass, "revoked", source)} size="sm" type="button" variant="secondary">Revoke</Button>
           </div>
         </div>
       ) : null}
 
-      {canUpdate && source === "staff_documented" ? <p className="mt-3 text-xs leading-5 text-amber-800">Staff documentation can record denial or revocation, but it cannot create permission.</p> : null}
-      {canUpdate && messageClass === "marketing" ? <p className="mt-2 text-xs leading-5 text-slate-600">Marketing grant requires patient-written authorization plus an opaque evidence reference. Klinikos currently has no production marketing SMS template.</p> : null}
+      {canUpdate && source === "staff_documented" ? <p className="mt-3 text-xs leading-5 text-amber-900">Staff documentation may record denial or revocation, but it cannot create permission.</p> : null}
+      {canUpdate && marketing ? <p className="mt-2 text-xs leading-5 text-slate-700">Marketing grant is deliberately unavailable here. A dedicated patient-facing written communication-consent ceremony must exist before Klinikos can create marketing permission.</p> : null}
     </section>
   );
 }
@@ -162,7 +142,7 @@ export function PatientSmsPreferencesPanel({ patientId, canRead, canUpdate }: { 
   const verification = state?.sms.endpoint;
   const verificationMatchesCurrent = Boolean(state?.normalizedPhone && verification?.normalizedPhone && state.normalizedPhone === verification.normalizedPhone && verification.verifiedAt);
 
-  async function save(messageClass: MessageClass, status: Exclude<PermissionStatus, "unknown">, source: ConsentSource, evidenceReference?: string) {
+  async function save(messageClass: MessageClass, status: Exclude<PermissionStatus, "unknown">, source: ConsentSource) {
     setSaving(true);
     setError(null);
     setNotice(null);
@@ -170,7 +150,7 @@ export function PatientSmsPreferencesPanel({ patientId, canRead, canUpdate }: { 
       const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messageClass, status, source, evidenceReference }),
+        body: JSON.stringify({ messageClass, status, source }),
       });
       const payload = await response.json() as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not update SMS permission.");
@@ -190,11 +170,11 @@ export function PatientSmsPreferencesPanel({ patientId, canRead, canUpdate }: { 
       <div className="flex flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex items-center gap-2"><MessageSquareText aria-hidden="true" className="size-5 text-teal-700" /><h3 className="text-base font-extrabold text-slate-950">SMS permissions & suppression</h3></div>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Permission is recorded separately by message class. Phone verification proves possession only; it never creates consent. Clinical or PHI-bearing SMS remains blocked.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Permission is recorded separately by message class. Phone verification proves possession only and is independently required before a patient send. Clinical/PHI SMS and staff-created marketing permission remain blocked.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={suppressed ? "rose" : "slate"}>{suppressed ? "Recipient suppressed" : "No global suppression"}</Badge>
-          <Badge tone={verificationMatchesCurrent ? "teal" : "slate"}>{verificationMatchesCurrent ? "Phone verified" : "Phone not verified"}</Badge>
+          <Badge tone={verificationMatchesCurrent ? "teal" : "slate"}>{verificationMatchesCurrent ? "Current phone verified" : "Current phone not verified"}</Badge>
         </div>
       </div>
 
@@ -211,7 +191,8 @@ export function PatientSmsPreferencesPanel({ patientId, canRead, canUpdate }: { 
               <div className={`rounded-xl p-4 ${suppressed ? "bg-rose-50" : "bg-slate-50"}`}><AlertTriangle aria-hidden="true" className={`size-5 ${suppressed ? "text-rose-700" : "text-slate-600"}`} /><p className="mt-2 text-xs font-extrabold uppercase tracking-[.08em] text-slate-500">Suppression</p><p className={`mt-1 text-sm font-bold ${suppressed ? "text-rose-950" : "text-slate-900"}`}>{suppressed ? `Since ${new Date(state.sms.suppressedAt ?? "").toLocaleString()}` : "Not suppressed"}</p></div>
             </div>
 
-            {suppressed ? <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-900"><strong>Recipient opt-out is authoritative.</strong> Staff cannot clear suppression from this chart. Consent evidence may still be documented accurately, but sends remain blocked until the recipient uses a provider-supported resume command such as START or UNSTOP.</div> : null}
+            {!verificationMatchesCurrent ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"><strong>Patient SMS remains blocked.</strong> The current phone needs a governed possession-verification ceremony. Staff cannot mark a phone verified from this panel.</div> : null}
+            {suppressed ? <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-900"><strong>Recipient opt-out is authoritative.</strong> Staff cannot clear suppression from this chart. Permission may still be documented accurately, but sends remain blocked until the recipient uses a provider-supported resume command such as START or UNSTOP.</div> : null}
 
             <div className="space-y-3">
               {classes.map((messageClass) => <PermissionRow canUpdate={canUpdate} disabled={saving} evidence={state.sms.permissions?.[messageClass]} key={messageClass} messageClass={messageClass} onSave={save} />)}
