@@ -41,11 +41,14 @@ describe("adversarial buyer and accessibility baseline", () => {
   const about = read("src/app/about/page.tsx");
   const renderBuild = read("scripts/render-build.mjs");
 
-  it("provides a global keyboard bypass target and visible focus treatment", () => {
+  it("provides a global keyboard bypass target and visible focus treatment loaded after theme CSS", () => {
     expect(layout).toContain('href="#klinikos-page-content"');
     expect(layout).toContain('id="klinikos-page-content"');
     expect(layout).toContain('className="klinikos-skip-link"');
-    expect(layout).toContain('import "./accessibility.css"');
+    const convergenceImport = layout.indexOf('import "./experience-convergence.css"');
+    const accessibilityImport = layout.indexOf('import "./accessibility.css"');
+    expect(convergenceImport).toBeGreaterThan(0);
+    expect(accessibilityImport).toBeGreaterThan(convergenceImport);
     expect(accessibility).toContain(":focus-visible");
     expect(accessibility).toContain("outline: 3px solid");
     expect(accessibility).toContain("forced-colors: active");
@@ -58,10 +61,12 @@ describe("adversarial buyer and accessibility baseline", () => {
     expect(accessibility).toContain("scroll-behavior: auto");
   });
 
-  it("keeps key small public rose text at or above the normal-text contrast floor", () => {
+  it("keeps key small public rose text and placeholders at or above the normal-text contrast floor", () => {
     for (const color of ["#9a817c", "#8f7773", "#ad928d", "#b99a95"]) {
       expect(contrast(color, "#050303")).toBeGreaterThanOrEqual(4.5);
     }
+    expect(accessibility).toContain("#zumi-presence-panel");
+    expect(accessibility).toContain("color: #9a817c !important");
     expect(home).not.toContain("#806f6c");
     expect(home).not.toContain("#5d4b49");
     expect(bridge).not.toContain("#806965");
