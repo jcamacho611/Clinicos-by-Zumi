@@ -11,6 +11,7 @@ import {
   type DemoOfferKey,
   type SalesPainPoint,
 } from "@/lib/sales-demo-rules";
+import type { PaidAnalysisHandoff } from "@/lib/sales/intake-handoff";
 import { StatusPill } from "@/components/sales/status-pill";
 
 const inputClass = "h-12 w-full rounded-xl border border-white/10 bg-white/[.045] px-3.5 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-[#e6817b]/50 focus:bg-white/[.07] focus:ring-4 focus:ring-[#e6817b]/[.06]";
@@ -53,20 +54,21 @@ type SubmissionState = {
   checkoutNotice: string;
 };
 
-function initialState(): IntakeState {
+function initialState(initialContext?: PaidAnalysisHandoff): IntakeState {
+  const carriedPainPoints = initialContext?.painPoints.length ? initialContext.painPoints : ["follow_ups" as SalesPainPoint];
   return {
     clinicName: "",
     contactName: "",
     contactRole: "",
     contactEmail: "",
     contactPhone: "",
-    clinicType: "Primary care",
+    clinicType: initialContext?.clinicType ?? "Primary care",
     providerCount: 1,
     locationCount: 1,
     currentSystems: { ehr: "", scheduling: "", billing: "", crm: "", patientMessaging: "" },
     estimatedSoftwareSpendDollars: 0,
-    biggestPainPoint: "follow_ups",
-    painPoints: ["follow_ups"],
+    biggestPainPoint: initialContext?.biggestPainPoint ?? carriedPainPoints[0],
+    painPoints: carriedPainPoints,
     selectedOffer: ANALYSIS_OFFER_KEY,
     wantsFreeIntro: false,
     wantsPaidDemo: true,
@@ -77,8 +79,8 @@ function initialState(): IntakeState {
   };
 }
 
-export function SalesIntakeForm({ analysisOffer }: { analysisOffer: PublicAnalysisOffer }) {
-  const [form, setForm] = useState<IntakeState>(initialState);
+export function SalesIntakeForm({ analysisOffer, initialContext }: { analysisOffer: PublicAnalysisOffer; initialContext?: PaidAnalysisHandoff }) {
+  const [form, setForm] = useState<IntakeState>(() => initialState(initialContext));
   const [submission, setSubmission] = useState<SubmissionState | null>(null);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -174,6 +176,13 @@ export function SalesIntakeForm({ analysisOffer }: { analysisOffer: PublicAnalys
         </div>
 
         <div className="space-y-9 p-6 sm:p-8">
+          {initialContext?.summaryLabels.length ? (
+            <section className="rounded-2xl border border-[#e6817b]/18 bg-[#e6817b]/[.055] p-5">
+              <div className="flex items-start gap-3"><Sparkles className="mt-0.5 size-4 shrink-0 text-[#efaaa1]" /><div><p className="text-xs font-black text-[#ffe2de]">Carried from your operating map</p><p className="mt-1 text-[10px] leading-5 text-slate-500">Only matching clinic-type and bottleneck categories were carried forward. Review or change them below before submitting.</p></div></div>
+              <ul className="mt-4 flex flex-wrap gap-2">{initialContext.summaryLabels.map((label) => <li className="rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-[10px] font-bold text-slate-300" key={label}>{label}</li>)}</ul>
+            </section>
+          ) : null}
+
           <section>
             <p className="mb-4 text-[10px] font-black uppercase tracking-[.18em] text-slate-500">01 / Clinic profile</p>
             <div className="grid gap-4 sm:grid-cols-2">
