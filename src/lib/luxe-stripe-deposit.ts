@@ -22,6 +22,22 @@ function stringId(value: string | { id: string } | null) {
   return typeof value === "string" ? value : value?.id ?? null;
 }
 
+function expectedAmountFromMetadata(metadata: Stripe.Metadata | null | undefined) {
+  const expectedRaw = metadataValue(metadata, EXPECTED_AMOUNT_METADATA_KEY);
+  const expectedAmount = expectedRaw && /^\d+$/.test(expectedRaw) ? Number.parseInt(expectedRaw, 10) : null;
+  if (!expectedAmount || !Number.isSafeInteger(expectedAmount) || expectedAmount < MIN_DEPOSIT_CENTS || expectedAmount > MAX_DEPOSIT_CENTS) {
+    throw new Error("Luxe Stripe expected amount metadata is invalid.");
+  }
+  return expectedAmount;
+}
+
+function assertLuxeCorrelationMetadata(metadata: Stripe.Metadata | null | undefined) {
+  const journeyToken = metadataValue(metadata, JOURNEY_METADATA_KEY);
+  if (!journeyToken || journeyToken.length > 500) throw new Error("Luxe Stripe deposit correlation metadata is invalid.");
+  if (metadataValue(metadata, PAYMENT_KIND_METADATA_KEY) !== "deposit") throw new Error("Luxe Stripe payment kind is invalid.");
+  return { journeyToken, expectedAmount: expectedAmountFromMetadata(metadata) };
+}
+
 function configuredAmount(env: NodeJS.ProcessEnv) {
   const raw = env.LUXE_MEDI_STRIPE_DEPOSIT_CENTS?.trim();
   if (!raw || !/^\d+$/.test(raw)) return null;
@@ -72,8 +88,6 @@ export async function createLuxeStripeDepositCheckout(input: {
   const returnUrl = new URL(input.returnUrl);
   if (env.NODE_ENV === "production" && returnUrl.protocol !== "https:") throw new Error("Production Luxe deposit return URL must use HTTPS.");
 
-  // Keep this as a plain string map instead of coupling the application to a
-  // Stripe SDK metadata alias that can move between SDK major versions.
   const metadata: Record<string, string> = {
     [SALE_MODE_METADATA_KEY]: LUXE_STRIPE_SALE_MODE,
     [JOURNEY_METADATA_KEY]: input.journeyToken,
@@ -119,6 +133,17 @@ export type NormalizedLuxeStripeDeposit = {
   receivedAt: Date;
 };
 
+export type NormalizedLuxeStripeRefund = {
+  journeyToken: string;
+  eventId: string;
+  externalReference: string;
+  paymentExternalReference: string | null;
+  amountRefundedCents: number;
+  originalAmountCents: number;
+  currency: "USD";
+  receivedAt: Date;
+};
+
 export function isLuxeStripeDepositEvent(event: Stripe.Event) {
   if (![
     "checkout.session.completed",
@@ -129,20 +154,18 @@ export function isLuxeStripeDepositEvent(event: Stripe.Event) {
   return metadataValue(session.metadata, SALE_MODE_METADATA_KEY) === LUXE_STRIPE_SALE_MODE;
 }
 
+export function isLuxeStripeDepositRefundEvent(event: Stripe.Event) {
+  if (event.type !== "charge.refunded") return false;
+  const charge = event.data.object as Stripe.Charge;
+  return metadataValue(charge.metadata, SALE_MODE_METADATA_KEY) === LUXE_STRIPE_SALE_MODE;
+}
+
 export function normalizeVerifiedLuxeStripeDepositEvent(event: Stripe.Event): NormalizedLuxeStripeDeposit {
   if (!isLuxeStripeDepositEvent(event)) throw new Error("Stripe event is not a Luxe deposit event.");
   if (!event.livemode) throw new Error("Test-mode Stripe events cannot verify a live Luxe deposit.");
 
   const session = event.data.object as Stripe.Checkout.Session;
-  const journeyToken = metadataValue(session.metadata, JOURNEY_METADATA_KEY);
-  const expectedRaw = metadataValue(session.metadata, EXPECTED_AMOUNT_METADATA_KEY);
-  const paymentKind = metadataValue(session.metadata, PAYMENT_KIND_METADATA_KEY);
-  const expectedAmount = expectedRaw && /^\d+$/.test(expectedRaw) ? Number.parseInt(expectedRaw, 10) : null;
-  if (!journeyToken || journeyToken.length > 500) throw new Error("Luxe Stripe deposit correlation metadata is invalid.");
-  if (paymentKind !== "deposit") throw new Error("Luxe Stripe payment kind is invalid.");
-  if (!expectedAmount || !Number.isSafeInteger(expectedAmount) || expectedAmount < MIN_DEPOSIT_CENTS || expectedAmount > MAX_DEPOSIT_CENTS) {
-    throw new Error("Luxe Stripe expected amount metadata is invalid.");
-  }
+  const { journeyToken, expectedAmount } = assertLuxeCorrelationMetadata(session.metadata);
   if (session.amount_total !== expectedAmount) throw new Error("Stripe deposit amount does not match the server-owned checkout amount.");
   if (session.currency?.toLowerCase() !== "usd") throw new Error("Luxe Stripe deposits must settle in USD.");
 
@@ -162,6 +185,30 @@ export function normalizeVerifiedLuxeStripeDepositEvent(event: Stripe.Event): No
     externalCheckoutId: session.id,
     externalPaymentIntentId: paymentIntentId,
     amountCents: expectedAmount,
+    currency: "USD",
+    receivedAt: new Date(event.created * 1000),
+  };
+}
+
+export function normalizeVerifiedLuxeStripeRefundEvent(event: Stripe.Event): NormalizedLuxeStripeRefund {
+  if (!isLuxeStripeDepositRefundEvent(event)) throw new Error("Stripe event is not a Luxe deposit refund event.");
+  if (!event.livemode) throw new Error("Test-mode Stripe events cannot verify a live Luxe refund.");
+
+  const charge = event.data.object as Stripe.Charge;
+  const { journeyToken, expectedAmount } = assertLuxeCorrelationMetadata(charge.metadata);
+  if (charge.currency?.toLowerCase() !== "usd") throw new Error("Luxe Stripe refunds must settle in USD.");
+  if (charge.amount !== expectedAmount) throw new Error("Stripe charge amount does not match the server-owned Luxe deposit amount.");
+  if (!Number.isInteger(charge.amount_refunded) || charge.amount_refunded <= 0 || charge.amount_refunded > expectedAmount) {
+    throw new Error("Stripe refunded amount is invalid for this Luxe deposit.");
+  }
+
+  return {
+    journeyToken,
+    eventId: event.id,
+    externalReference: charge.id,
+    paymentExternalReference: stringId(charge.payment_intent),
+    amountRefundedCents: charge.amount_refunded,
+    originalAmountCents: expectedAmount,
     currency: "USD",
     receivedAt: new Date(event.created * 1000),
   };
