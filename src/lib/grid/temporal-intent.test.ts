@@ -3,33 +3,83 @@ import { parseGridTemporalIntent, resolveGridTemporalWindow, stripGridTemporalLa
 
 describe("Grid temporal intent", () => {
   it("structures a weekday and common workday range", () => {
-    expect(parseGridTemporalIntent("I need an RN Friday 9-5 in Brooklyn")).toMatchObject({ weekdays: [5], startTime: "09:00", endTime: "17:00", timeWasInferred: true, recurrence: null });
+    expect(parseGridTemporalIntent("I need an RN Friday 9-5 in Brooklyn")).toMatchObject({
+      weekdays: [5],
+      startTime: "09:00",
+      endTime: "17:00",
+      timeWasInferred: true,
+      recurrence: null,
+    });
   });
+
   it("preserves explicit meridiem without inference", () => {
-    expect(parseGridTemporalIntent("Need a treatment room Tuesday from 1pm to 6pm")).toMatchObject({ weekdays: [2], startTime: "13:00", endTime: "18:00", timeWasInferred: false });
+    expect(parseGridTemporalIntent("Need a treatment room Tuesday from 1pm to 6pm")).toMatchObject({
+      weekdays: [2],
+      startTime: "13:00",
+      endTime: "18:00",
+      timeWasInferred: false,
+    });
   });
+
   it("recognizes recurring weekday supply without pretending it is a booking", () => {
-    expect(parseGridTemporalIntent("I have a room every Monday from 8am to 4pm")).toMatchObject({ weekdays: [1], startTime: "08:00", endTime: "16:00", recurrence: "weekly" });
+    expect(parseGridTemporalIntent("I have a room every Monday from 8am to 4pm")).toMatchObject({
+      weekdays: [1],
+      startTime: "08:00",
+      endTime: "16:00",
+      recurrence: "weekly",
+    });
   });
+
   it("recognizes plural weekday language used for recurring availability", () => {
-    expect(parseGridTemporalIntent("I have treatment space Saturdays from 10am to 2pm")).toMatchObject({ weekdays: [6], startTime: "10:00", endTime: "14:00" });
+    expect(parseGridTemporalIntent("I have treatment space Saturdays from 10am to 2pm")).toMatchObject({
+      weekdays: [6],
+      startTime: "10:00",
+      endTime: "14:00",
+    });
     expect(stripGridTemporalLanguage("I have treatment space Saturdays from 10am to 2pm")).toBe("I have treatment space");
   });
+
   it("recognizes weekday and weekend groups", () => {
     expect(parseGridTemporalIntent("available weekdays 8am-4pm").weekdays).toEqual([1, 2, 3, 4, 5]);
     expect(parseGridTemporalIntent("available weekends 10am-2pm").weekdays).toEqual([0, 6]);
   });
+
   it("resolves tomorrow in the caller local calendar", () => {
     const reference = new Date(2026, 7, 18, 4, 0, 0);
-    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage tomorrow 9am-5pm"), reference)).toEqual({ startsAt: "2026-08-19T09:00", endsAt: "2026-08-19T17:00" });
+    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage tomorrow 9am-5pm"), reference)).toEqual({
+      startsAt: "2026-08-19T09:00",
+      endsAt: "2026-08-19T17:00",
+    });
   });
+
   it("resolves the next named weekday without inventing a date at parse time", () => {
     const reference = new Date(2026, 7, 18, 4, 0, 0);
-    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage Friday 9am-5pm"), reference)).toEqual({ startsAt: "2026-08-21T09:00", endsAt: "2026-08-21T17:00" });
+    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage Friday 9am-5pm"), reference)).toEqual({
+      startsAt: "2026-08-21T09:00",
+      endsAt: "2026-08-21T17:00",
+    });
   });
+
+  it("rolls a named weekday to next week when today's requested time already passed", () => {
+    const reference = new Date(2026, 7, 18, 18, 0, 0); // Tuesday 6pm
+    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage Tuesday 9am-5pm"), reference)).toEqual({
+      startsAt: "2026-08-25T09:00",
+      endsAt: "2026-08-25T17:00",
+    });
+  });
+
+  it("does not invent a calendar date when the user gave only a clock time", () => {
+    const reference = new Date(2026, 7, 18, 18, 0, 0);
+    expect(resolveGridTemporalWindow(parseGridTemporalIntent("Need coverage at 9am"), reference)).toEqual({
+      startsAt: "",
+      endsAt: "",
+    });
+  });
+
   it("removes temporal language from marketplace text search", () => {
     expect(stripGridTemporalLanguage("I need an RN Friday 9-5 in Brooklyn")).toBe("I need an RN in Brooklyn");
   });
+
   it("does not invent a time when the request only names a day", () => {
     expect(parseGridTemporalIntent("I need an RN Friday")).toMatchObject({ weekdays: [5], startTime: null, endTime: null });
   });
