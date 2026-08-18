@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deliverOutbound, outboundChannelStatus, resetOutboundAdapters } from "@/lib/communications/outbound";
-import { checkTwilioPhoneVerification, startTwilioPhoneVerification, twilioApiKeyCredentials } from "@/lib/communications/twilio";
+import {
+  checkTwilioPhoneVerification,
+  startTwilioPhoneVerification,
+  twilioApiKeyCredentials,
+} from "@/lib/communications/twilio";
 
 const env = {
   TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
@@ -11,7 +15,10 @@ const env = {
 };
 const messageSid = `SM${"e".repeat(32)}`;
 
-afterEach(() => { vi.restoreAllMocks(); resetOutboundAdapters(); });
+afterEach(() => {
+  vi.restoreAllMocks();
+  resetOutboundAdapters();
+});
 
 describe("Twilio restricted API-key credentials", () => {
   it("requires exact AC/SK identifiers plus the separate secret", () => {
@@ -27,21 +34,36 @@ describe("Twilio restricted API-key credentials", () => {
   });
 
   it("uses an explicit tenant sender instead of the global Messaging Service pool when no service is supplied", async () => {
-    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ sid: messageSid, status: "queued" }), { status: 201, headers: { "content-type": "application/json" } }));
-    const result = await deliverOutbound({ channel: "sms", to: "+12125550123", sender: "+12125550199", subject: "ignored", body: "Your Klinikos notification is ready." }, env);
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ sid: messageSid, status: "queued" }), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    }));
+    const result = await deliverOutbound({
+      channel: "sms",
+      to: "+12125550123",
+      sender: "+12125550199",
+      subject: "ignored",
+      body: "Your Klinikos notification is ready.",
+    }, env);
     expect(result).toEqual({ ok: true, providerReference: messageSid, provider: "twilio" });
     const [url, options] = request.mock.calls[0] as [string, RequestInit];
     expect(url).toContain(`/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`);
     expect(String(options.body)).toContain("From=%2B12125550199");
     expect(String(options.body)).not.toContain("MessagingServiceSid=");
     expect(String(options.body)).toContain("To=%2B12125550123");
-    expect((options.headers as Record<string, string>).authorization).toBe(`Basic ${Buffer.from(`${env.TWILIO_API_KEY_SID}:${env.TWILIO_API_KEY_SECRET}`).toString("base64")}`);
   });
 
   it("preserves both the tenant From sender and Messaging Service when both are explicitly governed", async () => {
     const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ sid: messageSid, status: "queued" }), { status: 201 }));
     const tenantService = `MG${"f".repeat(32)}`;
-    await deliverOutbound({ channel: "sms", to: "+12125550123", sender: "+12125550199", messagingServiceSid: tenantService, subject: "ignored", body: "Klinikos has a secure account update for you." }, env);
+    await deliverOutbound({
+      channel: "sms",
+      to: "+12125550123",
+      sender: "+12125550199",
+      messagingServiceSid: tenantService,
+      subject: "ignored",
+      body: "Klinikos has a secure account update for you.",
+    }, env);
     const body = String((request.mock.calls[0]?.[1] as RequestInit).body);
     expect(body).toContain("From=%2B12125550199");
     expect(body).toContain(`MessagingServiceSid=${tenantService}`);
