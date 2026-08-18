@@ -68,8 +68,20 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
   );
 }
 
-export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: MarketplaceListing[]; initialQuery?: string }) {
-  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({ ...emptyMarketplaceFilters, q: initialQuery }));
+export function MarketplaceBrowser({
+  listings,
+  initialQuery = "",
+  initialWeekdays = [],
+}: {
+  listings: MarketplaceListing[];
+  initialQuery?: string;
+  initialWeekdays?: number[];
+}) {
+  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({
+    ...emptyMarketplaceFilters,
+    q: initialQuery,
+    weekdays: [...new Set(initialWeekdays.filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))],
+  }));
   const [showFilters, setShowFilters] = useState(false);
 
   const results = useMemo(() => applyMarketplaceFilters(listings, filters), [listings, filters]);
@@ -83,6 +95,10 @@ export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: 
   function toggleIn<T>(key: keyof MarketplaceFilters, list: T[], value: T) {
     const next = list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
     setFilters((current) => ({ ...current, [key]: next }));
+  }
+
+  function clearFilters() {
+    setFilters({ ...emptyMarketplaceFilters });
   }
 
   return (
@@ -116,7 +132,7 @@ export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: 
             <button className={`${marketplaceSurfaces.chip} ${filters.verifiedOnly ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} onClick={() => update("verifiedOnly", !filters.verifiedOnly)} type="button" aria-pressed={filters.verifiedOnly}>Verified only</button>
             <button className={`${marketplaceSurfaces.chip} ${filters.onCallOnly ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} onClick={() => update("onCallOnly", !filters.onCallOnly)} type="button" aria-pressed={filters.onCallOnly}>Available now</button>
             {facets.settings.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.settings.includes(facet.value)} className={`${marketplaceSurfaces.chip} ${filters.settings.includes(facet.value) ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => toggleIn("settings", filters.settings, facet.value)} type="button">{settingLabel(facet.value)} <span className="text-[#5b6675]">({facet.count})</span></button>)}
-            {activeCount > 0 && <button className={`${marketplaceSurfaces.chip} ${marketplaceSurfaces.chipIdle} flex items-center gap-1.5`} onClick={() => setFilters(emptyMarketplaceFilters)} type="button"><X aria-hidden="true" className="size-3.5" /> Clear all</button>}
+            {activeCount > 0 && <button className={`${marketplaceSurfaces.chip} ${marketplaceSurfaces.chipIdle} flex items-center gap-1.5`} onClick={clearFilters} type="button"><X aria-hidden="true" className="size-3.5" /> Clear all</button>}
           </div>
 
           {showFilters && (
@@ -131,7 +147,7 @@ export function MarketplaceBrowser({ listings, initialQuery = "" }: { listings: 
 
       <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8">
         <p aria-live="polite" className="text-[13px] font-semibold text-[#5b6675]">{results.length} {results.length === 1 ? "listing" : "listings"}{activeCount > 0 ? " matching your filters" : " available"}</p>
-        {results.length ? <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{results.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</ul> : <div className="mt-5 border border-dashed border-[#cdd3dc] bg-white px-6 py-16 text-center"><p className="text-sm font-extrabold text-[#0b1220]">{listings.length === 0 ? "Nothing is published in this lane yet" : "Nothing matches those filters"}</p><p className="mx-auto mt-2 max-w-md text-[13px] leading-6 text-[#5b6675]">{listings.length === 0 ? "Grid surfaces inventory only after the underlying participant or resource is ready to be published." : "Try clearing a filter, widening the days, or changing your Grid goal."}</p>{activeCount > 0 && <button className={`${marketplaceSurfaces.chip} ${marketplaceSurfaces.chipIdle} mt-5 inline-flex`} onClick={() => setFilters(emptyMarketplaceFilters)} type="button">Clear all filters</button>}</div>}
+        {results.length ? <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{results.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</ul> : <div className="mt-5 border border-dashed border-[#cdd3dc] bg-white px-6 py-16 text-center"><p className="text-sm font-extrabold text-[#0b1220]">{listings.length === 0 ? "Nothing is published in this lane yet" : "Nothing matches those filters"}</p><p className="mx-auto mt-2 max-w-md text-[13px] leading-6 text-[#5b6675]">{listings.length === 0 ? "Grid surfaces inventory only after the underlying participant or resource is ready to be published." : "Try clearing a filter, widening the days, or changing your Grid goal."}</p>{activeCount > 0 && <button className={`${marketplaceSurfaces.chip} ${marketplaceSurfaces.chipIdle} mt-5 inline-flex`} onClick={clearFilters} type="button">Clear all filters</button>}</div>}
       </div>
     </>
   );
