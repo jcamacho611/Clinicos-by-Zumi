@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PatientChart } from "@/components/clinic/patient-chart";
+import { PatientSmsPreferencesPanel } from "@/components/clinic/patient-sms-preferences-panel";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession, requireClinicSession } from "@/lib/auth/session";
 import { listEncountersForPatient } from "@/lib/repositories/encounter-repository";
@@ -36,5 +37,26 @@ export default async function PatientPage({ params }: { params: Promise<{ patien
     listMedicationHistoryForPatient(session.organizationId, patientId),
   ]);
   if (!patient) notFound();
-  return <PatientChart consents={consents} documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }} documents={documents} encounters={encounters} formSubmissions={formSubmissions} imagingResults={imagingResults} labResults={labResults} medicationHistory={medicationHistory} medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }} patient={patient} />;
+
+  return (
+    <>
+      <PatientChart
+        consents={consents}
+        documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }}
+        documents={documents}
+        encounters={encounters}
+        formSubmissions={formSubmissions}
+        imagingResults={imagingResults}
+        labResults={labResults}
+        medicationHistory={medicationHistory}
+        medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }}
+        patient={patient}
+      />
+      <PatientSmsPreferencesPanel
+        canRead={can(session.role, "consents", "read")}
+        canUpdate={can(session.role, "consents", "update")}
+        patientId={patient.id}
+      />
+    </>
+  );
 }
