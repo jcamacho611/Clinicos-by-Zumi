@@ -1,6 +1,6 @@
 # KLINIKOS — EDU CANON
 
-Version: `2026-08-18.1`
+Version: `2026-08-18.2`
 Status: `AUTHORITATIVE SPECIALIST CANON`
 
 ## 1. Definition
@@ -71,6 +71,10 @@ Native certificate evidence is intentionally narrow:
 Every certificate carries server-owned language stating that the evidence is not professional licensure, board certification, clinical credentialing, authorization to practice, scope-of-practice approval, clinical privileges, employment eligibility, or automatic Klinikos Grid eligibility.
 
 Students may read only evidence in their own EDU identity scope. Instructors may issue only within cohorts they teach. EDU administrators may issue institution-wide and are the only current role allowed to revoke certificate evidence. Revocation preserves the record and reason rather than deleting history.
+
+Certificate mutations require the EDU institution to be linked to an active host Klinikos organization so the append-only audit record belongs to the institution's host tenant rather than whichever clinic context the actor happened to enter from. Issue and revoke operations are serialized at the database row level; duplicate detection, evidence validation, certificate creation/revocation, and audit creation occur inside the same transaction.
+
+Competency-evidence scope is preserved in issuance audit metadata and projected back with the certificate. A same-title certificate covering a different set of competency areas is therefore different evidence, not an idempotent duplicate.
 
 ## 8. Current truth
 
