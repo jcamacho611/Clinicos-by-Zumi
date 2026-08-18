@@ -113,12 +113,6 @@ export function ZumiPresence({ userName }: { userName: string }) {
     try {
       const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
       const highContrast = window.matchMedia?.("(prefers-contrast: more)").matches ?? false;
-      // Cloudflare/self-hosted adapters do not have provider-native response IDs. For
-      // ordinary conversation/command/brief turns, carry a small recent-turn context
-      // through the existing governed context/redaction boundary so follow-ups remain
-      // coherent without creating a second AI authority. Research mode intentionally
-      // leaves operational context empty so the gateway may use its separated public-
-      // web research path.
       const recentConversation = mode === "research"
         ? undefined
         : messages.slice(-8).map((message) => ({ role: message.role, text: message.text.slice(0, 3000) }));
@@ -278,7 +272,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
           aria-controls="zumi-presence-panel"
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={open ? "Close Zumi" : "Open Zumi. Keyboard shortcut Control or Command J"}
+          aria-label={open ? "Hide Zumi chat" : "Focus Zumi chat. Keyboard shortcut Control or Command J"}
           className="fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full border border-[#e6817b]/35 bg-[#16090c] text-[#f0a39c] shadow-[0_16px_50px_rgba(0,0,0,.42)] transition hover:scale-[1.03] hover:border-[#efaaa1]/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] motion-reduce:transform-none"
           onClick={() => setOpen((value) => !value)}
           type="button"
@@ -308,12 +302,12 @@ export function ZumiPresence({ userName }: { userName: string }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-extrabold tracking-[-.02em]">Zumi</p>
-              <p className="truncate text-[10px] text-[#b89f9b]">Klinikos Intelligence · {userName}</p>
+              <p className="truncate text-[10px] text-[#b89f9b]">With you across Klinikos · {userName}</p>
             </div>
             <span className="hidden items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.14em] text-[#d6b787] md:inline-flex"><ShieldCheck className="size-3.5" /> Governed</span>
             <button aria-label="Start a new Zumi conversation" className="grid size-8 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" onClick={startNewConversation} title="New conversation" type="button"><Plus className="size-4" /></button>
-            {!dedicatedPage && <button aria-label="Open full Zumi conversation" className="grid size-8 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" onClick={() => router.push("/zumi")} title="Open full conversation" type="button"><Maximize2 className="size-4" /></button>}
-            <button aria-label={dedicatedPage ? "Return to dashboard" : "Close Zumi"} className="grid size-8 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" onClick={closeSurface} type="button"><X className="size-4" /></button>
+            {!dedicatedPage && <button aria-label="Expand Zumi conversation" className="grid size-8 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" onClick={() => router.push("/zumi")} title="Expand conversation" type="button"><Maximize2 className="size-4" /></button>}
+            <button aria-label={dedicatedPage ? "Return to dashboard" : "Hide Zumi chat"} className="grid size-8 place-items-center rounded-lg text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" onClick={closeSurface} type="button"><X className="size-4" /></button>
           </header>
 
           <div className="flex gap-1 overflow-x-auto border-b border-[#e6817b]/10 bg-[#0d0608] px-3 py-2 sm:px-5" role="tablist" aria-label="Zumi interaction mode">
@@ -349,13 +343,13 @@ export function ZumiPresence({ userName }: { userName: string }) {
             <div className={cn("mx-auto space-y-5 px-4 py-6", dedicatedPage ? "max-w-[900px] sm:px-8 sm:py-10" : "max-w-full")}>
               {messages.length === 0 && (
                 <div className={cn("mx-auto border-y border-[#e6817b]/12 py-8", dedicatedPage && "max-w-2xl py-14 text-center")}>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Klinikos Intelligence</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Zumi</p>
                   <h2 className={cn("mt-4 font-light tracking-[-.04em] text-[#fff8f6]", dedicatedPage ? "text-3xl sm:text-4xl" : "text-xl")}>What needs to happen?</h2>
-                  <p className="mx-auto mt-4 max-w-xl text-[12px] leading-6 text-[#b89f9b]">Talk naturally. Zumi can understand the current Klinikos surface, explain state, research when permitted, prepare governed work, and compare suggestions with deterministic Klinikos paths before anything consequential happens.</p>
+                  <p className="mx-auto mt-4 max-w-xl text-[12px] leading-6 text-[#b89f9b]">Talk naturally. Zumi stays aware of the current Klinikos surface, explains state, researches when permitted, and prepares governed work without making you leave the workflow you are in.</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
                     {["What needs my attention today?", "Find the next best action", "Explain what is blocked"].map((prompt) => <button className="rounded-full border border-[#e6817b]/14 bg-[#12090b]/75 px-3 py-2 text-[10px] font-semibold text-[#d8c1bd] hover:border-[#e6817b]/30 hover:text-[#fff8f6]" key={prompt} onClick={() => void sendQuestion(prompt)} type="button">{prompt}</button>)}
                   </div>
-                  <p className="mt-6 text-[9px] font-bold uppercase tracking-[.12em] text-[#806965]">Ctrl/Cmd + J summons Zumi anywhere in the authenticated workspace</p>
+                  <p className="mt-6 text-[9px] font-bold uppercase tracking-[.12em] text-[#806965]">Ctrl/Cmd + J focuses the conversation anywhere in Klinikos</p>
                 </div>
               )}
 

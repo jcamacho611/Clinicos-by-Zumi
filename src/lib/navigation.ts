@@ -3,7 +3,6 @@ export const navigation = [
     label: "Home",
     items: [
       { href: "/dashboard", label: "Home", icon: "LayoutDashboard", description: "Your daily overview, priorities, and shortcuts." },
-      { href: "/zumi", label: "Zumi", icon: "Sparkles", description: "Use the Klinikos Browser to understand state, resolve routes, and coordinate governed work." },
       { href: "/paths", label: "Routes", icon: "Route", description: "See governed journeys from current state to a desired healthcare outcome." },
       { href: "/ecosystem", label: "Ecosystem", icon: "Orbit", description: "See how EDU, Grid, Clinic OS, capacity, and Network compound across the healthcare lifecycle." },
       { href: "/front-desk", label: "Front desk", icon: "Headphones", description: "Appointments, arrivals, readiness, and patient requests." },
@@ -88,7 +87,7 @@ export const navigation = [
 
 export const workspaceMeta: Record<string, { title: string; eyebrow: string }> = {
   dashboard: { title: "Home", eyebrow: "Your Klinikos workspace" },
-  zumi: { title: "Klinikos Browser", eyebrow: "Klinikos Intelligence" },
+  zumi: { title: "Conversation", eyebrow: "Zumi" },
   paths: { title: "Routes", eyebrow: "Current state → desired state" },
   ecosystem: { title: "Ecosystem", eyebrow: "Healthcare lifecycle" },
   "front-desk": { title: "Front desk", eyebrow: "Today at a glance" },
