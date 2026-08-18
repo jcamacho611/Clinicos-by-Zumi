@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ds";
 import { ZumiCommandShell, ZumiBriefingPanel, MissionPhaseProgress } from "@/components/command/zumi-command-shell";
 import { ZumiInterview } from "@/components/command/zumi-interview";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 
 /**
  * Clinic Operating Analysis — a Klinikos commercial qualification experience
@@ -15,6 +16,8 @@ export const metadata = {
 };
 
 export default function ClinicOperatingAnalysisPage() {
+  const analysisOffer = clinicCommercialOffers.privateWorkflowReview;
+
   return (
     <ZumiCommandShell>
       <section aria-labelledby="mission-brief-heading" style={{ borderBottom: "var(--border-hair-dark)" }}>
@@ -37,16 +40,16 @@ export default function ClinicOperatingAnalysisPage() {
               <Link
                 href="#analysis"
                 className="inline-flex min-h-12 items-center justify-center gap-2 px-5 text-xs font-extrabold"
-                style={{ background: "var(--cyan-300)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}
+                style={{ background: "#e6817b", color: "#19090b", borderRadius: "var(--radius-sm)" }}
               >
                 Start Clinic Operating Analysis <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
               <Link
-                href="/founding-clinic"
+                href="/pricing"
                 className="inline-flex min-h-12 items-center justify-center px-5 text-xs font-extrabold"
                 style={{ color: "var(--text-primary)", border: "var(--border-hair-dark)", borderRadius: "var(--radius-sm)" }}
               >
-                View Founding Clinic Qualification
+                See current pricing
               </Link>
             </div>
           </div>
@@ -59,7 +62,7 @@ export default function ClinicOperatingAnalysisPage() {
       </section>
 
       <div id="analysis">
-        <ZumiInterview />
+        <ZumiInterview analysisOffer={{ name: analysisOffer.name, priceLabel: analysisOffer.priceLabel, creditForward: analysisOffer.creditForward }} />
       </div>
     </ZumiCommandShell>
   );
