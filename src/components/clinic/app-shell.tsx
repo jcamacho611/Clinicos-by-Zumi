@@ -222,7 +222,7 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
         <main className={cn("klinikos-workspace mx-auto w-full max-w-[1680px] text-[var(--k-text)]", expandedZumiConversation ? "px-4 py-4 sm:px-7 sm:py-7 lg:px-10 lg:py-10 xl:px-14 xl:py-14" : "px-4 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-14")}>{children}</main>
       </div>
 
-      {!expandedZumiConversation ? <ZumiPresence userName={session.name} /> : null}
+      <ZumiPresence userName={session.name} />
     </div>
   );
 }
