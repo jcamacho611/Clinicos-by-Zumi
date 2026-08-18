@@ -142,6 +142,34 @@ export async function recordLegalEvent({
   acceptanceId?: string;
   metadata?: Record<string, string | number | boolean | null>;
 }) {
+  return recordLegalEvidenceEvent({
+    session,
+    eventType,
+    documentKey: agreement.documentKey,
+    documentVersion: agreement.documentVersion,
+    documentSha256: agreementSha256(agreement),
+    acceptanceId,
+    metadata,
+  });
+}
+
+export async function recordLegalEvidenceEvent({
+  session,
+  eventType,
+  documentKey,
+  documentVersion,
+  documentSha256,
+  acceptanceId,
+  metadata = {},
+}: {
+  session: ClinicSession;
+  eventType: string;
+  documentKey: string;
+  documentVersion: string;
+  documentSha256: string;
+  acceptanceId?: string;
+  metadata?: Record<string, string | number | boolean | null>;
+}) {
   const id = randomUUID();
   await db.$executeRaw(Prisma.sql`
     INSERT INTO "legal_agreement_events" (
@@ -149,7 +177,7 @@ export async function recordLegalEvent({
       "documentKey", "documentVersion", "metadata"
     ) VALUES (
       ${id}, ${acceptanceId ?? null}, ${session.userId}, ${session.organizationId}, ${eventType},
-      ${agreement.documentKey}, ${agreement.documentVersion}, CAST(${JSON.stringify(metadata)} AS JSONB)
+      ${documentKey}, ${documentVersion}, CAST(${JSON.stringify(metadata)} AS JSONB)
     )
   `);
 
@@ -160,11 +188,11 @@ export async function recordLegalEvent({
       actorType: "user",
       action: eventType,
       resourceType: "legal_agreement",
-      resourceId: acceptanceId ?? `${agreement.documentKey}:${agreement.documentVersion}`,
+      resourceId: acceptanceId ?? `${documentKey}:${documentVersion}`,
       metadata: {
-        documentKey: agreement.documentKey,
-        documentVersion: agreement.documentVersion,
-        documentSha256: agreementSha256(agreement),
+        documentKey,
+        documentVersion,
+        documentSha256,
         ...metadata,
       },
     },
@@ -221,7 +249,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
         ${input.signedAt}, ${input.signedAt}, ${input.ipAddress ?? null}, ${input.userAgent ?? null},
         'authenticated-legal-gate', ${input.session.userId}, ${input.session.organizationId}, ${input.legalName},
         ${input.signerTitle ?? null}, ${input.signerCapacity}, ${input.signerCountry}, ${input.signerRegion ?? null},
-        'typed', ${input.signatureText}, ${input.authorityConfirmed}, ${input.signedAt}, ${input.presentedAt},
+        'typed', NULL, ${input.authorityConfirmed}, ${input.signedAt}, ${input.presentedAt},
         ${input.presentedAt}, ${input.reachedEndAt}, ${input.signedAt}, ${input.signedAt}, ${sha256}, ${snapshot},
         CAST(${JSON.stringify(input.acknowledgments)} AS JSONB), ${input.session.sessionId}, ${input.idempotencyKey},
         ${input.sourceRoute ?? null}, 'active'
