@@ -21,7 +21,7 @@ function json(value: unknown) {
 }
 
 type EditableSmsMessageClass = Exclude<SmsMessageClass, "clinical">;
-type StaffConsentSource = "patient_verbal" | "patient_written" | "staff_documented";
+type StaffConsentSource = "patient_verbal" | "staff_documented";
 
 async function patientForSms(organizationId: string, patientId: string) {
   return db.patient.findFirst({
@@ -68,11 +68,11 @@ export async function recordPatientSmsPermission(input: {
   status: Exclude<SmsPermissionStatus, "unknown">;
   source: StaffConsentSource;
   policyVersion?: string | null;
-  evidenceReference?: string | null;
 }) {
-  if (input.source === "patient_written" && !input.evidenceReference) return { ok: false as const, reason: "invalid_evidence" as const };
-  if (input.status === "granted" && input.source === "staff_documented") return { ok: false as const, reason: "invalid_evidence" as const };
-  if (input.messageClass === "marketing" && input.status === "granted" && (input.source !== "patient_written" || !input.evidenceReference)) {
+  if (input.status === "granted" && input.source !== "patient_verbal") {
+    return { ok: false as const, reason: "invalid_evidence" as const };
+  }
+  if (input.messageClass === "marketing" && input.status === "granted") {
     return { ok: false as const, reason: "invalid_evidence" as const };
   }
 
@@ -86,7 +86,7 @@ export async function recordPatientSmsPermission(input: {
     source: input.source,
     actorId: input.actorId ?? null,
     policyVersion: input.policyVersion ?? null,
-    evidenceReference: input.evidenceReference ?? null,
+    evidenceReference: null,
   });
 
   await db.$transaction([
@@ -105,7 +105,7 @@ export async function recordPatientSmsPermission(input: {
           status: input.status,
           source: input.source,
           policyVersion: input.policyVersion ?? null,
-          hasEvidenceReference: Boolean(input.evidenceReference),
+          evidenceReferenceAccepted: false,
         },
       },
     }),
