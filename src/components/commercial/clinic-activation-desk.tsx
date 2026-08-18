@@ -21,8 +21,9 @@ type CheckoutView = {
   createdAt: string;
 };
 
-type Plan = { key: string; label: string; priceLabel: string; checkoutConfigured: boolean };
-type RailSummary = { configuredPlanCount: number; totalPlanCount: number };
+type RailProvider = "stripe" | "godaddy" | null;
+type Plan = { key: string; label: string; priceLabel: string; checkoutConfigured: boolean; railProvider: RailProvider };
+type RailSummary = { configuredPlanCount: number; totalPlanCount: number; nativeStripeReady: boolean };
 
 function money(cents: number | null) {
   if (cents === null) return "Review required";
@@ -33,6 +34,12 @@ function checkoutTone(status: string): BadgeTone {
   if (["paid", "completed", "activated", "reconciled"].includes(status.toLowerCase())) return "resolved";
   if (status.toLowerCase() === "created") return "analyzing";
   return "neutral";
+}
+
+function railLabel(provider: RailProvider) {
+  if (provider === "stripe") return "Stripe recurring";
+  if (provider === "godaddy") return "GoDaddy manual";
+  return "Not configured";
 }
 
 export function ClinicActivationDesk({
@@ -66,7 +73,7 @@ export function ClinicActivationDesk({
 
   function createCheckout() {
     if (!selectedPlan?.checkoutConfigured) {
-      setError("This recurring plan does not have its exact approved checkout rail configured.");
+      setError("This recurring plan does not have an approved checkout rail configured.");
       return;
     }
     setError("");
@@ -113,6 +120,26 @@ export function ClinicActivationDesk({
     });
   }
 
+  function issueActivation(intentId: string) {
+    setError("");
+    setCheckoutUrl("");
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/commercial/clinic-checkouts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "issue_activation", intentId }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Activation link could not be issued.");
+        setActivationUrl(payload.result.activationUrl);
+        await refresh();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Activation link could not be issued.");
+      }
+    });
+  }
+
   async function copy(value: string) {
     await navigator.clipboard.writeText(value);
   }
@@ -134,12 +161,15 @@ export function ClinicActivationDesk({
               <Badge tone={allRailsReady ? "resolved" : railSummary.configuredPlanCount ? "analyzing" : "signal"}>
                 {railSummary.configuredPlanCount}/{railSummary.totalPlanCount} recurring rails configured
               </Badge>
+              {railSummary.nativeStripeReady ? <Badge tone="resolved">Native Stripe recurring</Badge> : <Badge tone="observing">Manual fallback</Badge>}
             </div>
             <h1 className="mt-6 text-balance font-extrabold" style={{ fontSize: "var(--text-h1)", letterSpacing: "var(--tracking-tight)", lineHeight: "var(--leading-tight)" }}>
               Money first. Evidence second. Access only after both agree.
             </h1>
             <p className="mt-5 max-w-3xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              This desk uses exact-plan GoDaddy paylinks as the current operator-managed recurring fallback. A plan is sellable here only when its own approved rail is configured. Staff still reconcile payment manually because this recurring rail has no processor webhook or authoritative verification API connected.
+              {railSummary.nativeStripeReady
+                ? "Native Stripe recurring Checkout is the preferred clinic-plan rail. Only signed live invoice evidence can activate or renew access; browser return never does. Exact-plan GoDaddy links remain the operator-managed fallback when native recurring Stripe is not enabled."
+                : "Exact-plan GoDaddy paylinks remain the current operator-managed recurring fallback. A plan is sellable here only when its own approved rail is configured, and staff reconcile payment manually because this fallback has no processor webhook or authoritative verification API."}
             </p>
           </div>
         </section>
@@ -154,10 +184,13 @@ export function ClinicActivationDesk({
                 </div>
                 <Badge tone={plan.checkoutConfigured ? "resolved" : "signal"}>{plan.checkoutConfigured ? "Rail ready" : "Not configured"}</Badge>
               </div>
-              <p className="mt-4 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
-                {plan.checkoutConfigured
-                  ? "Exact plan paylink is configured. Payment still requires human reconciliation before access changes."
-                  : "No exact approved paylink is configured for this plan, so this desk will not create its checkout."}
+              <p className="mt-3 text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{railLabel(plan.railProvider)}</p>
+              <p className="mt-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+                {plan.railProvider === "stripe"
+                  ? "Server-owned monthly price. Signed Stripe invoice evidence controls activation and renewal."
+                  : plan.railProvider === "godaddy"
+                    ? "Exact plan paylink is configured. Payment still requires human reconciliation before access changes."
+                    : "No approved recurring checkout rail is configured for this plan, so this desk will not create its checkout."}
               </p>
             </Card>
           ))}
@@ -195,7 +228,7 @@ export function ClinicActivationDesk({
                 {!firstConfiguredPlan ? <option value="">No recurring plan rail configured</option> : null}
                 {plans.map((plan) => (
                   <option disabled={!plan.checkoutConfigured} key={plan.key} value={plan.key}>
-                    {plan.label} · {plan.priceLabel}{plan.checkoutConfigured ? "" : " · not configured"}
+                    {plan.label} · {plan.priceLabel}{plan.checkoutConfigured ? ` · ${railLabel(plan.railProvider)}` : " · not configured"}
                   </option>
                 ))}
               </select>
@@ -204,7 +237,7 @@ export function ClinicActivationDesk({
             {!selectedPlan?.checkoutConfigured ? (
               <div className="mt-5 flex items-start gap-3 p-4" style={{ background: "color-mix(in oklch, var(--status-signal) 7%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-signal) 25%, transparent)", borderRadius: "var(--radius-md)" }}>
                 <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-signal)" }} aria-hidden="true" />
-                <p className="text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an exact approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
+                <p className="text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
               </div>
             ) : null}
 
@@ -234,15 +267,17 @@ export function ClinicActivationDesk({
           </Card>
 
           <Card dark>
-            <Badge tone="analyzing">02 · Human verification</Badge>
+            <Badge tone="analyzing">02 · Payment truth</Badge>
             <ShieldCheck className="mt-6 size-6" style={{ color: "var(--gold-300)" }} aria-hidden="true" />
-            <h2 className="mt-4 text-2xl font-extrabold tracking-tight">Reconciliation is consequential.</h2>
+            <h2 className="mt-4 text-2xl font-extrabold tracking-tight">Processor evidence is consequential.</h2>
             <p className="mt-4 text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              Confirm only after independently seeing the expected payment in the real GoDaddy payment records. The first click arms the action. The second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link.
+              {railSummary.nativeStripeReady
+                ? "For native Stripe recurring checkout, signed live invoice evidence activates or renews the paid plan and its configured allowances. Staff cannot manually mark a Stripe checkout paid. GoDaddy fallback checkouts remain a two-click human reconciliation process."
+                : "For the GoDaddy fallback, confirm only after independently seeing the expected payment in real processor records. The first click arms the action; the second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link."}
             </p>
             <div className="mt-7 border-t pt-5" style={{ borderColor: "var(--line-dark)" }}>
               <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
-              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>Processor verification remains false for this recurring fallback. A staff reconciliation record is not the same thing as a signed processor webhook.</p>
+              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>A browser return never activates software. Payment entitlement also does not enable production PHI, approve connectors, or certify deployment readiness.</p>
             </div>
           </Card>
         </section>
@@ -255,7 +290,7 @@ export function ClinicActivationDesk({
                 <Badge tone="resolved">Subscription activated</Badge>
                 <h2 className="mt-4 text-xl font-extrabold">The owner setup link is ready.</h2>
                 <p className="mt-2 max-w-3xl text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-                  This means the operator-reconciled paid software entitlement is active. It does not enable production PHI, approve connectors, or certify deployment readiness. The signed setup link expires automatically and cannot choose a different organization, email, plan, role, or price.
+                  Verified paid software access is active. This does not enable production PHI, approve connectors, or certify deployment readiness. The signed setup link expires automatically and cannot choose a different organization, email, plan, role, or price.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Button variant="gold" size="sm" onClick={() => copy(activationUrl)}>Copy activation link <Copy className="size-3.5" aria-hidden="true" /></Button>
@@ -294,7 +329,7 @@ export function ClinicActivationDesk({
                   <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"} · {checkout.provider}</p>
                 </div>
                 <div>
-                  {checkout.status === "created" ? (
+                  {checkout.status === "created" && checkout.provider === "godaddy" ? (
                     <Button
                       variant={confirmIntentId === checkout.id ? "gold" : "outline"}
                       size="sm"
@@ -302,6 +337,14 @@ export function ClinicActivationDesk({
                       onClick={() => reconcile(checkout.id)}
                     >
                       {confirmIntentId === checkout.id ? "Confirm: payment independently verified" : "Record reconciled payment"}
+                    </Button>
+                  ) : checkout.status === "created" && checkout.provider === "stripe" ? (
+                    <span className="inline-flex items-center gap-2 text-xs font-extrabold" style={{ color: "var(--status-analyzing)" }}>
+                      <ShieldCheck className="size-4" aria-hidden="true" /> Awaiting signed Stripe invoice
+                    </span>
+                  ) : checkout.status === "completed" && checkout.provider === "stripe" ? (
+                    <Button variant="gold" size="sm" disabled={pending} onClick={() => issueActivation(checkout.id)}>
+                      Issue owner activation link
                     </Button>
                   ) : (
                     <span className="inline-flex items-center gap-2 text-xs font-extrabold" style={{ color: "var(--status-resolved)" }}>

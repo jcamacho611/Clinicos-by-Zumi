@@ -1,10 +1,22 @@
 import Stripe from "stripe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { recordEvidence } = vi.hoisted(() => ({ recordEvidence: vi.fn() }));
+const { recordEvidence, processRecurring } = vi.hoisted(() => ({
+  recordEvidence: vi.fn(),
+  processRecurring: vi.fn(),
+}));
 
 vi.mock("@/lib/commercial/payment-evidence-repository", () => ({
   recordCommercialPaymentEvidence: recordEvidence,
+}));
+
+vi.mock("@/lib/commercial/stripe-clinic-subscriptions", () => ({
+  StripeClinicSubscriptionError: class StripeClinicSubscriptionError extends Error {
+    constructor(message: string, readonly status = 400) {
+      super(message);
+    }
+  },
+  processVerifiedStripeClinicSubscriptionEvent: processRecurring,
 }));
 
 import { POST } from "@/app/api/webhooks/stripe/route";
@@ -51,12 +63,43 @@ function checkoutEvent(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function recurringInvoiceEvent(withKlinikosMetadata = true) {
+  return {
+    id: "evt_invoice_paid",
+    object: "event",
+    type: "invoice.paid",
+    livemode: true,
+    data: {
+      object: {
+        id: "in_live_paid",
+        object: "invoice",
+        customer: "cus_live_customer",
+        amount_paid: 79_900,
+        currency: "usd",
+        parent: {
+          type: "subscription_details",
+          subscription_details: {
+            subscription: "sub_live",
+            metadata: withKlinikosMetadata ? {
+              klinikos_checkout_intent_id: "intent_recurring",
+              klinikos_checkout_state: "state_recurring",
+              klinikos_product_key: "clinic_core",
+            } : {},
+          },
+        },
+      },
+    },
+  };
+}
+
 describe("Stripe live webhook boundary", () => {
   beforeEach(() => {
     process.env.STRIPE_SECRET_KEY = "sk_live_unit_test_only";
     process.env.STRIPE_WEBHOOK_SECRET = webhookSecret;
     recordEvidence.mockReset();
     recordEvidence.mockResolvedValue({ status: "applied", idempotent: false });
+    processRecurring.mockReset();
+    processRecurring.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -133,6 +176,37 @@ describe("Stripe live webhook boundary", () => {
     }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ received: true, supported: false, manualReconciliation: true });
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("acknowledges unrelated Stripe invoice events without creating a retry storm", async () => {
+    const response = await POST(signedRequest(recurringInvoiceEvent(false)));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ received: true, supported: false, unrelatedRecurringEvent: true });
+    expect(processRecurring).not.toHaveBeenCalled();
+    expect(recordEvidence).not.toHaveBeenCalled();
+  });
+
+  it("routes a signed Klinikos recurring invoice into the isolated subscription processor", async () => {
+    processRecurring.mockResolvedValueOnce({
+      kind: "invoice_paid",
+      status: "applied",
+      organizationId: "org_paid",
+      productKey: "clinic_core",
+      subscriptionId: "subscription_internal",
+      idempotent: false,
+    });
+    const response = await POST(signedRequest(recurringInvoiceEvent(true)));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      received: true,
+      supported: true,
+      recurring: true,
+      kind: "invoice_paid",
+      status: "applied",
+      organizationId: "org_paid",
+    });
+    expect(processRecurring).toHaveBeenCalledOnce();
     expect(recordEvidence).not.toHaveBeenCalled();
   });
 
