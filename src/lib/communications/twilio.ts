@@ -20,6 +20,10 @@ function messagingServiceSid(value: string) {
   return /^MG[0-9a-fA-F]{32}$/.test(value);
 }
 
+function verifySid(value: string) {
+  return /^VE[0-9a-fA-F]{32}$/.test(value);
+}
+
 export function twilioApiKeyCredentials(env: TwilioEnv = process.env): TwilioApiKeyCredentials | null {
   const accountSid = clean(env.TWILIO_ACCOUNT_SID);
   const apiKeySid = clean(env.TWILIO_API_KEY_SID);
@@ -203,7 +207,7 @@ export async function startTwilioPhoneVerification(input: { to: string; env?: Tw
   if (!response) return { ok: false, reason: "provider_error", detail: "Twilio Verify could not be reached." };
   if (!response.ok) return { ok: false, reason: "provider_error", detail: `Twilio Verify returned HTTP ${response.status}.` };
   const payload = (await response.json().catch(() => null)) as { sid?: string; status?: string } | null;
-  if (!payload?.sid || !payload.status) return { ok: false, reason: "provider_error", detail: "Twilio Verify returned no verification reference." };
+  if (!payload?.sid || !verifySid(payload.sid) || !payload.status) return { ok: false, reason: "provider_error", detail: "Twilio Verify returned no valid verification reference." };
   return { ok: true, sid: payload.sid, status: payload.status };
 }
 
@@ -224,6 +228,6 @@ export async function checkTwilioPhoneVerification(input: { to: string; code: st
   if (!response) return { ok: false, reason: "provider_error", detail: "Twilio Verify could not be reached." };
   if (!response.ok) return { ok: false, reason: "provider_error", detail: `Twilio Verify returned HTTP ${response.status}.` };
   const payload = (await response.json().catch(() => null)) as { sid?: string; status?: string } | null;
-  if (!payload?.sid || !payload.status) return { ok: false, reason: "provider_error", detail: "Twilio Verify returned no verification result." };
+  if (!payload?.sid || !verifySid(payload.sid) || !payload.status) return { ok: false, reason: "provider_error", detail: "Twilio Verify returned no valid verification result." };
   return { ok: true, sid: payload.sid, status: payload.status };
 }
