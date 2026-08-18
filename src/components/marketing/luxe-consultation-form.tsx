@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, LoaderCircle, ShieldCheck } from "lucide-react";
-import type { PublicLuxeServiceOption } from "@/lib/repositories/luxe-public-conversion-repository";
+
+type PublicLuxeServiceOption = {
+  name: string;
+  category: string | null;
+};
 
 const FIRST_TOUCH_KEY = "klinikos:luxe:first-touch:v1";
 
