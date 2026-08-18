@@ -7,6 +7,7 @@ import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
 import "./cinematic-command-overrides.css";
 import "./cinematic-home-overrides.css";
+import "./experience-convergence.css";
 
 const siteUrl = "https://klinikos.io";
 
