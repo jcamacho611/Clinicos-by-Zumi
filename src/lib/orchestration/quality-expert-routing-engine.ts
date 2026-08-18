@@ -1,3 +1,4 @@
+import type { NextAction } from "@/lib/orchestration/contracts";
 import type { ExpertDataAccessClass, ExpertEngagementNeed } from "@/lib/orchestration/expert-grid-engine";
 import type { GovernedRuleEvaluation } from "@/lib/orchestration/rules-evidence-engine";
 
@@ -6,6 +7,10 @@ function urgencyFromEvaluation(evaluation: GovernedRuleEvaluation, now: Date): E
   if (evaluation.dueAt && evaluation.dueAt.getTime() < now.getTime()) return "urgent";
   if (evaluation.dueAt && evaluation.dueAt.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000) return "priority";
   return "routine";
+}
+
+function priorityFromUrgency(urgency: ExpertEngagementNeed["urgency"]) {
+  return { routine: 45, priority: 65, urgent: 80, critical: 95 }[urgency];
 }
 
 export function qualityExpertNeedFromEvaluation(input: {
@@ -39,6 +44,27 @@ export function qualityExpertNeedFromEvaluation(input: {
     requiredDataAccessClass: input.requiredDataAccessClass ?? "deidentified",
     urgency: urgencyFromEvaluation(evaluation, now),
     maxPriceCents: input.maxPriceCents ?? null,
+  };
+}
+
+export function qualityExpertGridNextAction(input: {
+  need: ExpertEngagementNeed;
+  evaluation: GovernedRuleEvaluation;
+}): NextAction {
+  return {
+    id: `grid:${input.need.id}`,
+    title: "Find qualified quality support",
+    reason: qualityExpertEscalationReason(input.evaluation),
+    sourceType: "grid",
+    sourceId: input.need.id,
+    capabilityKey: "grid.request.create",
+    href: "/grid/requests",
+    state: "recommended",
+    priority: priorityFromUrgency(input.need.urgency),
+    dueAt: input.evaluation.dueAt ?? null,
+    organizationId: input.need.organizationId,
+    pathInstanceId: null,
+    blockers: [],
   };
 }
 
