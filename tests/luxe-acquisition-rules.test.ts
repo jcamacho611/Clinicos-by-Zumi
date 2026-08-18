@@ -17,6 +17,8 @@ describe("Luxe acquisition intake rules", () => {
       preferredContactMethod: "sms",
       attribution: {
         firstTouchSource: "instagram",
+        firstTouchCampaign: "ig-launch",
+        firstTouchLandingPage: "https://www.klinikos.io/luxe/consult?service=Botox",
         lastTouchSource: "google",
         utmCampaign: "summer-glow",
         originatingPage: "https://luxe-medi.com/botox",
@@ -56,14 +58,17 @@ describe("Luxe acquisition intake rules", () => {
     expect(normalizeLuxePhone("1-516-555-0199")).toBe("+15165550199");
   });
 
-  it("preserves first touch separately while deriving a campaign source", () => {
+  it("keeps the original campaign as the canonical acquisition campaign on a later touch", () => {
     const attribution = {
       firstTouchSource: "instagram",
+      firstTouchCampaign: "ig-launch",
+      firstTouchLandingPage: "https://www.klinikos.io/luxe/consult?utm_campaign=ig-launch",
       lastTouchSource: "google",
+      lastTouchCampaign: "brand-search",
       utmSource: "google",
-      utmCampaign: "lip-filler-search",
+      utmCampaign: "brand-search",
     };
-    expect(campaignSourceFromAttribution(attribution)).toBe("lip-filler-search");
+    expect(campaignSourceFromAttribution(attribution)).toBe("ig-launch");
     expect(normalizeAttribution(attribution)).toEqual(attribution);
   });
 
