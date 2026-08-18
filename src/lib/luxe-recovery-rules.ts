@@ -14,7 +14,7 @@ export type LuxeRecoveryLeadFact = {
 };
 
 const BLOCKED_CONSENT = new Set(["opted_out", "do_not_contact", "denied", "revoked", "suppressed"]);
-const NON_RECOVERY_LOST_REASON = /\b(spam|duplicate|test|invalid|wrong number|fake)\b/i;
+const NON_RECOVERY_LOST_REASON = /\b(spam|duplicate|test|invalid|wrong number|fake|do not contact|dont contact|don't contact|stop contact(?:ing)?)\b/i;
 
 function dollars(cents: number) {
   return `$${Math.round(cents / 100).toLocaleString("en-US")}`;
@@ -95,9 +95,9 @@ export function buildLuxeRecoveryReview(
     },
     queue: actionable.slice(0, 100),
     definitions: {
-      reviewCandidate: `Lost leads or non-booked leads with no record update for at least ${staleAfterDays} days, excluding obvious spam/duplicate/test/invalid reasons.`,
+      reviewCandidate: `Lost leads or non-booked leads with no record update for at least ${staleAfterDays} days, excluding obvious spam/duplicate/test/invalid/do-not-contact reasons.`,
       communicationEligibility: "Recovery candidates require a human review of channel-specific consent and context before outreach. No message is sent automatically.",
-      suppressed: "Leads with explicit blocked/suppressed consent states or clearly non-recoverable lost reasons are excluded from the action queue.",
+      suppressed: "Leads with explicit blocked/suppressed consent states or clearly non-recoverable/do-not-contact lost reasons are excluded from the action queue.",
     },
   };
 }
