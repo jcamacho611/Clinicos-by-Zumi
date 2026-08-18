@@ -14,17 +14,9 @@ function metadataTaskId(value: unknown) {
   return typeof taskId === "string" && taskId.trim() ? taskId.trim() : null;
 }
 
-function normalized(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function highImpact(value: string) {
-  return ["high", "critical", "urgent"].includes(normalized(value));
-}
-
-function terminalTask(value: string) {
-  return ["completed", "cancelled", "closed"].includes(normalized(value));
-}
+function normalized(value: string) { return value.trim().toLowerCase(); }
+function highImpact(value: string) { return ["high", "critical", "urgent"].includes(normalized(value)); }
+function terminalTask(value: string) { return ["completed", "cancelled", "closed"].includes(normalized(value)); }
 
 export type QualityCommandCenterGap = {
   id: string;
@@ -34,13 +26,7 @@ export type QualityCommandCenterGap = {
   impact: string;
   workflowStatus: string;
   timing: "overdue" | "due_soon" | "open";
-  task: null | {
-    id: string;
-    status: string;
-    priority: string;
-    dueAt: string | null;
-    owner: { id: string; name: string } | null;
-  };
+  task: null | { id: string; status: string; priority: string; dueAt: string | null; owner: { id: string; name: string } | null };
   requiresReview: boolean;
 };
 
@@ -48,29 +34,14 @@ export type QualityCommandCenterWorkspace = {
   complete: boolean;
   coverage: "persisted_active_quality_gap_backlog";
   canMaterializeTasks: boolean;
-  summary: null | {
-    open: number;
-    overdue: number;
-    dueSoon: number;
-    highImpact: number;
-    materialized: number;
-    unassigned: number;
-    humanReview: number;
-  };
+  summary: null | { open: number; overdue: number; dueSoon: number; highImpact: number; materialized: number; unassigned: number; humanReview: number };
   gaps: QualityCommandCenterGap[];
   warnings: string[];
 };
 
 export async function listQualityCommandCenter(session: ClinicSession): Promise<QualityCommandCenterWorkspace> {
   if (!can(session.role, "quality", "read")) {
-    return {
-      complete: false,
-      coverage: "persisted_active_quality_gap_backlog",
-      canMaterializeTasks: false,
-      summary: null,
-      gaps: [],
-      warnings: ["Quality operations are not authorized for this role."],
-    };
+    return { complete: false, coverage: "persisted_active_quality_gap_backlog", canMaterializeTasks: false, summary: null, gaps: [], warnings: ["Quality operations are not authorized for this role."] };
   }
 
   const canMaterializeTasks = can(session.role, "quality", "update") && can(session.role, "tasks", "create");
@@ -101,7 +72,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
   const [measures, patients, materializationAudits] = await Promise.all([
     measureIds.length
       ? db.qualityMeasure.findMany({
-          where: { organizationId: session.organizationId, id: { in: measureIds } },
+          where: { organizationId: session.organizationId, id: { in: measureIds }, status: "active" },
           select: { id: true, key: true, name: true, version: true },
         })
       : Promise.resolve([]),
@@ -113,12 +84,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
       : Promise.resolve([]),
     gapIds.length
       ? db.auditLog.findMany({
-          where: {
-            organizationId: session.organizationId,
-            action: MATERIALIZATION_ACTION,
-            resourceType: MATERIALIZATION_RESOURCE,
-            resourceId: { in: gapIds },
-          },
+          where: { organizationId: session.organizationId, action: MATERIALIZATION_ACTION, resourceType: MATERIALIZATION_RESOURCE, resourceId: { in: gapIds } },
           select: { resourceId: true, metadata: true, createdAt: true },
           orderBy: { createdAt: "asc" },
         })
@@ -151,17 +117,11 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
 
   const taskIds = [...new Set(taskIdByGapId.values())];
   const tasks = taskIds.length
-    ? await db.task.findMany({
-        where: { organizationId: session.organizationId, id: { in: taskIds } },
-        select: { id: true, status: true, priority: true, dueAt: true, ownerId: true },
-      })
+    ? await db.task.findMany({ where: { organizationId: session.organizationId, id: { in: taskIds } }, select: { id: true, status: true, priority: true, dueAt: true, ownerId: true } })
     : [];
   const ownerIds = [...new Set(tasks.map((task) => task.ownerId).filter((value): value is string => Boolean(value)))];
   const owners = ownerIds.length
-    ? await db.user.findMany({
-        where: { organizationId: session.organizationId, id: { in: ownerIds }, status: "active" },
-        select: { id: true, name: true },
-      })
+    ? await db.user.findMany({ where: { organizationId: session.organizationId, id: { in: ownerIds }, status: "active" }, select: { id: true, name: true } })
     : [];
   const taskById = new Map(tasks.map((task) => [task.id, task]));
   const ownerById = new Map(owners.map((owner) => [owner.id, owner]));
@@ -177,38 +137,18 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
     const linkedTaskId = taskIdByGapId.get(gap.id) ?? null;
     const linkedTask = linkedTaskId ? taskById.get(linkedTaskId) ?? null : null;
     const dueTime = gap.dueAt?.getTime() ?? null;
-    const timing = dueTime !== null && dueTime < now
-      ? "overdue" as const
-      : dueTime !== null && dueTime <= dueSoonBoundary
-        ? "due_soon" as const
-        : "open" as const;
+    const timing = dueTime !== null && dueTime < now ? "overdue" as const : dueTime !== null && dueTime <= dueSoonBoundary ? "due_soon" as const : "open" as const;
     const owner = linkedTask?.ownerId ? ownerById.get(linkedTask.ownerId) ?? null : null;
 
     return {
       id: gap.id,
-      patient: {
-        id: patient.id,
-        displayName: patient.preferredName?.trim() || `${patient.firstName} ${patient.lastName}`,
-        mrn: patient.mrn,
-      },
-      measure: {
-        id: gap.measureId,
-        name: measure?.name ?? "Unmapped quality requirement",
-        key: measure?.key ?? null,
-        version: measure?.version?.trim() || null,
-        mapped: Boolean(measure),
-      },
+      patient: { id: patient.id, displayName: patient.preferredName?.trim() || `${patient.firstName} ${patient.lastName}`, mrn: patient.mrn },
+      measure: { id: gap.measureId, name: measure?.name ?? "Unmapped quality requirement", key: measure?.key ?? null, version: measure?.version?.trim() || null, mapped: Boolean(measure) },
       dueAt: gap.dueAt?.toISOString() ?? null,
       impact: gap.impact,
       workflowStatus: gap.status,
       timing,
-      task: linkedTask ? {
-        id: linkedTask.id,
-        status: linkedTask.status,
-        priority: linkedTask.priority,
-        dueAt: linkedTask.dueAt?.toISOString() ?? null,
-        owner: owner ? { id: owner.id, name: owner.name } : null,
-      } : null,
+      task: linkedTask ? { id: linkedTask.id, status: linkedTask.status, priority: linkedTask.priority, dueAt: linkedTask.dueAt?.toISOString() ?? null, owner: owner ? { id: owner.id, name: owner.name } : null } : null,
       requiresReview: highImpact(gap.impact) || !measure || Boolean(linkedTask && terminalTask(linkedTask.status)),
     };
   });
@@ -229,12 +169,5 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
   ];
   if (unmappedMeasureCount) warnings.push(`${unmappedMeasureCount} open gap(s) do not map to an active organization quality-measure record.`);
 
-  return {
-    complete: true,
-    coverage: "persisted_active_quality_gap_backlog",
-    canMaterializeTasks,
-    summary,
-    gaps: projected,
-    warnings,
-  };
+  return { complete: true, coverage: "persisted_active_quality_gap_backlog", canMaterializeTasks, summary, gaps: projected, warnings };
 }
