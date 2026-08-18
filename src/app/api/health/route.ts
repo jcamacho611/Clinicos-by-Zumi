@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
+import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 
-function nonSecretReleaseIdentity() {
-  const commit = process.env.RENDER_GIT_COMMIT?.trim() || process.env.GIT_COMMIT_SHA?.trim() || null;
-  const branch = process.env.RENDER_GIT_BRANCH?.trim() || null;
-  return { commit, shortCommit: commit ? commit.slice(0, 12) : null, branch };
-}
-
+/**
+ * Public liveness is intentionally information-poor. Deployment identity, branch,
+ * database configuration, provider state, integration readiness, and other diagnostics
+ * belong on authenticated/internal surfaces and must not be fingerprinting material for
+ * arbitrary visitors.
+ */
 export function GET() {
-  return NextResponse.json({
-    status: "ok",
-    service: "klinikos",
-    mode: "demo",
-    databaseConfigured: Boolean(process.env.DATABASE_URL),
-    liveIntegrations: false,
-    release: nonSecretReleaseIdentity(),
-    timestamp: new Date().toISOString(),
-  });
+  return NextResponse.json(
+    { status: "ok" },
+    { headers: PRIVATE_NO_STORE_HEADERS },
+  );
 }
