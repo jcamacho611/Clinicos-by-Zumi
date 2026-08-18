@@ -1,8 +1,8 @@
 # Luxe lead payment evidence
 
-Status: **MANUAL RECONCILIATION READY / PROCESSOR VERIFICATION ADAPTER PENDING**
+Status: **MANUAL RECONCILIATION READY / STRIPE PROCESSOR ADAPTER READY / PUBLIC DEPOSIT CHECKOUT OFF BY DEFAULT**
 
-This capability connects Luxe acquisition attribution to collected money without confusing estimated opportunity, booking state, or redirect success with payment evidence.
+This capability connects Luxe acquisition attribution to collected money without confusing estimated opportunity, booking state, redirect success, or browser state with payment evidence.
 
 ## Money states
 
@@ -83,32 +83,131 @@ processorVerified = false
 
 It therefore cannot masquerade as a webhook/processor verification.
 
+## Stripe processor verification
+
+Klinikos can create a server-owned Stripe Checkout Session for a Luxe deposit through:
+
+`POST /api/public/luxe-medi/deposit/checkout`
+
+The route requires the HttpOnly opaque Luxe acquisition journey cookie created after an accepted inquiry. The browser never receives the internal lead ID.
+
+The Checkout Session carries only bounded server-created correlation metadata:
+
+- sale mode = `luxe_deposit`
+- opaque encrypted acquisition journey token
+- server-owned expected amount in cents
+- payment kind = `deposit`
+
+The same metadata is copied to the Stripe PaymentIntent. No clinical details, diagnosis, chart data, medical history, card data, or raw patient record is sent for correlation.
+
+A Stripe event becomes processor evidence only after:
+
+1. `POST /api/webhooks/stripe` receives the raw request;
+2. Stripe's endpoint signature verifies with the configured live webhook secret;
+3. the event is live mode;
+4. the event is explicitly tagged as a Luxe deposit;
+5. the signed amount matches the server-created expected amount metadata;
+6. currency is USD;
+7. the opaque journey decrypts to a current Luxe lead;
+8. the payment outcome is successful.
+
+Successful evidence is written with:
+
+```text
+provider = stripe
+paymentKind = deposit
+evidenceSource = stripe_webhook
+verificationMethod = processor_verification
+processorVerified = true
+```
+
+and the lead workflow payment state becomes:
+
+`processor_verified`
+
+That state proves money evidence only. It does **not** mark:
+
+- booking confirmed
+- appointment completed
+- treatment eligible
+- treatment completed
+- provider payout settled
+
+A high-priority booking-verification task remains/gets created so staff still confirms the actual appointment.
+
+## Manual → processor upgrade
+
+A common operational sequence is:
+
+```text
+staff sees Stripe payment
+→ manually reconciles it
+→ signed webhook arrives later
+```
+
+The processor adapter does not count the same payment twice. When the existing Stripe reference belongs to the same Luxe lead, the signed webhook upgrades the manual evidence row to processor verification and corrects the amount to the signed processor amount if needed.
+
+If the same Stripe payment reference is already attached to a different lead, automatic attribution stops and requires reconciliation rather than silently moving money between customers.
+
+Concurrent/replayed webhook delivery uses the database unique constraint plus `ON CONFLICT` handling, so one payment cannot become multiple evidence rows through a race.
+
+## Public deposit activation
+
+Immediate public deposit checkout is deliberately **disabled by default**.
+
+Required configuration:
+
+- `STRIPE_SECRET_KEY` — live `sk_live_` or restricted `rk_live_` key
+- `STRIPE_WEBHOOK_SECRET` — live `whsec_` endpoint signing secret
+- `LUXE_MEDI_JOURNEY_SECRET` — existing opaque acquisition journey encryption key
+- `LUXE_MEDI_STRIPE_DEPOSIT_CENTS` — positive server-owned integer cents, currently bounded to $1.00–$10,000.00
+- `LUXE_MEDI_STRIPE_DEPOSIT_PUBLIC_ENABLED=true` — explicit business approval before the public inquiry success state exposes checkout
+- `LUXE_MEDI_STRIPE_DEPOSIT_LABEL` — optional customer-facing Stripe line-item label
+
+Do not enable immediate public deposit collection merely because Stripe is technically configured. Luxe should first decide the business rule for when a customer is allowed to pay relative to availability/booking confirmation and refund operations.
+
+## Redirect truth
+
+Stripe's success/cancel URL returns to:
+
+`/luxe/consult?deposit=returned`
+
+That query parameter is presentation context only and can be forged. The page therefore says only that the customer returned from secure checkout and that Klinikos will wait for signed processor evidence.
+
+The redirect can never set:
+
+`paymentStatus = processor_verified`
+
+Only the signed webhook evidence path can do that.
+
 ## Lead timeline
 
-A successful evidence insert also appends a lead event:
+Manual reconciliation appends:
 
 `payment_reconciled_manual`
 
-and updates the lead workflow `paymentStatus` to:
+Processor verification appends:
 
-`manual_reconciled`
+`payment_verified_processor`
 
-The authoritative amount remains the evidence ledger row. The lead status string is workflow context, not the financial ledger.
+Processor metadata explicitly preserves:
+
+- evidence ID
+- Stripe event ID
+- processor reference
+- amount/currency
+- processor-verification truth
+- booking-verification = false
+- whether manual evidence was upgraded
+- booking-verification task reference
 
 ## Audit
 
-Every manual reconciliation records:
+Every manual reconciliation records the user actor.
 
-- user actor
-- lead
-- evidence ID
-- lead event ID
-- provider
-- external reference
-- amount
-- evidence source
-- verification method
-- processor-verification truth
+Every processor verification records a system actor and includes the evidence/event correlation required to explain why the payment state changed.
+
+Raw Stripe webhook bodies are not copied into the Luxe lead evidence table or lead-event metadata.
 
 ## Attribution analytics
 
@@ -141,11 +240,11 @@ Authorized managers can open **Record payment evidence** on a lead inside:
 
 The form intentionally asks for reconciliation evidence rather than presenting a generic “mark paid” toggle.
 
-The UI warns against placing sensitive payment credentials in the note.
+When public Stripe deposits are explicitly enabled, the hosted Luxe inquiry success state may display the server-owned deposit amount and route through the server-created Stripe Checkout Session.
 
-## Processor verification next
+## Other processors
 
-Future GoDaddy/Square/Stripe adapters should write to the same evidence ledger with:
+GoDaddy/Square adapters should write to the same evidence ledger with:
 
 ```text
 verificationMethod = processor_verification
@@ -160,12 +259,12 @@ A success-page redirect, booking email, customer statement, screenshot-free brow
 
 This feature does not:
 
-- move money
 - issue refunds
 - settle provider payouts
 - prove a clinical service occurred
 - prove an appointment occurred
 - replace the financial/general ledger
 - store payment-card data
+- automatically enable public deposits
 
-It exists to establish truthful acquisition-to-revenue evidence while the authoritative payment connectors are still being wired.
+It exists to establish truthful acquisition-to-revenue evidence while keeping booking, payment, fulfillment, and clinical authority separate.
