@@ -41,35 +41,42 @@ describe("recurring clinic plan rail readiness", () => {
   });
 
   it("uses exact plan-specific recurring paylink variables rather than the analysis payment link", () => {
-    expect(goDaddy).toContain("GODADDY_KLINIKOS_CORE_PAYLINK_URL");
-    expect(goDaddy).toContain("GODADDY_KLINIKOS_GROWTH_PAYLINK_URL");
-    expect(goDaddy).toContain("GODADDY_KLINIKOS_SCALE_PAYLINK_URL");
+    expect(goDaddy).toContain("KLINIKOS_GODADDY_CORE_PAYLINK");
+    expect(goDaddy).toContain("KLINIKOS_GODADDY_GROWTH_PAYLINK");
+    expect(goDaddy).toContain("KLINIKOS_GODADDY_SCALE_PAYLINK");
     expect(goDaddy).toContain("configuredPlanKeys");
+    expect(goDaddy).toContain("webhookConfigured: false");
+    expect(goDaddy).toContain("processorVerification: false");
     expect(goDaddy).toContain("processorVerificationAvailable: false");
-    expect(goDaddy).toContain('verificationMode: "manual_reconciliation"');
   });
 
   it("keeps the current Stripe connector from pretending one-time Checkout supports monthly subscriptions", () => {
-    expect(stripe).toContain('if (input.product.billing !== "one_time")');
-    expect(stripe).toContain("Stripe Checkout currently supports the one-time Clinic Operating Analysis only");
-    expect(stripe).toContain('params.set("mode", "payment")');
-    expect(stripe).not.toContain('params.set("mode", "subscription")');
+    expect(stripe).toContain('if (request.product.billing !== "one_time")');
+    expect(stripe).toContain("This Stripe slice supports only the one-time Clinic Operating Analysis.");
+    expect(stripe).toContain('mode: "payment"');
+    expect(stripe).not.toContain('mode: "subscription"');
   });
 
   it("preserves the paid subscription to signed activation to first-login Living Home chain", () => {
     expect(activationApi).toContain('redirectTo: "/dashboard?onboarding=complete"');
     expect(dashboard).toContain("ClinicFirstLoginLaunch");
-    expect(firstLoginTruth).toContain('state: "active"');
-    expect(firstLoginTruth).toContain('key: "commercial_subscription_state"');
-    expect(firstLoginTruth).toContain('key: "paid_activation"');
-    expect(firstLoginTruth).toContain('key: "payment_evidence"');
+    expect(firstLoginTruth).toContain('subscription.status === "active"');
+    expect(firstLoginTruth).toContain("subscription.paymentConfirmedAt");
+    expect(firstLoginTruth).toContain('onboarding.mode === "paid_activation"');
+    expect(firstLoginTruth).toContain('["commercial_access", "organization", "owner", "location", "workspace"]');
+    expect(firstLoginTruth).toContain("verifiedFirstLogin: paidAccess && paidWorkspaceCompleted");
   });
 
-  it("does not require secrets to calculate readiness", () => {
-    const status = goDaddyClinicPlanCheckoutStatus();
-    expect(status.configuredPlanCount).toBeGreaterThanOrEqual(0);
-    expect(status.configuredPlanCount).toBeLessThanOrEqual(3);
-    expect(Array.isArray(status.configuredPlanKeys)).toBe(true);
-    expect(Array.isArray(status.missingEnvironmentKeys)).toBe(true);
+  it("calculates plan readiness from configuration presence without exposing secret values", () => {
+    const status = goDaddyClinicPlanCheckoutStatus({
+      KLINIKOS_GODADDY_CORE_PAYLINK: "https://payments.example/core",
+    } as NodeJS.ProcessEnv);
+
+    expect(status.configuredPlanKeys).toEqual(["clinic_core"]);
+    expect(status.missing).toEqual([
+      "KLINIKOS_GODADDY_GROWTH_PAYLINK",
+      "KLINIKOS_GODADDY_SCALE_PAYLINK",
+    ]);
+    expect(status.allConfigured).toBe(false);
   });
 });
