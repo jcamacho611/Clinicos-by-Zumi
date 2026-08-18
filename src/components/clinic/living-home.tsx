@@ -314,7 +314,7 @@ export function LivingHome({
         <div className="grid gap-10 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-8">
           {/* Phase rail — what the interface is doing right now, and nothing more. */}
           <ol
-            aria-label="Klinikos Intelligence progress"
+            aria-label="Progress on your request"
             className="flex flex-row flex-wrap items-center gap-x-6 gap-y-3 lg:flex-col lg:items-start lg:gap-9 lg:pt-28"
           >
             {PHASES.map((step, index) => {
@@ -344,9 +344,8 @@ export function LivingHome({
 
           <div className="min-w-0 text-center">
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">
-                Klinikos Intelligence
-              </p>
+              {/* No product-layer eyebrow here. A person should experience Klinikos as
+                  intelligent rather than be told that it is. */}
               {onboardingComplete ? <Badge tone="resolved">Setup complete</Badge> : null}
             </div>
 
@@ -396,7 +395,6 @@ export function LivingHome({
 
             <div className="mt-8 grid justify-items-center">
               <ZumiOrb size={104} state={orbState} />
-              <p className="mt-4 text-sm text-[var(--text-secondary)]">Your Klinikos operating partner</p>
               <p aria-live="polite" className="mt-2 text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">
                 {working ? PHASE_LABELS[phase] : PHASE_LABELS.listening}
               </p>
@@ -437,12 +435,15 @@ export function LivingHome({
                   >
                     {destination.short}
                   </span>
-                  {destination.live ? (
+                  {/* A "0" badge is noise that teaches people to stop reading badges, and
+                      a naked number says nothing. Show it only when there is something,
+                      and say what it is. */}
+                  {destination.live && destination.live.count > 0 ? (
                     <span
-                      className="text-center text-[var(--text-micro)]"
-                      style={{ color: destination.live.count > 0 ? "var(--accent-intelligence)" : "var(--text-secondary)" }}
+                      className="text-balance text-center text-[var(--text-micro)]"
+                      style={{ color: "var(--accent-intelligence)" }}
                     >
-                      {destination.live.count}
+                      {destination.live.count} {destination.live.count === 1 ? destination.live.singular : destination.live.noun}
                     </span>
                   ) : null}
                 </div>
