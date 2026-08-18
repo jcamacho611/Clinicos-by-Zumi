@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeLuxeEmail, normalizeLuxePhone } from "@/lib/luxe-acquisition-rules";
+import { canonicalizeLuxeServiceInterest } from "@/lib/luxe-service-interest";
 
 export const godaddyConversationEnvelopeSchema = z.object({
   messageId: z.string().trim().min(1).max(255),
@@ -63,7 +64,7 @@ export function parseGoDaddyConversationNotification(rawEnvelope: unknown): Pars
   const rawPhone = capture(envelope.body, /\nPhone:\s*\n([^\n]+)/i);
   const email = normalizeLuxeEmail(capture(envelope.body, /\nEmail:\s*\n([^\n]+)/i));
   const phone = normalizeLuxePhone(rawPhone);
-  const serviceInterest = capture(envelope.body, /\nWhat:\s*\n([^\n]+)/i);
+  const serviceInterest = canonicalizeLuxeServiceInterest(capture(envelope.body, /\nWhat:\s*\n([^\n]+)/i));
   const appointmentText = capture(envelope.body, /\nWhen:\s*\n([^\n]+)/i);
   const initialMessage = stripForwardedHistory(capture(envelope.body, /received a new message\.\s*\n\s*From[^:]*:\s*\n\s*([\s\S]+)$/i));
   const normalizedMessage = initialMessage?.replace(/\n{3,}/g, "\n\n").trim() ?? null;
