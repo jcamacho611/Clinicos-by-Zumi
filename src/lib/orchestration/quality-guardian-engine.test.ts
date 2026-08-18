@@ -55,16 +55,18 @@ describe("Zumi Quality Guardian orchestration", () => {
     });
   });
 
-  it("turns open quality work into prioritized Klinikos next actions using the existing task capability", () => {
+  it("turns open quality work into permission-gated Klinikos next actions", () => {
     const actions = qualityGuardianNextActions([
       evaluation({ id: "routine", riskClass: "review", dueAt: new Date("2026-10-01T00:00:00Z") }),
       evaluation({ id: "urgent", riskClass: "regulated", dueAt: new Date("2026-08-17T00:00:00Z") }),
+      evaluation({ id: "review", status: "review_required", missingEvidenceKeys: [], matchedEvidenceRefs: ["doc:1"] }),
       evaluation({ id: "done", status: "satisfied", missingEvidenceKeys: [], dueAt: null }),
     ], now);
 
-    expect(actions).toHaveLength(2);
+    expect(actions).toHaveLength(3);
     expect(actions[0].sourceId).toBe("urgent");
-    expect(actions[0].capabilityKey).toBe("work.task.manage");
+    expect(actions[0].capabilityKey).toBe("quality.assurance.manage");
+    expect(actions.find((action) => action.sourceId === "review")?.capabilityKey).toBe("quality.assurance.review");
     expect(actions[0].href).toBe("/tasks");
     expect(actions[0].blockers).toEqual(["Missing evidence: required-evidence"]);
   });
