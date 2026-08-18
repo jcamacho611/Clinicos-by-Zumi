@@ -167,11 +167,12 @@ export async function resolveTrustedZumiOrchestration(input: {
  * function intentionally returns aggregate state and safe action metadata rather
  * than subject identifiers or evidence references. The caller remains responsible
  * for retrieving the evaluations through the canonical tenant/RBAC repository path.
+ * Unknown internal-capability state never becomes automatic outside paid work.
  */
 export function resolveTrustedZumiQualityAssurance(input: {
   session: ClinicSession;
   evaluations: readonly GovernedRuleEvaluation[];
-  internalQualityCapabilityAvailable: boolean;
+  internalQualityCapabilityAvailable?: boolean | null;
   jurisdictionKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
   requiredAgreementEvidenceKeys?: string[];
@@ -252,10 +253,15 @@ export function trustedQualityAssuranceInstruction(quality: ZumiTrustedQualityAs
   }
 
   const snapshot = quality.snapshot;
+  const internalCapability = quality.internalCapabilityAvailable === true
+    ? "yes"
+    : quality.internalCapabilityAvailable === false
+      ? "no"
+      : "unknown";
   return [
     "Trusted Quality Guardian result:",
     `Evaluated=${snapshot.evaluated}; applicable=${snapshot.applicable}; satisfied=${snapshot.satisfied}; open gaps=${snapshot.openGaps}; review required=${snapshot.reviewRequired}; overdue=${snapshot.overdue}; due soon=${snapshot.dueSoon}.`,
-    `Internal quality capability available=${quality.internalCapabilityAvailable ? "yes" : "no"}.`,
+    `Internal quality capability available=${internalCapability}.`,
     quality.nextActions.length
       ? `Governed quality next actions: ${quality.nextActions.map((action) => `${action.title} [${action.state}]${action.capabilityKey ? ` capability=${action.capabilityKey}` : ""}`).join("; ")}.`
       : "No governed quality next actions were produced.",
@@ -263,6 +269,7 @@ export function trustedQualityAssuranceInstruction(quality: ZumiTrustedQualityAs
       ? `Expert Grid needs: ${quality.expertNeeds.map((need) => `${need.capabilityDomain}/${need.capabilityKey} urgency=${need.urgency} access=${need.requiredDataAccessClass}`).join("; ")}. A need is not an engagement and grants no data access.`
       : "No Expert Grid escalation was produced.",
     quality.blockers.length ? `Quality blockers: ${quality.blockers.map((blocker) => `${blocker.title}: ${blocker.explanation}`).join("; ")}.` : "No quality blockers were produced.",
+    quality.warnings.length ? `Quality warnings: ${quality.warnings.join("; ")}.` : "No quality warnings were produced.",
     "These are deterministic operational states from the supplied authorized evaluation set. They are not a blanket claim of CMS, NCQA, HEDIS, payer-program, or legal compliance. Never let model prose close a rule or bypass human review.",
   ].join("\n");
 }
