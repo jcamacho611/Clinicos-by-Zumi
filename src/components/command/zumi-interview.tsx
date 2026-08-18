@@ -18,6 +18,7 @@ import {
   RevenueSignalCard,
   WorkflowLeakageCard,
 } from "@/components/command/zumi-operating-map";
+import { buildPaidAnalysisHandoffHref } from "@/lib/sales/intake-handoff";
 import {
   deriveOperatingMap,
   deriveSignalSummary,
@@ -116,6 +117,7 @@ export function ZumiInterview({ analysisOffer }: { analysisOffer: PublicAnalysis
 
   const map = useMemo(() => deriveOperatingMap(answers), [answers]);
   const summary = useMemo(() => deriveSignalSummary(answers), [answers]);
+  const paidAnalysisHref = useMemo(() => buildPaidAnalysisHandoffHref(answers), [answers]);
 
   const phase: MissionPhaseKey = progress.complete ? "signal" : progress.answered > 0 ? "map" : "interview";
 
@@ -187,13 +189,13 @@ export function ZumiInterview({ analysisOffer }: { analysisOffer: PublicAnalysis
                     <p className="mt-3 max-w-2xl text-[11px] leading-5 text-slate-500">{analysisOffer.creditForward}</p>
                   </div>
                   <Button asChild className="min-w-[230px]" variant="primary">
-                    <Link href="/private-demo#reserve">Continue to paid analysis <ArrowRight className="size-4" /></Link>
+                    <Link href={paidAnalysisHref}>Continue to paid analysis <ArrowRight className="size-4" /></Link>
                   </Button>
                 </div>
                 <div className="grid gap-4 border-t border-white/10 bg-black/15 px-6 py-5 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="flex items-start gap-3 text-[11px] leading-5 text-slate-400">
                     <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#efaaa1]" />
-                    Implementation Blueprint, Founding Clinic Implementation, and recurring software are later decisions after the paid analysis and human review. They are not competing checkout choices on this screen.
+                    Only matching operating-map categories are carried into the next screen. Contact details, patient data, exact counts, vendor names, and financial values are not placed in the continuation URL.
                   </div>
                   <div className="flex flex-wrap gap-4 text-[11px] font-bold">
                     <Link className="text-[#efaaa1] hover:text-white" href="/pricing">See current pricing</Link>

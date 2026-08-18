@@ -21,10 +21,11 @@ describe("clinic revenue funnel convergence", () => {
     expect(privateDemo).toContain("clinicCommercialOffers.privateWorkflowReview");
   });
 
-  it("uses the guided operating map to drive one paid next step instead of three competing checkout choices", () => {
+  it("uses the guided operating map to drive one sanitized paid next step instead of three competing checkout choices", () => {
     expect(interview).toContain("Next paid step");
-    expect(interview).toContain('href="/private-demo#reserve"');
-    expect(interview).toContain("Implementation Blueprint, Founding Clinic Implementation, and recurring software are later decisions");
+    expect(interview).toContain("buildPaidAnalysisHandoffHref");
+    expect(interview).toContain("href={paidAnalysisHref}");
+    expect(privateDemo).toContain("Implementation Blueprint, Founding Clinic Implementation, and recurring plans are separate reviewed decisions");
     expect(interview).not.toContain("engagementOffers.map");
   });
 

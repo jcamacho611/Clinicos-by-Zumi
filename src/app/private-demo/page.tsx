@@ -5,6 +5,7 @@ import { SalesIntakeForm } from "@/components/sales/sales-intake-form";
 import { SalesSiteShell } from "@/components/sales/sales-site-shell";
 import { StatusPill } from "@/components/sales/status-pill";
 import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
+import { parsePaidAnalysisHandoffSearchParams } from "@/lib/sales/intake-handoff";
 
 const included = [
   [Workflow, "Clinic-specific workflow review", "We map one real operational pain point without collecting patient information."],
@@ -13,8 +14,9 @@ const included = [
   [FileText, "Written recommendation", "You receive a human-reviewed recap of what was shown, what remains manual, and what comes next."],
 ] as const;
 
-export default function PrivateDemoPage() {
+export default async function PrivateDemoPage({ searchParams }: { searchParams: Promise<{ clinic?: string | string[]; pain?: string | string[] }> }) {
   const analysisOffer = clinicCommercialOffers.privateWorkflowReview;
+  const initialContext = parsePaidAnalysisHandoffSearchParams(await searchParams);
 
   return (
     <SalesSiteShell>
@@ -61,7 +63,7 @@ export default function PrivateDemoPage() {
       <section className="border-y border-white/[.08] bg-black/20" id="reserve">
         <div className="mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
           <div className="mb-14 max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#efaaa1]">Start the analysis</p><h2 className="mt-5 text-4xl font-black tracking-[-.055em] sm:text-5xl">Give Klinikos the business problem. Keep patient data out.</h2><p className="mt-5 text-sm leading-7 text-slate-400">This intake is for the {analysisOffer.name}. Klinikos saves the clinic and buyer first, then creates a server-owned checkout intent for exactly {analysisOffer.priceLabel} before exposing a configured payment page.</p></div>
-          <SalesIntakeForm analysisOffer={{ name: analysisOffer.name, priceLabel: analysisOffer.priceLabel, creditForward: analysisOffer.creditForward }} />
+          <SalesIntakeForm analysisOffer={{ name: analysisOffer.name, priceLabel: analysisOffer.priceLabel, creditForward: analysisOffer.creditForward }} initialContext={initialContext} />
         </div>
       </section>
 
