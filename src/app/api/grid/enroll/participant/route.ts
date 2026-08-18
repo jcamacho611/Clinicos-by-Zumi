@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkGridEnrollmentRateLimit, recordGridEnrollmentAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { createExternalGridParticipantEnrollment } from "@/lib/grid/external-participant-enrollment";
+import { parseGridPublicAssent, recordGridPublicAssent } from "@/lib/legal/grid-public-assent";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 
 export async function POST(request: Request) {
@@ -21,7 +22,10 @@ export async function POST(request: Request) {
   recordGridEnrollmentAttempt(key);
 
   try {
-    const data = await createExternalGridParticipantEnrollment(await request.json().catch(() => null));
+    const rawInput = await request.json().catch(() => null);
+    const assent = parseGridPublicAssent(rawInput);
+    await recordGridPublicAssent(assent, metadata, "grid-participant-enrollment-clickwrap");
+    const data = await createExternalGridParticipantEnrollment(rawInput);
     return NextResponse.json(
       {
         data,
