@@ -56,7 +56,6 @@ export const navigation = [
       { href: "/crm", label: "Revenue recovery", icon: "CircleDollarSign", description: "Turn missed opportunities into owned next actions." },
       { href: "/quality", label: "Quality & HEDIS", icon: "ChartNoAxesCombined", description: "Track care gaps and quality work." },
       { href: "/luxe-medi", label: "Luxe Medi", icon: "Sparkles", description: "Run med-spa leads, services, packages, and follow-up." },
-      { href: "/luxe-medi/acquisition", label: "Luxe acquisition", icon: "CircleDollarSign", description: "See unanswered demand, source attribution, response speed, and at-risk opportunity." },
     ],
   },
   {
