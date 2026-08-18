@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PUBLIC_USE_NOTICE, WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 const primary = [
   ["About", "/about"],
@@ -10,9 +11,10 @@ const primary = [
 ] as const;
 
 const legal = [
+  ["Terms", "/legal/terms"],
   ["Privacy", "/legal/privacy"],
+  ["Acceptable use", "/legal/acceptable-use"],
   ["Access terms", "/legal/access-terms"],
-  ["Legal status", "/legal/terms"],
 ] as const;
 
 export function PublicTrustFooter() {
@@ -31,6 +33,10 @@ export function PublicTrustFooter() {
         <nav className="flex flex-wrap gap-x-5 gap-y-3 text-[11px] font-semibold text-[#ad928d]" aria-label="Legal and trust">
           {legal.map(([label, href]) => <Link className="hover:text-white" href={href} key={href}>{label}</Link>)}
         </nav>
+      </div>
+      <div className="mx-auto mt-7 max-w-[1500px] border-t border-[#e6817b]/10 pt-5 text-[10px] leading-5 text-[#806965]">
+        <p>{PUBLIC_USE_NOTICE} Terms version {WEBSITE_TERMS_VERSION}. Protected access, purchases, marketplace transactions, and production healthcare use may require additional affirmative agreements.</p>
+        <p className="mt-2">© {new Date().getFullYear()} Klinikos. All rights reserved.</p>
       </div>
     </footer>
   );
