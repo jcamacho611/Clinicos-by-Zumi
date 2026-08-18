@@ -36,7 +36,11 @@ export async function POST(request: Request) {
 
   try {
     const result = await ingestGoDaddyConversationNotification(payload);
-    const status = result.status === "captured" ? 202 : result.status === "manual_review" ? 202 : 200;
+    const status = result.status === "unavailable"
+      ? 503
+      : result.status === "captured" || result.status === "manual_review"
+        ? 202
+        : 200;
     return NextResponse.json({ data: result }, { status, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof ZodError) {
