@@ -37,14 +37,16 @@ describe("Twilio inbound webhook security", () => {
     expect(validateTwilioWebhookSignature({ publicUrl: url, params, signature, authToken: "" })).toBe(false);
   });
 
-  it("classifies standard opt-out, resume and help commands without treating arbitrary messages as consent", () => {
-    for (const word of ["STOP", "stopall", "unsubscribe", "cancel", "end", "quit"]) {
+  it("classifies conservative fallback opt-out, resume and help commands", () => {
+    for (const word of ["STOP", "stopall", "unsubscribe", "cancel", "end", "quit", "revoke", "optout"]) {
       expect(classifyInboundSmsCommand(word)).toBe("stop");
     }
-    for (const word of ["START", "unstop", "yes"]) {
-      expect(classifyInboundSmsCommand(word)).toBe("start");
-    }
+    for (const word of ["START", "unstop"]) expect(classifyInboundSmsCommand(word)).toBe("start");
     for (const word of ["HELP", "info"]) expect(classifyInboundSmsCommand(word)).toBe("help");
+
+    // YES may be classified by Twilio Advanced Opt-Out and arrive as signed OptOutType=START,
+    // but it is not safe as our provider-independent fallback because sender types differ.
+    expect(classifyInboundSmsCommand("yes")).toBe("other");
     expect(classifyInboundSmsCommand("please text me tomorrow")).toBe("other");
   });
 });
