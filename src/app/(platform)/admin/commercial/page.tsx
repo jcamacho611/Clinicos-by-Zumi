@@ -5,27 +5,44 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
 import { goDaddyClinicPlanCheckoutStatus } from "@/lib/commercial/payment-connectors/godaddy";
 import { listClinicPlanCheckouts } from "@/lib/commercial/clinic-provisioning";
+import { stripeRecurringSubscriptionStatus } from "@/lib/commercial/stripe-clinic-subscriptions";
 
 export default async function CommercialActivationPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "sales", "read")) redirect("/dashboard");
 
-  const [initialCheckouts, railStatus] = await Promise.all([
+  const [initialCheckouts, goDaddyStatus, stripeStatus] = await Promise.all([
     listClinicPlanCheckouts(session),
     Promise.resolve(goDaddyClinicPlanCheckoutStatus()),
+    Promise.resolve(stripeRecurringSubscriptionStatus()),
   ]);
-  const configured = new Set(railStatus.configuredPlanKeys);
+  const goDaddyConfigured = new Set(goDaddyStatus.configuredPlanKeys);
+  const stripeReady = stripeStatus.processorVerification;
+  const plan = (key: "clinic_core" | "clinic_growth" | "clinic_scale", label: string, priceLabel: string) => {
+    const goDaddyReady = goDaddyConfigured.has(key);
+    return {
+      key,
+      label,
+      priceLabel,
+      checkoutConfigured: stripeReady || goDaddyReady,
+      railProvider: stripeReady ? "stripe" as const : goDaddyReady ? "godaddy" as const : null,
+    };
+  };
   const plans = [
-    { key: "clinic_core", label: clinicPlans.core.name, priceLabel: clinicPlans.core.monthlyPriceLabel, checkoutConfigured: configured.has("clinic_core") },
-    { key: "clinic_growth", label: clinicPlans.growth.name, priceLabel: clinicPlans.growth.monthlyPriceLabel, checkoutConfigured: configured.has("clinic_growth") },
-    { key: "clinic_scale", label: clinicPlans.scale.name, priceLabel: clinicPlans.scale.monthlyPriceLabel, checkoutConfigured: configured.has("clinic_scale") },
+    plan("clinic_core", clinicPlans.core.name, clinicPlans.core.monthlyPriceLabel),
+    plan("clinic_growth", clinicPlans.growth.name, clinicPlans.growth.monthlyPriceLabel),
+    plan("clinic_scale", clinicPlans.scale.name, clinicPlans.scale.monthlyPriceLabel),
   ];
 
   return (
     <ClinicActivationDesk
       initialCheckouts={initialCheckouts}
       plans={plans}
-      railSummary={{ configuredPlanCount: railStatus.configuredPlanKeys.length, totalPlanCount: plans.length }}
+      railSummary={{
+        configuredPlanCount: plans.filter((item) => item.checkoutConfigured).length,
+        totalPlanCount: plans.length,
+        nativeStripeReady: stripeReady,
+      }}
     />
   );
 }
