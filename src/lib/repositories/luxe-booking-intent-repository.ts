@@ -1,6 +1,6 @@
 import "server-only";
 
-import { RiskLevel } from "@prisma/client";
+import { Prisma, RiskLevel } from "@prisma/client";
 import { db } from "@/lib/db";
 import { configuredLuxeBookingReviewMinutes } from "@/lib/luxe-booking-config";
 
@@ -12,7 +12,7 @@ function earlierDate(existing: Date | null, candidate: Date) {
   return !existing || existing > candidate ? candidate : existing;
 }
 
-async function resolveActiveLuxeLead(tx: Parameters<Parameters<typeof db.$transaction>[0]>[0], leadId: string) {
+async function resolveActiveLuxeLead(tx: Prisma.TransactionClient, leadId: string) {
   const organization = await tx.organization.findUnique({
     where: { slug: LUXE_ORGANIZATION_SLUG },
     select: { id: true, status: true },
@@ -34,7 +34,7 @@ async function resolveActiveLuxeLead(tx: Parameters<Parameters<typeof db.$transa
 }
 
 async function ensureBookingVerificationTask(
-  tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
+  tx: Prisma.TransactionClient,
   input: {
     organizationId: string;
     leadId: string;
