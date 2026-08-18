@@ -1,13 +1,18 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
 import { summarizeAcquisitionLeads, type LeadCollectedEvidence, type LatestTouch } from "@/lib/luxe-acquisition-analytics";
-import { LUXE_MANUAL_PAYMENT_EVENT, LUXE_PROCESSOR_PAYMENT_EVENT } from "@/lib/luxe-payment-evidence-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
+
+type PaymentAggregateRow = {
+  leadId: string;
+  manualReconciledCents: bigint;
+  processorVerifiedCents: bigint;
+};
 
 function configuredSlaMinutes() {
   const parsed = Number.parseInt(process.env.LUXE_MEDI_LEAD_SLA_MINUTES ?? "15", 10);
@@ -23,14 +28,6 @@ function stringValue(value: Prisma.JsonValue | undefined) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
-function numberValue(value: Prisma.JsonValue | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function booleanValue(value: Prisma.JsonValue | undefined) {
-  return typeof value === "boolean" ? value : null;
-}
-
 function latestTouchFromMetadata(metadata: Prisma.JsonValue | null, occurredAt: Date): LatestTouch | null {
   const root = objectValue(metadata);
   const attribution = objectValue(root?.attribution);
@@ -40,27 +37,6 @@ function latestTouchFromMetadata(metadata: Prisma.JsonValue | null, occurredAt: 
   const cta = stringValue(attribution.cta);
   if (!source && !campaign && !cta) return null;
   return { source, campaign, cta, occurredAt };
-}
-
-function addPaymentEvidence(
-  map: Map<string, LeadCollectedEvidence>,
-  event: { leadId: string; eventType: string; metadata: Prisma.JsonValue | null },
-) {
-  if (![LUXE_MANUAL_PAYMENT_EVENT, LUXE_PROCESSOR_PAYMENT_EVENT].includes(event.eventType)) return;
-  const metadata = objectValue(event.metadata);
-  const amountCents = numberValue(metadata?.amountCents);
-  const verificationMethod = stringValue(metadata?.verificationMethod);
-  const processorVerified = booleanValue(metadata?.processorVerified);
-  if (!amountCents || amountCents <= 0) return;
-
-  const current = map.get(event.leadId) ?? { manualReconciledCents: 0, processorVerifiedCents: 0 };
-  if (event.eventType === LUXE_MANUAL_PAYMENT_EVENT && verificationMethod === "manual_reconciliation" && processorVerified === false) {
-    current.manualReconciledCents += amountCents;
-  }
-  if (event.eventType === LUXE_PROCESSOR_PAYMENT_EVENT && verificationMethod === "processor_verification" && processorVerified === true) {
-    current.processorVerifiedCents += amountCents;
-  }
-  map.set(event.leadId, current);
 }
 
 export async function getLuxeAcquisitionOperations(session: ClinicSession) {
@@ -98,18 +74,36 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
   const latestTouches = new Map<string, LatestTouch>();
   const collectedEvidenceByLead = new Map<string, LeadCollectedEvidence>();
   if (leads.length) {
-    const events = await db.leadEvent.findMany({
-      where: { organizationId: session.organizationId, leadId: { in: leads.map((lead) => lead.id) } },
-      select: { leadId: true, eventType: true, metadata: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
-      take: 5000,
-    });
+    const leadIds = leads.map((lead) => lead.id);
+    const [events, paymentRows] = await Promise.all([
+      db.leadEvent.findMany({
+        where: { organizationId: session.organizationId, leadId: { in: leadIds } },
+        select: { leadId: true, metadata: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 5000,
+      }),
+      db.$queryRaw<PaymentAggregateRow[]>(Prisma.sql`
+        SELECT
+          "leadId",
+          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualReconciledCents",
+          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorVerifiedCents"
+        FROM "luxe_lead_payment_evidence"
+        WHERE "organizationId" = ${session.organizationId}
+          AND "leadId" IN (${Prisma.join(leadIds)})
+        GROUP BY "leadId"
+      `),
+    ]);
+
     for (const event of events) {
-      if (!latestTouches.has(event.leadId)) {
-        const touch = latestTouchFromMetadata(event.metadata, event.createdAt);
-        if (touch) latestTouches.set(event.leadId, touch);
-      }
-      addPaymentEvidence(collectedEvidenceByLead, event);
+      if (latestTouches.has(event.leadId)) continue;
+      const touch = latestTouchFromMetadata(event.metadata, event.createdAt);
+      if (touch) latestTouches.set(event.leadId, touch);
+    }
+    for (const row of paymentRows) {
+      collectedEvidenceByLead.set(row.leadId, {
+        manualReconciledCents: Number(row.manualReconciledCents),
+        processorVerifiedCents: Number(row.processorVerifiedCents),
+      });
     }
   }
 
