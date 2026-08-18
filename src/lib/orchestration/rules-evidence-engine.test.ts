@@ -122,8 +122,8 @@ describe("Klinikos Rules & Evidence engine", () => {
     expect(result.matchedEvidenceRefs).toEqual(["encounter:123"]);
   });
 
-  it("keeps organization-scoped evidence from closing another tenant's requirement", () => {
-    const result = evaluateGovernedRule({
+  it("keeps cross-organization and unscoped evidence from closing a tenant requirement", () => {
+    const crossTenant = evaluateGovernedRule({
       rule: rule(),
       subjectId: "patient-1",
       organizationId: "org-1",
@@ -131,8 +131,39 @@ describe("Klinikos Rules & Evidence engine", () => {
       evidence: [evidence({ organizationId: "org-2" })],
       now,
     });
+    const unscoped = evaluateGovernedRule({
+      rule: rule(),
+      subjectId: "patient-1",
+      organizationId: "org-1",
+      facts: { programEligible: true },
+      evidence: [evidence({ organizationId: null })],
+      now,
+    });
 
-    expect(result.status).toBe("gap");
-    expect(result.matchedEvidenceRefs).toEqual([]);
+    expect(crossTenant.status).toBe("gap");
+    expect(crossTenant.matchedEvidenceRefs).toEqual([]);
+    expect(unscoped.status).toBe("gap");
+    expect(unscoped.matchedEvidenceRefs).toEqual([]);
+  });
+
+  it("treats alternative evidence requirements as satisfied when closure mode is any", () => {
+    const alternativeRule = rule({
+      closureMode: "any",
+      evidenceRequirements: [
+        { key: "encounter", label: "Encounter evidence", evidenceTypes: ["followup_record"] },
+        { key: "external", label: "External evidence", evidenceTypes: ["external_record"] },
+      ],
+    });
+    const result = evaluateGovernedRule({
+      rule: alternativeRule,
+      subjectId: "patient-1",
+      organizationId: "org-1",
+      facts: { programEligible: true },
+      evidence: [evidence()],
+      now,
+    });
+
+    expect(result.status).toBe("satisfied");
+    expect(result.missingEvidenceKeys).toEqual([]);
   });
 });
