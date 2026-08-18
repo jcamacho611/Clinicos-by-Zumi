@@ -16,36 +16,24 @@ function json(value: unknown) {
   return value as Prisma.InputJsonValue;
 }
 
-async function auditIntegrationEvent(input: {
-  organizationId: string;
-  integrationId: string;
-  action: string;
-  patientId?: string | null;
-  metadata?: Record<string, unknown>;
-}) {
-  await db.auditLog.create({
-    data: {
-      organizationId: input.organizationId,
-      actorId: null,
-      actorType: "system",
-      action: input.action,
-      resourceType: input.patientId ? "patient" : "integration",
-      resourceId: input.patientId ?? input.integrationId,
-      patientId: input.patientId ?? undefined,
-      metadata: input.metadata ?? {},
-    },
-  });
+type LockedPatientSmsRow = {
+  id: string;
+  communicationPrefs: Prisma.JsonValue | null;
+};
+
+function normalizedPatientPhoneExpression(normalizedPhone: string) {
+  return Prisma.sql`
+    "organizationId" = ${Prisma.raw("$organizationId$")}
+  `;
 }
 
-async function resolvePatientByInboundPhone(organizationId: string, from: string) {
-  const normalizedPhone = normalizeSmsPhone(from);
-  if (!normalizedPhone) return { ok: false as const, reason: "invalid_source" as const };
-
-  // Match the same conservative normalization rule used by the product policy without
-  // requiring a new indexed column in this slice. Limit 2 is deliberate: duplicates
-  // fail closed rather than choosing a patient by query order.
-  const rows = await db.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-    SELECT "id"
+async function lockPatientsByPhone(
+  tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
+  organizationId: string,
+  normalizedPhone: string,
+) {
+  return tx.$queryRaw<Array<LockedPatientSmsRow>>(Prisma.sql`
+    SELECT "id", "communicationPrefs"
       FROM "patients"
      WHERE "organizationId" = ${organizationId}
        AND "phone" IS NOT NULL
@@ -58,12 +46,9 @@ async function resolvePatientByInboundPhone(organizationId: string, from: string
            ELSE NULL
          END
        ) = ${normalizedPhone}
-     LIMIT 2
+     ORDER BY "id"
+     FOR UPDATE
   `);
-
-  if (rows.length === 0) return { ok: false as const, reason: "patient_not_found" as const };
-  if (rows.length !== 1) return { ok: false as const, reason: "ambiguous_patient" as const };
-  return { ok: true as const, patientId: rows[0].id, normalizedPhone };
 }
 
 export async function processInboundPatientSms(input: {
@@ -74,30 +59,15 @@ export async function processInboundPatientSms(input: {
   body: string;
   optOutType?: string | null;
 }) {
-  const resolved = await resolvePatientByInboundPhone(input.organizationId, input.from);
-  if (!resolved.ok) {
-    await auditIntegrationEvent({
-      organizationId: input.organizationId,
-      integrationId: input.integrationId,
-      action: `communications.sms.inbound.${resolved.reason}`,
-      metadata: { provider: "twilio", providerEventId: input.messageSid, bodyStored: false },
-    });
-    return resolved;
-  }
-
+  const normalizedPhone = normalizeSmsPhone(input.from);
   const command = classifySignedTwilioOptOut({ optOutType: input.optOutType, body: input.body });
 
   return db.$transaction(async (tx) => {
-    const locked = await tx.$queryRaw<Array<{ id: string; communicationPrefs: Prisma.JsonValue | null }>>(Prisma.sql`
-      SELECT "id", "communicationPrefs"
-        FROM "patients"
-       WHERE "id" = ${resolved.patientId}
-         AND "organizationId" = ${input.organizationId}
-       LIMIT 1
-       FOR UPDATE
+    // MessageSid is the provider event identity. Serialize the whole event before the
+    // replay check so concurrent retries cannot both mutate patient state.
+    await tx.$queryRaw<Array<{ pg_advisory_xact_lock: unknown }>>(Prisma.sql`
+      SELECT pg_advisory_xact_lock(hashtextextended(${input.messageSid}, 0))
     `);
-    const patient = locked[0];
-    if (!patient) return { ok: false as const, reason: "patient_not_found" as const };
 
     const durableReplay = await tx.integrationEvent.findFirst({
       where: {
@@ -109,31 +79,186 @@ export async function processInboundPatientSms(input: {
       },
       select: { id: true },
     });
-    if (durableReplay || hasProcessedInboundSmsEvent(patient.communicationPrefs, input.messageSid)) {
+    if (durableReplay) return { ok: true as const, state: "duplicate" as const, command };
+
+    if (!normalizedPhone) {
+      await tx.integrationEvent.create({
+        data: {
+          organizationId: input.organizationId,
+          integrationId: input.integrationId,
+          resourceType: "twilio_message",
+          resourceId: input.messageSid,
+          direction: "inbound",
+          eventType: "sms.inbound",
+          status: "ignored",
+          metadata: { provider: "twilio", command, reason: "invalid_source", bodyStored: false, consentGranted: false },
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: input.organizationId,
+          actorId: null,
+          actorType: "system",
+          action: "communications.sms.inbound.invalid_source",
+          resourceType: "integration",
+          resourceId: input.integrationId,
+          metadata: { provider: "twilio", providerEventId: input.messageSid, bodyStored: false },
+        },
+      });
+      return { ok: false as const, reason: "invalid_source" as const };
+    }
+
+    const patients = await lockPatientsByPhone(tx, input.organizationId, normalizedPhone);
+
+    if (patients.length === 0) {
+      await tx.integrationEvent.create({
+        data: {
+          organizationId: input.organizationId,
+          integrationId: input.integrationId,
+          resourceType: "twilio_message",
+          resourceId: input.messageSid,
+          direction: "inbound",
+          eventType: "sms.inbound",
+          status: "ignored",
+          metadata: { provider: "twilio", command, reason: "patient_not_found", bodyStored: false, consentGranted: false },
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: input.organizationId,
+          actorId: null,
+          actorType: "system",
+          action: "communications.sms.inbound.patient_not_found",
+          resourceType: "integration",
+          resourceId: input.integrationId,
+          metadata: { provider: "twilio", providerEventId: input.messageSid, bodyStored: false },
+        },
+      });
+      return { ok: false as const, reason: "patient_not_found" as const };
+    }
+
+    // STOP and START are endpoint-level suppression events, not patient-identity claims.
+    // A shared family phone must never let Klinikos route around an opt-out through a
+    // second chart. Apply suppression/resume to every matching patient in this tenant.
+    if (command === "stop" || command === "start") {
+      for (const patient of patients) {
+        const nextPrefs = command === "stop"
+          ? suppressSms({ communicationPrefs: patient.communicationPrefs, reason: "recipient_opt_out", eventId: input.messageSid })
+          : resumeSms({ communicationPrefs: patient.communicationPrefs, eventId: input.messageSid });
+        await tx.patient.update({ where: { id: patient.id }, data: { communicationPrefs: json(nextPrefs) } });
+      }
+
+      await tx.integrationEvent.create({
+        data: {
+          organizationId: input.organizationId,
+          integrationId: input.integrationId,
+          resourceType: "twilio_message",
+          resourceId: input.messageSid,
+          direction: "inbound",
+          eventType: "sms.inbound",
+          status: "processed",
+          metadata: {
+            provider: "twilio",
+            command,
+            affectedPatientCount: patients.length,
+            endpointScoped: true,
+            bodyStored: false,
+            consentGranted: false,
+          },
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: input.organizationId,
+          actorId: null,
+          actorType: "system",
+          action: `communications.sms.inbound.${command}`,
+          resourceType: "integration",
+          resourceId: input.integrationId,
+          metadata: {
+            provider: "twilio",
+            providerEventId: input.messageSid,
+            command,
+            affectedPatientCount: patients.length,
+            endpointScoped: true,
+            suppressionApplied: command === "stop",
+            suppressionRemoved: command === "start",
+            consentGranted: false,
+            bodyStored: false,
+          },
+        },
+      });
+
+      return {
+        ok: true as const,
+        state: command === "stop" ? "suppressed" as const : "resumed" as const,
+        command,
+        affectedPatientCount: patients.length,
+      };
+    }
+
+    // Ordinary inbound text still requires exact patient identity. Shared numbers are
+    // intentionally ambiguous for message attachment and therefore cause no chart mutation.
+    if (patients.length !== 1) {
+      await tx.integrationEvent.create({
+        data: {
+          organizationId: input.organizationId,
+          integrationId: input.integrationId,
+          resourceType: "twilio_message",
+          resourceId: input.messageSid,
+          direction: "inbound",
+          eventType: "sms.inbound",
+          status: "ignored",
+          metadata: {
+            provider: "twilio",
+            command,
+            reason: "ambiguous_patient",
+            matchingPatientCount: patients.length,
+            bodyStored: false,
+            consentGranted: false,
+          },
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: input.organizationId,
+          actorId: null,
+          actorType: "system",
+          action: "communications.sms.inbound.ambiguous_patient",
+          resourceType: "integration",
+          resourceId: input.integrationId,
+          metadata: { provider: "twilio", providerEventId: input.messageSid, matchingPatientCount: patients.length, bodyStored: false },
+        },
+      });
+      return { ok: false as const, reason: "ambiguous_patient" as const };
+    }
+
+    const patient = patients[0];
+    if (hasProcessedInboundSmsEvent(patient.communicationPrefs, input.messageSid)) {
+      // The bounded patient cache is secondary defense for historical events whose
+      // IntegrationEvent record may predate this durable replay path.
+      await tx.integrationEvent.create({
+        data: {
+          organizationId: input.organizationId,
+          integrationId: input.integrationId,
+          resourceType: "twilio_message",
+          resourceId: input.messageSid,
+          direction: "inbound",
+          eventType: "sms.inbound",
+          status: "duplicate",
+          metadata: { provider: "twilio", command, patientCacheReplay: true, bodyStored: false, consentGranted: false },
+        },
+      });
       return { ok: true as const, state: "duplicate" as const, command };
     }
 
-    let nextPrefs: unknown;
-    if (command === "stop") {
-      nextPrefs = suppressSms({
-        communicationPrefs: patient.communicationPrefs,
-        reason: "recipient_opt_out",
-        eventId: input.messageSid,
-      });
-    } else if (command === "start") {
-      // START removes the suppression state only. It does not invent transactional,
-      // operational, marketing or clinical consent that is not already recorded.
-      nextPrefs = resumeSms({ communicationPrefs: patient.communicationPrefs, eventId: input.messageSid });
-    } else {
-      const sms = readSmsPreferences(patient.communicationPrefs);
-      const recent = new Set(sms.recentInboundEventIds ?? []);
-      recent.add(input.messageSid);
-      nextPrefs = writeSmsPreferences(patient.communicationPrefs, {
-        ...sms,
-        recentInboundEventIds: Array.from(recent).slice(-50),
-      });
-    }
-
+    const sms = readSmsPreferences(patient.communicationPrefs);
+    const recent = new Set(sms.recentInboundEventIds ?? []);
+    recent.add(input.messageSid);
+    const nextPrefs = writeSmsPreferences(patient.communicationPrefs, {
+      ...sms,
+      recentInboundEventIds: Array.from(recent).slice(-50),
+    });
     await tx.patient.update({ where: { id: patient.id }, data: { communicationPrefs: json(nextPrefs) } });
     await tx.integrationEvent.create({
       data: {
@@ -144,13 +269,7 @@ export async function processInboundPatientSms(input: {
         direction: "inbound",
         eventType: "sms.inbound",
         status: "processed",
-        metadata: {
-          provider: "twilio",
-          patientId: patient.id,
-          command,
-          bodyStored: false,
-          consentGranted: false,
-        },
+        metadata: { provider: "twilio", patientId: patient.id, command, bodyStored: false, consentGranted: false },
       },
     });
     await tx.auditLog.create({
@@ -166,8 +285,6 @@ export async function processInboundPatientSms(input: {
           provider: "twilio",
           providerEventId: input.messageSid,
           command,
-          suppressionApplied: command === "stop",
-          suppressionRemoved: command === "start",
           consentGranted: false,
           bodyStored: false,
           integrationId: input.integrationId,
@@ -175,10 +292,6 @@ export async function processInboundPatientSms(input: {
       },
     });
 
-    return {
-      ok: true as const,
-      state: command === "stop" ? "suppressed" as const : command === "start" ? "resumed" as const : "recorded" as const,
-      command,
-    };
+    return { ok: true as const, state: "recorded" as const, command };
   });
 }
