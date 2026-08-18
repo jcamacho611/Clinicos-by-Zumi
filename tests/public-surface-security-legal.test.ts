@@ -22,6 +22,7 @@ describe("public surface security hardening", () => {
   const platformLayout = read("src/app/(platform)/layout.tsx");
   const robots = read("src/app/robots.ts");
   const securityHeaders = read("src/lib/security/headers.ts");
+  const health = read("src/app/api/health/route.ts");
 
   it("keeps authenticated workspaces server-gated and non-indexable", () => {
     expect(platformLayout).toContain("requireClinicSession()");
@@ -60,6 +61,14 @@ describe("public surface security hardening", () => {
     }
   });
 
+  it("keeps unauthenticated health deliberately information-poor", () => {
+    expect(health).toContain('{ status: "ok" }');
+    expect(health).toContain("PRIVATE_NO_STORE_HEADERS");
+    for (const leakedDiagnostic of ["RENDER_GIT_COMMIT", "RENDER_GIT_BRANCH", "databaseConfigured", "liveIntegrations", "source:", "mode:"]) {
+      expect(health).not.toContain(leakedDiagnostic);
+    }
+  });
+
   it("does not expose known server-secret environment variables through NEXT_PUBLIC names", () => {
     const banned = [
       "NEXT_PUBLIC_STRIPE_SECRET_KEY",
@@ -79,6 +88,7 @@ describe("public surface security hardening", () => {
 
 describe("public legal protection", () => {
   const terms = read("src/app/legal/terms/page.tsx");
+  const privacy = read("src/app/legal/privacy/page.tsx");
   const acceptableUse = read("src/app/legal/acceptable-use/page.tsx");
   const publicZumi = read("src/components/marketing/public-living-gateway.tsx");
   const footer = read("src/components/marketing/public-trust-footer.tsx");
@@ -96,6 +106,14 @@ describe("public legal protection", () => {
     expect(terms).toContain("Indemnification");
     expect(terms).toContain("Governing law and disputes");
     expect(terms).not.toContain("Governed legal-document status");
+  });
+
+  it("publishes an operative public privacy notice with a no-PHI boundary", () => {
+    expect(privacy).toContain("Klinikos Privacy Notice");
+    expect(privacy).toContain("do not submit patient information or PHI");
+    expect(privacy).toContain("Information collected automatically");
+    expect(privacy).toContain("Artificial intelligence");
+    expect(privacy).toContain("Your choices and privacy rights");
   });
 
   it("publishes explicit anti-abuse and no-unauthorized-testing rules", () => {
