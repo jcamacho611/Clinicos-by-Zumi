@@ -3,10 +3,12 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { normalizeSmsPhone } from "@/lib/communications/sms-policy";
+import { isIanaTimeZone } from "@/lib/communications/sms-templates";
 
 export type TwilioSmsRoutingConfig = {
   senderPhone: string;
   messagingServiceSid?: string | null;
+  timeZone?: string | null;
   inboundEnabled: boolean;
   configuredAt?: string | null;
   configuredBy?: string | null;
@@ -24,16 +26,22 @@ function parseConfig(value: unknown): IntegrationConfigRecord {
   return isRecord(value) ? value : {};
 }
 
+function validMessagingServiceSid(value: string) {
+  return /^MG[0-9a-fA-F]{32}$/.test(value);
+}
+
 export function readTwilioSmsRoutingConfig(value: unknown): TwilioSmsRoutingConfig | null {
   const config = parseConfig(value);
   if (!isRecord(config.sms)) return null;
   const senderPhone = typeof config.sms.senderPhone === "string" ? normalizeSmsPhone(config.sms.senderPhone) : null;
   if (!senderPhone) return null;
   const sid = typeof config.sms.messagingServiceSid === "string" ? config.sms.messagingServiceSid.trim() : "";
-  if (sid && !/^MG[A-Za-z0-9]{8,}$/.test(sid)) return null;
+  if (sid && !validMessagingServiceSid(sid)) return null;
+  const timeZone = typeof config.sms.timeZone === "string" && isIanaTimeZone(config.sms.timeZone) ? config.sms.timeZone.trim() : null;
   return {
     senderPhone,
     messagingServiceSid: sid || null,
+    timeZone,
     inboundEnabled: config.sms.inboundEnabled === true,
     configuredAt: typeof config.sms.configuredAt === "string" ? config.sms.configuredAt : null,
     configuredBy: typeof config.sms.configuredBy === "string" ? config.sms.configuredBy : null,
@@ -54,31 +62,35 @@ export async function configureTwilioSmsRouting(input: {
   actorId: string;
   senderPhone: string;
   messagingServiceSid?: string | null;
+  timeZone?: string | null;
   inboundEnabled: boolean;
 }) {
   const senderPhone = normalizeSmsPhone(input.senderPhone);
   if (!senderPhone) return { ok: false as const, reason: "invalid_sender" as const };
   const messagingServiceSid = input.messagingServiceSid?.trim() || null;
-  if (messagingServiceSid && !/^MG[A-Za-z0-9]{8,}$/.test(messagingServiceSid)) {
+  if (messagingServiceSid && !validMessagingServiceSid(messagingServiceSid)) {
     return { ok: false as const, reason: "invalid_messaging_service_sid" as const };
   }
-
-  // The sender is a tenancy boundary. Refuse to assign the same normalized destination
-  // to a second organization. The webhook resolver repeats this uniqueness check and
-  // fails closed if legacy/manual data ever violates the rule.
-  const conflict = await db.$queryRaw<Array<{ organizationId: string }>>(Prisma.sql`
-    SELECT "organizationId"
-      FROM "integrations"
-     WHERE "type" = 'communications'
-       AND "vendor" = 'Twilio'
-       AND "organizationId" <> ${input.organizationId}
-       AND "config"->'sms'->>'senderPhone' = ${senderPhone}
-     LIMIT 1
-  `);
-  if (conflict[0]) return { ok: false as const, reason: "sender_already_assigned" as const };
+  const timeZone = input.timeZone?.trim() || null;
+  if (timeZone && !isIanaTimeZone(timeZone)) return { ok: false as const, reason: "invalid_timezone" as const };
 
   const configuredAt = new Date().toISOString();
   return db.$transaction(async (tx) => {
+    // The sender is a tenancy boundary. Serialize all assignments for this normalized
+    // phone so two concurrent admins cannot both pass a check-then-write race.
+    await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${senderPhone}, 0))`);
+
+    const conflict = await tx.$queryRaw<Array<{ organizationId: string }>>(Prisma.sql`
+      SELECT "organizationId"
+        FROM "integrations"
+       WHERE "type" = 'communications'
+         AND "vendor" = 'Twilio'
+         AND "organizationId" <> ${input.organizationId}
+         AND "config"->'sms'->>'senderPhone' = ${senderPhone}
+       LIMIT 1
+    `);
+    if (conflict[0]) return { ok: false as const, reason: "sender_already_assigned" as const };
+
     const current = await tx.integration.findFirst({
       where: { organizationId: input.organizationId, type: "communications", vendor: "Twilio" },
       select: { id: true, config: true },
@@ -89,6 +101,7 @@ export async function configureTwilioSmsRouting(input: {
       sms: {
         senderPhone,
         messagingServiceSid,
+        timeZone,
         inboundEnabled: input.inboundEnabled,
         configuredAt,
         configuredBy: input.actorId,
@@ -105,7 +118,7 @@ export async function configureTwilioSmsRouting(input: {
             status: "pending_connection",
             riskLevel: "high",
             baaRequired: true,
-            phase: "Routing configured; credentials, policy, BAA and live verification remain separate gates",
+            phase: "Platform sender routing configured; credentials, registration, consent policy and live proof remain separate gates",
             config: nextConfig,
           },
         });
@@ -121,6 +134,7 @@ export async function configureTwilioSmsRouting(input: {
         metadata: {
           inboundEnabled: input.inboundEnabled,
           hasMessagingServiceSid: Boolean(messagingServiceSid),
+          hasTimeZone: Boolean(timeZone),
           senderLast4: senderPhone.slice(-4),
           credentialsChanged: false,
           consentPolicyChanged: false,
