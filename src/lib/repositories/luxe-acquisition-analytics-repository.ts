@@ -86,7 +86,7 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
         WITH payment_totals AS (
           SELECT
             "leadId",
-            COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualReconciledCents",
+            COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualGrossCents",
             COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorGrossCents"
           FROM "luxe_lead_payment_evidence"
           WHERE "organizationId" = ${session.organizationId}
@@ -104,7 +104,13 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
         )
         SELECT
           payment_totals."leadId",
-          payment_totals."manualReconciledCents",
+          GREATEST(
+            payment_totals."manualGrossCents" - GREATEST(
+              COALESCE(refund_totals."processorRefundedCents", 0) - payment_totals."processorGrossCents",
+              0
+            ),
+            0
+          )::bigint AS "manualReconciledCents",
           GREATEST(
             payment_totals."processorGrossCents" - COALESCE(refund_totals."processorRefundedCents", 0),
             0
