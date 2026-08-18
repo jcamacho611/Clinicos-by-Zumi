@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
-import { BrandMark } from "@/components/clinic/brand-mark";
+import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 
 export const metadata: Metadata = {
   title: "Payment return | Klinikos",
@@ -15,13 +15,7 @@ export default function PaymentReturnPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(161,74,70,.16),transparent_34%),radial-gradient(circle_at_78%_78%,rgba(111,49,49,.1),transparent_30%)]" />
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col">
         <header className="flex items-center justify-between gap-4">
-          <Link className="flex items-center gap-3" href="/">
-            <BrandMark />
-            <span>
-              <span className="block text-sm font-black tracking-[-.03em]">Klinikos</span>
-              <span className="block text-[9px] font-extrabold uppercase tracking-[.2em] text-[#efaaa1]/70">Payment return</span>
-            </span>
-          </Link>
+          <KlinikosWordmark href="/" framed inverse markClassName="h-10 w-10" textClassName="h-[19px] w-[170px]" className="gap-3" />
           <span className="rounded-full border border-[#efaaa1]/20 px-3 py-2 text-[9px] font-extrabold uppercase tracking-[.16em] text-[#efaaa1]/70">Server verification</span>
         </header>
 
@@ -46,16 +40,16 @@ export default function PaymentReturnPage() {
             </p>
             <div className="mt-6 flex items-start gap-3 border-t border-white/10 pt-5 text-[11px] leading-5 text-white/45">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#efaaa1]" aria-hidden="true" />
-              Payment does not bypass identity, privacy, eligibility, authorization, clinical, or human-review controls.
+              Payment does not bypass identity, privacy, eligibility, authorization, clinical, or human-review controls. The Clinic Operating Analysis does not activate production software.
             </div>
           </aside>
         </section>
 
         <footer className="flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[10px] leading-5 text-white/35">If confirmation requires attention, the saved request remains available for authorized follow-up.</p>
+          <p className="text-[10px] leading-5 text-white/35">Your saved request remains available for authorized follow-up. Do not create a second reservation for the same purchase.</p>
           <div className="flex flex-wrap gap-2">
             <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 text-xs font-extrabold text-white/70 hover:bg-white/[.04]" href="/">Return home</Link>
-            <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#b66d69] px-5 text-xs font-extrabold text-[#170708] hover:bg-[#ca807a]" href="/private-demo">Continue with Klinikos <ArrowRight className="size-4" aria-hidden="true" /></Link>
+            <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#b66d69] px-5 text-xs font-extrabold text-[#170708] hover:bg-[#ca807a]" href="/pricing">See what comes after the analysis <ArrowRight className="size-4" aria-hidden="true" /></Link>
           </div>
         </footer>
       </div>
