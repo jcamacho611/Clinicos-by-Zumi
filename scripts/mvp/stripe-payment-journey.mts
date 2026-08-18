@@ -82,7 +82,11 @@ async function main() {
     await tx.$executeRawUnsafe('CREATE SCHEMA "stripe_migration_compat_probe"');
     await tx.$executeRawUnsafe('SET LOCAL search_path TO "stripe_migration_compat_probe"');
     await tx.$executeRawUnsafe('CREATE TABLE "commercial_checkout_intents" ("status" TEXT NOT NULL DEFAULT \'created\', "amountCents" INTEGER, "provider" TEXT NOT NULL)');
-    await tx.$executeRawUnsafe('CREATE TABLE "commercial_payment_events" ("id" TEXT PRIMARY KEY, "processorVerified" BOOLEAN NOT NULL DEFAULT FALSE, "processingStatus" TEXT NOT NULL DEFAULT \'received\', "verified" BOOLEAN NOT NULL DEFAULT FALSE)');
+    // The probe has to model the columns the migration legitimately depends on, not just
+    // the ones this assertion reads. `provider` predates migration 53 and is indexed by
+    // it alongside the two columns it adds itself, so a probe table without `provider`
+    // fails with 42703 — a defect in the probe, not in the migration.
+    await tx.$executeRawUnsafe('CREATE TABLE "commercial_payment_events" ("id" TEXT PRIMARY KEY, "provider" TEXT NOT NULL DEFAULT \'stripe\', "processorVerified" BOOLEAN NOT NULL DEFAULT FALSE, "processingStatus" TEXT NOT NULL DEFAULT \'received\', "verified" BOOLEAN NOT NULL DEFAULT FALSE)');
     await tx.$executeRawUnsafe("INSERT INTO \"commercial_payment_events\" (\"id\", \"processorVerified\", \"processingStatus\", \"verified\") VALUES ('applied', TRUE, 'applied', TRUE), ('failed', TRUE, 'failed', TRUE), ('unknown', FALSE, 'ignored', FALSE)");
     for (const statement of migrationStatements) await tx.$executeRawUnsafe(statement);
     const rows = await tx.$queryRawUnsafe<Array<{ id: string; processorMode: string; outcome: string }>>('SELECT "id", "processorMode", "outcome" FROM "commercial_payment_events" ORDER BY "id"');

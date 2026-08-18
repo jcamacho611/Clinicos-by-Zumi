@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "node scripts/capture-release.mjs && prisma generate && next build",
     "postinstall": "node scripts/postinstall.mjs",
     "render:build": "node scripts/render-build.mjs",
     "start": "node scripts/start.mjs",
@@ -17,7 +17,9 @@
     "db:validate": "prisma validate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts"
+    "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts",
+    "verify:release": "node scripts/verify-release.mjs",
+    "verify:code": "node scripts/verify-release.mjs --code-only"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",
