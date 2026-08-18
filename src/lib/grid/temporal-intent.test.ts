@@ -30,6 +30,15 @@ describe("Grid temporal intent", () => {
     });
   });
 
+  it("recognizes plural weekday language used for recurring availability", () => {
+    expect(parseGridTemporalIntent("I have treatment space Saturdays from 10am to 2pm")).toMatchObject({
+      weekdays: [6],
+      startTime: "10:00",
+      endTime: "14:00",
+    });
+    expect(stripGridTemporalLanguage("I have treatment space Saturdays from 10am to 2pm")).toBe("I have treatment space");
+  });
+
   it("recognizes weekday and weekend groups", () => {
     expect(parseGridTemporalIntent("available weekdays 8am-4pm").weekdays).toEqual([1, 2, 3, 4, 5]);
     expect(parseGridTemporalIntent("available weekends 10am-2pm").weekdays).toEqual([0, 6]);
