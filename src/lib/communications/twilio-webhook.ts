@@ -43,8 +43,11 @@ export function validateTwilioWebhookSignature(input: {
 
 export type InboundSmsCommand = "stop" | "start" | "help" | "other";
 
-const STOP_WORDS = new Set(["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"]);
-const START_WORDS = new Set(["START", "UNSTOP", "YES"]);
+// These are conservative fallback keywords for deployments where Twilio does not send
+// OptOutType. When signed OptOutType is present, the inbound service trusts Twilio's
+// provider-side classification instead of re-interpreting the message body.
+const STOP_WORDS = new Set(["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT", "REVOKE", "OPTOUT"]);
+const START_WORDS = new Set(["START", "UNSTOP"]);
 const HELP_WORDS = new Set(["HELP", "INFO"]);
 
 export function classifyInboundSmsCommand(body: string): InboundSmsCommand {
