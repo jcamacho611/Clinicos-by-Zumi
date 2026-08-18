@@ -1,7 +1,52 @@
 import "server-only";
 
+import { db } from "@/lib/db";
 import { parseGoDaddyConversationNotification } from "@/lib/luxe-godaddy-conversation-rules";
 import { ingestPublicLuxeLead } from "@/lib/repositories/luxe-acquisition-repository";
+
+const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
+const GODADDY_RESOURCE_TYPE = "godaddy_conversation_notification";
+const GODADDY_EVENT_TYPE = "luxe.godaddy_conversation.inbound";
+
+async function resolveLuxeOrganizationId() {
+  const organization = await db.organization.findUnique({
+    where: { slug: LUXE_ORGANIZATION_SLUG },
+    select: { id: true, status: true },
+  });
+  return organization?.status === "active" ? organization.id : null;
+}
+
+async function alreadyProcessed(organizationId: string, sourceMessageId: string) {
+  return db.integrationEvent.findFirst({
+    where: {
+      organizationId,
+      resourceType: GODADDY_RESOURCE_TYPE,
+      resourceId: sourceMessageId,
+      eventType: GODADDY_EVENT_TYPE,
+    },
+    select: { id: true, status: true },
+  });
+}
+
+async function recordSourceEvent(input: {
+  organizationId: string;
+  sourceMessageId: string;
+  status: string;
+  metadata: Record<string, unknown>;
+}) {
+  return db.integrationEvent.create({
+    data: {
+      organizationId: input.organizationId,
+      integrationId: null,
+      resourceType: GODADDY_RESOURCE_TYPE,
+      resourceId: input.sourceMessageId,
+      direction: "inbound",
+      eventType: GODADDY_EVENT_TYPE,
+      status: input.status,
+      metadata: input.metadata,
+    },
+  });
+}
 
 export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown) {
   const parsed = parseGoDaddyConversationNotification(rawEnvelope);
@@ -10,10 +55,36 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
     return { status: "ignored" as const, reason: "unrecognized_notification" as const };
   }
 
+  const organizationId = await resolveLuxeOrganizationId();
+  if (!organizationId) {
+    return { status: "unavailable" as const, reason: "luxe_organization_unavailable" as const };
+  }
+
+  const replay = await alreadyProcessed(organizationId, parsed.sourceMessageId);
+  if (replay) {
+    return {
+      status: "duplicate" as const,
+      reason: "source_message_already_processed" as const,
+      conversationReference: parsed.conversationReference,
+    };
+  }
+
   // A cancellation email can be operationally important, but the notification format
   // does not always contain enough stable identity to mutate a lead safely. Keep it
   // human-reviewable until a conversation/order identity is linked deterministically.
   if (parsed.kind === "cancellation_observed") {
+    await recordSourceEvent({
+      organizationId,
+      sourceMessageId: parsed.sourceMessageId,
+      status: "manual_review",
+      metadata: {
+        observedKind: parsed.kind,
+        conversationReference: parsed.conversationReference,
+        bodyStored: false,
+        leadMutated: false,
+        paymentVerified: false,
+      },
+    });
     return {
       status: "manual_review" as const,
       reason: "cancellation_requires_identity_link" as const,
@@ -22,6 +93,18 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
   }
 
   if (!parsed.customerName || (!parsed.email && !parsed.phone)) {
+    await recordSourceEvent({
+      organizationId,
+      sourceMessageId: parsed.sourceMessageId,
+      status: "manual_review",
+      metadata: {
+        observedKind: parsed.kind,
+        conversationReference: parsed.conversationReference,
+        bodyStored: false,
+        leadMutated: false,
+        paymentVerified: false,
+      },
+    });
     return {
       status: "manual_review" as const,
       reason: "missing_contact_identity" as const,
@@ -64,6 +147,22 @@ export async function ingestGoDaddyConversationNotification(rawEnvelope: unknown
       qrSource: null,
     },
     website: "",
+  });
+
+  await recordSourceEvent({
+    organizationId,
+    sourceMessageId: parsed.sourceMessageId,
+    status: "processed",
+    metadata: {
+      observedKind: parsed.kind,
+      conversationReference: parsed.conversationReference,
+      orderReference: parsed.orderReference,
+      leadId: result.leadId,
+      leadCreated: result.created,
+      bodyStored: false,
+      bookingVerified: false,
+      paymentVerified: false,
+    },
   });
 
   return {
