@@ -21,6 +21,25 @@ function sign(url: string, params: URLSearchParams, token: string) {
 }
 
 describe("Twilio inbound webhook security", () => {
+  it("matches Twilio's published HMAC-SHA1 request-validation example", () => {
+    const url = "https://example.com/myapp.php?foo=1&bar=2";
+    const token = "12345";
+    const params = new URLSearchParams({
+      CallSid: "CA1234567890ABCDE",
+      Caller: "+14158675310",
+      Digits: "1234",
+      From: "+14158675310",
+      To: "+18005551212",
+    });
+
+    expect(validateTwilioWebhookSignature({
+      publicUrl: url,
+      params,
+      signature: "L/OH5YylLD5NRKLltdqwSvS0BnU=",
+      authToken: token,
+    })).toBe(true);
+  });
+
   it("accepts an exact signed public URL + form payload and rejects tampering", () => {
     const url = "https://www.klinikos.io/api/webhooks/twilio/sms";
     const token = "test-auth-token";
@@ -37,6 +56,7 @@ describe("Twilio inbound webhook security", () => {
     const tampered = new URLSearchParams(params);
     tampered.set("Body", "START");
     expect(validateTwilioWebhookSignature({ publicUrl: url, params: tampered, signature, authToken: token })).toBe(false);
+    expect(validateTwilioWebhookSignature({ publicUrl: `${url}?unexpected=1`, params, signature, authToken: token })).toBe(false);
     expect(validateTwilioWebhookSignature({ publicUrl: url, params, signature: "", authToken: token })).toBe(false);
     expect(validateTwilioWebhookSignature({ publicUrl: url, params, signature, authToken: "" })).toBe(false);
   });
