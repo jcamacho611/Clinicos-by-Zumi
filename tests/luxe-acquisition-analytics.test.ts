@@ -73,6 +73,21 @@ describe("Luxe acquisition operations analytics", () => {
     expect(result.actionQueue[0]?.action).toBe("verify_booking");
   });
 
+  it("treats an external booking observation as stronger evidence that still needs human verification", () => {
+    const result = summarizeAcquisitionLeads([
+      lead({
+        id: "observed",
+        bookingStatus: "observed",
+        followUpDueAt: new Date("2026-08-18T17:10:00.000Z"),
+        lastContactedAt: new Date("2026-08-18T16:40:00.000Z"),
+      }),
+    ], { now, slaMinutes: 15 });
+    expect(result.metrics.bookingObservedLeads).toBe(1);
+    expect(result.metrics.bookedEstimatedValueCents).toBe(0);
+    expect(result.actionQueue[0]?.bookingObservationPending).toBe(true);
+    expect(result.actionQueue[0]?.action).toBe("verify_booking");
+  });
+
   it("attributes manual and processor evidence separately and by source", () => {
     const collectedEvidenceByLead = new Map([
       ["manual", { manualReconciledCents: 15000, processorVerifiedCents: 0 }],
