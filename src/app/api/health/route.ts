@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server";
 
-function nonSecretReleaseIdentity() {
-  const commit = process.env.RENDER_GIT_COMMIT?.trim() || process.env.GIT_COMMIT_SHA?.trim() || null;
-  const branch = process.env.RENDER_GIT_BRANCH?.trim() || null;
-  return { commit, shortCommit: commit ? commit.slice(0, 12) : null, branch };
-}
-
+/**
+ * Public liveness endpoint for the deployment platform. It intentionally proves only
+ * that the web process can answer HTTP. Release SHAs/branches, database configuration,
+ * deployment mode, and integration readiness are private operational observability,
+ * not public health metadata.
+ */
 export function GET() {
-  return NextResponse.json({
-    status: "ok",
-    service: "klinikos",
-    mode: "demo",
-    databaseConfigured: Boolean(process.env.DATABASE_URL),
-    liveIntegrations: false,
-    release: nonSecretReleaseIdentity(),
-    timestamp: new Date().toISOString(),
-  });
+  return NextResponse.json(
+    { status: "ok" },
+    { headers: { "Cache-Control": "no-store, max-age=0" } },
+  );
 }
