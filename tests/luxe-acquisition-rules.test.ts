@@ -26,6 +26,16 @@ describe("Luxe acquisition intake rules", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it("normalizes customer-facing service names before catalog lookup", () => {
+    const parsed = publicLuxeLeadSchema.parse({
+      name: "Maria Example",
+      phone: "5165550199",
+      serviceInterest: "Luxe Rejuvenation Infusion (Botox)",
+      attribution: {},
+    });
+    expect(parsed.serviceInterest).toBe("Botox");
+  });
+
   it("requires email or phone but does not require clinical information", () => {
     expect(publicLuxeLeadSchema.safeParse({ name: "Maria Example", attribution: {} }).success).toBe(false);
     expect(publicLuxeLeadSchema.safeParse({ name: "Maria Example", phone: "(516) 555-0199", attribution: {} }).success).toBe(true);
