@@ -26,9 +26,11 @@ describe("Twilio inbound tenant routing contract", () => {
   it("hardens the public boundary before tenant resolution or mutation", () => {
     expect(webhook.indexOf("content-type")).toBeLessThan(webhook.indexOf("request.text()"));
     expect(webhook.indexOf("MAX_TWILIO_FORM_BYTES")).toBeLessThan(webhook.indexOf("request.text()"));
+    expect(webhook.indexOf("hasDuplicateFormKeys(params)")).toBeLessThan(webhook.indexOf("validateTwilioWebhookSignature"));
     expect(webhook.indexOf("validateTwilioWebhookSignature")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization"));
     expect(webhook.indexOf("accountSid !== configuredAccountSid")).toBeLessThan(webhook.indexOf("resolveInboundTwilioOrganization"));
     expect(webhook.indexOf("resolveInboundTwilioOrganization({")).toBeLessThan(webhook.indexOf("processInboundPatientSms({"));
+    expect(webhook).toContain("Ambiguous Twilio webhook form fields");
     expect(webhook).toContain('request.headers.get("x-twilio-signature")');
     expect(webhook).toContain("TWILIO_AUTH_TOKEN");
     expect(webhook).toContain("TWILIO_ACCOUNT_SID");
