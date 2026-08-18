@@ -2,6 +2,11 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { checkLuxeLeadIntakeRateLimit, recordLuxeLeadIntakeAttempt } from "@/lib/auth/rate-limit";
+import {
+  LUXE_ACQUISITION_JOURNEY_COOKIE,
+  LUXE_ACQUISITION_JOURNEY_TTL_SECONDS,
+  sealLuxeAcquisitionJourney,
+} from "@/lib/luxe-acquisition-journey-token";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { ingestPublicLuxeLead } from "@/lib/repositories/luxe-acquisition-repository";
@@ -102,8 +107,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    await ingestPublicLuxeLead(payload);
-    return NextResponse.json({ received: true }, { status: 202, headers });
+    const result = await ingestPublicLuxeLead(payload);
+    const response = NextResponse.json({ received: true }, { status: 202, headers });
+    const journeyToken = sealLuxeAcquisitionJourney(result.leadId);
+    if (journeyToken) {
+      response.cookies.set({
+        name: LUXE_ACQUISITION_JOURNEY_COOKIE,
+        value: journeyToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: LUXE_ACQUISITION_JOURNEY_TTL_SECONDS,
+      });
+    }
+    return response;
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Lead request is invalid." }, { status: 400, headers });
