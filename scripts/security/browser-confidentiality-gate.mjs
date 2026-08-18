@@ -5,6 +5,7 @@ const ROOT = process.cwd();
 const failures = [];
 
 const ALLOWED_PUBLIC_ENV = new Set(["NEXT_PUBLIC_APP_URL"]);
+const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const CLIENT_FORBIDDEN_IMPORTS = [
   /^@\/lib\/db$/,
   /^@\/lib\/repositories(?:\/|$)/,
@@ -83,21 +84,32 @@ function readText(file) {
   }
 }
 
+function isSourceFile(file) {
+  return SOURCE_EXTENSIONS.includes(path.extname(file).toLowerCase());
+}
+
 function isClientModule(text) {
   const prefix = text.slice(0, 800).replace(/^\uFEFF/, "");
   return /^\s*["']use client["'];/.test(prefix);
 }
 
+function stripTypeOnlyImports(text) {
+  return text
+    .replace(/import\s+type\b[\s\S]*?\bfrom\s*["'][^"']+["']\s*;?/g, "")
+    .replace(/export\s+type\b[\s\S]*?\bfrom\s*["'][^"']+["']\s*;?/g, "");
+}
+
 function importSpecifiers(text) {
+  const runtimeText = stripTypeOnlyImports(text);
   const values = [];
   const patterns = [
     /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["']([^"']+)["']/g,
     /import\s*["']([^"']+)["']/g,
   ];
   for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) values.push(match[1]);
+    for (const match of runtimeText.matchAll(pattern)) values.push(match[1]);
   }
-  return values;
+  return [...new Set(values)];
 }
 
 function resolvedClientTarget(file, specifier) {
@@ -110,6 +122,79 @@ function forbiddenClientImport(file, specifier) {
   if (CLIENT_FORBIDDEN_IMPORTS.some((pattern) => pattern.test(specifier))) return true;
   const resolved = resolvedClientTarget(file, specifier);
   return Boolean(resolved && CLIENT_FORBIDDEN_RESOLVED_PATHS.some((pattern) => pattern.test(resolved)));
+}
+
+function sourceCandidates(base) {
+  const candidates = [base];
+  if (!path.extname(base)) {
+    for (const extension of SOURCE_EXTENSIONS) candidates.push(`${base}${extension}`);
+    for (const extension of SOURCE_EXTENSIONS) candidates.push(path.join(base, `index${extension}`));
+  }
+  return candidates;
+}
+
+function resolveSourceImport(fromFile, specifier) {
+  let base = null;
+  if (specifier.startsWith("@/")) base = path.join(ROOT, "src", specifier.slice(2));
+  else if (specifier.startsWith(".")) base = path.resolve(path.dirname(fromFile), specifier.replace(/[?#].*$/, ""));
+  else return null;
+
+  for (const candidate of sourceCandidates(base)) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile() && isSourceFile(candidate)) return path.resolve(candidate);
+  }
+  return null;
+}
+
+function isConfidentialSourceFile(file, text) {
+  if (/import\s*["']server-only["']\s*;?/.test(text)) return true;
+  const relative = rel(file);
+  return CLIENT_FORBIDDEN_RESOLVED_PATHS.some((pattern) => pattern.test(relative));
+}
+
+/**
+ * Direct-import scanning is not enough: a client component can import a seemingly
+ * neutral helper that imports another helper that eventually reaches a repository,
+ * database, orchestration engine, prompt, or server-only module. Walk the runtime
+ * source graph from every client root and fail on the first confidential dependency.
+ * Type-only imports are erased and therefore are not treated as browser disclosure.
+ */
+function scanTransitiveClientDependencies(sourceFiles, sourceTextByFile) {
+  const confidential = new Set(
+    sourceFiles.filter((file) => isConfidentialSourceFile(file, sourceTextByFile.get(file) ?? "")),
+  );
+
+  const dependencyCache = new Map();
+  function dependencies(file) {
+    if (dependencyCache.has(file)) return dependencyCache.get(file);
+    const text = sourceTextByFile.get(file) ?? "";
+    const resolved = importSpecifiers(text)
+      .map((specifier) => resolveSourceImport(file, specifier))
+      .filter(Boolean);
+    dependencyCache.set(file, resolved);
+    return resolved;
+  }
+
+  for (const root of sourceFiles.filter((file) => isClientModule(sourceTextByFile.get(file) ?? ""))) {
+    const visited = new Set([root]);
+    const queue = [{ file: root, chain: [root] }];
+    while (queue.length) {
+      const current = queue.shift();
+      for (const dependency of dependencies(current.file)) {
+        if (visited.has(dependency)) continue;
+        const chain = [...current.chain, dependency];
+        if (confidential.has(dependency)) {
+          fail(
+            root,
+            "client-transitive-import",
+            `runtime dependency reaches server-confidential '${rel(dependency)}' via ${chain.map(rel).join(" -> ")}`,
+          );
+          continue;
+        }
+        visited.add(dependency);
+        queue.push({ file: dependency, chain });
+      }
+    }
+  }
 }
 
 function environmentNames(text) {
@@ -127,10 +212,12 @@ function processEnvReferences(text) {
 
 function scanClientModules() {
   const src = path.join(ROOT, "src");
-  for (const file of walk(src)) {
-    if (!/\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(file)) continue;
-    const text = readText(file);
-    if (!text || !isClientModule(text)) continue;
+  const sourceFiles = walk(src).filter(isSourceFile).map((file) => path.resolve(file));
+  const sourceTextByFile = new Map(sourceFiles.map((file) => [file, readText(file) ?? ""]));
+
+  for (const file of sourceFiles) {
+    const text = sourceTextByFile.get(file) ?? "";
+    if (!isClientModule(text)) continue;
 
     for (const specifier of importSpecifiers(text)) {
       if (forbiddenClientImport(file, specifier)) {
@@ -150,6 +237,8 @@ function scanClientModules() {
       if (text.includes(marker)) fail(file, "client-marker", `confidential marker '${marker}' appears in a client module`);
     }
   }
+
+  scanTransitiveClientDependencies(sourceFiles, sourceTextByFile);
 }
 
 function scanPublicEnvironmentSurface() {
