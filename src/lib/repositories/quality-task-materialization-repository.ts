@@ -118,8 +118,11 @@ export async function materializeQualityGapTask(
       };
     }
 
+    // Only active organization measure metadata may label new operational work.
+    // A gap tied to a retired/inactive definition stays visible, but the task uses
+    // a neutral label and requires the human reviewer to resolve the governing rule.
     const measure = await tx.qualityMeasure.findFirst({
-      where: { id: gap.measureId, organizationId: session.organizationId },
+      where: { id: gap.measureId, organizationId: session.organizationId, status: "active" },
       select: { id: true, key: true, name: true, version: true },
     });
 
@@ -183,6 +186,7 @@ export async function materializeQualityGapTask(
           measureId: gap.measureId,
           measureKey: measure?.key ?? null,
           measureVersion: measure?.version ?? null,
+          activeMeasureMapped: Boolean(measure),
           ownerAssigned: Boolean(owner),
           priority,
           dueAt: gap.dueAt?.toISOString() ?? null,
@@ -211,7 +215,7 @@ export async function materializeQualityGapTask(
       ownerId: task.ownerId,
       created: true,
       idempotent: false,
-      requiresReview: false,
+      requiresReview: !measure,
     };
   });
 }
