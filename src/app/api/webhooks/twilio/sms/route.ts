@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 function publicWebhookUrl(request: Request) {
   const incoming = new URL(request.url);
-  const configuredBase = process.env.TWILIO_WEBHOOK_BASE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const configuredBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (!configuredBase) return incoming.toString();
 
   try {
