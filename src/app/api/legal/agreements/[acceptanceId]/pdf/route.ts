@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticationSession } from "@/lib/auth/session";
-import { getUserLegalAcceptance, recordLegalEvent } from "@/lib/legal/legal-access";
+import { getUserLegalAcceptance, recordLegalEvidenceEvent } from "@/lib/legal/legal-access";
 import { renderSignedAgreementPdf } from "@/lib/legal/agreement-pdf";
-import { buildGlobalAgreement } from "@/lib/legal/global-agreement";
-import { getLegalConfigurationStatus } from "@/lib/legal/legal-config";
 
 export async function GET(
   _request: Request,
@@ -24,21 +22,16 @@ export async function GET(
     const bytes = await renderSignedAgreementPdf(record);
     const body = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
-    const legal = getLegalConfigurationStatus();
-    if (legal.ready) {
-      const current = buildGlobalAgreement(legal.config);
-      if (current.documentKey === record.documentKey) {
-        await recordLegalEvent({
-          session,
-          eventType: "legal.agreement.copy_downloaded",
-          agreement: {
-            ...current,
-            documentVersion: record.documentVersion,
-          },
-          acceptanceId: record.id,
-          metadata: { artifact: "signed_pdf" },
-        }).catch(() => undefined);
-      }
+    if (record.documentSha256) {
+      await recordLegalEvidenceEvent({
+        session,
+        eventType: "legal.agreement.copy_downloaded",
+        documentKey: record.documentKey,
+        documentVersion: record.documentVersion,
+        documentSha256: record.documentSha256,
+        acceptanceId: record.id,
+        metadata: { artifact: "signed_pdf" },
+      }).catch(() => undefined);
     }
 
     return new Response(body, {
