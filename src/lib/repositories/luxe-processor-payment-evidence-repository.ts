@@ -68,6 +68,10 @@ async function findEvidenceByReference(
   return rows[0] ?? null;
 }
 
+function sameProcessorEvidence(evidence: PaymentEvidenceRow, leadId: string, amountCents: number) {
+  return evidence.leadId === leadId && evidence.processorVerified && evidence.amountCents === amountCents;
+}
+
 export async function recordProcessorVerifiedLuxeStripeDeposit(input: NormalizedLuxeStripeDeposit) {
   if (input.outcome !== "succeeded") {
     return { recorded: false as const, outcome: input.outcome };
@@ -100,12 +104,12 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
       evidence = await findEvidenceByReference(tx, organization.id, input.alternateExternalReference);
     }
 
-    if (evidence?.leadId !== undefined && evidence.leadId !== lead.id) {
+    if (evidence && evidence.leadId !== lead.id) {
       throw new NetworkAccessError("This Stripe payment reference is already linked to a different Luxe lead.", 409);
     }
     if (evidence?.processorVerified) {
-      if (evidence.amountCents !== input.amountCents) {
-        throw new NetworkAccessError("Existing processor evidence does not match the signed Stripe amount.", 409);
+      if (!sameProcessorEvidence(evidence, lead.id, input.amountCents)) {
+        throw new NetworkAccessError("Existing processor evidence does not match the signed Stripe payment.", 409);
       }
       return {
         recorded: true as const,
@@ -116,9 +120,53 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
       };
     }
 
-    const evidenceId = evidence?.id ?? randomUUID();
-    const previousManualAmount = evidence?.amountCents ?? null;
-    if (evidence) {
+    let upgradedManualEvidence = Boolean(evidence);
+    let previousManualAmount = evidence?.amountCents ?? null;
+    let evidenceId = evidence?.id ?? randomUUID();
+
+    if (!evidence) {
+      const inserted = await tx.$queryRaw<PaymentEvidenceRow[]>(Prisma.sql`
+        INSERT INTO "luxe_lead_payment_evidence" (
+          "id", "organizationId", "leadId", "provider", "externalReference", "amountCents", "currency",
+          "paymentKind", "evidenceSource", "verificationMethod", "processorVerified", "receivedAt", "actorId", "note"
+        ) VALUES (
+          ${evidenceId}, ${organization.id}, ${lead.id}, 'stripe', ${input.externalReference}, ${input.amountCents}, 'USD',
+          'deposit', 'stripe_webhook', 'processor_verification', true, ${input.receivedAt}, NULL,
+          ${`Stripe signed webhook verified payment. Processor event ${input.eventId}.`}
+        )
+        ON CONFLICT ("organizationId", "provider", "externalReference") DO NOTHING
+        RETURNING "id", "leadId", "externalReference", "amountCents", "verificationMethod", "processorVerified"
+      `);
+
+      if (inserted[0]) {
+        evidence = inserted[0];
+      } else {
+        // Another webhook delivery may have won the unique-key race. Lock and
+        // inspect the row rather than turning a valid Stripe retry into a failure.
+        evidence = await findEvidenceByReference(tx, organization.id, input.externalReference);
+        if (!evidence) throw new NetworkAccessError("Stripe payment evidence could not be resolved after a concurrent insert.", 409);
+        if (evidence.leadId !== lead.id) {
+          throw new NetworkAccessError("This Stripe payment reference is already linked to a different Luxe lead.", 409);
+        }
+        if (evidence.processorVerified) {
+          if (!sameProcessorEvidence(evidence, lead.id, input.amountCents)) {
+            throw new NetworkAccessError("Existing processor evidence does not match the signed Stripe payment.", 409);
+          }
+          return {
+            recorded: true as const,
+            idempotent: true as const,
+            evidenceId: evidence.id,
+            paymentStatus: lead.paymentStatus,
+            bookingStatus: lead.bookingStatus,
+          };
+        }
+        upgradedManualEvidence = true;
+        previousManualAmount = evidence.amountCents;
+        evidenceId = evidence.id;
+      }
+    }
+
+    if (evidence && !evidence.processorVerified && upgradedManualEvidence) {
       await tx.$executeRaw(Prisma.sql`
         UPDATE "luxe_lead_payment_evidence"
         SET "amountCents" = ${input.amountCents},
@@ -131,17 +179,6 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
             "actorId" = NULL,
             "note" = ${`Stripe signed webhook verified payment. Processor event ${input.eventId}. Manual reconciliation evidence was upgraded to processor verification.`}
         WHERE "id" = ${evidence.id}
-      `);
-    } else {
-      await tx.$executeRaw(Prisma.sql`
-        INSERT INTO "luxe_lead_payment_evidence" (
-          "id", "organizationId", "leadId", "provider", "externalReference", "amountCents", "currency",
-          "paymentKind", "evidenceSource", "verificationMethod", "processorVerified", "receivedAt", "actorId", "note"
-        ) VALUES (
-          ${evidenceId}, ${organization.id}, ${lead.id}, 'stripe', ${input.externalReference}, ${input.amountCents}, 'USD',
-          'deposit', 'stripe_webhook', 'processor_verification', true, ${input.receivedAt}, NULL,
-          ${`Stripe signed webhook verified payment. Processor event ${input.eventId}.`}
-        )
       `);
     }
 
@@ -200,6 +237,7 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
           evidenceId,
           provider: "stripe",
           externalReference: input.externalReference,
+          alternateExternalReference: input.alternateExternalReference,
           externalCheckoutId: input.externalCheckoutId,
           externalPaymentIntentId: input.externalPaymentIntentId,
           stripeEventId: input.eventId,
@@ -213,6 +251,7 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
           bookingStatus: lead.bookingStatus,
           taskId,
           cardDataStored: false,
+          upgradedManualEvidence,
           previousManualAmount,
         },
       },
@@ -230,6 +269,7 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
           paymentEventId: event.id,
           provider: "stripe",
           externalReference: input.externalReference,
+          alternateExternalReference: input.alternateExternalReference,
           stripeEventId: input.eventId,
           amountCents: input.amountCents,
           currency: input.currency,
@@ -237,7 +277,7 @@ export async function recordProcessorVerifiedLuxeStripeDeposit(input: Normalized
           processorVerified: true,
           bookingVerified: false,
           taskId,
-          upgradedManualEvidence: Boolean(evidence),
+          upgradedManualEvidence,
           previousManualAmount,
         },
       },
