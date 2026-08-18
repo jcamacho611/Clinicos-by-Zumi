@@ -1,6 +1,7 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
 import { LUXE_MANUAL_PAYMENT_EVENT, manualLuxePaymentEvidenceSchema } from "@/lib/luxe-payment-evidence-rules";
@@ -8,17 +9,13 @@ import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 const LUXE_ORGANIZATION_SLUG = process.env.LUXE_MEDI_ORGANIZATION_SLUG?.trim() || "luxe-medi";
 
-function objectValue(value: Prisma.JsonValue | null | undefined) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, Prisma.JsonValue> : null;
-}
-
-function stringValue(value: Prisma.JsonValue | undefined) {
-  return typeof value === "string" ? value : null;
-}
-
-function numberValue(value: Prisma.JsonValue | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
+type PaymentEvidenceRow = {
+  id: string;
+  leadId: string;
+  amountCents: number;
+  verificationMethod: string;
+  processorVerified: boolean;
+};
 
 export async function recordManualLuxePaymentEvidence(session: ClinicSession, leadId: string, rawInput: unknown) {
   const input = manualLuxePaymentEvidenceSchema.parse(rawInput);
@@ -33,32 +30,40 @@ export async function recordManualLuxePaymentEvidence(session: ClinicSession, le
   return db.$transaction(async (tx) => {
     const lead = await tx.lead.findFirst({
       where: { id: leadId, organizationId: session.organizationId },
-      select: { id: true, paymentStatus: true, name: true },
+      select: { id: true, paymentStatus: true },
     });
     if (!lead) throw new NetworkAccessError("Lead not found for this organization.", 404);
 
-    const recentPaymentEvents = await tx.leadEvent.findMany({
-      where: {
-        organizationId: session.organizationId,
-        eventType: { in: [LUXE_MANUAL_PAYMENT_EVENT, "payment_verified_processor"] },
-      },
-      select: { id: true, leadId: true, eventType: true, metadata: true },
-      orderBy: { createdAt: "desc" },
-      take: 2000,
-    });
+    const evidenceId = randomUUID();
+    const receivedAt = new Date(input.receivedAt);
+    const inserted = await tx.$queryRaw<PaymentEvidenceRow[]>(Prisma.sql`
+      INSERT INTO "luxe_lead_payment_evidence" (
+        "id", "organizationId", "leadId", "provider", "externalReference", "amountCents", "currency",
+        "paymentKind", "evidenceSource", "verificationMethod", "processorVerified", "receivedAt", "actorId", "note"
+      ) VALUES (
+        ${evidenceId}, ${session.organizationId}, ${lead.id}, ${input.provider}, ${input.externalReference}, ${input.amountCents}, ${input.currency},
+        ${input.paymentKind}, ${input.evidenceSource}, 'manual_reconciliation', false, ${receivedAt}, ${session.userId}, ${input.note}
+      )
+      ON CONFLICT ("organizationId", "provider", "externalReference") DO NOTHING
+      RETURNING "id", "leadId", "amountCents", "verificationMethod", "processorVerified"
+    `);
 
-    const matchingReference = recentPaymentEvents.find((event) => {
-      const metadata = objectValue(event.metadata);
-      return stringValue(metadata?.provider) === input.provider && stringValue(metadata?.externalReference) === input.externalReference;
-    });
-
-    if (matchingReference) {
-      const metadata = objectValue(matchingReference.metadata);
-      const amountCents = numberValue(metadata?.amountCents);
-      if (matchingReference.leadId !== lead.id || amountCents !== input.amountCents) {
+    let evidence = inserted[0] ?? null;
+    if (!evidence) {
+      const existing = await tx.$queryRaw<PaymentEvidenceRow[]>(Prisma.sql`
+        SELECT "id", "leadId", "amountCents", "verificationMethod", "processorVerified"
+        FROM "luxe_lead_payment_evidence"
+        WHERE "organizationId" = ${session.organizationId}
+          AND "provider" = ${input.provider}
+          AND "externalReference" = ${input.externalReference}
+        LIMIT 1
+        FOR UPDATE
+      `);
+      evidence = existing[0] ?? null;
+      if (!evidence || evidence.leadId !== lead.id || evidence.amountCents !== input.amountCents || evidence.verificationMethod !== "manual_reconciliation" || evidence.processorVerified) {
         throw new NetworkAccessError("This payment reference is already linked to different evidence.", 409);
       }
-      return { eventId: matchingReference.id, inserted: false, paymentStatus: lead.paymentStatus };
+      return { evidenceId: evidence.id, eventId: null, inserted: false, paymentStatus: lead.paymentStatus };
     }
 
     const event = await tx.leadEvent.create({
@@ -71,6 +76,7 @@ export async function recordManualLuxePaymentEvidence(session: ClinicSession, le
         toStatus: "manual_reconciled",
         note: input.note,
         metadata: {
+          evidenceId: evidence.id,
           provider: input.provider,
           externalReference: input.externalReference,
           amountCents: input.amountCents,
@@ -99,17 +105,19 @@ export async function recordManualLuxePaymentEvidence(session: ClinicSession, le
         resourceType: "lead",
         resourceId: lead.id,
         metadata: {
+          paymentEvidenceId: evidence.id,
           paymentEventId: event.id,
           provider: input.provider,
           externalReference: input.externalReference,
           amountCents: input.amountCents,
           currency: input.currency,
           evidenceSource: input.evidenceSource,
+          verificationMethod: "manual_reconciliation",
           processorVerified: false,
         },
       },
     });
 
-    return { eventId: event.id, inserted: true, paymentStatus: "manual_reconciled" as const };
+    return { evidenceId: evidence.id, eventId: event.id, inserted: true, paymentStatus: "manual_reconciled" as const };
   });
 }
