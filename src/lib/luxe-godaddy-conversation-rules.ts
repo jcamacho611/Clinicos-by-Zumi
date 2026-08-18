@@ -40,6 +40,22 @@ function extractConversationReference(body: string) {
   return match?.[1] ?? null;
 }
 
+export function messageRequestsCancellation(message: string | null | undefined) {
+  const text = message?.replace(/\s+/g, " ").trim();
+  if (!text) return false;
+
+  // Negated intent must win. A message such as "do not cancel" cannot create
+  // cancellation recovery work merely because it contains the word cancel.
+  if (/\b(?:do not|don't|dont|please do not|please don't|not to) cancel\b/i.test(text)) return false;
+  if (/\b(?:keep|confirm|leave) (?:my |the )?(?:appointment|booking)\b/i.test(text) && /\bcancel\b/i.test(text)) return false;
+
+  return /\bplease cancel\b/i.test(text)
+    || /\b(?:i|we) (?:need|want|would like|have) to cancel\b/i.test(text)
+    || /\bcancel (?:my|our|the) (?:appointment|booking)\b/i.test(text)
+    || /\b(?:appointment|booking) (?:was|is|has been)? ?(?:cancelled|canceled)\b/i.test(text)
+    || /^(?:cancel|cancellation)\b/i.test(text);
+}
+
 export function parseGoDaddyConversationNotification(rawEnvelope: unknown): ParsedGoDaddyConversation {
   const envelope = godaddyConversationEnvelopeSchema.parse(rawEnvelope);
   const subjectLooksRight = /new message for luxe medical spa/i.test(envelope.subject);
@@ -71,7 +87,7 @@ export function parseGoDaddyConversationNotification(rawEnvelope: unknown): Pars
   const initialMessage = stripForwardedHistory(capture(envelope.body, /received a new message\.\s*\n\s*From[^:]*:\s*\n\s*([\s\S]+)$/i));
   const normalizedMessage = initialMessage?.replace(/\n{3,}/g, "\n\n").trim() ?? null;
 
-  const cancellationObserved = /\b(cancel|cancelled|canceled|please cancel)\b/i.test(normalizedMessage ?? "");
+  const cancellationObserved = messageRequestsCancellation(normalizedMessage);
   const bookingObserved = Boolean(orderReference && /\nBooking\b/i.test(envelope.body) && serviceInterest);
   const inquiryObserved = Boolean(normalizedMessage && !bookingObserved && !cancellationObserved);
 
