@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ZumiBrowserWorkspace } from "@/components/clinic/zumi-browser-workspace";
+import { ZumiPresence } from "@/components/clinic/zumi-presence";
 import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 
@@ -13,5 +13,5 @@ export default async function ZumiPage() {
   const session = await requireClinicSession();
   if (!can(session.role, "ai", "read")) return notFound();
 
-  return <ZumiBrowserWorkspace userName={session.name} />;
+  return <ZumiPresence userName={session.name} />;
 }
