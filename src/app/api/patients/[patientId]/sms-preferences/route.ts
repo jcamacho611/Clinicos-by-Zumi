@@ -6,6 +6,7 @@ import {
   getPatientSmsState,
   recordPatientSmsPermission,
 } from "@/lib/communications/patient-sms-service";
+import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const updateSchema = z.object({
   messageClass: z.enum(["transactional", "operational", "marketing"]),
@@ -50,6 +51,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
   const { patientId } = await params;
   const denied = await enforceApiPermission(session, "consents", "update", { request, resourceId: patientId });
   if (denied) return denied;
+
+  const originDecision = evaluateSameOriginMutation(request);
+  if (!originDecision.allowed) {
+    return NextResponse.json({ error: "Cross-origin mutation blocked." }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
