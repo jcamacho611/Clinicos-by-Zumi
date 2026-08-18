@@ -22,10 +22,12 @@ describe("Zumi ambient copilot contract", () => {
     expect(shell).not.toContain('aria-label="Open Zumi"');
   });
 
-  it("uses one conversation component for compact and expanded modes", () => {
-    expect(expandedPage).toContain('import { ZumiPresence }');
-    expect(expandedPage).toContain('<ZumiPresence userName={session.name} />');
+  it("keeps one mounted conversation instance across normal and expanded routes", () => {
+    expect(shell).toContain('<ZumiPresence userName={session.name} />');
+    expect(shell).not.toContain('!expandedZumiConversation ? <ZumiPresence');
+    expect(expandedPage).toContain("return null;");
     expect(expandedPage).not.toContain("ZumiBrowserWorkspace");
+    expect(expandedPage).not.toContain("<ZumiPresence");
   });
 
   it("keeps Zumi context-aware without advertising an intelligence subsystem to the user", () => {
