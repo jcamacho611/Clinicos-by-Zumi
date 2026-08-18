@@ -22,7 +22,7 @@ export type QualityAssuranceExperience = {
   snapshot: QualityGuardianSnapshot;
   nextActions: NextAction[];
   expertNeeds: ExpertEngagementNeed[];
-  internalCapabilityAvailable: boolean;
+  internalCapabilityAvailable: boolean | null;
   blockers: BlockerResolution[];
   warnings: string[];
 };
@@ -140,13 +140,14 @@ function expertEscalations(input: {
  * Trusted Zumi quality orchestration consumes already-authorized deterministic
  * evaluations. It fails closed on tenant scope, never lets model output establish
  * quality truth, and creates outside Expert Grid demand only when the organization
- * lacks internal quality capability. Expert demand contains no patient/evidence
- * payload and still requires a separately governed engagement before data access.
+ * has an explicit governed `false` for internal quality capability. Unknown
+ * capability state does not create paid/external work. Expert demand contains no
+ * patient/evidence payload and still requires a separately governed engagement.
  */
 export function orchestrateQualityAssurance(input: {
   context: ActorContext;
   evaluations: readonly GovernedRuleEvaluation[];
-  internalQualityCapabilityAvailable: boolean;
+  internalQualityCapabilityAvailable?: boolean | null;
   jurisdictionKey?: string | null;
   requiredExpertEvidenceKeys?: string[];
   requiredAgreementEvidenceKeys?: string[];
@@ -173,13 +174,20 @@ export function orchestrateQualityAssurance(input: {
 
   const tenantEvaluations = input.evaluations.filter((evaluation) => evaluation.organizationId === organizationId);
   const excludedCount = input.evaluations.length - tenantEvaluations.length;
-  const warnings = excludedCount > 0
+  const warnings: string[] = excludedCount > 0
     ? [`${excludedCount} out-of-scope or unscoped quality evaluation(s) were excluded before orchestration.`]
     : [];
   const now = input.now ?? new Date();
   const brief = qualityGuardianBrief(tenantEvaluations, now);
+  const internalCapabilityAvailable = input.internalQualityCapabilityAvailable ?? null;
 
-  if (input.internalQualityCapabilityAvailable) {
+  // External Expert Grid demand requires an explicit governed determination that
+  // internal capability is unavailable. Unknown state remains internal-first and
+  // is surfaced as a warning instead of being treated as a commercial trigger.
+  if (internalCapabilityAvailable !== false) {
+    if (internalCapabilityAvailable === null) {
+      warnings.push("Internal quality capability availability is not configured; Expert Grid escalation was not attempted.");
+    }
     const governed = governNextActions({
       actions: brief.nextActions,
       context: input.context,
@@ -191,7 +199,7 @@ export function orchestrateQualityAssurance(input: {
         snapshot: brief.snapshot,
         nextActions: governed.nextActions,
         expertNeeds: [],
-        internalCapabilityAvailable: true,
+        internalCapabilityAvailable,
         blockers: governed.blockers,
         warnings,
       },
