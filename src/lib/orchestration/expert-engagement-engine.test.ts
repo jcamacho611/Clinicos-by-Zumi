@@ -20,6 +20,7 @@ function need(overrides: Partial<ExpertEngagementNeed> = {}): ExpertEngagementNe
     remoteAllowed: true,
     onsiteLocationKey: null,
     requiredEvidenceKeys: ["quality-experience"],
+    requiredAgreementEvidenceKeys: ["approved-data-services-agreement"],
     requiredDataAccessClass: "limited_phi",
     urgency: "priority",
     maxPriceCents: 150000,
@@ -45,8 +46,7 @@ function engagement(overrides: Partial<ExpertEngagement> = {}): ExpertEngagement
       allowedResourceTypes: ["quality_evaluation", "supporting_document"],
       dataAccessClass: "limited_phi",
       minimumNecessaryFields: ["qualityStatus", "evidenceStatus"],
-      requiresBaaEvidence: true,
-      baaEvidenceRef: "agreement:baa-1",
+      agreementEvidenceRefs: { "approved-data-services-agreement": "agreement:1" },
       scopedAuthorizationApprovedBy: "owner-1",
       scopedAuthorizationApprovedAt: new Date("2026-08-18T11:30:00Z"),
     },
@@ -82,16 +82,16 @@ describe("Expert Grid governed engagement", () => {
     expect(result.blockers).toContain("Explicit scoped data-access authorization is required.");
   });
 
-  it("blocks activation when required BAA/contract evidence is missing", () => {
+  it("blocks activation when a policy-required agreement evidence key is missing", () => {
     const result = evaluateExpertEngagementReadiness({
-      engagement: engagement({ terms: { ...engagement().terms, baaEvidenceRef: null } }),
+      engagement: engagement({ terms: { ...engagement().terms, agreementEvidenceRefs: {} } }),
       need: need(),
       matchEligible: true,
       now,
     });
 
     expect(result.ready).toBe(false);
-    expect(result.blockers).toContain("Required BAA/contract evidence is missing.");
+    expect(result.blockers).toContain("Required agreement evidence is missing: approved-data-services-agreement.");
   });
 
   it("does not allow a wider data-access class than the approved Grid need", () => {
