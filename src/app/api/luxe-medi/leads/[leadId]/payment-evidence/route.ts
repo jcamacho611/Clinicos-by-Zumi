@@ -16,7 +16,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ lea
 
   const { leadId } = await params;
   try {
-    const result = await recordManualLuxePaymentEvidence(session, leadId, await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Payment evidence must be valid JSON." }, { status: 400 });
+    }
+    const result = await recordManualLuxePaymentEvidence(session, leadId, body);
     return NextResponse.json({ data: result }, { status: result.inserted ? 201 : 200, headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof ZodError) {
