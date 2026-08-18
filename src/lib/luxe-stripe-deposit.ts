@@ -72,7 +72,9 @@ export async function createLuxeStripeDepositCheckout(input: {
   const returnUrl = new URL(input.returnUrl);
   if (env.NODE_ENV === "production" && returnUrl.protocol !== "https:") throw new Error("Production Luxe deposit return URL must use HTTPS.");
 
-  const metadata: Stripe.MetadataParam = {
+  // Keep this as a plain string map instead of coupling the application to a
+  // Stripe SDK metadata alias that can move between SDK major versions.
+  const metadata: Record<string, string> = {
     [SALE_MODE_METADATA_KEY]: LUXE_STRIPE_SALE_MODE,
     [JOURNEY_METADATA_KEY]: input.journeyToken,
     [EXPECTED_AMOUNT_METADATA_KEY]: String(status.amountCents),
