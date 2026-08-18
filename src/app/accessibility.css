@@ -25,6 +25,12 @@
   box-shadow: 0 0 0 2px rgba(5, 3, 3, 0.92);
 }
 
+.klinikos-cinematic-root :where(input, textarea)::placeholder,
+.klinikos-cinematic-root #zumi-presence-panel :where(input, textarea)::placeholder {
+  color: #9a817c !important;
+  opacity: 1;
+}
+
 #klinikos-page-content:focus {
   outline: none;
 }
