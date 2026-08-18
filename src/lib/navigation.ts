@@ -3,7 +3,9 @@ export const navigation = [
     label: "Home",
     items: [
       { href: "/dashboard", label: "Home", icon: "LayoutDashboard", description: "Your daily overview, priorities, and shortcuts." },
-      { href: "/zumi", label: "Zumi", icon: "Sparkles", description: "Talk, research, brief, and coordinate governed work with Klinikos Intelligence." },
+      { href: "/zumi", label: "Zumi", icon: "Sparkles", description: "Use the Klinikos Browser to understand state, resolve routes, and coordinate governed work." },
+      { href: "/paths", label: "Routes", icon: "Route", description: "See governed journeys from current state to a desired healthcare outcome." },
+      { href: "/ecosystem", label: "Ecosystem", icon: "Orbit", description: "See how EDU, Grid, Clinic OS, capacity, and Network compound across the healthcare lifecycle." },
       { href: "/front-desk", label: "Front desk", icon: "Headphones", description: "Appointments, arrivals, readiness, and patient requests." },
       { href: "/provider", label: "Provider workspace", icon: "Stethoscope", description: "Clinical priorities, encounters, and review work." },
     ],
@@ -41,7 +43,7 @@ export const navigation = [
   {
     label: "Grid",
     items: [
-      { href: "/grid", label: "The Grid", icon: "Orbit", description: "Open the provider, service, and opportunity network." },
+      { href: "/grid", label: "The Grid", icon: "Orbit", description: "Open the universal healthcare opportunity and capacity network." },
     ],
   },
   {
@@ -68,7 +70,7 @@ export const navigation = [
   {
     label: "Learning",
     items: [
-      { href: "/edu", label: "Klinikos EDU", icon: "BookOpenCheck", description: "Open the virtual clinic lab, courses, and simulations." },
+      { href: "/edu", label: "Klinikos EDU", icon: "BookOpenCheck", description: "Open the virtual clinic lab, courses, simulations, competency, and readiness experience." },
     ],
   },
   {
@@ -86,7 +88,9 @@ export const navigation = [
 
 export const workspaceMeta: Record<string, { title: string; eyebrow: string }> = {
   dashboard: { title: "Home", eyebrow: "Your Klinikos workspace" },
-  zumi: { title: "Zumi", eyebrow: "Klinikos Intelligence" },
+  zumi: { title: "Klinikos Browser", eyebrow: "Klinikos Intelligence" },
+  paths: { title: "Routes", eyebrow: "Current state → desired state" },
+  ecosystem: { title: "Ecosystem", eyebrow: "Healthcare lifecycle" },
   "front-desk": { title: "Front desk", eyebrow: "Today at a glance" },
   provider: { title: "Provider workspace", eyebrow: "Clinical priority queue" },
   patients: { title: "Patient charts", eyebrow: "Unified record" },
@@ -113,7 +117,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   escalations: { title: "Escalations", eyebrow: "Human review required" },
   "ai-assistants": { title: "Zumi Copilot", eyebrow: "Safe workflow automation" },
   "patient-navigation": { title: "Patient navigation", eyebrow: "Administrative next steps" },
-  grid: { title: "The Grid", eyebrow: "Provider and service network" },
+  grid: { title: "The Grid", eyebrow: "Opportunity and capacity network" },
   network: { title: "Care network", eyebrow: "Connected-care coordination" },
   referrals: { title: "Referrals", eyebrow: "Closed-loop care coordination" },
   "access-controls": { title: "Access & sharing", eyebrow: "Consent-bound record exchange" },
