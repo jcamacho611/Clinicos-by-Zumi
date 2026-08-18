@@ -226,6 +226,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
     if (duplicate[0]) {
       if (
         duplicate[0].userId !== input.session.userId ||
+        duplicate[0].organizationId !== input.session.organizationId ||
         duplicate[0].documentKey !== input.agreement.documentKey ||
         duplicate[0].documentVersion !== input.agreement.documentVersion ||
         duplicate[0].documentSha256 !== sha256
@@ -238,7 +239,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
     const id = randomUUID();
     const inserted = await tx.$queryRaw<LegalAcceptanceRecord[]>(Prisma.sql`
       INSERT INTO "access_gate_acceptances" (
-        "id", "email", "documentKey", "documentVersion", "acceptedAt", "verifiedEmailAt",
+        "id", "email", "documentKey", "documentVersion", "acceptedAt",
         "ipAddress", "userAgent", "source", "userId", "organizationId", "legalName",
         "signerTitle", "signerCapacity", "signerCountry", "signerRegion", "signatureMethod",
         "signatureText", "authorityConfirmed", "electronicSignatureConsentedAt", "presentedAt",
@@ -246,7 +247,7 @@ export async function createLegalAcceptance(input: CreateAcceptanceInput): Promi
         "documentSnapshot", "acknowledgments", "sessionId", "idempotencyKey", "sourceRoute", "status"
       ) VALUES (
         ${id}, ${input.session.email}, ${input.agreement.documentKey}, ${input.agreement.documentVersion},
-        ${input.signedAt}, NULL, ${input.ipAddress ?? null}, ${input.userAgent ?? null},
+        ${input.signedAt}, ${input.ipAddress ?? null}, ${input.userAgent ?? null},
         'authenticated-legal-gate', ${input.session.userId}, ${input.session.organizationId}, ${input.legalName},
         ${input.signerTitle ?? null}, ${input.signerCapacity}, ${input.signerCountry}, ${input.signerRegion ?? null},
         'typed', NULL, ${input.authorityConfirmed}, ${input.signedAt}, ${input.presentedAt},
