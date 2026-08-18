@@ -10,9 +10,19 @@ import {
 const updateSchema = z.object({
   messageClass: z.enum(["transactional", "operational", "marketing", "clinical"]),
   status: z.enum(["granted", "denied", "revoked"]),
-  source: z.enum(["patient_verbal", "patient_written", "patient_portal", "staff_documented", "system_migration"]),
+  // This is a staff-authenticated route. It may document what staff actually observed,
+  // but it cannot impersonate a patient-portal action or a system migration.
+  source: z.enum(["patient_verbal", "patient_written", "staff_documented"]),
   policyVersion: z.string().trim().min(1).max(80).optional(),
   evidenceReference: z.string().trim().min(1).max(200).optional(),
+}).superRefine((value, context) => {
+  if (value.source === "patient_written" && !value.evidenceReference) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["evidenceReference"],
+      message: "Written consent requires an evidence reference.",
+    });
+  }
 });
 
 export async function GET(request: Request, { params }: { params: Promise<{ patientId: string }> }) {
