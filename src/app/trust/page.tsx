@@ -20,22 +20,22 @@ const statusMeta: Record<Status, { label: string; icon: typeof CheckCircle2; cla
 
 const items: Array<{ title: string; status: Status; summary: string; evidence: string }> = [
   {
-    title: "Public routing preview",
+    title: "Public Zumi navigation",
     status: "built",
-    summary: "The public Living Home classifies a request with deterministic browser-side routing rules and points to a real product surface.",
-    evidence: "It is explicitly labeled as a routing preview. It does not call a model, open private records, or execute work.",
+    summary: "The public Living Home keeps a conversation-first interface while routing requests through deterministic navigation rules into real Klinikos surfaces.",
+    evidence: "The public surface does not open private clinic records or execute work. The interface now states that this page uses fixed routing rules rather than representing the navigation response as a live model conversation.",
   },
   {
     title: "Clinic commercial payment evidence",
-    status: "connected",
-    summary: "Klinikos has server-owned commercial intents, Stripe-hosted Checkout, signed webhook verification, replay protection, refunds/failure truth, and manual fallback boundaries.",
-    evidence: "The live Stripe webhook endpoint is configured for the supported one-time and recurring lifecycle event set. Controlled end-to-end production proofs still determine what may be called verified live.",
+    status: "pending",
+    summary: "The repository contains server-owned commercial intents, Stripe-hosted Checkout integration, signed webhook verification, replay protection, refunds/failure truth, and manual fallback boundaries.",
+    evidence: "Repository presence does not prove the deployed endpoint, live account configuration, or an end-to-end production payment. Controlled production evidence determines what may be called verified live.",
   },
   {
     title: "Recurring Clinic OS subscriptions",
     status: "pending",
-    summary: "Native monthly Stripe subscription code is merged behind an explicit production feature gate.",
-    evidence: "The gate remains off until the deployed application SHA is confirmed and a controlled subscription invoice lifecycle proves activation, renewal, failure, and cancellation behavior.",
+    summary: "The repository contains native monthly Stripe subscription code behind an explicit production feature gate.",
+    evidence: "The production gate should remain off until the deployed application SHA is confirmed and a controlled subscription invoice lifecycle proves activation, renewal, failure, and cancellation behavior.",
   },
   {
     title: "Grid discovery and geolocation",
