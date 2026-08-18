@@ -34,7 +34,9 @@ import { orchestrationInstruction, planZumiOrchestration, type ZumiOrchestration
 import {
   resolveTrustedZumiOrchestration,
   trustedOrchestrationInstruction,
+  trustedQualityAssuranceInstruction,
   type ZumiTrustedOrchestration,
+  type ZumiTrustedQualityAssurance,
 } from "@/features/zumi/trusted-orchestration";
 import { runZumiCognition, type ZumiCognitionTrace } from "@/features/zumi/cognition-loop";
 
@@ -50,6 +52,8 @@ export type ZumiRequest = {
   entitlements: readonly string[];
   question: string;
   context?: unknown;
+  /** Server-supplied aggregate/action-only Quality Guardian state. Never populate from client JSON. */
+  trustedQualityAssurance?: ZumiTrustedQualityAssurance | null;
   timeoutMs?: number;
   maxOutputTokens?: number;
   previousResponseId?: string | null;
@@ -78,6 +82,7 @@ export type ZumiSuccess = {
   cognition: ZumiCognitionTrace;
   orchestration: ZumiOrchestrationPlan;
   trustedOrchestration: ZumiTrustedOrchestration;
+  trustedQualityAssurance: ZumiTrustedQualityAssurance | null;
 };
 export type ZumiGatewayResult = ZumiSuccess | ZumiFailure;
 
@@ -290,6 +295,11 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     trustedPathId: trustedOrchestration.path?.pathId ?? null,
     trustedNextActions: trustedOrchestration.nextActions.map((action) => ({ id: action.id, state: action.state, capabilityKey: action.capabilityKey })),
     trustedBlockerCodes: trustedOrchestration.blockers.map((blocker) => blocker.code),
+    qualityGuardianAvailable: request.trustedQualityAssurance?.available ?? false,
+    qualityGuardianEvaluated: request.trustedQualityAssurance?.snapshot?.evaluated ?? null,
+    qualityGuardianOpenGaps: request.trustedQualityAssurance?.snapshot?.openGaps ?? null,
+    qualityGuardianReviewRequired: request.trustedQualityAssurance?.snapshot?.reviewRequired ?? null,
+    qualityGuardianExpertNeeds: request.trustedQualityAssurance?.expertNeeds.length ?? 0,
   };
 
   if (!decision.allowed) {
@@ -358,6 +368,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     conversationPolicy.publicResearchAllowed &&
     requestedWebResearch &&
     request.context === undefined &&
+    request.trustedQualityAssurance == null &&
     !built.questionRedacted,
   );
 
@@ -366,6 +377,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
     presenceInstruction({ presence, accessibility }),
     orchestrationInstruction(orchestration),
     trustedOrchestrationInstruction(trustedOrchestration),
+    trustedQualityAssuranceInstruction(request.trustedQualityAssurance ?? null),
     securityInstructionForTools(),
     `Research depth for this turn: ${complexity.depth}. Reasons: ${complexity.reasons.join(", ") || "simple_direct_question"}.`,
     `Canonical repository sources selected: ${canonicalContext.sources.join(", ") || "none"}${canonicalContext.truncated ? " (context limit reached)" : ""}.`,
@@ -464,6 +476,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       cognition: cognition.trace,
       orchestration,
       trustedOrchestration,
+      trustedQualityAssurance: request.trustedQualityAssurance ?? null,
     };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
