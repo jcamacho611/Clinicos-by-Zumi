@@ -49,7 +49,7 @@ export function LuxeRecoverySection({ canReactivate, recovery }: { canReactivate
                     <Badge tone="rose">Consent review required</Badge>
                   </div>
                   <p className="mt-1 text-[11px] text-slate-500">{lead.serviceInterest ?? "Service interest pending"} · {lead.estimatedOpportunity} estimated · source {lead.source}</p>
-                  <p className="mt-2 text-[10px] text-slate-400">{lead.daysSinceActivity} days since CRM activity{lead.lostReason ? ` · prior lost reason: ${lead.lostReason}` : ""}</p>
+                  <p className="mt-2 text-[12px] text-slate-400">{lead.daysSinceActivity} days since CRM activity{lead.lostReason ? ` · prior lost reason: ${lead.lostReason}` : ""}</p>
                   {canReactivate && <LuxeReactivationReviewForm leadId={lead.id} />}
                 </div>
               </div>
@@ -60,7 +60,7 @@ export function LuxeRecoverySection({ canReactivate, recovery }: { canReactivate
       </SectionCard>
 
       {recovery.metrics.suppressedCandidates > 0 && (
-        <p className="text-[10px] leading-4 text-slate-500">{recovery.metrics.suppressedCandidates} record(s), representing {recovery.metrics.suppressedEstimatedOpportunity} in estimated opportunity, are intentionally excluded from action because of explicit suppression/opt-out state or clearly non-recoverable lost reasons.</p>
+        <p className="text-[12px] leading-4 text-slate-500">{recovery.metrics.suppressedCandidates} record(s), representing {recovery.metrics.suppressedEstimatedOpportunity} in estimated opportunity, are intentionally excluded from action because of explicit suppression/opt-out state or clearly non-recoverable lost reasons.</p>
       )}
     </section>
   );
