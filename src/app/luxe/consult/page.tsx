@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { LuxeConsultationForm } from "@/components/marketing/luxe-consultation-form";
+import { luxeAcquisitionJourneyEnabled } from "@/lib/luxe-acquisition-journey-token";
+import { configuredLuxeBookingUrl } from "@/lib/luxe-booking-config";
 import { listPublicLuxeServiceOptions } from "@/lib/repositories/luxe-public-conversion-repository";
 
 export const metadata: Metadata = {
@@ -14,6 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LuxeConsultPage() {
   const services = await listPublicLuxeServiceOptions().catch(() => []);
+  const bookingAvailable = Boolean(configuredLuxeBookingUrl() && luxeAcquisitionJourneyEnabled());
 
   return (
     <main className="min-h-screen bg-[#090608] text-white">
@@ -56,12 +59,12 @@ export default async function LuxeConsultPage() {
               </div>
               <div>
                 <p className="font-extrabold text-white">3. Booking comes later</p>
-                <p className="mt-1 leading-6">An appointment or deposit is only confirmed through the appropriate booking/payment process.</p>
+                <p className="mt-1 leading-6">If online booking is configured, you can continue to the approved booking rail after sending the inquiry. Opening that rail still does not confirm an appointment or payment.</p>
               </div>
             </div>
           </div>
 
-          <LuxeConsultationForm services={services} />
+          <LuxeConsultationForm bookingAvailable={bookingAvailable} services={services} />
         </section>
 
         <footer className="border-t border-white/10 py-8 text-[11px] leading-5 text-slate-600">
