@@ -3,6 +3,7 @@ import "@fontsource-variable/manrope";
 import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
+import "./accessibility.css";
 import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
 import "./cinematic-command-overrides.css";
@@ -46,7 +47,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: klinikosAtmosphereBootstrap }} />
       </head>
       <body className="klinikos-cinematic-root">
-        {children}
+        <a className="klinikos-skip-link" href="#klinikos-page-content">Skip to main content</a>
+        <div id="klinikos-page-content" tabIndex={-1}>{children}</div>
         <KlinikosAtmosphereController />
       </body>
     </html>
