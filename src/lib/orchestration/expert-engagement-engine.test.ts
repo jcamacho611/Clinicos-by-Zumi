@@ -106,12 +106,12 @@ describe("Expert Grid governed engagement", () => {
     expect(result.blockers).toContain("Engagement data-access class must exactly match the approved Grid need before activation.");
   });
 
-  it("creates a bounded authorization envelope only after governed activation", () => {
-    expect(scopedAccessGrantForActiveEngagement(engagement(), now)).toBeNull();
+  it("creates a bounded authorization envelope only after governed activation and revalidation", () => {
+    expect(scopedAccessGrantForActiveEngagement({ engagement: engagement(), need: need(), matchEligible: true, now })).toBeNull();
 
     const activated = activateExpertEngagement({ engagement: engagement(), need: need(), matchEligible: true, now });
     expect(activated.activated).toBe(true);
-    const grant = scopedAccessGrantForActiveEngagement(activated.engagement, now);
+    const grant = scopedAccessGrantForActiveEngagement({ engagement: activated.engagement, need: need(), matchEligible: true, now });
 
     expect(grant).toMatchObject({
       organizationId: "org-a",
@@ -120,6 +120,18 @@ describe("Expert Grid governed engagement", () => {
       capabilityKeys: ["quality.expert.review"],
     });
     expect(grant?.minimumNecessaryFields).toEqual(["qualityStatus", "evidenceStatus"]);
+  });
+
+  it("revokes access when current governed policy no longer validates the active engagement", () => {
+    const active = { ...engagement(), state: "active" as const, activatedAt: now };
+
+    expect(scopedAccessGrantForActiveEngagement({ engagement: active, need: need(), matchEligible: false, now })).toBeNull();
+    expect(scopedAccessGrantForActiveEngagement({
+      engagement: { ...active, terms: { ...active.terms, agreementEvidenceRefs: {} } },
+      need: need(),
+      matchEligible: true,
+      now,
+    })).toBeNull();
   });
 
   it("requires attributable deliverable evidence and preserves organization review", () => {
