@@ -11,15 +11,15 @@ export type GridTemporalIntent = {
   summary: string | null;
 };
 
-const weekdayByName: Record<string, number> = {
-  sunday: 0, sun: 0,
-  monday: 1, mon: 1,
-  tuesday: 2, tue: 2, tues: 2,
-  wednesday: 3, wed: 3,
-  thursday: 4, thu: 4, thur: 4, thurs: 4,
-  friday: 5, fri: 5,
-  saturday: 6, sat: 6,
-};
+const weekdayPatterns: Array<[RegExp, number]> = [
+  [/\bsun(?:day)?s?\b/i, 0],
+  [/\bmon(?:day)?s?\b/i, 1],
+  [/\btue(?:s|sday)?s?\b/i, 2],
+  [/\bwed(?:nesday)?s?\b/i, 3],
+  [/\bthu(?:r|rs|rsday)?s?\b/i, 4],
+  [/\bfri(?:day)?s?\b/i, 5],
+  [/\bsat(?:urday)?s?\b/i, 6],
+];
 
 const weekdayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 
@@ -96,9 +96,11 @@ function parseSingleTime(query: string) {
   return clock ? `${pad(clock.hour)}:${pad(clock.minute)}` : null;
 }
 
+const weekdayLanguagePattern = /\b(?:every\s+)?(?:sun(?:day)?s?|mon(?:day)?s?|tue(?:s|sday)?s?|wed(?:nesday)?s?|thu(?:r|rs|rsday)?s?|fri(?:day)?s?|sat(?:urday)?s?|weekdays?|weekends?|daily|weekly|today|tomorrow)\b/gi;
+
 export function stripGridTemporalLanguage(rawQuery: string) {
   return rawQuery
-    .replace(/\b(?:every\s+)?(?:sun(?:day)?|mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?|weekdays?|weekends?|daily|weekly|today|tomorrow)\b/gi, " ")
+    .replace(weekdayLanguagePattern, " ")
     .replace(/\b(?:from\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*(?:-|–|—|to|until|through)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, " ")
     .replace(/\b(?:at|around)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, " ")
     .replace(/\s+/g, " ")
@@ -109,8 +111,7 @@ export function parseGridTemporalIntent(rawQuery: string): GridTemporalIntent {
   const query = rawQuery.trim().toLowerCase().replace(/\s+/g, " ");
   const weekdays: number[] = [];
 
-  for (const [name, weekday] of Object.entries(weekdayByName)) {
-    const pattern = new RegExp(`\\b${name}\\b`, "i");
+  for (const [pattern, weekday] of weekdayPatterns) {
     if (pattern.test(query)) weekdays.push(weekday);
   }
   if (/\bweekdays?\b/.test(query)) weekdays.push(1, 2, 3, 4, 5);
@@ -123,7 +124,7 @@ export function parseGridTemporalIntent(rawQuery: string): GridTemporalIntent {
       ? "weekdays"
       : /\bweekends?\b/.test(query)
         ? "weekends"
-        : /\bweekly\b|\bevery\s+(?:sun(?:day)?|mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?)\b/.test(query)
+        : /\bweekly\b|\bevery\s+(?:sun(?:day)?s?|mon(?:day)?s?|tue(?:s|sday)?s?|wed(?:nesday)?s?|thu(?:r|rs|rsday)?s?|fri(?:day)?s?|sat(?:urday)?s?)\b/.test(query)
           ? "weekly"
           : null;
 
