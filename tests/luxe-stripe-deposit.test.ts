@@ -2,9 +2,18 @@ import { describe, expect, it } from "vitest";
 import type Stripe from "stripe";
 import {
   isLuxeStripeDepositEvent,
+  isLuxeStripeDepositRefundEvent,
   luxeStripeDepositStatus,
   normalizeVerifiedLuxeStripeDepositEvent,
+  normalizeVerifiedLuxeStripeRefundEvent,
 } from "@/lib/luxe-stripe-deposit";
+
+const luxeMetadata = {
+  klinikos_sale_mode: "luxe_deposit",
+  klinikos_luxe_journey: "opaque-journey-token",
+  klinikos_luxe_expected_amount_cents: "15000",
+  klinikos_luxe_payment_kind: "deposit",
+};
 
 function checkoutEvent(overrides: Record<string, unknown> = {}) {
   return {
@@ -20,12 +29,27 @@ function checkoutEvent(overrides: Record<string, unknown> = {}) {
         amount_total: 15000,
         currency: "usd",
         payment_intent: "pi_live_luxe_deposit",
-        metadata: {
-          klinikos_sale_mode: "luxe_deposit",
-          klinikos_luxe_journey: "opaque-journey-token",
-          klinikos_luxe_expected_amount_cents: "15000",
-          klinikos_luxe_payment_kind: "deposit",
-        },
+        metadata: luxeMetadata,
+        ...overrides,
+      },
+    },
+  } as unknown as Stripe.Event;
+}
+
+function refundEvent(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "evt_live_luxe_refund",
+    type: "charge.refunded",
+    livemode: true,
+    created: 1787079600,
+    data: {
+      object: {
+        id: "ch_live_luxe_deposit",
+        amount: 15000,
+        amount_refunded: 5000,
+        currency: "usd",
+        payment_intent: "pi_live_luxe_deposit",
+        metadata: luxeMetadata,
         ...overrides,
       },
     },
@@ -79,9 +103,40 @@ describe("Luxe Stripe deposit adapter", () => {
     expect(() => normalizeVerifiedLuxeStripeDepositEvent(checkoutEvent({ amount_total: 14999 }))).toThrow(/amount/i);
   });
 
-  it("rejects test-mode evidence even when it carries Luxe metadata", () => {
+  it("rejects test-mode payment evidence even when it carries Luxe metadata", () => {
     const event = checkoutEvent() as unknown as { livemode: boolean };
     event.livemode = false;
     expect(() => normalizeVerifiedLuxeStripeDepositEvent(event as unknown as Stripe.Event)).toThrow(/Test-mode/i);
+  });
+
+  it("recognizes and normalizes a signed partial refund as cumulative refund evidence", () => {
+    expect(isLuxeStripeDepositRefundEvent(refundEvent())).toBe(true);
+    const normalized = normalizeVerifiedLuxeStripeRefundEvent(refundEvent());
+    expect(normalized).toMatchObject({
+      externalReference: "ch_live_luxe_deposit",
+      paymentExternalReference: "pi_live_luxe_deposit",
+      amountRefundedCents: 5000,
+      originalAmountCents: 15000,
+      currency: "USD",
+      journeyToken: "opaque-journey-token",
+    });
+  });
+
+  it("normalizes a full refund without treating it as booking cancellation", () => {
+    const normalized = normalizeVerifiedLuxeStripeRefundEvent(refundEvent({ amount_refunded: 15000 }));
+    expect(normalized.amountRefundedCents).toBe(15000);
+    expect("bookingStatus" in normalized).toBe(false);
+    expect("bookingCancelled" in normalized).toBe(false);
+  });
+
+  it("rejects refund amount or charge amount inconsistencies", () => {
+    expect(() => normalizeVerifiedLuxeStripeRefundEvent(refundEvent({ amount_refunded: 15001 }))).toThrow(/refunded amount/i);
+    expect(() => normalizeVerifiedLuxeStripeRefundEvent(refundEvent({ amount: 14000 }))).toThrow(/charge amount/i);
+  });
+
+  it("rejects test-mode refund evidence", () => {
+    const event = refundEvent() as unknown as { livemode: boolean };
+    event.livemode = false;
+    expect(() => normalizeVerifiedLuxeStripeRefundEvent(event as unknown as Stripe.Event)).toThrow(/Test-mode/i);
   });
 });
