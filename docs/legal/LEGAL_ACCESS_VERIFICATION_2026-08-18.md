@@ -6,9 +6,11 @@ Status: engineering evidence only; not legal approval and not production deploym
 
 PR #170 implements the first signed protected-access agreement foundation. `LEGAL_GATE_ENFORCEMENT_ENABLED` remains disabled by default. The final contracting entity, governing law, and forum remain explicit configuration/counsel gates.
 
+The branch has been re-anchored onto current main as concurrent non-overlapping work landed. At the latest recorded re-anchor, main was `2eaf4e9287cee7e40a035aec632c24fd4ade5fc3` and the branch was behind main by zero commits. Re-check this before merge because main can continue moving.
+
 ## GitHub Actions truth
 
-Exact-head GitHub Actions runs were rejected before runner startup. Both `verify` and `deploy-contract` returned `steps: null` and no job logs. No executable CI pass is claimed from those runs.
+Exact-head GitHub Actions runs have been rejected before runner startup. Both `verify` and `deploy-contract` returned `steps: null` and no job logs. No executable CI pass is claimed from those runs.
 
 ## Disposable Neon validation
 
@@ -36,12 +38,13 @@ The disposable branch was deleted after verification. No migration was applied t
 
 The source-level adversarial review additionally corrected:
 
-- a stale reference to a nonexistent `verifiedEmailAt` database column;
+- a stale runtime reference to a nonexistent `verifiedEmailAt` database column;
 - organization binding in idempotency validation;
 - race-safe agreement-version registration;
 - race-safe/idempotent final acceptance;
 - atomic signature/acceptance legal-event creation;
-- explicit same-origin checks for legal review/signature POST endpoints.
+- explicit same-origin checks for legal review/signature POST endpoints;
+- duplicate event creation on replay/retry.
 
 ## Remaining merge gate
 
