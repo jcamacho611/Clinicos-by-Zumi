@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { CheckCircle2, Copy, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { CheckCircle2, Copy, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Badge, Button, Card, DsSurface, Input, type BadgeTone } from "@/components/ds";
 
 type CheckoutView = {
@@ -21,7 +21,8 @@ type CheckoutView = {
   createdAt: string;
 };
 
-type Plan = { key: string; label: string; priceLabel: string };
+type Plan = { key: string; label: string; priceLabel: string; checkoutConfigured: boolean };
+type RailSummary = { configuredPlanCount: number; totalPlanCount: number };
 
 function money(cents: number | null) {
   if (cents === null) return "Review required";
@@ -34,16 +35,27 @@ function checkoutTone(status: string): BadgeTone {
   return "neutral";
 }
 
-export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheckouts: CheckoutView[]; plans: Plan[] }) {
+export function ClinicActivationDesk({
+  initialCheckouts,
+  plans,
+  railSummary,
+}: {
+  initialCheckouts: CheckoutView[];
+  plans: Plan[];
+  railSummary: RailSummary;
+}) {
+  const firstConfiguredPlan = plans.find((plan) => plan.checkoutConfigured)?.key ?? "";
   const [checkouts, setCheckouts] = useState(initialCheckouts);
   const [clinicName, setClinicName] = useState("");
   const [email, setEmail] = useState("");
-  const [productKey, setProductKey] = useState(plans[0]?.key ?? "clinic_core");
+  const [productKey, setProductKey] = useState(firstConfiguredPlan);
   const [error, setError] = useState("");
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [activationUrl, setActivationUrl] = useState("");
   const [confirmIntentId, setConfirmIntentId] = useState("");
   const [pending, startTransition] = useTransition();
+  const selectedPlan = useMemo(() => plans.find((plan) => plan.key === productKey) ?? null, [plans, productKey]);
+  const allRailsReady = railSummary.configuredPlanCount === railSummary.totalPlanCount;
 
   async function refresh() {
     const response = await fetch("/api/admin/commercial/clinic-checkouts", { cache: "no-store" });
@@ -53,6 +65,10 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
   }
 
   function createCheckout() {
+    if (!selectedPlan?.checkoutConfigured) {
+      setError("This recurring plan does not have its exact approved checkout rail configured.");
+      return;
+    }
     setError("");
     setActivationUrl("");
     startTransition(async () => {
@@ -110,17 +126,41 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
         >
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: "radial-gradient(circle at 82% 20%, color-mix(in oklch, var(--gold-500) 15%, transparent), transparent 28%), radial-gradient(circle at 16% 85%, color-mix(in oklch, var(--cyan-500) 18%, transparent), transparent 30%)" }}
+            style={{ background: "radial-gradient(circle at 82% 20%, color-mix(in oklch, var(--gold-500) 15%, transparent), transparent 28%), radial-gradient(circle at 16% 85%, color-mix(in oklch, var(--accent-signal) 16%, transparent), transparent 30%)" }}
           />
           <div className="relative max-w-4xl">
-            <Badge tone="mapping">Commercial activation</Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="mapping">Commercial activation</Badge>
+              <Badge tone={allRailsReady ? "resolved" : railSummary.configuredPlanCount ? "analyzing" : "signal"}>
+                {railSummary.configuredPlanCount}/{railSummary.totalPlanCount} recurring rails configured
+              </Badge>
+            </div>
             <h1 className="mt-6 text-balance font-extrabold" style={{ fontSize: "var(--text-h1)", letterSpacing: "var(--tracking-tight)", lineHeight: "var(--leading-tight)" }}>
               Money first. Evidence second. Access only after both agree.
             </h1>
             <p className="mt-5 max-w-3xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              Create the server-owned clinic subscription checkout, send the official GoDaddy rail, then reconcile only after independently verifying the expected payment. Klinikos keeps checkout, evidence, entitlement, organization provisioning, and owner activation as separate facts.
+              This desk uses exact-plan GoDaddy paylinks as the current operator-managed recurring fallback. A plan is sellable here only when its own approved rail is configured. Staff still reconcile payment manually because this recurring rail has no processor webhook or authoritative verification API connected.
             </p>
           </div>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Recurring plan checkout readiness">
+          {plans.map((plan) => (
+            <Card key={plan.key}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-extrabold">{plan.label}</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{plan.priceLabel}</p>
+                </div>
+                <Badge tone={plan.checkoutConfigured ? "resolved" : "signal"}>{plan.checkoutConfigured ? "Rail ready" : "Not configured"}</Badge>
+              </div>
+              <p className="mt-4 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+                {plan.checkoutConfigured
+                  ? "Exact plan paylink is configured. Payment still requires human reconciliation before access changes."
+                  : "No exact approved paylink is configured for this plan, so this desk will not create its checkout."}
+              </p>
+            </Card>
+          ))}
         </section>
 
         {error ? (
@@ -134,9 +174,9 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
-                <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the plan before they pay.</h2>
+                <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the exact plan before they pay.</h2>
               </div>
-              <Badge tone="observing">Server-owned</Badge>
+              <Badge tone="observing">Server-owned intent</Badge>
             </div>
 
             <div className="mt-7 grid gap-6 sm:grid-cols-2">
@@ -152,12 +192,24 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                 value={productKey}
                 onChange={(event) => setProductKey(event.target.value)}
               >
-                {plans.map((plan) => <option key={plan.key} value={plan.key}>{plan.label} · {plan.priceLabel}</option>)}
+                {!firstConfiguredPlan ? <option value="">No recurring plan rail configured</option> : null}
+                {plans.map((plan) => (
+                  <option disabled={!plan.checkoutConfigured} key={plan.key} value={plan.key}>
+                    {plan.label} · {plan.priceLabel}{plan.checkoutConfigured ? "" : " · not configured"}
+                  </option>
+                ))}
               </select>
             </label>
 
+            {!selectedPlan?.checkoutConfigured ? (
+              <div className="mt-5 flex items-start gap-3 p-4" style={{ background: "color-mix(in oklch, var(--status-signal) 7%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--status-signal) 25%, transparent)", borderRadius: "var(--radius-md)" }}>
+                <TriangleAlert className="mt-0.5 size-4 shrink-0" style={{ color: "var(--status-signal)" }} aria-hidden="true" />
+                <p className="text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>Checkout creation is blocked until an exact approved recurring rail is configured for the selected plan. Klinikos will not substitute the $500 analysis link or another plan&apos;s paylink.</p>
+              </div>
+            ) : null}
+
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Button disabled={pending || !clinicName.trim() || !email.trim()} onClick={createCheckout}>
+              <Button disabled={pending || !clinicName.trim() || !email.trim() || !selectedPlan?.checkoutConfigured} onClick={createCheckout}>
                 {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <ExternalLink className="size-4" aria-hidden="true" />}
                 Create checkout
               </Button>
@@ -169,7 +221,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             {checkoutUrl ? (
               <div className="mt-7 p-5" style={{ background: "color-mix(in oklch, var(--accent-signal) 8%, var(--surface-paper))", border: "1px solid color-mix(in oklch, var(--accent-signal) 26%, transparent)", borderRadius: "var(--radius-md)" }}>
                 <Badge tone="mapping">Checkout ready</Badge>
-                <p className="mt-4 text-sm font-extrabold">Send or open the official payment rail.</p>
+                <p className="mt-4 text-sm font-extrabold">Send or open the exact plan payment rail.</p>
                 <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>Opening or returning from checkout is never payment evidence.</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <a className="inline-flex min-h-11 items-center gap-2 px-4 text-xs font-extrabold" href={checkoutUrl} target="_blank" rel="noreferrer" style={{ background: "var(--accent-signal)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}>
@@ -190,7 +242,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             </p>
             <div className="mt-7 border-t pt-5" style={{ borderColor: "var(--line-dark)" }}>
               <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
-              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>Processor verification remains false until a real processor verification connector exists.</p>
+              <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>Processor verification remains false for this recurring fallback. A staff reconciliation record is not the same thing as a signed processor webhook.</p>
             </div>
           </Card>
         </section>
@@ -203,7 +255,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                 <Badge tone="resolved">Subscription activated</Badge>
                 <h2 className="mt-4 text-xl font-extrabold">The owner setup link is ready.</h2>
                 <p className="mt-2 max-w-3xl text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>
-                  This signed link expires automatically and cannot choose a different organization, email, plan, role, or price. Send it only to the intended clinic owner.
+                  This means the operator-reconciled paid software entitlement is active. It does not enable production PHI, approve connectors, or certify deployment readiness. The signed setup link expires automatically and cannot choose a different organization, email, plan, role, or price.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Button variant="gold" size="sm" onClick={() => copy(activationUrl)}>Copy activation link <Copy className="size-3.5" aria-hidden="true" /></Button>
@@ -239,7 +291,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                     <Badge tone={checkoutTone(checkout.status)}>{checkout.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkout.email} · {checkout.productLabel} · {money(checkout.expectedAmountCents)}</p>
-                  <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"}</p>
+                  <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"} · {checkout.provider}</p>
                 </div>
                 <div>
                   {checkout.status === "created" ? (
@@ -249,7 +301,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                       disabled={pending}
                       onClick={() => reconcile(checkout.id)}
                     >
-                      {confirmIntentId === checkout.id ? "Confirm: payment verified" : "Record verified payment"}
+                      {confirmIntentId === checkout.id ? "Confirm: payment independently verified" : "Record reconciled payment"}
                     </Button>
                   ) : (
                     <span className="inline-flex items-center gap-2 text-xs font-extrabold" style={{ color: "var(--status-resolved)" }}>
