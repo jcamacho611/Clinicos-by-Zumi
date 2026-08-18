@@ -42,6 +42,13 @@ export function validateEduCertificateEvidence(input: {
   return problems;
 }
 
+export function certificateCompetencyAreasFromAudit(metadata: unknown) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  const value = (metadata as Record<string, unknown>).competencyAreas;
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((entry): entry is string => typeof entry === "string").map((entry) => entry.trim()).filter(Boolean))];
+}
+
 export function certificateMayAffectProfessionalEligibility() {
   return false;
 }
