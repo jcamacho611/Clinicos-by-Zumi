@@ -39,3 +39,23 @@ For each protected route:
 8. PHI responses use private/no-store where appropriate.
 9. Demo/static content is labeled or removed.
 10. Every exposed action is wired, intentionally disabled with a reason, or removed.
+
+## 2026-08-18 — Post-PR #128 design-route QA delta
+
+Scope: newly merged Klinikos Browser, governed Route registry, Ecosystem surface, account/theme/sign-out wiring, public conversion bridge, and Grid design convergence.
+
+### Findings and corrections
+
+- The `clinic-monetize-capacity` Route step `Publication readiness` links to `/grid/trust`.
+- `/grid/trust` is a real authenticated App Router route under `src/app/(platform)/grid/trust/page.tsx`; an initial direct-file probe that omitted the `(platform)` route-group directory incorrectly looked like a 404. The route itself was never absent.
+- The actual defect was semantic: `/grid/trust` presented only post-transaction disputes/safety governance, while the Route Engine described it as a pre-publication readiness step.
+- `/grid/trust` is now a combined **Grid Trust & Readiness** surface. It adds a truthful pre-publication sequence for resource definition, real availability, required review, and transaction-state separation while preserving the existing dispute/safety workspace and its settlement-hold boundaries.
+- `/grid/resources` remains the source-of-truth owner console for creating, reviewing, pausing, and managing real Grid resources/capacity. Its page-level entry treatment is aligned to the current Klinikos rose/ink visual language; underlying resource actions and policy/review behavior are unchanged.
+- `tests/path-route-existence.test.ts` now walks the actual `src/app/**/page.tsx` tree, removes Next.js route-group/parallel-route segments, understands dynamic route segments, strips query/hash suffixes, and asserts that every internal governed Path node href resolves to a real application page.
+- The same test explicitly locks `clinic-monetize-capacity:readiness` to the real `/grid/trust` governance surface.
+
+### Verification truth
+
+- Repository-level route/auth/design contracts were inspected directly against the merged `main` implementation.
+- Independent production browser/device QA is **not yet proven from this tool environment** because the sandbox resolver could not reach `klinikos.io` during the pass. Do not upgrade this audit to production visual/runtime proof until the deployed domain is exercised successfully.
+- GitHub Actions has recently been refusing `verify` / `deploy-contract` jobs before step 1 because of the repository/account runner-billing condition. A zero-step/no-log Actions result is infrastructure refusal, not a passing or failing repository command. Rerun the exact-head gates when runner availability is restored.
