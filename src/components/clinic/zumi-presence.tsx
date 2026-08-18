@@ -224,9 +224,9 @@ export function ZumiPresence({ userName }: { userName: string }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-extrabold tracking-[-.02em]">Zumi</p>
-              <p className="truncate text-[10px] text-white/55">Klinikos Intelligence · {userName}</p>
+              <p className="truncate text-[12px] text-white/55">Klinikos Intelligence · {userName}</p>
             </div>
-            <span className="hidden items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.14em] text-emerald-300 sm:inline-flex"><ShieldCheck className="size-3.5" /> Governed</span>
+            <span className="hidden items-center gap-1.5 text-[11px] font-bold uppercase tracking-[.14em] text-emerald-300 sm:inline-flex"><ShieldCheck className="size-3.5" /> Governed</span>
             <button aria-label="Close Zumi" className="grid size-8 place-items-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)} type="button"><X className="size-4" /></button>
           </header>
 
@@ -234,7 +234,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
             {MODE_META.map(({ key, label, icon: Icon }) => (
               <button
                 aria-selected={mode === key}
-                className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold", mode === key ? "bg-[#0b1e3a] text-white" : "text-[#0b1e3a]/60 hover:bg-[#0b1e3a]/6")}
+                className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-bold", mode === key ? "bg-[#0b1e3a] text-white" : "text-[#0b1e3a]/60 hover:bg-[#0b1e3a]/6")}
                 key={key}
                 onClick={() => setMode(key)}
                 role="tab"
@@ -246,14 +246,14 @@ export function ZumiPresence({ userName }: { userName: string }) {
 
           {settingsOpen && (
             <div className="grid gap-3 border-b border-[#0b1e3a]/10 bg-[#f1f0eb] p-3 text-xs sm:grid-cols-2">
-              <label className="space-y-1"><span className="text-[9px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Response</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setResponseLength(event.target.value as ResponseLength)} value={responseLength}><option value="concise">Concise</option><option value="balanced">Balanced</option><option value="detailed">Detailed</option></select></label>
-              <label className="space-y-1"><span className="text-[9px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Language</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setLanguageStyle(event.target.value as LanguageStyle)} value={languageStyle}><option value="plain">Plain</option><option value="professional">Professional</option><option value="technical">Technical</option></select></label>
-              <label className="space-y-1"><span className="text-[9px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Autonomy</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setAutonomy(event.target.value as Autonomy)} value={autonomy}><option value="answer_only">Answer only</option><option value="suggest_actions">Suggest actions</option><option value="prepare_actions">Prepare actions</option></select></label>
-              <button className="flex items-center justify-center gap-2 rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5 text-[10px] font-bold" onClick={() => setSpeechOutput((value) => !value)} type="button">{speechOutput ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}{speechOutput ? "Speech on" : "Speech off"}</button>
+              <label className="space-y-1"><span className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Response</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setResponseLength(event.target.value as ResponseLength)} value={responseLength}><option value="concise">Concise</option><option value="balanced">Balanced</option><option value="detailed">Detailed</option></select></label>
+              <label className="space-y-1"><span className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Language</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setLanguageStyle(event.target.value as LanguageStyle)} value={languageStyle}><option value="plain">Plain</option><option value="professional">Professional</option><option value="technical">Technical</option></select></label>
+              <label className="space-y-1"><span className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Autonomy</span><select className="w-full rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5" onChange={(event) => setAutonomy(event.target.value as Autonomy)} value={autonomy}><option value="answer_only">Answer only</option><option value="suggest_actions">Suggest actions</option><option value="prepare_actions">Prepare actions</option></select></label>
+              <button className="flex items-center justify-center gap-2 rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5 text-[12px] font-bold" onClick={() => setSpeechOutput((value) => !value)} type="button">{speechOutput ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}{speechOutput ? "Speech on" : "Speech off"}</button>
               <div className="space-y-2 sm:col-span-2">
-                <span className="text-[9px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Memory</span>
-                <div className="flex gap-2"><input className="min-w-0 flex-1 rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5 text-[11px]" maxLength={1500} onChange={(event) => setMemoryNote(event.target.value)} placeholder="Remember a safe preference for future conversations…" value={memoryNote} /><Button className="h-8 px-3 text-[10px]" disabled={!memoryNote.trim()} onClick={saveMemory} type="button">Remember</Button></div>
-                {memoryStatus && <p aria-live="polite" className="text-[10px] text-[#0b1e3a]/55">{memoryStatus}</p>}
+                <span className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#0b1e3a]/50">Memory</span>
+                <div className="flex gap-2"><input className="min-w-0 flex-1 rounded-lg border border-[#0b1e3a]/15 bg-white px-2 py-1.5 text-[11px]" maxLength={1500} onChange={(event) => setMemoryNote(event.target.value)} placeholder="Remember a safe preference for future conversations…" value={memoryNote} /><Button className="h-8 px-3 text-[12px]" disabled={!memoryNote.trim()} onClick={saveMemory} type="button">Remember</Button></div>
+                {memoryStatus && <p aria-live="polite" className="text-[12px] text-[#0b1e3a]/55">{memoryStatus}</p>}
               </div>
             </div>
           )}
@@ -263,7 +263,7 @@ export function ZumiPresence({ userName }: { userName: string }) {
               <div className="rounded-xl border border-[#1677a8]/15 bg-[#1677a8]/5 p-4">
                 <p className="text-sm font-bold text-[#0b1e3a]">What do you need?</p>
                 <p className="mt-1 text-[11px] leading-5 text-[#0b1e3a]/60">Talk naturally. I can use the current Klinikos page as context, research when permitted, plan across tools, and compare those ideas with trusted Klinikos paths and blockers before suggesting what comes next.</p>
-                <p className="mt-3 text-[9px] font-bold uppercase tracking-[.12em] text-[#1677a8]">Ctrl/Cmd + J summons me anywhere</p>
+                <p className="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-[#1677a8]">Ctrl/Cmd + J summons me anywhere</p>
               </div>
             )}
             {messages.map((message) => (
@@ -275,16 +275,16 @@ export function ZumiPresence({ userName }: { userName: string }) {
             {error && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-[11px] text-rose-800">{error}</div>}
 
             {(trustedActions.length > 0 || trustedBlockers.length > 0) && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-[10px] text-[#0b1e3a]">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-[12px] text-[#0b1e3a]">
                 <p className="flex items-center gap-1.5 font-extrabold"><ShieldCheck className="size-3.5 text-emerald-700" /> Trusted Klinikos path</p>
                 {trustedOrchestration?.path && <p className="mt-1 text-[#0b1e3a]/65">{trustedOrchestration.path.title} · {trustedOrchestration.path.status} · {Math.round(trustedOrchestration.path.progress * 100)}%</p>}
-                {trustedActions.length > 0 && <ul className="mt-2 space-y-1.5">{trustedActions.slice(0, 5).map((action) => <li className="rounded-lg border border-emerald-200/70 bg-white/80 p-2" key={action.id}><div className="flex items-start justify-between gap-2"><span className="font-bold">{action.title}</span><span className="shrink-0 rounded bg-[#0b1e3a]/6 px-1.5 py-0.5 text-[8px] font-extrabold uppercase">{action.state.replaceAll("_", " ")}</span></div><p className="mt-0.5 text-[#0b1e3a]/55">{action.reason}</p>{action.href && action.state !== "blocked" && <a className="mt-1 inline-block font-bold text-[#0f658f] underline" href={action.href}>Open path</a>}</li>)}</ul>}
+                {trustedActions.length > 0 && <ul className="mt-2 space-y-1.5">{trustedActions.slice(0, 5).map((action) => <li className="rounded-lg border border-emerald-200/70 bg-white/80 p-2" key={action.id}><div className="flex items-start justify-between gap-2"><span className="font-bold">{action.title}</span><span className="shrink-0 rounded bg-[#0b1e3a]/6 px-1.5 py-0.5 text-[11px] font-extrabold uppercase">{action.state.replaceAll("_", " ")}</span></div><p className="mt-0.5 text-[#0b1e3a]/55">{action.reason}</p>{action.href && action.state !== "blocked" && <a className="mt-1 inline-block font-bold text-[#0f658f] underline" href={action.href}>Open path</a>}</li>)}</ul>}
                 {trustedBlockers.length > 0 && <ul className="mt-2 space-y-1 text-amber-800">{trustedBlockers.slice(0, 5).map((blocker) => <li key={blocker.code}><strong>{blocker.title}:</strong> {blocker.explanation}</li>)}</ul>}
               </div>
             )}
 
             {(toolsUsed.length > 0 || sources.length > 0 || orchestration?.candidateTools?.length) && (
-              <details className="rounded-xl border border-[#0b1e3a]/10 bg-[#f1f0eb] p-3 text-[10px] text-[#0b1e3a]/65">
+              <details className="rounded-xl border border-[#0b1e3a]/10 bg-[#f1f0eb] p-3 text-[12px] text-[#0b1e3a]/65">
                 <summary className="cursor-pointer font-extrabold text-[#0b1e3a]">Evidence & capability trace</summary>
                 {toolsUsed.length > 0 && <p className="mt-2"><strong>Actually used:</strong> {toolsUsed.join(", ")}</p>}
                 {orchestration?.candidateTools?.length ? <p className="mt-1"><strong>Considered:</strong> {orchestration.candidateTools.map((tool) => `${tool.label} (${tool.readiness})`).join(", ")}</p> : null}
@@ -311,9 +311,9 @@ export function ZumiPresence({ userName }: { userName: string }) {
               value={input}
             />
             <div className="mt-2 flex items-center gap-2">
-              <VoiceInputButton className="[&_button]:h-8 [&_button]:rounded-lg [&_button]:px-2.5 [&_button]:text-[10px]" onTranscript={(transcript) => { setVoiceTurn(true); setInput(transcript); }} />
-              <span className="hidden text-[9px] text-[#0b1e3a]/40 sm:inline">Enter sends · Shift+Enter adds a line</span>
-              <Button className="ml-auto h-8 gap-1.5 px-3 text-[10px]" disabled={loading || !input.trim()} type="submit"><Send className="size-3.5" />Send</Button>
+              <VoiceInputButton className="[&_button]:h-8 [&_button]:rounded-lg [&_button]:px-2.5 [&_button]:text-[12px]" onTranscript={(transcript) => { setVoiceTurn(true); setInput(transcript); }} />
+              <span className="hidden text-[11px] text-[#0b1e3a]/40 sm:inline">Enter sends · Shift+Enter adds a line</span>
+              <Button className="ml-auto h-8 gap-1.5 px-3 text-[12px]" disabled={loading || !input.trim()} type="submit"><Send className="size-3.5" />Send</Button>
             </div>
           </form>
         </section>

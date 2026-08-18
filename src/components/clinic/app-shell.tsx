@@ -78,7 +78,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
 
       <div className="mx-4 rounded-[16px] border border-[#e28b85]/10 bg-[#12090b]/65 px-4 py-3">
         <p className="truncate text-xs font-semibold text-[#f8efed]">{session.organizationName}</p>
-        <p className="mt-1 text-[10px] text-[#9f8985]">{roleLabel(session.role)}</p>
+        <p className="mt-1 text-[12px] text-[#9f8985]">{roleLabel(session.role)}</p>
       </div>
 
       <nav className="mt-3 flex-1 overflow-y-auto px-3 pb-8" aria-label="Klinikos workspace navigation">
@@ -101,9 +101,9 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
             const groupActive = group.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
             return (
               <details className="group/nav" open={groupActive ? true : undefined} key={group.label}>
-                <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773] transition hover:bg-[#e6817b]/[.04] hover:text-[#d8c1bd] marker:hidden">
+                <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-semibold uppercase tracking-[.12em] text-[#8f7773] transition hover:bg-[#e6817b]/[.04] hover:text-[#d8c1bd] marker:hidden">
                   <span>{group.label}</span>
-                  <span className="ml-auto text-[9px] text-[#6f5b58]">{group.items.length}</span>
+                  <span className="ml-auto text-[11px] text-[#6f5b58]">{group.items.length}</span>
                   <ChevronDown className="size-3.5 text-[#725d59] transition group-open/nav:rotate-180" />
                 </summary>
                 <div className="mt-1 space-y-0.5 border-l border-[#e28b85]/10 pl-2">
@@ -129,7 +129,7 @@ function Sidebar({ onNavigate, session }: { onNavigate?: () => void; session: Cl
           <span className="grid size-9 place-items-center rounded-full border border-[#efaaa1]/18 bg-[#e6817b]/[.06] text-xs font-semibold text-[#f8efed]">{initials(session.name)}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold text-[#f8efed]">{session.name}</p>
-            <Link className="mt-1 block text-[10px] text-[#8f7773] hover:text-[#efaaa1]" href="/settings" onClick={onNavigate}>Settings & appearance</Link>
+            <Link className="mt-1 block text-[12px] text-[#8f7773] hover:text-[#efaaa1]" href="/settings" onClick={onNavigate}>Settings & appearance</Link>
           </div>
           <form action="/api/auth/logout" method="post">
             <Button className="text-[#9f8985] hover:bg-[#e6817b]/10 hover:text-[#f8efed]" aria-label="Sign out" size="icon" title="Sign out" type="submit" variant="ghost"><LogOut className="size-4" /></Button>
@@ -166,14 +166,14 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
         <header className="sticky top-0 z-30 flex h-[82px] items-center gap-4 border-b border-[#e28b85]/10 bg-[color:var(--mode-header)] px-4 backdrop-blur-2xl transition-colors duration-500 sm:px-7 lg:px-10">
           <Button className="border-[#e28b85]/15 bg-transparent text-[#f8efed] lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">{meta.eyebrow}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">{meta.eyebrow}</p>
             <h1 className="truncate text-xl font-light tracking-[-.035em] text-[#f8efed]">{meta.title}</h1>
           </div>
 
           <div className="ml-auto hidden w-full max-w-[430px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex">
             <Search className="size-4 text-[#9f8985]" />
             <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder="Search Klinikos..." aria-label="Global search" onChange={(event) => setGlobalSearch(event.target.value)} value={globalSearch} />
-            <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[10px] [&_button]:text-[#d8c1bd]" onTranscript={setGlobalSearch} />
+            <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[12px] [&_button]:text-[#d8c1bd]" onTranscript={setGlobalSearch} />
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">

@@ -116,7 +116,7 @@ export default async function EduLabPage({ params }: { params: Promise<{ assignm
           <h2 className="text-sm font-extrabold uppercase tracking-[.14em] text-slate-500" id="brief-heading">Scenario brief</h2>
           <ul aria-label="Data classification" className="mt-3 flex flex-wrap gap-1.5">
             {SYNTHETIC_DATA_LABELS.map((label) => (
-              <li className="border border-[#e6c55b]/40 bg-[#e6c55b]/[.08] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-[#f0dda0]" key={label}>{label}</li>
+              <li className="border border-[#e6c55b]/40 bg-[#e6c55b]/[.08] px-2 py-1 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#f0dda0]" key={label}>{label}</li>
             ))}
           </ul>
           <p className="mt-4 text-[12px] leading-6 text-slate-300">{view.openingBrief}</p>

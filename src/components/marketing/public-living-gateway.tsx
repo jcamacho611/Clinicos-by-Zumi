@@ -255,7 +255,7 @@ export function PublicLivingGateway() {
             textClassName="h-[22px] w-[205px]"
           />
           <nav
-            className="mx-auto hidden items-center gap-11 text-[10px] font-medium uppercase tracking-[0.3em] text-[#d8c7c4] lg:flex"
+            className="mx-auto hidden items-center gap-11 text-[12px] font-medium uppercase tracking-[0.3em] text-[#d8c7c4] lg:flex"
             aria-label="Primary"
           >
             {navItems.map((item) => (
@@ -265,7 +265,7 @@ export function PublicLivingGateway() {
             ))}
           </nav>
           <Link
-            className="ml-auto grid size-12 place-items-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 text-[9px] font-bold uppercase tracking-[0.14em] text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)]"
+            className="ml-auto grid size-12 place-items-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 text-[11px] font-bold uppercase tracking-[0.14em] text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)]"
             href="/login"
             aria-label="Sign in"
           >
@@ -280,7 +280,7 @@ export function PublicLivingGateway() {
                 {progressSteps.map((step, index) => {
                   const active = index === 0;
                   return (
-                    <li className="relative text-[10px] font-medium uppercase tracking-[0.15em]" key={step}>
+                    <li className="relative text-[12px] font-medium uppercase tracking-[0.15em]" key={step}>
                       <span
                         className={`absolute -left-[31px] top-1.5 size-[7px] rounded-full ${active ? "bg-[#f08c85] shadow-[0_0_17px_#f08c85]" : "bg-[#514544]"}`}
                       />
@@ -343,7 +343,7 @@ export function PublicLivingGateway() {
                     </button>
                     <div className="reference-zumi absolute -bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-3">
                       <ZumiOrb state="dormant" size={48} />
-                      <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-[#9d7772]">Your AI Operating Partner</span>
+                      <span className="whitespace-nowrap text-[12px] uppercase tracking-[0.22em] text-[#9d7772]">Your AI Operating Partner</span>
                     </div>
                   </div>
                 </form>
@@ -381,7 +381,7 @@ export function PublicLivingGateway() {
             <aside className="reference-action-rail hidden items-center justify-end lg:flex">
               <nav className="space-y-7" aria-label="Operational shortcuts">
                 {actionItems.map(({ label, href, icon: Icon }) => (
-                  <Link className="group flex items-center justify-end gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-[#806f6c]" href={href} key={label}>
+                  <Link className="group flex items-center justify-end gap-3 text-[12px] font-medium uppercase tracking-[0.15em] text-[#806f6c]" href={href} key={label}>
                     <span className="transition-colors group-hover:text-[#e6817b]">{label}</span>
                     <span className="grid size-8 place-items-center rounded-full border border-[#d0837d]/12 bg-[#100708]/52 text-[#9e817d] transition group-hover:border-[#e6817b]/30 group-hover:text-[#e6817b]">
                       <Icon className="size-3.5" />
@@ -405,13 +405,13 @@ export function PublicLivingGateway() {
                     <div className="grid gap-5 lg:grid-cols-[96px_minmax(0,1fr)]">
                       <ol className="space-y-3" aria-label="Progress">
                         {progressSteps.map((step, index) => (
-                          <li className={`text-[9px] uppercase tracking-[.16em] ${index <= turnStage ? "text-[#e6817b]" : "text-[#5d4b49]"}`} key={step}>{step}</li>
+                          <li className={`text-[11px] uppercase tracking-[.16em] ${index <= turnStage ? "text-[#e6817b]" : "text-[#5d4b49]"}`} key={step}>{step}</li>
                         ))}
                       </ol>
                       <div className="rounded-[26px] border border-[#d0837d]/12 bg-[#0f0708]/72 p-6 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                           <ZumiOrb state={complete ? "resolved" : orbState(turn.stage)} size={52} />
-                          <p className="text-[10px] uppercase tracking-[.22em] text-[#e6817b]">{statusLabel(turn.stage)}</p>
+                          <p className="text-[12px] uppercase tracking-[.22em] text-[#e6817b]">{statusLabel(turn.stage)}</p>
                         </div>
                         {complete && (
                           <div className="mt-6">

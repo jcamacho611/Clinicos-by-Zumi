@@ -28,7 +28,7 @@ const layers = [
 const flow = [
   "A clinic chooses an approved commercial path.",
   "Payment or pilot authorization is verified by Klinikos before paid access changes.",
-  "The organization and owner workspace are provisioned with server-owned permissions and entitlements.",
+  "Your clinic workspace is created, and you are set up as its owner.",
   "The owner completes guided setup and lands in the Living Home operating view.",
   "Klinikos surfaces real work that needs attention and safely advances what it is allowed to handle.",
   "External services stay marked Pending Connection or Manual Fallback until their real readiness gates are satisfied.",
@@ -49,7 +49,7 @@ export default function HowKlinikosWorksPage() {
 
       <section className="border-b border-[#dfe3e8] bg-[#07131f] text-white">
         <div className="mx-auto max-w-[1400px] px-5 py-20 sm:px-8 lg:py-24">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-cyan-300">How it works</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-cyan-300">How it works</p>
           <h1 className="mt-5 max-w-5xl text-5xl font-black leading-[.96] tracking-[-.06em] sm:text-7xl">One operating layer for the work that falls between systems.</h1>
           <p className="mt-7 max-w-3xl text-base leading-8 text-slate-300">Klinikos is the platform. Zumi is the intelligence inside it. Grid is the healthcare resource network. The product connects operational truth first, then lets automation and outside services participate only through governed boundaries.</p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -73,12 +73,12 @@ export default function HowKlinikosWorksPage() {
 
       <section className="border-y border-[#dfe3e8] bg-white">
         <div className="mx-auto max-w-[1100px] px-5 py-14 sm:px-8">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#174ea6]">From interest to daily use</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#174ea6]">From interest to daily use</p>
           <h2 className="mt-3 text-3xl font-black tracking-[-.045em]">A controlled path, not a collection of disconnected signups.</h2>
           <ol className="mt-8 grid gap-3">
             {flow.map((item, index) => (
               <li className="flex gap-4 border border-[#e6e9ed] bg-[#fafbfc] p-4" key={item}>
-                <span className="grid size-8 shrink-0 place-items-center bg-[#0b1220] text-[10px] font-black text-white">{String(index + 1).padStart(2, "0")}</span>
+                <span className="grid size-8 shrink-0 place-items-center bg-[#0b1220] text-[12px] font-black text-white">{String(index + 1).padStart(2, "0")}</span>
                 <p className="pt-1 text-[12px] leading-6 text-[#4f5a68]">{item}</p>
               </li>
             ))}
@@ -90,8 +90,8 @@ export default function HowKlinikosWorksPage() {
         <div className="flex gap-4 border border-[#d8dee5] bg-white p-6">
           <ShieldCheck className="size-5 shrink-0 text-[#9a7a1f]" />
           <div>
-            <h2 className="text-sm font-black">Commercial access and operational authority are separate.</h2>
-            <p className="mt-2 text-[12px] leading-6 text-[#5b6675]">Paying for Klinikos can activate purchased software access. It never overrides authentication, tenant isolation, privacy, clinical governance, Grid eligibility, credential requirements, or required human review. Production patient-data use requires its own deployment and compliance readiness.</p>
+            <h2 className="text-sm font-black">Paying turns on software, not permission.</h2>
+            <p className="mt-2 text-[12px] leading-6 text-[#5b6675]">Paying turns on what you bought. It never changes who can sign in, what your team can see, what stays private, who may make a clinical decision, or what still needs a person to approve. Production patient-data use requires its own deployment and compliance readiness.</p>
           </div>
         </div>
       </section>

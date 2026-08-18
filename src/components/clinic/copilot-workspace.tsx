@@ -68,7 +68,7 @@ function ReviewActions({ canReview, runId, status }: { canReview: boolean; runId
   return <div className="mt-4 flex flex-wrap gap-2">
     <Button disabled={busy} onClick={() => review("approve")} size="sm" variant="secondary"><Check className="size-3.5" /> Accept as staff draft</Button>
     <Button disabled={busy} onClick={() => review("reject")} size="sm" variant="ghost"><X className="size-3.5" /> Reject draft</Button>
-    {error && <p className="basis-full text-[10px] font-bold text-rose-600" role="alert">{error}</p>}
+    {error && <p className="basis-full text-[12px] font-bold text-rose-600" role="alert">{error}</p>}
   </div>;
 }
 
@@ -150,7 +150,7 @@ export function CopilotWorkspace({
         <div className="border-b border-white/10 p-5 sm:p-7 xl:border-b-0 xl:border-r">
           <div className="flex flex-wrap items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-cyan-300/10 text-cyan-200 ring-1 ring-inset ring-cyan-200/15"><Orbit className="size-5" /></span>
-            <div><p className="text-[10px] font-black uppercase tracking-[.22em] text-cyan-200">Zumi workflow intelligence</p><p className="mt-1 text-xs text-slate-400">Deterministic local engine · {workspace.rulesVersion}</p></div>
+            <div><p className="text-[12px] font-black uppercase tracking-[.22em] text-cyan-200">Zumi workflow intelligence</p><p className="mt-1 text-xs text-slate-400">Deterministic local engine · {workspace.rulesVersion}</p></div>
             <Badge className="ml-auto bg-white/8 text-white ring-white/10">No auto-send</Badge>
           </div>
 
@@ -174,28 +174,28 @@ export function CopilotWorkspace({
                 </Button>
               </div>
             </div>
-            <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-3 text-[10px] leading-5 text-amber-100">
+            <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-3 text-[12px] leading-5 text-amber-100">
               <input checked={acknowledged} className="mt-1" onChange={(event) => setAcknowledged(event.target.checked)} type="checkbox" />
               <span><strong>Synthetic demo only.</strong> I will not enter real patient information. Production use requires security, consent, retention, and vendor review.</span>
             </label>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {examples.map((example, index) => <button className="rounded-full bg-white/6 px-3 py-1.5 text-[9px] font-bold text-slate-400 ring-1 ring-inset ring-white/8 transition hover:bg-white/10 hover:text-white" key={example} onClick={() => { setInput(example); setInputMode("typed"); }}>Scenario {index + 1}</button>)}
+            {examples.map((example, index) => <button className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-bold text-slate-400 ring-1 ring-inset ring-white/8 transition hover:bg-white/10 hover:text-white" key={example} onClick={() => { setInput(example); setInputMode("typed"); }}>Scenario {index + 1}</button>)}
           </div>
-          <p className="mt-4 truncate text-[9px] text-slate-600">Visible input preview: {deferredInput || "No request entered"}</p>
+          <p className="mt-4 truncate text-[11px] text-slate-600">Visible input preview: {deferredInput || "No request entered"}</p>
         </div>
 
         <div className="relative min-h-[520px] p-5 sm:p-7">
           {!busy && !result && !error && <div className="grid min-h-[455px] place-items-center text-center"><div><span className="mx-auto grid size-16 place-items-center rounded-[22px] bg-white/6 text-slate-300 ring-1 ring-inset ring-white/10"><Bot className="size-7" /></span><h3 className="mt-5 text-xl font-black tracking-[-.04em]">One surface. No confusing second page.</h3><p className="mx-auto mt-3 max-w-sm text-xs leading-6 text-slate-500">Zumi will classify the request, show its limits, select the human queue, and save the review receipt right here.</p></div></div>}
-          {busy && <div className="flex min-h-[455px] flex-col justify-center"><p className="text-[10px] font-black uppercase tracking-[.22em] text-emerald-300">Processing visibly</p><h3 className="mt-3 text-2xl font-black tracking-[-.045em]">Zumi is organizing the next action.</h3><div className="mt-8 space-y-3">{phases.map((phase, index) => { const complete = index < phaseIndex; const active = index === phaseIndex; return <div className={`flex items-center gap-3 rounded-2xl p-3 ring-1 ring-inset ${active ? "bg-cyan-300/10 ring-cyan-300/20" : complete ? "bg-emerald-300/8 ring-emerald-300/15" : "bg-white/[.025] ring-white/5"}`} key={phase}>{complete ? <CheckCircle2 className="size-4 text-emerald-300" /> : active ? <LoaderCircle className="size-4 animate-spin text-cyan-200" /> : <CircleDashed className="size-4 text-slate-700" />}<p className={`text-xs font-bold ${active || complete ? "text-slate-200" : "text-slate-700"}`}>{phase}</p></div>; })}</div><p className="mt-6 text-[10px] text-slate-500">No external message or workflow action is being sent.</p></div>}
+          {busy && <div className="flex min-h-[455px] flex-col justify-center"><p className="text-[12px] font-black uppercase tracking-[.22em] text-emerald-300">Processing visibly</p><h3 className="mt-3 text-2xl font-black tracking-[-.045em]">Zumi is organizing the next action.</h3><div className="mt-8 space-y-3">{phases.map((phase, index) => { const complete = index < phaseIndex; const active = index === phaseIndex; return <div className={`flex items-center gap-3 rounded-2xl p-3 ring-1 ring-inset ${active ? "bg-cyan-300/10 ring-cyan-300/20" : complete ? "bg-emerald-300/8 ring-emerald-300/15" : "bg-white/[.025] ring-white/5"}`} key={phase}>{complete ? <CheckCircle2 className="size-4 text-emerald-300" /> : active ? <LoaderCircle className="size-4 animate-spin text-cyan-200" /> : <CircleDashed className="size-4 text-slate-700" />}<p className={`text-xs font-bold ${active || complete ? "text-slate-200" : "text-slate-700"}`}>{phase}</p></div>; })}</div><p className="mt-6 text-[12px] text-slate-500">No external message or workflow action is being sent.</p></div>}
           {error && <div className="grid min-h-[455px] place-items-center text-center"><div className="max-w-sm rounded-2xl border border-rose-400/20 bg-rose-400/8 p-5"><AlertTriangle className="mx-auto size-6 text-rose-300" /><p className="mt-3 text-sm font-black">Zumi stopped safely</p><p className="mt-2 text-xs leading-5 text-rose-100/70">{error}</p></div></div>}
           {result && <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="flex flex-wrap items-start gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-emerald-300/10 text-emerald-200 ring-1 ring-inset ring-emerald-200/15"><ShieldCheck className="size-5" /></span><div className="min-w-0 flex-1"><p className="text-[9px] font-black uppercase tracking-[.18em] text-emerald-300">Saved for review</p><h3 className="mt-1 text-xl font-black tracking-[-.04em]">{result.headline}</h3></div><Badge className="bg-white/8 text-white ring-white/10">{Math.round(result.confidence * 100)}% rules match</Badge></div>
+            <div className="flex flex-wrap items-start gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-emerald-300/10 text-emerald-200 ring-1 ring-inset ring-emerald-200/15"><ShieldCheck className="size-5" /></span><div className="min-w-0 flex-1"><p className="text-[11px] font-black uppercase tracking-[.18em] text-emerald-300">Saved for review</p><h3 className="mt-1 text-xl font-black tracking-[-.04em]">{result.headline}</h3></div><Badge className="bg-white/8 text-white ring-white/10">{Math.round(result.confidence * 100)}% rules match</Badge></div>
             <p className="mt-5 text-xs leading-6 text-slate-400">{result.explanation}</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-white/[.045] p-4 ring-1 ring-inset ring-white/8"><p className="text-[9px] font-black text-slate-600">ROUTE</p><p className="mt-2 text-sm font-black">{result.assignedTeam}</p></div><div className="rounded-2xl bg-white/[.045] p-4 ring-1 ring-inset ring-white/8"><p className="text-[9px] font-black text-slate-600">STATUS</p><p className="mt-2 text-sm font-black">{readable(result.status)}</p></div></div>
-            <div className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[.055] p-4"><p className="text-[9px] font-black uppercase tracking-[.16em] text-cyan-200">Draft · not sent</p><p className="mt-3 text-xs leading-6 text-slate-200">{result.draft}</p></div>
-            <div className="mt-4 rounded-2xl border border-amber-300/15 bg-amber-300/[.055] p-4"><p className="text-[9px] font-black uppercase tracking-[.16em] text-amber-200">Next human action</p><p className="mt-2 text-xs font-bold leading-5 text-amber-50">{result.nextAction}</p></div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-white/[.045] p-4 ring-1 ring-inset ring-white/8"><p className="text-[11px] font-black text-slate-600">ROUTE</p><p className="mt-2 text-sm font-black">{result.assignedTeam}</p></div><div className="rounded-2xl bg-white/[.045] p-4 ring-1 ring-inset ring-white/8"><p className="text-[11px] font-black text-slate-600">STATUS</p><p className="mt-2 text-sm font-black">{readable(result.status)}</p></div></div>
+            <div className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[.055] p-4"><p className="text-[11px] font-black uppercase tracking-[.16em] text-cyan-200">Draft · not sent</p><p className="mt-3 text-xs leading-6 text-slate-200">{result.draft}</p></div>
+            <div className="mt-4 rounded-2xl border border-amber-300/15 bg-amber-300/[.055] p-4"><p className="text-[11px] font-black uppercase tracking-[.16em] text-amber-200">Next human action</p><p className="mt-2 text-xs font-bold leading-5 text-amber-50">{result.nextAction}</p></div>
             <div className="mt-4 flex flex-wrap gap-2">{result.blockedActions.map((action) => <Badge className="bg-rose-300/8 text-rose-200 ring-rose-300/15" key={action}><LockKeyhole className="mr-1 size-3" /> {action} blocked</Badge>)}</div>
             {resultRunId && <ReviewActions canReview={canReview} runId={resultRunId} status={result.status} />}
           </div>}
@@ -214,9 +214,9 @@ export function CopilotWorkspace({
       <SectionCard description="Every result remains tenant-scoped, blocked from execution, and traceable to the rule set that produced it." title="Recent Zumi runs">
         <div className="divide-y divide-slate-100">
           {workspace.runs.map((run) => <div className="p-5" key={run.id}>
-            <div className="flex flex-wrap items-start gap-3"><span className={`grid size-10 place-items-center rounded-xl ${run.inputMode === "voice" ? "bg-sky-50 text-sky-700" : "bg-slate-100 text-slate-700"}`}>{run.inputMode === "voice" ? <AudioLines className="size-4" /> : <Sparkles className="size-4" />}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-black text-slate-950">{run.category}</p><StatusBadge status={readable(run.status)} /><Badge tone={riskTone(run.riskLevel)}>{readable(run.riskLevel)}</Badge></div><p className="mt-1 text-[10px] text-slate-400">{run.patient ? `${run.patient.name} · ${run.patient.mrn} · ` : "Organization workflow · "}{new Date(run.createdAt).toLocaleString()}</p></div><p className="text-[10px] font-black text-slate-500">{run.confidence ? `${Math.round(run.confidence * 100)}%` : "No score"}</p></div>
+            <div className="flex flex-wrap items-start gap-3"><span className={`grid size-10 place-items-center rounded-xl ${run.inputMode === "voice" ? "bg-sky-50 text-sky-700" : "bg-slate-100 text-slate-700"}`}>{run.inputMode === "voice" ? <AudioLines className="size-4" /> : <Sparkles className="size-4" />}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-black text-slate-950">{run.category}</p><StatusBadge status={readable(run.status)} /><Badge tone={riskTone(run.riskLevel)}>{readable(run.riskLevel)}</Badge></div><p className="mt-1 text-[12px] text-slate-400">{run.patient ? `${run.patient.name} · ${run.patient.mrn} · ` : "Organization workflow · "}{new Date(run.createdAt).toLocaleString()}</p></div><p className="text-[12px] font-black text-slate-500">{run.confidence ? `${Math.round(run.confidence * 100)}%` : "No score"}</p></div>
             <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[11px] leading-5 text-slate-700">{run.inputText}</p>
-            {run.result && <div className="mt-3 grid gap-3 md:grid-cols-2"><div className="rounded-xl border border-slate-200 p-3"><p className="text-[8px] font-black text-slate-400">NEXT ACTION</p><p className="mt-1 text-[10px] font-bold leading-5 text-slate-700">{run.result.nextAction}</p></div><div className="rounded-xl border border-slate-200 p-3"><p className="text-[8px] font-black text-slate-400">RESPONSIBLE TEAM</p><p className="mt-1 text-[10px] font-bold text-slate-700">{run.assignedTeam}</p></div></div>}
+            {run.result && <div className="mt-3 grid gap-3 md:grid-cols-2"><div className="rounded-xl border border-slate-200 p-3"><p className="text-[11px] font-black text-slate-400">NEXT ACTION</p><p className="mt-1 text-[12px] font-bold leading-5 text-slate-700">{run.result.nextAction}</p></div><div className="rounded-xl border border-slate-200 p-3"><p className="text-[11px] font-black text-slate-400">RESPONSIBLE TEAM</p><p className="mt-1 text-[12px] font-bold text-slate-700">{run.assignedTeam}</p></div></div>}
             <ReviewActions canReview={canReview} runId={run.id} status={run.status} />
           </div>)}
           {!workspace.runs.length && <div className="p-8 text-center"><Bot className="mx-auto size-6 text-slate-300" /><p className="mt-3 text-xs font-bold text-slate-500">No tenant Copilot runs have been saved yet.</p></div>}
@@ -225,10 +225,10 @@ export function CopilotWorkspace({
 
       <div className="space-y-6">
         <Card className="border-slate-800 bg-slate-950 p-5 text-white">
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-emerald-300/10 text-emerald-200"><BadgeCheck className="size-4" /></span><div><p className="text-xs font-black">Truth panel</p><p className="text-[10px] text-slate-500">What is actually connected</p></div></div>
+          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-emerald-300/10 text-emerald-200"><BadgeCheck className="size-4" /></span><div><p className="text-xs font-black">Truth panel</p><p className="text-[12px] text-slate-500">What is actually connected</p></div></div>
           <div className="mt-5 space-y-2">{[
             ["Typed workflow input", "Live"], ["Browser push-to-talk", "Demo"], ["Local safety engine", "Live"], ["AI provider adapter", "Pending connection"], ["Patient message send", "Human review required"], ["Production PHI use", "Requires production review"],
-          ].map(([label, status]) => <div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-inset ring-white/8" key={label}><p className="text-[10px] font-bold text-slate-300">{label}</p><span className="text-right text-[9px] font-black text-emerald-200">{status}</span></div>)}</div>
+          ].map(([label, status]) => <div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-inset ring-white/8" key={label}><p className="text-[12px] font-bold text-slate-300">{label}</p><span className="text-right text-[11px] font-black text-emerald-200">{status}</span></div>)}</div>
         </Card>
         <SectionCard description="Each Copilot output records its path instead of hiding behind a generic AI label." title="Processing contract">
           <div className="space-y-3 p-4">{[
@@ -236,7 +236,7 @@ export function CopilotWorkspace({
             [Route, "Route", "Choose a responsible human queue."],
             [UserCheck, "Review", "An authorized person accepts or rejects the draft."],
             [LockKeyhole, "Hold", "No downstream action executes from this surface."],
-          ].map(([Icon, title, detail]) => { const IconComponent = Icon as typeof Activity; return <div className="flex items-start gap-3 rounded-xl border border-slate-200 p-3" key={String(title)}><IconComponent className="mt-0.5 size-4 text-teal-600" /><div><p className="text-xs font-black text-slate-900">{String(title)}</p><p className="mt-1 text-[10px] leading-5 text-slate-500">{String(detail)}</p></div></div>; })}</div>
+          ].map(([Icon, title, detail]) => { const IconComponent = Icon as typeof Activity; return <div className="flex items-start gap-3 rounded-xl border border-slate-200 p-3" key={String(title)}><IconComponent className="mt-0.5 size-4 text-teal-600" /><div><p className="text-xs font-black text-slate-900">{String(title)}</p><p className="mt-1 text-[12px] leading-5 text-slate-500">{String(detail)}</p></div></div>; })}</div>
         </SectionCard>
       </div>
     </section>

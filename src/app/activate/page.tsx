@@ -86,7 +86,7 @@ export default async function ActivatePage({ searchParams }: { searchParams: Pro
             aria-labelledby="activation-form-heading"
           >
             <div className="max-w-3xl">
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>
                 Secure activation
               </p>
               <h2 id="activation-form-heading" className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">

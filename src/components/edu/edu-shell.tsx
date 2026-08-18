@@ -43,14 +43,14 @@ export function EduShell({
             <BrandMark />
             <div>
               <p className="text-sm font-semibold text-[#f8efed]">Klinikos EDU</p>
-              <p className="text-[9px] font-semibold uppercase tracking-[.18em] text-[#efaaa1]">Virtual Clinic Lab</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[#efaaa1]">Virtual Clinic Lab</p>
             </div>
           </div>
 
           <nav aria-label="Klinikos EDU" className="px-3 pb-8">
             {groups.map((group) => (
               <div className="mt-5 first:mt-0" key={group.label}>
-                <p className="px-2 text-[10px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">{group.label}</p>
+                <p className="px-2 text-[12px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">{group.label}</p>
                 <ul className="mt-2 space-y-0.5">
                   {group.items.map((item) => (
                     <li key={item.href}>
@@ -82,7 +82,7 @@ export function EduShell({
               <ul aria-label="Data classification" className="flex flex-wrap gap-1.5">
                 {SYNTHETIC_DATA_LABELS.map((label) => (
                   <li
-                    className="rounded-full border border-[#efaaa1]/24 bg-[#efaaa1]/[.06] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.12em] text-[#e8bbb4]"
+                    className="rounded-full border border-[#efaaa1]/24 bg-[#efaaa1]/[.06] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[.12em] text-[#e8bbb4]"
                     key={label}
                   >
                     {label}

@@ -50,7 +50,7 @@ export default async function EduScenariosPage() {
                     <tr className="border-t border-white/10" key={scenario.id}>
                       <th className="px-4 py-3 font-bold text-white" scope="row">
                         {scenario.title}
-                        {scenario.aiGenerated && <span className="ml-2 text-[10px] font-bold uppercase tracking-[.1em] text-slate-500">AI draft</span>}
+                        {scenario.aiGenerated && <span className="ml-2 text-[12px] font-bold uppercase tracking-[.1em] text-slate-500">AI draft</span>}
                       </th>
                       <td className="px-4 py-3 text-slate-400">{scenario.setting.replace(/_/g, " ")}</td>
                       <td className="px-4 py-3 text-slate-400">{scenario.difficulty}</td>

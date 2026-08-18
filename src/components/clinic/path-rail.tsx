@@ -27,7 +27,7 @@ export function PathRail({ nodes }: { nodes: KlinikosPathNode[] }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-extrabold text-[#0b1e3a]">{node.label}</p>
-                <span className="text-[9px] font-extrabold uppercase tracking-[.16em] text-[#0b1e3a]/38">{stateLabel[node.state]}</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#0b1e3a]/38">{stateLabel[node.state]}</span>
               </div>
               <p className="mt-1 max-w-xl text-[11px] leading-5 text-[#0b1e3a]/55">{node.description}</p>
             </div>

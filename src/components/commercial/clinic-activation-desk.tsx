@@ -133,7 +133,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
           <Card>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
+                <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>01 · Create checkout</p>
                 <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Bind the buyer to the plan before they pay.</h2>
               </div>
               <Badge tone="observing">Server-owned</Badge>
@@ -145,7 +145,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
             </div>
 
             <label className="mt-6 flex flex-col gap-2">
-              <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Clinic plan</span>
+              <span className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Clinic plan</span>
               <select
                 className="min-h-11 bg-transparent px-1 text-sm outline-none"
                 style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}
@@ -161,7 +161,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                 {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <ExternalLink className="size-4" aria-hidden="true" />}
                 Create checkout
               </Button>
-              <p className="max-w-md text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+              <p className="max-w-md text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
                 Creating the checkout does not grant access and does not establish that money moved.
               </p>
             </div>
@@ -189,7 +189,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
               Confirm only after independently seeing the expected payment in the real GoDaddy payment records. The first click arms the action. The second records manual evidence, activates the paid plan, initializes configured allowances, and issues the signed owner setup link.
             </p>
             <div className="mt-7 border-t pt-5" style={{ borderColor: "var(--line-dark)" }}>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--status-analyzing)", letterSpacing: "var(--tracking-wide)" }}>External truth</p>
               <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>Processor verification remains false until a real processor verification connector exists.</p>
             </div>
           </Card>
@@ -219,7 +219,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
         <section aria-labelledby="checkout-ledger-heading">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>03 · Activation ledger</p>
+              <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wider)" }}>03 · Activation ledger</p>
               <h2 id="checkout-ledger-heading" className="mt-2 text-2xl font-extrabold tracking-tight">Recent clinic checkouts</h2>
               <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkouts.length} recent records</p>
             </div>
@@ -239,7 +239,7 @@ export function ClinicActivationDesk({ initialCheckouts, plans }: { initialCheck
                     <Badge tone={checkoutTone(checkout.status)}>{checkout.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{checkout.email} · {checkout.productLabel} · {money(checkout.expectedAmountCents)}</p>
-                  <p className="mt-2 text-[10px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"}</p>
+                  <p className="mt-2 text-[12px]" style={{ color: "var(--text-on-paper-dim)" }}>Intent {checkout.id.slice(0, 8)} · {checkout.organizationId ? "organization linked" : "pre-provisioning"}</p>
                 </div>
                 <div>
                   {checkout.status === "created" ? (

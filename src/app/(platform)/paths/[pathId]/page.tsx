@@ -33,20 +33,20 @@ export default async function KlinikosPathPage({ params }: { params: Promise<{ p
       <section className="rounded-[30px] border border-[#0b1e3a]/8 bg-white px-6 py-8 shadow-[0_24px_70px_rgba(11,30,58,.06)] sm:px-9 sm:py-10">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Klinikos Path</p>
+            <p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#1677a8]">Klinikos Path</p>
             <h1 className="mt-3 max-w-3xl text-balance text-4xl font-extrabold tracking-[-.055em] text-[#0b1e3a] sm:text-5xl">{definition.title}</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#0b1e3a]/58">{runtime.goal}</p>
           </div>
           <div className="rounded-2xl bg-[#f1f8fc] px-4 py-3 text-right">
-            <p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">Progress</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">Progress</p>
             <p className="mt-1 text-2xl font-extrabold text-[#0b1e3a]">{Math.round(runtime.progress * 100)}%</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#0b1e3a]/38">{runtime.status}</p>
+            <p className="mt-1 text-[12px] font-semibold uppercase tracking-[.12em] text-[#0b1e3a]/38">{runtime.status}</p>
           </div>
         </div>
 
         {current ? (
           <div className="mt-8 rounded-2xl bg-[#f1f8fc] p-5">
-            <p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">Next action</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">Next action</p>
             <div className="mt-2">
               <p className="text-base font-extrabold text-[#0b1e3a]">{current.label}</p>
               <p className="mt-1 max-w-2xl text-xs leading-5 text-[#0b1e3a]/55">{current.description}</p>
@@ -72,7 +72,7 @@ export default async function KlinikosPathPage({ params }: { params: Promise<{ p
 
       <section className="rounded-[28px] border border-[#0b1e3a]/8 bg-white p-6 sm:p-8">
         <div className="mb-7">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#0b1e3a]/42">Journey</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-[#0b1e3a]/42">Journey</p>
           <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#0b1e3a]">Where you are and what comes next.</h2>
         </div>
         <PathRail nodes={nodes} />

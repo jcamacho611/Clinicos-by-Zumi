@@ -116,7 +116,7 @@ export function KlinikosAtmosphereController() {
             })}
           </div>
 
-          <p className="k-muted mt-5 text-[10px] leading-5">Current atmosphere: <span className="font-semibold text-[var(--k-text)]">{currentLabel}</span>. This changes presentation only. Permissions, safety rules, and product behavior do not change.</p>
+          <p className="k-muted mt-5 text-[12px] leading-5">Current atmosphere: <span className="font-semibold text-[var(--k-text)]">{currentLabel}</span>. This changes presentation only. Permissions, safety rules, and product behavior do not change.</p>
         </div>
       ) : null}
 

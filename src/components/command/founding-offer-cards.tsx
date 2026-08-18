@@ -32,16 +32,16 @@ export function FoundingOfferCards({ headingId = "engagement-heading", ctaHref =
 
             <dl className="mt-6 grid gap-5 pt-5" style={{ borderTop: "var(--border-hair-dark)" }}>
               <div>
-                <dt className="text-[10px] font-bold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>Best for</dt>
+                <dt className="text-[12px] font-bold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>Best for</dt>
                 <dd className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>{offer.bestFor}</dd>
               </div>
               <div>
-                <dt className="text-[10px] font-bold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>What happens</dt>
+                <dt className="text-[12px] font-bold uppercase" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>What happens</dt>
                 <dd className="mt-2 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>{offer.whatHappens}</dd>
               </div>
             </dl>
 
-            <p className="mt-5 text-[10px] leading-5" style={{ color: "var(--text-secondary)" }}>{offer.creditForward}</p>
+            <p className="mt-5 text-[12px] leading-5" style={{ color: "var(--text-secondary)" }}>{offer.creditForward}</p>
 
             <Link
               className="mt-auto inline-flex min-h-11 items-center justify-between gap-3 pt-7 text-xs font-extrabold"

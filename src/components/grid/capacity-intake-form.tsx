@@ -110,7 +110,7 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
   if (result) {
     return <div className="border border-emerald-200 bg-white p-7 shadow-[0_24px_70px_rgba(5,150,105,.08)]">
       <CheckCircle2 className="size-8 text-emerald-600" />
-      <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[.18em] text-emerald-700">Account created</p>
+      <p className="mt-5 text-[12px] font-extrabold uppercase tracking-[.18em] text-emerald-700">Account created</p>
       <h3 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-950">{copy.successTitle}</h3>
       <p className="mt-3 text-sm leading-7 text-slate-600">Your account is active and the first capacity record has been persisted. The listing is in human review and is not public or bookable until that review succeeds.</p>
       <div className="mt-5 border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-600">
@@ -195,19 +195,19 @@ export function CapacityIntakeForm({ mode = "space" }: { mode?: CapacityMode }) 
 
   return <div className="border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,.08)] sm:p-8">
     <div className="flex flex-wrap gap-2">{steps.map((item, index) => <button key={item.title} className={`rounded-full border px-3 py-2 text-[11px] font-extrabold ${index === step ? "border-[#174ea6] bg-[#174ea6] text-white" : index < step ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-400"}`} onClick={() => index <= step && setStep(index)} type="button">{index + 1}</button>)}</div>
-    <p className="mt-6 text-[10px] font-extrabold uppercase tracking-[.18em] text-[#174ea6]">Step {step + 1} of 5</p>
+    <p className="mt-6 text-[12px] font-extrabold uppercase tracking-[.18em] text-[#174ea6]">Step {step + 1} of 5</p>
     <h3 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-950">{steps[step].title}</h3>
 
     {step === 0 && <div className="mt-6 grid gap-4 sm:grid-cols-2">
       <label className={label}>Your name<Input value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>
       <label className={label}>Email<Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
       <label className={label}>{copy.accountLabel}<Input value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} placeholder={copy.accountPlaceholder} /></label>
-      <label className={label}>Password<Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /><span className="block text-[10px] font-normal leading-5 text-slate-400">12+ characters with uppercase, lowercase, number, and symbol.</span></label>
+      <label className={label}>Password<Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /><span className="block text-[12px] font-normal leading-5 text-slate-400">12+ characters with uppercase, lowercase, number, and symbol.</span></label>
       <label className={label}>{copy.typeLabel}<select className={field} value={type} onChange={(event) => setType(event.target.value)}>{copy.types.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className={label}>Listing name<Input value={name} onChange={(event) => setName(event.target.value)} placeholder={copy.listingPlaceholder} /></label>
     </div>}
 
-    {step === 1 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>City<Input value={city} onChange={(event) => setCity(event.target.value)} /></label><label className={label}>State<Input value={state} maxLength={2} onChange={(event) => setState(event.target.value.toUpperCase())} /></label><div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-extrabold text-slate-800">Map position</p><p className="mt-1 text-[10px] leading-5 text-slate-500">Optional. Use the device only if you are physically at the listed capacity. Otherwise Grid keeps city/state without inventing a pin.</p></div><Button type="button" variant="secondary" size="sm" disabled={locating} onClick={useCurrentLocation}>{locating ? <LoaderCircle className="size-4 animate-spin" /> : <Crosshair className="size-4" />}Use current location</Button></div>{latitude && longitude && <p className="mt-3 text-[10px] font-bold text-emerald-700">Coordinates captured: {latitude}, {longitude}</p>}</div></div>}
+    {step === 1 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>City<Input value={city} onChange={(event) => setCity(event.target.value)} /></label><label className={label}>State<Input value={state} maxLength={2} onChange={(event) => setState(event.target.value.toUpperCase())} /></label><div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-extrabold text-slate-800">Map position</p><p className="mt-1 text-[12px] leading-5 text-slate-500">Optional. Use the device only if you are physically at the listed capacity. Otherwise Grid keeps city/state without inventing a pin.</p></div><Button type="button" variant="secondary" size="sm" disabled={locating} onClick={useCurrentLocation}>{locating ? <LoaderCircle className="size-4 animate-spin" /> : <Crosshair className="size-4" />}Use current location</Button></div>{latitude && longitude && <p className="mt-3 text-[12px] font-bold text-emerald-700">Coordinates captured: {latitude}, {longitude}</p>}</div></div>}
 
     {step === 2 && <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className={label}>Available from<Input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label><label className={label}>Available until<Input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label><label className={label}>Simultaneous capacity<Input min={1} type="number" value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label></div>}
 

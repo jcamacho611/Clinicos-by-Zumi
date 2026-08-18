@@ -44,7 +44,7 @@ export function ClinicSignalChips({ signals }: { signals: string[] }) {
   return (
     <ul aria-label="Clinic signals captured" className="flex flex-wrap gap-1.5">
       {signals.map((signal) => (
-        <li className="border border-cyan-300/30 bg-cyan-400/[.08] px-2.5 py-1 text-[10px] font-bold text-cyan-100" key={signal}>
+        <li className="border border-cyan-300/30 bg-cyan-400/[.08] px-2.5 py-1 text-[12px] font-bold text-cyan-100" key={signal}>
           {signal}
         </li>
       ))}

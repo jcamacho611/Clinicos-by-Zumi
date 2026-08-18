@@ -26,7 +26,7 @@ export default function GridContractorJoinPage() {
       <header className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
         <Link className="flex items-center gap-3" href="/grid">
           <BrandMark />
-          <div><p className="text-sm font-extrabold text-slate-950">Klinikos Grid</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-amber-600">Healthcare opportunity network</p></div>
+          <div><p className="text-sm font-extrabold text-slate-950">Klinikos Grid</p><p className="text-[11px] font-bold uppercase tracking-[.18em] text-amber-600">Healthcare opportunity network</p></div>
         </Link>
         <div className="ml-auto flex items-center gap-4"><Link className="hidden text-xs font-bold text-slate-600 hover:text-slate-950 sm:block" href="/grid/browse">Browse Grid</Link><Link className="flex items-center gap-2 text-xs font-bold text-slate-600" href="/grid"><ArrowLeft className="size-4" /> Grid</Link></div>
       </header>
@@ -45,7 +45,7 @@ export default function GridContractorJoinPage() {
 
       <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.62fr_1.38fr]" id="professional">
         <aside className="lg:sticky lg:top-8 lg:self-start">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-teal-700">Professional enrollment</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[.18em] text-teal-700">Professional enrollment</p>
           <h2 className="mt-3 text-3xl font-black tracking-[-.05em] text-slate-950">For people whose work depends on professional eligibility.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">Clinical and regulated professional work stays on the existing credential-aware enrollment path. The account is not proof that the person is eligible for every opportunity.</p>
           <ul className="mt-6 space-y-3 text-sm leading-6 text-slate-600">{["Identity and professional profile", "License, certification, and malpractice evidence where applicable", "Mobile, clinic-chair, and partner-location preferences", "Recurring availability and travel radius", "Human verification before regulated activation", "Opportunity, booking, and payout state after eligibility"].map((item) => <li className="flex gap-3" key={item}><span className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-500" />{item}</li>)}</ul>

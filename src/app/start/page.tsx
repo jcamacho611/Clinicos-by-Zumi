@@ -95,7 +95,7 @@ export default function StartPage() {
                     <path.icon aria-hidden="true" className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">{path.eyebrow}</p>
+                    <p className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">{path.eyebrow}</p>
                     <h3 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-white">{path.title}</h3>
                     <p className="mt-4 max-w-xl text-[13px] leading-7 text-slate-400">{path.body}</p>
                     <div className="mt-7">

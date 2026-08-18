@@ -12,12 +12,12 @@ import {
 export const metadata = {
   title: "Founding Clinic Qualification — Klinikos",
   description:
-    "The founding pathway evaluates operational fit before implementation. Klinikos maps the real workflow first, then scope and production gates are reviewed before launch.",
+    "The founding pathway evaluates operational fit before implementation. Klinikos maps how your clinic actually works first, then we agree the scope and what has to be ready before launch.",
 };
 
 const pathway = [
   { icon: Layers3, title: "Evaluate", body: "Map the workflow, software burden, staffing gaps, and operating cost before anything is committed." },
-  { icon: Handshake, title: "Agree", body: "Define the approved scope, ownership, production gates, connections, and manual fallbacks in writing." },
+  { icon: Handshake, title: "Agree", body: "Agree in writing what is in scope, who owns what, what has to be ready before launch, which connections are needed, and what happens manually until they are." },
   { icon: Crown, title: "Build", body: "Launch reviewed operating slices with priority onboarding and a clear path from qualification to production readiness." },
 ] as const;
 
@@ -63,13 +63,13 @@ export default function FoundingClinicPage() {
 
       <section aria-labelledby="pathway-heading" id="pathway" style={{ borderBottom: "var(--border-hair-dark)" }}>
         <div className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8">
-          <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>The pathway</p>
+          <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>The pathway</p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight" id="pathway-heading">Three decisions before production.</h2>
           <ol className="mt-8 grid gap-4 sm:grid-cols-3">
             {pathway.map((step, index) => (
               <li key={step.title}>
                 <Card dark className="h-full">
-                  <p className="text-[10px] font-extrabold" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>0{index + 1}</p>
+                  <p className="text-[12px] font-extrabold" style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}>0{index + 1}</p>
                   <step.icon aria-hidden="true" className="mt-7 size-5" style={{ color: "var(--cyan-400)" }} />
                   <h3 className="mt-5 text-base font-extrabold">{step.title}</h3>
                   <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>{step.body}</p>
@@ -85,10 +85,10 @@ export default function FoundingClinicPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <Card dark>
-            <Badge tone="mapping">Payment rail</Badge>
+            <Badge tone="mapping">How payment works</Badge>
             <h2 className="mt-4 text-xl font-extrabold">GoDaddy checkout is available after the correct commercial intent exists.</h2>
             <p className="mt-3 text-xs leading-6" style={{ color: "var(--text-secondary)" }}>
-              Klinikos first captures the clinic, buyer, selected engagement, and expected amount. The server then creates an auditable checkout intent before the configured GoDaddy payment rail opens. Opening or returning from checkout is never proof of payment.
+              Klinikos records the clinic, the buyer, what you selected and the amount — the browser never sets the price — then opens the payment page. Opening or returning from it does not by itself mean you have paid — we confirm that with the payment provider.
             </p>
             <Link className="mt-5 inline-flex min-h-11 items-center gap-2 px-5 text-xs font-extrabold" href="/sales" style={{ background: "var(--gold-300)", color: "var(--obsidian)", borderRadius: "var(--radius-sm)" }}>
               Start qualification <ArrowRight className="size-4" aria-hidden="true" />
@@ -107,7 +107,7 @@ export default function FoundingClinicPage() {
 
         <div className="mt-10 grid gap-5 pt-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start" style={{ borderTop: "var(--border-hair-dark)" }}>
           <div>
-            <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>Production boundary</p>
+            <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--cyan-400)", letterSpacing: "var(--tracking-wider)" }}>Production boundary</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Clear gates, not repeated fine print.</h2>
           </div>
           <p className="text-xs leading-6" style={{ color: "var(--text-secondary)" }}>

@@ -124,12 +124,12 @@ export function ClinicActivationForm({
     <div className="mt-9 space-y-8">
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
-          <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Organization</p>
+          <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Organization</p>
           <p className="mt-3 text-lg font-extrabold">{organizationName}</p>
           <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>{email}</p>
         </Card>
         <Card>
-          <p className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Paid plan</p>
+          <p className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>Paid plan</p>
           <p className="mt-3 text-lg font-extrabold">{productLabel}</p>
           <p className="mt-1 text-xs" style={{ color: "var(--text-on-paper-dim)" }}>Bound to the signed activation link</p>
         </Card>
@@ -165,7 +165,7 @@ export function ClinicActivationForm({
           <Input label="Your name" value={form.ownerName} onChange={(event) => update("ownerName", event.target.value)} />
           <div>
             <Input label="Create password" type="password" value={form.password} onChange={(event) => update("password", event.target.value)} />
-            <p className="mt-2 flex items-center gap-2 text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+            <p className="mt-2 flex items-center gap-2 text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
               <LockKeyhole className="size-3" aria-hidden="true" /> Password is never included in autosaved onboarding progress.
             </p>
           </div>
@@ -227,7 +227,7 @@ export function ClinicActivationForm({
             {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="size-4" aria-hidden="true" />}
             {pending ? "Activating workspace" : "Activate my Klinikos workspace"}
           </Button>
-          <p className="max-w-sm text-[10px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
+          <p className="max-w-sm text-[12px] leading-5" style={{ color: "var(--text-on-paper-dim)" }}>
             Successful activation signs you into the organization bound to this link and opens Living Home.
           </p>
         </div>
@@ -240,7 +240,7 @@ function ActivationSection({ number, title, description, children }: { number: s
   return (
     <section className="border-t pt-7" style={{ borderColor: "var(--line-light)" }}>
       <div className="mb-7 grid gap-2 sm:grid-cols-[auto_1fr] sm:gap-5">
-        <p className="text-[10px] font-extrabold" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{number}</p>
+        <p className="text-[12px] font-extrabold" style={{ color: "var(--accent-signal)", letterSpacing: "var(--tracking-wide)" }}>{number}</p>
         <div>
           <h3 className="text-xl font-extrabold tracking-tight">{title}</h3>
           <p className="mt-2 text-xs leading-6" style={{ color: "var(--text-on-paper-dim)" }}>{description}</p>
@@ -254,7 +254,7 @@ function ActivationSection({ number, title, description, children }: { number: s
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
+      <span className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
       <select
         className="min-h-11 bg-transparent px-1 text-sm outline-none"
         style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}
@@ -270,7 +270,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
 function TextareaField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
+      <span className="text-[12px] font-extrabold uppercase" style={{ color: "var(--text-on-paper-dim)", letterSpacing: "var(--tracking-wide)" }}>{label}</span>
       <textarea
         className="min-h-28 resize-y bg-transparent px-1 py-3 text-sm leading-6 outline-none"
         style={{ color: "var(--text-on-paper)", border: "none", borderBottom: "var(--border-hair-light)" }}

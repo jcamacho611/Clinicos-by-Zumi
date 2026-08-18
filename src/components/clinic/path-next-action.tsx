@@ -34,7 +34,7 @@ export function PathNextAction({ guidance }: { guidance: PathGuidanceView }) {
     <section className="mt-6 border-t border-[#0b1e3a]/8 pt-6" aria-labelledby={`next-action-${guidance.instanceId}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-xl">
-          <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">
+          <div className="flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-[.16em] text-[#1677a8]">
             <StateIcon className="size-3.5" /> {state.label}
           </div>
           <h3 className="mt-2 text-lg font-extrabold tracking-[-.035em] text-[#0b1e3a]" id={`next-action-${guidance.instanceId}`}>{guidance.title}</h3>

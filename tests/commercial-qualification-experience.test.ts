@@ -25,8 +25,14 @@ describe("commercial qualification experience", () => {
     const founding = read("src/app/founding-clinic/page.tsx");
 
     expect(sales).toContain("This analysis does not itself activate production access or external integrations.");
-    expect(founding).toContain("Opening or returning from checkout is never proof of payment.");
+
+    // The fact survives; the vocabulary carrying it is now plain language.
+    expect(founding).toMatch(/does not by itself mean you have paid/i);
+    expect(founding).toMatch(/we confirm that with the payment provider/i);
     expect(founding).toContain("do not by themselves activate production PHI");
+    for (const jargon of ["payment rail", "checkout intent", "production gates"]) {
+      expect(founding.toLowerCase(), `"${jargon}" is internal vocabulary`).not.toContain(jargon);
+    }
   });
 
   it("keeps founding prices server-controlled and removes raw-hex visual drift", () => {
