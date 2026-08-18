@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { CREDENTIAL_DISCLAIMER } from "@/lib/edu/edu-safety";
 
-export const EDU_CERTIFICATE_DISCLAIMER = "Klinikos EDU evidence only. This certificate does not confer professional licensure, board certification, scope of practice, clinical privileges, independent practice authority, employment eligibility, or automatic Klinikos Grid eligibility. Any regulated opportunity requires separate authoritative credential, jurisdiction, insurance, organization, and policy verification.";
+export const EDU_CERTIFICATE_DISCLAIMER = CREDENTIAL_DISCLAIMER;
 
 export const eduCertificateTypes = ["completion", "competency_evidence"] as const;
 export type EduCertificateType = (typeof eduCertificateTypes)[number];
