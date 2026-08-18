@@ -101,27 +101,65 @@ export const currentSystemsSchema = z.object({
   patientMessaging: z.string().trim().max(120).default(""),
 });
 
+/**
+ * What a purchase actually requires.
+ *
+ * Creating the reservation and the server-owned checkout intent reads an email, a clinic
+ * and contact name, an explicit acknowledgment, and an offer key whose price the server
+ * owns. That is the whole dependency. Role, phone, provider count, location count,
+ * current vendors, monthly software spend and a repeated pain-point selection were all
+ * demanded before payment and none of them are read by either step — they were
+ * consulting homework standing between a ready buyer and giving us money.
+ *
+ * `clinicType` and `biggestPainPoint` stay required because the Zumi operating interview
+ * already carries them into this form; the buyer is not answering them twice.
+ *
+ * Everything else is optional here and collected after payment, during implementation
+ * discovery, where it is genuinely useful. Optional means absent, not defaulted: writing
+ * providerCount = 1 for a twelve-provider clinic invents a fact that would flow into
+ * proposals and any later ROI claim, so an uncollected answer stays null.
+ */
 export const salesIntakeSchema = z.object({
   clinicName: z.string().trim().min(2).max(140),
   contactName: z.string().trim().min(2).max(120),
-  contactRole: z.string().trim().min(2).max(100),
   contactEmail: z.string().trim().email().max(180),
-  contactPhone: z.string().trim().min(7).max(40),
   clinicType: z.enum(clinicTypeOptions),
-  providerCount: z.number().int().min(1).max(10_000),
-  locationCount: z.number().int().min(1).max(1_000),
-  currentSystems: currentSystemsSchema,
-  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
   biggestPainPoint: painPointSchema,
-  painPoints: z.array(painPointSchema).min(1).max(salesPainPoints.length),
+  acknowledgesSyntheticData: z.literal(true),
   selectedOffer: demoOfferSchema.default("private_workflow_demo"),
+
+  // Collected after payment. Present when the buyer volunteered it, null otherwise.
+  contactRole: z.string().trim().min(2).max(100).nullable().default(null),
+  contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
+  providerCount: z.number().int().min(1).max(10_000).nullable().default(null),
+  locationCount: z.number().int().min(1).max(1_000).nullable().default(null),
+  currentSystems: currentSystemsSchema.nullable().default(null),
+  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
+  painPoints: z.array(painPointSchema).max(salesPainPoints.length).nullable().default(null),
+
   wantsFreeIntro: z.boolean().default(false),
   wantsPaidDemo: z.boolean().default(true),
   wantsFoundingEvaluation: z.boolean().default(false),
   wantsFoundingProgram: z.boolean().default(false),
-  acknowledgesSyntheticData: z.literal(true),
   website: z.string().max(0).optional(),
 }).strict();
+
+/**
+ * The qualification a person is asked for after they have paid, when it informs
+ * implementation rather than gating a purchase. Every field is optional: an unanswered
+ * question stays unanswered.
+ */
+export const salesQualificationSchema = z.object({
+  contactRole: z.string().trim().min(2).max(100).nullable().default(null),
+  contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
+  providerCount: z.number().int().min(1).max(10_000).nullable().default(null),
+  locationCount: z.number().int().min(1).max(1_000).nullable().default(null),
+  currentSystems: currentSystemsSchema.nullable().default(null),
+  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
+  painPoints: z.array(painPointSchema).max(salesPainPoints.length).nullable().default(null),
+}).strict();
+
+export type SalesQualification = z.infer<typeof salesQualificationSchema>;
 
 export type SalesIntake = z.infer<typeof salesIntakeSchema>;
 

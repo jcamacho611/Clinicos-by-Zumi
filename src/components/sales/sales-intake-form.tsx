@@ -24,18 +24,20 @@ export type PublicAnalysisOffer = {
   creditForward: string;
 };
 
+/**
+ * Only what the purchase needs. Role, phone, provider count, location count, current
+ * vendors and monthly spend are deliberately absent: they are not read when creating the
+ * reservation or the server-owned checkout, and carrying them here would mean sending
+ * placeholder values — `providerCount: 1` for a twelve-provider clinic — that the server
+ * would then store as though the buyer had answered. They are collected after payment.
+ */
 interface IntakeState {
   clinicName: string;
   contactName: string;
-  contactRole: string;
   contactEmail: string;
-  contactPhone: string;
   clinicType: (typeof clinicTypeOptions)[number];
-  providerCount: number;
-  locationCount: number;
-  currentSystems: { ehr: string; scheduling: string; billing: string; crm: string; patientMessaging: string };
-  estimatedSoftwareSpendDollars: number;
   biggestPainPoint: SalesPainPoint;
+  /** Carried from the Zumi operating interview; drives the scenario preview. */
   painPoints: SalesPainPoint[];
   selectedOffer: DemoOfferKey;
   wantsFreeIntro: boolean;
@@ -59,14 +61,8 @@ function initialState(initialContext?: PaidAnalysisHandoff): IntakeState {
   return {
     clinicName: "",
     contactName: "",
-    contactRole: "",
     contactEmail: "",
-    contactPhone: "",
     clinicType: initialContext?.clinicType ?? "Primary care",
-    providerCount: 1,
-    locationCount: 1,
-    currentSystems: { ehr: "", scheduling: "", billing: "", crm: "", patientMessaging: "" },
-    estimatedSoftwareSpendDollars: 0,
     biggestPainPoint: initialContext?.biggestPainPoint ?? carriedPainPoints[0],
     painPoints: carriedPainPoints,
     selectedOffer: ANALYSIS_OFFER_KEY,
@@ -188,36 +184,19 @@ export function SalesIntakeForm({ analysisOffer, initialContext }: { analysisOff
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="sm:col-span-2"><span className={labelClass}>Clinic name</span><input className={inputClass} required value={form.clinicName} onChange={(event) => setField("clinicName", event.target.value)} placeholder="Northstar Family Practice" /></label>
               <label><span className={labelClass}>Contact name</span><input className={inputClass} required value={form.contactName} onChange={(event) => setField("contactName", event.target.value)} placeholder="Jordan Rivera" /></label>
-              <label><span className={labelClass}>Role</span><input className={inputClass} required value={form.contactRole} onChange={(event) => setField("contactRole", event.target.value)} placeholder="Owner / practice manager" /></label>
               <label><span className={labelClass}>Email</span><input className={inputClass} required type="email" value={form.contactEmail} onChange={(event) => setField("contactEmail", event.target.value)} placeholder="you@clinic.com" /></label>
-              <label><span className={labelClass}>Phone</span><input className={inputClass} required type="tel" value={form.contactPhone} onChange={(event) => setField("contactPhone", event.target.value)} placeholder="(212) 555-0100" /></label>
               <label className="sm:col-span-2"><span className={labelClass}>Clinic type</span><select className={inputClass} value={form.clinicType} onChange={(event) => setField("clinicType", event.target.value as IntakeState["clinicType"])}>{clinicTypeOptions.map((option) => <option className="bg-slate-950" key={option}>{option}</option>)}</select></label>
-              <label><span className={labelClass}>Providers</span><input className={inputClass} min={1} required type="number" value={form.providerCount} onChange={(event) => setField("providerCount", Math.max(1, Number(event.target.value)))} /></label>
-              <label><span className={labelClass}>Locations</span><input className={inputClass} min={1} required type="number" value={form.locationCount} onChange={(event) => setField("locationCount", Math.max(1, Number(event.target.value)))} /></label>
             </div>
           </section>
 
           <section>
             <p className="mb-4 text-[12px] font-black uppercase tracking-[.18em] text-slate-500">02 / Where work gets stuck</p>
-            <div className="flex flex-wrap gap-2">
-              {salesPainPoints.map(([key, label]) => {
-                const active = form.painPoints.includes(key);
-                return <button aria-pressed={active} className={`rounded-full border px-3.5 py-2 text-[11px] font-bold transition ${active ? "border-[#e6817b]/40 bg-[#e6817b]/10 text-[#ffd9d5]" : "border-white/10 bg-white/[.03] text-slate-400 hover:border-white/20 hover:text-white"}`} key={key} onClick={() => togglePainPoint(key)} type="button">{active && <Check className="mr-1.5 inline size-3" />}{label}</button>;
-              })}
-            </div>
-            <label className="mt-5 block"><span className={labelClass}>Biggest pain point</span><select className={inputClass} value={form.biggestPainPoint} onChange={(event) => { const value = event.target.value as SalesPainPoint; setForm((current) => ({ ...current, biggestPainPoint: value, painPoints: current.painPoints.includes(value) ? current.painPoints : [...current.painPoints, value] })); }}>{form.painPoints.map((key) => <option className="bg-slate-950" key={key} value={key}>{painPointLabel[key]}</option>)}</select></label>
+            <label className="block"><span className={labelClass}>What is costing you the most right now?</span><select className={inputClass} value={form.biggestPainPoint} onChange={(event) => setField("biggestPainPoint", event.target.value as SalesPainPoint)}>{salesPainPoints.map(([key, label]) => <option className="bg-slate-950" key={key} value={key}>{label}</option>)}</select></label>
+            <p className="mt-3 text-[12px] leading-5 text-slate-600">One answer is enough to prepare the analysis. The rest of the picture is worth having, and we ask for it after payment, when it shapes the work instead of delaying it.</p>
           </section>
 
           <section>
-            <p className="mb-4 text-[12px] font-black uppercase tracking-[.18em] text-slate-500">03 / Current system map</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {([['ehr', 'Current EHR'], ['scheduling', 'Scheduling'], ['billing', 'Billing'], ['crm', 'CRM / follow-up'], ['patientMessaging', 'Patient messaging']] as const).map(([key, label]) => <label key={key}><span className={labelClass}>{label}</span><input className={inputClass} value={form.currentSystems[key]} onChange={(event) => setForm((current) => ({ ...current, currentSystems: { ...current.currentSystems, [key]: event.target.value } }))} placeholder="None or vendor name" /></label>)}
-              <label><span className={labelClass}>Monthly software estimate</span><div className="relative"><span className="absolute left-3.5 top-3.5 text-sm text-slate-500">$</span><input className={`${inputClass} pl-8`} min={0} type="number" value={form.estimatedSoftwareSpendDollars} onChange={(event) => setField("estimatedSoftwareSpendDollars", Math.max(0, Number(event.target.value)))} /></div></label>
-            </div>
-          </section>
-
-          <section>
-            <p className="mb-4 text-[12px] font-black uppercase tracking-[.18em] text-slate-500">04 / Paid engagement</p>
+            <p className="mb-4 text-[12px] font-black uppercase tracking-[.18em] text-slate-500">03 / Paid engagement</p>
             <div className="rounded-2xl border border-[#e6817b]/28 bg-[#e6817b]/[.07] p-5">
               <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm font-black text-white">{analysisOffer.name}</p><p className="mt-2 max-w-xl text-[11px] leading-5 text-slate-400">Clinic-specific operating review, synthetic scenario, cost/workflow discussion, and human-reviewed recommendation.</p></div><p className="text-2xl font-black text-[#d6b787]">{analysisOffer.priceLabel}</p></div>
               <p className="mt-4 border-t border-white/10 pt-4 text-[12px] leading-5 text-slate-500">{analysisOffer.creditForward}</p>
