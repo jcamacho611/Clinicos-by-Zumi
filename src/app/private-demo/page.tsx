@@ -5,6 +5,7 @@ import { SalesIntakeForm } from "@/components/sales/sales-intake-form";
 import { SalesSiteShell } from "@/components/sales/sales-site-shell";
 import { StatusPill } from "@/components/sales/status-pill";
 import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 import { parsePaidAnalysisHandoffSearchParams } from "@/lib/sales/intake-handoff";
 
 const included = [
@@ -62,7 +63,14 @@ export default async function PrivateDemoPage({ searchParams }: { searchParams: 
 
       <section className="border-y border-white/[.08] bg-black/20" id="reserve">
         <div className="mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-          <div className="mb-14 max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#efaaa1]">Start the analysis</p><h2 className="mt-5 text-4xl font-black tracking-[-.055em] sm:text-5xl">Give Klinikos the business problem. Keep patient data out.</h2><p className="mt-5 text-sm leading-7 text-slate-400">This intake is for the {analysisOffer.name}. Klinikos saves the clinic and buyer first, then creates a server-owned checkout intent for exactly {analysisOffer.priceLabel} before exposing a configured payment page.</p></div>
+          <div className="mb-14 max-w-3xl">
+            <p className="text-[10px] font-black uppercase tracking-[.22em] text-[#efaaa1]">Start the analysis</p>
+            <h2 className="mt-5 text-4xl font-black tracking-[-.055em] sm:text-5xl">Give Klinikos the business problem. Keep patient data out.</h2>
+            <p className="mt-5 text-sm leading-7 text-slate-400">This intake is for the {analysisOffer.name}. Klinikos saves the clinic and buyer first, then creates a server-owned checkout intent for exactly {analysisOffer.priceLabel} before exposing a configured payment page.</p>
+            <p className="mt-4 text-[11px] leading-6 text-slate-500">
+              Submitting the reservation and continuing to payment confirms that you have reviewed and agree to the <Link className="font-bold text-slate-300 underline underline-offset-4 hover:text-white" href="/legal/terms">Website Terms of Use</Link> and <Link className="font-bold text-slate-300 underline underline-offset-4 hover:text-white" href="/legal/acceptable-use">Acceptable Use Policy</Link>, and acknowledge the <Link className="font-bold text-slate-300 underline underline-offset-4 hover:text-white" href="/legal/privacy">Privacy Notice</Link>. Website Terms version {WEBSITE_TERMS_VERSION}. This purchase is the one-time analysis only; recurring software is a separate decision.
+            </p>
+          </div>
           <SalesIntakeForm analysisOffer={{ name: analysisOffer.name, priceLabel: analysisOffer.priceLabel, creditForward: analysisOffer.creditForward }} initialContext={initialContext} />
         </div>
       </section>
