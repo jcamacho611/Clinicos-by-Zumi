@@ -12,6 +12,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:mvp": "node scripts/mvp/run-all.mjs",
+    "security:client-boundary": "node scripts/security/browser-confidentiality-gate.mjs",
+    "security:check": "npm run security:client-boundary",
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
