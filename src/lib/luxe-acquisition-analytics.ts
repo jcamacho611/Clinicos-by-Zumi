@@ -23,6 +23,11 @@ export type LatestTouch = {
   occurredAt: Date;
 };
 
+export type LeadCollectedEvidence = {
+  manualReconciledCents: number;
+  processorVerifiedCents: number;
+};
+
 const TERMINAL = new Set(["lost", "completed"]);
 
 function dollars(cents: number) {
@@ -50,11 +55,17 @@ function bucketUnanswered(age: number) {
 
 export function summarizeAcquisitionLeads(
   leads: AcquisitionLeadFact[],
-  options: { now?: Date; slaMinutes?: number; latestTouches?: Map<string, LatestTouch> } = {},
+  options: {
+    now?: Date;
+    slaMinutes?: number;
+    latestTouches?: Map<string, LatestTouch>;
+    collectedEvidenceByLead?: Map<string, LeadCollectedEvidence>;
+  } = {},
 ) {
   const now = options.now ?? new Date();
   const slaMinutes = Math.max(5, Math.min(1440, options.slaMinutes ?? 15));
   const latestTouches = options.latestTouches ?? new Map<string, LatestTouch>();
+  const collectedEvidenceByLead = options.collectedEvidenceByLead ?? new Map<string, LeadCollectedEvidence>();
   const open = leads.filter((lead) => !TERMINAL.has(lead.status));
   const unanswered = open.filter((lead) => !lead.lastContactedAt);
   const overdueFollowUps = open.filter((lead) => Boolean(lead.followUpDueAt && lead.followUpDueAt <= now));
@@ -80,19 +91,33 @@ export function summarizeAcquisitionLeads(
   for (const lead of unanswered) unansweredBuckets[bucketUnanswered(ageMinutes(lead.createdAt, now))] += 1;
 
   const group = (keyFor: (lead: AcquisitionLeadFact) => string) => {
-    const grouped = new Map<string, { key: string; leads: number; openLeads: number; estimatedOpportunityCents: number; bookedEstimatedCents: number }>();
+    const grouped = new Map<string, {
+      key: string;
+      leads: number;
+      openLeads: number;
+      estimatedOpportunityCents: number;
+      bookedEstimatedCents: number;
+      collectedWithEvidenceCents: number;
+    }>();
     for (const lead of leads) {
       const key = keyFor(lead) || "unknown";
-      const current = grouped.get(key) ?? { key, leads: 0, openLeads: 0, estimatedOpportunityCents: 0, bookedEstimatedCents: 0 };
+      const current = grouped.get(key) ?? { key, leads: 0, openLeads: 0, estimatedOpportunityCents: 0, bookedEstimatedCents: 0, collectedWithEvidenceCents: 0 };
+      const evidence = collectedEvidenceByLead.get(lead.id);
       current.leads += 1;
       current.estimatedOpportunityCents += lead.estimatedValueCents;
+      current.collectedWithEvidenceCents += (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
       if (!TERMINAL.has(lead.status)) current.openLeads += 1;
       if (["booked", "completed"].includes(lead.status) || lead.bookingStatus === "booked") current.bookedEstimatedCents += lead.estimatedValueCents;
       grouped.set(key, current);
     }
     return Array.from(grouped.values())
-      .sort((a, b) => b.estimatedOpportunityCents - a.estimatedOpportunityCents || b.leads - a.leads)
-      .map((item) => ({ ...item, estimatedOpportunity: dollars(item.estimatedOpportunityCents), bookedEstimated: dollars(item.bookedEstimatedCents) }));
+      .sort((a, b) => b.collectedWithEvidenceCents - a.collectedWithEvidenceCents || b.estimatedOpportunityCents - a.estimatedOpportunityCents || b.leads - a.leads)
+      .map((item) => ({
+        ...item,
+        estimatedOpportunity: dollars(item.estimatedOpportunityCents),
+        bookedEstimated: dollars(item.bookedEstimatedCents),
+        collectedWithEvidence: dollars(item.collectedWithEvidenceCents),
+      }));
   };
 
   const actionQueue = open
@@ -102,6 +127,8 @@ export function summarizeAcquisitionLeads(
       const pastSla = unansweredAgeMinutes !== null && unansweredAgeMinutes >= slaMinutes;
       const score = (followUpOverdue ? 100 : 0) + (pastSla ? 80 : 0) + Math.min(50, Math.floor(lead.estimatedValueCents / 10_000));
       const latest = latestTouches.get(lead.id) ?? null;
+      const evidence = collectedEvidenceByLead.get(lead.id);
+      const collectedWithEvidenceCents = (evidence?.manualReconciledCents ?? 0) + (evidence?.processorVerifiedCents ?? 0);
       return {
         id: lead.id,
         name: lead.name,
@@ -111,6 +138,9 @@ export function summarizeAcquisitionLeads(
         latestTouch: latest ? { source: latest.source, campaign: latest.campaign, cta: latest.cta, occurredAt: latest.occurredAt.toISOString() } : null,
         estimatedOpportunityCents: lead.estimatedValueCents,
         estimatedOpportunity: dollars(lead.estimatedValueCents),
+        collectedWithEvidenceCents,
+        collectedWithEvidence: dollars(collectedWithEvidenceCents),
+        paymentStatus: lead.paymentStatus,
         status: lead.status,
         pipelineStage: lead.pipelineStage,
         assignedTo: lead.assignedTo,
@@ -132,6 +162,14 @@ export function summarizeAcquisitionLeads(
   const booked = leads.filter((lead) => ["booked", "completed"].includes(lead.status) || lead.bookingStatus === "booked");
   const lost = leads.filter((lead) => lead.status === "lost");
   const unassigned = open.filter((lead) => !lead.assignedTo);
+  const paymentTotals = Array.from(collectedEvidenceByLead.values()).reduce(
+    (totals, evidence) => ({
+      manualReconciledCents: totals.manualReconciledCents + evidence.manualReconciledCents,
+      processorVerifiedCents: totals.processorVerifiedCents + evidence.processorVerifiedCents,
+    }),
+    { manualReconciledCents: 0, processorVerifiedCents: 0 },
+  );
+  const collectedWithEvidenceCents = paymentTotals.manualReconciledCents + paymentTotals.processorVerifiedCents;
 
   return {
     generatedAt: now.toISOString(),
@@ -152,8 +190,12 @@ export function summarizeAcquisitionLeads(
       bookedEstimatedValue: dollars(sum(booked)),
       lostEstimatedOpportunityCents: sum(lost),
       lostEstimatedOpportunity: dollars(sum(lost)),
-      verifiedCollectedRevenueCents: null,
-      verifiedCollectedRevenue: null,
+      manualReconciledRevenueCents: paymentTotals.manualReconciledCents,
+      manualReconciledRevenue: dollars(paymentTotals.manualReconciledCents),
+      processorVerifiedRevenueCents: paymentTotals.processorVerifiedCents,
+      processorVerifiedRevenue: dollars(paymentTotals.processorVerifiedCents),
+      collectedRevenueWithEvidenceCents: collectedWithEvidenceCents,
+      collectedRevenueWithEvidence: dollars(collectedWithEvidenceCents),
     },
     unansweredBuckets,
     bySource: group((lead) => lead.source),
@@ -163,7 +205,7 @@ export function summarizeAcquisitionLeads(
     definitions: {
       atRisk: `Open lead with an overdue follow-up or no recorded contact within ${slaMinutes} minutes of creation.`,
       bookedEstimatedValue: "Estimated lead value associated with a booked/completed lead or booked bookingStatus. This is not collected revenue.",
-      verifiedRevenue: "Unavailable until authoritative payment evidence is linked to the originating lead.",
+      collectedRevenueWithEvidence: "Sum of processor-verified evidence plus authorized manual reconciliation evidence linked to leads. Manual reconciliation is labeled separately and is not processor verification.",
       recentVolume: "Lead records created during the rolling 24 hours ending at generatedAt; not a clinic-local calendar-day metric.",
     },
   };
