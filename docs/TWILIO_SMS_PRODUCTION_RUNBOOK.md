@@ -91,15 +91,14 @@ A **temporary bounded engineering security exception** is recorded at:
 
 `docs/security/TWILIO_WEBHOOK_VALIDATION_EXCEPTION.md`
 
+The exception is tracked by P0 issue **#160** and expires/requires explicit review on **2026-09-18**.
+
 The exception:
 
 - applies only to `POST /api/webhooks/twilio/sms`;
 - is backed by Twilio's published HMAC-SHA1 request-validation vector plus tamper tests;
 - depends on the route's fixed canonical HTTPS URL, form-only body, body-size limit, duplicate-key rejection, signed AccountSid match, tenant routing, replay protection, and body non-persistence;
-- expires/requires explicit review on **2026-09-18**;
-- is tracked by P0 issue **#160**.
-
-Do not broaden the webhook contract while relying on this exception. Query parameters, JSON payloads, additional Twilio products, or materially different URL construction invalidate the exception and require the maintained SDK migration first.
+- may not be broadened to query-bearing/JSON/other-product webhook shapes.
 
 Do not edit `package.json` without a matching lockfile generated through npm merely to satisfy the SDK migration checkbox.
 
@@ -112,6 +111,7 @@ The authenticated patient-portal Twilio Verify ceremony is **BUILT**:
 - start/check attempts are bounded and audited;
 - verification codes are sent to Twilio Verify but not persisted in Klinikos audit/database metadata;
 - only provider status `approved` records possession evidence;
+- provider verification references must match Twilio Verify SID shape before they are accepted as evidence;
 - possession evidence does not grant any messaging permission.
 
 It remains **PENDING LIVE PROOF** until the exact deployed ceremony is exercised against the configured Twilio Verify Service.
