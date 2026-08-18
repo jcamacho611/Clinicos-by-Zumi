@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WEBSITE_TERMS_VERSION } from "@/lib/legal/public-terms";
 
 export const productStatusLabels = [
   "Live",
@@ -120,6 +121,10 @@ export const salesIntakeSchema = z.object({
   wantsFoundingEvaluation: z.boolean().default(false),
   wantsFoundingProgram: z.boolean().default(false),
   acknowledgesSyntheticData: z.literal(true),
+  acceptsWebsiteTerms: z.literal(true),
+  acceptsAcceptableUse: z.literal(true),
+  acknowledgesPrivacyNotice: z.literal(true),
+  websiteTermsVersion: z.literal(WEBSITE_TERMS_VERSION),
   website: z.string().max(0).optional(),
 }).strict();
 
@@ -239,51 +244,53 @@ export function buildSyntheticDemoScenario(input: ScenarioInput) {
   return {
     clinicType: input.clinicType,
     primaryPainPoint: input.biggestPainPoint,
+    requestedPainPoints,
     title: blueprint.title,
     summary: blueprint.summary,
-    syntheticPatient: { synthetic: true, name: "Maya Thompson", identifier: "DEMO-28419", notice: "Not a real patient." },
-    syntheticAppointment: { synthetic: true, type: "Workflow review visit", status: "Confirmed", nextStep: "Complete intake readiness check" },
-    syntheticDocument: { synthetic: true, name: "Demo intake packet.pdf", status: "Human review required", missingItem: "Signed authorization" },
-    syntheticReferral: { synthetic: true, destination: "Northstar Diagnostic Demo", status: "Pending acknowledgment", delivery: "Manual fallback" },
-    syntheticTask: { synthetic: true, title: `Resolve ${painPointLabel[input.biggestPainPoint].toLowerCase()} gap`, owner: "Demo operations lead", due: "Today" },
-    syntheticResult: { synthetic: true, type: "Demo imaging report", status: "Awaiting provider review", portalReleased: false },
-    syntheticBillingItem: { synthetic: true, status: "Not ready", blocker: "Required workflow evidence is missing", submission: "Blocked from autonomous submission" },
-    syntheticOwnerAlert: { synthetic: true, level: "Needs staff", message: `${requestedPainPoints.length} selected workflow areas need a named next action.` },
-    syntheticRevenueLeak: { synthetic: true, category: blueprint.revenueLabel, estimateStatus: "Illustrative only", amountCents: 125_000 },
+    syntheticPatient: { name: "Synthetic patient A", ageBand: "40–49", mrn: "DEMO-0001" },
+    syntheticAppointment: { reason: "Illustrative follow-up visit", status: "scheduled" },
+    syntheticDocument: { missingItem: "Signed acknowledgment", status: "pending" },
+    syntheticReferral: { status: "awaiting partner acknowledgment", destination: "Synthetic partner organization" },
+    syntheticTask: { owner: "Front desk role", status: "open", due: "Today" },
+    syntheticResult: { status: "awaiting provider review", releaseState: "not released" },
+    syntheticBillingItem: { status: "not ready", reason: blueprint.revenueLabel },
+    syntheticOwnerAlert: { severity: "medium", message: `${blueprint.revenueLabel} is still unresolved.` },
+    syntheticRevenueLeak: { label: blueprint.revenueLabel, estimateRange: "$0–$0 (demo only)" },
     recommendedWorkflow: {
-      synthetic: true,
-      steps: ["Capture", "Assign", "Confirm", "Escalate if late", "Close with an audit receipt"],
-      selectedPainPoints: requestedPainPoints,
-      productStatus: ["Demo", "Manual fallback", "Human review required"],
+      title: "Human-owned workflow",
+      steps: ["capture", "assign", "review", "complete", "audit"],
+      humanReviewRequired: true,
     },
-    status: "ready" as const,
+    status: "Demo" as const,
   };
 }
 
 export function buildDemoRecapDraft(input: {
   clinicName: string;
-  clinicType: string;
+  selectedOffer: DemoOfferKey;
   biggestPainPoint: SalesPainPoint;
-  painPoints: readonly SalesPainPoint[];
-  scenarioTitle: string;
+  painPoints: SalesPainPoint[];
+  currentSystems: Record<string, unknown>;
 }) {
-  const selected = [...new Set(input.painPoints)].map((key) => painPointLabel[key]);
+  const offer = demoOffers[input.selectedOffer];
+  const visiblePains = input.painPoints.map((key) => painPointLabel[key]);
   return {
-    painPoint: painPointLabel[input.biggestPainPoint],
-    whatWasShown: [input.scenarioTitle, "Synthetic workflow command center", "Named owners and next actions", "Truthful integration and review states"],
-    workflowGaps: selected.map((label) => `${label}: validate the current owner, handoff, and completion evidence.`),
-    recommendedNextStep: `Review the draft with ${input.clinicName}, confirm the actual workflow, then decide whether an Implementation Blueprint is appropriate.`,
-    estimatedValueAreas: ["Staff time recovered", "Fewer dropped follow-ups", "Faster billing readiness", "Clearer owner visibility"],
-    productStatusSnapshot: [
-      { label: "ClinicOS workflow foundation", status: "Live" },
-      { label: "Clinic-specific scenario", status: "Demo" },
-      { label: "External vendor delivery", status: "Pending connection" },
-      { label: "Clinical and financial decisions", status: "Human review required" },
+    title: `${input.clinicName} — ${offer.name} recap draft`,
+    summary: `The clinic reported ${visiblePains.join(", ")}. The controlled synthetic review focused on ${painPointLabel[input.biggestPainPoint]}.`,
+    findings: [
+      "The walkthrough used synthetic data only.",
+      "The workflow illustrated explicit ownership, status, and audit state rather than autonomous action.",
+      "External integrations remain subject to production readiness and clinic-specific implementation.",
     ],
-    priceOption: { name: demoOffers.founding_clinic_evaluation.name, priceCents: demoOffers.founding_clinic_evaluation.priceCents, creditForward: demoOffers.founding_clinic_evaluation.creditForward },
-    callToAction: "Invite the clinic to review an Implementation Blueprint after a human reviews this draft.",
-    status: "draft" as const,
-    reviewStatus: "human_review_required" as const,
-    draftedBy: "deterministic_fallback" as const,
+    recommendations: [
+      "Validate the highest-cost manual handoff with clinic staff.",
+      "Choose one workflow for a measured implementation milestone.",
+      "Confirm vendor, security, legal, and training gates before production use.",
+    ],
+    limitations: [
+      "No live PHI was used.",
+      "No external claim, prescription, result, or patient message was transmitted.",
+      "No certification or guaranteed financial outcome is implied.",
+    ],
   };
 }
