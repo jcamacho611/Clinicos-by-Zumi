@@ -8,6 +8,7 @@ const navigation = readFileSync(join(process.cwd(), "src/lib/navigation.ts"), "u
 const surfaceSchema = readFileSync(join(process.cwd(), "src/features/zumi/presence.ts"), "utf8");
 const workspacePage = readFileSync(join(process.cwd(), "src/app/(platform)/zumi/page.tsx"), "utf8");
 const customerContext = readFileSync(join(process.cwd(), "docs/ZUMI_CUSTOMER_PRODUCT_CONTEXT.md"), "utf8");
+const masterDirective = readFileSync(join(process.cwd(), "src/features/zumi/master-directive.ts"), "utf8");
 
 describe("Zumi conversation experience", () => {
   it("has one explicit full conversation workspace and primary navigation entry", () => {
@@ -27,15 +28,20 @@ describe("Zumi conversation experience", () => {
   it("keeps trusted path navigation client-side so the active conversation is not destroyed", () => {
     expect(presence).toContain('import Link from "next/link"');
     expect(presence).toContain("Open path without losing this conversation");
-    expect(presence).toContain("href={action.href}");
-    expect(presence).not.toContain('<a className="mt-1 inline-block font-bold');
+    expect(presence).toContain("href={action.href!}");
+    expect(presence).toContain("onClick={() => setOpen(true)}");
   });
 
-  it("supports an expanded ChatGPT-style conversation surface and new-chat control", () => {
+  it("supports an expanded conversation surface and new-chat control without permanent mode chrome", () => {
     expect(presence).toContain('const dedicatedPage = pathname === "/zumi"');
     expect(presence).toContain("Start a new Zumi conversation");
     expect(presence).toContain("Open full Zumi conversation");
     expect(presence).toContain("What needs to happen?");
+    expect(presence).toContain('aria-label="Zumi preferences"');
+    expect(presence).not.toContain('role="tablist"');
+    expect(presence).not.toContain("Evidence & capability trace");
+    expect(presence).not.toContain("Trusted Klinikos path");
+    expect(presence).not.toContain("Understanding, connecting only where needed");
   });
 
   it("carries bounded recent-turn context for non-research follow-ups through the existing governed context boundary", () => {
@@ -43,6 +49,13 @@ describe("Zumi conversation experience", () => {
     expect(presence).toContain("messages.slice(-8)");
     expect(presence).toContain("context: recentConversation?.length ? { recentConversation } : undefined");
     expect(presence).toContain('webResearch: mode === "research" ? true : undefined');
+  });
+
+  it("tells the model to converse before routing or exposing internal machinery", () => {
+    expect(masterDirective).toContain("Conversation comes before routing");
+    expect(masterDirective).toContain("A conversational answer is allowed to simply answer");
+    expect(masterDirective).toContain("Do not expose orchestration plans");
+    expect(masterDirective).toContain("ask one concise human question at a time");
   });
 
   it("declares the dedicated intelligence surface in the backend schema", () => {
