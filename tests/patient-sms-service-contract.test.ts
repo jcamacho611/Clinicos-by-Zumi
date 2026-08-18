@@ -27,6 +27,13 @@ describe("patient SMS service architecture", () => {
     expect(templates).not.toContain('messageClass: "clinical"');
   });
 
+  it("requires current phone verification independently from message permission", () => {
+    expect(service).toContain("phone_not_verified");
+    expect(service).toContain("verification.normalizedPhone !== decision.normalizedPhone");
+    expect(service).toContain("recordPatientPhoneVerification");
+    expect(service).toContain('source: "twilio_verify" | "patient_portal_verified"');
+  });
+
   it("requires an explicit production gate, tenant sender, inbound STOP routing and timezone", () => {
     expect(service).toContain("KLINIKOS_SMS_PRODUCTION_ENABLED");
     expect(service).toContain("getTwilioSmsRoutingConfig(input.organizationId)");
