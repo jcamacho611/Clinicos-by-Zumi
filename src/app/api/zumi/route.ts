@@ -204,12 +204,32 @@ export async function POST(request: Request) {
     // going dark. Every other refusal — rate limit, entitlement, policy, kill switch —
     // still refuses, because those are decisions rather than gaps.
     if (result.reason === "provider_unavailable") {
-      const fallback = answerDeterministically({ question: parsed.data.question, session, workspace });
+      const fallback = answerDeterministically({
+        question: parsed.data.question,
+        session,
+        workspace,
+        // Carry the previous turn forward so "what about tomorrow?" stays on topic
+        // instead of being answered as a brand new question.
+        thread: previous?.thread ?? null,
+      });
+      // Issue a token even with no provider, or the conversation cannot have a second
+      // turn at all — which is what made every follow-up start from nothing.
+      const fallbackToken = sealZumiConversation({
+        responseId: "",
+        organizationId: session.organizationId,
+        userId: session.userId,
+        thread: {
+          surface: fallback.destinations[0]?.href,
+          routeId: fallback.routeId ?? undefined,
+          topic: fallback.topic,
+        },
+      });
       return NextResponse.json(
         {
           data: {
             answer: fallback.answer,
             routeId: fallback.routeId,
+            conversationToken: fallbackToken,
             // Shaped as guidance so the conversation renders these as real controls. An
             // answer that names a place without linking to it makes the person go and
             // find it themselves, which is the work Zumi is supposed to remove.

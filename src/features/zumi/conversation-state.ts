@@ -5,11 +5,28 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const TOKEN_VERSION = 1;
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 30;
 
+/**
+ * What the deterministic path needs to follow a thread.
+ *
+ * Deliberately only product metadata: which surface the last turn pointed at, which
+ * route it resolved to, and which topic matched. No patient data, no counts, no names,
+ * no free text from the person — a conversation token travels in a client and is not a
+ * place to put anything about a patient. "What about tomorrow?" needs to know we were
+ * talking about intake, not who was on the list.
+ */
+export type ZumiThreadContext = {
+  surface?: string;
+  routeId?: string;
+  topic?: string;
+};
+
 type ConversationPayload = {
   v: number;
+  /** Provider-side thread pointer. Absent on the deterministic path. */
   responseId: string;
   organizationId: string;
   userId: string | null;
+  thread?: ZumiThreadContext;
   issuedAt: number;
   expiresAt: number;
 };
@@ -31,9 +48,11 @@ function signature(body: string, secret: string) {
 }
 
 export function sealZumiConversation(input: {
+  /** Empty string when there is no provider thread, which is the deterministic case. */
   responseId: string;
   organizationId: string;
   userId: string | null;
+  thread?: ZumiThreadContext;
   ttlSeconds?: number;
 }, env: NodeJS.ProcessEnv = process.env) {
   const secret = signingSecret(env);
@@ -45,6 +64,14 @@ export function sealZumiConversation(input: {
     responseId: input.responseId,
     organizationId: input.organizationId,
     userId: input.userId,
+    // Bounded so a token cannot grow without limit across a long conversation.
+    thread: input.thread
+      ? {
+          surface: input.thread.surface?.slice(0, 120),
+          routeId: input.thread.routeId?.slice(0, 80),
+          topic: input.thread.topic?.slice(0, 40),
+        }
+      : undefined,
     issuedAt,
     expiresAt: issuedAt + Math.max(60, Math.min(input.ttlSeconds ?? DEFAULT_TTL_SECONDS, DEFAULT_TTL_SECONDS)),
   };
@@ -71,7 +98,10 @@ export function openZumiConversation(token: string | null | undefined, expected:
   try {
     const payload = JSON.parse(decode(body)) as ConversationPayload;
     const now = Math.floor(Date.now() / 1000);
-    if (payload.v !== TOKEN_VERSION || !payload.responseId || payload.expiresAt <= now) return null;
+    // A deterministic turn has no provider responseId but does carry thread context.
+    // Requiring responseId made every deterministic follow-up look like a forged token.
+    const hasThread = Boolean(payload.thread?.surface || payload.thread?.routeId || payload.thread?.topic);
+    if (payload.v !== TOKEN_VERSION || (!payload.responseId && !hasThread) || payload.expiresAt <= now) return null;
     if (payload.organizationId !== expected.organizationId || payload.userId !== expected.userId) return null;
     return payload;
   } catch {
