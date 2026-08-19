@@ -17,6 +17,7 @@ import {
   sanitizeZumiAnswerForClient,
 } from "@/features/zumi/client-projection";
 import { resolveZumiWorkspaceIntelligence } from "@/features/zumi/workspace-intelligence";
+import { answerDeterministically } from "@/features/zumi/deterministic-answer";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
@@ -29,7 +30,9 @@ const domainSchema = z.string().trim().min(3).max(200).regex(/^[a-z0-9.-]+$/i);
 
 const requestSchema = z.object({
   capability: z.string().trim().min(2).max(80).default("conversation"),
-  question: z.string().trim().min(3).max(8_000),
+  // "hi", "ok" and "no" are real conversational turns. A minimum of three
+  // characters rejected every one of them with "Invalid request."
+  question: z.string().trim().min(1).max(8_000),
   context: z.record(z.string(), z.unknown()).optional(),
   conversationToken: z.string().trim().max(4_000).optional(),
   webResearch: z.boolean().optional(),
@@ -195,6 +198,41 @@ export async function POST(request: Request) {
   });
 
   if (!result.allowed) {
+    // A deployment with no inference provider used to return 503 to every question,
+    // including "hi". Conversation and navigation are the parts people rely on most and
+    // both are answerable from state Klinikos already owns, so answer them rather than
+    // going dark. Every other refusal — rate limit, entitlement, policy, kill switch —
+    // still refuses, because those are decisions rather than gaps.
+    if (result.reason === "provider_unavailable") {
+      const fallback = answerDeterministically({ question: parsed.data.question, session, workspace });
+      return NextResponse.json(
+        {
+          data: {
+            answer: fallback.answer,
+            routeId: fallback.routeId,
+            // Shaped as guidance so the conversation renders these as real controls. An
+            // answer that names a place without linking to it makes the person go and
+            // find it themselves, which is the work Zumi is supposed to remove.
+            trustedOrchestration: {
+              path: null,
+              nextActions: fallback.destinations.map((destination, index) => ({
+                id: `action-${index + 1}`,
+                title: destination.label,
+                reason: "Open without losing this conversation",
+                href: destination.href,
+                state: "available" as const,
+              })),
+              blockers: [],
+            },
+            workspace,
+            // Travels with the reply so no surface can present this as a model answer.
+            modelGenerated: false,
+            intelligenceAvailable: false,
+          },
+        },
+        { headers: NO_STORE },
+      );
+    }
     return NextResponse.json({ error: result.message }, { status: result.status, headers: NO_STORE });
   }
 

@@ -266,7 +266,14 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       maxCharacters: conversationPolicy.profile === "founder" ? 18_000 : 8_000,
       maxSections: conversationPolicy.profile === "founder" ? 16 : 6,
     }),
-    retrieveZumiMemoryContext(request.session, questionText),
+    // Recalled memory is an enhancement, not a prerequisite, and it is the only one of
+    // these three that touches the database. `Promise.all` rejects on the first failure,
+    // so an unreachable database turned every question into a 500 — the person lost
+    // their turn because an optional lookup failed. Degrade to no memory instead.
+    retrieveZumiMemoryContext(request.session, questionText).catch((error: unknown) => {
+      console.warn("[zumi] prior-conversation memory unavailable; answering without it.", error);
+      return { text: "", memoryIds: [] as string[] };
+    }),
     resolveTrustedZumiOrchestration({ session: request.session, question: questionText, presence }),
   ]);
 
