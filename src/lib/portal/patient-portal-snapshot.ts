@@ -8,6 +8,10 @@ export const PATIENT_PORTAL_SNAPSHOT_SCOPE_NOTICE =
 function safeFilePart(value: string) {
   return value
     .normalize("NFKD")
+    // NFKD splits an accented letter into a base letter plus a combining mark. Without
+    // dropping the mark, the next rule turns it into a separator and "Pátient" becomes
+    // "pa-tient" — so every patient with an accent in their name got a mangled filename.
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .toLowerCase()

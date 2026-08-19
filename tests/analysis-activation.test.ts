@@ -131,3 +131,28 @@ describe("the post-payment surface tells the truth about money", () => {
     expect(page).toContain("robots: { index: false, follow: false }");
   });
 });
+
+describe("processor verification and the activation surface are one chain", () => {
+  const fulfillment = fs.readFileSync(path.join(process.cwd(), "src/lib/commercial/sales-payment-fulfillment.ts"), "utf8");
+  const activation = fs.readFileSync(path.join(process.cwd(), "src/lib/commercial/analysis-activation.ts"), "utf8");
+
+  it("shows as verified exactly the status signed processor evidence writes", () => {
+    // These two files were written independently: one turns signed Stripe evidence into
+    // a recorded payment, the other decides what a buyer is told. If they disagree about
+    // the status string, a genuinely paid customer keeps seeing "we're confirming this"
+    // forever — and nothing else in the suite would notice.
+    const written = [...fulfillment.matchAll(/paymentStatus:\s*"([a-z_]+)"/g)].map((match) => match[1]);
+    expect(written).toContain("payment_recorded");
+
+    const recognized = activation.match(/VERIFIED_PAYMENT_STATUSES = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
+    for (const status of new Set(written)) {
+      // Only success statuses must be recognized; a preserved refund is not a payment.
+      if (status === "payment_recorded") expect(recognized).toContain(`"${status}"`);
+    }
+  });
+
+  it("never lets the activation surface be the thing that records payment", () => {
+    expect(fulfillment).toContain('paymentStatus: "payment_recorded"');
+    expect(activation).not.toContain('paymentStatus: "payment_recorded"');
+  });
+});

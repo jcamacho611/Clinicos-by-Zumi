@@ -212,7 +212,7 @@ export function PublicLivingGateway() {
                   <ArrowUp className="size-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-2 px-3 text-[10px] leading-4 text-[#9a817c]" id="public-follow-up-note">
+              <p className="mt-2 px-3 text-[11px] leading-4 text-[#9a817c]" id="public-follow-up-note">
                 Public Zumi is a guided navigator and cannot access private clinic records or execute changes.
               </p>
             </form>

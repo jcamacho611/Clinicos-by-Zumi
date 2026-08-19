@@ -2,11 +2,10 @@
 
 import { useDeferredValue, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, CircleAlert, CircleCheckBig, LoaderCircle, Radar, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, CircleAlert, CircleCheckBig, LoaderCircle, Radar, ShieldCheck, Sparkles } from "lucide-react";
 import {
   buildSyntheticDemoScenario,
   clinicTypeOptions,
-  painPointLabel,
   salesPainPoints,
   type DemoOfferKey,
   type SalesPainPoint,
@@ -92,19 +91,6 @@ export function SalesIntakeForm({ analysisOffer, initialContext }: { analysisOff
 
   function setField<K extends keyof IntakeState>(key: K, value: IntakeState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
-  }
-
-  function togglePainPoint(key: SalesPainPoint) {
-    setForm((current) => {
-      const selected = current.painPoints.includes(key);
-      if (selected && current.painPoints.length === 1) return current;
-      const painPoints = selected ? current.painPoints.filter((item) => item !== key) : [...current.painPoints, key];
-      return {
-        ...current,
-        painPoints,
-        biggestPainPoint: selected && current.biggestPainPoint === key ? painPoints[0] : current.biggestPainPoint,
-      };
-    });
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
