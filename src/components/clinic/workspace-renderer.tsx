@@ -12,10 +12,8 @@ import { MedicationsWorkspace } from "@/components/clinic/medications-workspace"
 import { CasesWorkspace } from "@/components/clinic/cases-workspace";
 import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWorkspace, ScheduleWorkspace, TelemedicineWorkspace } from "@/components/clinic/workspaces/operations";
 import { BillingWorkspace, InsuranceWorkspace } from "@/components/clinic/workspaces/revenue";
-import { QualityWorkspace } from "@/components/clinic/workspaces/quality";
 import { InsightsWorkspace } from "@/components/clinic/workspaces/insights";
 import { getInsightsPicture } from "@/lib/insights/observations";
-import { getQualityPicture } from "@/lib/quality/quality-attention";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PatientNavigationWorkspace, PortalWorkspace, ProviderConsultationWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
 import { FeatureRegistryWorkspace } from "@/components/clinic/feature-registry-workspace";
 import { AccessControlsWorkspace } from "@/components/clinic/access-controls-workspace";
@@ -151,7 +149,6 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
       const session = { organizationId, role, userId } as Parameters<typeof listCaseWorkspace>[0];
       return <CasesWorkspace canCreate={can(role, "cases", "create")} workspace={await listCaseWorkspace(session)} />;
     }
-    case "quality": return <QualityWorkspace picture={await getQualityPicture({ organizationId, role })} />;
     case "insights": return <InsightsWorkspace picture={await getInsightsPicture({ organizationId, role })} />;
     case "messages": return <MessagesWorkspace />;
     case "tasks": {

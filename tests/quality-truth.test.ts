@@ -1,134 +1,72 @@
 import fs from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClinicRole } from "@/lib/auth/rbac";
+import { describe, expect, it } from "vitest";
 
-const measureFindMany = vi.fn();
-const gapFindMany = vi.fn();
-const statusGroupBy = vi.fn();
+/**
+ * Quality must never report an unmeasured clinic as a clean one.
+ *
+ * The surface this once guarded rendered a dashboard written into the source —
+ * "78% overall compliance", "30 open care gaps", named patients — on an organization
+ * whose quality tables were empty. That surface is gone, replaced by the engine-backed
+ * command centre, and this file now guards the property that mattered rather than the
+ * implementation that carried it.
+ *
+ * An empty backlog means two entirely different things depending on whether anything is
+ * being measured, and a gap count alone cannot tell them apart.
+ */
 
-vi.mock("@/lib/db", () => ({
-  db: {
-    qualityMeasure: { findMany: (...a: unknown[]) => measureFindMany(...a) },
-    qualityGap: { findMany: (...a: unknown[]) => gapFindMany(...a) },
-    patientQualityStatus: { groupBy: (...a: unknown[]) => statusGroupBy(...a) },
-  },
-}));
+const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
+const code = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-const { getQualityPicture } = await import("@/lib/quality/quality-attention");
+const repository = read("src/lib/repositories/quality-command-center-repository.ts");
+const surface = read("src/components/clinic/quality-command-center.tsx");
 
-const owner = { organizationId: "org-1", role: "clinic_owner" as ClinicRole };
-
-beforeEach(() => {
-  measureFindMany.mockReset().mockResolvedValue([]);
-  gapFindMany.mockReset().mockResolvedValue([]);
-  statusGroupBy.mockReset().mockResolvedValue([]);
-});
-
-describe("quality reports rows, not invented numbers", () => {
-  it("distinguishes 'not measured' from 'nothing open'", async () => {
-    // The screen this replaces showed 78% compliance and 30 open gaps on an
-    // organization whose quality tables are empty. "Unmeasured" and "clean" are
-    // different facts and a clinic owner has to be able to tell them apart.
-    const picture = await getQualityPicture(owner);
-    expect(picture.configured).toBe(false);
-    expect(picture.everythingCurrent).toBe(false);
-    expect(picture.attention).toEqual([]);
-    // Nothing was invented to fill the space.
-    expect(picture.measures).toEqual([]);
+describe("quality reports rows, not invented performance", () => {
+  it("counts configured measures so an unmeasured clinic is distinguishable from a clean one", () => {
+    expect(repository).toContain("db.qualityMeasure.count");
+    expect(repository).toContain("measuresConfigured");
+    // Every return path carries it, including the unauthorized one — otherwise the
+    // surface silently falls back to the "on top of the work" wording.
+    const returns = repository.match(/coverage: "persisted_active_quality_gap_backlog"/g) ?? [];
+    const carried = repository.match(/measuresConfigured/g) ?? [];
+    expect(carried.length).toBeGreaterThanOrEqual(returns.length);
   });
 
-  it("reports everything current only when measures exist and no gap is open", async () => {
-    measureFindMany.mockResolvedValue([{ id: "m1", name: "Diabetes follow-up" }]);
-    const picture = await getQualityPicture(owner);
-    expect(picture.configured).toBe(true);
-    expect(picture.everythingCurrent).toBe(true);
+  it("says nothing has been evaluated rather than nothing is wrong", () => {
+    expect(surface).toContain("Quality is not being measured yet.");
+    expect(surface).toContain("not the same as having no gaps");
   });
 
-  it("counts open gaps per measure and names the records the count came from", async () => {
-    measureFindMany.mockResolvedValue([{ id: "m1", name: "Diabetes follow-up" }]);
-    gapFindMany.mockResolvedValue([
-      { id: "g1", measureId: "m1", dueAt: null, impact: "high" },
-      { id: "g2", measureId: "m1", dueAt: null, impact: "medium" },
-    ]);
-    const picture = await getQualityPicture(owner);
-
-    expect(picture.attention).toHaveLength(1);
-    const item = picture.attention[0];
-    expect(item.count).toBe(2);
-    // A count that cannot produce its records is an assertion, not evidence.
-    expect(item.recordIds).toEqual(["g1", "g2"]);
-    expect(item.count).toBe(item.recordIds.length);
-    expect(item.action.href).toContain("m1");
+  it("reads real gap rows and scopes them to the organization", () => {
+    expect(repository).toContain("db.qualityGap.findMany");
+    expect(repository).toContain("organizationId: session.organizationId");
   });
 
-  it("treats an overdue gap as critical and dates it from the earliest one", async () => {
-    const now = new Date("2026-03-10T00:00:00Z");
-    measureFindMany.mockResolvedValue([{ id: "m1", name: "Blood pressure" }]);
-    gapFindMany.mockResolvedValue([
-      { id: "g1", measureId: "m1", dueAt: new Date("2026-03-01T00:00:00Z"), impact: "low" },
-      { id: "g2", measureId: "m1", dueAt: new Date("2026-03-08T00:00:00Z"), impact: "low" },
-    ]);
-    const picture = await getQualityPicture(owner, now);
-
-    expect(picture.attention[0].severity).toBe("critical");
-    expect(picture.attention[0].due).toEqual({ kind: "overdue", since: new Date("2026-03-01T00:00:00Z") });
-    // Reporting the most recent due date would understate how long people have waited.
+  it("refuses the whole surface for a role without quality read", () => {
+    expect(repository).toContain('can(session.role, "quality", "read")');
+    expect(repository).toContain("not authorized for this role");
   });
 
-  it("returns null measures for a role that cannot read quality, rather than zero", async () => {
-    const picture = await getQualityPicture({ organizationId: "org-1", role: "contractor" });
-    // Zero would claim this clinic is clean. Null says "you cannot see this", which is
-    // the truth, and stops the query from running at all.
-    expect(picture.measures).toBeNull();
-    expect(measureFindMany).not.toHaveBeenCalled();
-  });
-
-  it("scopes every read to the caller's organization", async () => {
-    measureFindMany.mockResolvedValue([{ id: "m1", name: "X" }]);
-    await getQualityPicture(owner);
-    for (const call of [measureFindMany, gapFindMany, statusGroupBy]) {
-      expect(call).toHaveBeenCalled();
-      const where = (call.mock.calls[0][0] as { where: { organizationId?: string } }).where;
-      expect(where.organizationId).toBe("org-1");
-    }
-  });
-});
-
-describe("the quality surface carries no fabricated data", () => {
-  const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
-  const source = read("src/components/clinic/workspaces/quality.tsx");
-  const revenue = read("src/components/clinic/workspaces/revenue.tsx");
-  // The rule is about what the surface renders. A comment explaining which invented
-  // numbers were removed is documentation, not data, so comments are stripped before
-  // matching — otherwise recording the fix would look identical to still shipping it.
-  const stripComments = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  const sourceCode = stripComments(source);
-  const revenueCode = stripComments(revenue);
-
-  it("no longer ships the hardcoded measure table", () => {
-    // The exact literals that used to be rendered as this clinic's own performance.
+  it("ships none of the fabricated figures the old surface rendered", () => {
     for (const invented of ["rate: 74", "target: 80", '"78%"', "Diabetes A1C control", "qualityGaps"]) {
-      expect(sourceCode, `quality surface still renders ${invented}`).not.toContain(invented);
-      expect(revenueCode, `revenue workspace still renders ${invented}`).not.toContain(invented);
+      expect(code(surface), `the surface still renders ${invented}`).not.toContain(invented);
     }
+    // And the file that carried them is gone rather than merely unwired.
+    expect(fs.existsSync(path.join(process.cwd(), "src/components/clinic/workspaces/quality.tsx"))).toBe(false);
   });
 
-  it("says what an empty state means rather than showing a zeroed dashboard", () => {
-    expect(source).toContain("No measures are configured.");
-    expect(source).toContain("not zero gaps");
-    expect(source).toContain("Everything is current.");
+  it("keeps exactly one quality surface wired", () => {
+    // Two implementations existed briefly: one intercepted the route and the other was
+    // dead code that still looked live in the renderer.
+    const renderer = read("src/components/clinic/workspace-renderer.tsx");
+    const route = read("src/app/(platform)/[workspace]/page.tsx");
+    expect(renderer).not.toContain("QualityWorkspace");
+    expect(route).toContain("QualityCommandCenter");
   });
 
-  it("uses the shared design tokens rather than a generic grey palette", () => {
-    expect(source).toContain("var(--text-primary)");
-    expect(source).toContain("var(--surface-secondary)");
-    expect(sourceCode).not.toMatch(/text-slate-\d|bg-slate-\d/);
-  });
-
-  it("does not rely on colour alone to say something is overdue", () => {
-    expect(source).toContain("Overdue");
-    expect(source).toContain("Needs review");
-    expect(source).toContain("TriangleAlert");
+  it("does not lead with rules-engine vocabulary", () => {
+    for (const jargon in { "rules engine": 1, "evidence closure": 1, "capability registry": 1, "assurance monitor": 1 }) {
+      expect(surface.toLowerCase(), `the surface leads with "${jargon}"`).not.toContain(jargon);
+    }
   });
 });

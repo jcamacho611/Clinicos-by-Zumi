@@ -56,9 +56,17 @@ export function QualityCommandCenter({ workspace }: { workspace: QualityCommandC
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             Quality operations
           </div>
-          <h1 className="text-3xl font-semibold tracking-[-.035em] text-[#fff7f2] md:text-5xl">Close the work before it becomes a problem.</h1>
+          <h1 className="text-3xl font-semibold tracking-[-.035em] text-[#fff7f2] md:text-5xl">
+            {workspace.measuresConfigured === 0 ? "Quality is not being measured yet." : "Close the work before it becomes a problem."}
+          </h1>
+          {/* An empty backlog means two completely different things depending on whether
+              anything is being measured, and the gap count cannot tell them apart.
+              Telling a clinic that has never been evaluated it has nothing open reports
+              that they are clean when nobody has looked. */}
           <p className="mt-4 max-w-2xl text-sm leading-6 text-[#c8b6b1] md:text-base">
-            This command center turns persisted quality gaps into accountable clinic work. It tracks what still needs attention without representing operational tasks as proof of compliance.
+            {workspace.measuresConfigured === 0
+              ? "No measures are configured, so nothing has been evaluated. This is not the same as having no gaps — it means Klinikos has not been told what to watch for. Defining measures and their clinical criteria is deliberate setup work, and Klinikos will not guess them on your behalf."
+              : "This command center turns persisted quality gaps into accountable clinic work. It tracks what still needs attention without representing operational tasks as proof of compliance."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -3,6 +3,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 
 const qualityGapFindMany = vi.fn();
 const qualityMeasureFindMany = vi.fn();
+const qualityMeasureCount = vi.fn();
 const patientFindMany = vi.fn();
 const auditFindMany = vi.fn();
 const taskFindMany = vi.fn();
@@ -11,7 +12,12 @@ const userFindMany = vi.fn();
 vi.mock("@/lib/db", () => ({
   db: {
     qualityGap: { findMany: (...args: unknown[]) => qualityGapFindMany(...args) },
-    qualityMeasure: { findMany: (...args: unknown[]) => qualityMeasureFindMany(...args) },
+    qualityMeasure: {
+      findMany: (...args: unknown[]) => qualityMeasureFindMany(...args),
+      // Counted so an organization with no configured measures is distinguishable from
+      // one that simply has nothing open.
+      count: (...args: unknown[]) => qualityMeasureCount(...args),
+    },
     patient: { findMany: (...args: unknown[]) => patientFindMany(...args) },
     auditLog: { findMany: (...args: unknown[]) => auditFindMany(...args) },
     task: { findMany: (...args: unknown[]) => taskFindMany(...args) },

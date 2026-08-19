@@ -33,6 +33,12 @@ export type QualityCommandCenterGap = {
 export type QualityCommandCenterWorkspace = {
   complete: boolean;
   coverage: "persisted_active_quality_gap_backlog";
+  /**
+   * How many active measures this organization has configured. Zero means nothing has
+   * been evaluated, which is a different fact from an empty backlog and must not be
+   * reported as being on top of the work.
+   */
+  measuresConfigured: number;
   canMaterializeTasks: boolean;
   summary: null | { open: number; overdue: number; dueSoon: number; highImpact: number; materialized: number; unassigned: number; humanReview: number };
   gaps: QualityCommandCenterGap[];
@@ -41,10 +47,19 @@ export type QualityCommandCenterWorkspace = {
 
 export async function listQualityCommandCenter(session: ClinicSession): Promise<QualityCommandCenterWorkspace> {
   if (!can(session.role, "quality", "read")) {
-    return { complete: false, coverage: "persisted_active_quality_gap_backlog", canMaterializeTasks: false, summary: null, gaps: [], warnings: ["Quality operations are not authorized for this role."] };
+    return { complete: false, coverage: "persisted_active_quality_gap_backlog", measuresConfigured: 0, canMaterializeTasks: false, summary: null, gaps: [], warnings: ["Quality operations are not authorized for this role."] };
   }
 
   const canMaterializeTasks = can(session.role, "quality", "update") && can(session.role, "tasks", "create");
+
+  // An organization with no measures configured has an empty backlog for a completely
+  // different reason than one that is on top of its work, and the two look identical
+  // from a gap count alone. Reporting "nothing open" to a clinic that has never been
+  // evaluated tells them they are clean when nobody has looked.
+  const measuresConfigured = await db.qualityMeasure.count({
+    where: { organizationId: session.organizationId, status: "active" },
+  });
+
   const gaps = await db.qualityGap.findMany({
     where: { organizationId: session.organizationId, status: { not: "closed" } },
     orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }],
@@ -55,6 +70,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
     return {
       complete: false,
       coverage: "persisted_active_quality_gap_backlog",
+      measuresConfigured,
       canMaterializeTasks,
       summary: null,
       gaps: [],
@@ -98,6 +114,7 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
     return {
       complete: false,
       coverage: "persisted_active_quality_gap_backlog",
+      measuresConfigured,
       canMaterializeTasks,
       summary: null,
       gaps: [],
@@ -169,5 +186,5 @@ export async function listQualityCommandCenter(session: ClinicSession): Promise<
   ];
   if (unmappedMeasureCount) warnings.push(`${unmappedMeasureCount} open gap(s) do not map to an active organization quality-measure record.`);
 
-  return { complete: true, coverage: "persisted_active_quality_gap_backlog", canMaterializeTasks, summary, gaps: projected, warnings };
+  return { complete: true, coverage: "persisted_active_quality_gap_backlog", measuresConfigured, canMaterializeTasks, summary, gaps: projected, warnings };
 }
