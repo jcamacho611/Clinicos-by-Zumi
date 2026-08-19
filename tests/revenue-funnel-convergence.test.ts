@@ -9,7 +9,8 @@ const salesPage = read("src/app/sales/page.tsx");
 const interview = read("src/components/command/zumi-interview.tsx");
 const privateDemo = read("src/app/private-demo/page.tsx");
 const intake = read("src/components/sales/sales-intake-form.tsx");
-const paymentReturn = read("src/app/payments/success/page.tsx");
+// Route file plus the component it renders: together they are the return surface.
+const paymentReturn = read("src/app/payments/success/page.tsx") + read("src/components/commercial/payment-return-experience.tsx");
 const salesGuide = read("docs/SALES-AUDIT-FUNNEL.md");
 
 describe("clinic revenue funnel convergence", () => {

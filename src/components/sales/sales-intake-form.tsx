@@ -54,6 +54,9 @@ type SubmissionState = {
   checkoutUrl: string | null;
   expectedAmountCents: number | null;
   checkoutNotice: string;
+  /** Signed link to the activation step. Rail-independent, so it survives a fixed
+   *  payment link that carries no return URL of its own. */
+  activationPath: string | null;
 };
 
 function initialState(initialContext?: PaidAnalysisHandoff): IntakeState {
@@ -128,6 +131,7 @@ export function SalesIntakeForm({ analysisOffer, initialContext }: { analysisOff
           scenarioTitle: payload.data.scenario.title,
           checkoutUrl: payload.data.checkout?.checkoutUrl ?? null,
           expectedAmountCents: payload.data.checkout?.expectedAmountCents ?? null,
+          activationPath: payload.data.activationPath ?? null,
           checkoutNotice: payload.data.checkoutNotice ?? "Your request is saved for human review.",
         });
       } catch (caught) {
@@ -159,6 +163,13 @@ export function SalesIntakeForm({ analysisOffer, initialContext }: { analysisOff
         ) : (
           <div className="mt-6 rounded-2xl border border-amber-300/15 bg-amber-300/[.05] p-5 text-[11px] leading-5 text-amber-100/75">Your request is saved. Klinikos will not invent a different payment method or amount when the configured checkout rail is unavailable; authorized follow-up can continue from this reservation.</div>
         )}
+        {submission.activationPath ? (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[.02] p-5">
+            <p className="text-xs font-black text-white">While we prepare, tell us about the clinic.</p>
+            <p className="mt-2 text-[11px] leading-5 text-slate-400">Optional, and separate from payment. Anything you share goes straight into the analysis; anything you skip we cover on the call. Keep this link — it works whether or not checkout is finished.</p>
+            <Link className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 px-6 text-xs font-black text-white transition hover:bg-white/[.05]" href={submission.activationPath}>Continue setup <ArrowRight className="size-4" /></Link>
+          </div>
+        ) : null}
         <div className="mt-8 flex flex-wrap gap-3"><Link className="rounded-full border border-white/15 px-5 py-3 text-xs font-black text-white" href="/pricing">See what comes next</Link><Link className="rounded-full border border-white/15 px-5 py-3 text-xs font-black text-white" href="/">Return home</Link></div>
       </section>
     );
