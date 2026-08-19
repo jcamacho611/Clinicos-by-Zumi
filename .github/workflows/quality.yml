@@ -1,3 +1,23 @@
+# CI has not executed on this repository since at least 2026-08-18.
+#
+# Every run — this workflow and the separate runner diagnostic alike — fails in about
+# two seconds with `runner_id: 0`, an empty runner name, and no `steps` array at all.
+# That is the signature of a job that was never assigned a runner, not of a job that ran
+# and failed: the workflow is valid, its YAML parses, and its steps are well formed.
+#
+# The cause is account-level. This repository is private, and private repositories
+# consume billable Actions minutes; when the included allowance is spent or the spending
+# limit is $0, GitHub accepts the run and then never provisions a runner. Nothing in this
+# file can fix it. It is resolved in Settings → Billing and plans → either raise the
+# Actions spending limit or wait for the monthly reset.
+#
+# Until it is fixed, release proof comes from two commands that do run:
+#   npm run verify:release      full gate — migrations on an empty database, tests,
+#                               journeys, production build, startup, health
+#   npm run verify:production   read-only check of what is actually deployed
+#
+# Do not weaken the gates below to make this display green.
+
 name: Quality
 
 on:

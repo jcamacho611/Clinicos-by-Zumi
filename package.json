@@ -23,7 +23,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts",
     "verify:release": "node scripts/verify-release.mjs",
-    "verify:code": "node scripts/verify-release.mjs --code-only"
+    "verify:code": "node scripts/verify-release.mjs --code-only",
+    "verify:production": "node scripts/verify-production.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",
