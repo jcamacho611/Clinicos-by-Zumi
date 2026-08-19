@@ -165,19 +165,22 @@ export async function reconcileVerifiedAnalysisPayment(
     }
 
     let nextStatus = reservation.status;
+    let paymentEventFromStatus = reservation.status;
     let transitionPath = [reservation.status];
+    let addQualificationEvidence = false;
 
     if (
       reservation.status === "inquiry"
       && canTransitionDemoReservation("inquiry", "qualified")
       && canTransitionDemoReservation("qualified", "reserved")
     ) {
-      // Legacy checkout-ready reservations were left at inquiry. Verified payment is
-      // enough to traverse the already-approved qualification/reservation path, but
-      // we keep the path explicit in durable evidence rather than inventing a direct
-      // inquiry -> reserved transition.
+      // Legacy checkout-ready reservations were left at inquiry. The durable event
+      // history preserves both allowed transitions instead of pretending the graph
+      // contains an inquiry -> reserved edge that does not exist.
       nextStatus = "reserved";
+      paymentEventFromStatus = "qualified";
       transitionPath = ["inquiry", "qualified", "reserved"];
+      addQualificationEvidence = true;
     } else if (canTransitionDemoReservation(reservation.status, "reserved")) {
       nextStatus = "reserved";
       transitionPath = [reservation.status, "reserved"];
@@ -192,6 +195,27 @@ export async function reconcileVerifiedAnalysisPayment(
       select: { id: true, status: true, paymentStatus: true },
     });
 
+    if (addQualificationEvidence) {
+      await tx.demoReservationEvent.create({
+        data: {
+          salesOwnerOrganizationId: input.organizationId,
+          reservationId: reservation.id,
+          actorType: "system",
+          eventType: "payment_verified_qualification",
+          fromStatus: "inquiry",
+          toStatus: "qualified",
+          note: "The exact server-owned Clinic Operating Analysis checkout was processor-verified, satisfying the existing qualification step before reservation.",
+          metadata: {
+            checkoutIntentId: input.checkoutIntentId,
+            paymentEventId: input.paymentEventId,
+            provider: input.provider,
+            amountCents: input.amountCents ?? null,
+            processorVerified: true,
+          },
+        },
+      });
+    }
+
     const fulfillmentReviewRequired = nextStatus !== "reserved"
       && !["reserved", "scheduled", "completed", "moved_to_evaluation", "moved_to_founding"].includes(nextStatus);
 
@@ -201,7 +225,7 @@ export async function reconcileVerifiedAnalysisPayment(
         reservationId: reservation.id,
         actorType: "system",
         eventType: "processor_payment_verified",
-        fromStatus: reservation.status,
+        fromStatus: paymentEventFromStatus,
         toStatus: updated.status,
         note: fulfillmentReviewRequired
           ? "Processor-verified payment was recorded. The current reservation state requires human fulfillment review."
