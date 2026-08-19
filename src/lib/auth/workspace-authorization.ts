@@ -50,6 +50,8 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   insurance: { all: [["insurance", "read"]] },
   cases: { all: [["cases", "read"]] },
   quality: { all: [["quality", "read"]] },
+  // Insights read across the schedule and follow-up work rather than any one record type.
+  insights: { all: [["appointments", "read"]] },
   crm: { all: [["crm", "read"]] },
   "admin/sales": { all: [["sales", "read"]] },
   "owner/founding-program": { all: [["sales", "read"]] },

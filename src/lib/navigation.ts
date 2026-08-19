@@ -110,6 +110,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   insurance: { title: "Insurance", eyebrow: "Eligibility and authorization" },
   cases: { title: "No-fault / workers' comp", eyebrow: "Case operations" },
   quality: { title: "Quality", eyebrow: "What may fall through the cracks" },
+  insights: { title: "Insights", eyebrow: "What Klinikos noticed" },
   crm: { title: "CRM & revenue recovery", eyebrow: "Lead conversion and follow-up" },
   messages: { title: "Messages", eyebrow: "Secure communication" },
   tasks: { title: "Tasks", eyebrow: "Work queue" },
