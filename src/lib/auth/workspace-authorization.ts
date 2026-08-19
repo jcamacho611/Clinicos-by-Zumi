@@ -52,6 +52,8 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   quality: { all: [["quality", "read"]] },
   // Insights read across the schedule and follow-up work rather than any one record type.
   insights: { all: [["appointments", "read"]] },
+  // Requesting outside expertise is an organizational decision, not a clinical one.
+  "expert-support": { all: [["network", "read"]] },
   crm: { all: [["crm", "read"]] },
   "admin/sales": { all: [["sales", "read"]] },
   "owner/founding-program": { all: [["sales", "read"]] },

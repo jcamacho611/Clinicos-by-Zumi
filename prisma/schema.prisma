@@ -4125,3 +4125,29 @@ model ZumiInvocation {
   @@index([organizationId, capability, createdAt])
   @@map("zumi_invocations")
 }
+
+/// Demand for expertise a clinic does not have internally.
+///
+/// The supply half of Expert Grid does not exist yet, so nothing is matched on write.
+/// A request is captured, owned, and followed up by a person — which is the truthful
+/// path until there are real experts to match against.
+model ExpertSupportRequest {
+  id                String    @id @default(cuid())
+  organizationId    String
+  requestedByUserId String?
+  capabilityDomain  String
+  outcomeWanted     String
+  urgency           String    @default("routine")
+  jurisdictionKey   String?
+  remoteAllowed     Boolean   @default(true)
+  neededBy          DateTime?
+  /// Being matched conveys no access. Widening this is a separate, explicit decision.
+  dataAccessClass   String    @default("none")
+  status            String    @default("submitted")
+  sourceNeedKey     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([organizationId, status, createdAt])
+  @@map("expert_support_requests")
+}
