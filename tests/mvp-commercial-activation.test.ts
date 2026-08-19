@@ -98,7 +98,13 @@ describe("Klinikos MVP commercial activation", () => {
     const source = read("src/app/api/onboarding/organizations/route.ts");
     expect(source).toContain('process.env.NODE_ENV !== "production"');
     expect(source).toContain("KLINIKOS_SYNTHETIC_WORKSPACE_CREATION");
-    expect(source).toContain("productionAccessActivated: false");
+    // This endpoint was hardened to stop returning any workspace detail at all, so the
+    // old `productionAccessActivated: false` field no longer exists — not because the
+    // guarantee weakened, but because the response body it lived in was removed. Assert
+    // the guarantees that actually protect the endpoint instead of one disclosed field.
+    expect(source).toContain("PRIVATE_NO_STORE_HEADERS");
+    expect(source).not.toMatch(/organizationId:|organizationSlug:|trialEndsAt:/);
+    expect(source).toMatch(/RateLimit/);
   });
 
   it("requires exact-value GoDaddy paylinks for Core, Growth, and Scale instead of falling back to the audit link", () => {

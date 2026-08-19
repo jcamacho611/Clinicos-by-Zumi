@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { checkOnboardingRateLimit, recordOnboardingAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
-import { onboardingErrorMessage, onboardingSchema } from "@/lib/onboarding-rules";
+import { onboardingSchema } from "@/lib/onboarding-rules";
 import { createOrganizationWorkspace, OnboardingError } from "@/lib/repositories/onboarding-repository";
+import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
+
+const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 
 /**
  * Legacy synthetic-workspace creator.
@@ -20,18 +23,16 @@ export async function POST(request: Request) {
 
   if (!syntheticWorkspaceCreationEnabled) {
     return NextResponse.json(
-      {
-        error:
-          "Direct workspace creation is not available. Start with the Klinikos Clinic Operating Analysis or use an approved activation link.",
-      },
-      { status: 403, headers: { "Cache-Control": "no-store" } },
+      { error: "Direct workspace creation is not available. Use an approved Klinikos activation path." },
+      { status: 403, headers: NO_STORE },
     );
   }
 
+  // Do not disclose deployment/database topology through a browser-facing error.
   if (!process.env.DATABASE_URL) {
     return NextResponse.json(
-      { error: "Synthetic workspace creation requires PostgreSQL. Connect DATABASE_URL and try again." },
-      { status: 503 },
+      { error: "Synthetic workspace creation is temporarily unavailable." },
+      { status: 503, headers: NO_STORE },
     );
   }
 
@@ -41,14 +42,14 @@ export async function POST(request: Request) {
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many workspace creation attempts. Try again later." },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+      { status: 429, headers: { ...NO_STORE, "Retry-After": String(limit.retryAfterSeconds) } },
     );
   }
 
   const parsed = onboardingSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     recordOnboardingAttempt(rateLimitKey);
-    return NextResponse.json({ error: onboardingErrorMessage(parsed.error) }, { status: 400 });
+    return NextResponse.json({ error: "Review the workspace information and try again." }, { status: 400, headers: NO_STORE });
   }
 
   try {
@@ -56,24 +57,20 @@ export async function POST(request: Request) {
     const workspace = await createOrganizationWorkspace(parsed.data, metadata);
     const { token } = await createClinicSession(workspace.identity, metadata);
     const response = NextResponse.json(
-      {
-        ok: true,
-        redirectTo: "/dashboard?onboarding=synthetic-demo",
-        organizationId: workspace.identity.organizationId,
-        organizationSlug: workspace.identity.organizationSlug,
-        trialEndsAt: workspace.trialEndsAt.toISOString(),
-        mode: "synthetic-data-only",
-        productionAccessActivated: false,
-      },
-      { status: 201 },
+      { ok: true, redirectTo: "/dashboard?onboarding=synthetic-demo" },
+      { status: 201, headers: NO_STORE },
     );
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
-    response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error) {
     if (error instanceof OnboardingError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      const message = error.status === 409
+        ? "A workspace with these details already exists."
+        : error.status === 403
+          ? "Access denied."
+          : "Synthetic workspace creation could not be completed.";
+      return NextResponse.json({ error: message }, { status: error.status, headers: NO_STORE });
     }
-    return NextResponse.json({ error: "Synthetic workspace creation is temporarily unavailable." }, { status: 503 });
+    return NextResponse.json({ error: "Synthetic workspace creation is temporarily unavailable." }, { status: 503, headers: NO_STORE });
   }
 }

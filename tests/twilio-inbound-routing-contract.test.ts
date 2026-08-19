@@ -21,7 +21,12 @@ describe("Twilio inbound tenant routing contract", () => {
     // configuration guidance. What it must never do is read the token's value or put
     // it on the wire, which is what actually leaks a credential to the browser.
     expect(configRoute).not.toMatch(/process\.env\.TWILIO_AUTH_TOKEN/);
-    expect(configRoute).toContain('requiredServerSecret: "TWILIO_AUTH_TOKEN"');
+    // The route was hardened further and no longer echoes the env var name at all, nor
+    // the raw messaging service SID — only whether one is configured. Naming the secret
+    // was operator convenience rather than a security property, so the rule asserted
+    // here is the one that protects the tenant: no token value, no raw provider ids.
+    expect(configRoute).not.toMatch(/messagingServiceSid:\s*routing/);
+    expect(configRoute).toContain("messagingServiceConfigured");
     expect(configRoute).toContain('enforceApiPermission(session, "integrations", "manage"');
   });
 

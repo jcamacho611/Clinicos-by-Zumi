@@ -45,6 +45,8 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Source confidentiality gates
+        run: npm run security:check
       - name: Install dependencies
         run: npm ci --ignore-scripts
       - name: Generate Prisma client
@@ -65,6 +67,8 @@ jobs:
         run: npm run test:mvp
       - name: Production build
         run: npm run build
+      - name: Post-build confidentiality gates
+        run: npm run security:check
       - name: Production startup smoke
         shell: bash
         run: |
@@ -131,11 +135,15 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Source confidentiality gates
+        run: npm run security:check
       # Render's Build Command, verbatim.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
         run: npm run render:build
+      - name: Post-build confidentiality gates
+        run: npm run security:check
       # Render's Start Command, verbatim. A build that cannot start is not a deploy.
       - name: Start exactly as the production host starts
         shell: bash
