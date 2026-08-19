@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 
 export const productStatusLabels = [
   "Live",
@@ -19,39 +20,39 @@ export const demoOfferKeys = [
 export const demoOfferSchema = z.enum(demoOfferKeys);
 export type DemoOfferKey = z.infer<typeof demoOfferSchema>;
 
-/**
- * Compatibility keys remain stable for persisted sales history. Customer-facing
- * labels mirror the current Klinikos commercial canon so historical/internal keys
- * never leak legacy product names into UI or API projections.
- */
-export const demoOffers: Record<DemoOfferKey, {
+type CanonicalClinicCommercialOffer = (typeof clinicCommercialOffers)[keyof typeof clinicCommercialOffers];
+
+type DemoOffer = {
   name: string;
   priceCents: number;
   shortPrice: string;
   creditForward: string;
   status: (typeof productStatusLabels)[number];
-}> = {
-  private_workflow_demo: {
-    name: "Clinic Operating Analysis",
-    priceCents: 50_000,
-    shortPrice: "$500",
-    creditForward: "100% credited toward an Implementation Blueprint or qualifying implementation when the clinic proceeds within 30 days.",
-    status: "Demo",
-  },
-  founding_clinic_evaluation: {
-    name: "Implementation Blueprint",
-    priceCents: 150_000,
-    shortPrice: "$1,500",
-    creditForward: "100% credited toward a qualifying Klinikos implementation when the clinic proceeds within 30 days.",
-    status: "Human review required",
-  },
-  founding_clinic_program: {
-    name: "Founding Clinic Implementation",
-    priceCents: 800_000,
-    shortPrice: "from $8,000",
-    creditForward: "Eligible analysis and blueprint fees are credited after human review.",
-    status: "Requires production review",
-  },
+};
+
+function projectCommercialOffer(
+  offer: CanonicalClinicCommercialOffer,
+  status: DemoOffer["status"],
+): DemoOffer {
+  return {
+    name: offer.name,
+    priceCents: offer.priceCents,
+    shortPrice: offer.priceLabel,
+    creditForward: offer.creditForward,
+    status,
+  };
+}
+
+/**
+ * Persisted/internal sales keys stay stable, but all customer-facing commercial
+ * facts come from the single canonical Klinikos commercial catalog. Sales owns
+ * only workflow-specific status semantics; it does not own another copy of price,
+ * name, price label, or credit-forward terms.
+ */
+export const demoOffers: Record<DemoOfferKey, DemoOffer> = {
+  private_workflow_demo: projectCommercialOffer(clinicCommercialOffers.privateWorkflowReview, "Demo"),
+  founding_clinic_evaluation: projectCommercialOffer(clinicCommercialOffers.foundingEvaluation, "Human review required"),
+  founding_clinic_program: projectCommercialOffer(clinicCommercialOffers.foundingImplementation, "Requires production review"),
 };
 
 export const salesPainPoints = [
