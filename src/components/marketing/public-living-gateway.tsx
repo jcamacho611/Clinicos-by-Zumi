@@ -42,8 +42,8 @@ export function PublicLivingGateway() {
   const latestTurn = turns[turns.length - 1] ?? null;
 
   const liveStatus = latestTurn
-    ? `Zumi replied. ${latestTurn.resolution.title}`
-    : "Zumi is ready.";
+    ? `Public Zumi guidance ready. ${latestTurn.resolution.title}`
+    : "Public Zumi guidance is ready.";
 
   useEffect(() => {
     if (!conversationStarted) return;
@@ -126,7 +126,7 @@ export function PublicLivingGateway() {
                 What needs<br />to happen?
               </h1>
               <p className="mt-7 max-w-[620px] text-sm leading-7 text-[#d9c4c0] sm:text-base">
-                Talk to Zumi naturally. Start with what is going on, what you need, or what you want to get done.
+                Tell Zumi what is going on, what you need, or what you want to get done. This public guide will point you toward the right Klinikos next step.
               </p>
 
               <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>
@@ -147,7 +147,7 @@ export function PublicLivingGateway() {
                   </button>
                 </div>
                 <p className="mx-auto mt-4 max-w-[680px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
-                  This public conversation can guide you to the right next step, but it does not open private clinic records or make changes. Do not enter patient information here.
+                  Public Zumi is a guided navigator. The full governed Zumi experience is available inside Klinikos after sign-in. This page cannot open private clinic records or make changes. Do not enter patient information here.
                 </p>
               </form>
 
@@ -162,7 +162,7 @@ export function PublicLivingGateway() {
           </main>
         ) : (
           <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
-            <section className="flex-1 space-y-8 py-4" aria-label="Conversation with Zumi">
+            <section className="flex-1 space-y-8 py-4" aria-label="Public Zumi guidance">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
                 return (
@@ -196,7 +196,7 @@ export function PublicLivingGateway() {
             </section>
 
             <form className="sticky bottom-4 mt-8 rounded-[24px] border border-[#d0837d]/22 bg-[#12090b]/95 p-3 shadow-2xl backdrop-blur-xl" onSubmit={submit}>
-              <label className="sr-only" htmlFor="public-klinikos-follow-up">Continue talking to Zumi</label>
+              <label className="sr-only" htmlFor="public-klinikos-follow-up">Continue with public Zumi</label>
               <div className="flex items-end gap-3">
                 <textarea
                   aria-describedby="public-follow-up-note"
@@ -212,8 +212,8 @@ export function PublicLivingGateway() {
                   <ArrowUp className="size-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-2 px-3 text-[12px] leading-4 text-[#8f7773]" id="public-follow-up-note">
-                Public Zumi does not access private clinic records or execute changes.
+              <p className="mt-2 px-3 text-[10px] leading-4 text-[#9a817c]" id="public-follow-up-note">
+                Public Zumi is a guided navigator and cannot access private clinic records or execute changes.
               </p>
             </form>
           </main>
