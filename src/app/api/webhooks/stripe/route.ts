@@ -5,6 +5,7 @@ import {
   normalizeStripeWebhookEvent,
   stripeLivePaymentStatus,
 } from "@/lib/commercial/payment-connectors/stripe";
+import { reconcileVerifiedAnalysisPayment } from "@/lib/commercial/sales-payment-fulfillment";
 import { isKlinikosRecurringStripeEventCandidate } from "@/lib/commercial/stripe-recurring-event-candidate";
 import {
   processVerifiedStripeClinicSubscriptionEvent,
@@ -147,7 +148,35 @@ export async function POST(request: Request) {
 
   try {
     const result = await recordCommercialPaymentEvidence(evidence);
-    return json({ received: true, supported: true, status: result.status, idempotent: result.idempotent });
+    let salesFulfillment = null;
+
+    // The payment ledger remains authoritative. Only after a signed processor
+    // success has been applied do we ask the sales subsystem to resolve the exact
+    // checkout_ready reservation by its opaque checkout-intent correlation.
+    // Reconciliation failure never downgrades or erases real collected-money truth.
+    if (
+      result.status === "applied"
+      && evidence.processorVerified
+      && evidence.outcome === "succeeded"
+      && evidence.checkoutIntentId
+      && result.organizationId
+    ) {
+      salesFulfillment = await reconcileVerifiedAnalysisPayment({
+        checkoutIntentId: evidence.checkoutIntentId,
+        organizationId: result.organizationId,
+        paymentEventId: result.eventId,
+        provider: evidence.provider,
+        amountCents: evidence.amountCents,
+      }).catch(() => ({ status: "reconciliation_required" as const }));
+    }
+
+    return json({
+      received: true,
+      supported: true,
+      status: result.status,
+      idempotent: result.idempotent,
+      salesFulfillment: salesFulfillment?.status ?? null,
+    });
   } catch {
     return json({ error: "Stripe evidence could not be recorded." }, 500);
   }
