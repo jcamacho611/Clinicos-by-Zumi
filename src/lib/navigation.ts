@@ -112,6 +112,7 @@ export const workspaceMeta: Record<string, { title: string; eyebrow: string }> =
   quality: { title: "Quality", eyebrow: "What may fall through the cracks" },
   insights: { title: "Insights", eyebrow: "What Klinikos noticed" },
   "expert-support": { title: "Outside expertise", eyebrow: "When your team does not have it" },
+  "action-center": { title: "Action center", eyebrow: "What is waiting, and on whom" },
   crm: { title: "CRM & revenue recovery", eyebrow: "Lead conversion and follow-up" },
   messages: { title: "Messages", eyebrow: "Secure communication" },
   tasks: { title: "Tasks", eyebrow: "Work queue" },

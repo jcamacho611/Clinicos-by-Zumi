@@ -14,6 +14,8 @@ import { EncountersWorkspace, FrontDeskWorkspace, PatientsWorkspace, ProviderWor
 import { BillingWorkspace, InsuranceWorkspace } from "@/components/clinic/workspaces/revenue";
 import { InsightsWorkspace } from "@/components/clinic/workspaces/insights";
 import { ExpertSupportWorkspace } from "@/components/clinic/workspaces/expert-support";
+import { ActionCenterWorkspace } from "@/components/clinic/workspaces/action-center";
+import { getActionCenter } from "@/lib/home/action-center";
 import { listExpertSupportRequests } from "@/lib/repositories/expert-support-repository";
 import { getInsightsPicture } from "@/lib/insights/observations";
 import { AiAssistantsWorkspace, EscalationsWorkspace, IntegrationsWorkspace, MessagesWorkspace, PatientNavigationWorkspace, PortalWorkspace, ProviderConsultationWorkspace, SettingsWorkspace, TasksWorkspace } from "@/components/clinic/workspaces/system";
@@ -64,7 +66,7 @@ export const workspaceSlugs = [
   "front-desk", "provider", "patients", "schedule", "encounters", "telemedicine",
   "labs", "imaging", "medications", "documents", "forms", "knowledge", "remote-monitoring", "inventory", "billing", "claim-readiness", "luxe-medi", "insurance", "cases", "quality", "crm", "system-health",
   "messages", "tasks", "escalations", "ai-assistants", "patient-navigation", "portal-admin", "integrations", "settings",
-  "insights", "expert-support", "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
+  "insights", "expert-support", "action-center", "network", "referrals", "access-controls", "identity-resolution", "care-teams", "capacity-exchange", "provider-network", "health-passport", "intake-passport", "injury-episodes", "voice-assistant", "feature-registry",
 ] as const;
 
 export async function WorkspaceRenderer({ organizationId, role, userId, workspace }: { organizationId: string; role: ClinicRole; userId: string; workspace: string }) {
@@ -153,6 +155,7 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "insights": return <InsightsWorkspace picture={await getInsightsPicture({ organizationId, role })} />;
     case "expert-support": return <ExpertSupportWorkspace picture={await listExpertSupportRequests({ organizationId, role })} />;
+    case "action-center": return <ActionCenterWorkspace center={await getActionCenter({ organizationId, role, userId })} />;
     case "messages": return <MessagesWorkspace />;
     case "tasks": {
       if (!can(role, "tasks", "read")) return notFound();

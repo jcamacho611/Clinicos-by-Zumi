@@ -42,7 +42,11 @@ function evaluation(overrides: Partial<GovernedRuleEvaluation> = {}): GovernedRu
     missingEvidenceKeys: ["followup"],
     reasons: ["Follow-up evidence is missing."],
     ownerRoleKeys: ["quality"],
-    dueAt: new Date("2026-08-20T12:00:00Z"),
+    // Relative to the real clock, because urgency is computed against it. An absolute
+    // date here made the test decay: once 2026-08-20 passed, "priority" (due within a
+    // week) silently became "urgent" (already overdue) and the failure looked like a
+    // regression rather than a stale fixture.
+    dueAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     evaluatedAt: now,
     ...overrides,
   };

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const {
@@ -43,7 +43,20 @@ function request() {
 }
 
 describe("Luxe public deposit checkout route", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
+    // Pin the configured origin. `normalizeCommercialReturnUrl` deliberately takes the
+    // return origin from configuration rather than the request Host, so that a spoofed
+    // Host cannot send a paying customer somewhere else — which means this test's answer
+    // depends on NEXT_PUBLIC_APP_URL. Left to the ambient shell it passed on a bare
+    // machine and failed on any developer who had a local app URL exported, which is a
+    // gate that reports on the environment instead of on the product.
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://klinikos.io");
+    vi.stubEnv("RENDER_EXTERNAL_URL", "");
+
     depositStatus.mockReset();
     openJourney.mockReset();
     resolveContext.mockReset();

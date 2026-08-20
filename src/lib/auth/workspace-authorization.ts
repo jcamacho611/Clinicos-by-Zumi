@@ -54,6 +54,8 @@ export const workspaceAccessRules: Readonly<Record<string, WorkspaceRule>> = {
   insights: { all: [["appointments", "read"]] },
   // Requesting outside expertise is an organizational decision, not a clinical one.
   "expert-support": { all: [["network", "read"]] },
+  // Draws on tasks and escalations; either one is enough to have something to show.
+  "action-center": { any: [["tasks", "read"], ["escalations", "read"]] },
   crm: { all: [["crm", "read"]] },
   "admin/sales": { all: [["sales", "read"]] },
   "owner/founding-program": { all: [["sales", "read"]] },

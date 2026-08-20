@@ -284,13 +284,13 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
               <Sparkles aria-hidden="true" className="size-4 text-[#b9837e]" />
               <input className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]" placeholder={promptPlaceholder} aria-label="Ask Klinikos" onChange={(event) => setZumiPrompt(event.target.value)} value={zumiPrompt} />
               <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[12px] [&_button]:text-[#d8c1bd]" onTranscript={(transcript) => { setZumiPrompt(""); sendToZumi(transcript, true); }} />
-              <button aria-label="Send" className="relative grid size-8 place-items-center rounded-full border border-[#e6817b]/18 bg-[#16090c] transition hover:border-[#efaaa1]/40 hover:bg-[#241014] disabled:opacity-35" disabled={!zumiPrompt.trim()} type="submit"><span className="absolute inset-1 rounded-full border border-[#e6817b]/10" /><img alt="" className="relative h-5 w-5 object-contain" src="/klinikos-orbital-k-transparent.png" /></button>
+              <button aria-label="Send" className="relative grid size-8 place-items-center rounded-full border border-[#e6817b]/18 bg-[#16090c] transition hover:border-[#efaaa1]/40 hover:bg-[#241014] disabled:opacity-35" disabled={!zumiPrompt.trim()} type="submit"><span className="absolute inset-1 rounded-full border border-[#e6817b]/10" /><img alt="" className="relative h-5 w-5 object-contain" src="/klinikos-orbital-k-production.png" /></button>
             </form>
           ) : <div className="ml-auto hidden text-[11px] font-semibold uppercase tracking-[.15em] text-[#806965] md:block">Conversation</div>}
 
           <div className="flex items-center gap-2">
             {!expandedZumiConversation ? <Button aria-label={zumiPrompt.trim() ? "Send" : "Ask Klinikos"} className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6]" onClick={sendOrFocusZumi} title={zumiPrompt.trim() ? "Send" : "Ask Klinikos"} type="button" variant="secondary"><Sparkles className="size-4" /><span className="hidden text-xs font-semibold sm:inline">{zumiPrompt.trim() ? "Send" : "Ask"}</span></Button> : null}
-            <Button asChild className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/dashboard#action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
+            <Button asChild className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
           </div>
         </header>
 
