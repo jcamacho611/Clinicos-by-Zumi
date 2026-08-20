@@ -20,7 +20,11 @@ function formatDate(value: string | null) {
 }
 
 function Stat({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
-  return <Card className="border-stone-200 bg-[#fffdf7] p-4"><div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-stone-950 text-amber-300">{icon}</span><p className="text-2xl font-black tracking-[-.06em] text-stone-950">{value}</p></div><p className="mt-5 text-[11px] font-black uppercase tracking-[.16em] text-stone-500">{label}</p><p className="mt-1 text-[12px] text-stone-400">{detail}</p></Card>;
+  /* Design tokens rather than a hard-coded cream. These four cards were the only light
+     panels left on this surface, sitting directly beside the dark encryption cards, and
+     their captions were failing contrast on their own cream at 2.54:1 before anything
+     else changed. Tokens make them agree with the rest of the page and with the theme. */
+  return <Card className="p-4" style={{ borderColor: "var(--line-dark)", background: "var(--surface-secondary)" }}><div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl" style={{ background: "var(--surface-raised)", color: "var(--accent-intelligence)" }}>{icon}</span><p className="text-2xl font-black tracking-[-.06em]" style={{ color: "var(--text-primary)" }}>{value}</p></div><p className="mt-5 text-[11px] font-black uppercase tracking-[.16em]" style={{ color: "var(--text-secondary)" }}>{label}</p><p className="mt-1 text-[12px]" style={{ color: "var(--text-secondary)" }}>{detail}</p></Card>;
 }
 
 export function DocumentsWorkspace({ workspace, canCreate, canUpdate, canSign, canManage }: { workspace: DocumentWorkspaceData; canCreate: boolean; canUpdate: boolean; canSign: boolean; canManage: boolean }) {

@@ -107,9 +107,23 @@
 .klinikos-cinematic-root [class~="bg-white"],
 .klinikos-cinematic-root [class*="bg-white/"] { background-color:#0d0708!important; }
 .klinikos-cinematic-root [class~="bg-slate-950"],
-.klinikos-cinematic-root [class~="bg-slate-900"] { background-color:#080405!important; }
+.klinikos-cinematic-root [class~="bg-slate-900"],
+.klinikos-cinematic-root [class~="bg-stone-950"],
+.klinikos-cinematic-root [class~="bg-stone-900"],
+.klinikos-cinematic-root [class~="bg-neutral-950"],
+.klinikos-cinematic-root [class~="bg-neutral-900"] { background-color:#080405!important; }
 .klinikos-cinematic-root [class~="bg-slate-50"],
 .klinikos-cinematic-root [class~="bg-slate-100"],
+/* `stone` is the same neutral ramp as `slate`, and the documents surface is written in
+   it throughout. It was absent from every rule in this layer, so its panels stayed light
+   while its text was left dark — or the reverse once a tinted panel darkened around it.
+   Document names rendered at 1.01:1 on the converted rows: present in the DOM, invisible
+   on the screen. Treating stone exactly as slate is what fixes it, because slate's
+   handling is already proven across the rest of the product. */
+.klinikos-cinematic-root [class~="bg-stone-50"],
+.klinikos-cinematic-root [class~="bg-stone-100"],
+.klinikos-cinematic-root [class~="bg-neutral-50"],
+.klinikos-cinematic-root [class~="bg-neutral-100"],
 /* Slash-opacity variants are separate class tokens, so an exact-word selector never
    matches them. `bg-slate-50/60` slipped through and left a mid-grey wash under light
    text on the referrals and imaging surfaces — the layer already special-cases
@@ -197,12 +211,23 @@
 .klinikos-cinematic-root [class~="text-slate-950"],
 .klinikos-cinematic-root [class~="text-slate-900"],
 .klinikos-cinematic-root [class~="text-slate-800"],
+.klinikos-cinematic-root [class~="text-stone-950"],
+.klinikos-cinematic-root [class~="text-stone-900"],
+.klinikos-cinematic-root [class~="text-stone-800"],
+.klinikos-cinematic-root [class~="text-neutral-900"],
 .klinikos-cinematic-root [class*="text-[#0b1220]"],
 .klinikos-cinematic-root [class*="text-[#0b1e3a]"] { color:#f8efed!important; }
 .klinikos-cinematic-root [class~="text-slate-700"],
 .klinikos-cinematic-root [class~="text-slate-600"],
+.klinikos-cinematic-root [class~="text-stone-700"],
+.klinikos-cinematic-root [class~="text-stone-600"],
+.klinikos-cinematic-root [class~="text-neutral-700"],
 .klinikos-cinematic-root [class*="text-[#5b6675]"] { color:#bca5a1!important; }
 .klinikos-cinematic-root [class~="text-slate-500"],
+.klinikos-cinematic-root [class~="text-stone-500"],
+.klinikos-cinematic-root [class~="text-stone-400"],
+.klinikos-cinematic-root [class~="text-neutral-500"],
+.klinikos-cinematic-root [class~="text-neutral-400"],
 .klinikos-cinematic-root [class~="text-slate-400"] { color:#927b77!important; }
 
 /* The Grid's faintest tones.

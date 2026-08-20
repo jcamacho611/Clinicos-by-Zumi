@@ -154,7 +154,7 @@ export function QualityCommandCenter({ workspace }: { workspace: QualityCommandC
       </ul> : <div className="py-14 text-center">
         <CheckCircle2 className="mx-auto h-6 w-6 text-[#9db6a1]" aria-hidden="true" />
         <p className="mt-3 text-sm font-semibold text-[#e6d6d2]">No unresolved quality gaps are visible in this scope.</p>
-        <p className="mt-1 text-xs text-[#806d69]">This does not by itself establish program compliance.</p>
+        <p className="mt-1 text-xs text-[#9a8480]">This does not by itself establish program compliance.</p>
       </div>}
     </section>
   </div>;

@@ -72,6 +72,21 @@ describe("the legacy theme conversion moves backgrounds and text together", () =
     },
   );
 
+  it.each(["slate", "stone", "neutral"])(
+    "handles the %s neutral ramp on both sides",
+    (ramp) => {
+      // `stone` was in neither list. The documents surface is written in it throughout,
+      // so its panels stayed light while its text was left dark — document names
+      // rendered at 1.01:1, present in the DOM and invisible on the screen. A neutral
+      // ramp that appears in the markup has to be converted as completely as `slate`,
+      // which is the one this layer was originally written around.
+      expect(obsidianRules, `bg-${ramp}-* light steps are never darkened`)
+        .toMatch(new RegExp(`bg-${ramp}-(50|100)`));
+      expect(obsidianRules, `text-${ramp}-* dark steps are never lifted`)
+        .toMatch(new RegExp(`text-${ramp}-(800|900)`));
+    },
+  );
+
   it("darkens hover backgrounds as well as resting ones", () => {
     // Hover is a lift away from the surface, not a return to the light theme. Without
     // this the row a person points at is the one they cannot read: pointing at a patient
