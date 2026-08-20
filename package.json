@@ -24,7 +24,8 @@
     "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts",
     "verify:release": "node scripts/verify-release.mjs",
     "verify:code": "node scripts/verify-release.mjs --code-only",
-    "verify:production": "node scripts/verify-production.mjs"
+    "verify:production": "node scripts/verify-production.mjs",
+    "db:seed:grid-demo": "tsx scripts/seed-grid-demo.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",
