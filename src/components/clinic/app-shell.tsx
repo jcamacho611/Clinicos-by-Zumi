@@ -110,7 +110,7 @@ function Sidebar({
         >
           <Search aria-hidden="true" className="size-[17px] text-[#806965]" />
           <span className="flex-1">Explore Klinikos</span>
-          <span className="text-[11px] font-medium text-[#6f5b58]">⌘K</span>
+          <span className="text-[11px] font-medium text-[#8d7572]">⌘K</span>
         </button>
       </nav>
 
