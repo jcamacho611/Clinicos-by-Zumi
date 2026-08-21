@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/manrope";
 import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
 import "./cinematic-global.css";
@@ -14,23 +15,28 @@ const siteUrl = "https://klinikos.io";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: "Klinikos",
   title: {
-    default: "Klinikos — The Healthcare Operating Ecosystem",
+    default: KLINIKOS_META.title,
     template: "%s | Klinikos",
   },
-  description: "A healthcare operating ecosystem for clinical workflow, office operations, patient follow-through, provider networks, education, capacity, and revenue intelligence.",
-  alternates: { canonical: "/" },
+  description: KLINIKOS_META.description,
+  category: "healthcare software",
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     type: "website",
     url: siteUrl,
     siteName: "Klinikos",
-    title: "Klinikos — The Healthcare Operating Ecosystem",
-    description: "One coherent operating layer for healthcare workflow, network capacity, care coordination, education, and revenue intelligence.",
+    title: KLINIKOS_META.title,
+    description: KLINIKOS_META.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Klinikos — The Healthcare Operating Ecosystem",
-    description: "One coherent operating layer for healthcare workflow, network capacity, care coordination, education, and revenue intelligence.",
+    title: KLINIKOS_META.title,
+    description: KLINIKOS_META.description,
   },
 };
 
