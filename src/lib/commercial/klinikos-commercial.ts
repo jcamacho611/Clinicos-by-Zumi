@@ -101,48 +101,6 @@ export const commercialAddOns = {
  * `priceLabel` is the customer-facing string and `monthlyPriceCents` the machine
  * value; a range carries a null cents value because a range is not a charge.
  */
-export const gridPlans = {
-  individual: {
-    key: "grid_individual",
-    name: "Grid Individual",
-    monthlyPriceCents: 0,
-    priceLabel: "Free",
-    unitLabel: "for clinicians and contractors",
-    idealFor: "Be findable, be eligible, receive offers.",
-    includes: ["Profile, credentials and availability", "Search and receive offers", "Eligibility screening"],
-    excludes: ["No priority matching"],
-  },
-  pro: {
-    key: "grid_pro",
-    name: "Grid Pro",
-    monthlyPriceCents: 4_900,
-    priceLabel: "$49/mo",
-    unitLabel: "per person",
-    idealFor: "People who work Grid regularly.",
-    includes: ["Priority matching", "Saved availability and searches", "Earnings and obligation history"],
-    excludes: ["Single-person account"],
-  },
-  proPlus: {
-    key: "grid_pro_plus",
-    name: "Grid Pro+",
-    monthlyPriceCents: null,
-    priceLabel: "$99–149/mo",
-    unitLabel: "per person",
-    idealFor: "Independent practitioners running their own book.",
-    includes: ["Everything in Pro", "Multi-site availability", "Client and rebooking continuity", "Agreement and payout records"],
-    excludes: [],
-  },
-  organization: {
-    key: "grid_organization",
-    name: "Grid for organizations",
-    monthlyPriceCents: 29_900,
-    priceLabel: "from $299/mo",
-    unitLabel: "per organization",
-    idealFor: "Publish capacity, receive eligible offers, run transactions.",
-    includes: ["Publish rooms, hours, services, placements", "Your eligibility rules enforced at match", "Offers, reservations, obligations", "Splits, payouts and settlement records"],
-    excludes: [],
-  },
-} as const;
 
 export const gridCommercialRule =
   "Listing, searching and declining are always free. A platform fee applies only when a lawful match is accepted.";
@@ -238,30 +196,3 @@ export const clinicSubscriptionPlanning = {
   implementationReference: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md",
 };
 
-export const gridCommercialModel = {
-  professional: {
-    label: "Grid Professional",
-    freeLabel: "$0 basic profile",
-    proLabel: "$39/mo Pro",
-    transactionLabel: "10% standard completed-transaction platform fee",
-    pricing: "Keep supply acquisition friction low: basic verified profiles can join free. Pro adds visibility, analytics, advanced availability, alerts, and matching tools. Completed paid activity uses a server-owned resource-class fee policy; 10% is the launch midpoint, not a universal legal rule.",
-  },
-  facility: {
-    label: "Grid Facility",
-    freeLabel: "$0 to join",
-    proLabel: "$99/mo Facility Pro",
-    transactionLabel: "10% standard completed-booking platform fee",
-    pricing: "Facilities can list eligible capacity with low entry friction. Facility Pro adds expanded inventory, analytics, priority matching, and operating tools. Completed bookings remain subject to resource-specific server-owned economics.",
-  },
-  seller: {
-    label: "Grid Seller",
-    freeLabel: "$0 to join",
-    proLabel: "$49/mo Seller Pro",
-    transactionLabel: "10% standard completed-transaction platform fee",
-    pricing: "Eligible sellers can enter the network without a mandatory subscription. Seller Pro adds expanded listings, analytics, visibility, and fulfillment tools. Regulated categories remain policy-gated regardless of payment.",
-  },
-  platform: {
-    label: "Klinikos fee",
-    pricing: "Launch around a 10% completed-transaction midpoint where legally and economically appropriate, while preserving server-owned class-specific fees, minimum fees, processor-cost recovery, refunds, disputes, and negotiated enterprise economics. Never let payment bypass eligibility or healthcare fee-splitting rules.",
-  },
-} as const;

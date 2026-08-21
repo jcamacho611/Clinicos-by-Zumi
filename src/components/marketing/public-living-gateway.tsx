@@ -9,6 +9,13 @@ import {
   resolvePublicLivingIntent,
   type PublicLivingResolution,
 } from "@/lib/orchestration/public-living-intent";
+import {
+  KLINIKOS_ECONOMIC_THESIS,
+  KLINIKOS_HUMAN_AUTHORITY,
+  KLINIKOS_ONE_LINE,
+  KLINIKOS_SUPPORTING,
+  ZUMI_COMPOSER_PROMPT,
+} from "@/lib/brand/canonical-messaging";
 
 type ConversationTurn = {
   id: number;
@@ -116,17 +123,53 @@ export function PublicLivingGateway() {
         {!conversationStarted ? (
           <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9">
             <section className="flex w-full flex-col items-center text-center">
-              <div className="flex items-center gap-3" aria-hidden="true">
-                <ZumiOrb state="observing" size={62} />
-                <span className="text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</span>
+              {/* Comprehension before mystery.
+                  This viewport used to be an orb, the word "Klinikos", the headline
+                  "What needs to happen?" and a chat box — nothing that said what the
+                  product was. An external evaluator reviewed the site and could not
+                  determine the value proposition or what Klinikos does. The cinematic
+                  treatment and the composer both stay; they now follow the sentence that
+                  answers the question a stranger actually arrives with. */}
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#e88f88]">Klinikos</p>
+              <h1 id="public-living-title" className="mt-5 max-w-[900px] text-balance text-[clamp(2.4rem,5.4vw,4.6rem)] font-extralight leading-[1.02] tracking-[-0.045em] text-[#f5edeb]">
+                {KLINIKOS_ONE_LINE}
+              </h1>
+              <p className="mt-6 max-w-[680px] text-sm leading-7 text-[#e2cecb] sm:text-base">
+                {KLINIKOS_SUPPORTING}
+              </p>
+              <p className="mt-4 max-w-[640px] text-[13px] leading-6 text-[#d3bcb8]">
+                {KLINIKOS_ECONOMIC_THESIS}
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  className="inline-flex items-center gap-2 rounded-full bg-[#e6817b] px-6 py-3 text-sm font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
+                  href="/operational-audit"
+                >
+                  See what Klinikos would replace <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
+                <Link
+                  className="inline-flex items-center gap-2 rounded-full border border-[#d9918a]/35 px-6 py-3 text-sm font-semibold text-[#f5edeb] transition hover:border-[#efaaa1]/60 hover:bg-[#e6817b]/10"
+                  href="/how-it-works"
+                >
+                  See how it works
+                </Link>
               </div>
 
-              <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#e88f88]">Klinikos</p>
-              <h1 id="public-living-title" className="mt-5 max-w-[800px] text-balance text-[clamp(3.6rem,8vw,7.8rem)] font-extralight leading-[0.88] tracking-[-0.07em] text-[#f5edeb]">
-                What needs<br />to happen?
-              </h1>
-              <p className="mt-7 max-w-[620px] text-sm leading-7 text-[#d9c4c0] sm:text-base">
-                Tell Zumi what is going on, what you need, or what you want to get done. This public guide will point you toward the right Klinikos next step.
+              <p className="mt-5 max-w-[620px] text-[12px] leading-5 text-[#c6aeaa]">
+                {KLINIKOS_HUMAN_AUTHORITY}
+              </p>
+
+              {/* The composer is the proof, and it comes after the claim. */}
+              <div className="mt-14 flex items-center gap-3" aria-hidden="true">
+                <ZumiOrb state="observing" size={44} />
+                <span className="text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</span>
+              </div>
+              <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
+                {ZUMI_COMPOSER_PROMPT}
+              </p>
+              <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-[#c3aaa6]">
+                Describe something your clinic is dealing with and Zumi will show you where it goes.
               </p>
 
               <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>

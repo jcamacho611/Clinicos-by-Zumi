@@ -77,9 +77,14 @@ describe("public Living Home conversation and accessibility contract", () => {
   it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
-    expect(source).toContain("What needs");
-    expect(source).toContain("to happen?");
-    expect(source).toContain("Tell Zumi what is going on");
+    // The composer keeps its question, but it is no longer the first thing on the page.
+    // An external evaluator reviewed this site and could not work out what the product
+    // was, because the entire first viewport was an orb, a headline reading "What needs
+    // to happen?" and a chat box. The conversation surface stays; it now follows the
+    // sentence that says what Klinikos is.
+    expect(source).toContain("ZUMI_COMPOSER_PROMPT");
+    expect(source).toContain("KLINIKOS_ONE_LINE");
+    expect(source).toContain("KLINIKOS_SUPPORTING");
     expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
