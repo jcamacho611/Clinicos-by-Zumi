@@ -183,7 +183,8 @@ const exactGreeting = /^(?:hey|hi|hello|yo|sup|what'?s up|good morning|good afte
 const exactThanks = /^(?:thanks|thank you|appreciate it|got it|perfect|cool)[!.? ]*$/i;
 const exactHowAreYou = /^(?:how are you|how'?s it going|you good)[!.? ]*$/i;
 const identityQuestion = /^(?:who are you|what are you|what is zumi|who is zumi)[?.! ]*$/i;
-const capabilityQuestion = /^(?:what can you do|how can you help|what can klinikos do|what does klinikos do)[?.! ]*$/i;
+const capabilityQuestion = /^(?:what can (?:you|i) do(?: here)?|what should i do(?: here)?|how can you help|what can klinikos do|what does klinikos do)[?.! ]*$/i;
+const pageContextQuestion = /^(?:what'?s going on(?: here)?|what is going on(?: here)?|what is this(?: page)?|where am i|what am i looking at)[?.! ]*$/i;
 
 function conversationResolution(title: string, body: string): PublicLivingResolution {
   return {
@@ -210,6 +211,12 @@ function casualResponse(prompt: string): PublicLivingResolution | null {
     return conversationResolution(
       "I’m Zumi.",
       "I’m the intelligence inside Klinikos. You can talk to me naturally, and I’ll help you understand what to do next or get you to the right part of Klinikos.",
+    );
+  }
+  if (pageContextQuestion.test(prompt)) {
+    return conversationResolution(
+      "You’re in Klinikos.",
+      "This is the public front door to Klinikos. Tell me what you are trying to run, fix, find, learn, or get done and I’ll point you toward the most useful next step. Private clinic records and actions stay behind sign-in.",
     );
   }
   if (capabilityQuestion.test(prompt)) {
@@ -282,6 +289,17 @@ export function resolvePublicLivingIntent(
       assumption: `Your latest message refines the previous ${label} request rather than starting an unrelated goal.`,
       destination,
       confidence: Math.max(0.52, priorResolution.confidence * 0.9),
+    };
+  }
+
+  if (priorResolution?.title === "Tell me a little more.") {
+    return {
+      kind: "conversation",
+      title: "What outcome are you after?",
+      body: "Give me the result you want in one sentence—for example, fill a shift, fix follow-up, recover revenue, find space, learn a skill, or get to patient access—and I’ll narrow the next step.",
+      assumption: "Your latest message continues the same public conversation, but there still is not enough context to choose a safe destination.",
+      destination: null,
+      confidence: 0.3,
     };
   }
 
