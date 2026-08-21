@@ -5,41 +5,12 @@ import {
   KLINIKOS_SUPPORTING,
 } from "@/lib/brand/canonical-messaging";
 
-/**
- * What public Zumi can answer from, and what it must refuse.
- *
- * Two defects motivate this module, both reproduced before it was written.
- *
- * The public resolver is a synchronous regex matcher with no model behind it, so any
- * phrase its rules did not match fell through to one hardcoded sentence. "whats going"
- * and "what can i do" both returned "Tell me a little more.", which is how three turns
- * in a row felt like talking to a wall. Ordinary questions about the product were
- * unmatched simply because no rule described the product.
- *
- * Worse, a sticky branch attached any unmatched follow-up to the previous destination.
- * "show me Mrs. Smith's patient record" returned "Got it." and routed to EDU, because
- * the turn before it had been about training. A request for a patient record must never
- * be absorbed into whatever the last topic happened to be — on a page that cannot see
- * patient data, the only correct answer is to say so.
- *
- * So: the private-data check runs first and is never sticky, and the product answers
- * come from the canonical messaging rather than a second copy of the marketing text.
- */
-
 export interface PublicAnswer {
   readonly title: string;
   readonly body: string;
-  /** A public route to offer, or null when the answer is complete on its own. */
   readonly destination: { readonly key: "explore" | "signin" | "grid" | "edu"; readonly href: string; readonly action: string } | null;
 }
 
-/**
- * Phrases that mean "show me real clinical or personal data".
- *
- * Deliberately broad. A false positive costs one honest sentence explaining that this
- * page cannot see records; a false negative means public Zumi answered as though it
- * could, or quietly filed the request under an unrelated topic.
- */
 const PRIVATE_DATA = [
   /\b(?:patient|medical|health)\s+(?:record|records|chart|charts|file|files|history|data|info|information)\b/i,
   /\b(?:show|pull|open|find|get|look\s*up|see)\b[^.?!]{0,40}\b(?:chart|record|records|labs?|results?|prescription|medication list)\b/i,
@@ -52,7 +23,6 @@ export function looksLikePrivateDataRequest(prompt: string): boolean {
   return PRIVATE_DATA.some((pattern) => pattern.test(prompt));
 }
 
-/** The one honest answer to a records request on a page with no access to records. */
 export function privateDataAnswer(): PublicAnswer {
   return {
     title: "I can’t see patient information here.",
@@ -65,10 +35,9 @@ export function privateDataAnswer(): PublicAnswer {
 }
 
 /**
- * Questions about the product itself, answered from the canonical description.
- *
- * These are not conversation scripts. Each is a real question a visitor asks in the
- * first thirty seconds, and every one of them used to hit the generic fallback.
+ * Fast, public-safe answers used both as cheap deterministic Tier 0 responses and as the
+ * browser's emergency path if the server conversation boundary cannot be reached. They
+ * must therefore remain useful on their own rather than behaving like a routing menu.
  */
 const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnswer }> = [
   {
@@ -80,17 +49,44 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
     }),
   },
   {
-    // Deliberately not a bare "help me". That hijacked real requests — "help me run my
-    // clinic" is a clinic-operations intent and belongs to the routing rules, not to a
-    // generic capability answer.
-    match: /\b(?:what can i do|what can you do|how can you help|what are my options|where do i start|how do i start)\b/i,
+    match: /\b(?:what can (?:i|you|we) do|how can you help|how could you help|what are my options|where do i start|how do i start|like what|what else)\b/i,
     answer: () => ({
-      title: "Here’s what this page can actually do.",
+      title: "There are a few very different things we can solve.",
       body:
-        "Tell me what your clinic is dealing with and I’ll point you at the part of Klinikos that owns it — "
-        + "cover for a shift, a room or equipment you need, follow-up that keeps slipping, or training. "
-        + "You can also see what Klinikos would replace in your current software, or read how it works.",
-      destination: { key: "explore", href: "/operational-audit", action: "See what Klinikos would replace" },
+        "For a clinic, Klinikos can help organize scheduling, intake, team tasks, callbacks, referrals, documents, billing follow-through and revenue work. "
+        + "Grid covers healthcare people, work, space, equipment and services. EDU covers learning and synthetic practice. "
+        + "Tell me who you are or what keeps going wrong and I’ll tailor the next answer instead of making you pick a module.",
+      destination: null,
+    }),
+  },
+  {
+    match: /\b(?:i(?:'m| am)|im)\s+(?:a\s+)?(?:doctor|physician|m\.?d\.?)\b/i,
+    answer: () => ({
+      title: "That gives me a much better starting point.",
+      body:
+        "If you practice as a physician, Klinikos is most useful for the operational work around care rather than replacing your judgment: intake, scheduling, team tasks, follow-up, referrals, documents, billing follow-through and outside capacity through Grid. "
+        + "If you also own or manage the practice, I can go deeper into staffing, missed revenue and operating workflow. Are you mainly practicing, running the business, or both?",
+      destination: null,
+    }),
+  },
+  {
+    match: /\b(?:i own|i run|i operate)\s+(?:my\s+|a\s+|the\s+)?(?:clinic|practice|med spa|medical practice)\b/i,
+    answer: () => ({
+      title: "Then we can focus on the operation, not just the software.",
+      body:
+        "I can help you work through where intake, staff ownership, callbacks, referrals, billing follow-through, capacity or revenue are getting stuck and connect that problem to the relevant Klinikos workflow. "
+        + "A useful place to start is the part of the practice that wastes the most time or loses the most follow-through.",
+      destination: null,
+    }),
+  },
+  {
+    match: /\b(?:i(?:'m| am)|im)\s+(?:an?\s+)?(?:nurse practitioner|np|physician assistant|pa|registered nurse|rn|nurse|therapist|injector)\b/i,
+    answer: () => ({
+      title: "I can tailor this around your healthcare role.",
+      body:
+        "Klinikos can help with the operational work around care, including schedules, tasks, follow-up, referrals and documents, while Grid can help with healthcare capacity and opportunities. "
+        + "Tell me whether you are trying to improve work inside a clinic, find opportunities, or solve a specific workflow and I’ll make the next step concrete.",
+      destination: null,
     }),
   },
   {
@@ -99,8 +95,8 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
       title: "Pricing depends on what it replaces.",
       body:
         "Klinikos is priced against the whole stack a clinic already pays for, not against a single EHR seat. "
-        + "The quickest honest answer is to put your current software costs in and see the difference.",
-      destination: { key: "explore", href: "/operational-audit", action: "See what Klinikos would replace" },
+        + "The useful comparison is the scheduling, messaging, forms, documents, task, follow-up and revenue tools the clinic is already carrying alongside its clinical systems.",
+      destination: { key: "explore", href: "/operational-audit", action: "Compare your current stack" },
     }),
   },
   {
@@ -110,7 +106,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
       body:
         "An EHR stores and documents clinical information. Klinikos coordinates the work that happens around "
         + "it — scheduling, follow-up, tasks, documents, referrals and revenue work — and connects to the "
-        + "systems that have to stay external, like your clearinghouse and eRx.",
+        + "systems that have to stay external.",
       destination: { key: "explore", href: "/how-it-works", action: "See how it works" },
     }),
   },
@@ -118,7 +114,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
     match: /\b(?:what is|what'?s|tell me about)\s+(?:the\s+)?grid\b/i,
     answer: () => ({
       title: "Grid is the network.",
-      body: `${KLINIKOS_ECOSYSTEM[2].sentence} Listing and searching are free, and declining an offer costs nothing.`,
+      body: `${KLINIKOS_ECOSYSTEM[2].sentence} It is broader than staffing: healthcare work, people, rooms, space, equipment, services and other capacity can belong there, subject to the requirements for each opportunity.`,
       destination: { key: "grid", href: "/grid", action: "Open Grid" },
     }),
   },
@@ -126,7 +122,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
     match: /\b(?:what is|what'?s|tell me about)\s+(?:klinikos\s+)?edu\b/i,
     answer: () => ({
       title: "EDU is the learning system.",
-      body: KLINIKOS_ECOSYSTEM[3].sentence,
+      body: `${KLINIKOS_ECOSYSTEM[3].sentence} Learning and readiness do not by themselves verify a license, credential or eligibility for regulated work.`,
       destination: { key: "edu", href: "/edu", action: "Explore EDU" },
     }),
   },
@@ -146,38 +142,36 @@ export function answerProductQuestion(prompt: string): PublicAnswer | null {
 }
 
 /**
- * The last resort, which must not be the same sentence every time.
+ * Absolute last-resort responses for the deterministic/browser emergency path.
  *
- * Repeating one fallback is what made the conversation feel broken: two different
- * questions produced identical text, so the page looked like it had stopped listening.
- * These rotate on how many times the conversation has already failed to land, and each
- * one asks for something more specific than the last.
+ * These intentionally do not escalate toward "go read the site". Even without model
+ * inference, each response provides substantive options and asks for one useful piece of
+ * context. A provider outage may reduce sophistication; it must not erase helpfulness.
  */
 const ESCALATING_FALLBACKS: readonly PublicAnswer[] = [
   {
-    title: "Say a bit more and I’ll point you somewhere useful.",
+    title: "I can still give you a useful starting point.",
     body:
-      "Are you asking what Klinikos does for a clinic, or what you can do from this page? Either is fine — "
-      + "a sentence about what you are trying to get done is enough.",
+      "If you are running a clinic, I can help with follow-up, staffing, scheduling, referrals, billing workflow, revenue recovery or the software stack. "
+      + "If you are a healthcare professional, Grid can also help with healthcare opportunities and capacity. If you are learning, EDU is the relevant path. Which of those is closest to what you are trying to do?",
     destination: null,
   },
   {
-    title: "Let me offer some directions.",
+    title: "Let’s narrow it from your role or the problem.",
     body:
-      "People usually arrive here for one of four things: cover for a shift, space or equipment, follow-up "
-      + "that keeps slipping, or training. If none of those fit, tell me what your clinic is struggling with.",
+      "You can tell me something as simple as ‘I’m a doctor,’ ‘I run the practice,’ ‘we miss callbacks,’ ‘I need a nurse Friday,’ ‘I need a room,’ or ‘I’m in nursing school.’ "
+      + "Any one of those gives me enough context to make the next answer specific.",
     destination: null,
   },
   {
-    title: "It might be quicker to look around.",
+    title: "Here are the main problem types I can help unpack.",
     body:
-      "I am not picking up enough to route you well. How it works explains the product end to end, and the "
-      + "operating analysis shows what Klinikos would replace in your current software.",
-    destination: { key: "explore", href: "/how-it-works", action: "See how it works" },
+      "Clinic operations covers intake, scheduling, team ownership, follow-up, referrals, documents, billing and revenue work. Grid covers people, work, space, equipment and services. EDU covers learning and synthetic practice. "
+      + "Tell me the part of your day that is breaking and I’ll connect it to a concrete next step.",
+    destination: null,
   },
 ];
 
-/** Pick a fallback that has not just been used. `attempt` is how many have preceded it. */
 export function escalatingFallback(attempt: number): PublicAnswer {
   const index = Math.min(Math.max(attempt, 0), ESCALATING_FALLBACKS.length - 1);
   return ESCALATING_FALLBACKS[index];
