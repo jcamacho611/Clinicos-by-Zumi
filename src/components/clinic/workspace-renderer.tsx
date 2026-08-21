@@ -155,7 +155,7 @@ export async function WorkspaceRenderer({ organizationId, role, userId, workspac
     }
     case "insights": return <InsightsWorkspace picture={await getInsightsPicture({ organizationId, role })} />;
     case "expert-support": return <ExpertSupportWorkspace picture={await listExpertSupportRequests({ organizationId, role })} />;
-    case "action-center": return <ActionCenterWorkspace center={await getActionCenter({ organizationId, role, userId })} />;
+    case "action-center": return <ActionCenterWorkspace center={await getActionCenter({ organizationId, role, userId })} userId={userId} />;
     case "messages": return <MessagesWorkspace />;
     case "tasks": {
       if (!can(role, "tasks", "read")) return notFound();

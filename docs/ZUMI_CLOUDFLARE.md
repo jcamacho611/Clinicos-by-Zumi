@@ -12,6 +12,8 @@ replace the governed Zumi gateway. It is one provider adapter behind that gatewa
 - Metadata-only AI Gateway logging by default via `cf-aig-collect-log-payload: false`.
 - Existing Zumi admission, redaction, audit, metering, kill switch, and human-review
   rules remain in force.
+- Explicit current-model cost rates so Cloudflare calls participate in the same
+  `costMicroUsd` accounting and deep-cognition spend budget as other paid providers.
 
 ## Required configuration
 
@@ -21,8 +23,16 @@ Set these values in the deployment secret store, never in source control:
 ZUMI_PROVIDER=cloudflare
 ZUMI_CLOUDFLARE_ACCOUNT_ID=<cloudflare-account-id>
 ZUMI_CLOUDFLARE_API_TOKEN=<scoped-workers-ai-token>
-ZUMI_CLOUDFLARE_MODEL=@cf/meta/llama-3.1-8b-instruct-fast
+ZUMI_CLOUDFLARE_MODEL=<exact-active-workers-ai-model>
+ZUMI_CLOUDFLARE_INPUT_MICRO_USD_PER_M_TOKENS=<current-model-input-rate>
+ZUMI_CLOUDFLARE_OUTPUT_MICRO_USD_PER_M_TOKENS=<current-model-output-rate>
 ```
+
+The two cost variables are **integer micro-USD per one million tokens**. For example,
+`45000` means `$0.045 per million tokens`. Populate them from the current official
+Cloudflare pricing for the exact selected model and re-check them whenever the model
+or provider pricing changes. Do not copy a stale rate from this document into
+production.
 
 Optional:
 
@@ -33,9 +43,9 @@ ZUMI_CLOUDFLARE_GATEWAY_ID=default
 Leaving the gateway ID blank is equivalent to `default` in the adapter. Cloudflare can
 create that default gateway on first use. Do not expose the API token to the browser.
 
-The previously documented `@cf/meta/llama-3.1-8b-instruct` model was deprecated by
-Cloudflare on 2026-05-30. The `-fast` variant remains active at this update; model
-availability is an external dependency and must be re-verified before future changes.
+Model availability is an external dependency and must be re-verified before future
+changes. A model name present in repository history is not proof that Cloudflare still
+serves it.
 
 ## Runtime contract
 
@@ -67,14 +77,31 @@ infrastructure posture appropriate to the intended healthcare data flow.
 
 ## Cost truth
 
-`ProviderResult.costMicroUsd` remains `0` for this adapter because Workers AI usage and
-free-tier allowances are not safely derivable from the chat-completions token counts in
-the application response. This must not be interpreted as a promise that Cloudflare
-usage is always free.
+Cloudflare publishes model-specific Workers AI pricing and, as of the 2026-08-20
+review, also describes an account-level daily free allocation before paid neuron
+usage. Those account-wide allocations or credits cannot be truthfully assigned to an
+individual request from the chat-completions response alone.
 
-Klinikos should treat Cloudflare as a low-cost inference rail and enforce spend at the
-provider/account layer until a trustworthy per-request billing signal is available to
-the gateway.
+Klinikos therefore records a **conservative marginal request cost** using the exact
+model's operator-configured current input/output rates and the token counts returned by
+Cloudflare. It deliberately does not subtract an account-wide free allocation from a
+single request.
+
+This matters for more than reporting. `ProviderResult.costMicroUsd` is aggregated by
+Zumi's cognition loop and compared with `ZUMI_MAX_TURN_COST_MICRO_USD`. Reporting zero
+for a paid provider would allow multi-pass cognition to bypass the product's intended
+per-turn spend ceiling and would understate tenant cost-to-serve.
+
+The rates are deployment configuration rather than hardcoded constants because:
+
+- Cloudflare pricing is model-specific;
+- model availability and rates can change;
+- Klinikos can change the selected model without application-code edits;
+- old source code must not silently become the billing authority for a new provider
+  rate.
+
+Provider/account-level budget alerts remain useful defense in depth. They do not
+replace application-level cost metering.
 
 ## Activation checklist
 
@@ -83,14 +110,18 @@ the gateway.
 3. Create a scoped Workers AI / AI Gateway API token.
 4. Copy the account ID.
 5. Choose and test an active model identifier in Cloudflare.
-6. Add the required environment variables to the production secret store.
-7. Keep `ZUMI_PHI_EGRESS_APPROVED` blank unless a separate approved PHI posture exists.
-8. Leave the gateway ID blank/use `default`, or explicitly select a reviewed gateway.
-9. Run the Zumi gateway tests and the Cloudflare adapter tests.
-10. Exercise a non-PHI Zumi request and confirm provider/model/outcome audit metadata.
-11. Confirm AI Gateway retains metadata but not raw request/response payloads.
-12. Verify provider-side rate/spend controls before scaling traffic.
-13. Only then promote the provider connection as production-live.
+6. Read the current official price for that exact model and convert the input/output
+   rates to integer micro-USD per million tokens.
+7. Add the required environment variables to the production secret store.
+8. Keep `ZUMI_PHI_EGRESS_APPROVED` blank unless a separate approved PHI posture exists.
+9. Leave the gateway ID blank/use `default`, or explicitly select a reviewed gateway.
+10. Run the Zumi gateway tests and the Cloudflare adapter tests.
+11. Exercise a non-PHI Zumi request and confirm provider/model/token/cost/outcome audit
+    metadata.
+12. Confirm AI Gateway retains metadata but not raw request/response payloads.
+13. Confirm the same request cost contributes to the configured Zumi turn budget.
+14. Verify provider-side rate/spend controls before scaling traffic.
+15. Only then promote the provider connection as production-live.
 
 ## Rollback
 

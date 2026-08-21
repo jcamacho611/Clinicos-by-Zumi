@@ -21,8 +21,14 @@ describe("Klinikos landing funnel", () => {
     // A marketing page carrying its own numbers is a second source of truth, and the
     // two drift the first time one changes. Prices are read from the commercial
     // module; the page and component must contain no currency literal of their own.
+    // Comments are stripped first. The invariant is about what reaches the rendered
+    // surface, and a guard that also fails on the sentence explaining a pricing decision
+    // punishes the documentation rather than the defect — it flagged the note recording
+    // why the free check stopped being labelled with the paid price.
+    const withoutComments = (source: string) =>
+      source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     for (const [label, source] of [["page", page], ["component", component]] as const) {
-      const literals = [...source.matchAll(/\$[\d,]+/g)].map((match) => match[0]);
+      const literals = [...withoutComments(source).matchAll(/\$[\d,]+/g)].map((match) => match[0]);
       expect(literals, `${label} hardcodes ${literals.join(", ")}`).toEqual([]);
     }
   });

@@ -2,28 +2,28 @@
  * Keep this layer narrow: it reconciles approved Living Home geometry with the newer
  * interaction law without baking product UI into images or weakening domain truth. */
 
-/* The visible center Zumi orb is the public Living Home submit control. The old arrow
- * becomes a transparent hit target over the approved orb instead of a second send icon. */
+/* The public Living Home composer now renders a normal two-control layout: a real
+ * textarea and a visible send button. An older reference-locked treatment turned the
+ * submit button into an absolute, transparent 96px hit target over a Zumi orb and hid
+ * its icon. That markup no longer exists, so retaining that override made the composer
+ * visually misleading and broke responsive sizing. Keep controls in normal layout and
+ * let the component's design-system classes own their visual treatment. */
+#living-composer .reference-composer-shell > textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
 #living-composer .reference-composer-shell > button[type="submit"] {
-  position:absolute;
-  left:50%;
-  top:50%;
-  z-index:8;
-  width:96px;
-  height:96px;
-  transform:translate(-50%,-50%);
-  border:0;
-  background:transparent;
-  box-shadow:none;
-  color:transparent;
+  position: static;
+  flex: 0 0 auto;
+  transform: none;
 }
-#living-composer .reference-composer-shell > button[type="submit"] svg {display:none}
+
 #living-composer .reference-composer-shell > button[type="submit"]:focus-visible {
-  outline:2px solid #efaaa1;
-  outline-offset:5px;
+  outline: 2px solid #efaaa1;
+  outline-offset: 3px;
 }
-#living-composer .reference-composer-shell > button[type="submit"]:disabled {opacity:.42}
-#living-composer .reference-zumi {z-index:6;pointer-events:none}
 
 /* Premium light-mode readability. Existing atmosphere logic remains the single theme
  * authority; these rules simply prevent cinematic text treatments from becoming faint
@@ -37,10 +37,6 @@ html[data-klinikos-atmosphere="golden"] .klinikos-platform {
 html[data-klinikos-atmosphere="day"] .k-muted,
 html[data-klinikos-atmosphere="dawn"] .k-muted,
 html[data-klinikos-atmosphere="golden"] .k-muted {color:color-mix(in srgb,var(--k-text) 68%,transparent)}
-
-@media (max-width: 640px) {
-  #living-composer .reference-composer-shell > button[type="submit"] {width:78px;height:78px}
-}
 
 @media (prefers-reduced-motion: reduce) {
   #living-composer .reference-composer-shell > button[type="submit"] {transition:none}

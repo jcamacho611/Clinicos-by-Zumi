@@ -209,6 +209,23 @@ describe("the action centre surface", () => {
     expect(surface).toContain("Nothing is waiting on anyone.");
   });
 
+  it("calls the governed task routes rather than writing its own", () => {
+    // The Action Center gets no privileges of its own. Both controls go through the
+    // existing endpoints, which enforce tasks:update, scope to the caller's
+    // organization and write an audit row.
+    const controls = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/action-center-controls.tsx"), "utf8");
+    expect(controls).toContain("/api/tasks/${taskId}/assign");
+    expect(controls).toContain("/api/tasks/${taskId}/transition");
+    expect(controls, "no direct database or repository access from the browser").not.toMatch(/@\/lib\/db|prisma/i);
+  });
+
+  it("re-reads from the server instead of guessing the new state", () => {
+    // A row leaves the list because the task changed, not because a button was pressed.
+    // Optimistic removal makes the list quietly disagree with the database.
+    const controls = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/action-center-controls.tsx"), "utf8");
+    expect(controls).toContain("router.refresh()");
+  });
+
   it("never draws a zero count", () => {
     expect(surface).toContain("bucket.count > 0 ?");
   });

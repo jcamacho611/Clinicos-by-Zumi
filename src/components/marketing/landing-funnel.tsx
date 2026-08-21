@@ -274,15 +274,21 @@ export function LandingFunnel({
 
       <section className="border-t border-[var(--line-dark)] bg-[var(--surface-raised)]" id="funnel">
         <div className="mx-auto max-w-[var(--container-max)] px-5 py-20 sm:px-8 lg:px-12">
+          {/* This block is the FREE check, and it used to be headed "Clinic Operating
+              Analysis · $500" — the price of the paid service. A visitor read that one of
+              two ways, and both were bad: either the two-question widget costs $500, or
+              the $500 service is nothing more than a questionnaire. Neither is true. The
+              free thing is now named as free, and the paid service is described on its
+              own terms further down. */}
           <p className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">
-            Clinic Operating Analysis · {analysisPriceLabel}
+            Clinic continuity check · Free
           </p>
           <h2 className="mt-4 max-w-3xl text-3xl font-light tracking-[var(--tracking-tight)]">
             Two questions. Then what Klinikos would look at first.
           </h2>
           <Rule>
             No PHI. No integration. Nothing is sent anywhere — this runs in your browser and reflects only what you
-            select. {analysisCredit}
+            select. It is a starting point, not a financial analysis.
           </Rule>
 
           {step === 1 ? (
@@ -382,6 +388,15 @@ export function LandingFunnel({
                 >
                   Change answers
                 </button>
+                {/* The other free step. A visitor who wants numbers rather than a list of
+                    gaps should be able to get to the stack comparison without paying
+                    first, and without being told this widget was the analysis. */}
+                <Link
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[var(--line-dark)] px-6 text-xs font-semibold transition-opacity hover:opacity-80"
+                  href="/operational-audit"
+                >
+                  See what Klinikos would replace <ArrowRight className="size-4" />
+                </Link>
                 {contactEmail ? (
                   <a
                     className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[var(--accent-intelligence)] px-7 text-xs font-semibold text-[var(--surface-primary)] transition-opacity hover:opacity-90"

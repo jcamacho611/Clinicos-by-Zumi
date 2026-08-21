@@ -50,6 +50,12 @@ export type ProviderRequest = {
   signal?: AbortSignal;
   /** Optional provider-native conversation continuity. */
   previousResponseId?: string | null;
+  /**
+   * Whether a provider that supports response retention may store this turn. Omitted
+   * preserves the adapter's existing authenticated/default behavior. Public anonymous
+   * surfaces should explicitly set this to false.
+   */
+  storeResponse?: boolean;
   /** Optional capabilities. An adapter that does not support one simply ignores it. */
   allowWebSearch?: boolean;
   allowKnowledgeSearch?: boolean;

@@ -32,7 +32,13 @@ export const marketplacePalette = {
 } as const;
 
 export const marketplaceSurfaces = {
-  page: "min-h-screen bg-[#f7f3ef] text-[#241517]",
+  /* `grid-marble-surface` declares this a light surface so the legacy dark-theme
+     conversion leaves it alone. Without it the layer remapped authored colours that
+     were correct for a light page — text-[#5b6675] became a pale rose on cream at
+     2.26:1 — while the page's own backgrounds stayed light. The class supplies the
+     background and base text colour; a bg-* utility alongside it only re-opens the
+     specificity fight the layer already loses badly. */
+  page: "grid-marble-surface min-h-screen",
   card: "border border-[#e8ded9] bg-[#fffdf9]",
   cardInteractive:
     "border border-[#e8ded9] bg-[#fffdf9] transition-[border-color,background-color] duration-200 hover:border-[#a8474e]/45 hover:bg-white focus-within:border-[#a8474e]",
