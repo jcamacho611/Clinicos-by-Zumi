@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
+import { publicZumiDurableQuotaAttested } from "@/features/zumi/public-quota-attestation";
 import { resolvePublicZumiTurn } from "@/features/zumi/public-intelligence";
 
 export const maxDuration = 20;
@@ -81,8 +82,9 @@ async function boundedJson(request: Request) {
 
 export async function POST(request: Request) {
   // Origin is defense-in-depth, not authentication: non-browser callers can forge it.
-  // The real public boundary is bounded input + rate limiting + no tenant/private data
-  // + pre-provider minimization + zero authenticated tools/actions.
+  // Paid anonymous inference additionally requires durable quota evidence from a trusted
+  // edge/data-layer authority. Browser-controlled IP headers and this process-local
+  // limiter are never sufficient authority to spend provider money.
   if (!originAccepted(request)) {
     return NextResponse.json({ error: "Public conversation is not available from this source." }, { status: 403, headers: NO_STORE_HEADERS });
   }
@@ -105,6 +107,17 @@ export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(body.value);
   if (!parsed.success) {
     return NextResponse.json({ error: "That message could not be processed." }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+
+  // The client already has a deterministic public fallback. If the durable quota
+  // authority is absent, unavailable, or did not attest this request, fail closed here
+  // so the browser uses that no-cost path rather than letting spoofable forwarded-IP
+  // metadata authorize paid model execution.
+  if (!publicZumiDurableQuotaAttested(request)) {
+    return NextResponse.json(
+      { error: "Public intelligence is temporarily using local guidance." },
+      { status: 503, headers: { ...NO_STORE_HEADERS, "Retry-After": "60" } },
+    );
   }
 
   const result = await resolvePublicZumiTurn(parsed.data);

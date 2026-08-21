@@ -11,6 +11,7 @@ describe("public Zumi API disclosure and abuse contract", () => {
   const service = source("src/features/zumi/public-intelligence.ts");
   const providers = source("src/features/zumi/providers.ts");
   const openAI = source("src/features/zumi/adapters/openai-responses.ts");
+  const quota = source("src/features/zumi/public-quota-attestation.ts");
 
   it("keeps anonymous input bounded and no-store while allowing enough recent turns for role continuity", () => {
     expect(route).toContain("MAX_BODY_BYTES = 16 * 1024");
@@ -23,12 +24,19 @@ describe("public Zumi API disclosure and abuse contract", () => {
     expect(route).toContain('Vary: "Origin"');
   });
 
-  it("requires an allowed public origin and a public-specific rate-limit key", () => {
+  it("keeps the process limiter as defense-in-depth but requires durable attestation before paid inference", () => {
     expect(route).toContain("originAccepted(request)");
     expect(route).toContain('"https://klinikos.io"');
     expect(route).toContain('"https://www.klinikos.io"');
     expect(route).toContain("public-zumi:");
     expect(route).toContain("checkZumiProcessRateLimit");
+    expect(route).toContain("publicZumiDurableQuotaAttested(request)");
+    expect(route.indexOf("publicZumiDurableQuotaAttested(request)")).toBeLessThan(route.indexOf("resolvePublicZumiTurn(parsed.data)"));
+    expect(quota).toContain('PUBLIC_ZUMI_DURABLE_QUOTA_MODE');
+    expect(quota).toContain('PUBLIC_ZUMI_DURABLE_QUOTA_ATTESTATION_SECRET');
+    expect(quota).toContain('timingSafeEqual');
+    expect(quota).not.toContain('x-forwarded-for');
+    expect(quota).not.toContain('x-real-ip');
   });
 
   it("returns presentation only and does not disclose provider economics or internal routing state", () => {
