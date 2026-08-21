@@ -36,6 +36,17 @@ function configuredOrigins() {
       // Misconfigured public app URL must not broaden the origin allowlist.
     }
   }
+  const additional = process.env.PUBLIC_ZUMI_ALLOWED_ORIGINS
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean) ?? [];
+  for (const value of additional) {
+    try {
+      origins.add(new URL(value).origin);
+    } catch {
+      // Ignore malformed operator entries instead of weakening the check.
+    }
+  }
   if (process.env.NODE_ENV !== "production") {
     origins.add("http://localhost:3000");
     origins.add("http://127.0.0.1:3000");
@@ -45,7 +56,15 @@ function configuredOrigins() {
 
 function originAccepted(request: Request) {
   const origin = request.headers.get("origin");
-  return Boolean(origin && configuredOrigins().has(origin));
+  if (!origin) return false;
+  try {
+    // Same-origin preview/development deployments remain usable without hardcoding every
+    // ephemeral host. The fixed/configured allowlist covers canonical alternate origins.
+    if (origin === new URL(request.url).origin) return true;
+  } catch {
+    return false;
+  }
+  return configuredOrigins().has(origin);
 }
 
 async function boundedJson(request: Request) {
