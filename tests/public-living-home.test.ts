@@ -44,8 +44,9 @@ describe("public Living Home intent", () => {
     const resolution = resolvePublicLivingIntent("Help me make this better");
     expect(resolution.kind).toBe("conversation");
     expect(resolution.destination).toBeNull();
-    expect(resolution.title).toBe("Tell me a little more.");
-    expect(resolution.body).toContain("What’s going on");
+    expect(resolution.title.length).toBeGreaterThan(0);
+    expect(resolution.body.length).toBeGreaterThan(40);
+    expect(resolution.title).not.toBe("Tell me a little more.");
   });
 
   it("preserves a known destination when a short follow-up adds context", () => {
@@ -87,10 +88,11 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(page).not.toContain("PublicConversionBridge");
   });
 
-  it("uses bounded server intelligence while preserving a deterministic degraded path", () => {
+  it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {
     expect(source).toContain('fetch("/api/zumi/public"');
     expect(source).toContain("resolvePublicLivingIntent");
-    expect(source).toContain("const fallback = resolvePublicLivingIntent");
+    expect(source).toContain("let unresolvedTurns = 0");
+    expect(source).toContain("resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns)");
     expect(source).toContain("Public Zumi can answer general Klinikos questions");
     expect(publicRoute).toContain("resolvePublicZumiTurn");
     expect(publicRoute).not.toContain("getClinicSession");
