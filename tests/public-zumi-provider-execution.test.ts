@@ -42,7 +42,7 @@ function fakeProvider(requests: ProviderRequest[]): ProviderAdapter {
 }
 
 describe("public Zumi provider execution", () => {
-  it("uses the provider for free-form product conversation with storage and every optional tool disabled", async () => {
+  it("uses the provider for free-form product conversation with retention and every optional tool disabled", async () => {
     delete process.env.ZUMI_PROVIDER;
     delete process.env.ZUMI_DISABLED;
     resetProviderRegistry();
@@ -67,14 +67,13 @@ describe("public Zumi provider execution", () => {
     });
     expect(requests[0].prompt).toContain("front desk more reliable");
     expect(requests[0].prompt).toContain("staff keeps forgetting callbacks");
+    expect(requests[0].system).toContain("CURRENT CONVERSATION STATE");
+    expect(requests[0].system).toContain("PUBLIC-SAFE KLINIKOS KNOWLEDGE");
     expect(result.modelGenerated).toBe(true);
     expect(result.intelligenceAvailable).toBe(true);
     expect(result.degradedReason).toBeNull();
     expect(result.resolution.title).toBe("Fix the follow-up loop");
     expect(result.resolution.body).toContain("callback work visible");
-    // The verified deterministic path now recognizes callbacks + forgetting as a
-    // follow-up continuity problem. The model can improve the prose without throwing
-    // away that safe, high-confidence route or falling back to the weaker "staff" token.
     expect(result.resolution.destination).toMatchObject({ key: "referrals", href: "/referrals" });
   });
 
@@ -90,10 +89,10 @@ describe("public Zumi provider execution", () => {
     expect(requests).toHaveLength(0);
     expect(result.modelGenerated).toBe(false);
     expect(result.degradedReason).toBe("privacy_boundary");
-    expect(result.resolution.destination).toMatchObject({ href: "/dashboard" });
+    expect(result.resolution.destination).toMatchObject({ key: "signin", href: "/login" });
   });
 
-  it("truthfully degrades to deterministic guidance when inference is disabled", async () => {
+  it("truthfully degrades to solution-first guidance when inference is disabled", async () => {
     delete process.env.ZUMI_PROVIDER;
     process.env.ZUMI_DISABLED = "1";
     resetProviderRegistry();
@@ -106,6 +105,7 @@ describe("public Zumi provider execution", () => {
     expect(result.modelGenerated).toBe(false);
     expect(result.intelligenceAvailable).toBe(false);
     expect(result.degradedReason).toBe("provider_unavailable");
-    expect(result.resolution.destination).toMatchObject({ key: "staffing", href: "/grid" });
+    expect(result.resolution.destination).toMatchObject({ href: "/grid" });
+    expect(result.resolution.body.toLowerCase()).toContain("grid");
   });
 });
