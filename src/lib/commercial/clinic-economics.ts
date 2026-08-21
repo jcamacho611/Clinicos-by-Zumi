@@ -131,7 +131,7 @@ function assertOptionalMoney(name: string, cents: number | null) {
 function assertReplacementShare(item: ClinicStackItem) {
   if (item.replaceability !== "partial") return;
   const share = item.replacementShareBps;
-  if (!Number.isInteger(share) || share === undefined || share < 0 || share > 10_000) {
+  if (share === undefined || !Number.isInteger(share) || share < 0 || share > 10_000) {
     throw new Error(`${item.key}.replacementShareBps must be an integer from 0 to 10000 for partial replacement.`);
   }
 }
