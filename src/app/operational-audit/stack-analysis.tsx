@@ -3,21 +3,31 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { STACK_CATEGORIES, computeStackSavings } from "@/lib/commercial/clinic-stack-savings";
+import { STACK_CATEGORIES, computeStackSavings, type StackCategory } from "@/lib/commercial/clinic-stack-savings";
 
 /**
  * The clinic enters what it already pays. Klinikos shows what it would and would not
- * replace, and what the difference is.
- *
- * Everything shown is arithmetic over numbers the visitor typed. No figure is fetched,
- * inferred or improved, and the page says so. The one design decision worth defending:
- * a clinic with a thin stack sees a negative number rather than a hidden one. A
- * calculator that can only produce good news is a calculator nobody believes, and the
- * clinics it would mislead are exactly the ones that churn.
+ * replace, what is only a transition target today, and what the checkable difference is.
  */
 
 const currency = (cents: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100);
+
+function categoryStatus(category: StackCategory) {
+  if (category.disposition === "connected") {
+    return { label: "Stays connected", color: "#a8c4ea" };
+  }
+  if (category.disposition === "partial") {
+    return { label: "Partly replaced", color: "#f3c98a" };
+  }
+  if (category.replacementReadiness === "counted_now") {
+    return { label: "Counted as replaceable", color: "#8fd9bd" };
+  }
+  if (category.replacementReadiness === "external_connection_required") {
+    return { label: "Connection required", color: "#f3c98a" };
+  }
+  return { label: "Keep during transition", color: "#f3c98a" };
+}
 
 export function StackAnalysis({ klinikosMonthlyCents, implementationCents }: { klinikosMonthlyCents: number; implementationCents: number }) {
   const [entries, setEntries] = useState<Record<string, string>>({});
@@ -44,52 +54,55 @@ export function StackAnalysis({ klinikosMonthlyCents, implementationCents }: { k
           What does your clinic pay each month?
         </h2>
         <p className="mt-2 max-w-xl text-[13px] leading-6" style={{ color: "var(--text-secondary)" }}>
-          Enter what you know. Leave the rest blank — anything you skip is left out of the total rather than
-          guessed at, and the result tells you what it did not count.
+          Enter what you know. Leave the rest blank. Klinikos counts a bill as replaceable only when the current
+          product path is ready enough to defend that claim; transition and external-connection items stay out of savings.
         </p>
 
         <div className="mt-6 space-y-3">
-          {STACK_CATEGORIES.map((category) => (
-            <div
-              className="flex flex-wrap items-center gap-3 rounded-xl border p-3"
-              key={category.key}
-              style={{ borderColor: "var(--line-dark)", background: "var(--surface-secondary)" }}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="text-sm font-semibold" htmlFor={`stack-${category.key}`} style={{ color: "var(--text-primary)" }}>
-                    {category.label}
-                  </label>
-                  <span
-                    className="rounded-full border px-2 py-0.5 text-[11px] font-semibold"
-                    style={
-                      category.disposition === "replaced"
-                        ? { color: "#8fd9bd", borderColor: "#8fd9bd" }
-                        : category.disposition === "connected"
-                          ? { color: "#a8c4ea", borderColor: "#a8c4ea" }
-                          : { color: "#f3c98a", borderColor: "#f3c98a" }
-                    }
-                  >
-                    {category.disposition === "replaced" ? "Klinikos replaces" : category.disposition === "connected" ? "Stays connected" : "Partly replaced"}
-                  </span>
+          {STACK_CATEGORIES.map((category) => {
+            const status = categoryStatus(category);
+            const transition = category.disposition === "replaced" && category.replacementReadiness !== "counted_now";
+            return (
+              <div
+                className="flex flex-wrap items-center gap-3 rounded-xl border p-3"
+                key={category.key}
+                style={{ borderColor: "var(--line-dark)", background: "var(--surface-secondary)" }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-sm font-semibold" htmlFor={`stack-${category.key}`} style={{ color: "var(--text-primary)" }}>
+                      {category.label}
+                    </label>
+                    <span
+                      className="rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                      style={{ color: status.color, borderColor: status.color }}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12px]" style={{ color: "var(--text-secondary)" }}>{category.examples}</p>
+                  {transition ? (
+                    <p className="mt-1 text-[11px] leading-5" style={{ color: "var(--text-secondary)" }}>
+                      {category.readinessReason}
+                    </p>
+                  ) : null}
                 </div>
-                <p className="mt-1 text-[12px]" style={{ color: "var(--text-secondary)" }}>{category.examples}</p>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm" style={{ color: "var(--text-secondary)" }}>$</span>
+                  <input
+                    className="w-24 rounded-lg border px-2 py-2 text-sm"
+                    id={`stack-${category.key}`}
+                    inputMode="decimal"
+                    onChange={(event) => setEntries((prior) => ({ ...prior, [category.key]: event.target.value }))}
+                    placeholder="0"
+                    style={{ borderColor: "var(--line-dark)", background: "var(--surface-raised)", color: "var(--text-primary)" }}
+                    value={entries[category.key] ?? ""}
+                  />
+                  <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>/mo</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>$</span>
-                <input
-                  className="w-24 rounded-lg border px-2 py-2 text-sm"
-                  id={`stack-${category.key}`}
-                  inputMode="decimal"
-                  onChange={(event) => setEntries((prior) => ({ ...prior, [category.key]: event.target.value }))}
-                  placeholder="0"
-                  style={{ borderColor: "var(--line-dark)", background: "var(--surface-raised)", color: "var(--text-primary)" }}
-                  value={entries[category.key] ?? ""}
-                />
-                <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>/mo</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -109,8 +122,12 @@ export function StackAnalysis({ klinikosMonthlyCents, implementationCents }: { k
                   <dd className="font-semibold" style={{ color: "var(--text-primary)" }}>{currency(result.currentMonthlyCents)}/mo</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-4">
-                  <dt style={{ color: "var(--text-secondary)" }}>Klinikos would replace</dt>
+                  <dt style={{ color: "var(--text-secondary)" }}>Counted as replaceable now</dt>
                   <dd className="font-semibold" style={{ color: "#8fd9bd" }}>{currency(result.replaceableMonthlyCents)}/mo</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt style={{ color: "var(--text-secondary)" }}>Replacement target, not counted yet</dt>
+                  <dd className="font-semibold" style={{ color: "var(--text-primary)" }}>{currency(result.transitionMonthlyCents)}/mo</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-4">
                   <dt style={{ color: "var(--text-secondary)" }}>Stays connected, keeps its bill</dt>
@@ -128,23 +145,29 @@ export function StackAnalysis({ klinikosMonthlyCents, implementationCents }: { k
 
               <div className="mt-5 rounded-xl border p-4" style={{ borderColor: "var(--line-dark)", background: "var(--surface-raised)" }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[.14em]" style={{ color: "var(--text-secondary)" }}>
-                  {saving ? "Estimated monthly change" : "This stack costs less than Klinikos today"}
+                  {saving ? "Estimated monthly software change" : "Counted replacement spend is below Klinikos today"}
                 </p>
                 <p className="mt-1 text-3xl font-semibold tracking-[-.04em]" style={{ color: saving ? "#8fd9bd" : "var(--text-primary)" }}>
                   {saving ? "−" : "+"}{currency(Math.abs(result.netMonthlyChangeCents))}/mo
                 </p>
                 <p className="mt-2 text-[13px] leading-6" style={{ color: "var(--text-secondary)" }}>
                   {saving
-                    ? `About ${currency(Math.abs(result.netAnnualChangeCents))} a year, before implementation.`
-                    : "On software cost alone, Klinikos would cost you more. Whether the operating capability is worth that is a fair question to put to us directly."}
+                    ? `About ${currency(Math.abs(result.netAnnualChangeCents))} a year in currently countable software savings, before implementation.`
+                    : "On currently countable software replacement alone, Klinikos would cost you more. Transition targets are deliberately excluded until their real deployment dependencies are closed."}
                 </p>
                 {result.paybackMonths !== null ? (
                   <p className="mt-3 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                    Implementation {currency(result.implementationCents)} · pays back in about{" "}
+                    Implementation {currency(result.implementationCents)} · software-only payback in about{" "}
                     <strong style={{ color: "var(--text-primary)" }}>{result.paybackMonths} months</strong>.
                   </p>
                 ) : null}
               </div>
+
+              {result.transitionCategories.length > 0 ? (
+                <p className="mt-4 text-[12px] leading-5" style={{ color: "var(--text-secondary)" }}>
+                  Not counted as removable yet: {result.transitionCategories.join(", ")}.
+                </p>
+              ) : null}
 
               {result.unansweredCategories.length > 0 ? (
                 <p className="mt-4 text-[12px] leading-5" style={{ color: "var(--text-secondary)" }}>
@@ -153,8 +176,8 @@ export function StackAnalysis({ klinikosMonthlyCents, implementationCents }: { k
               ) : null}
 
               <p className="mt-4 text-[12px] leading-5" style={{ color: "var(--text-secondary)" }}>
-                Every figure here is what you typed. Klinikos has not estimated your costs, and this comparison
-                covers software only — it makes no claim about recovered revenue or staff time.
+                Every cost is what you typed. This comparison covers software only. It does not claim recovered
+                revenue, staff-time savings, a production connector that has not been verified, or a vendor cutover before implementation approves it.
               </p>
 
               <Link
