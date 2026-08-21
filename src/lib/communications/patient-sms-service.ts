@@ -13,6 +13,10 @@ import {
   type SmsMessageClass,
   type SmsPermissionStatus,
 } from "@/lib/communications/sms-policy";
+import {
+  tenantVariableSpendFundingReady,
+  variableCostRailPolicy,
+} from "@/lib/commercial/variable-cost-rail-registry";
 
 type StaffEditableSmsMessageClass = Exclude<SmsMessageClass, "clinical">;
 type StaffSmsEvidenceSource = "patient_verbal" | "staff_documented";
@@ -194,6 +198,7 @@ export type PatientSmsSendResult =
       reason:
         | "patient_not_found"
         | "missing_phone"
+        | "commercial_funding_not_ready"
         | "invalid_recipient"
         | "permission_missing"
         | "permission_denied"
@@ -235,6 +240,27 @@ export async function sendAuthorizedPatientSms(input: {
       metadata: { channel: "sms", messageClass: input.messageClass, reason: decision.reason, containsPhi: Boolean(input.containsPhi) },
     });
     return { ok: false as const, reason: decision.reason, detail: decision.detail };
+  }
+
+  const economicPolicy = variableCostRailPolicy("patient_sms");
+  if (!economicPolicy || !tenantVariableSpendFundingReady(economicPolicy)) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: {
+        channel: "sms",
+        messageClass: input.messageClass,
+        reason: "commercial_funding_not_ready",
+        economicPolicy: economicPolicy?.economicReadiness ?? "missing",
+      },
+    });
+    return {
+      ok: false,
+      reason: "commercial_funding_not_ready",
+      detail: "Patient SMS remains disabled until the durable tenant micro-funding reservation and reconciliation authority is live.",
+    };
   }
 
   const result = await deliverOutbound({
