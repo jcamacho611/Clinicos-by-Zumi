@@ -71,9 +71,10 @@ describe("public Zumi provider execution", () => {
     expect(result.degradedReason).toBeNull();
     expect(result.resolution.title).toBe("Fix the follow-up loop");
     expect(result.resolution.body).toContain("callback work visible");
-    // The broad word "staff" alone is a weak deterministic match. It must not turn a
-    // contextual model answer into a wrong staffing CTA.
-    expect(result.resolution.destination).toBeNull();
+    // The verified deterministic path now recognizes callbacks + forgetting as a
+    // follow-up continuity problem. The model can improve the prose without throwing
+    // away that safe, high-confidence route or falling back to the weaker "staff" token.
+    expect(result.resolution.destination).toMatchObject({ key: "referrals", href: "/referrals" });
   });
 
   it("does not invoke a provider for patient-specific content", async () => {
