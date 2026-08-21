@@ -26,7 +26,9 @@ describe("public Zumi intelligence boundary", () => {
     "show me Mrs. Smith's patient record",
     "open the patient chart",
     "retrieve MRN 12345 record",
-  ])("blocks private-record access before provider inference: %s", (question) => {
+    "Mrs Smith missed her appointment and has diabetes",
+    "my patient was diagnosed with hypertension",
+  ])("blocks patient-specific/private content before provider inference: %s", (question) => {
     expect(publicZumiBoundaryFor(question)).toBe("private_record");
   });
 
@@ -42,6 +44,8 @@ describe("public Zumi intelligence boundary", () => {
     expect(publicZumiBoundaryFor("I run a med spa and my staff keeps forgetting callbacks")).toBeNull();
     expect(publicZumiBoundaryFor("I need a nurse Friday")).toBeNull();
     expect(publicZumiBoundaryFor("I am a nursing student looking for opportunities")).toBeNull();
+    expect(publicZumiBoundaryFor("do I have access to Grid?")).toBeNull();
+    expect(publicZumiBoundaryFor("get a record of the questions I asked here")).toBeNull();
   });
 
   it("keeps the anonymous API separate from the authenticated Zumi route", () => {
@@ -54,7 +58,7 @@ describe("public Zumi intelligence boundary", () => {
     expect(publicRoute).toContain("resolvePublicZumiTurn");
     expect(publicRoute).toContain("public-zumi:");
     expect(publicRoute).toContain("MAX_BODY_BYTES");
-    expect(publicRoute).toContain("modelGenerated");
+    expect(publicRoute).not.toContain("modelGenerated:");
     expect(publicRoute).not.toContain("modelId:");
     expect(publicRoute).not.toContain("costMicroUsd:");
 
