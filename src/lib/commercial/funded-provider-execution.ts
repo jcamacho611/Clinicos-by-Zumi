@@ -23,10 +23,12 @@ export type FundedProviderExecutionResult<T> = {
  * - provider acceptance does NOT call the ledger's `settle` function because an estimate
  *   is not an actual invoice cost;
  * - accepted calls remain reserved until a provider-specific reconciliation process has
- *   trustworthy cost evidence and settles the reservation.
+ *   trustworthy cost evidence and settles the reservation;
+ * - an already-existing reservation is NOT permission to replay the vendor call. It is
+ *   an ambiguous prior execution that requires reconciliation/release first.
  *
  * This keeps the platform from fronting variable COGS while also keeping estimates out
- * of fields named `actualCostCents`.
+ * of fields named `actualCostCents` and duplicate side effects out of retry paths.
  */
 export async function executeCustomerFundedProviderCall<T>(input: {
   organizationId: string;
@@ -66,6 +68,14 @@ export async function executeCustomerFundedProviderCall<T>(input: {
       actualCostPendingProviderReconciliation: true,
     },
   });
+
+  if (reservation.idempotent) {
+    throw new CommercialAccessError(
+      "This funded provider operation already has an active reservation. Reconcile or release the prior execution before retrying the external side effect.",
+      "invalid_state",
+      409,
+    );
+  }
 
   try {
     const result = await input.execute();
