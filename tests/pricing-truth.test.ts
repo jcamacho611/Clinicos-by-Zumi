@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { clinicCommercialOffers, clinicPlans, gridPlans } from "@/lib/commercial/klinikos-commercial";
+import { clinicCommercialOffers, clinicPlans, gridCommercialRule, gridPlans } from "@/lib/commercial/klinikos-commercial";
 import { gridPublicPricingPolicy } from "@/lib/commercial/grid-public-pricing";
 import { demoOffers } from "@/lib/sales-demo-rules";
 
@@ -31,6 +31,16 @@ describe("Klinikos pricing truth", () => {
     expect(gridPublicPricingPolicy.professional.transactionLabel).toMatch(/resource-class/i);
     expect(gridPublicPricingPolicy.platform.pricing).toMatch(/does not publish one universal/i);
     expect(gridPublicPricingPolicy.platform.pricing).toMatch(/server-owned/i);
+    expect(gridCommercialRule).toMatch(/server-owned resource-class policy/i);
+    expect(gridCommercialRule).toMatch(/no universal percentage/i);
+  });
+
+  it("has one canonical Grid subscription source instead of a stale second pricing model", () => {
+    const source = readFileSync(join(process.cwd(), "src/lib/commercial/klinikos-commercial.ts"), "utf8");
+    expect(source).not.toContain("gridCommercialModel");
+    expect(source).not.toMatch(/10% standard completed/i);
+    expect(source).not.toContain("$39/mo Pro");
+    expect(source).not.toContain("$99/mo Facility Pro");
   });
 
   it("keeps universal transaction percentages off the public Grid pricing surface", () => {
