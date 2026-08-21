@@ -49,7 +49,17 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
     }),
   },
   {
-    match: /\b(?:what can (?:i|you|we) do|how can you help|how could you help|what are my options|where do i start|how do i start|like what|what else)\b/i,
+    match: /^\s*(?:like what|what else|give me examples?|such as what)[?.! ]*$/i,
+    answer: () => ({
+      title: "Here are concrete examples.",
+      body:
+        "If callbacks are missed, Klinikos can turn follow-up into owned work with a next step. If you need a nurse, room, equipment or extra work, that belongs in Grid. "
+        + "If billing or claim-readiness work is stuck, Klinikos can organize the follow-through. If you are learning, EDU is the learning path. Tell me which example sounds closest and I’ll go deeper.",
+      destination: null,
+    }),
+  },
+  {
+    match: /\b(?:what can (?:i|you|we) do|how can you help|how could you help|what are my options|where do i start|how do i start)\b/i,
     answer: () => ({
       title: "There are a few very different things we can solve.",
       body:
