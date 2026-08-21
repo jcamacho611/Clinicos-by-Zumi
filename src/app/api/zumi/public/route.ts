@@ -107,15 +107,17 @@ export async function POST(request: Request) {
 
   const result = await resolvePublicZumiTurn(parsed.data);
   const resolution = result.resolution;
-  // Presentation DTO only. Assumptions, confidence, provider/model/tool/cost/redaction
-  // state and other implementation detail stay server-side.
+  // Presentation DTO only. The two compatibility fields below are constants needed by
+  // the existing client presentation type; they are NOT internal router state.
   return NextResponse.json({
     data: {
       resolution: {
         kind: resolution.kind,
         title: resolution.title,
         body: resolution.body,
+        assumption: null,
         destination: resolution.destination,
+        confidence: 1,
       },
     },
   }, { headers: NO_STORE_HEADERS });
