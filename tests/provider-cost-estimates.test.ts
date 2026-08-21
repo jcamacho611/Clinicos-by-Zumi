@@ -53,6 +53,15 @@ describe("provider cost reservation estimates", () => {
     expect(providerCall).toBeGreaterThan(funding);
   });
 
+  it("does not replay an external side effect merely because its reservation is idempotent", () => {
+    const wrapper = read("src/lib/commercial/funded-provider-execution.ts");
+    const guard = wrapper.indexOf("if (reservation.idempotent)");
+    const providerCall = wrapper.indexOf("const result = await input.execute()");
+    expect(guard).toBeGreaterThan(0);
+    expect(providerCall).toBeGreaterThan(guard);
+    expect(wrapper).toContain("Reconcile or release the prior execution before retrying the external side effect");
+  });
+
   it("does not settle a provider acceptance from the pre-send estimate", () => {
     const wrapper = read("src/lib/commercial/funded-provider-execution.ts");
     expect(wrapper).toContain("pending_actual_cost");
