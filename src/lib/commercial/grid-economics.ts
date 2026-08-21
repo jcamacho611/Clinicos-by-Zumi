@@ -1,71 +1,62 @@
 import "server-only";
 
 /**
- * The single source of truth for what Grid costs and what Klinikos earns.
+ * The single source of truth for proposed Grid participation pricing and transaction
+ * economics.
  *
- * Before this existed, `klinikos-commercial.ts` held two separate Grid pricing models
- * that disagreed with each other, and two public pages rendered them side by side:
- * /klinikos advertised Grid Pro at $49/mo from one constant while /grid/pricing
- * advertised it at $39/mo from another. A visitor comparing the two pages was reading a
- * contradiction, and no code could tell which number was real.
- *
- * The second, larger problem was the fee. Both models applied "10% of the completed
- * transaction" to every kind of Grid activity. That is not a pricing preference, it is a
- * legal exposure: a percentage taken from a regulated clinical service or a professional
- * placement runs into fee-splitting, corporate-practice-of-medicine, and anti-kickback
- * rules that vary by state, and none of that applies to renting out an empty treatment
- * room. Charging one percentage across all of them treats a room and a clinician as the
- * same transaction. They are not.
- *
- * So fees are declared per resource class, and a class whose economics need a lawyer is
- * marked `requires_legal_review` and earns nothing until somebody qualified signs it off.
- * That is deliberately visible rather than hidden behind a default: an unreviewed class
- * that silently charged 10% would be the worst possible outcome.
- *
- * This module declares policy. It does not enforce it — `GridFeePolicyRecord` and
- * `allocateGridFinancialObligations` remain the server-side authority that decides what
- * an actual transaction owes, and they refuse to settle when no active policy applies.
- * Declaring a fee here does not create one in the database, and it must not: policy
- * reaches production through a reviewed migration, never through a constant.
+ * Important boundary: this module may describe a business proposal, but it cannot turn
+ * that proposal into legal approval or a production charge. Actual settlement remains
+ * server-owned through the persisted Grid fee-policy records and financial-obligation
+ * allocator. A fee-bearing declaration here is chargeable only after counsel clearance
+ * is represented with review evidence and a separately reviewed production policy is
+ * activated on the server.
  */
 
 export type GridLegalReviewStatus =
-  /** Reviewed and cleared for the economics described. */
-  | "cleared"
-  /** Economics are drafted but must not be charged until reviewed. */
-  | "requires_legal_review";
+  /** Business economics drafted for evaluation. Not active and not legal approval. */
+  | "business_draft"
+  /** Higher-risk class that requires explicit counsel review before monetization. */
+  | "requires_legal_review"
+  /** Counsel reviewed the stated economics for the recorded scope. */
+  | "counsel_cleared";
 
 export type GridFeeModel =
-  /** A share of the transaction. Only where a share is lawful and ordinary. */
   | "percentage"
-  /** A flat amount per completed transaction, independent of its value. */
   | "fixed_per_transaction"
-  /** Klinikos earns nothing on the transaction itself. */
   | "none";
+
+export type GridLegalReviewEvidence = {
+  /** Human/legal reviewer or firm name. Do not put privileged advice here. */
+  readonly reviewedBy: string;
+  readonly reviewedAt: string;
+  /** Durable internal reference to the approval record, memo, or contract review. */
+  readonly evidenceRef: string;
+  /** Jurisdictional scope actually covered by the review. */
+  readonly jurisdictionScope: readonly string[];
+};
 
 export interface GridFeePolicyDeclaration {
   readonly resourceClass: string;
   readonly label: string;
-  /** What is actually being exchanged, in words a non-lawyer can check. */
   readonly whatIsExchanged: string;
   readonly feeModel: GridFeeModel;
-  /** Basis points, when and only when `feeModel` is "percentage". */
   readonly percentBps: number | null;
   readonly fixedFeeCents: number | null;
   readonly minimumFeeCents: number | null;
   readonly maximumFeeCents: number | null;
   readonly legalReview: GridLegalReviewStatus;
-  /** Why this class is treated the way it is. Reviewed by humans, so state the reason. */
+  readonly legalReviewEvidence: GridLegalReviewEvidence | null;
+  /** Commercial rationale only. This field must never be written as legal advice. */
   readonly rationale: string;
   readonly version: number;
 }
 
 /**
- * Fee policy by resource class.
+ * Proposed economics by resource class.
  *
- * Ordering principle from the directive: listing is free, searching is free, and
- * declining costs nothing. A marketplace with no liquidity earns nothing from any
- * percentage, so friction at the edges is more expensive than a forgone fee.
+ * Listing, searching and declining remain free. Fee-bearing rows below are business
+ * proposals, not active charges, until `counsel_cleared` carries evidence and the
+ * separately persisted production policy is activated. This deliberately fails closed.
  */
 export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
   {
@@ -77,11 +68,10 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     fixedFeeCents: null,
     minimumFeeCents: 500,
     maximumFeeCents: 50_000,
-    legalReview: "cleared",
+    legalReview: "business_draft",
+    legalReviewEvidence: null,
     rationale:
-      "Renting space is an ordinary commercial transaction. No professional fee is being divided, so a "
-      + "share of the booking is the same arrangement any venue marketplace uses. Capped so a long "
-      + "high-value booking does not produce a fee out of proportion to the work Klinikos did.",
+      "Business proposal: a capped marketplace fee for completed facility-capacity bookings. It is not active until the legal and production-policy gates are satisfied.",
     version: 1,
   },
   {
@@ -93,8 +83,10 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     fixedFeeCents: null,
     minimumFeeCents: 500,
     maximumFeeCents: 50_000,
-    legalReview: "cleared",
-    rationale: "Goods and rentals, not professional services. Ordinary marketplace economics apply.",
+    legalReview: "business_draft",
+    legalReviewEvidence: null,
+    rationale:
+      "Business proposal: a capped marketplace fee for a completed equipment transaction. It remains inactive until reviewed and activated through server-owned policy.",
     version: 1,
   },
   {
@@ -106,8 +98,10 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     fixedFeeCents: null,
     minimumFeeCents: 300,
     maximumFeeCents: 50_000,
-    legalReview: "cleared",
-    rationale: "Goods resale. Lower than space because margins on supplies are thinner.",
+    legalReview: "business_draft",
+    legalReviewEvidence: null,
+    rationale:
+      "Business proposal: a lower capped fee for completed permitted-goods transactions because product margins may be thinner than facility-capacity margins.",
     version: 1,
   },
   {
@@ -119,23 +113,25 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     fixedFeeCents: null,
     minimumFeeCents: 200,
     maximumFeeCents: 25_000,
-    legalReview: "cleared",
+    legalReview: "business_draft",
+    legalReviewEvidence: null,
     rationale:
-      "Course enrolment is a consumer-style transaction and carries no patient-care referral. Klinikos "
-      + "takes no position on whether training leads to a credential.",
+      "Business proposal: a capped marketplace fee for completed education transactions. Buying training never creates a credential, license, or Grid eligibility by itself.",
     version: 1,
   },
   {
     resourceClass: "nonclinical_service",
     label: "Non-clinical services",
-    whatIsExchanged: "Business services: cleaning, IT, marketing, administration.",
+    whatIsExchanged: "Business services such as cleaning, IT, marketing, or administration.",
     feeModel: "percentage",
     percentBps: 1_000,
     fixedFeeCents: null,
     minimumFeeCents: 500,
     maximumFeeCents: 50_000,
-    legalReview: "cleared",
-    rationale: "No clinical service and no professional fee involved.",
+    legalReview: "business_draft",
+    legalReviewEvidence: null,
+    rationale:
+      "Business proposal: a capped marketplace fee for completed non-clinical service transactions. It is not an active production fee until reviewed and activated.",
     version: 1,
   },
   {
@@ -148,11 +144,9 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     minimumFeeCents: null,
     maximumFeeCents: null,
     legalReview: "requires_legal_review",
+    legalReviewEvidence: null,
     rationale:
-      "A percentage of a clinician's compensation is the arrangement most likely to be read as fee "
-      + "splitting, and corporate-practice-of-medicine rules differ by state. A flat placement fee is "
-      + "charged for the matching work Klinikos actually performs and does not scale with the "
-      + "professional's earnings. Nothing is charged on this class until reviewed.",
+      "Higher-sensitivity proposal. Professional-compensation and placement economics can implicate state-specific fee-splitting, corporate-practice, employment, referral, and payer rules. No platform fee is active here before counsel review.",
     version: 1,
   },
   {
@@ -165,35 +159,30 @@ export const GRID_FEE_POLICY: readonly GridFeePolicyDeclaration[] = [
     minimumFeeCents: null,
     maximumFeeCents: null,
     legalReview: "requires_legal_review",
+    legalReviewEvidence: null,
     rationale:
-      "Taking a share of payment for patient care is the clearest anti-kickback and fee-splitting "
-      + "exposure in the whole marketplace, and it can implicate payer contracts as well. Klinikos earns "
-      + "nothing here. If this class is ever monetised it will be through a subscription for the tooling, "
-      + "never a cut of the care.",
+      "Klinikos does not take a transaction percentage from patient care under the current policy. Any future monetization of this class requires separate counsel and payer review and should favor software/tooling economics rather than a cut of care.",
     version: 1,
   },
   {
     resourceClass: "referral",
     label: "Referral destinations",
-    whatIsExchanged: "A patient being directed to another provider.",
+    whatIsExchanged: "A patient being directed to another provider or organization.",
     feeModel: "none",
     percentBps: null,
     fixedFeeCents: null,
     minimumFeeCents: null,
     maximumFeeCents: null,
     legalReview: "requires_legal_review",
+    legalReviewEvidence: null,
     rationale:
-      "Payment in exchange for a patient referral is the textbook anti-kickback problem. Klinikos "
-      + "charges nothing for referral routing and should be extremely slow to change that.",
+      "Klinikos does not charge for patient referral routing under the current policy. Any future economic model requires dedicated legal, payer, and jurisdictional review.",
     version: 1,
   },
 ] as const;
 
 /**
- * Participation tiers. One set of numbers, replacing the two that disagreed.
- *
- * Free tiers are load-bearing rather than generous: the marketplace has no liquidity yet,
- * and a subscription at the door is the surest way to keep it that way.
+ * Participation tiers. Free entry is load-bearing while Grid builds real liquidity.
  */
 export const GRID_MEMBERSHIP = {
   individualFree: {
@@ -234,23 +223,34 @@ export function gridFeePolicyFor(resourceClass: string): GridFeePolicyDeclaratio
   return GRID_FEE_POLICY.find((policy) => policy.resourceClass === resourceClass) ?? null;
 }
 
-/** Classes that must not be charged yet, for display and for review checklists. */
+export function gridPolicyHasCounselClearance(policy: GridFeePolicyDeclaration) {
+  if (policy.legalReview !== "counsel_cleared") return false;
+  const evidence = policy.legalReviewEvidence;
+  return Boolean(
+    evidence?.reviewedBy.trim()
+    && evidence.reviewedAt.trim()
+    && evidence.evidenceRef.trim()
+    && evidence.jurisdictionScope.length > 0,
+  );
+}
+
+/** All fee-policy classes that still need review evidence before a fee can be active. */
 export function gridClassesAwaitingLegalReview(): readonly GridFeePolicyDeclaration[] {
-  return GRID_FEE_POLICY.filter((policy) => policy.legalReview === "requires_legal_review");
+  return GRID_FEE_POLICY.filter((policy) => !gridPolicyHasCounselClearance(policy));
 }
 
 /**
- * What a completed transaction of this class would owe.
+ * Proposed fee for a completed transaction.
  *
- * Returns null — not zero — for a class that has not been reviewed, because zero reads
- * as "this is free" and null forces the caller to decide what to do about an unpriced
- * class. A caller that cannot handle null should not be charging.
+ * `none` is an explicit zero-fee policy. A fee-bearing draft returns null until counsel
+ * clearance carries evidence. Actual production settlement still requires a separate,
+ * active persisted server policy, so this helper never creates a charge by itself.
  */
 export function computeGridPlatformFeeCents(resourceClass: string, grossAmountCents: number): number | null {
   const policy = gridFeePolicyFor(resourceClass);
   if (!policy) return null;
-  if (policy.legalReview === "requires_legal_review") return null;
   if (policy.feeModel === "none") return 0;
+  if (!gridPolicyHasCounselClearance(policy)) return null;
   if (policy.feeModel === "fixed_per_transaction") return policy.fixedFeeCents ?? 0;
   const raw = Math.round((grossAmountCents * (policy.percentBps ?? 0)) / 10_000);
   const floored = policy.minimumFeeCents == null ? raw : Math.max(raw, policy.minimumFeeCents);
