@@ -9,6 +9,8 @@ function source(relative: string) {
 describe("public Zumi API disclosure and abuse contract", () => {
   const route = source("src/app/api/zumi/public/route.ts");
   const service = source("src/features/zumi/public-intelligence.ts");
+  const providers = source("src/features/zumi/providers.ts");
+  const openAI = source("src/features/zumi/adapters/openai-responses.ts");
 
   it("keeps anonymous input bounded and no-store", () => {
     expect(route).toContain("MAX_BODY_BYTES = 16 * 1024");
@@ -43,10 +45,13 @@ describe("public Zumi API disclosure and abuse contract", () => {
     expect(responseSection).not.toContain("redactions");
   });
 
-  it("disables every optional provider tool on the public surface", () => {
+  it("disables optional tools and provider-side response retention on the public surface", () => {
+    expect(service).toContain("storeResponse: false");
     expect(service).toContain("allowWebSearch: false");
     expect(service).toContain("allowKnowledgeSearch: false");
     expect(service).toContain("allowCodeInterpreter: false");
     expect(service).toContain("maxToolCalls: 0");
+    expect(providers).toContain("storeResponse?: boolean");
+    expect(openAI).toContain("store: request.storeResponse ?? true");
   });
 });
