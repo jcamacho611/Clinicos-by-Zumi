@@ -41,11 +41,16 @@ describe("public Living Home intent", () => {
   });
 
   it("keeps an unknown request useful without exposing routing internals", () => {
+    // The exact sentence is no longer asserted. It used to be "Tell me a little more."
+    // for every unmatched message, which is precisely the defect: two different
+    // questions produced identical text. What matters is the contract — an unmatched
+    // first attempt stays conversational, offers no route, and asks for something
+    // usable — not one frozen string.
     const resolution = resolvePublicLivingIntent("Help me make this better");
     expect(resolution.kind).toBe("conversation");
     expect(resolution.destination).toBeNull();
-    expect(resolution.title).toBe("Tell me a little more.");
-    expect(resolution.body).toContain("What’s going on");
+    expect(resolution.title.length).toBeGreaterThan(0);
+    expect(resolution.body.length).toBeGreaterThan(20);
   });
 
   it("preserves a known destination when a short follow-up adds context", () => {

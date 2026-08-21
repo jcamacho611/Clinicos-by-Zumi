@@ -64,7 +64,15 @@ export function PublicLivingGateway() {
     if (!prompt) return;
 
     const priorResolution = turns[turns.length - 1]?.resolution ?? null;
-    const resolution = resolvePublicLivingIntent(prompt, priorResolution);
+    // How many turns in a row have already failed to land. The resolver uses it to ask
+    // for something more specific each time instead of repeating one sentence, which is
+    // what made two different questions produce identical text.
+    let unresolvedTurns = 0;
+    for (let index = turns.length - 1; index >= 0; index -= 1) {
+      if (turns[index].resolution.confidence > 0.25) break;
+      unresolvedTurns += 1;
+    }
+    const resolution = resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns);
     const id = nextTurnId.current;
     nextTurnId.current += 1;
 
@@ -177,7 +185,7 @@ export function PublicLivingGateway() {
                 <div className="reference-composer-shell grid min-h-[88px] grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3 rounded-[28px] border border-[#d9918a]/35 bg-[#1b0d10]/68 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
                   <textarea
                     aria-describedby="public-conversation-disclosure"
-                    className="max-h-36 min-h-14 resize-none bg-transparent py-4 text-left text-[15px] font-medium text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
+                    className="w-full min-w-0 max-h-36 min-h-14 resize-none bg-transparent py-4 text-left text-[15px] font-medium text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
                     id="public-klinikos-intent"
                     onChange={(event) => setIntent(event.target.value)}
                     onKeyDown={handleComposerKeyDown}
@@ -243,7 +251,7 @@ export function PublicLivingGateway() {
               <div className="flex items-end gap-3">
                 <textarea
                   aria-describedby="public-follow-up-note"
-                  className="min-h-12 flex-1 resize-none bg-transparent px-3 py-3 text-sm text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
+                  className="min-h-12 min-w-0 flex-1 resize-none bg-transparent px-3 py-3 text-sm text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
                   id="public-klinikos-follow-up"
                   onChange={(event) => setIntent(event.target.value)}
                   onKeyDown={handleComposerKeyDown}

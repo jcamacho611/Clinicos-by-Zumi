@@ -1,5 +1,12 @@
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 
+import {
+  answerProductQuestion,
+  escalatingFallback,
+  looksLikePrivateDataRequest,
+  privateDataAnswer,
+} from "@/lib/orchestration/public-living-context";
+
 export type PublicLivingDestination = {
   key:
     | "clinic"
@@ -12,7 +19,12 @@ export type PublicLivingDestination = {
     | "revenue"
     | "billing"
     | "insights"
-    | "care";
+    | "care"
+    /* Public-only destinations. `explore` covers the product-explanation routes a
+       visitor asks for by name; `signin` is where a request for real clinic data has to
+       go, because this page has none. */
+    | "explore"
+    | "signin";
   href: string;
   action: string;
 };
@@ -95,6 +107,12 @@ const publicRules: readonly PublicRule[] = [
     patterns: [
       /\breferrals?\b/i,
       /\b(?:follow[- ]?up|open loops?|missing results?|lost patients?)\b/i,
+      // Two separate signals on purpose. Rules are ranked by how many patterns match and
+      // ties break toward whichever rule is declared first, which is staffing. "My staff
+      // keeps forgetting callbacks" is a continuity problem that happens to mention
+      // staff, and one weak token should not outrank two strong ones.
+      /\b(?:call[- ]?backs?|calling back|call(?:ing)? them back)\b/i,
+      /\b(?:forget(?:ting|s)?|forgot|slip(?:ping|s)? through|falling through|never (?:called|contacted|followed))\b/i,
       /\b(?:results?|handoffs?)\s+(?:are\s+)?(?:missing|stuck|late|lost)\b/i,
     ],
     title: "Let’s close the loop.",
@@ -177,6 +195,8 @@ const destinationLabels: Record<PublicLivingDestination["key"], string> = {
   billing: "billing",
   insights: "operational insights",
   care: "care",
+  explore: "the product overview",
+  signin: "signing in",
 };
 
 const exactGreeting = /^(?:hey|hi|hello|yo|sup|what'?s up|good morning|good afternoon|good evening)[!.? ]*$/i;
@@ -184,7 +204,10 @@ const exactThanks = /^(?:thanks|thank you|appreciate it|got it|perfect|cool)[!.?
 const exactHowAreYou = /^(?:how are you|how'?s it going|you good)[!.? ]*$/i;
 const identityQuestion = /^(?:who are you|what are you|what is zumi|who is zumi)[?.! ]*$/i;
 const capabilityQuestion = /^(?:what can (?:you|i) do(?: here)?|what should i do(?: here)?|how can you help|what can klinikos do|what does klinikos do)[?.! ]*$/i;
-const pageContextQuestion = /^(?:what'?s going on(?: here)?|what is going on(?: here)?|what is this(?: page)?|where am i|what am i looking at)[?.! ]*$/i;
+// "on" is optional because the reported failure was literally "whats going" — a real
+// person trailing off mid-phrase. The anchored form without it never matched, so the
+// page-context answer could not fire on the exact input it was written for.
+const pageContextQuestion = /^(?:what'?s? going(?: on)?(?: here)?|what is going(?: on)?(?: here)?|what is this(?: page)?|where am i|what am i looking at)[?.! ]*$/i;
 
 function conversationResolution(title: string, body: string): PublicLivingResolution {
   return {
@@ -239,10 +262,44 @@ function matchScore(prompt: string, rule: PublicRule) {
 export function resolvePublicLivingIntent(
   rawPrompt: string,
   priorResolution: PublicLivingResolution | null = null,
+  unresolvedTurns = 0,
 ): PublicLivingResolution {
   const prompt = rawPrompt.trim();
+
+  // Before anything else, and never sticky. A request for real clinical or personal
+  // data has exactly one honest answer on a page with no access to it. This used to
+  // fall through to the prior-destination branch, so "show me Mrs. Smith's patient
+  // record" returned "Got it." and routed to EDU because the previous turn had been
+  // about training.
+  if (looksLikePrivateDataRequest(prompt)) {
+    const refusal = privateDataAnswer();
+    return {
+      kind: "route",
+      title: refusal.title,
+      body: refusal.body,
+      assumption: null,
+      destination: refusal.destination,
+      confidence: 0.95,
+    };
+  }
+
   const casual = casualResponse(prompt);
   if (casual) return casual;
+
+  // Questions about the product itself. These were unmatched by every routing rule,
+  // because no rule described the product, so "what is this" and "what can I do" both
+  // reached the generic fallback.
+  const product = answerProductQuestion(prompt);
+  if (product) {
+    return {
+      kind: product.destination ? "route" : "conversation",
+      title: product.title,
+      body: product.body,
+      assumption: null,
+      destination: product.destination,
+      confidence: 0.8,
+    };
+  }
 
   const established = resolveIntentDeterministically(prompt);
   const establishedKey = established.candidatePathIds[0]
@@ -279,8 +336,18 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  if (priorResolution?.destination) {
-    const destination = priorResolution.destination;
+  // `signin` is only ever reached by refusing a private-data request, and `explore` is
+  // a generic product route. Neither is an intent the visitor was pursuing, so neither
+  // should capture the next unmatched message — otherwise typing nonsense straight
+  // after a refusal answers "Got it." and points at sign-in.
+  const stickyPrior = priorResolution?.destination
+    && priorResolution.destination.key !== "signin"
+    && priorResolution.destination.key !== "explore"
+    ? priorResolution
+    : null;
+
+  if (stickyPrior?.destination) {
+    const destination = stickyPrior.destination;
     const label = destinationLabels[destination.key];
     return {
       kind: "conversation",
@@ -288,27 +355,28 @@ export function resolvePublicLivingIntent(
       body: `I’ll keep that with your ${label} request. What else should I know?`,
       assumption: `Your latest message refines the previous ${label} request rather than starting an unrelated goal.`,
       destination,
-      confidence: Math.max(0.52, priorResolution.confidence * 0.9),
+      confidence: Math.max(0.52, stickyPrior.confidence * 0.9),
     };
   }
 
-  if (priorResolution?.title === "Tell me a little more.") {
-    return {
-      kind: "conversation",
-      title: "What outcome are you after?",
-      body: "Give me the result you want in one sentence—for example, fill a shift, fix follow-up, recover revenue, find space, learn a skill, or get to patient access—and I’ll narrow the next step.",
-      assumption: "Your latest message continues the same public conversation, but there still is not enough context to choose a safe destination.",
-      destination: null,
-      confidence: 0.3,
-    };
-  }
-
+  // Main added a single follow-on prompt keyed to the literal title "Tell me a little
+  // more.". That title no longer exists — it was the repeated sentence this replaces —
+  // so the check could never fire. The escalation below generalises it: each successive
+  // miss asks for something more specific than the last and offers a route by the third.
+  // Derive escalation from the conversation itself rather than trusting the caller to
+  // count. `unresolvedTurns` lets the UI carry an exact streak, but a caller that passes
+  // nothing must still not repeat itself, and the prior turn already says whether it was
+  // a fallback: fallbacks are the only resolutions that end at this confidence.
+  const priorWasFallback = priorResolution !== null
+    && priorResolution.confidence <= 0.25
+    && priorResolution.destination === null;
+  const fallback = escalatingFallback(Math.max(unresolvedTurns, priorWasFallback ? 1 : 0));
   return {
-    kind: "conversation",
-    title: "Tell me a little more.",
-    body: "What’s going on, or what do you want to be different when we’re done?",
+    kind: fallback.destination ? "route" : "conversation",
+    title: fallback.title,
+    body: fallback.body,
     assumption: null,
-    destination: null,
+    destination: fallback.destination,
     confidence: 0.25,
   };
 }

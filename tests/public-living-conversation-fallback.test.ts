@@ -19,10 +19,14 @@ describe("public Living Home degraded conversation fallback", () => {
     const first = resolvePublicLivingIntent("make things better somehow");
     const second = resolvePublicLivingIntent("yeah that", first);
 
-    expect(first.title).toBe("Tell me a little more.");
-    expect(second.title).toBe("What outcome are you after?");
+    // The literal strings are no longer asserted. "Tell me a little more." was the
+    // repeated sentence this whole change removes, and keying an escalation to that
+    // exact title made the escalation unreachable the moment the copy improved. What
+    // matters is the behaviour: a second ambiguous turn must not repeat the first, and
+    // must ask for something more specific.
+    expect(first.title.length).toBeGreaterThan(0);
     expect(second.title).not.toBe(first.title);
-    expect(second.body).toContain("fill a shift");
+    expect(second.body.length).toBeGreaterThan(40);
   });
 
   it("keeps clear governed routes ahead of conversational fallback", () => {
