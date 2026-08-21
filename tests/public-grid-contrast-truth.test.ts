@@ -34,16 +34,18 @@ describe("public Grid small-text contrast", () => {
     expect(contrast("#475569", "#ffffff")).toBeGreaterThanOrEqual(4.5);
     expect(contrast("#5b6675", "#fbfcfd")).toBeGreaterThanOrEqual(4.5);
     expect(contrast("#64748b", "#f8fafc")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#9f8985", "#050303")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("does not reintroduce the measured low-contrast Grid metadata tones", () => {
     const files = [
+      "src/app/grid/page.tsx",
       "src/components/grid/grid-resource-marketplace.tsx",
       "src/components/grid/marketplace-browser.tsx",
       "src/components/grid/universal-resource-browser.tsx",
       "src/components/grid/grid-exchange-field.tsx",
     ];
-    const forbidden = ["#94a3b8", "#9b8883", "#8a7772", "#8f7c77", "#7b8490"];
+    const forbidden = ["#94a3b8", "#9b8883", "#8a7772", "#8f7c77", "#7b8490", "#806965"];
     const offenders: string[] = [];
 
     for (const file of files) {
