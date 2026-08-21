@@ -4,6 +4,8 @@ const REQUIRED_ENV = [
   "ZUMI_CLOUDFLARE_ACCOUNT_ID",
   "ZUMI_CLOUDFLARE_API_TOKEN",
   "ZUMI_CLOUDFLARE_MODEL",
+  "ZUMI_CLOUDFLARE_INPUT_MICRO_USD_PER_M_TOKENS",
+  "ZUMI_CLOUDFLARE_OUTPUT_MICRO_USD_PER_M_TOKENS",
 ] as const;
 
 const DEFAULT_GATEWAY_ID = "default";
@@ -21,6 +23,17 @@ function configuredValue(env: ZumiEnv, name: string) {
 
 function integerUsage(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function envInt(env: ZumiEnv, key: string, fallback = 0) {
+  const value = Number.parseInt(env[key] ?? "", 10);
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+function estimateTokenCostMicroUsd(inputTokens: number, outputTokens: number, env: ZumiEnv) {
+  const inputPerMillion = envInt(env, "ZUMI_CLOUDFLARE_INPUT_MICRO_USD_PER_M_TOKENS");
+  const outputPerMillion = envInt(env, "ZUMI_CLOUDFLARE_OUTPUT_MICRO_USD_PER_M_TOKENS");
+  return Math.round((inputTokens * inputPerMillion + outputTokens * outputPerMillion) / 1_000_000);
 }
 
 function endpointFor(accountId: string) {
@@ -69,11 +82,19 @@ async function invokeCloudflare(
     throw new Error("Cloudflare Workers AI returned no assistant content.");
   }
 
+  const inputTokens = integerUsage(payload.usage?.prompt_tokens);
+  const outputTokens = integerUsage(payload.usage?.completion_tokens);
+
   return {
     text,
-    inputTokens: integerUsage(payload.usage?.prompt_tokens),
-    outputTokens: integerUsage(payload.usage?.completion_tokens),
-    costMicroUsd: 0,
+    inputTokens,
+    outputTokens,
+    // This is a conservative marginal-cost estimate using the operator-configured
+    // current model rates. Account-wide free allocations/credits are deliberately not
+    // netted out here because a single request cannot truthfully claim them. That keeps
+    // Zumi's per-turn spend budget and customer-funded metering from treating paid
+    // inference as free.
+    costMicroUsd: estimateTokenCostMicroUsd(inputTokens, outputTokens, process.env),
     modelId: typeof payload.model === "string" && payload.model.trim() ? payload.model : config.model,
   };
 }
