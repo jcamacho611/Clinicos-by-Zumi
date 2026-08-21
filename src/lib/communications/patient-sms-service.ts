@@ -13,6 +13,9 @@ import {
   type SmsMessageClass,
   type SmsPermissionStatus,
 } from "@/lib/communications/sms-policy";
+import { executeCustomerFundedProviderCall } from "@/lib/commercial/funded-provider-execution";
+import { estimateTwilioSmsReservationCents } from "@/lib/commercial/provider-cost-estimates";
+import { CommercialAccessError } from "@/lib/commercial/commercial-ledger-repository";
 
 function json(value: unknown) {
   return value as Prisma.InputJsonValue;
@@ -183,6 +186,8 @@ export type PatientSmsSendResult =
         | "permission_denied"
         | "suppressed"
         | "clinical_sms_blocked"
+        | "commercial_cost_unconfigured"
+        | "commercial_access_blocked"
         | "no_connector"
         | "no_sender"
         | "provider_error";
@@ -192,7 +197,10 @@ export type PatientSmsSendResult =
 export async function sendAuthorizedPatientSms(input: {
   organizationId: string;
   patientId: string;
-  actorId?: string | null;
+  /** Real authenticated user authorizing this variable-cost production side effect. */
+  actorId: string;
+  /** Stable operation/message ID supplied by the caller; retries must reuse it. */
+  idempotencyKey: string;
   messageClass: SmsMessageClass;
   subject?: string;
   body: string;
@@ -218,27 +226,104 @@ export async function sendAuthorizedPatientSms(input: {
       patientId: patient.id,
       metadata: { channel: "sms", messageClass: input.messageClass, reason: decision.reason, containsPhi: Boolean(input.containsPhi) },
     });
-    // The permission guard reports `allowed`; this function's result contract uses
-    // `ok`. Same refusal, same reason — only the field name differs.
     return { ok: false as const, reason: decision.reason, detail: decision.detail };
   }
 
-  const result = await deliverOutbound({
-    channel: "sms",
-    to: decision.normalizedPhone,
-    subject: input.subject ?? "Klinikos notification",
-    body: input.body,
-  }, input.env);
+  // Permission is checked before money is reserved: a blocked clinical/consent state
+  // must never hold customer funds. Once the message is otherwise sendable, variable
+  // provider spend must be backed before Twilio is invoked.
+  const estimate = estimateTwilioSmsReservationCents(input.body, input.env ?? process.env);
+  if (!estimate) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: {
+        channel: "sms",
+        messageClass: input.messageClass,
+        reason: "commercial_cost_unconfigured",
+        customerFundedBeforeExecution: false,
+      },
+    });
+    return {
+      ok: false,
+      reason: "commercial_cost_unconfigured",
+      detail: "SMS cost reservation is not configured for this deployment; Klinikos will not create unpriced variable vendor spend.",
+    };
+  }
 
-  await audit({
-    organizationId: input.organizationId,
-    actorId: input.actorId,
-    action: result.ok ? "communications.sms.send.accepted" : "communications.sms.send.failed",
-    patientId: patient.id,
-    metadata: result.ok
-      ? { channel: "sms", messageClass: input.messageClass, provider: result.provider, providerReference: result.providerReference }
-      : { channel: "sms", messageClass: input.messageClass, reason: result.reason },
-  });
+  try {
+    const execution = await executeCustomerFundedProviderCall({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      capability: "communications.patient_sms",
+      bucket: "sms",
+      estimatedCostCents: estimate.estimatedCostCents,
+      idempotencyKey: `patient-sms:${input.idempotencyKey}`,
+      provider: "twilio",
+      service: "messaging_service",
+      metadata: {
+        patientId: patient.id,
+        messageClass: input.messageClass,
+        estimatedSegments: estimate.segments,
+        reservationCentsPerSegment: estimate.centsPerSegment,
+        containsPhi: Boolean(input.containsPhi),
+      },
+      execute: () => deliverOutbound({
+        channel: "sms",
+        to: decision.normalizedPhone,
+        subject: input.subject ?? "Klinikos notification",
+        body: input.body,
+      }, input.env),
+      accepted: (result) => result.ok,
+    });
 
-  return result;
+    const result = execution.result;
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: result.ok ? "communications.sms.send.accepted" : "communications.sms.send.failed",
+      patientId: patient.id,
+      metadata: result.ok
+        ? {
+            channel: "sms",
+            messageClass: input.messageClass,
+            provider: result.provider,
+            providerReference: result.providerReference,
+            commercialUsageReservationId: execution.reservationId,
+            estimatedCostCents: estimate.estimatedCostCents,
+            estimatedSegments: estimate.segments,
+            costReconciliation: execution.reconciliation,
+            customerFundedBeforeExecution: true,
+          }
+        : {
+            channel: "sms",
+            messageClass: input.messageClass,
+            reason: result.reason,
+            commercialUsageReservationId: execution.reservationId,
+            costReconciliation: execution.reconciliation,
+          },
+    });
+
+    return result;
+  } catch (error) {
+    if (error instanceof CommercialAccessError) {
+      await audit({
+        organizationId: input.organizationId,
+        actorId: input.actorId,
+        action: "communications.sms.send.blocked",
+        patientId: patient.id,
+        metadata: {
+          channel: "sms",
+          messageClass: input.messageClass,
+          reason: error.reason,
+          shortfallCents: error.shortfallCents ?? null,
+          customerFundedBeforeExecution: false,
+        },
+      });
+      return { ok: false, reason: "commercial_access_blocked", detail: error.message };
+    }
+    throw error;
+  }
 }
