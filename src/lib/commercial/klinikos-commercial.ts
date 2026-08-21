@@ -91,15 +91,11 @@ export const commercialAddOns = {
 } as const;
 
 /**
- * Grid monetization.
+ * Grid subscription anchors.
  *
- * Grid's economics are deliberately asymmetric: being findable costs nothing, and a
- * platform fee applies only when a lawful match is actually accepted. Listing,
- * searching and declining stay free forever, because a marketplace that charges for
- * presence prices out exactly the supply it needs.
- *
- * `priceLabel` is the customer-facing string and `monthlyPriceCents` the machine
- * value; a range carries a null cents value because a range is not a charge.
+ * Being findable stays low-friction. Transaction economics are not encoded here:
+ * they belong to the server-owned resource-class policy because different resource
+ * and jurisdiction combinations can require different commercial/legal treatment.
  */
 export const gridPlans = {
   individual: {
@@ -145,7 +141,7 @@ export const gridPlans = {
 } as const;
 
 export const gridCommercialRule =
-  "Listing, searching and declining are always free. A platform fee applies only when a lawful match is accepted.";
+  "Listing, searching and declining are always free. Any transaction fee must come from an approved server-owned resource-class policy; no universal percentage applies.";
 
 /**
  * Klinikos EDU monetization.
@@ -237,31 +233,3 @@ export const clinicSubscriptionPlanning = {
   commercialModel: "subscription_plus_implementation_plus_customer_funded_usage" as const,
   implementationReference: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md",
 };
-
-export const gridCommercialModel = {
-  professional: {
-    label: "Grid Professional",
-    freeLabel: "$0 basic profile",
-    proLabel: "$39/mo Pro",
-    transactionLabel: "10% standard completed-transaction platform fee",
-    pricing: "Keep supply acquisition friction low: basic verified profiles can join free. Pro adds visibility, analytics, advanced availability, alerts, and matching tools. Completed paid activity uses a server-owned resource-class fee policy; 10% is the launch midpoint, not a universal legal rule.",
-  },
-  facility: {
-    label: "Grid Facility",
-    freeLabel: "$0 to join",
-    proLabel: "$99/mo Facility Pro",
-    transactionLabel: "10% standard completed-booking platform fee",
-    pricing: "Facilities can list eligible capacity with low entry friction. Facility Pro adds expanded inventory, analytics, priority matching, and operating tools. Completed bookings remain subject to resource-specific server-owned economics.",
-  },
-  seller: {
-    label: "Grid Seller",
-    freeLabel: "$0 to join",
-    proLabel: "$49/mo Seller Pro",
-    transactionLabel: "10% standard completed-transaction platform fee",
-    pricing: "Eligible sellers can enter the network without a mandatory subscription. Seller Pro adds expanded listings, analytics, visibility, and fulfillment tools. Regulated categories remain policy-gated regardless of payment.",
-  },
-  platform: {
-    label: "Klinikos fee",
-    pricing: "Launch around a 10% completed-transaction midpoint where legally and economically appropriate, while preserving server-owned class-specific fees, minimum fees, processor-cost recovery, refunds, disputes, and negotiated enterprise economics. Never let payment bypass eligibility or healthcare fee-splitting rules.",
-  },
-} as const;
