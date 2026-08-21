@@ -93,17 +93,14 @@ export const commercialAddOns = {
 /**
  * Grid monetization.
  *
- * Grid's economics are deliberately asymmetric: being findable costs nothing, and a
- * platform fee applies only when a lawful match is actually accepted. Listing,
- * searching and declining stay free forever, because a marketplace that charges for
- * presence prices out exactly the supply it needs.
- *
- * `priceLabel` is the customer-facing string and `monthlyPriceCents` the machine
- * value; a range carries a null cents value because a range is not a charge.
+ * Basic participation stays free because liquidity comes before extraction. Transaction
+ * economics are resource-class specific and are not created by this customer-facing
+ * summary. A fee can become real only after the transaction completes and an active,
+ * reviewed, server-owned fee policy applies. Payment never widens eligibility,
+ * credentialing, jurisdiction, privacy, clinical authority, or regulated-work rights.
  */
-
 export const gridCommercialRule =
-  "Listing, searching and declining are always free. A platform fee applies only when a lawful match is accepted.";
+  "Listing, searching and declining are always free. Any transaction fee is resource-class specific and may apply only after a completed transaction under an active reviewed server-owned policy.";
 
 /**
  * Klinikos EDU monetization.
@@ -195,4 +192,3 @@ export const clinicSubscriptionPlanning = {
   commercialModel: "subscription_plus_implementation_plus_customer_funded_usage" as const,
   implementationReference: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md",
 };
-
