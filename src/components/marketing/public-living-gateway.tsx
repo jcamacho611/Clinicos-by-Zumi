@@ -29,7 +29,7 @@ type PublicZumiApiResponse = {
   };
 };
 
-const protectedHref = (href: string) => `/login?next=${encodeURIComponent(href)}`;
+const protectedHref = (href: string) => href === "/login" ? "/login" : `/login?next=${encodeURIComponent(href)}`;
 const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales"]);
 
 function destinationActionHref(href: string) {
