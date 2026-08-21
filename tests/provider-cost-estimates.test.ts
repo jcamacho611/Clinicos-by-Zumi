@@ -45,7 +45,7 @@ describe("provider cost reservation estimates", () => {
     expect(source).toContain("executeCustomerFundedProviderCall");
     expect(source).toContain("idempotencyKey: `patient-sms:${input.idempotencyKey}`");
     expect(source).toContain("customerFundedBeforeExecution: true");
-    expect(source).toContain("actualCostPendingProviderReconciliation").toBe(false);
+    expect(source).not.toContain("actualCostPendingProviderReconciliation");
 
     const funding = source.indexOf("executeCustomerFundedProviderCall({");
     const providerCall = source.indexOf("execute: () => deliverOutbound({");
