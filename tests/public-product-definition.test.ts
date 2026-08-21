@@ -18,6 +18,12 @@ describe("public product definition", () => {
     expect(definition).toContain("scheduling, follow-up, referrals, team workflows, documents, revenue work, and owner visibility");
   });
 
+  it("states the differentiated unfinished-work job instead of relying on the operating-system label alone", () => {
+    expect(definition).toContain("unfinished work stays visible");
+    expect(definition).toContain("an owner and a next action");
+    expect(definition).toContain("between systems and handoffs");
+  });
+
   it("makes the ecosystem hierarchy explicit without presenting four competing products", () => {
     expect(definition).toContain('["Klinikos", "clinic operating system"]');
     expect(definition).toContain('["Zumi", "intelligence layer"]');
