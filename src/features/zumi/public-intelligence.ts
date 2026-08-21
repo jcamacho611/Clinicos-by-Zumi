@@ -33,8 +33,10 @@ const MAX_QUESTION_CHARACTERS = 1_200;
 const MAX_OUTPUT_TOKENS = 420;
 const PROVIDER_TIMEOUT_MS = 12_000;
 
-const privateRecordRequest = /(?:\b(?:show|open|view|pull|find|access|read|get|retrieve)\b[\s\S]{0,80}\b(?:patient|chart|medical record|record|mrn|lab result|imaging result)\b|\b(?:patient|chart|medical record|mrn)\b[\s\S]{0,80}\b(?:show|open|view|pull|find|access|read|get|retrieve)\b)/i;
-const clinicalAdviceRequest = /\b(?:diagnose|diagnosis|what do i have|do i have|symptoms? of|treatment for|what medication|which medication|medication dose|dosage|prescribe|should i take|should i stop taking)\b/i;
+const privateRecordRequest = /(?:\b(?:show|open|view|pull|find|access|read|get|retrieve)\b[\s\S]{0,80}\b(?:(?:patient|medical|clinical)\s+(?:record|chart|file)|chart|mrn|lab result|imaging result)\b|\b(?:(?:patient|medical|clinical)\s+(?:record|chart|file)|chart|mrn)\b[\s\S]{0,80}\b(?:show|open|view|pull|find|access|read|get|retrieve)\b)/i;
+const likelyPatientSpecificContent = /(?:\b(?:mr|mrs|ms|miss|dr)\.?\s+[a-z][a-z'-]{1,40}\b|\bpatient\s+(?:named\s+)?[a-z][a-z'-]{1,40}\b|\bmy patient\b[\s\S]{0,80}\b(?:has|with|diagnosed|taking|medication|dob|mrn)\b)/i;
+const clinicalAdviceRequest = /\b(?:diagnose(?: me)?|diagnosis|what condition do i have|symptoms? of|treatment for|what medication|which medication|medication dose|dosage|prescribe|should i take|should i stop taking)\b/i;
+const likelyConditionQuestion = /\b(?:do|could|might) i have\b[\s\S]{0,60}\b(?:diabetes|cancer|infection|disease|condition|syndrome|covid|flu|influenza|strep|pneumonia|asthma|adhd)\b/i;
 
 const PRIVATE_ACCESS_DESTINATION: PublicLivingDestination = {
   key: "clinic",
@@ -81,8 +83,8 @@ export function boundedPublicZumiHistory(history: readonly PublicZumiHistoryMess
 }
 
 export function publicZumiBoundaryFor(question: string): "private_record" | "clinical_advice" | null {
-  if (privateRecordRequest.test(question)) return "private_record";
-  if (clinicalAdviceRequest.test(question)) return "clinical_advice";
+  if (privateRecordRequest.test(question) || likelyPatientSpecificContent.test(question)) return "private_record";
+  if (clinicalAdviceRequest.test(question) || likelyConditionQuestion.test(question)) return "clinical_advice";
   return null;
 }
 
