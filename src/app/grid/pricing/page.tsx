@@ -37,16 +37,19 @@ function feeSummary(policy: (typeof GRID_FEE_POLICY)[number]) {
   return `${(policy.percentBps ?? 0) / 100}% of the completed transaction`;
 }
 
-const membership = [
-  GRID_MEMBERSHIP.individualFree,
-  GRID_MEMBERSHIP.individualPro,
-  GRID_MEMBERSHIP.organizationFree,
-  GRID_MEMBERSHIP.organizationPro,
-];
+// Rendered from the canonical object rather than a hand-picked list, so a tier added
+// there reaches the public page instead of being silently left off it — which is how
+// Grid Pro+ went missing the first time.
+const membership = Object.values(GRID_MEMBERSHIP);
 
 export default function GridPricingPage() {
+  // No bg-* utility on the <main> on purpose. `bg-[#f7f8fa]` is in the legacy
+  // conversion layer's darken list and was winning over the marble rule that makes this
+  // a light surface, so the page turned dark while its text stayed dark and every
+  // heading outside a card measured 1.08:1. `grid-marble-surface` already supplies both
+  // the background and the text colour; adding a utility alongside it re-opens the fight.
   return (
-    <main className="grid-marble-surface min-h-screen bg-[#f7f8fa] text-[#0b1220]">
+    <main className="grid-marble-surface min-h-screen">
       <header className="border-b border-[#e2e6ea] bg-white">
         <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-5 sm:px-8">
           <Link className="flex items-center gap-3" href="/grid"><BrandMark /><span className="text-sm font-semibold text-[#0b1220]">Grid</span></Link>

@@ -212,6 +212,18 @@ export const GRID_MEMBERSHIP = {
     audience: "People who work through Grid regularly",
     includes: ["Priority matching", "Saved availability and searches", "Earnings and obligation history"],
   },
+  individualProPlus: {
+    key: "grid_pro_plus",
+    name: "Grid Pro+",
+    // A range rather than a number: this tier is sold on what the practitioner runs
+    // through it, and publishing a single price would be a commitment the sales
+    // conversation cannot honour. Null keeps checkout from treating it as purchasable
+    // without a quote.
+    monthlyPriceCents: null,
+    priceLabel: "$99–149/mo",
+    audience: "Independent practitioners running their own book",
+    includes: ["Everything in Pro", "Multi-site availability", "Client and rebooking continuity", "Agreement and payout records"],
+  },
   organizationFree: {
     key: "grid_organization_free",
     name: "Grid for organizations",

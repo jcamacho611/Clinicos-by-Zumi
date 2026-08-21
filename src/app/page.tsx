@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
+import { EcosystemHierarchy } from "@/components/marketing/ecosystem-hierarchy";
 import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
 
 /* Read from the canonical source. The previous title, "Healthcare operating
@@ -16,6 +17,7 @@ export default function LandingPage() {
   return (
     <>
       <PublicLivingGateway />
+      <EcosystemHierarchy />
       <PublicTrustFooter />
     </>
   );
