@@ -71,7 +71,7 @@ export default function GridGatewayPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-[1500px] px-5 py-12 sm:px-8"><p className="max-w-5xl text-[11px] leading-6 text-[#806965]">Grid is intentionally broader than any one profession or transaction type. Policy is applied by resource class: regulated clinical work, space, equipment, products, professional services, education, organizations, and referrals each get the eligibility and review rules they actually require. Regulated items and services remain subject to applicable law, contracts, licensing, credentialing, facility rules, and human review.</p></section>
+      <section className="relative z-10 mx-auto max-w-[1500px] px-5 py-12 sm:px-8"><p className="max-w-5xl text-[11px] leading-6 text-[#9f8985]">Grid is intentionally broader than any one profession or transaction type. Policy is applied by resource class: regulated clinical work, space, equipment, products, professional services, education, organizations, and referrals each get the eligibility and review rules they actually require. Regulated items and services remain subject to applicable law, contracts, licensing, credentialing, facility rules, and human review.</p></section>
     </main>
   );
 }
