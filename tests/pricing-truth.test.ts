@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { clinicCommercialOffers, clinicPlans, gridCommercialModel } from "@/lib/commercial/klinikos-commercial";
+import { clinicCommercialOffers, clinicPlans, gridPlans } from "@/lib/commercial/klinikos-commercial";
+import { gridPublicPricingPolicy } from "@/lib/commercial/grid-public-pricing";
 import { demoOffers } from "@/lib/sales-demo-rules";
 
 describe("Klinikos pricing truth", () => {
@@ -19,11 +20,23 @@ describe("Klinikos pricing truth", () => {
     expect(Object.values(clinicPlans).every((plan) => plan.implementationPriceLabel.length > 0)).toBe(true);
   });
 
-  it("keeps Grid launch economics explicit without treating them as universal legal rules", () => {
-    expect(gridCommercialModel.professional.transactionLabel).toContain("10%");
-    expect(gridCommercialModel.facility.transactionLabel).toContain("10%");
-    expect(gridCommercialModel.seller.transactionLabel).toContain("10%");
-    expect(gridCommercialModel.platform.pricing).toMatch(/where legally and economically appropriate/i);
+  it("keeps public Grid subscriptions anchored to the canonical Grid plans", () => {
+    expect(gridPublicPricingPolicy.professional.freeLabel).toBe(gridPlans.individual.priceLabel);
+    expect(gridPublicPricingPolicy.professional.proLabel).toContain(gridPlans.pro.priceLabel);
+    expect(gridPublicPricingPolicy.facility.proLabel).toContain(gridPlans.organization.priceLabel);
+  });
+
+  it("does not invent a universal Grid transaction percentage", () => {
+    expect(gridPublicPricingPolicy.universalTransactionPercent).toBeNull();
+    expect(gridPublicPricingPolicy.professional.transactionLabel).toMatch(/resource-class/i);
+    expect(gridPublicPricingPolicy.platform.pricing).toMatch(/does not publish one universal/i);
+    expect(gridPublicPricingPolicy.platform.pricing).toMatch(/server-owned/i);
+  });
+
+  it("keeps universal transaction percentages off the public Grid pricing surface", () => {
+    const source = readFileSync(join(process.cwd(), "src/app/grid/pricing/page.tsx"), "utf8");
+    expect(source).not.toMatch(/10%/i);
+    expect(source).toContain("approved resource-class transaction fee");
   });
 
   it("never lets a public pricing surface bypass the server-owned checkout intent", () => {
