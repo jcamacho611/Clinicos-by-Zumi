@@ -23,6 +23,8 @@ Identifier-shaped content is redacted before any provider boundary and causes th
 
 This remains conservative rather than claiming de-identification. Pattern redaction cannot prove that arbitrary free text is free of all PHI/PII, so the page continues to tell visitors not to enter patient information.
 
+Anonymous public turns explicitly request `storeResponse: false`. Provider adapters that expose an equivalent retention control must honor that request. The OpenAI Responses adapter maps it to the request-level `store` field while preserving the existing authenticated default when the option is omitted. This minimizes provider-side response retention for the anonymous surface; it is not a claim about every provider's transport logs, abuse monitoring, or contractual data-handling behavior.
+
 ## Origin and abuse
 
 Origin allowlisting is defense-in-depth only. It is not authentication because non-browser clients can forge Origin. Abuse resistance also relies on bounded input, a public-specific rate-limit key, provider output/tool budgets, and the fact that no private capability exists behind the endpoint.
@@ -31,6 +33,6 @@ The current process limiter is not a distributed quota. A production multi-insta
 
 ## Provider truth
 
-If the configured provider cannot run, the route returns the deterministic public navigator instead. The browser is told only that the experience degraded, not which provider, model, price, environment variable, or internal failure caused it.
+If the configured provider cannot run, the route returns the deterministic public navigator instead. The browser is told only the safe user-facing answer, not which provider, model, price, environment variable, or internal failure caused it.
 
-Provider cost/token metadata is retained server-side only and must never be added to the public response DTO.
+Provider cost/token metadata stays server-side and must never be added to the public response DTO.
