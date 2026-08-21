@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allocateFundedUsage, evaluateCustomerFundedAccess } from "@/lib/commercial/customer-funded-access";
 import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
-import { getCommercialProduct, resolveCommercialCheckoutAmount } from "@/lib/commercial/product-catalog";
+import { canStartNewCommercialCheckout, getCommercialProduct, resolveCommercialCheckoutAmount } from "@/lib/commercial/product-catalog";
 import { evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
 
 describe("Klinikos commercial truth", () => {
@@ -68,8 +68,30 @@ describe("Klinikos commercial truth", () => {
     const product = getCommercialProduct("operational_audit");
     expect(product?.label).toBe("Clinic Operating Analysis");
     expect(product?.priceCents).toBe(50_000);
+    expect(product?.lifecycle).toBe("active");
+    expect(canStartNewCommercialCheckout(product!)).toBe(true);
     expect(product?.modules).toEqual([]);
     expect(product?.postPurchaseBoundary).toMatch(/does not activate production software/i);
+  });
+
+  it("keeps obsolete Grid processor products readable but blocks them from new checkout", () => {
+    const professional = getCommercialProduct("grid_professional");
+    const facility = getCommercialProduct("grid_facility");
+
+    expect(professional).toMatchObject({
+      priceCents: 3_900,
+      lifecycle: "legacy_evidence_only",
+      publicPurchasable: false,
+    });
+    expect(facility).toMatchObject({
+      priceCents: 9_900,
+      lifecycle: "legacy_evidence_only",
+      publicPurchasable: false,
+    });
+    expect(professional?.label).toMatch(/legacy Whop evidence/i);
+    expect(facility?.label).toMatch(/legacy Whop evidence/i);
+    expect(canStartNewCommercialCheckout(professional!)).toBe(false);
+    expect(canStartNewCommercialCheckout(facility!)).toBe(false);
   });
 
   it("refuses to pair a fixed checkout link with a conflicting recorded amount", () => {
