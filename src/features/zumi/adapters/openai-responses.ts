@@ -14,20 +14,46 @@ const REQUIRED_ENV = [
   "ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS",
 ] as const;
 
+type OpenAIConfig = {
+  apiKey: string;
+  model: string;
+  inputMicroUsdPerMillionTokens: number | null;
+  outputMicroUsdPerMillionTokens: number | null;
+  webSearchMicroUsdPerCall: number | null;
+  fileSearchMicroUsdPerCall: number | null;
+  codeInterpreterMicroUsdPerSession: number | null;
+  vectorStoreId: string;
+  codeInterpreterEnabled: boolean;
+  webSearchContextSize: string;
+  baaOnFile: boolean;
+};
+
 function configuredValue(env: ZumiEnv, name: string) {
   const value = env[name];
   return typeof value === "string" ? value.trim() : "";
 }
 
-function envInt(env: ZumiEnv, key: string, fallback = 0) {
+function positiveEnvInt(env: ZumiEnv, key: string) {
   const value = Number.parseInt(env[key] ?? "", 10);
-  return Number.isFinite(value) && value >= 0 ? value : fallback;
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
-function estimateTokenCostMicroUsd(inputTokens: number, outputTokens: number, env: ZumiEnv) {
-  const inputPerMillion = envInt(env, "ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS");
-  const outputPerMillion = envInt(env, "ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS");
-  return Math.round((inputTokens * inputPerMillion + outputTokens * outputPerMillion) / 1_000_000);
+function validatedTokenRates(config: OpenAIConfig) {
+  if (config.inputMicroUsdPerMillionTokens == null || config.outputMicroUsdPerMillionTokens == null) {
+    throw new Error("OpenAI token pricing must be configured as positive integer micro-USD rates before paid inference can execute.");
+  }
+  return {
+    inputMicroUsdPerMillionTokens: config.inputMicroUsdPerMillionTokens,
+    outputMicroUsdPerMillionTokens: config.outputMicroUsdPerMillionTokens,
+  };
+}
+
+function estimateTokenCostMicroUsd(inputTokens: number, outputTokens: number, config: OpenAIConfig) {
+  const rates = validatedTokenRates(config);
+  return Math.round((
+    inputTokens * rates.inputMicroUsdPerMillionTokens +
+    outputTokens * rates.outputMicroUsdPerMillionTokens
+  ) / 1_000_000);
 }
 
 function collectText(output: unknown) {
@@ -102,12 +128,34 @@ function collectToolsUsed(output: unknown) {
   return [...types];
 }
 
-function toolsFor(request: ProviderRequest, env: ZumiEnv) {
-  const tools: Record<string, unknown>[] = [];
-  const vectorStoreId = configuredValue(env, "ZUMI_OPENAI_VECTOR_STORE_ID");
+function countToolCalls(output: unknown, fragment: "web_search" | "file_search" | "code_interpreter") {
+  if (!Array.isArray(output)) return 0;
+  return output.filter((item) => {
+    if (!item || typeof item !== "object") return false;
+    const type = (item as { type?: unknown }).type;
+    return typeof type === "string" && type.includes(fragment);
+  }).length;
+}
 
-  if (request.allowKnowledgeSearch && vectorStoreId) {
-    tools.push({ type: "file_search", vector_store_ids: [vectorStoreId] });
+function validateExecutionCostConfiguration(request: ProviderRequest, config: OpenAIConfig) {
+  validatedTokenRates(config);
+  if (request.allowWebSearch && config.webSearchMicroUsdPerCall == null) {
+    throw new Error("ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL is required before OpenAI web search can be enabled.");
+  }
+  if (request.allowKnowledgeSearch && config.vectorStoreId && config.fileSearchMicroUsdPerCall == null) {
+    throw new Error("ZUMI_OPENAI_FILE_SEARCH_MICRO_USD_PER_CALL is required before OpenAI file search can be enabled.");
+  }
+  if (request.allowCodeInterpreter && config.codeInterpreterEnabled && config.codeInterpreterMicroUsdPerSession == null) {
+    throw new Error("ZUMI_OPENAI_CODE_INTERPRETER_MICRO_USD_PER_SESSION is required before OpenAI Code Interpreter can be enabled.");
+  }
+}
+
+function toolsFor(request: ProviderRequest, config: OpenAIConfig) {
+  validateExecutionCostConfiguration(request, config);
+  const tools: Record<string, unknown>[] = [];
+
+  if (request.allowKnowledgeSearch && config.vectorStoreId) {
+    tools.push({ type: "file_search", vector_store_ids: [config.vectorStoreId] });
   }
 
   if (request.allowWebSearch) {
@@ -115,34 +163,57 @@ function toolsFor(request: ProviderRequest, env: ZumiEnv) {
     tools.push({
       type: "web_search",
       ...(domains.length > 0 ? { filters: { allowed_domains: domains } } : {}),
-      search_context_size: configuredValue(env, "ZUMI_WEB_SEARCH_CONTEXT_SIZE") || "medium",
+      search_context_size: config.webSearchContextSize || "medium",
     });
   }
 
-  if (request.allowCodeInterpreter && configuredValue(env, "ZUMI_OPENAI_CODE_INTERPRETER") === "1") {
+  if (request.allowCodeInterpreter && config.codeInterpreterEnabled) {
     tools.push({ type: "code_interpreter", container: { type: "auto" } });
   }
 
   return tools;
 }
 
+function toolCostMicroUsd(output: unknown, config: OpenAIConfig) {
+  const webSearchCalls = countToolCalls(output, "web_search");
+  const fileSearchCalls = countToolCalls(output, "file_search");
+  const codeInterpreterCalls = countToolCalls(output, "code_interpreter");
+
+  const webSearchCost = webSearchCalls * (config.webSearchMicroUsdPerCall ?? 0);
+  const fileSearchCost = fileSearchCalls * (config.fileSearchMicroUsdPerCall ?? 0);
+  const codeInterpreterCost = codeInterpreterCalls > 0 ? (config.codeInterpreterMicroUsdPerSession ?? 0) : 0;
+
+  return webSearchCost + fileSearchCost + codeInterpreterCost;
+}
+
 export function createOpenAIResponsesAdapter(env: ZumiEnv = process.env): ProviderAdapter {
-  const modelId = configuredValue(env, "ZUMI_OPENAI_MODEL") || "openai-unconfigured";
+  const config: OpenAIConfig = {
+    apiKey: configuredValue(env, "OPENAI_API_KEY"),
+    model: configuredValue(env, "ZUMI_OPENAI_MODEL"),
+    inputMicroUsdPerMillionTokens: positiveEnvInt(env, "ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS"),
+    outputMicroUsdPerMillionTokens: positiveEnvInt(env, "ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS"),
+    webSearchMicroUsdPerCall: positiveEnvInt(env, "ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL"),
+    fileSearchMicroUsdPerCall: positiveEnvInt(env, "ZUMI_OPENAI_FILE_SEARCH_MICRO_USD_PER_CALL"),
+    codeInterpreterMicroUsdPerSession: positiveEnvInt(env, "ZUMI_OPENAI_CODE_INTERPRETER_MICRO_USD_PER_SESSION"),
+    vectorStoreId: configuredValue(env, "ZUMI_OPENAI_VECTOR_STORE_ID"),
+    codeInterpreterEnabled: configuredValue(env, "ZUMI_OPENAI_CODE_INTERPRETER") === "1",
+    webSearchContextSize: configuredValue(env, "ZUMI_WEB_SEARCH_CONTEXT_SIZE") || "medium",
+    baaOnFile: configuredValue(env, "OPENAI_BAA_ON_FILE") === "1",
+  };
+  const modelId = config.model || "openai-unconfigured";
+
   return {
     key: "openai",
     label: "OpenAI Responses",
     modelId,
     requiredEnv: REQUIRED_ENV,
-    baaOnFile: configuredValue(env, "OPENAI_BAA_ON_FILE") === "1",
+    baaOnFile: config.baaOnFile,
     async invoke(request): Promise<ProviderResult> {
-      const runtimeEnv: ZumiEnv = process.env;
-      const apiKey = configuredValue(runtimeEnv, "OPENAI_API_KEY");
-      const model = configuredValue(runtimeEnv, "ZUMI_OPENAI_MODEL");
-      if (!apiKey || !model) throw new Error("OpenAI Zumi adapter is not configured.");
+      if (!config.apiKey || !config.model) throw new Error("OpenAI Zumi adapter is not configured.");
 
-      const tools = toolsFor(request, runtimeEnv);
+      const tools = toolsFor(request, config);
       const payload: Record<string, unknown> = {
-        model,
+        model: config.model,
         instructions: request.system,
         input: request.prompt,
         max_output_tokens: request.maxOutputTokens,
@@ -158,7 +229,7 @@ export function createOpenAIResponsesAdapter(env: ZumiEnv = process.env): Provid
 
       const response = await fetch(`${OPENAI_BASE_URL}/responses`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         signal: request.signal,
       });
@@ -180,19 +251,12 @@ export function createOpenAIResponsesAdapter(env: ZumiEnv = process.env): Provid
       if (!text) throw new Error("OpenAI returned no text output.");
 
       const toolsUsed = collectToolsUsed(data.output);
-      const webSearchCalls = toolsUsed.includes("web_search")
-        ? (Array.isArray(data.output)
-            ? data.output.filter((item) => item && typeof item === "object" && String((item as { type?: unknown }).type).includes("web_search")).length
-            : 0)
-        : 0;
-      const webSearchCost = webSearchCalls * envInt(runtimeEnv, "ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL");
-
       return {
         text,
         inputTokens,
         outputTokens,
-        costMicroUsd: estimateTokenCostMicroUsd(inputTokens, outputTokens, runtimeEnv) + webSearchCost,
-        modelId: data.model ?? model,
+        costMicroUsd: estimateTokenCostMicroUsd(inputTokens, outputTokens, config) + toolCostMicroUsd(data.output, config),
+        modelId: data.model ?? config.model,
         responseId: data.id ?? null,
         sources: collectSources(data.output),
         toolsUsed,
