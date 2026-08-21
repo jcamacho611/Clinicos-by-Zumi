@@ -2,20 +2,29 @@ import type { MetadataRoute } from "next";
 
 const SITE_URL = "https://klinikos.io";
 
-// Prefix-match the route root itself and everything below it. Using `/login`
-// rather than `/login/` protects both `/login` and nested login routes.
+// robots.txt is crawl guidance, never access control. Every route below must still
+// enforce its own authentication/authorization and private metadata boundaries.
 export const privateRoutePrefixes = [
   "/api",
   "/access",
   "/activate",
   "/admin",
+  "/action-center",
   "/billing",
   "/cases",
+  "/care-teams",
+  "/capacity-exchange",
   "/connections",
+  "/crm",
   "/dashboard",
+  "/documents",
   "/encounters",
   "/follow-up",
   "/front-desk",
+  "/health-passport",
+  "/identity-resolution",
+  "/injury-episodes",
+  "/intake-passport",
   "/login",
   "/luxe-medi",
   "/network",
@@ -30,6 +39,7 @@ export const privateRoutePrefixes = [
   "/settings",
   "/tasks",
   "/today",
+  "/zumi",
   "/grid/workspace",
   "/grid/opportunities",
 ] as const;

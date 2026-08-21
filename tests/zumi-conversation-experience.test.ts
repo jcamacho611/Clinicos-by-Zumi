@@ -19,26 +19,19 @@ describe("Zumi conversation experience", () => {
     expect(shell).toContain("<ZumiPresence userName={session.name}");
   });
 
-  it("turns the shell composer into a real Zumi entry instead of decorative search state", () => {
+  it("turns the shell composer into the canonical Zumi control instead of decorative search state", () => {
     expect(shell).toContain('new CustomEvent("zumi:prompt"');
-    // The placeholder follows the surface a person is standing on rather than naming
-    // the assistant: "What needs to happen?" on Home, "What do you need or have?" on
-    // Grid, "Ask about money that needs attention…" on billing.
+    expect(shell).toContain('new Event("zumi:open")');
     expect(shell).toContain("placeholder={promptPlaceholder}");
     expect(shell).toContain("klinikosPromptForWorkspace");
-    // The critical interaction: with text, the control SENDS; empty, it focuses the
-    // conversation already mounted in the shell. It never navigates, so it can never
-    // surprise someone by throwing them into a different surface mid-sentence. The
-    // label follows the behaviour rather than announcing Zumi as a separate app.
-    // The label follows the behaviour and never names Zumi as somewhere to be sent:
-    // with text the control sends, empty it focuses the mounted conversation.
-    expect(shell).toContain('aria-label={zumiPrompt.trim() ? "Send" : "Ask Klinikos"}');
-    expect(shell).not.toMatch(/aria-label="(Open|Focus) Zumi/);
+    expect(shell).toContain('aria-label="Message Zumi"');
+    expect(shell).toContain('const shellControlLabel = zumiPrompt.trim() ? "Send message to Zumi" : "Open Zumi assistant"');
+    expect(shell).toContain("aria-label={shellControlLabel}");
+    expect(shell).toContain('aria-controls="zumi-presence-panel"');
+    expect(shell).toContain('aria-haspopup="dialog"');
+    expect(shell).toContain('src="/klinikos-orbital-k-production.png"');
     expect(shell).toContain("onClick={sendOrFocusZumi}");
-    expect(shell).toContain('new Event("zumi:open")');
-    expect(shell).not.toMatch(/aria-label="Open Zumi"/);
-    // Visible text says what the button does, not what product it belongs to.
-    expect(shell).toContain('{zumiPrompt.trim() ? "Send" : "Ask"}');
+    expect(shell).toContain("md:hidden");
   });
 
   it("keeps trusted path navigation client-side so the active conversation is not destroyed", () => {
@@ -52,8 +45,6 @@ describe("Zumi conversation experience", () => {
     expect(presence).toContain('const dedicatedPage = pathname === "/zumi"');
     expect(presence).toContain('aria-label="Start a new conversation"');
     expect(presence).toContain('aria-label="Expand conversation"');
-    // The conversation's own invitation is contextual too, so it comes from the shared
-    // per-workspace prompt rather than being hard-coded to Home's question.
     expect(presence).toContain("placeholder={conversationPrompt}");
     expect(presence).toContain('aria-label="Conversation preferences"');
     expect(presence).not.toContain('role="tablist"');
@@ -71,8 +62,6 @@ describe("Zumi conversation experience", () => {
 
   it("tells the model to converse before routing or exposing internal machinery", () => {
     expect(masterDirective).toContain("Conversation comes before routing");
-    // The rule, not one phrasing of it: an ordinary turn may get an ordinary reply
-    // rather than being forced into a workflow.
     expect(masterDirective).toMatch(/casual turns[\s\S]{0,80}without inventing workflows/);
     expect(masterDirective).toContain("Answer first.");
     expect(masterDirective).toContain("Do not expose orchestration plans");

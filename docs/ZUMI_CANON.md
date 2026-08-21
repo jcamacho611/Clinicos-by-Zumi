@@ -1,6 +1,6 @@
 # KLINIKOS — ZUMI CANON
 
-Version: `2026-08-17.1`
+Version: `2026-08-20.2`
 Status: `AUTHORITATIVE SPECIALIST CANON`
 
 ## 1. Definition
@@ -28,19 +28,34 @@ Zumi may never override authentication, tenant isolation, RBAC, resource authori
 
 ## 3. Primary experience law
 
-Zumi is **one assistant with multiple governed modes**, not a collection of disconnected AI pages.
+Zumi is **one persistent assistant with multiple governed modes**, not a collection of disconnected AI pages or competing launchers.
 
-Primary authenticated entry points are:
+The canonical authenticated experience is the **persistent Zumi control in the Klinikos shell**. It is available across authenticated workspaces and acts as the user's natural-language operating control for the application.
 
-- the visible `Zumi` control in the Klinikos shell;
-- the global **Ask Zumi** composer in the shell header;
-- the floating Zumi presence control;
+Equivalent access paths all converge on the same conceptual assistant and governed request path:
+
+- the persistent shell composer/control;
+- the compact mobile equivalent of that same control;
 - `Ctrl/Cmd + J`;
-- the dedicated `/zumi` full conversation workspace.
+- the dedicated `/zumi` expanded conversation workspace.
 
-The dedicated workspace and the floating assistant use the same mounted conversation surface inside the authenticated Klinikos shell. Opening a trusted Klinikos path must use client-side navigation so a user can inspect the destination and keep talking to Zumi without destroying the active thread.
+These are access methods to one assistant, not separate Zumi instances.
 
-`/zumi` is the primary conversational intelligence surface. Historical workflow-management pages such as `/ai-assistants` and `/voice-assistant` may continue to exist for specialized administrative functionality, but they are not competing primary chat entry points.
+The shell control must:
+
+- remain available on every authenticated application page except where `/zumi` itself is already the expanded assistant;
+- have an accessible name that clearly identifies Zumi and whether the action sends or opens the assistant;
+- send entered text into the same mounted Zumi conversation surface;
+- open that same conversation when invoked without a message;
+- use page/workspace context to help the user without creating page-specific assistant personalities;
+- preserve conversation continuity during trusted client-side navigation while the authenticated shell remains mounted;
+- avoid duplicate decorative launchers that make the user guess which Zumi is authoritative.
+
+If a Zumi mark is interactive, its purpose must be obvious and accessible. Decorative Zumi marks must not look like unexplained controls.
+
+`/zumi` is the expanded conversational intelligence workspace. Historical workflow-management pages such as `/ai-assistants` and `/voice-assistant` may continue to exist for specialized administrative functionality, but they are not competing primary chat entry points.
+
+The deeper repository-wide control/comprehension/disclosure law is `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md`.
 
 ## 4. Conversation UX law
 
@@ -192,6 +207,6 @@ Zumi is production-live for a workload only when the exact provider path, enviro
 
 The conversation UX is considered wired only when a user can:
 
-`OPEN ZUMI → ASK → RECEIVE → FOLLOW UP → OPEN TRUSTED KLINIKOS PATH → KEEP TALKING → RETURN / EXPAND → START NEW THREAD`
+`OPEN ZUMI FROM ANY AUTHORIZED WORKSPACE → ASK → RECEIVE → FOLLOW UP → OPEN TRUSTED KLINIKOS PATH → KEEP TALKING → RETURN / EXPAND → START NEW THREAD`
 
-without encountering a dead-end result page or losing the active in-shell conversation during governed client-side navigation.
+without encountering a dead-end result page, a competing assistant, or loss of the active in-shell conversation during governed client-side navigation.
