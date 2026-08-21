@@ -35,7 +35,11 @@ export function PublicProductDefinition() {
           Klinikos brings scheduling, follow-up, referrals, team workflows, documents, revenue work, and owner visibility into one governed workspace, with Zumi helping your team understand what needs attention and what should happen next.
         </p>
 
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#bfa7a2]">
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#d4b6b1]">
+          The difference: unfinished work stays visible until it has an owner and a next action, instead of disappearing between systems and handoffs.
+        </p>
+
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[#bfa7a2]">
           Built to reduce fragmented clinic software and manual handoffs while keeping the external healthcare connections that still need to remain.
         </p>
 
