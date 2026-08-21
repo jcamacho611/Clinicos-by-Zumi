@@ -114,6 +114,14 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).not.toContain("Preparing");
   });
 
+  it("makes Zumi the composer send control instead of leaving a detached decorative orb", () => {
+    expect(source).toContain("function ZumiSendGlyph");
+    expect(source).toContain("data-zumi-send-glyph");
+    expect(source).toContain("<ZumiSendGlyph active={isSubmitting} />");
+    expect(source).not.toContain('<ZumiOrb state="observing" size={44} />');
+    expect(source).not.toContain("ArrowUp");
+  });
+
   it("provides explicit composer labels, plain-language disclosure, live status, and keyboard submit", () => {
     expect(source).toContain('htmlFor="public-klinikos-intent"');
     expect(source).toContain('aria-describedby="public-conversation-disclosure"');
