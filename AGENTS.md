@@ -12,7 +12,8 @@ Start every material run with:
 4. read `docs/SOURCE_OF_TRUTH.md` and `docs/KLINIKOS_ARCHITECTURE_INDEX.md`;
 5. for **any frontend, API, Zumi, Grid, Quality/Assurance, pricing, security, analytics, admin, integration, or client-visible work**, read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing;
 6. for any work involving production, vendors, secrets, payments, AI, maps, communications, healthcare rails, or deployment, read `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` and `docs/EXTERNAL_DEPENDENCY_MATRIX.md` before making claims or edits;
-7. for **any Zumi shell/control, public UX, product-comprehension, navigation, SEO, metadata, sitemap, robots, indexing, or growth-surface work**, read `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` before editing.
+7. for **any Zumi shell/control, public UX, product-comprehension, navigation, SEO, metadata, sitemap, robots, indexing, or growth-surface work**, read `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` before editing;
+8. for **any Zumi conversation, routing, role/goal understanding, public intelligence, fallback/degraded behavior, quick-reply, provider, memory/context, or assistant-response work**, read `docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` before editing.
 
 For Grid, Zumi, EDU, Clinic OS, portal/role, finance, design, pricing, Assurance/Quality Guardian/Expert Grid, or security-boundary work, read the corresponding specialist canon before editing. For recovery work, read `docs/BRANCH_LEDGER.md` and preserve all listed local/remote history.
 
@@ -70,6 +71,24 @@ Permanent rules:
 - growth work should improve qualified discovery, activation, retained operational use, paid conversion/expansion, network liquidity, cost-to-serve, and trust rather than vanity traffic or feature count.
 
 A regression that removes persistent Zumi access from a core authenticated surface, creates a competing assistant, exposes proprietary implementation details to the browser, or makes private workspaces indexable is a merge blocker.
+
+## Zumi conversation intelligence law
+
+`docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` is repository-wide law for how Zumi understands, continues, and degrades a conversation.
+
+Permanent rules:
+
+- Zumi is not a regex router wearing a chat UI; routing is one optional capability beneath conversation understanding;
+- every ordinary safe turn must provide value before asking for more information;
+- self-described roles and goals may personalize conversation but never become verified credential, eligibility, payment, or clinical truth;
+- short turns such as `like what`, `how`, `why`, `what else`, `for me`, and `how could you help` inherit relevant prior context instead of restarting the conversation;
+- public-safe product knowledge is server-owned and intentionally excludes confidential implementation, security, margin, provider, ranking, and roadmap details;
+- provider failure must degrade to a state-aware solution-first response rather than a generic fallback carousel;
+- anonymous public turns must not gain authenticated authority or inherit tenant memory;
+- public quick replies are normalized prompt shortcuts, never arbitrary model-generated executable actions;
+- the exact `hey → what can we do → like what → im a doctor → i own my practice too → we keep missing callbacks → how could you help` regression must remain covered in provider-disabled/degraded mode.
+
+A Zumi change that makes additional user context produce a less useful answer, reintroduces standalone dead-end copy, exposes raw conversation-state internals to the client, or weakens public/authenticated authority separation is a merge blocker.
 
 ## Default completion condition
 
