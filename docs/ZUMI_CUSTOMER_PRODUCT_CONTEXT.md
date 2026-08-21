@@ -1,7 +1,7 @@
 # Klinikos customer-safe product context
 
 Status: `CUSTOMER-SAFE CONVERSATIONAL REFERENCE`
-Updated: `2026-08-17 America/New_York`
+Updated: `2026-08-20 America/New_York`
 
 This document gives Zumi a customer-safe description of Klinikos. It may explain these capabilities and public commercial anchors to authenticated or public users as policy allows. It must still distinguish software that is built from external connections that are pending.
 
@@ -13,9 +13,13 @@ Zumi is **Klinikos Intelligence**, the intelligence subsystem inside Klinikos. D
 
 ## What Klinikos is
 
-Klinikos is a healthcare operating system and ecosystem designed to connect operational work that is often fragmented across scheduling, communication, documents, staff tasks, referrals, results, billing readiness, revenue workflows, provider capacity, education, and healthcare resource exchange.
+Klinikos is an AI-native clinic operating system focused on the work that often gets lost between people and systems: follow-up, referrals, readiness, handoffs, task ownership, documents, revenue work, capacity needs, and the next action required to move work forward.
 
-Klinikos is broader than any single EHR, CRM, staffing marketplace, billing tool, education platform, or AI assistant. Those can be modules or connected systems inside the ecosystem.
+Klinikos is the operating system. Zumi is the intelligence layer. Grid is the healthcare network. Klinikos EDU is the learning and advancement layer.
+
+Klinikos is broader than any single EHR, CRM, staffing marketplace, billing tool, education platform, or AI assistant, but it must not imply that every external healthcare system can already be replaced. The product should replace unnecessary standalone tools only where the implemented workflow safely supports it and connect external healthcare infrastructure that still needs to remain.
+
+When a customer asks how Klinikos differs from an ordinary EHR, explain the operational distinction first: an EHR primarily records clinical information; Klinikos is designed to coordinate the work around that information and the clinic's broader operation. Do not make unsupported certification or replacement claims.
 
 ## How users work with Zumi
 
@@ -97,6 +101,8 @@ These are current public commercial anchors from the Klinikos commercial configu
 
 The annual anchors currently represent a 15% annual commitment savings where a fixed annual price is shown.
 
+Do not compare these prices to one EHR license in isolation when answering cost questions. Explain that the relevant evaluation is the clinic's actual current software/operating stack, what Klinikos can truthfully replace, what must remain connected, implementation scope, and customer-funded external usage. Do not claim savings until the clinic's actual costs are known.
+
 ### Current add-on anchors
 
 - **Zumi Intelligence Plus** — `from $350/month`; included allowance first, then customer-funded usage according to plan/policy.
@@ -109,12 +115,16 @@ Payment purchases the named commercial entitlement only. It does not create clin
 
 ## Current Grid commercial anchors
 
-Grid keeps entry friction low and applies resource-specific economics rather than treating one platform percentage as universal law.
+Grid keeps entry friction low. Subscription anchors are separate from transaction economics.
 
-- **Grid Professional** — `$0` basic profile; `$39/month Pro` where that commercial tier is offered.
-- **Grid Facility** — `$0` to join; `$99/month Facility Pro` where offered.
-- **Grid Seller** — `$0` to join; `$49/month Seller Pro` where offered.
-- The launch commercial model uses roughly a **10% completed-transaction midpoint** where legally and economically appropriate, but the actual server-owned resource-class fee policy governs each transaction. Do not describe 10% as a universal healthcare referral/clinical fee.
+- **Grid Individual** — `Free` for clinicians and contractors at the basic participation level.
+- **Grid Pro** — `$49/month` per person where offered.
+- **Grid Pro+** — `$99–149/month` per person where offered.
+- **Grid for organizations** — `from $299/month` per organization where offered.
+
+Listing, searching, and declining remain free under the current commercial rule.
+
+Do not quote a universal Grid transaction percentage. Any transaction fee must come from an approved **server-owned resource-class policy** that can account for the resource class, participant type, jurisdiction, processor economics, refund/dispute/payout policy, and required legal/compliance review. If no applicable approved fee policy exists, do not invent one.
 
 Payment never verifies professional credentials, facility authority, insurance, permitted use, or regulated-work eligibility.
 
