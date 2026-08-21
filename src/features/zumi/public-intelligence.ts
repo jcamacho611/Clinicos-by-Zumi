@@ -217,6 +217,9 @@ export async function resolvePublicZumiTurn(input: {
       prompt: buildPublicPrompt(redacted.question, redacted.history),
       maxOutputTokens: MAX_OUTPUT_TOKENS,
       timeoutMs: PROVIDER_TIMEOUT_MS,
+      // Anonymous public conversation has no need for provider-native continuation.
+      // Ask adapters that support retention controls not to store the response.
+      storeResponse: false,
       allowWebSearch: false,
       allowKnowledgeSearch: false,
       allowCodeInterpreter: false,
