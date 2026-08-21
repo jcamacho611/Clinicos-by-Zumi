@@ -52,6 +52,9 @@ describe("public Zumi zero-dead-end degraded conversation", () => {
       expect(text.length, messages[index]).toBeGreaterThan(80);
     }
 
+    expect(results[2].resolution.title).not.toBe(results[1].resolution.title);
+    expect(results[2].resolution.body).not.toBe(results[1].resolution.body);
+    expect(results[2].resolution.body.toLowerCase()).toMatch(/callback|nurse|grid|billing|edu/);
     expect(results[3].resolution.body.toLowerCase()).toMatch(/physician|clinical practice/);
     expect(results[4].resolution.body.toLowerCase()).toMatch(/practice owner|running the practice|operation/);
     expect(results[5].resolution.body.toLowerCase()).toMatch(/callback|follow-up/);
