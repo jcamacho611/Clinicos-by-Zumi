@@ -17,18 +17,27 @@ import {
   ZUMI_COMPOSER_PROMPT,
 } from "@/lib/brand/canonical-messaging";
 
+type PublicZumiSuggestion = {
+  id: string;
+  label: string;
+  prompt: string;
+};
+
 type ConversationTurn = {
   id: number;
   prompt: string;
   resolution: PublicLivingResolution;
+  suggestions: PublicZumiSuggestion[];
 };
 
 type PublicZumiApiResponse = {
   data?: {
     resolution?: unknown;
+    suggestions?: unknown;
   };
 };
 
+const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const protectedHref = (href: string) => href === "/login" ? "/login" : `/login?next=${encodeURIComponent(href)}`;
 const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales"]);
 
@@ -52,6 +61,35 @@ function isPublicLivingResolution(value: unknown): value is PublicLivingResoluti
     && !candidate.destination.href.startsWith("//")
     && typeof candidate.destination.action === "string"
     && typeof candidate.destination.key === "string";
+}
+
+function isPublicZumiSuggestions(value: unknown): value is PublicZumiSuggestion[] {
+  if (!Array.isArray(value) || value.length > 4) return false;
+  return value.every((item) => {
+    if (!item || typeof item !== "object") return false;
+    const suggestion = item as Partial<PublicZumiSuggestion>;
+    return typeof suggestion.id === "string"
+      && suggestion.id.length > 0
+      && suggestion.id.length <= 64
+      && typeof suggestion.label === "string"
+      && suggestion.label.length > 0
+      && suggestion.label.length <= 80
+      && typeof suggestion.prompt === "string"
+      && suggestion.prompt.length > 0
+      && suggestion.prompt.length <= 300;
+  });
+}
+
+function publicConversationId() {
+  try {
+    const existing = window.sessionStorage.getItem(PUBLIC_SESSION_KEY);
+    if (existing && /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(existing)) return existing;
+    const created = window.crypto.randomUUID();
+    window.sessionStorage.setItem(PUBLIC_SESSION_KEY, created);
+    return created;
+  } catch {
+    return undefined;
+  }
 }
 
 function ZumiSendGlyph({ active }: { active: boolean }) {
@@ -95,9 +133,8 @@ export function PublicLivingGateway() {
 
   useEffect(() => () => activeRequest.current?.abort(), []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const prompt = intent.trim();
+  async function sendPrompt(rawPrompt: string) {
+    const prompt = rawPrompt.trim();
     if (!prompt || isSubmitting) return;
 
     const priorResolution = turns[turns.length - 1]?.resolution ?? null;
@@ -112,7 +149,7 @@ export function PublicLivingGateway() {
         { role: "user" as const, content: turn.prompt },
         { role: "assistant" as const, content: `${turn.resolution.title}\n${turn.resolution.body}` },
       ]))
-      .slice(-6);
+      .slice(-12);
     const id = nextTurnId.current;
     nextTurnId.current += 1;
 
@@ -125,12 +162,18 @@ export function PublicLivingGateway() {
     activeRequest.current = controller;
 
     let resolution = fallback;
+    let suggestions: PublicZumiSuggestion[] = [];
 
     try {
       const response = await fetch("/api/zumi/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: prompt, history }),
+        body: JSON.stringify({
+          question: prompt,
+          history,
+          sessionId: publicConversationId(),
+          surface: window.location.pathname,
+        }),
         cache: "no-store",
         signal: controller.signal,
       });
@@ -140,18 +183,26 @@ export function PublicLivingGateway() {
         if (isPublicLivingResolution(payload.data?.resolution)) {
           resolution = payload.data.resolution;
         }
+        if (isPublicZumiSuggestions(payload.data?.suggestions)) {
+          suggestions = payload.data.suggestions;
+        }
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      // Network/provider failure does not erase the person's turn. The deterministic
-      // navigator is the truthful degraded path and remains entirely local/public.
+      // Network/provider failure does not erase the person's turn. The local resolver is
+      // an emergency path only and is required to remain solution-first as well.
     } finally {
       if (activeRequest.current === controller) activeRequest.current = null;
     }
 
-    setTurns((current) => [...current, { id, prompt, resolution }]);
+    setTurns((current) => [...current, { id, prompt, resolution, suggestions }]);
     setPendingPrompt(null);
     setIsSubmitting(false);
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await sendPrompt(intent);
   }
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -279,6 +330,7 @@ export function PublicLivingGateway() {
             <section className="flex-1 space-y-8 py-4" aria-label="Public Zumi guidance">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
+                const showSuggestions = turn.id === latestTurn?.id && turn.suggestions.length > 0;
                 return (
                   <article className="space-y-5" key={turn.id}>
                     <div className="flex justify-end">
@@ -300,6 +352,23 @@ export function PublicLivingGateway() {
                             {resolution.destination.action}
                             <ArrowRight className="size-3.5" aria-hidden="true" />
                           </Link>
+                        )}
+
+                        {showSuggestions && (
+                          <div className="mt-5 flex flex-wrap gap-2" aria-label="Suggested replies">
+                            {turn.suggestions.map((suggestion) => (
+                              <button
+                                aria-label={`Reply: ${suggestion.label}`}
+                                className="min-h-10 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                                disabled={isSubmitting}
+                                key={suggestion.id}
+                                onClick={() => void sendPrompt(suggestion.prompt)}
+                                type="button"
+                              >
+                                {suggestion.label}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
