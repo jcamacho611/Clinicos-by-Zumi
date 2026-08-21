@@ -1,53 +1,46 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
-import { GRID_FEE_POLICY, GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
+import {
+  GRID_FEE_POLICY,
+  GRID_MEMBERSHIP,
+  gridPolicyHasCounselClearance,
+} from "@/lib/commercial/grid-economics";
 
 export const metadata = {
   title: "Grid pricing — Klinikos",
   description:
-    "Listing and searching Grid are free. Klinikos earns a fee only when a transaction completes, and the "
-    + "fee depends on what was exchanged.",
+    "Listing, searching and declining on Grid are free. Any transaction fee is resource-class specific and becomes active only through reviewed server-owned policy.",
 };
 
 /**
- * Grid pricing, from one source.
- *
- * This page and /klinikos previously read from two different constants and advertised
- * two different prices for the same product — Grid Pro was $49 on one and $39 on the
- * other. Both now read `GRID_MEMBERSHIP`, so a contradiction between two public pages
- * would require editing one file twice.
- *
- * The fee table is rendered from the policy declarations rather than a hand-written
- * sentence, including the classes Klinikos does not charge for. Showing "no fee — under
- * legal review" is better commercially than hiding it: a clinic that asks whether we
- * take a cut of patient care deserves to see the answer without asking, and a
- * marketplace that quietly took one would be a much bigger problem than an awkward row
- * in a table.
+ * Participation pricing comes from one canonical object. Transaction economics are
+ * different: a business proposal is not a live charge, and browser copy is never fee
+ * authority. Persisted server-owned policy remains the settlement authority.
  */
-
 function feeSummary(policy: (typeof GRID_FEE_POLICY)[number]) {
-  if (policy.legalReview === "requires_legal_review") {
-    return policy.feeModel === "none" ? "No platform fee" : "No platform fee yet";
-  }
   if (policy.feeModel === "none") return "No platform fee";
+  if (!gridPolicyHasCounselClearance(policy)) return "Not active — review required";
   if (policy.feeModel === "fixed_per_transaction") {
     return `$${((policy.fixedFeeCents ?? 0) / 100).toFixed(0)} per completed match`;
   }
   return `${(policy.percentBps ?? 0) / 100}% of the completed transaction`;
 }
 
+function reviewLabel(policy: (typeof GRID_FEE_POLICY)[number]) {
+  if (policy.feeModel === "none" || gridPolicyHasCounselClearance(policy)) return null;
+  return policy.legalReview === "business_draft"
+    ? "Business draft · not active"
+    : "Counsel review required";
+}
+
 // Rendered from the canonical object rather than a hand-picked list, so a tier added
-// there reaches the public page instead of being silently left off it — which is how
-// Grid Pro+ went missing the first time.
+// there reaches the public page instead of being silently left off it.
 const membership = Object.values(GRID_MEMBERSHIP);
 
 export default function GridPricingPage() {
-  // No bg-* utility on the <main> on purpose. `bg-[#f7f8fa]` is in the legacy
-  // conversion layer's darken list and was winning over the marble rule that makes this
-  // a light surface, so the page turned dark while its text stayed dark and every
-  // heading outside a card measured 1.08:1. `grid-marble-surface` already supplies both
-  // the background and the text colour; adding a utility alongside it re-opens the fight.
+  // No bg-* utility on the <main> on purpose. `grid-marble-surface` owns the light
+  // background/text contract and avoids the legacy conversion layer fighting it.
   return (
     <main className="grid-marble-surface min-h-screen">
       <header className="border-b border-[#e2e6ea] bg-white">
@@ -66,8 +59,9 @@ export default function GridPricingPage() {
             Free to list. Free to search. Free to say no.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[#334155]">
-            Klinikos earns when a transaction actually completes, and what it earns depends on what was
-            exchanged. A room is not a clinician, and the two are not priced the same way.
+            Participation stays low-friction while Grid builds real supply and demand. Transaction economics are
+            handled by resource class, and a proposed fee does not become a live charge until required review and
+            server-side policy gates are complete.
           </p>
         </div>
       </section>
@@ -88,13 +82,12 @@ export default function GridPricingPage() {
         </div>
 
         <h2 className="mt-16 text-2xl font-semibold tracking-[-.02em] text-[#0b1220]">
-          What Klinikos earns on a completed transaction
+          Transaction-fee status by resource class
         </h2>
         <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#334155]">
-          Healthcare puts real limits on what a marketplace may take a share of. Rules on fee splitting,
-          corporate practice of medicine and patient referrals differ by state and do not apply the same way to
-          an empty treatment room as they do to patient care. So each class is priced on its own terms, and the
-          classes still under review earn nothing.
+          Healthcare marketplace economics can change with what is exchanged, the parties, jurisdiction,
+          payer rules and professional-practice restrictions. Fee-bearing proposals shown as drafts are not
+          active charges. Patient-care and referral routing carry no Grid platform fee under the current policy.
         </p>
 
         <div className="mt-6 overflow-x-auto">
@@ -102,39 +95,42 @@ export default function GridPricingPage() {
             <thead>
               <tr className="border-b border-[#cbd5e1]">
                 <th className="py-3 pr-4 text-[12px] font-bold uppercase tracking-[.12em] text-[#475569]">What is exchanged</th>
-                <th className="py-3 pr-4 text-[12px] font-bold uppercase tracking-[.12em] text-[#475569]">Klinikos fee</th>
-                <th className="py-3 text-[12px] font-bold uppercase tracking-[.12em] text-[#475569]">Why</th>
+                <th className="py-3 pr-4 text-[12px] font-bold uppercase tracking-[.12em] text-[#475569]">Current fee status</th>
+                <th className="py-3 text-[12px] font-bold uppercase tracking-[.12em] text-[#475569]">Commercial rationale</th>
               </tr>
             </thead>
             <tbody>
-              {GRID_FEE_POLICY.map((policy) => (
-                <tr className="border-b border-[#e2e8f0] align-top" key={policy.resourceClass}>
-                  <td className="py-4 pr-4">
-                    <p className="text-sm font-semibold text-[#0b1220]">{policy.label}</p>
-                    <p className="mt-1 text-[13px] leading-6 text-[#475569]">{policy.whatIsExchanged}</p>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <p className="text-sm font-semibold text-[#0b1220]">{feeSummary(policy)}</p>
-                    {policy.legalReview === "requires_legal_review" ? (
-                      <p className="mt-1 inline-flex rounded-full border border-[#f59e0b] px-2 py-0.5 text-[11px] font-semibold text-[#92400e]">
-                        Under legal review
-                      </p>
-                    ) : null}
-                  </td>
-                  <td className="py-4 text-[13px] leading-6 text-[#475569]">{policy.rationale}</td>
-                </tr>
-              ))}
+              {GRID_FEE_POLICY.map((policy) => {
+                const label = reviewLabel(policy);
+                return (
+                  <tr className="border-b border-[#e2e8f0] align-top" key={policy.resourceClass}>
+                    <td className="py-4 pr-4">
+                      <p className="text-sm font-semibold text-[#0b1220]">{policy.label}</p>
+                      <p className="mt-1 text-[13px] leading-6 text-[#475569]">{policy.whatIsExchanged}</p>
+                    </td>
+                    <td className="py-4 pr-4">
+                      <p className="text-sm font-semibold text-[#0b1220]">{feeSummary(policy)}</p>
+                      {label ? (
+                        <p className="mt-1 inline-flex rounded-full border border-[#d97706] bg-[#fffbeb] px-2 py-0.5 text-[11px] font-semibold text-[#78350f]">
+                          {label}
+                        </p>
+                      ) : null}
+                    </td>
+                    <td className="py-4 text-[13px] leading-6 text-[#475569]">{policy.rationale}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         <div className="mt-10 rounded-2xl border border-[#dfe3e8] bg-white p-6">
           <ShieldCheck aria-hidden="true" className="size-5 text-[#0f766e]" />
-          <h3 className="mt-3 text-lg font-semibold text-[#0b1220]">Fees are decided on the server, never in a browser</h3>
+          <h3 className="mt-3 text-lg font-semibold text-[#0b1220]">A pricing idea is not a production charge</h3>
           <p className="mt-2 max-w-3xl text-[14px] leading-7 text-[#334155]">
-            What a transaction owes is resolved from the stored fee policy at settlement time, and a completed
-            transaction with no active policy does not settle at all. Nothing about the page you are reading
-            can change what is charged.
+            Klinikos settles money from active server-owned policy, not from browser copy or a planning constant.
+            Fee-bearing Grid economics remain inactive until required review is evidenced and the corresponding
+            production policy is deliberately activated. Nothing on this page can create or change a charge.
           </p>
           <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#0f766e] hover:text-[#115e59]" href="/grid">
             Open Grid <ArrowRight aria-hidden="true" className="size-4" />
