@@ -5,14 +5,15 @@ export const commercialProductKeys = [
   "clinic_core",
   "clinic_growth",
   "clinic_scale",
-  // Legacy internal alias retained only so previously recorded commercial evidence
-  // remains readable. New clinic purchases use the named public plans above.
+  // Legacy internal aliases remain readable so historical processor/subscription
+  // evidence can still resolve. They must not become new checkout products.
   "clinic_operator",
   "grid_professional",
   "grid_facility",
 ] as const;
 
 export type CommercialProductKey = (typeof commercialProductKeys)[number];
+export type CommercialProductLifecycle = "active" | "legacy_evidence_only";
 
 export type CommercialProduct = {
   key: CommercialProductKey;
@@ -20,6 +21,9 @@ export type CommercialProduct = {
   audience: "clinic" | "professional" | "facility";
   billing: "one_time" | "monthly" | "custom";
   priceCents: number | null;
+  /** Current product can start a new governed checkout. Historical aliases cannot. */
+  lifecycle: CommercialProductLifecycle;
+  /** May be offered directly on a public purchase surface without another sales gate. */
   publicPurchasable: boolean;
   modules: readonly string[];
   whopPlanEnvVars: readonly string[];
@@ -42,6 +46,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "one_time",
     priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
+    lifecycle: "active",
     publicPurchasable: false,
     modules: [],
     whopPlanEnvVars: [],
@@ -55,6 +60,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.core.monthlyPriceCents,
+    lifecycle: "active",
     publicPurchasable: true,
     modules: ["advanced_reports"],
     whopPlanEnvVars: [],
@@ -76,6 +82,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.growth.monthlyPriceCents,
+    lifecycle: "active",
     publicPurchasable: true,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
@@ -97,6 +104,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.scale.monthlyPriceCents,
+    lifecycle: "active",
     publicPurchasable: true,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
@@ -114,10 +122,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
   },
   {
     key: "clinic_operator",
-    label: "Klinikos Clinic Operator (legacy)",
+    label: "Klinikos Clinic Operator (legacy evidence only)",
     audience: "clinic",
     billing: "custom",
     priceCents: null,
+    lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: ["WHOP_PLAN_CLINIC_OPERATOR"],
@@ -135,34 +144,44 @@ export const commercialProducts: readonly CommercialProduct[] = [
   },
   {
     key: "grid_professional",
-    label: "Klinikos Grid Professional",
+    label: "Klinikos Grid Professional (legacy Whop evidence)",
     audience: "professional",
     billing: "monthly",
+    // Historical processor amount retained for reconciliation only. Current public
+    // Grid subscription truth lives in `gridPlans` and must not be inferred from this.
     priceCents: 3_900,
+    lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["grid"],
     whopPlanEnvVars: ["WHOP_PLAN_GRID_PROFESSIONAL", "WHOP_PLAN_GRID_PROVIDER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_PROFESSIONAL_MAPS_CENTS" },
     postPurchaseBoundary:
-      "Payment never verifies a professional credential or makes someone eligible for regulated work. Grid eligibility remains deterministic and contextual.",
+      "Historical payment evidence never verifies a professional credential or makes someone eligible for regulated work. Grid eligibility remains deterministic and contextual.",
   },
   {
     key: "grid_facility",
-    label: "Klinikos Grid Facility",
+    label: "Klinikos Grid Facility (legacy Whop evidence)",
     audience: "facility",
     billing: "monthly",
+    // Historical processor amount retained for reconciliation only. Current public
+    // organization pricing lives in `gridPlans` and must not be inferred from this.
     priceCents: 9_900,
+    lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["grid"],
     whopPlanEnvVars: ["WHOP_PLAN_GRID_FACILITY", "WHOP_PLAN_GRID_LOCATION_PARTNER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_FACILITY_MAPS_CENTS" },
     postPurchaseBoundary:
-      "Payment never verifies facility authority, permitted use, insurance, or regulated-service eligibility. Those checks remain separate.",
+      "Historical payment evidence never verifies facility authority, permitted use, insurance, or regulated-service eligibility. Those checks remain separate.",
   },
 ] as const;
 
 export function getCommercialProduct(key: string | null | undefined) {
   return commercialProducts.find((product) => product.key === key);
+}
+
+export function canStartNewCommercialCheckout(product: CommercialProduct) {
+  return product.lifecycle === "active";
 }
 
 export function resolveCommercialCheckoutAmount(product: CommercialProduct, requestedAmountCents?: number | null) {
