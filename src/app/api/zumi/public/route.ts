@@ -20,7 +20,9 @@ const requestSchema = z.object({
   history: z.array(z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().trim().min(1).max(600),
-  })).max(6).default([]),
+  })).max(12).default([]),
+  sessionId: z.string().uuid().optional(),
+  surface: z.string().trim().max(160).regex(/^\/(?!\/)/).optional(),
 });
 
 function configuredOrigins() {
@@ -107,8 +109,9 @@ export async function POST(request: Request) {
 
   const result = await resolvePublicZumiTurn(parsed.data);
   const resolution = result.resolution;
-  // Presentation DTO only. The two compatibility fields below are constants needed by
-  // the existing client presentation type; they are NOT internal router state.
+  // Presentation DTO only. The compatibility fields are constants required by the
+  // existing client presentation type; they are not internal confidence/router state.
+  // Suggestions are server-owned prompt shortcuts, never arbitrary executable actions.
   return NextResponse.json({
     data: {
       resolution: {
@@ -119,6 +122,11 @@ export async function POST(request: Request) {
         destination: resolution.destination,
         confidence: 1,
       },
+      suggestions: result.suggestions.slice(0, 4).map((suggestion) => ({
+        id: suggestion.id,
+        label: suggestion.label,
+        prompt: suggestion.prompt,
+      })),
     },
   }, { headers: NO_STORE_HEADERS });
 }
