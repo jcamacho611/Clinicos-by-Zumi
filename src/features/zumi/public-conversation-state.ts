@@ -158,13 +158,15 @@ export function derivePublicConversationState(
     if (confirmedRoles.includes("clinic_owner")) ownsPractice = true;
     if (confirmedRoles.some((role) => role === "practice_manager" || role === "administrator")) managesPractice = true;
 
+    const shortContinuation = isPublicShortContinuation(message);
     const detectedGoals = goalsIn(message);
-    if (detectedGoals.length > 0) {
+    const onlyContextualGoal = detectedGoals.length > 0 && detectedGoals.every((goal) => goal === "understand_klinikos");
+    if (detectedGoals.length > 0 && !(shortContinuation && currentGoal !== null && onlyContextualGoal)) {
       for (const goal of detectedGoals) recentGoals.push(goal);
       currentGoal = detectedGoals[0];
     }
 
-    if (!isPublicShortContinuation(message) && !/^(?:hey|hi|hello|thanks|thank you|cool|ok|okay)[!.? ]*$/i.test(message)) {
+    if (!shortContinuation && !/^(?:hey|hi|hello|thanks|thank you|cool|ok|okay)[!.? ]*$/i.test(message)) {
       lastSubstantiveUserTurn = message;
     }
   }
