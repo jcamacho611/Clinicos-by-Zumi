@@ -42,6 +42,6 @@ describe("Zumi ambient copilot contract", () => {
     expect(presence).not.toContain("Klinikos Intelligence");
     expect(presence).toContain('aria-label="Expand conversation"');
     expect(presence).toContain('aria-label="Start a new conversation"');
-    expect(presence).toContain("With you across Klinikos");
+    expect(presence).toContain("Your assistant across Klinikos");
   });
 });
