@@ -13,7 +13,6 @@ import {
   PUBLIC_ROLE_LABELS,
   publicConversationStateForModel,
   type PublicConversationState,
-  type PublicZumiGoal,
   type PublicZumiRole,
 } from "@/features/zumi/public-conversation-state";
 import { publicKlinikosKnowledgeForModel } from "@/features/zumi/public-product-knowledge";
@@ -338,7 +337,25 @@ function goalAwareResolution(state: PublicConversationState, deterministic: Publ
     );
   }
 
-  if (goal === "understand_klinikos" || state.currentMessageIsShortContinuation) {
+  if (goal === "understand_klinikos" && state.currentMessageIsShortContinuation) {
+    if (state.primaryRole && state.primaryRole !== "patient") {
+      return conversationResolution(
+        `Here are concrete examples for a ${PUBLIC_ROLE_LABELS[state.primaryRole]}.`,
+        "You could use Klinikos to see overdue follow-up, keep referrals from disappearing between handoffs, coordinate team tasks around patient work, track documents and billing-readiness items, or understand which operational work needs attention next. Grid extends that into people, shifts, rooms, equipment and services; EDU handles learning and synthetic practice. Give me one real headache from your day and I’ll map it to the workflow.",
+        null,
+        0.86,
+      );
+    }
+
+    return conversationResolution(
+      "For example, start with one thing that currently falls through.",
+      "If callbacks are missed, Klinikos can turn follow-up into owned work with a next step. If you need a nurse, room, equipment or extra work, that belongs in Grid. If claims or billing work are stuck, Klinikos can organize the readiness and follow-through. If you are learning, EDU provides the learning path. Tell me which example sounds closest and I’ll go deeper.",
+      null,
+      0.85,
+    );
+  }
+
+  if (goal === "understand_klinikos") {
     if (state.primaryRole && state.primaryRole !== "patient") {
       return conversationResolution(
         `For a ${PUBLIC_ROLE_LABELS[state.primaryRole]}, the useful question is what work keeps slipping between people and systems.`,
@@ -356,6 +373,7 @@ function goalAwareResolution(state: PublicConversationState, deterministic: Publ
     );
   }
 
+  if (state.currentMessageIsShortContinuation && deterministic.confidence > 0.5) return deterministic;
   if (deterministic.destination && deterministic.confidence > 0.5) return deterministic;
   if (deterministic.confidence > 0.5 && deterministic.destination === null) return deterministic;
   return null;
