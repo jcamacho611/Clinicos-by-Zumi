@@ -62,7 +62,7 @@ const ROLE_RULES: readonly RoleRule[] = [
   { role: "physician", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as|i practice as)\s+(?:a\s+)?(?:doctor|physician|m\.?d\.?)\b/i] },
   { role: "nurse_practitioner", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?(?:nurse practitioner|np)\b/i] },
   { role: "physician_assistant", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?(?:physician assistant|pa)\b/i] },
-  { role: "nurse", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?(?:registered nurse|rn|nurse)\b/i] },
+  { role: "nurse", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?(?:registered nurse|rn|nurse(?!\s+practitioner))\b/i] },
   { role: "therapist", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?therapist\b/i] },
   { role: "injector", group: "clinical", patterns: [/\b(?:i(?:'m| am)|im|i work as)\s+(?:an?\s+)?(?:injector|aesthetic injector)\b/i] },
   { role: "clinic_owner", group: "operations", patterns: [/\b(?:i own|i run|i operate)\s+(?:my\s+|a\s+|the\s+)?(?:clinic|practice|med spa|medical practice)\b/i, /\b(?:i(?:'m| am)|im)\s+(?:a\s+)?(?:clinic|practice|med spa) owner\b/i] },
@@ -96,13 +96,15 @@ const GOAL_RULES: ReadonlyArray<{ goal: PublicZumiGoal; patterns: readonly RegEx
   { goal: "software_stack", patterns: [/\b(?:too much on software|software costs?|too many apps?|too many systems?|replace.*software|current stack|ehr)\b/i] },
   { goal: "growth", patterns: [/\b(?:grow|more patients|more bookings|increase revenue|expand my practice|expand the clinic)\b/i] },
   { goal: "clinic_operations", patterns: [/\b(?:run|manage|operate|organize|fix)\b[^.?!]{0,40}\b(?:clinic|practice|front desk|office)\b/i, /\b(?:front desk|clinic operations?|practice operations?|intake|scheduling)\b/i] },
-  { goal: "understand_klinikos", patterns: [/\b(?:what is this|what is klinikos|what does klinikos do|what can (?:you|i|we) do|how can you help|what do you do|like what|what else)\b/i] },
+  { goal: "understand_klinikos", patterns: [/\b(?:what is this|what is klinikos|what does klinikos do|what can (?:you|i|we) do|how can you help|how could you help|what do you do|like what|what else)\b/i] },
 ];
 
-const SHORT_CONTINUATION = /^(?:like what|how|why|what else|then what|me\??|for me\??|show me|and\??|okay|ok|cool|what do you mean|can you do that|why would i use it|how would (?:you|that) help|how do you fix (?:it|that)|what about billing)[?.! ]*$/i;
+const SHORT_CONTINUATION = /^(?:like what|how|why|what else|then what|me\??|for me\??|show me|and\??|okay|ok|cool|what do you mean|can you do that|why would i use it|how (?:would|could) (?:you|that) help|how do you fix (?:it|that)|what about billing)[?.! ]*$/i;
 
 function rolesDeclaredIn(message: string) {
-  return ROLE_RULES.filter((rule) => rule.patterns.some((pattern) => pattern.test(message))).map((rule) => rule.role);
+  const roles = ROLE_RULES.filter((rule) => rule.patterns.some((pattern) => pattern.test(message))).map((rule) => rule.role);
+  if (roles.includes("nurse_practitioner")) return roles.filter((role) => role !== "nurse");
+  return roles;
 }
 
 function goalsIn(message: string) {
@@ -144,11 +146,8 @@ export function derivePublicConversationState(
 
     if (declared.length > 0) {
       if (CORRECTION.test(message)) {
-        for (const role of declared) {
-          const group = ROLE_GROUP.get(role);
-          if (!group) continue;
-          confirmedRoles = confirmedRoles.filter((existing) => ROLE_GROUP.get(existing) !== group);
-        }
+        const correctedGroups = new Set(declared.map((role) => ROLE_GROUP.get(role)).filter(Boolean));
+        confirmedRoles = confirmedRoles.filter((existing) => !correctedGroups.has(ROLE_GROUP.get(existing)));
       }
       confirmedRoles = unique([...confirmedRoles, ...declared]);
       primaryRole = declared[declared.length - 1];
