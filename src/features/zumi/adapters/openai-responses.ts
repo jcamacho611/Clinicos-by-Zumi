@@ -146,7 +146,10 @@ export function createOpenAIResponsesAdapter(env: ZumiEnv = process.env): Provid
         instructions: request.system,
         input: request.prompt,
         max_output_tokens: request.maxOutputTokens,
-        store: true,
+        // Authenticated callers preserve the existing retained-response default. Public
+        // anonymous callers explicitly pass false so this request is not retained merely
+        // to support provider-native continuation they do not use.
+        store: request.storeResponse ?? true,
         ...(request.previousResponseId ? { previous_response_id: request.previousResponseId } : {}),
         ...(tools.length > 0 ? {
           tools,
