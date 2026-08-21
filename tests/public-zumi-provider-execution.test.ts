@@ -42,7 +42,7 @@ function fakeProvider(requests: ProviderRequest[]): ProviderAdapter {
 }
 
 describe("public Zumi provider execution", () => {
-  it("uses the provider for free-form product conversation with every optional tool disabled", async () => {
+  it("uses the provider for free-form product conversation with storage and every optional tool disabled", async () => {
     delete process.env.ZUMI_PROVIDER;
     delete process.env.ZUMI_DISABLED;
     resetProviderRegistry();
@@ -59,6 +59,7 @@ describe("public Zumi provider execution", () => {
 
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({
+      storeResponse: false,
       allowWebSearch: false,
       allowKnowledgeSearch: false,
       allowCodeInterpreter: false,
