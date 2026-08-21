@@ -37,6 +37,19 @@ export interface ActionItem {
   readonly urgency: ActionUrgency;
   readonly href: string;
   readonly dueAt: string | null;
+  /**
+   * The record this item stands for, so an action can name its target. Null for items
+   * that carry no inline action.
+   */
+  readonly taskId: string | null;
+  /**
+   * What this viewer may actually do to this item, decided here and never in the
+   * browser. A control the server did not authorise is a control that does not render;
+   * the API re-checks the same permission regardless, so this only governs what is
+   * offered, never what is allowed.
+   */
+  readonly canClaim: boolean;
+  readonly canComplete: boolean;
 }
 
 export interface ActionBucket {
@@ -64,7 +77,12 @@ function urgencyOf(dueAt: Date | null, now: Date): ActionUrgency {
   return dueAt.getTime() - now.getTime() <= DUE_SOON_MS ? "due_soon" : "open";
 }
 
-function taskItem(task: { id: string; title: string; dueAt: Date | null }, now: Date, ownerNote: string): ActionItem {
+function taskItem(
+  task: { id: string; title: string; dueAt: Date | null },
+  now: Date,
+  ownerNote: string,
+  actions: { canClaim: boolean; canComplete: boolean },
+): ActionItem {
   const urgency = urgencyOf(task.dueAt, now);
   return {
     id: `task-${task.id}`,
@@ -73,6 +91,8 @@ function taskItem(task: { id: string; title: string; dueAt: Date | null }, now: 
     urgency,
     href: "/tasks",
     dueAt: task.dueAt?.toISOString() ?? null,
+    taskId: task.id,
+    ...actions,
   };
 }
 
@@ -157,8 +177,12 @@ export async function getActionCenter(session: ActionCenterViewer, now: Date = n
 
   const needsYouTotal = mineTotal + escalationsTotal;
 
+  // Ownership decides the verb. A task already yours can be finished; a task nobody
+  // owns can be claimed. Both require the same tasks:update permission the API enforces.
+  const canWriteTasks = can(session.role, "tasks", "update");
+
   const needsYou: ActionItem[] = [
-    ...mine.map((task) => taskItem(task, now, "Assigned to you")),
+    ...mine.map((task) => taskItem(task, now, "Assigned to you", { canClaim: false, canComplete: canWriteTasks })),
     ...escalations.map((escalation) => ({
       id: `escalation-${escalation.id}`,
       // Category and team, never the person it concerns.
@@ -167,11 +191,25 @@ export async function getActionCenter(session: ActionCenterViewer, now: Date = n
       urgency: "open" as const,
       href: "/escalations",
       dueAt: null,
+      // Escalations carry no inline action on purpose. They exist because something
+      // needed a human to look at it, and a one-tap resolve on a glanceable list is
+      // exactly how that stops happening. The link goes to the surface built to review
+      // them, where the reviewer and their note are recorded.
+      taskId: null,
+      canClaim: false,
+      canComplete: false,
     })),
   ];
 
-  const waiting: ActionItem[] = others.map((task) =>
-    taskItem(task, now, task.ownerId ? "Owned by someone else" : "No owner yet"));
+  const waiting: ActionItem[] = others.map((task) => taskItem(
+    task,
+    now,
+    task.ownerId ? "Owned by someone else" : "No owner yet",
+    // Unfinished work stays visible until it has an owner: an unowned task is the one
+    // thing on this surface a passer-by can genuinely resolve, so it is the one that
+    // gets a control. Someone else's task is theirs to finish.
+    { canClaim: canWriteTasks && !task.ownerId, canComplete: false },
+  ));
 
   const completed: ActionItem[] = done.map((task) => ({
     id: `done-${task.id}`,
@@ -180,6 +218,9 @@ export async function getActionCenter(session: ActionCenterViewer, now: Date = n
     urgency: "open" as const,
     href: "/tasks",
     dueAt: task.completedAt?.toISOString() ?? null,
+    taskId: task.id,
+    canClaim: false,
+    canComplete: false,
   }));
 
   const buckets: ActionBucket[] = [];
