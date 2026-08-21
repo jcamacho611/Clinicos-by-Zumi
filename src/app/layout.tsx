@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/manrope";
 import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import { PublicZumiSiteControl } from "@/components/marketing/public-zumi-site-control";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
 import "./globals.css";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="klinikos-cinematic-root">
         <a className="klinikos-skip-link" href="#klinikos-page-content">Skip to main content</a>
         <div id="klinikos-page-content" tabIndex={-1}>{children}</div>
+        <PublicZumiSiteControl />
         <KlinikosAtmosphereController />
       </body>
     </html>
