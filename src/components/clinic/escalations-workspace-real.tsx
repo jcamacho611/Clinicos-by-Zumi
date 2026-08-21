@@ -36,7 +36,7 @@ export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordin
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><strong>Callback boundary:</strong> phone/SMS/voice actions remain external-connection work. Until that rail is approved, staff can resolve the escalation, create internal tasks/messages, or use their existing clinic phone system outside Klinikos.</div>
 
     <div className="space-y-4">
-      {workspace.escalations.map((item, index) => <Card className={`p-5 ${index === 0 ? "border-rose-300 shadow-[0_18px_45px_rgba(190,24,93,.12)]" : ""}`} key={item.id}>
+      {workspace.escalations.map((item, index) => <Card className={`klinikos-deep-target scroll-mt-24 p-5 ${index === 0 ? "border-rose-300 shadow-[0_18px_45px_rgba(190,24,93,.12)]" : ""}`} id={`escalation-${item.id}`} key={item.id}>
         <div className="grid gap-5 lg:grid-cols-[1.2fr_.7fr_.8fr] lg:items-start">
           <div className="flex items-start gap-4">
             <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${item.riskLevel === "URGENT" ? "bg-rose-100 text-rose-700" : "bg-amber-50 text-amber-700"}`}><ShieldAlert className="size-5" /></span>

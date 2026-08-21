@@ -189,7 +189,10 @@ export async function getActionCenter(session: ActionCenterViewer, now: Date = n
       title: `${escalation.category.replaceAll("_", " ")} needs review`,
       detail: `${escalation.riskLevel.toLowerCase()} risk · ${escalation.assignedTeam.replaceAll("_", " ")}`,
       urgency: "open" as const,
-      href: "/escalations",
+      // Carry the record through. Landing a reviewer on the list and making them find
+      // the row again is where the handoff was being dropped — they arrived at the
+      // right surface with no idea which item sent them.
+      href: `/escalations#escalation-${escalation.id}`,
       dueAt: null,
       // Escalations carry no inline action on purpose. They exist because something
       // needed a human to look at it, and a one-tap resolve on a glanceable list is
