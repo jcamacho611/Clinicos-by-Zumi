@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createGoDaddyCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { allocateFundedUsage, evaluateCustomerFundedAccess } from "@/lib/commercial/customer-funded-access";
 import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/godaddy";
 import { canStartNewCommercialCheckout, getCommercialProduct, resolveCommercialCheckoutAmount } from "@/lib/commercial/product-catalog";
@@ -92,6 +93,16 @@ describe("Klinikos commercial truth", () => {
     expect(facility?.label).toMatch(/legacy Whop evidence/i);
     expect(canStartNewCommercialCheckout(professional!)).toBe(false);
     expect(canStartNewCommercialCheckout(facility!)).toBe(false);
+  });
+
+  it("rejects legacy Grid before a generic checkout intent can reach persistence", async () => {
+    await expect(createGoDaddyCommercialCheckout({
+      organizationId: "org-not-needed-because-guard-runs-first",
+      email: "buyer@example.test",
+      productKey: "grid_professional",
+      expectedAmountCents: 3_900,
+      returnUrl: "https://klinikos.io/grid",
+    })).rejects.toThrow(/historical payment evidence only/i);
   });
 
   it("refuses to pair a fixed checkout link with a conflicting recorded amount", () => {
