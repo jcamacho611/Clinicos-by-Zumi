@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUp, Menu } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import {
@@ -21,15 +21,11 @@ type ConversationTurn = {
   id: number;
   prompt: string;
   resolution: PublicLivingResolution;
-  modelGenerated: boolean;
 };
 
 type PublicZumiApiResponse = {
   data?: {
     resolution?: unknown;
-    modelGenerated?: unknown;
-    intelligenceAvailable?: unknown;
-    degraded?: unknown;
   };
 };
 
@@ -56,6 +52,14 @@ function isPublicLivingResolution(value: unknown): value is PublicLivingResoluti
     && !candidate.destination.href.startsWith("//")
     && typeof candidate.destination.action === "string"
     && typeof candidate.destination.key === "string";
+}
+
+function ZumiSendGlyph({ active }: { active: boolean }) {
+  return (
+    <span className="grid size-9 place-items-center overflow-visible" data-zumi-send-glyph>
+      <ZumiOrb state={active ? "analyzing" : "observing"} size={34} />
+    </span>
+  );
 }
 
 const navItems = [
@@ -116,7 +120,6 @@ export function PublicLivingGateway() {
     activeRequest.current = controller;
 
     let resolution = fallback;
-    let modelGenerated = false;
 
     try {
       const response = await fetch("/api/zumi/public", {
@@ -131,7 +134,6 @@ export function PublicLivingGateway() {
         const payload = await response.json() as PublicZumiApiResponse;
         if (isPublicLivingResolution(payload.data?.resolution)) {
           resolution = payload.data.resolution;
-          modelGenerated = payload.data?.modelGenerated === true;
         }
       }
     } catch (error) {
@@ -142,7 +144,7 @@ export function PublicLivingGateway() {
       if (activeRequest.current === controller) activeRequest.current = null;
     }
 
-    setTurns((current) => [...current, { id, prompt, resolution, modelGenerated }]);
+    setTurns((current) => [...current, { id, prompt, resolution }]);
     setPendingPrompt(null);
     setIsSubmitting(false);
   }
@@ -228,10 +230,7 @@ export function PublicLivingGateway() {
                 {KLINIKOS_HUMAN_AUTHORITY}
               </p>
 
-              <div className="mt-14 flex items-center gap-3" aria-hidden="true">
-                <ZumiOrb state="observing" size={44} />
-                <span className="text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</span>
-              </div>
+              <p className="mt-14 text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</p>
               <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
                 {ZUMI_COMPOSER_PROMPT}
               </p>
@@ -252,8 +251,8 @@ export function PublicLivingGateway() {
                     rows={1}
                     value={intent}
                   />
-                  <button aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"} className="grid size-12 place-items-center rounded-full bg-[#e6817b] text-[#1a090a] shadow-[0_0_28px_rgba(230,129,123,.22)] transition hover:bg-[#efaaa1] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
-                    <ArrowUp className="size-5" aria-hidden="true" />
+                  <button aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"} className="grid size-12 place-items-center rounded-full border border-[#e6817b]/35 bg-[#16090c] shadow-[0_0_28px_rgba(230,129,123,.16)] transition hover:border-[#efaaa1]/60 hover:bg-[#211013] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
+                    <ZumiSendGlyph active={isSubmitting} />
                   </button>
                 </div>
                 <p className="mx-auto mt-4 max-w-[680px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
@@ -334,8 +333,8 @@ export function PublicLivingGateway() {
                   rows={1}
                   value={intent}
                 />
-                <button aria-label={isSubmitting ? "Zumi is responding" : "Send follow-up to Zumi"} className="grid size-11 shrink-0 place-items-center rounded-full bg-[#e6817b] text-[#1a090a] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
-                  <ArrowUp className="size-4" aria-hidden="true" />
+                <button aria-label={isSubmitting ? "Zumi is responding" : "Send follow-up to Zumi"} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#e6817b]/35 bg-[#16090c] shadow-[0_0_24px_rgba(230,129,123,.14)] transition hover:border-[#efaaa1]/60 hover:bg-[#211013] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
+                  <ZumiSendGlyph active={isSubmitting} />
                 </button>
               </div>
               <p className="mt-2 px-3 text-[11px] leading-4 text-[#9a817c]" id="public-follow-up-note">
