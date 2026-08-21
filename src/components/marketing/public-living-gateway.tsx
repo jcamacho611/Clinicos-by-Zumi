@@ -101,7 +101,12 @@ export function PublicLivingGateway() {
     if (!prompt || isSubmitting) return;
 
     const priorResolution = turns[turns.length - 1]?.resolution ?? null;
-    const fallback = resolvePublicLivingIntent(prompt, priorResolution);
+    let unresolvedTurns = 0;
+    for (let index = turns.length - 1; index >= 0; index -= 1) {
+      if (turns[index].resolution.confidence > 0.25) break;
+      unresolvedTurns += 1;
+    }
+    const fallback = resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns);
     const history = turns
       .flatMap((turn) => ([
         { role: "user" as const, content: turn.prompt },
