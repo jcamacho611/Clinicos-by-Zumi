@@ -15,14 +15,16 @@ describe("Zumi ambient copilot contract", () => {
     expect(navigation).toContain('zumi: { title: "Conversation", eyebrow: "Zumi" }');
   });
 
-  it("makes the global Zumi control send a typed prompt or focus the mounted conversation", () => {
+  it("makes the persistent shell control send a typed prompt or open the mounted assistant", () => {
     expect(shell).toContain("function sendOrFocusZumi()");
-    // The label follows the behaviour and never names Zumi as a destination: with text
-    // the control sends, empty it focuses the conversation already mounted in the shell.
-    expect(shell).toContain('aria-label={zumiPrompt.trim() ? "Send" : "Ask Klinikos"}');
-    expect(shell).not.toMatch(/aria-label="(Open|Focus) Zumi/);
+    expect(shell).toContain('const shellControlLabel = zumiPrompt.trim() ? "Send message to Zumi" : "Open Zumi assistant"');
+    expect(shell).toContain('aria-label="Message Zumi"');
+    expect(shell).toContain('aria-controls="zumi-presence-panel"');
+    expect(shell).toContain("aria-label={shellControlLabel}");
     expect(shell).toContain("onClick={sendOrFocusZumi}");
     expect(shell).toContain('new CustomEvent("zumi:prompt"');
+    expect(shell).toContain('new Event("zumi:open")');
+    expect(shell).toContain('src="/klinikos-orbital-k-production.png"');
   });
 
   it("keeps one mounted conversation instance across normal and expanded routes", () => {
@@ -38,11 +40,8 @@ describe("Zumi ambient copilot contract", () => {
     expect(presence).toContain("pageTitle: document.title");
     expect(presence).toContain("recentConversation");
     expect(presence).not.toContain("Klinikos Intelligence");
-    // Zumi is ambient, so the controls are named for what they do rather than for a
-    // product the person is being sent to.
     expect(presence).toContain('aria-label="Expand conversation"');
     expect(presence).toContain('aria-label="Start a new conversation"');
-    expect(presence).not.toMatch(/aria-label="[^"]*Zumi/);
     expect(presence).toContain("With you across Klinikos");
   });
 });
