@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { clinicCommercialOffers, clinicPlans } from "@/lib/commercial/klinikos-commercial";
-import { GRID_FEE_POLICY, GRID_MEMBERSHIP, computeGridPlatformFeeCents } from "@/lib/commercial/grid-economics";
+import { GRID_FEE_POLICY, GRID_MEMBERSHIP, computeGridPlatformFeeCents, gridFeeAmountForPolicy } from "@/lib/commercial/grid-economics";
 import { demoOffers } from "@/lib/sales-demo-rules";
 
 describe("Klinikos pricing truth", () => {
@@ -40,19 +40,31 @@ describe("Klinikos pricing truth", () => {
     expect(provider?.percentBps, "a share of professional compensation is the fee-splitting case").toBeNull();
   });
 
-  it("earns nothing on a class that has not been through legal review", () => {
+  it("earns nothing on a class no counsel has cleared", () => {
     // Null rather than zero: zero reads as "this is free and settled", null forces the
-    // caller to notice the class is unpriced.
+    // caller to notice the class is unpriced. Nothing is cleared today, so every
+    // fee-bearing class answers null — the fee model is a proposal, not a live charge.
     expect(computeGridPlatformFeeCents("provider", 120_000)).toBeNull();
-    expect(computeGridPlatformFeeCents("regulated_clinical_service", 120_000)).toBeNull();
+    expect(computeGridPlatformFeeCents("space", 120_000)).toBeNull();
     expect(computeGridPlatformFeeCents("unknown_class", 120_000)).toBeNull();
+
+    // Zero is the right answer only where taking nothing is the stated policy rather
+    // than an unanswered question: Klinikos does not take a cut of care or a referral.
+    expect(computeGridPlatformFeeCents("regulated_clinical_service", 120_000)).toBe(0);
+    expect(computeGridPlatformFeeCents("referral", 120_000)).toBe(0);
   });
 
   it("prices ordinary commercial exchange normally, with a floor and a ceiling", () => {
-    expect(computeGridPlatformFeeCents("space", 68_000)).toBe(6_800);
+    // Exercised through the arithmetic directly. Every declared class fails closed
+    // before reaching this math today, so going through computeGridPlatformFeeCents
+    // would assert null and prove nothing about the floor or the cap.
+    const space = GRID_FEE_POLICY.find((entry) => entry.resourceClass === "space");
+    expect(space, "space has no declared policy").toBeDefined();
+
+    expect(gridFeeAmountForPolicy(space!, 68_000)).toBe(6_800);
     // A very large booking should not produce a fee out of proportion to the matching work.
-    expect(computeGridPlatformFeeCents("space", 5_000_000)).toBe(50_000);
-    expect(computeGridPlatformFeeCents("space", 1_000)).toBe(500);
+    expect(gridFeeAmountForPolicy(space!, 5_000_000)).toBe(50_000);
+    expect(gridFeeAmountForPolicy(space!, 1_000)).toBe(500);
   });
 
   it("states one price per Grid tier, from one source", () => {
