@@ -46,12 +46,13 @@ function isResolution(value: unknown): value is PublicLivingResolution {
   if (candidate.assumption !== null && typeof candidate.assumption !== "string") return false;
   if (typeof candidate.confidence !== "number" || !Number.isFinite(candidate.confidence)) return false;
   if (candidate.destination === null) return true;
-  return Boolean(candidate.destination)
-    && typeof candidate.destination?.href === "string"
-    && candidate.destination.href.startsWith("/")
-    && !candidate.destination.href.startsWith("//")
-    && typeof candidate.destination.action === "string"
-    && typeof candidate.destination.key === "string";
+  const destination = candidate.destination;
+  if (!destination || typeof destination !== "object") return false;
+  return typeof destination.href === "string"
+    && destination.href.startsWith("/")
+    && !destination.href.startsWith("//")
+    && typeof destination.action === "string"
+    && typeof destination.key === "string";
 }
 
 function isSuggestions(value: unknown): value is PublicZumiSuggestion[] {
@@ -167,6 +168,7 @@ export function PublicZumiSiteControl() {
         <section
           aria-label="Public Zumi assistant"
           className="flex max-h-[min(680px,calc(100vh-7rem))] w-[min(430px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[24px] border border-[#d0837d]/25 bg-[#0b0507]/[.98] text-[#fff7f5] shadow-[0_28px_90px_rgba(0,0,0,.52)] backdrop-blur-xl"
+          id="public-zumi-site-panel"
           role="dialog"
         >
           <header className="flex items-center gap-3 border-b border-[#d0837d]/14 px-4 py-3">
