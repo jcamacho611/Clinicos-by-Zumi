@@ -27,11 +27,16 @@ describe("public Zumi API disclosure and abuse contract", () => {
     expect(route).toContain("checkZumiProcessRateLimit");
   });
 
-  it("does not disclose provider economics or configuration in the browser DTO", () => {
+  it("returns presentation only and does not disclose provider economics or internal routing state", () => {
     const responseSection = route.slice(route.indexOf("return NextResponse.json({\n    data:"));
-    expect(responseSection).toContain("resolution: result.resolution");
-    expect(responseSection).toContain("modelGenerated: result.modelGenerated");
-    expect(responseSection).toContain("intelligenceAvailable: result.intelligenceAvailable");
+    expect(responseSection).toContain("title: resolution.title");
+    expect(responseSection).toContain("body: resolution.body");
+    expect(responseSection).toContain("destination: resolution.destination");
+    expect(responseSection).toContain("assumption: null");
+    expect(responseSection).toContain("confidence: 1");
+    expect(responseSection).not.toContain("modelGenerated");
+    expect(responseSection).not.toContain("intelligenceAvailable");
+    expect(responseSection).not.toContain("degradedReason");
     expect(responseSection).not.toContain("modelId");
     expect(responseSection).not.toContain("costMicroUsd");
     expect(responseSection).not.toContain("provider:");
