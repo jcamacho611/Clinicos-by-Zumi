@@ -58,8 +58,6 @@ function originAccepted(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
   try {
-    // Same-origin preview/development deployments remain usable without hardcoding every
-    // ephemeral host. The fixed/configured allowlist covers canonical alternate origins.
     if (origin === new URL(request.url).origin) return true;
   } catch {
     return false;
@@ -108,13 +106,17 @@ export async function POST(request: Request) {
   }
 
   const result = await resolvePublicZumiTurn(parsed.data);
-  // Minimum-necessary DTO: provider/model/tool/cost/redaction internals stay server-side.
+  const resolution = result.resolution;
+  // Presentation DTO only. Assumptions, confidence, provider/model/tool/cost/redaction
+  // state and other implementation detail stay server-side.
   return NextResponse.json({
     data: {
-      resolution: result.resolution,
-      modelGenerated: result.modelGenerated,
-      intelligenceAvailable: result.intelligenceAvailable,
-      degraded: result.degradedReason !== null,
+      resolution: {
+        kind: resolution.kind,
+        title: resolution.title,
+        body: resolution.body,
+        destination: resolution.destination,
+      },
     },
   }, { headers: NO_STORE_HEADERS });
 }
