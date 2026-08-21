@@ -49,7 +49,6 @@ describe("Klinikos design and ecosystem convergence", () => {
     expect(shell).toMatch(/zumi/i);
   });
 
-
   it("makes routes, ecosystem, account appearance, and explicit sign out discoverable", () => {
     const navigation = source("src/lib/navigation.ts");
     const shell = source("src/components/clinic/app-shell.tsx");
@@ -62,10 +61,22 @@ describe("Klinikos design and ecosystem convergence", () => {
     expect(settings).toContain('key: "dark"');
   });
 
-  it("turns the approved public Living Home Zumi orb into the submit hit target", () => {
-    const css = source("src/app/experience-convergence.css");
-    expect(css).toContain('#living-composer .reference-composer-shell > button[type="submit"]');
-    expect(css).toContain('button[type="submit"] svg {display:none}');
-    expect(css).toContain(".reference-zumi {z-index:6;pointer-events:none}");
+  it("keeps the public Living Home composer as a real responsive textarea plus visible send control", () => {
+    const convergence = source("src/app/experience-convergence.css");
+    const home = source("src/app/cinematic-home-overrides.css");
+
+    expect(convergence).toContain('#living-composer .reference-composer-shell > textarea');
+    expect(convergence).toContain("min-width: 0");
+    expect(convergence).toContain('#living-composer .reference-composer-shell > button[type="submit"]');
+    expect(convergence).toContain("position: static");
+    expect(convergence).not.toContain('button[type="submit"] svg {display:none}');
+    expect(convergence).not.toContain("color:transparent");
+
+    // The current component has exactly two grid children in its first-visit composer:
+    // textarea + submit. A stale four-track mobile override previously placed the
+    // textarea into a 2.5rem track, reproducing the vertical-character collapse seen
+    // in production at half-window widths.
+    expect(home).toContain("grid-template-columns: minmax(0,1fr) 3rem");
+    expect(home).not.toContain("grid-template-columns: 2.5rem minmax(0,1fr) 2.7rem 3rem");
   });
 });
