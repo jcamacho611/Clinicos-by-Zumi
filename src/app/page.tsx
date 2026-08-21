@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
+import { PublicProductDefinition } from "@/components/marketing/public-product-definition";
 import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
 
 export const metadata: Metadata = {
-  title: "Klinikos | Healthcare operating infrastructure",
+  title: "Klinikos | AI-native clinic operating system",
   description:
-    "Klinikos connects clinic workflow, follow-up, revenue, healthcare capacity, learning, and care navigation around accountable next actions.",
+    "Klinikos is an AI-native clinic operating system for scheduling, follow-up, referrals, team workflows, documents, revenue work, and owner visibility, with Zumi intelligence and the Grid healthcare network.",
 };
 
 export default function LandingPage() {
   return (
     <>
+      <PublicProductDefinition />
       <PublicLivingGateway />
       <PublicTrustFooter />
     </>
