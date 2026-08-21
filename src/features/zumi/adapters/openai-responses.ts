@@ -17,8 +17,8 @@ const REQUIRED_ENV = [
 type OpenAIConfig = {
   apiKey: string;
   model: string;
-  inputMicroUsdPerMillionTokens: number;
-  outputMicroUsdPerMillionTokens: number;
+  inputMicroUsdPerMillionTokens: number | null;
+  outputMicroUsdPerMillionTokens: number | null;
   webSearchMicroUsdPerCall: number | null;
   fileSearchMicroUsdPerCall: number | null;
   codeInterpreterMicroUsdPerSession: number | null;
@@ -38,16 +38,21 @@ function positiveEnvInt(env: ZumiEnv, key: string) {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
-function requiredPositiveRate(env: ZumiEnv, key: string) {
-  const value = positiveEnvInt(env, key);
-  if (value == null) throw new Error(`${key} must be configured as a positive integer before paid OpenAI usage is enabled.`);
-  return value;
+function validatedTokenRates(config: OpenAIConfig) {
+  if (config.inputMicroUsdPerMillionTokens == null || config.outputMicroUsdPerMillionTokens == null) {
+    throw new Error("OpenAI token pricing must be configured as positive integer micro-USD rates before paid inference can execute.");
+  }
+  return {
+    inputMicroUsdPerMillionTokens: config.inputMicroUsdPerMillionTokens,
+    outputMicroUsdPerMillionTokens: config.outputMicroUsdPerMillionTokens,
+  };
 }
 
 function estimateTokenCostMicroUsd(inputTokens: number, outputTokens: number, config: OpenAIConfig) {
+  const rates = validatedTokenRates(config);
   return Math.round((
-    inputTokens * config.inputMicroUsdPerMillionTokens +
-    outputTokens * config.outputMicroUsdPerMillionTokens
+    inputTokens * rates.inputMicroUsdPerMillionTokens +
+    outputTokens * rates.outputMicroUsdPerMillionTokens
   ) / 1_000_000);
 }
 
@@ -132,7 +137,8 @@ function countToolCalls(output: unknown, fragment: "web_search" | "file_search" 
   }).length;
 }
 
-function validateToolCostConfiguration(request: ProviderRequest, config: OpenAIConfig) {
+function validateExecutionCostConfiguration(request: ProviderRequest, config: OpenAIConfig) {
+  validatedTokenRates(config);
   if (request.allowWebSearch && config.webSearchMicroUsdPerCall == null) {
     throw new Error("ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL is required before OpenAI web search can be enabled.");
   }
@@ -145,7 +151,7 @@ function validateToolCostConfiguration(request: ProviderRequest, config: OpenAIC
 }
 
 function toolsFor(request: ProviderRequest, config: OpenAIConfig) {
-  validateToolCostConfiguration(request, config);
+  validateExecutionCostConfiguration(request, config);
   const tools: Record<string, unknown>[] = [];
 
   if (request.allowKnowledgeSearch && config.vectorStoreId) {
@@ -175,10 +181,6 @@ function toolCostMicroUsd(output: unknown, config: OpenAIConfig) {
 
   const webSearchCost = webSearchCalls * (config.webSearchMicroUsdPerCall ?? 0);
   const fileSearchCost = fileSearchCalls * (config.fileSearchMicroUsdPerCall ?? 0);
-  // Container pricing is session-based, not "each code cell" based. This adapter uses
-  // one auto container per Responses execution contract, so any observed interpreter
-  // activity consumes one configured session estimate here. Provider invoice
-  // reconciliation remains the source for account-wide credits, duration and storage.
   const codeInterpreterCost = codeInterpreterCalls > 0 ? (config.codeInterpreterMicroUsdPerSession ?? 0) : 0;
 
   return webSearchCost + fileSearchCost + codeInterpreterCost;
@@ -188,8 +190,8 @@ export function createOpenAIResponsesAdapter(env: ZumiEnv = process.env): Provid
   const config: OpenAIConfig = {
     apiKey: configuredValue(env, "OPENAI_API_KEY"),
     model: configuredValue(env, "ZUMI_OPENAI_MODEL"),
-    inputMicroUsdPerMillionTokens: requiredPositiveRate(env, "ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS"),
-    outputMicroUsdPerMillionTokens: requiredPositiveRate(env, "ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS"),
+    inputMicroUsdPerMillionTokens: positiveEnvInt(env, "ZUMI_OPENAI_INPUT_MICRO_USD_PER_M_TOKENS"),
+    outputMicroUsdPerMillionTokens: positiveEnvInt(env, "ZUMI_OPENAI_OUTPUT_MICRO_USD_PER_M_TOKENS"),
     webSearchMicroUsdPerCall: positiveEnvInt(env, "ZUMI_OPENAI_WEB_SEARCH_MICRO_USD_PER_CALL"),
     fileSearchMicroUsdPerCall: positiveEnvInt(env, "ZUMI_OPENAI_FILE_SEARCH_MICRO_USD_PER_CALL"),
     codeInterpreterMicroUsdPerSession: positiveEnvInt(env, "ZUMI_OPENAI_CODE_INTERPRETER_MICRO_USD_PER_SESSION"),
