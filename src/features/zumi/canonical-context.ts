@@ -14,6 +14,7 @@ export type CanonicalContextDocument = {
 
 const DOCUMENTS: readonly CanonicalContextDocument[] = [
   { path: "docs/ZUMI_CUSTOMER_PRODUCT_CONTEXT.md", visibility: "customer_safe", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education"], priority: 100 },
+  { path: "docs/KLINIKOS_COMMERCIAL_CANON.md", visibility: "founder", domains: ["canon", "commercial", "sales", "grid", "clinic_operations", "product_status"], priority: 100 },
   { path: "docs/ZUMI_AMBIENT_INTELLIGENCE.md", visibility: "founder", domains: ["canon", "engineering", "security", "integrations", "grid", "clinic_operations", "commercial"], priority: 100 },
   { path: "docs/CLINICOS_MASTER_CANON.md", visibility: "founder", domains: ["canon", "grid", "clinic_operations", "clinical_workflows", "education", "integrations"], priority: 95 },
   { path: "docs/KLINIKOS_CONSTITUTION.md", visibility: "founder", domains: ["canon", "engineering", "security", "compliance"], priority: 95 },
