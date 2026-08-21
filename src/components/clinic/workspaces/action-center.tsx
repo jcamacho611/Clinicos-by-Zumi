@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CircleCheck, Clock3, TriangleAlert } from "lucide-react";
+import { ActionCenterControls } from "@/components/clinic/action-center-controls";
 import type { ActionCenter, ActionItem } from "@/lib/home/action-center";
 
 /**
@@ -21,16 +22,24 @@ function urgencyLabel(item: ActionItem) {
   return null;
 }
 
-function Row({ item }: { item: ActionItem }) {
+function Row({ item, userId }: { item: ActionItem; userId: string }) {
   const urgency = urgencyLabel(item);
+  const actionable = item.taskId !== null && (item.canClaim || item.canComplete);
+
+  /* The title is the link and the buttons are siblings of it, rather than the whole row
+     being one anchor. A button nested inside an anchor is invalid, and it also makes
+     "claim" ambiguous with "open" for anyone using a keyboard or a screen reader. */
   return (
-    <Link
-      className="flex flex-wrap items-center gap-3 px-[var(--space-5)] py-[var(--space-4)] transition hover:bg-[var(--surface-raised)]"
-      href={item.href}
-    >
+    <div className="flex flex-wrap items-center gap-3 px-[var(--space-5)] py-[var(--space-4)] transition hover:bg-[var(--surface-raised)]">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{item.title}</p>
+          <Link
+            className="text-sm font-semibold underline-offset-4 hover:underline"
+            href={item.href}
+            style={{ color: "var(--text-primary)" }}
+          >
+            {item.title}
+          </Link>
           {urgency ? (
             <span
               className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold"
@@ -43,11 +52,19 @@ function Row({ item }: { item: ActionItem }) {
         </div>
         <p className="mt-1 text-[13px]" style={{ color: "var(--text-secondary)" }}>{item.detail}</p>
       </div>
-    </Link>
+      {actionable && item.taskId ? (
+        <ActionCenterControls
+          canClaim={item.canClaim}
+          canComplete={item.canComplete}
+          taskId={item.taskId}
+          userId={userId}
+        />
+      ) : null}
+    </div>
   );
 }
 
-export function ActionCenterWorkspace({ center }: { center: ActionCenter }) {
+export function ActionCenterWorkspace({ center, userId }: { center: ActionCenter; userId: string }) {
   if (center.buckets === null) {
     return (
       <div className="space-y-[var(--space-5)]">
@@ -117,7 +134,7 @@ export function ActionCenterWorkspace({ center }: { center: ActionCenter }) {
               </p>
             ) : (
               <>
-                {bucket.items.map((item) => <Row item={item} key={item.id} />)}
+                {bucket.items.map((item) => <Row item={item} key={item.id} userId={userId} />)}
                 {/* The count is the truth; the list is a page of it. When more exists than
                     fits at a glance, say so rather than letting the shorter list quietly
                     contradict the number above it. */}
