@@ -23,6 +23,16 @@ describe("persistent Zumi product-control law", () => {
     expect(presence).toContain('const dedicatedPage = pathname === "/zumi"');
   });
 
+  it("makes the shell control the only normal authenticated launcher", () => {
+    expect(shell).toContain('aria-controls="zumi-presence-panel"');
+    expect(shell).toContain('aria-label="Message Zumi"');
+    expect(shell).toContain('"Send message to Zumi" : "Open Zumi assistant"');
+    expect(presence).not.toContain('className="fixed bottom-5 right-5 z-40 flex size-14');
+    expect(presence).not.toContain('aria-label={open ? "Hide conversation" : "Ask Klinikos. Keyboard shortcut Control or Command J"}');
+    expect(presence).toContain('aria-label="Zumi assistant"');
+    expect(presence).toContain('aria-label="Send message to Zumi"');
+  });
+
   it("locks the assistant hierarchy into agent and specialist law", () => {
     expect(agents).toContain("KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md");
     expect(agents).toContain("persistent personal operating assistant");
