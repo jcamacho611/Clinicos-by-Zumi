@@ -32,6 +32,7 @@ export const eduNavigation: readonly EduNavGroup[] = [
     label: "Lab",
     items: [
       { href: "/edu/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: ALL_ROLES },
+      { href: "/edu/programs", label: "Programs", icon: "Building2", roles: [...TEACHING, "edu_observer"] },
       { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
       { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
     ],
@@ -62,6 +63,7 @@ export function eduNavigationForRole(role: EduPlatformRole): EduNavGroup[] {
 /** Route access contract. Every authenticated EDU route declares its allowed roles. */
 export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/dashboard": ALL_ROLES,
+  "/edu/programs": [...TEACHING, "edu_observer"],
   "/edu/courses": ALL_ROLES,
   "/edu/cohorts": [...STAFF, "edu_observer"],
   "/edu/scenarios": ALL_ROLES,
