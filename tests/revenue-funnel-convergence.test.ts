@@ -9,7 +9,8 @@ const salesPage = read("src/app/sales/page.tsx");
 const interview = read("src/components/command/zumi-interview.tsx");
 const privateDemo = read("src/app/private-demo/page.tsx");
 const intake = read("src/components/sales/sales-intake-form.tsx");
-const paymentReturn = read("src/app/payments/success/page.tsx");
+// Route file plus the component it renders: together they are the return surface.
+const paymentReturn = read("src/app/payments/success/page.tsx") + read("src/components/commercial/payment-return-experience.tsx");
 const salesGuide = read("docs/SALES-AUDIT-FUNNEL.md");
 
 describe("clinic revenue funnel convergence", () => {
@@ -54,6 +55,9 @@ describe("clinic revenue funnel convergence", () => {
     expect(salesGuide).toContain("Integrated Klinikos checkout — preferred");
     expect(salesGuide).toContain("Canonical shareable Stripe Payment Link — manual-service fallback");
     expect(salesGuide).toContain("never infer payment from browser return or checkout launch");
-    expect(salesGuide).toContain("does not create or unlock a Klinikos software entitlement");
+    // Markdown emphasis inside the sentence ("does **not** create") is presentation.
+    // Strip it before matching so the guard tracks the rule, not the styling.
+    const plainGuide = salesGuide.replace(/\*\*/g, "");
+    expect(plainGuide).toContain("does not create or unlock a Klinikos software entitlement");
   });
 });

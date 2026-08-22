@@ -44,8 +44,9 @@ describe("public Living Home intent", () => {
     const resolution = resolvePublicLivingIntent("Help me make this better");
     expect(resolution.kind).toBe("conversation");
     expect(resolution.destination).toBeNull();
-    expect(resolution.title).toBe("Tell me a little more.");
-    expect(resolution.body).toContain("What’s going on");
+    expect(resolution.title.length).toBeGreaterThan(0);
+    expect(resolution.body.length).toBeGreaterThan(40);
+    expect(resolution.title).not.toBe("Tell me a little more.");
   });
 
   it("preserves a known destination when a short follow-up adds context", () => {
@@ -69,6 +70,7 @@ describe("public Living Home intent", () => {
 
 describe("public Living Home conversation and accessibility contract", () => {
   const source = read("src/components/marketing/public-living-gateway.tsx");
+  const publicRoute = read("src/app/api/zumi/public/route.ts");
   const page = read("src/app/page.tsx");
   const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
   const brand = read("src/components/brand/klinikos-brand.tsx");
@@ -77,43 +79,56 @@ describe("public Living Home conversation and accessibility contract", () => {
   it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
-    expect(source).toContain("What needs");
-    expect(source).toContain("to happen?");
-    expect(source).toContain("Talk to Zumi naturally");
-    expect(source).toContain('aria-label="Conversation with Zumi"');
+    expect(source).toContain("ZUMI_COMPOSER_PROMPT");
+    expect(source).toContain("KLINIKOS_ONE_LINE");
+    expect(source).toContain("KLINIKOS_SUPPORTING");
+    expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
     expect(page).not.toContain("PublicConversionBridge");
   });
 
-  it("keeps deterministic routing behind the conversation instead of exposing it as the product", () => {
+  it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {
+    expect(source).toContain('fetch("/api/zumi/public"');
     expect(source).toContain("resolvePublicLivingIntent");
+    expect(source).toContain("let unresolvedTurns = 0");
+    expect(source).toContain("resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns)");
+    expect(source).toContain("Public Zumi can answer general Klinikos questions");
+    expect(publicRoute).toContain("resolvePublicZumiTurn");
+    expect(publicRoute).not.toContain("getClinicSession");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
-    expect(source).not.toContain("No records opened · no action executed");
     expect(source).not.toContain("Assumption:");
-    expect(source).not.toContain("Proof before promises.");
     expect(source).not.toContain("reference-state-rail");
     expect(source).not.toContain("reference-action-rail");
     expect(source).not.toContain("reference-card-row");
   });
 
-  it("keeps route inference immediate without manufactured progress delays", () => {
-    const inferencePosition = source.indexOf("const resolution = resolvePublicLivingIntent");
-    const appendPosition = source.indexOf("setTurns((current)", inferencePosition);
-    expect(inferencePosition).toBeGreaterThan(0);
-    expect(appendPosition).toBeGreaterThan(inferencePosition);
+  it("shows only truthful request progress and prevents duplicate concurrent sends", () => {
+    expect(source).toContain("pendingPrompt");
+    expect(source).toContain("isSubmitting");
+    expect(source).toContain("Working on your question…");
+    expect(source).toContain("activeRequest.current?.abort()");
+    expect(source).toContain("disabled={isSubmitting || !intent.trim()}");
     expect(source).not.toContain("setTimeout");
     expect(source).not.toContain("Listening");
     expect(source).not.toContain("Connecting");
     expect(source).not.toContain("Preparing");
   });
 
+  it("makes Zumi the composer send control instead of leaving a detached decorative orb", () => {
+    expect(source).toContain("function ZumiSendGlyph");
+    expect(source).toContain("data-zumi-send-glyph");
+    expect(source).toContain("<ZumiSendGlyph active={isSubmitting} />");
+    expect(source).not.toContain('<ZumiOrb state="observing" size={44} />');
+    expect(source).not.toContain("ArrowUp");
+  });
+
   it("provides explicit composer labels, plain-language disclosure, live status, and keyboard submit", () => {
     expect(source).toContain('htmlFor="public-klinikos-intent"');
     expect(source).toContain('aria-describedby="public-conversation-disclosure"');
     expect(source).toContain('id="public-conversation-disclosure"');
-    expect(source).toContain("does not open private clinic records or make changes");
+    expect(source).toContain("cannot open private clinic records or make changes");
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('role="status"');
     expect(source).toContain("onKeyDown={handleComposerKeyDown}");

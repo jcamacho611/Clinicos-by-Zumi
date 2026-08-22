@@ -83,14 +83,40 @@ export async function getLuxeAcquisitionOperations(session: ClinicSession) {
         take: 5000,
       }),
       db.$queryRaw<PaymentAggregateRow[]>(Prisma.sql`
+        WITH payment_totals AS (
+          SELECT
+            "leadId",
+            COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualGrossCents",
+            COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorGrossCents"
+          FROM "luxe_lead_payment_evidence"
+          WHERE "organizationId" = ${session.organizationId}
+            AND "leadId" IN (${Prisma.join(leadIds)})
+          GROUP BY "leadId"
+        ),
+        refund_totals AS (
+          SELECT
+            "leadId",
+            COALESCE(SUM("amountRefundedCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorRefundedCents"
+          FROM "luxe_lead_refund_evidence"
+          WHERE "organizationId" = ${session.organizationId}
+            AND "leadId" IN (${Prisma.join(leadIds)})
+          GROUP BY "leadId"
+        )
         SELECT
-          "leadId",
-          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'manual_reconciliation' AND "processorVerified" = false), 0)::bigint AS "manualReconciledCents",
-          COALESCE(SUM("amountCents") FILTER (WHERE "verificationMethod" = 'processor_verification' AND "processorVerified" = true), 0)::bigint AS "processorVerifiedCents"
-        FROM "luxe_lead_payment_evidence"
-        WHERE "organizationId" = ${session.organizationId}
-          AND "leadId" IN (${Prisma.join(leadIds)})
-        GROUP BY "leadId"
+          payment_totals."leadId",
+          GREATEST(
+            payment_totals."manualGrossCents" - GREATEST(
+              COALESCE(refund_totals."processorRefundedCents", 0) - payment_totals."processorGrossCents",
+              0
+            ),
+            0
+          )::bigint AS "manualReconciledCents",
+          GREATEST(
+            payment_totals."processorGrossCents" - COALESCE(refund_totals."processorRefundedCents", 0),
+            0
+          )::bigint AS "processorVerifiedCents"
+        FROM payment_totals
+        LEFT JOIN refund_totals ON refund_totals."leadId" = payment_totals."leadId"
       `),
     ]);
 

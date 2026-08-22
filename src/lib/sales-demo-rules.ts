@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
 
 export const productStatusLabels = [
   "Live",
@@ -19,39 +20,39 @@ export const demoOfferKeys = [
 export const demoOfferSchema = z.enum(demoOfferKeys);
 export type DemoOfferKey = z.infer<typeof demoOfferSchema>;
 
-/**
- * Compatibility keys remain stable for persisted sales history. Customer-facing
- * labels mirror the current Klinikos commercial canon so historical/internal keys
- * never leak legacy product names into UI or API projections.
- */
-export const demoOffers: Record<DemoOfferKey, {
+type CanonicalClinicCommercialOffer = (typeof clinicCommercialOffers)[keyof typeof clinicCommercialOffers];
+
+type DemoOffer = {
   name: string;
   priceCents: number;
   shortPrice: string;
   creditForward: string;
   status: (typeof productStatusLabels)[number];
-}> = {
-  private_workflow_demo: {
-    name: "Clinic Operating Analysis",
-    priceCents: 50_000,
-    shortPrice: "$500",
-    creditForward: "100% credited toward an Implementation Blueprint or qualifying implementation when the clinic proceeds within 30 days.",
-    status: "Demo",
-  },
-  founding_clinic_evaluation: {
-    name: "Implementation Blueprint",
-    priceCents: 150_000,
-    shortPrice: "$1,500",
-    creditForward: "100% credited toward a qualifying Klinikos implementation when the clinic proceeds within 30 days.",
-    status: "Human review required",
-  },
-  founding_clinic_program: {
-    name: "Founding Clinic Implementation",
-    priceCents: 800_000,
-    shortPrice: "from $8,000",
-    creditForward: "Eligible analysis and blueprint fees are credited after human review.",
-    status: "Requires production review",
-  },
+};
+
+function projectCommercialOffer(
+  offer: CanonicalClinicCommercialOffer,
+  status: DemoOffer["status"],
+): DemoOffer {
+  return {
+    name: offer.name,
+    priceCents: offer.priceCents,
+    shortPrice: offer.priceLabel,
+    creditForward: offer.creditForward,
+    status,
+  };
+}
+
+/**
+ * Persisted/internal sales keys stay stable, but all customer-facing commercial
+ * facts come from the single canonical Klinikos commercial catalog. Sales owns
+ * only workflow-specific status semantics; it does not own another copy of price,
+ * name, price label, or credit-forward terms.
+ */
+export const demoOffers: Record<DemoOfferKey, DemoOffer> = {
+  private_workflow_demo: projectCommercialOffer(clinicCommercialOffers.privateWorkflowReview, "Demo"),
+  founding_clinic_evaluation: projectCommercialOffer(clinicCommercialOffers.foundingEvaluation, "Human review required"),
+  founding_clinic_program: projectCommercialOffer(clinicCommercialOffers.foundingImplementation, "Requires production review"),
 };
 
 export const salesPainPoints = [
@@ -101,27 +102,65 @@ export const currentSystemsSchema = z.object({
   patientMessaging: z.string().trim().max(120).default(""),
 });
 
+/**
+ * What a purchase actually requires.
+ *
+ * Creating the reservation and the server-owned checkout intent reads an email, a clinic
+ * and contact name, an explicit acknowledgment, and an offer key whose price the server
+ * owns. That is the whole dependency. Role, phone, provider count, location count,
+ * current vendors, monthly software spend and a repeated pain-point selection were all
+ * demanded before payment and none of them are read by either step — they were
+ * consulting homework standing between a ready buyer and giving us money.
+ *
+ * `clinicType` and `biggestPainPoint` stay required because the Zumi operating interview
+ * already carries them into this form; the buyer is not answering them twice.
+ *
+ * Everything else is optional here and collected after payment, during implementation
+ * discovery, where it is genuinely useful. Optional means absent, not defaulted: writing
+ * providerCount = 1 for a twelve-provider clinic invents a fact that would flow into
+ * proposals and any later ROI claim, so an uncollected answer stays null.
+ */
 export const salesIntakeSchema = z.object({
   clinicName: z.string().trim().min(2).max(140),
   contactName: z.string().trim().min(2).max(120),
-  contactRole: z.string().trim().min(2).max(100),
   contactEmail: z.string().trim().email().max(180),
-  contactPhone: z.string().trim().min(7).max(40),
   clinicType: z.enum(clinicTypeOptions),
-  providerCount: z.number().int().min(1).max(10_000),
-  locationCount: z.number().int().min(1).max(1_000),
-  currentSystems: currentSystemsSchema,
-  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
   biggestPainPoint: painPointSchema,
-  painPoints: z.array(painPointSchema).min(1).max(salesPainPoints.length),
+  acknowledgesSyntheticData: z.literal(true),
   selectedOffer: demoOfferSchema.default("private_workflow_demo"),
+
+  // Collected after payment. Present when the buyer volunteered it, null otherwise.
+  contactRole: z.string().trim().min(2).max(100).nullable().default(null),
+  contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
+  providerCount: z.number().int().min(1).max(10_000).nullable().default(null),
+  locationCount: z.number().int().min(1).max(1_000).nullable().default(null),
+  currentSystems: currentSystemsSchema.nullable().default(null),
+  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
+  painPoints: z.array(painPointSchema).max(salesPainPoints.length).nullable().default(null),
+
   wantsFreeIntro: z.boolean().default(false),
   wantsPaidDemo: z.boolean().default(true),
   wantsFoundingEvaluation: z.boolean().default(false),
   wantsFoundingProgram: z.boolean().default(false),
-  acknowledgesSyntheticData: z.literal(true),
   website: z.string().max(0).optional(),
 }).strict();
+
+/**
+ * The qualification a person is asked for after they have paid, when it informs
+ * implementation rather than gating a purchase. Every field is optional: an unanswered
+ * question stays unanswered.
+ */
+export const salesQualificationSchema = z.object({
+  contactRole: z.string().trim().min(2).max(100).nullable().default(null),
+  contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
+  providerCount: z.number().int().min(1).max(10_000).nullable().default(null),
+  locationCount: z.number().int().min(1).max(1_000).nullable().default(null),
+  currentSystems: currentSystemsSchema.nullable().default(null),
+  estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
+  painPoints: z.array(painPointSchema).max(salesPainPoints.length).nullable().default(null),
+}).strict();
+
+export type SalesQualification = z.infer<typeof salesQualificationSchema>;
 
 export type SalesIntake = z.infer<typeof salesIntakeSchema>;
 

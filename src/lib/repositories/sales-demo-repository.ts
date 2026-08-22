@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
@@ -44,12 +44,14 @@ function reservationView<T extends {
   id: string;
   clinicName: string;
   contactName: string;
-  contactRole: string;
+  // Null where the buyer has not been asked yet — these are collected after payment,
+  // during implementation discovery, not as a gate in front of checkout.
+  contactRole: string | null;
   contactEmail: string;
-  contactPhone: string;
+  contactPhone: string | null;
   clinicType: string;
-  providerCount: number;
-  locationCount: number;
+  providerCount: number | null;
+  locationCount: number | null;
   biggestPainPoint: string;
   painPoints: Prisma.JsonValue;
   currentSystems: Prisma.JsonValue;
@@ -76,7 +78,7 @@ export async function createPublicDemoReservation(rawInput: unknown, metadata: P
   const input = salesIntakeSchema.parse(rawInput);
   const salesOwner = await requireSalesOwnerOrganization();
   const offer = demoOffers[input.selectedOffer];
-  const scenario = buildSyntheticDemoScenario(input);
+  const scenario = buildSyntheticDemoScenario({ ...input, painPoints: input.painPoints ?? [input.biggestPainPoint] });
   const normalizedEmail = input.contactEmail.toLowerCase();
 
   return db.$transaction(async (tx) => {
@@ -112,8 +114,8 @@ export async function createPublicDemoReservation(rawInput: unknown, metadata: P
         providerCount: input.providerCount,
         locationCount: input.locationCount,
         biggestPainPoint: input.biggestPainPoint,
-        painPoints: input.painPoints,
-        currentSystems: input.currentSystems,
+        painPoints: input.painPoints ?? Prisma.DbNull,
+        currentSystems: input.currentSystems ?? Prisma.DbNull,
         estimatedSoftwareSpendCents: input.estimatedSoftwareSpendDollars === null ? null : input.estimatedSoftwareSpendDollars * 100,
         wantsFreeIntro: input.wantsFreeIntro,
         wantsPaidDemo: input.wantsPaidDemo,

@@ -63,23 +63,22 @@ enum MessageDirection {
 }
 
 model AccessGateAcceptance {
-  id              String                    @id @default(cuid())
+  id              String    @id @default(cuid())
   email           String
   documentKey     String
   documentVersion String
-  acceptedAt      DateTime                  @default(now())
+  acceptedAt      DateTime  @default(now())
   verifiedEmailAt DateTime?
   ipAddress       String?
   userAgent       String?
-  source          String                    @default("web-access-gate")
-  createdAt       DateTime                  @default(now())
+  source          String    @default("web-access-gate")
+  createdAt       DateTime  @default(now())
 
   @@index([email, documentKey])
   @@index([acceptedAt])
   @@index([verifiedEmailAt])
   @@map("access_gate_acceptances")
 }
-
 
 model Organization {
   id                         String                      @id @default(cuid())
@@ -2434,15 +2433,15 @@ model DemoReservation {
   salesOwnerOrganizationId    String
   clinicName                  String
   contactName                 String
-  contactRole                 String
+  contactRole                 String?
   contactEmail                String
-  contactPhone                String
+  contactPhone                String?
   clinicType                  String
-  providerCount               Int
-  locationCount               Int
+  providerCount               Int?
+  locationCount               Int?
   biggestPainPoint            String
-  painPoints                  Json
-  currentSystems              Json
+  painPoints                  Json?
+  currentSystems              Json?
   estimatedSoftwareSpendCents Int?
   wantsFreeIntro              Boolean                @default(false)
   wantsPaidDemo               Boolean                @default(true)
@@ -3714,22 +3713,22 @@ model FeatureRegistryCapability {
 // ---------------------------------------------------------------------------
 
 model EducationInstitution {
-  id             String                @id @default(cuid())
-  name           String
-  slug           String                @unique
-  institutionType String               @default("college")
-  contactEmail   String?
-  status         String                @default("active")
+  id              String                @id @default(cuid())
+  name            String
+  slug            String                @unique
+  institutionType String                @default("college")
+  contactEmail    String?
+  status          String                @default("active")
   /// Optional host Klinikos tenant. Intentionally not a relation: an institution is
   /// its own isolation root and must not inherit clinical tenant scope.
-  organizationId String?
-  settings       Json?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  programs       EducationProgram[]
-  courses        EducationCourse[]
-  scenarios      EducationScenario[]
-  enrollments    EducationEnrollment[]
+  organizationId  String?
+  settings        Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  programs        EducationProgram[]
+  courses         EducationCourse[]
+  scenarios       EducationScenario[]
+  enrollments     EducationEnrollment[]
 
   @@index([status])
   @@map("education_institutions")
@@ -3802,28 +3801,28 @@ model EducationCohort {
 }
 
 model EducationEnrollment {
-  id                  String                    @id @default(cuid())
-  institutionId       String
-  cohortId            String
+  id                 String                    @id @default(cuid())
+  institutionId      String
+  cohortId           String
   /// Klinikos account when the student has one. Rosters may be email-only.
-  userId              String?
-  studentEmail        String
-  studentDisplayName  String
-  platformRole        String                    @default("edu_student")
+  userId             String?
+  studentEmail       String
+  studentDisplayName String
+  platformRole       String                    @default("edu_student")
   /// Clinic seat this student occupies in simulations. Grants nothing outside them.
-  simulationRole      String?
-  status              String                    @default("invited")
-  invitedAt           DateTime                  @default(now())
-  acceptedAt          DateTime?
-  completedAt         DateTime?
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  institution         EducationInstitution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  cohort              EducationCohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  submissions         EducationSubmission[]
-  competencies        EducationCompetency[]
-  certificates        EducationCertificate[]
-  instructorNotes     EducationInstructorNote[]
+  simulationRole     String?
+  status             String                    @default("invited")
+  invitedAt          DateTime                  @default(now())
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  institution        EducationInstitution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  cohort             EducationCohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  submissions        EducationSubmission[]
+  competencies       EducationCompetency[]
+  certificates       EducationCertificate[]
+  instructorNotes    EducationInstructorNote[]
 
   @@unique([cohortId, studentEmail])
   @@index([institutionId, status])
@@ -3870,24 +3869,24 @@ model EducationScenario {
 }
 
 model EducationScenarioAssignment {
-  id             String                  @id @default(cuid())
-  institutionId  String
-  cohortId       String
-  scenarioId     String
-  rubricId       String?
-  title          String
-  instructions   String?
-  status         String                  @default("assigned")
+  id               String                   @id @default(cuid())
+  institutionId    String
+  cohortId         String
+  scenarioId       String
+  rubricId         String?
+  title            String
+  instructions     String?
+  status           String                   @default("assigned")
   assignedByUserId String?
-  opensAt        DateTime?
-  dueAt          DateTime?
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
-  cohort         EducationCohort         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  scenario       EducationScenario       @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
-  rubric         EducationRubric?        @relation(fields: [rubricId], references: [id], onDelete: SetNull)
-  submissions    EducationSubmission[]
-  events         EducationScenarioEvent[]
+  opensAt          DateTime?
+  dueAt            DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  cohort           EducationCohort          @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  scenario         EducationScenario        @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  rubric           EducationRubric?         @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  submissions      EducationSubmission[]
+  events           EducationScenarioEvent[]
 
   @@unique([cohortId, scenarioId])
   @@index([institutionId, status])
@@ -3940,38 +3939,38 @@ model EducationRubric {
 }
 
 model EducationRubricCriterion {
-  id              String          @id @default(cuid())
-  rubricId        String
-  label           String
-  description     String?
-  competencyArea  String?
-  maxPoints       Int
-  orderIndex      Int             @default(0)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  rubric          EducationRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  id             String          @id @default(cuid())
+  rubricId       String
+  label          String
+  description    String?
+  competencyArea String?
+  maxPoints      Int
+  orderIndex     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  rubric         EducationRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
 
   @@index([rubricId, orderIndex])
   @@map("education_rubric_criteria")
 }
 
 model EducationSubmission {
-  id             String                      @id @default(cuid())
-  institutionId  String
-  assignmentId   String
-  enrollmentId   String
-  simulationRole String?
-  status         String                      @default("not_started")
-  startedAt      DateTime?
-  submittedAt    DateTime?
-  reflection     String?
-  createdAt      DateTime                    @default(now())
-  updatedAt      DateTime                    @updatedAt
-  assignment     EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  enrollment     EducationEnrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  evidence       EducationEvidence[]
-  events         EducationScenarioEvent[]
-  grade          EducationGrade?
+  id              String                      @id @default(cuid())
+  institutionId   String
+  assignmentId    String
+  enrollmentId    String
+  simulationRole  String?
+  status          String                      @default("not_started")
+  startedAt       DateTime?
+  submittedAt     DateTime?
+  reflection      String?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  assignment      EducationScenarioAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  enrollment      EducationEnrollment         @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  evidence        EducationEvidence[]
+  events          EducationScenarioEvent[]
+  grade           EducationGrade?
   instructorNotes EducationInstructorNote[]
 
   @@unique([assignmentId, enrollmentId])
@@ -3980,62 +3979,62 @@ model EducationSubmission {
 }
 
 model EducationEvidence {
-  id           String              @id @default(cuid())
+  id            String              @id @default(cuid())
   institutionId String
-  submissionId String
-  evidenceType String
-  label        String
-  body         String?
+  submissionId  String
+  evidenceType  String
+  label         String
+  body          String?
   /// Uploaded student files reuse the governed document custody path rather than a
   /// second, weaker upload route. Null when the evidence is inline text.
-  documentId   String?
-  metadata     Json?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  submission   EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  documentId    String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  submission    EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([submissionId, createdAt])
   @@map("education_evidence")
 }
 
 model EducationGrade {
-  id               String              @id @default(cuid())
-  institutionId    String
-  submissionId     String              @unique
-  rubricId         String?
-  pointsAwarded    Int
-  pointsPossible   Int
-  criterionScores  Json?
-  feedback         String?
+  id                String              @id @default(cuid())
+  institutionId     String
+  submissionId      String              @unique
+  rubricId          String?
+  pointsAwarded     Int
+  pointsPossible    Int
+  criterionScores   Json?
+  feedback          String?
   /// The human who recorded the grade. AI may suggest; only a person grades.
-  gradedByUserId   String
-  gradedAt         DateTime            @default(now())
+  gradedByUserId    String
+  gradedAt          DateTime            @default(now())
   /// Populated when an AI draft informed the grade, for provenance only.
-  aiSuggested      Boolean             @default(false)
-  releasedToStudent Boolean            @default(false)
-  releasedAt       DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  submission       EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  rubric           EducationRubric?    @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  aiSuggested       Boolean             @default(false)
+  releasedToStudent Boolean             @default(false)
+  releasedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  submission        EducationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  rubric            EducationRubric?    @relation(fields: [rubricId], references: [id], onDelete: SetNull)
 
   @@index([institutionId, gradedAt])
   @@map("education_grades")
 }
 
 model EducationInstructorNote {
-  id             String               @id @default(cuid())
-  institutionId  String
-  enrollmentId   String?
-  submissionId   String?
-  authorUserId   String
-  body           String
+  id               String               @id @default(cuid())
+  institutionId    String
+  enrollmentId     String?
+  submissionId     String?
+  authorUserId     String
+  body             String
   /// Instructor-only notes are never returned on a student-facing response.
-  visibleToStudent Boolean            @default(false)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  enrollment     EducationEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  submission     EducationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  visibleToStudent Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  enrollment       EducationEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  submission       EducationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([enrollmentId, createdAt])
   @@index([submissionId, createdAt])
@@ -4043,18 +4042,18 @@ model EducationInstructorNote {
 }
 
 model EducationCompetency {
-  id                String              @id @default(cuid())
-  institutionId     String
-  enrollmentId      String
-  competencyArea    String
-  status            String              @default("not_assessed")
+  id                 String              @id @default(cuid())
+  institutionId      String
+  enrollmentId       String
+  competencyArea     String
+  status             String              @default("not_assessed")
   /// Only an instructor or admin may finalise a competency determination.
   determinedByUserId String?
-  determinedAt      DateTime?
-  evidenceSummary   String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  enrollment        EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  determinedAt       DateTime?
+  evidenceSummary    String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  enrollment         EducationEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 
   @@unique([enrollmentId, competencyArea])
   @@index([institutionId, status])
@@ -4125,4 +4124,30 @@ model ZumiInvocation {
   @@index([organizationId, createdAt])
   @@index([organizationId, capability, createdAt])
   @@map("zumi_invocations")
+}
+
+/// Demand for expertise a clinic does not have internally.
+///
+/// The supply half of Expert Grid does not exist yet, so nothing is matched on write.
+/// A request is captured, owned, and followed up by a person — which is the truthful
+/// path until there are real experts to match against.
+model ExpertSupportRequest {
+  id                String    @id @default(cuid())
+  organizationId    String
+  requestedByUserId String?
+  capabilityDomain  String
+  outcomeWanted     String
+  urgency           String    @default("routine")
+  jurisdictionKey   String?
+  remoteAllowed     Boolean   @default(true)
+  neededBy          DateTime?
+  /// Being matched conveys no access. Widening this is a separate, explicit decision.
+  dataAccessClass   String    @default("none")
+  status            String    @default("submitted")
+  sourceNeedKey     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([organizationId, status, createdAt])
+  @@map("expert_support_requests")
 }

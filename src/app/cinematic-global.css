@@ -107,24 +107,195 @@
 .klinikos-cinematic-root [class~="bg-white"],
 .klinikos-cinematic-root [class*="bg-white/"] { background-color:#0d0708!important; }
 .klinikos-cinematic-root [class~="bg-slate-950"],
-.klinikos-cinematic-root [class~="bg-slate-900"] { background-color:#080405!important; }
+.klinikos-cinematic-root [class~="bg-slate-900"],
+.klinikos-cinematic-root [class~="bg-stone-950"],
+.klinikos-cinematic-root [class~="bg-stone-900"],
+.klinikos-cinematic-root [class~="bg-neutral-950"],
+.klinikos-cinematic-root [class~="bg-neutral-900"] { background-color:#080405!important; }
 .klinikos-cinematic-root [class~="bg-slate-50"],
-.klinikos-cinematic-root [class~="bg-slate-100"] { background-color:#100708!important; }
+.klinikos-cinematic-root [class~="bg-slate-100"],
+/* `stone` is the same neutral ramp as `slate`, and the documents surface is written in
+   it throughout. It was absent from every rule in this layer, so its panels stayed light
+   while its text was left dark — or the reverse once a tinted panel darkened around it.
+   Document names rendered at 1.01:1 on the converted rows: present in the DOM, invisible
+   on the screen. Treating stone exactly as slate is what fixes it, because slate's
+   handling is already proven across the rest of the product. */
+.klinikos-cinematic-root [class~="bg-stone-50"],
+.klinikos-cinematic-root [class~="bg-stone-100"],
+.klinikos-cinematic-root [class~="bg-neutral-50"],
+.klinikos-cinematic-root [class~="bg-neutral-100"],
+/* Slash-opacity variants are separate class tokens, so an exact-word selector never
+   matches them. `bg-slate-50/60` slipped through and left a mid-grey wash under light
+   text on the referrals and imaging surfaces — the layer already special-cases
+   `bg-white/` for exactly this reason, and the tinted equivalents need it too. */
+.klinikos-cinematic-root [class*="bg-slate-50/"],
+.klinikos-cinematic-root [class*="bg-slate-100/"],
+.klinikos-cinematic-root [class*="bg-slate-200/"],
+.klinikos-cinematic-root [class*="bg-gray-50/"],
+.klinikos-cinematic-root [class*="bg-gray-100/"] { background-color:#100708!important; }
+.klinikos-cinematic-root [class*="bg-amber-50/"],
+.klinikos-cinematic-root [class*="bg-amber-100/"],
+.klinikos-cinematic-root [class*="bg-yellow-50/"],
+.klinikos-cinematic-root [class*="bg-orange-50/"] { background-color:#1a1206!important; }
+.klinikos-cinematic-root [class*="bg-emerald-50/"],
+.klinikos-cinematic-root [class*="bg-green-50/"],
+.klinikos-cinematic-root [class*="bg-teal-50/"],
+.klinikos-cinematic-root [class*="bg-teal-100/"] { background-color:#06120d!important; }
+.klinikos-cinematic-root [class*="bg-rose-50/"],
+.klinikos-cinematic-root [class*="bg-rose-100/"],
+.klinikos-cinematic-root [class*="bg-red-50/"],
+.klinikos-cinematic-root [class*="bg-pink-50/"] { background-color:#180809!important; }
+.klinikos-cinematic-root [class*="bg-sky-50/"],
+.klinikos-cinematic-root [class*="bg-blue-50/"],
+.klinikos-cinematic-root [class*="bg-cyan-50/"],
+.klinikos-cinematic-root [class*="bg-indigo-50/"],
+.klinikos-cinematic-root [class*="bg-violet-50/"] { background-color:#080d18!important; }
+
+/* Hover states.
+   The rules above convert resting backgrounds; the hover variants were never
+   converted, so pointing at a patient row painted a near-white 70% wash under
+   light text and dropped it to 1.08:1. The row you point at was the one you could
+   not read. Hover has to survive the conversion the same as rest — it is a lift
+   away from the surface, not a return to the light theme. */
+.klinikos-cinematic-root [class*="hover:bg-white"]:hover,
+.klinikos-cinematic-root [class*="hover:bg-slate-50"]:hover,
+.klinikos-cinematic-root [class*="hover:bg-slate-100"]:hover,
+.klinikos-cinematic-root [class*="hover:bg-slate-200"]:hover,
+.klinikos-cinematic-root [class*="hover:bg-gray-50"]:hover,
+.klinikos-cinematic-root [class*="hover:bg-gray-100"]:hover { background-color:#1c1113!important; }
 .klinikos-cinematic-root [class*="bg-[#f7f8fa]"],
 .klinikos-cinematic-root [class*="bg-[#eef4f3]"],
 .klinikos-cinematic-root [class*="bg-[#faf9f5]"],
 .klinikos-cinematic-root [class*="bg-[#f1f0eb]"] { background-color:#090506!important; }
 
+/* Tinted callout panels.
+   The rules above darken white and slate surfaces, and the text rules below force
+   dark slate text to near-white. A tinted panel — bg-amber-50 with text-slate-900 —
+   matched the text rule but no background rule, so it kept a cream background and
+   was given near-white text on top of it. The billing surface rendered its most
+   important sentence, "Stored claim status is not clearinghouse evidence.", at a
+   contrast ratio of 1.09:1. Invisible. Roughly 280 tinted panels across the product
+   were failing the same way.
+   Each family darkens toward its own hue rather than to one neutral, so an amber
+   warning still reads warm and an emerald confirmation still reads green — the
+   semantic signal survives the conversion that fixes the contrast. */
+.klinikos-cinematic-root [class~="bg-amber-50"],
+.klinikos-cinematic-root [class~="bg-amber-100"],
+.klinikos-cinematic-root [class~="bg-yellow-50"],
+.klinikos-cinematic-root [class~="bg-yellow-100"],
+.klinikos-cinematic-root [class~="bg-orange-50"],
+.klinikos-cinematic-root [class~="bg-orange-100"] { background-color:#1a1206!important; }
+.klinikos-cinematic-root [class~="bg-emerald-50"],
+.klinikos-cinematic-root [class~="bg-emerald-100"],
+.klinikos-cinematic-root [class~="bg-green-50"],
+.klinikos-cinematic-root [class~="bg-green-100"],
+.klinikos-cinematic-root [class~="bg-lime-50"],
+.klinikos-cinematic-root [class~="bg-teal-50"],
+.klinikos-cinematic-root [class~="bg-teal-100"] { background-color:#06120d!important; }
+.klinikos-cinematic-root [class~="bg-rose-50"],
+.klinikos-cinematic-root [class~="bg-rose-100"],
+.klinikos-cinematic-root [class~="bg-red-50"],
+.klinikos-cinematic-root [class~="bg-red-100"],
+.klinikos-cinematic-root [class~="bg-pink-50"],
+.klinikos-cinematic-root [class~="bg-fuchsia-50"] { background-color:#180809!important; }
+.klinikos-cinematic-root [class~="bg-sky-50"],
+.klinikos-cinematic-root [class~="bg-sky-100"],
+.klinikos-cinematic-root [class~="bg-blue-50"],
+.klinikos-cinematic-root [class~="bg-blue-100"],
+.klinikos-cinematic-root [class~="bg-cyan-50"],
+.klinikos-cinematic-root [class~="bg-cyan-100"],
+.klinikos-cinematic-root [class~="bg-indigo-50"],
+.klinikos-cinematic-root [class~="bg-violet-50"],
+.klinikos-cinematic-root [class~="bg-purple-50"] { background-color:#080d18!important; }
+
 .klinikos-cinematic-root [class~="text-slate-950"],
 .klinikos-cinematic-root [class~="text-slate-900"],
 .klinikos-cinematic-root [class~="text-slate-800"],
+.klinikos-cinematic-root [class~="text-stone-950"],
+.klinikos-cinematic-root [class~="text-stone-900"],
+.klinikos-cinematic-root [class~="text-stone-800"],
+.klinikos-cinematic-root [class~="text-neutral-900"],
 .klinikos-cinematic-root [class*="text-[#0b1220]"],
 .klinikos-cinematic-root [class*="text-[#0b1e3a]"] { color:#f8efed!important; }
 .klinikos-cinematic-root [class~="text-slate-700"],
 .klinikos-cinematic-root [class~="text-slate-600"],
+.klinikos-cinematic-root [class~="text-stone-700"],
+.klinikos-cinematic-root [class~="text-stone-600"],
+.klinikos-cinematic-root [class~="text-neutral-700"],
 .klinikos-cinematic-root [class*="text-[#5b6675]"] { color:#bca5a1!important; }
 .klinikos-cinematic-root [class~="text-slate-500"],
+.klinikos-cinematic-root [class~="text-stone-500"],
+.klinikos-cinematic-root [class~="text-stone-400"],
+.klinikos-cinematic-root [class~="text-neutral-500"],
+.klinikos-cinematic-root [class~="text-neutral-400"],
 .klinikos-cinematic-root [class~="text-slate-400"] { color:#927b77!important; }
+
+/* The Grid's faintest tones.
+   Roughly a hundred labels across the Grid surfaces use text-white/30 through /45,
+   which composite to about 3.1:1 on the Grid's near-black — under the 4.5:1 floor
+   the rest of the product is held to. These are the metric captions that explain
+   what each number means ("Offers waiting on a decision."), so they are exactly the
+   text a person needs when they do not already know the surface. Two steps are kept
+   rather than one floor, so the hierarchy between a caption and a faint aside
+   survives the lift. */
+.klinikos-cinematic-root [class*="text-white/30"],
+.klinikos-cinematic-root [class*="text-white/35"] { color:rgba(255,255,255,.56)!important; }
+.klinikos-cinematic-root [class*="text-white/40"],
+.klinikos-cinematic-root [class*="text-white/45"] { color:rgba(255,255,255,.64)!important; }
+
+/* Tinted text.
+   The companion to the tinted panel rules above. A `text-amber-800` was chosen to sit
+   on a cream `bg-amber-50`; once the panel is dark, that same brown is unreadable on
+   it — the claim-status pills measured 2.61:1. These lift each dark hue to a light
+   tint of itself, so the panel and its text convert together and the hue still says
+   what it said before: amber warns, emerald confirms, rose alerts. Lighter steps
+   (-300, -400) are already legible on dark and are deliberately left alone. */
+.klinikos-cinematic-root [class~="text-amber-600"],
+.klinikos-cinematic-root [class~="text-amber-700"],
+.klinikos-cinematic-root [class~="text-amber-800"],
+.klinikos-cinematic-root [class~="text-amber-900"],
+.klinikos-cinematic-root [class~="text-amber-950"],
+.klinikos-cinematic-root [class~="text-yellow-700"],
+.klinikos-cinematic-root [class~="text-yellow-800"],
+.klinikos-cinematic-root [class~="text-orange-700"],
+.klinikos-cinematic-root [class~="text-orange-800"] { color:#f3c98a!important; }
+.klinikos-cinematic-root [class~="text-emerald-600"],
+.klinikos-cinematic-root [class~="text-emerald-700"],
+.klinikos-cinematic-root [class~="text-emerald-800"],
+.klinikos-cinematic-root [class~="text-green-700"],
+.klinikos-cinematic-root [class~="text-green-800"],
+.klinikos-cinematic-root [class~="text-teal-800"],
+.klinikos-cinematic-root [class~="text-teal-900"],
+.klinikos-cinematic-root [class~="text-emerald-950"],
+.klinikos-cinematic-root [class~="text-green-950"] { color:#8fd9bd!important; }
+.klinikos-cinematic-root [class~="text-rose-600"],
+.klinikos-cinematic-root [class~="text-rose-700"],
+.klinikos-cinematic-root [class~="text-rose-800"],
+.klinikos-cinematic-root [class~="text-rose-900"],
+.klinikos-cinematic-root [class~="text-red-600"],
+.klinikos-cinematic-root [class~="text-red-700"],
+.klinikos-cinematic-root [class~="text-red-800"],
+.klinikos-cinematic-root [class~="text-pink-700"],
+.klinikos-cinematic-root [class~="text-rose-950"],
+.klinikos-cinematic-root [class~="text-red-950"] { color:#f4a7a1!important; }
+.klinikos-cinematic-root [class~="text-sky-600"],
+.klinikos-cinematic-root [class~="text-sky-700"],
+.klinikos-cinematic-root [class~="text-sky-800"],
+.klinikos-cinematic-root [class~="text-sky-900"],
+.klinikos-cinematic-root [class~="text-blue-700"],
+.klinikos-cinematic-root [class~="text-blue-800"],
+.klinikos-cinematic-root [class~="text-cyan-700"],
+.klinikos-cinematic-root [class~="text-cyan-800"],
+.klinikos-cinematic-root [class~="text-indigo-600"],
+.klinikos-cinematic-root [class~="text-indigo-700"],
+.klinikos-cinematic-root [class~="text-indigo-800"],
+.klinikos-cinematic-root [class~="text-violet-600"],
+.klinikos-cinematic-root [class~="text-violet-700"],
+.klinikos-cinematic-root [class~="text-violet-800"],
+.klinikos-cinematic-root [class~="text-purple-700"],
+.klinikos-cinematic-root [class~="text-sky-950"],
+.klinikos-cinematic-root [class~="text-indigo-950"],
+.klinikos-cinematic-root [class~="text-violet-950"] { color:#a8c4ea!important; }
 
 .klinikos-cinematic-root [class~="text-teal-700"],
 .klinikos-cinematic-root [class~="text-teal-600"],
@@ -170,6 +341,14 @@
 .klinikos-cinematic-root .grid-marble-surface [class*="bg-white/"] { background-color:#fff!important; }
 .klinikos-cinematic-root .grid-marble-surface [class~="bg-slate-50"] { background-color:#f8fafc!important; }
 .klinikos-cinematic-root .grid-marble-surface [class~="bg-slate-100"] { background-color:#f1f5f9!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-slate-50/"] { background-color:#f8fafc!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-slate-100/"] { background-color:#f1f5f9!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-teal-50/"] { background-color:#f0fdfa!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-rose-50/"] { background-color:#fff1f2!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="bg-sky-50/"] { background-color:#f0f9ff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="hover:bg-white"]:hover { background-color:#fff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="hover:bg-slate-50"]:hover { background-color:#f8fafc!important; }
+.klinikos-cinematic-root .grid-marble-surface [class*="hover:bg-slate-100"]:hover { background-color:#f1f5f9!important; }
 .klinikos-cinematic-root .grid-marble-surface [class~="bg-teal-50"] { background-color:#f0fdfa!important; }
 .klinikos-cinematic-root .grid-marble-surface [class~="bg-teal-700"] { background-color:#0f766e!important; }
 .klinikos-cinematic-root .grid-marble-surface [class~="bg-sky-600"] { background-color:#0284c7!important; }
@@ -192,6 +371,73 @@
 .klinikos-cinematic-root .grid-marble-surface [class*="focus:border-sky-"]:focus { border-color:#38bdf8!important; }
 .klinikos-cinematic-root .grid-marble-surface [class*="ring-teal-"] { --tw-ring-color:#f0fdfa!important; }
 .klinikos-cinematic-root .grid-marble-surface [class*="ring-sky-"] { --tw-ring-color:#e0f2fe!important; }
+
+/* Marble keeps its tinted panels light. These carry more specificity than the
+   Obsidian tint rules above, so the deliberately-light Grid discovery surface is
+   not dragged dark along with the rest of the product. */
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-amber-50"] { background-color:#fffbeb!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-amber-100"] { background-color:#fef3c7!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-emerald-50"] { background-color:#ecfdf5!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-teal-100"] { background-color:#ccfbf1!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-rose-50"] { background-color:#fff1f2!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-rose-100"] { background-color:#ffe4e6!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-sky-50"] { background-color:#f0f9ff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-sky-100"] { background-color:#e0f2fe!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-cyan-50"] { background-color:#ecfeff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-cyan-100"] { background-color:#cffafe!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-indigo-50"] { background-color:#eef2ff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-violet-50"] { background-color:#f5f3ff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-blue-50"] { background-color:#eff6ff!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="bg-yellow-100"] { background-color:#fef9c3!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-amber-700"] { color:#b45309!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-amber-800"] { color:#92400e!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-amber-900"] { color:#78350f!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-emerald-700"] { color:#047857!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-teal-800"] { color:#115e59!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-rose-600"] { color:#e11d48!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-rose-700"] { color:#be123c!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-rose-800"] { color:#9f1239!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-sky-700"] { color:#0369a1!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-sky-900"] { color:#0c4a6e!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-cyan-700"] { color:#0e7490!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-indigo-700"] { color:#4338ca!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-violet-700"] { color:#6d28d9!important; }
+/* Every step the Obsidian tint rules lift needs a marble counterpart, or the panel
+   stays light while its text goes pale — which is how "Available now" landed at
+   1.55:1 on the Grid browse cards. The two lists have to move together. */
+.klinikos-cinematic-root .grid-marble-surface [class~="text-amber-600"] { color:#d97706!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-amber-950"] { color:#451a03!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-yellow-700"] { color:#a16207!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-yellow-800"] { color:#854d0e!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-orange-700"] { color:#c2410c!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-orange-800"] { color:#9a3412!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-emerald-600"] { color:#059669!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-emerald-800"] { color:#065f46!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-emerald-950"] { color:#022c22!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-green-700"] { color:#15803d!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-green-800"] { color:#166534!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-green-950"] { color:#052e16!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-teal-900"] { color:#134e4a!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-rose-900"] { color:#881337!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-rose-950"] { color:#4c0519!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-red-600"] { color:#dc2626!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-red-700"] { color:#b91c1c!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-red-800"] { color:#991b1b!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-red-950"] { color:#450a0a!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-pink-700"] { color:#be185d!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-sky-600"] { color:#0284c7!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-sky-800"] { color:#075985!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-sky-950"] { color:#082f49!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-blue-700"] { color:#1d4ed8!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-blue-800"] { color:#1e40af!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-cyan-800"] { color:#155e75!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-indigo-600"] { color:#4f46e5!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-indigo-800"] { color:#3730a3!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-indigo-950"] { color:#1e1b4b!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-violet-600"] { color:#7c3aed!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-violet-800"] { color:#5b21b6!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-violet-950"] { color:#2e1065!important; }
+.klinikos-cinematic-root .grid-marble-surface [class~="text-purple-700"] { color:#7e22ce!important; }
 
 @media(max-width:767px){
   .klinikos-cinematic-root { background:radial-gradient(circle at 52% 0%,rgba(123,29,36,.16),transparent 28%),#050303; }

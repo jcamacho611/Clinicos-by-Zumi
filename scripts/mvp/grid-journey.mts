@@ -229,7 +229,7 @@ async function main() {
       offeredEndAt: iso(10 * DAY + 7 * 3600 * 1000),
       grossAmountCents: 10_000,
       depositAmountCents: 0,
-      locationPayableCents: 10_000,
+      locationPayableCents: 0,
       note: "This offer intentionally falls outside the approved availability window.",
       expiresAt: iso(2 * DAY),
     });
@@ -255,7 +255,7 @@ async function main() {
       offeredEndAt: spaceEnd,
       grossAmountCents: 50_000,
       depositAmountCents: 10_000,
-      locationPayableCents: 50_000,
+      locationPayableCents: 0,
       note: "Offering the reviewed treatment-room availability window.",
       expiresAt: iso(2 * DAY),
     });

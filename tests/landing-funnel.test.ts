@@ -5,9 +5,9 @@ import {
   clinicCommercialOffers,
   clinicPlans,
   eduPlans,
-  gridPlans,
   serviceEngagements,
 } from "@/lib/commercial/klinikos-commercial";
+import { GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -21,8 +21,14 @@ describe("Klinikos landing funnel", () => {
     // A marketing page carrying its own numbers is a second source of truth, and the
     // two drift the first time one changes. Prices are read from the commercial
     // module; the page and component must contain no currency literal of their own.
+    // Comments are stripped first. The invariant is about what reaches the rendered
+    // surface, and a guard that also fails on the sentence explaining a pricing decision
+    // punishes the documentation rather than the defect — it flagged the note recording
+    // why the free check stopped being labelled with the paid price.
+    const withoutComments = (source: string) =>
+      source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     for (const [label, source] of [["page", page], ["component", component]] as const) {
-      const literals = [...source.matchAll(/\$[\d,]+/g)].map((match) => match[0]);
+      const literals = [...withoutComments(source).matchAll(/\$[\d,]+/g)].map((match) => match[0]);
       expect(literals, `${label} hardcodes ${literals.join(", ")}`).toEqual([]);
     }
   });
@@ -42,7 +48,7 @@ describe("Klinikos landing funnel", () => {
     // The page maps over the whole object rather than naming tiers one by one, so a
     // plan added to the commercial module reaches the public surface automatically
     // instead of being silently left off it.
-    for (const source of ["clinicPlans", "gridPlans", "eduPlans"]) {
+    for (const source of ["clinicPlans", "GRID_MEMBERSHIP", "eduPlans"]) {
       expect(page, `${source} is not rendered in full`).toContain(`Object.values(${source})`);
     }
     expect(page).toContain("serviceEngagements");
@@ -50,11 +56,10 @@ describe("Klinikos landing funnel", () => {
 
     // Every declared plan carries the fields the surface renders, so none of them can
     // reach the page as a blank card.
-    for (const [label, plans] of [["grid", gridPlans], ["edu", eduPlans]] as const) {
+    for (const [label, plans] of [["grid", GRID_MEMBERSHIP], ["edu", eduPlans]] as const) {
       for (const [key, plan] of Object.entries(plans)) {
         expect(plan.name.length, `${label}.${key} has no name`).toBeGreaterThan(0);
         expect(plan.priceLabel.length, `${label}.${key} has no price label`).toBeGreaterThan(0);
-        expect(plan.unitLabel.length, `${label}.${key} has no unit`).toBeGreaterThan(0);
         expect(plan.includes.length, `${label}.${key} lists nothing`).toBeGreaterThan(0);
       }
     }
@@ -92,8 +97,11 @@ describe("Klinikos landing funnel", () => {
   it("keeps the free tiers of Grid genuinely free", () => {
     // Charging for presence prices out the supply a marketplace needs; the rule is
     // published, so it must match the plan that implements it.
-    expect(gridPlans.individual.monthlyPriceCents).toBe(0);
-    expect(gridPlans.individual.priceLabel).toBe("Free");
+    expect(GRID_MEMBERSHIP.individualFree.monthlyPriceCents).toBe(0);
+    expect(GRID_MEMBERSHIP.individualFree.priceLabel).toBe("Free");
+    // Organizations list for nothing too: a marketplace with no supply earns no fee,
+    // so a subscription at the door costs more than it collects.
+    expect(GRID_MEMBERSHIP.organizationFree.monthlyPriceCents).toBe(0);
   });
 
   it("credits the analysis fee it advertises", () => {

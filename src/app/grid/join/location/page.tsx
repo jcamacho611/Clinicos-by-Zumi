@@ -18,7 +18,7 @@ export default async function GridLocationJoinPage({ searchParams }: { searchPar
   const organizationMode = type === "organization";
   const mode = organizationMode ? "organization" : "space";
 
-  return <main className="min-h-screen bg-[#fffdf9] text-[#241517]">
+  return <main className="grid-marble-surface min-h-screen bg-[#fffdf9] text-[#241517]">
     <header className="border-b border-[#e8ded9] bg-[#fffdf9]/95 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-[1400px] items-center px-5 sm:px-8">
         <KlinikosWordmark href="/grid" framed markClassName="h-10 w-10" textClassName="h-[20px] w-[176px]" className="gap-3" />

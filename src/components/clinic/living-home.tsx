@@ -20,6 +20,7 @@ import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity, RailDestination } from "@/lib/home/operating-rail";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
+import { resolveSurfaceLookup } from "@/features/zumi/deterministic-answer";
 import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
 import { getKlinikosPath } from "@/lib/paths/catalog";
@@ -175,6 +176,7 @@ export function LivingHome({
   const [working, setWorking] = useState(false);
   const [failed, setFailed] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
+  const [surfaceAnswer, setSurfaceAnswer] = useState<{ answer: string; label: string; href: string } | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeInstanceId, setActiveInstanceId] = useState<string | null>(null);
   const [attentionCount, setAttentionCount] = useState(0);
@@ -232,6 +234,7 @@ export function LivingHome({
     setFailed(false);
     setPhase("listening");
     setClarification(null);
+    setSurfaceAnswer(null);
     setTranscript([]);
     setActiveInstanceId(null);
   }, []);
@@ -248,6 +251,7 @@ export function LivingHome({
     setWorking(true);
     setFailed(false);
     setClarification(null);
+    setSurfaceAnswer(null);
     setTranscript([{ id: "you-0", speaker: "You", text }]);
     setActiveInstanceId(null);
     setDraft("");
@@ -260,8 +264,21 @@ export function LivingHome({
     const pathId = resolved.candidatePathIds[0] ?? null;
     if (!pathId) {
       setPhase("ready");
+      // Not every sentence is a journey. "Who hasn't completed intake tomorrow?" is a
+      // question about a list, and the honest answer is the surface that holds it — the
+      // same answer the Zumi conversation gives, from the same shared lookup. Demanding
+      // "the outcome rather than the topic" turned a clear question into an
+      // interrogation, which is the conversational bureaucracy this composer exists to
+      // avoid.
+      const surface = resolveSurfaceLookup(text, role);
+      if (surface) {
+        setClarification(null);
+        setSurfaceAnswer(surface);
+        say("Klinikos", surface.answer);
+        return;
+      }
       setClarification(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can help with that.");
-      say("Klinikos", "I can route this, but I need the outcome rather than the topic. Tell me what should be true when this is finished.");
+      say("Klinikos", "Tell me what you are trying to get done and I will take you to the right place.");
       return;
     }
 
@@ -314,7 +331,7 @@ export function LivingHome({
         <div className="grid gap-10 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-8">
           {/* Phase rail — what the interface is doing right now, and nothing more. */}
           <ol
-            aria-label="Klinikos Intelligence progress"
+            aria-label="Progress on your request"
             className="flex flex-row flex-wrap items-center gap-x-6 gap-y-3 lg:flex-col lg:items-start lg:gap-9 lg:pt-28"
           >
             {PHASES.map((step, index) => {
@@ -344,9 +361,8 @@ export function LivingHome({
 
           <div className="min-w-0 text-center">
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wider)]">
-                Klinikos Intelligence
-              </p>
+              {/* No product-layer eyebrow here. A person should experience Klinikos as
+                  intelligent rather than be told that it is. */}
               {onboardingComplete ? <Badge tone="resolved">Setup complete</Badge> : null}
             </div>
 
@@ -396,7 +412,6 @@ export function LivingHome({
 
             <div className="mt-8 grid justify-items-center">
               <ZumiOrb size={104} state={orbState} />
-              <p className="mt-4 text-sm text-[var(--text-secondary)]">Your Klinikos operating partner</p>
               <p aria-live="polite" className="mt-2 text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">
                 {working ? PHASE_LABELS[phase] : PHASE_LABELS.listening}
               </p>
@@ -437,12 +452,15 @@ export function LivingHome({
                   >
                     {destination.short}
                   </span>
-                  {destination.live ? (
+                  {/* A "0" badge is noise that teaches people to stop reading badges, and
+                      a naked number says nothing. Show it only when there is something,
+                      and say what it is. */}
+                  {destination.live && destination.live.count > 0 ? (
                     <span
-                      className="text-center text-[var(--text-micro)]"
-                      style={{ color: destination.live.count > 0 ? "var(--accent-intelligence)" : "var(--text-secondary)" }}
+                      className="text-balance text-center text-[var(--text-micro)]"
+                      style={{ color: "var(--accent-intelligence)" }}
                     >
-                      {destination.live.count}
+                      {destination.live.count} {destination.live.count === 1 ? destination.live.singular : destination.live.noun}
                     </span>
                   ) : null}
                 </div>
@@ -487,6 +505,19 @@ export function LivingHome({
                       </div>
                     ))}
                   </div>
+
+                  {surfaceAnswer ? (
+                    <div className="mt-6 rounded-[14px] border border-[var(--line-dark)] px-5 py-4">
+                      <p className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--accent-intelligence)]">Where that lives</p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{surfaceAnswer.answer}</p>
+                      <Link
+                        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--line-dark)] px-5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-raised)]"
+                        href={surfaceAnswer.href}
+                      >
+                        Open {surfaceAnswer.label}
+                      </Link>
+                    </div>
+                  ) : null}
 
                   {clarification ? (
                     <div className="mt-6 rounded-[14px] border border-[var(--line-dark)] px-5 py-4">

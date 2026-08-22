@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { ClinicSession } from "@/lib/auth/types";
 
 export const zumiAudienceProfiles = [

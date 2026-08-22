@@ -1,5 +1,16 @@
+import fs from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { GET } from "@/app/api/health/route";
+
+/** What the build stamped, if a build has run in this tree. */
+function buildStamp(): { commit?: string; branch?: string } {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), "release-identity.json"), "utf8"));
+  } catch {
+    return {};
+  }
+}
 
 const originalCommit = process.env.RENDER_GIT_COMMIT;
 const originalBranch = process.env.RENDER_GIT_BRANCH;
@@ -25,11 +36,29 @@ describe("production health release identity", () => {
     expect(JSON.stringify(body)).not.toContain("secret-value");
   });
 
-  it("returns null release fields outside a provider that supplies them", async () => {
+  it("falls back to the commit the build stamped, and to null when there is none", async () => {
+    // The host's own environment is the most trustworthy answer and wins. When the host
+    // supplies nothing, the build stamp is the next best thing — not an invention, but
+    // the commit that was actually compiled. Without either, this stays null rather than
+    // guessing, because a wrong SHA during an incident is worse than an absent one.
     delete process.env.RENDER_GIT_COMMIT;
     delete process.env.RENDER_GIT_BRANCH;
     delete process.env.GIT_COMMIT_SHA;
+    const stamp = buildStamp();
     const body = await GET().json();
-    expect(body.release).toEqual({ commit: null, shortCommit: null, branch: null });
+
+    expect(body.release.commit).toEqual(stamp.commit ?? null);
+    expect(body.release.branch).toEqual(stamp.branch ?? null);
+    expect(body.release.shortCommit).toEqual(stamp.commit ? stamp.commit.slice(0, 12) : null);
+  });
+
+  it("prefers the host's declared commit over the build stamp", async () => {
+    // A stale stamp inside an image must never outrank what the platform says it
+    // deployed, which is the case that makes health lie about the running version.
+    process.env.RENDER_GIT_COMMIT = "1111111111111111111111111111111111111111";
+    process.env.RENDER_GIT_BRANCH = "release";
+    const body = await GET().json();
+    expect(body.release.commit).toBe("1111111111111111111111111111111111111111");
+    expect(body.release.branch).toBe("release");
   });
 });

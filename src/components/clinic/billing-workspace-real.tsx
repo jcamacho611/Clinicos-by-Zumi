@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PaymentConsole } from "@/components/clinic/payment-actions";
+import { GridMoneyPanel } from "@/components/clinic/grid-money-panel";
+import type { GridMoney } from "@/lib/money/grid-money";
 import { PageIntro, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
 import type { BillingTruthWorkspace } from "@/lib/repositories/billing-truth-repository";
 import type { PaymentWorkspace } from "@/lib/repositories/payment-repository";
@@ -12,7 +14,7 @@ function money(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-export function BillingWorkspaceReal({ billing, payments }: { billing: BillingTruthWorkspace; payments: PaymentWorkspace }) {
+export function BillingWorkspaceReal({ billing, grid, payments }: { billing: BillingTruthWorkspace; grid: GridMoney | null; payments: PaymentWorkspace }) {
   const nonTerminalClaims = billing.claims.filter((claim) => !["CLOSED"].includes(claim.status));
   const claimValueCents = nonTerminalClaims.reduce((sum, claim) => sum + claim.totalCents, 0);
   const openDenials = billing.denials.filter((denial) => denial.status.toLowerCase() !== "resolved");
@@ -42,6 +44,8 @@ export function BillingWorkspaceReal({ billing, payments }: { billing: BillingTr
     </div>
 
     <Card className="border-amber-200 bg-amber-50 p-5"><div className="flex items-start gap-4"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-amber-800 shadow-sm"><ShieldCheck className="size-5" /></span><div><p className="text-xs font-extrabold text-slate-900">Stored claim status is not clearinghouse evidence.</p><p className="mt-2 text-[11px] leading-5 text-slate-600">A local `SUBMITTED`, `ACCEPTED`, or other claim state remains an internal workflow state unless a real 837/277/835 or equivalent external evidence record supports it. The current surface does not fabricate that evidence.</p><p className="mt-2 text-[12px] text-slate-500">Payment integrations currently marked connected/live in tenant configuration: {configuredPaymentRails.length}.</p></div></div></Card>
+
+    <GridMoneyPanel grid={grid} />
 
     <PaymentConsole workspace={payments} />
 

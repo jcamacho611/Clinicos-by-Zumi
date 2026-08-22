@@ -36,7 +36,14 @@ describe("commercial activation experience", () => {
 
     expect(desk).toContain("Opening or returning from checkout is never payment evidence.");
     expect(desk).toContain('confirmation: "I_VERIFIED_PAYMENT"');
-    expect(desk).toContain("Processor verification remains false until a real processor verification connector exists.");
+    // The desk now sells over two rails, so the honesty rule is stated per rail rather
+    // than as one global sentence. What must survive is that neither rail lets a human
+    // or a browser assert payment: signed Stripe invoice evidence activates the Stripe
+    // rail and staff cannot override it, and the GoDaddy fallback is declared as having
+    // no authoritative verification at all.
+    expect(desk).toContain("Staff cannot manually mark a Stripe checkout paid.");
+    expect(desk).toContain("no processor webhook or authoritative verification API");
+    expect(desk).toMatch(/signed live invoice evidence/i);
     expect(desk).toContain("The owner setup link is ready.");
     expect(desk).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });

@@ -19,26 +19,34 @@ describe("Zumi conversation experience", () => {
     expect(shell).toContain("<ZumiPresence userName={session.name}");
   });
 
-  it("turns the shell composer into a real Zumi entry instead of decorative search state", () => {
+  it("turns the shell composer into the canonical Zumi control instead of decorative search state", () => {
     expect(shell).toContain('new CustomEvent("zumi:prompt"');
-    expect(shell).toContain('placeholder="Ask Zumi or tell it what you want done…"');
-    expect(shell).toContain('aria-label="Open Zumi"');
-    expect(shell).toContain("<span className=\"hidden text-xs font-semibold sm:inline\">{zumiPrompt.trim() ? \"Send\" : \"Zumi\"}</span>");
+    expect(shell).toContain('new Event("zumi:open")');
+    expect(shell).toContain("placeholder={promptPlaceholder}");
+    expect(shell).toContain("klinikosPromptForWorkspace");
+    expect(shell).toContain('aria-label="Message Zumi"');
+    expect(shell).toContain('const shellControlLabel = zumiPrompt.trim() ? "Send message to Zumi" : "Open Zumi assistant"');
+    expect(shell).toContain("aria-label={shellControlLabel}");
+    expect(shell).toContain('aria-controls="zumi-presence-panel"');
+    expect(shell).toContain('aria-haspopup="dialog"');
+    expect(shell).toContain('src="/klinikos-orbital-k-production.png"');
+    expect(shell).toContain("onClick={sendOrFocusZumi}");
+    expect(shell).toContain("md:hidden");
   });
 
   it("keeps trusted path navigation client-side so the active conversation is not destroyed", () => {
     expect(presence).toContain('import Link from "next/link"');
-    expect(presence).toContain("Open path without losing this conversation");
+    expect(presence).toContain("Open without losing this conversation");
     expect(presence).toContain("href={action.href!}");
     expect(presence).toContain("onClick={() => setOpen(true)}");
   });
 
   it("supports an expanded conversation surface and new-chat control without permanent mode chrome", () => {
     expect(presence).toContain('const dedicatedPage = pathname === "/zumi"');
-    expect(presence).toContain("Start a new Zumi conversation");
-    expect(presence).toContain("Open full Zumi conversation");
-    expect(presence).toContain("What needs to happen?");
-    expect(presence).toContain('aria-label="Zumi preferences"');
+    expect(presence).toContain('aria-label="Start a new conversation"');
+    expect(presence).toContain('aria-label="Expand conversation"');
+    expect(presence).toContain("placeholder={conversationPrompt}");
+    expect(presence).toContain('aria-label="Conversation preferences"');
     expect(presence).not.toContain('role="tablist"');
     expect(presence).not.toContain("Evidence & capability trace");
     expect(presence).not.toContain("Trusted Klinikos path");
@@ -54,7 +62,8 @@ describe("Zumi conversation experience", () => {
 
   it("tells the model to converse before routing or exposing internal machinery", () => {
     expect(masterDirective).toContain("Conversation comes before routing");
-    expect(masterDirective).toContain("A conversational answer is allowed to simply answer");
+    expect(masterDirective).toMatch(/casual turns[\s\S]{0,80}without inventing workflows/);
+    expect(masterDirective).toContain("Answer first.");
     expect(masterDirective).toContain("Do not expose orchestration plans");
     expect(masterDirective).toContain("ask one concise human question at a time");
   });

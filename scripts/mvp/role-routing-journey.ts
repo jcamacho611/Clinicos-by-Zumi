@@ -115,9 +115,25 @@ async function main() {
     "src/components/clinic/workspace-launchpad.tsx",
     "src/components/clinic/workspace-renderer.tsx",
   ];
-  const notDelegating = shellSources.filter(
-    (path) => !readFileSync(join(process.cwd(), path), "utf8").includes("canAccessWorkspace"),
-  );
+  // Delegation can be direct or one module deep: the shell now asks
+  // `navigation-experience` for the destinations a role may see, and that module calls
+  // `canAccessWorkspace`. What must never happen is a surface deciding access itself, so
+  // check both halves — the decision reaches the shared function, and no source here
+  // makes its own role judgement.
+  const authorityModules = ["src/lib/navigation-experience.ts"];
+  const authorityHelpers = authorityModules
+    .map((path) => readFileSync(join(process.cwd(), path), "utf8"))
+    .every((source) => source.includes("canAccessWorkspace"));
+  const delegatesVia = ["canAccessWorkspace", "primaryNavigationForRole", "exploreNavigationForRole", "canOpen"];
+  const notDelegating = shellSources.filter((path) => {
+    const source = readFileSync(join(process.cwd(), path), "utf8");
+    const reachesAuthority = delegatesVia.some((symbol) => source.includes(symbol));
+    // An ad-hoc role comparison is a second opinion about access, which is the failure
+    // this check exists to catch — a menu that disagrees with the guard.
+    const decidesLocally = /\brole\s*(===|!==)\s*["']/.test(source);
+    return !reachesAuthority || decidesLocally;
+  });
+  if (!authorityHelpers) notDelegating.push("src/lib/navigation-experience.ts (no longer calls canAccessWorkspace)");
   check(
     "the sidebar, the launchpad and the route guard all decide access with the same function",
     notDelegating.length === 0,

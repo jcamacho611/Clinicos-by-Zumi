@@ -38,7 +38,7 @@ export default function GridGatewayPage() {
     <main className="grid-canvas min-h-screen bg-[#050303] text-[#f8efed]" data-klinikos-ds>
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(139,35,42,.22),transparent_34%),radial-gradient(circle_at_88%_74%,rgba(230,129,123,.035),transparent_26%)]" />
       <header className="relative z-20 border-b border-[#e28b85]/10 bg-[#050303]/88 backdrop-blur-2xl">
-        <div className="mx-auto flex min-h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
+        <div className="mx-auto flex min-h-20 max-w-[1500px] flex-wrap items-center gap-x-4 gap-y-3 px-5 py-3 sm:flex-nowrap sm:py-0 sm:px-8">
           <KlinikosWordmark href="/" framed inverse markClassName="h-12 w-12" textClassName="h-[21px] w-[188px]" className="gap-3" />
           <span className="hidden text-[11px] font-semibold uppercase tracking-[.18em] text-[#e6817b] md:block">Grid</span>
           <Link className="ml-auto hidden text-xs font-semibold text-[#9f8985] hover:text-[#f8efed] sm:block" href="/grid/pricing">Pricing</Link>
@@ -71,7 +71,7 @@ export default function GridGatewayPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-[1500px] px-5 py-12 sm:px-8"><p className="max-w-5xl text-[11px] leading-6 text-[#806965]">Grid is intentionally broader than any one profession or transaction type. Policy is applied by resource class: regulated clinical work, space, equipment, products, professional services, education, organizations, and referrals each get the eligibility and review rules they actually require. Regulated items and services remain subject to applicable law, contracts, licensing, credentialing, facility rules, and human review.</p></section>
+      <section className="relative z-10 mx-auto max-w-[1500px] px-5 py-12 sm:px-8"><p className="max-w-5xl text-[11px] leading-6 text-[#a8908b]">Grid is intentionally broader than any one profession or transaction type. Policy is applied by resource class: regulated clinical work, space, equipment, products, professional services, education, organizations, and referrals each get the eligibility and review rules they actually require. Regulated items and services remain subject to applicable law, contracts, licensing, credentialing, facility rules, and human review.</p></section>
     </main>
   );
 }

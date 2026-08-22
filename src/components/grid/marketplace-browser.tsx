@@ -65,7 +65,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-4 border-t border-[#e8ded9] pt-4">
-          <span className="text-[11px] font-extrabold uppercase tracking-[.13em] text-[#9b8883]">Terms / rate</span>
+          <span className="text-[11px] font-extrabold uppercase tracking-[.13em] text-[#6d5c58]">Terms / rate</span>
           <p className="text-right text-base font-extrabold tracking-[-.02em] text-[#241517]">{formatPriceRange(listing.priceLowCents, listing.priceHighCents)}</p>
         </div>
       </article>
@@ -111,7 +111,7 @@ export function MarketplaceBrowser({
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#756461]" />
               <input
                 aria-label="Search Grid listings"
-                className="h-11 w-full rounded-full border border-[#e8ded9] bg-[#fffdf9] pl-10 pr-3 text-sm text-[#241517] placeholder:text-[#8f7c77] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a8474e]"
+                className="h-11 w-full rounded-full border border-[#e8ded9] bg-[#fffdf9] pl-10 pr-3 text-sm text-[#241517] placeholder:text-[#655451] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a8474e]"
                 onChange={(event) => update("q", event.target.value)}
                 placeholder="Search work, providers, services, specialties, or areas…"
                 type="search"
@@ -132,15 +132,15 @@ export function MarketplaceBrowser({
           <div className="mt-3 flex flex-wrap gap-1.5">
             <button className={`${marketplaceSurfaces.chip} ${filters.verifiedOnly ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} onClick={() => update("verifiedOnly", !filters.verifiedOnly)} type="button" aria-pressed={filters.verifiedOnly}>Verified only</button>
             <button className={`${marketplaceSurfaces.chip} ${filters.onCallOnly ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} onClick={() => update("onCallOnly", !filters.onCallOnly)} type="button" aria-pressed={filters.onCallOnly}>Available now</button>
-            {facets.settings.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.settings.includes(facet.value)} className={`${marketplaceSurfaces.chip} ${filters.settings.includes(facet.value) ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => toggleIn("settings", filters.settings, facet.value)} type="button">{settingLabel(facet.value)} <span className="text-[#8f7c77]">({facet.count})</span></button>)}
+            {facets.settings.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.settings.includes(facet.value)} className={`${marketplaceSurfaces.chip} ${filters.settings.includes(facet.value) ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => toggleIn("settings", filters.settings, facet.value)} type="button">{settingLabel(facet.value)} <span className="text-[#655451]">({facet.count})</span></button>)}
             {activeCount > 0 && <button className={`${marketplaceSurfaces.chip} ${marketplaceSurfaces.chipIdle} flex items-center gap-1.5`} onClick={() => setFilters(emptyMarketplaceFilters)} type="button"><X aria-hidden="true" className="size-3.5" /> Clear all</button>}
           </div>
 
           {showFilters && (
             <div className="mt-4 grid gap-5 border-t border-[#e8ded9] pt-4 sm:grid-cols-3">
-              <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#756461]">Category</legend><div className="mt-2 flex flex-wrap gap-1.5">{facets.categories.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.category === facet.value} className={`${marketplaceSurfaces.chip} ${filters.category === facet.value ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => update("category", filters.category === facet.value ? "" : facet.value)} type="button">{facet.value} <span className="text-[#8f7c77]">({facet.count})</span></button>)}</div></fieldset>
+              <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#756461]">Category</legend><div className="mt-2 flex flex-wrap gap-1.5">{facets.categories.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.category === facet.value} className={`${marketplaceSurfaces.chip} ${filters.category === facet.value ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => update("category", filters.category === facet.value ? "" : facet.value)} type="button">{facet.value} <span className="text-[#655451]">({facet.count})</span></button>)}</div></fieldset>
               <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#756461]">Available on</legend><div className="mt-2 flex flex-wrap gap-1.5">{facets.weekdays.map((facet) => <button aria-pressed={filters.weekdays.includes(facet.value)} className={`${marketplaceSurfaces.chip} ${filters.weekdays.includes(facet.value) ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle} disabled:opacity-40`} disabled={facet.count === 0} key={facet.value} onClick={() => toggleIn("weekdays", filters.weekdays, facet.value)} type="button">{weekdayLabels[facet.value]}</button>)}</div></fieldset>
-              <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#756461]">State</legend><div className="mt-2 flex flex-wrap gap-1.5">{facets.states.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.state === facet.value} className={`${marketplaceSurfaces.chip} ${filters.state === facet.value ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => update("state", filters.state === facet.value ? "" : facet.value)} type="button">{facet.value} <span className="text-[#8f7c77]">({facet.count})</span></button>)}</div></fieldset>
+              <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#756461]">State</legend><div className="mt-2 flex flex-wrap gap-1.5">{facets.states.filter((facet) => facet.count > 0).map((facet) => <button aria-pressed={filters.state === facet.value} className={`${marketplaceSurfaces.chip} ${filters.state === facet.value ? marketplaceSurfaces.chipActive : marketplaceSurfaces.chipIdle}`} key={facet.value} onClick={() => update("state", filters.state === facet.value ? "" : facet.value)} type="button">{facet.value} <span className="text-[#655451]">({facet.count})</span></button>)}</div></fieldset>
             </div>
           )}
         </div>

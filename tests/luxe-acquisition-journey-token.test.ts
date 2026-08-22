@@ -29,8 +29,21 @@ describe("Luxe acquisition journey token", () => {
   it("rejects a tampered token rather than trusting browser state", () => {
     const now = Date.parse("2026-08-18T18:30:00.000Z");
     const token = sealLuxeAcquisitionJourney("lead-example-123456", now, 600)!;
-    const last = token.at(-1) === "A" ? "B" : "A";
-    expect(openLuxeAcquisitionJourney(`${token.slice(0, -1)}${last}`, now + 60_000)).toBeNull();
+
+    // Tamper at the byte level, not the character level. The token is one base64url blob
+    // of iv + tag + ciphertext, and depending on how the final byte aligns, several
+    // different last characters decode to identical bytes — so flipping the last
+    // character sometimes produced a token that decoded the same and still verified.
+    // That is why this test failed intermittently rather than never: the alignment
+    // changes with every freshly generated token.
+    const bytes = Buffer.from(token, "base64url");
+    bytes[bytes.length - 1] ^= 0xff;
+    expect(openLuxeAcquisitionJourney(bytes.toString("base64url"), now + 60_000)).toBeNull();
+
+    // And a flipped byte in the IV, so neither end of the envelope is trusted.
+    const ivTampered = Buffer.from(token, "base64url");
+    ivTampered[0] ^= 0xff;
+    expect(openLuxeAcquisitionJourney(ivTampered.toString("base64url"), now + 60_000)).toBeNull();
   });
 
   it("rejects an expired journey", () => {

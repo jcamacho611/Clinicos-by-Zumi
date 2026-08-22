@@ -88,9 +88,9 @@ export function EcosystemFlywheel() {
               const activeStage = highlighted.has(stage.key);
               return (
                 <div className={cn("relative min-h-[136px] rounded-[18px] border p-5 transition", activeStage ? "border-[#e6817b]/30 bg-[#e6817b]/[.08] shadow-[0_0_36px_rgba(230,129,123,.05)]" : "border-white/[.06] bg-[#080405]/60 opacity-55")} key={stage.key}>
-                  <span className={cn("text-[11px] font-extrabold uppercase tracking-[.18em]", activeStage ? "text-[#e6817b]" : "text-[#655653]")}>{String(index + 1).padStart(2, "0")}</span>
+                  <span className={cn("text-[11px] font-extrabold uppercase tracking-[.18em]", activeStage ? "text-[#e6817b]" : "text-[#9a817c]")}>{String(index + 1).padStart(2, "0")}</span>
                   <h2 className={cn("mt-4 text-base font-semibold", activeStage ? "text-[#fff8f6]" : "text-[#9f8985]")}>{stage.label}</h2>
-                  <p className="mt-2 text-[11px] leading-5 text-[#806965]">{stage.detail}</p>
+                  <p className="mt-2 text-[11px] leading-5 text-[#b39a95]">{stage.detail}</p>
                   {activeStage ? <span aria-hidden="true" className="absolute right-4 top-4 size-2 rounded-full bg-[#e6817b] shadow-[0_0_14px_rgba(230,129,123,.72)]" /> : null}
                 </div>
               );

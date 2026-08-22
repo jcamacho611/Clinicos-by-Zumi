@@ -13,6 +13,13 @@ import {
   type SmsMessageClass,
   type SmsPermissionStatus,
 } from "@/lib/communications/sms-policy";
+import {
+  tenantVariableSpendFundingReady,
+  variableCostRailPolicy,
+} from "@/lib/commercial/variable-cost-rail-registry";
+
+type StaffEditableSmsMessageClass = Exclude<SmsMessageClass, "clinical">;
+type StaffSmsEvidenceSource = "patient_verbal" | "staff_documented";
 
 function json(value: unknown) {
   return value as Prisma.InputJsonValue;
@@ -55,16 +62,29 @@ export async function getPatientSmsState(input: { organizationId: string; patien
   };
 }
 
+/**
+ * Staff may document limited consent evidence, but cannot create clinical permission or
+ * self-authorize marketing. A staff-created "written evidence reference" is not proof
+ * that the underlying patient artifact exists, so this route does not accept one as a
+ * grant authority. Future patient-controlled/e-sign consent needs its own verified
+ * evidence ceremony and can call a separate governed service.
+ */
 export async function recordPatientSmsPermission(input: {
   organizationId: string;
   patientId: string;
   actorId?: string | null;
-  messageClass: SmsMessageClass;
+  messageClass: StaffEditableSmsMessageClass;
   status: Exclude<SmsPermissionStatus, "unknown">;
-  source: string;
+  source: StaffSmsEvidenceSource;
   policyVersion?: string | null;
-  evidenceReference?: string | null;
 }) {
+  if (input.status === "granted" && input.source !== "patient_verbal") {
+    return { ok: false as const, reason: "invalid_evidence" as const };
+  }
+  if (input.messageClass === "marketing" && input.status === "granted") {
+    return { ok: false as const, reason: "invalid_evidence" as const };
+  }
+
   const patient = await patientForSms(input.organizationId, input.patientId);
   if (!patient) return { ok: false as const, reason: "patient_not_found" as const };
 
@@ -75,7 +95,7 @@ export async function recordPatientSmsPermission(input: {
     source: input.source,
     actorId: input.actorId ?? null,
     policyVersion: input.policyVersion ?? null,
-    evidenceReference: input.evidenceReference ?? null,
+    evidenceReference: null,
   });
 
   await db.$transaction([
@@ -94,7 +114,7 @@ export async function recordPatientSmsPermission(input: {
           status: input.status,
           source: input.source,
           policyVersion: input.policyVersion ?? null,
-          hasEvidenceReference: Boolean(input.evidenceReference),
+          evidenceReferenceAccepted: false,
         },
       },
     }),
@@ -178,6 +198,7 @@ export type PatientSmsSendResult =
       reason:
         | "patient_not_found"
         | "missing_phone"
+        | "commercial_funding_not_ready"
         | "invalid_recipient"
         | "permission_missing"
         | "permission_denied"
@@ -218,9 +239,28 @@ export async function sendAuthorizedPatientSms(input: {
       patientId: patient.id,
       metadata: { channel: "sms", messageClass: input.messageClass, reason: decision.reason, containsPhi: Boolean(input.containsPhi) },
     });
-    // The permission guard reports `allowed`; this function's result contract uses
-    // `ok`. Same refusal, same reason — only the field name differs.
     return { ok: false as const, reason: decision.reason, detail: decision.detail };
+  }
+
+  const economicPolicy = variableCostRailPolicy("patient_sms");
+  if (!economicPolicy || !tenantVariableSpendFundingReady(economicPolicy)) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: {
+        channel: "sms",
+        messageClass: input.messageClass,
+        reason: "commercial_funding_not_ready",
+        economicPolicy: economicPolicy?.economicReadiness ?? "missing",
+      },
+    });
+    return {
+      ok: false,
+      reason: "commercial_funding_not_ready",
+      detail: "Patient SMS remains disabled until the durable tenant micro-funding reservation and reconciliation authority is live.",
+    };
   }
 
   const result = await deliverOutbound({

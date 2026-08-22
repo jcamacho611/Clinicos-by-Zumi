@@ -36,6 +36,10 @@ import {
   trustedOrchestrationInstruction,
   type ZumiTrustedOrchestration,
 } from "@/features/zumi/trusted-orchestration";
+import {
+  workspaceIntelligenceInstruction,
+  type ZumiWorkspaceIntelligence,
+} from "@/features/zumi/workspace-intelligence";
 import { runZumiCognition, type ZumiCognitionTrace } from "@/features/zumi/cognition-loop";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
@@ -50,6 +54,8 @@ export type ZumiRequest = {
   entitlements: readonly string[];
   question: string;
   context?: unknown;
+  /** Server-owned product/navigation context. Never populate this from browser JSON. */
+  trustedWorkspaceIntelligence?: ZumiWorkspaceIntelligence | null;
   timeoutMs?: number;
   maxOutputTokens?: number;
   previousResponseId?: string | null;
@@ -164,7 +170,7 @@ function buildPrompt(
   const privateBase = [
     `Capability: ${request.capability}`,
     `Question: ${question.text}`,
-    serializedContext ? `Authorized operational context (JSON): ${serializedContext}` : "Authorized operational context: none supplied.",
+    serializedContext ? `Authorized conversational context (JSON): ${serializedContext}` : "Authorized conversational context: none supplied.",
   ].join("\n\n");
 
   if (containsLikelyIdentifiers(privateBase)) return null;
@@ -241,12 +247,8 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   const conversationPolicy = resolveAuthenticatedConversationPolicy(request.session);
 
   // Redact once, here, before anything else is allowed to read the question.
-  //
-  // Redaction used to live inside buildPrompt, which was too late: the planners below
-  // embed the question in text that goes to the provider — the trusted orchestration
-  // instruction prints the intent goal verbatim — so an SSN, email or phone number in a
-  // question reached the model in the system prompt even though the user prompt was
-  // clean. Everything downstream now sees only the redacted text.
+  // Everything downstream, including planners that may quote the goal, sees only the
+  // redacted form. Server-owned workspace context is kept outside browser context.
   const question = redactText(request.question);
   const questionText = question.text;
 
@@ -264,7 +266,14 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       maxCharacters: conversationPolicy.profile === "founder" ? 18_000 : 8_000,
       maxSections: conversationPolicy.profile === "founder" ? 16 : 6,
     }),
-    retrieveZumiMemoryContext(request.session, questionText),
+    // Recalled memory is an enhancement, not a prerequisite, and it is the only one of
+    // these three that touches the database. `Promise.all` rejects on the first failure,
+    // so an unreachable database turned every question into a 500 — the person lost
+    // their turn because an optional lookup failed. Degrade to no memory instead.
+    retrieveZumiMemoryContext(request.session, questionText).catch((error: unknown) => {
+      console.warn("[zumi] prior-conversation memory unavailable; answering without it.", error);
+      return { text: "", memoryIds: [] as string[] };
+    }),
     resolveTrustedZumiOrchestration({ session: request.session, question: questionText, presence }),
   ]);
 
@@ -281,6 +290,7 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   const commonAuditMetadata = {
     profile: conversationPolicy.profile,
     surface: presence.surface,
+    workspace: request.trustedWorkspaceIntelligence?.surfaceKey ?? null,
     interactionMode: presence.mode,
     autonomy: presence.autonomy,
     contextDomains: contextPlan.domains,
@@ -364,6 +374,9 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
   const system = [
     buildZumiMasterInstruction({ policy: conversationPolicy, contextPlan }),
     presenceInstruction({ presence, accessibility }),
+    request.trustedWorkspaceIntelligence
+      ? workspaceIntelligenceInstruction(request.trustedWorkspaceIntelligence)
+      : "No server-owned workspace intelligence was supplied. Do not infer product state from navigation alone.",
     orchestrationInstruction(orchestration),
     trustedOrchestrationInstruction(trustedOrchestration),
     securityInstructionForTools(),
@@ -493,8 +506,8 @@ export async function invokeZumi(request: ZumiRequest): Promise<ZumiGatewayResul
       reason: "provider_unavailable",
       status: 503,
       message: aborted
-        ? "Zumi did not answer in time. Nothing was changed and no suggestion was produced."
-        : "Zumi could not reach its model provider. Nothing was changed and no suggestion was produced.",
+        ? "Klinikos could not complete that in time. Nothing was changed."
+        : "Klinikos could not reach its intelligence provider. Nothing was changed.",
       invocationId,
     };
   }

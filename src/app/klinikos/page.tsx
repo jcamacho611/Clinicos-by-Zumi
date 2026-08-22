@@ -6,11 +6,11 @@ import {
   eduCommercialRule,
   eduPlans,
   gridCommercialRule,
-  gridPlans,
   klinikosCommercialContact,
   serviceCommercialRule,
   serviceEngagements,
 } from "@/lib/commercial/klinikos-commercial";
+import { GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
 
 export const metadata: Metadata = {
   title: "Klinikos — your clinic isn't missing software, it's missing continuity",
@@ -69,7 +69,7 @@ const audiences: FunnelAudience[] = [
       "Availability you've published",
       "Distance and terms before rate",
     ],
-    next: `Grid is free for individuals. ${gridPlans.pro.name} at ${gridPlans.pro.priceLabel} adds priority matching and saved availability.`,
+    next: `Grid is free for individuals. ${GRID_MEMBERSHIP.individualPro.name} at ${GRID_MEMBERSHIP.individualPro.priceLabel} adds priority matching and saved availability.`,
   },
   {
     key: "space",
@@ -82,7 +82,7 @@ const audiences: FunnelAudience[] = [
       "Equipment available midweek",
       "Placement slots you could host",
     ],
-    next: `Listing and searching are free. Publishing capacity as an organization starts at ${gridPlans.organization.priceLabel}.`,
+    next: `Listing and searching are free. Publishing capacity as an organization starts at ${GRID_MEMBERSHIP.organizationPro.priceLabel}.`,
   },
   {
     key: "student",
@@ -133,14 +133,17 @@ const priceGroups: FunnelPriceGroup[] = [
     key: "grid",
     label: "Grid",
     note: gridCommercialRule,
-    tiers: Object.values(gridPlans).map((plan) => ({
+    tiers: Object.values(GRID_MEMBERSHIP).map((plan) => ({
       tag: plan.name,
       price: plan.priceLabel,
-      unit: plan.unitLabel,
-      body: plan.idealFor,
+      unit: plan.audience,
+      body: plan.audience,
       includes: plan.includes,
-      excludes: plan.excludes,
-      primary: plan.key === gridPlans.organization.key,
+      // The canonical tiers describe what is included and stop there. An "excludes" list
+      // reads as a list of things being withheld, which is the wrong note for a
+      // marketplace still trying to attract its first participants.
+      excludes: [] as readonly string[],
+      primary: plan.key === GRID_MEMBERSHIP.organizationPro.key,
     })),
   },
   {

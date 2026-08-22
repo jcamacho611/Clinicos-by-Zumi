@@ -6,21 +6,28 @@ import {
   getPatientSmsState,
   recordPatientSmsPermission,
 } from "@/lib/communications/patient-sms-service";
+import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const updateSchema = z.object({
-  messageClass: z.enum(["transactional", "operational", "marketing", "clinical"]),
+  messageClass: z.enum(["transactional", "operational", "marketing"]),
   status: z.enum(["granted", "denied", "revoked"]),
-  // This is a staff-authenticated route. It may document what staff actually observed,
-  // but it cannot impersonate a patient-portal action or a system migration.
-  source: z.enum(["patient_verbal", "patient_written", "staff_documented"]),
+  // Staff may document a patient's verbal choice or an internal denial/revocation.
+  // This route does not turn a typed evidence reference into patient-controlled consent.
+  source: z.enum(["patient_verbal", "staff_documented"]),
   policyVersion: z.string().trim().min(1).max(80).optional(),
-  evidenceReference: z.string().trim().min(1).max(200).optional(),
 }).superRefine((value, context) => {
-  if (value.source === "patient_written" && !value.evidenceReference) {
+  if (value.status === "granted" && value.source !== "patient_verbal") {
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ["evidenceReference"],
-      message: "Written consent requires an evidence reference.",
+      path: ["source"],
+      message: "A staff-entered grant requires the staff member to attest that the patient gave verbal permission.",
+    });
+  }
+  if (value.messageClass === "marketing" && value.status === "granted") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["messageClass"],
+      message: "Marketing SMS cannot be granted through the staff preference route.",
     });
   }
 });
@@ -44,11 +51,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
   const denied = await enforceApiPermission(session, "consents", "update", { request, resourceId: patientId });
   if (denied) return denied;
 
+  const sameOrigin = evaluateSameOriginMutation(request);
+  if (!sameOrigin.allowed) {
+    return NextResponse.json(
+      { error: "This consent change must come from the authenticated Klinikos application." },
+      { status: 403, headers: { "Cache-Control": "private, no-store" } },
+    );
+  }
+
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid SMS preference update." }, { status: 400 });
 
-  // A clinical permission value may be recorded as evidence, but the actual clinical/
-  // PHI SMS send path remains independently fail-closed in the policy engine.
   const result = await recordPatientSmsPermission({
     organizationId: session.organizationId,
     patientId,
@@ -57,9 +70,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
     status: parsed.data.status,
     source: parsed.data.source,
     policyVersion: parsed.data.policyVersion,
-    evidenceReference: parsed.data.evidenceReference,
   });
-  if (!result.ok) return NextResponse.json({ error: "Patient not found." }, { status: 404 });
+  if (!result.ok) {
+    if (result.reason === "invalid_evidence") {
+      return NextResponse.json({ error: "That SMS permission cannot be established from this staff workflow." }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
+  }
 
   return NextResponse.json({ data: result.sms }, { headers: { "Cache-Control": "private, no-store" } });
 }

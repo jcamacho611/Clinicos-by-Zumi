@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-16.3`
+Version: `2026-08-22.1`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -15,6 +15,8 @@ It is not reducible to an EHR, CRM, clinic app, staffing marketplace, education 
 
 The detailed newest ecosystem model is authoritative in `docs/KLINIKOS_ECOSYSTEM_CANON.md`.
 
+The newest accepted **cross-domain translation of expert, operator, clinical, billing, interface/integration, security, commercial, and implementation knowledge into reusable architecture** is authoritative in `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`. The ledger sits below this Source of Truth and below current implementation/runtime truth, but it outranks older/narrower architecture when it records an explicit newer accepted cross-domain correction. It does not by itself change `FEATURE_STATUS` or external-connection truth.
+
 Specialist law is defined in:
 
 - `docs/GRID_CANON.md`;
@@ -22,7 +24,9 @@ Specialist law is defined in:
 - `docs/EDU_CANON.md`;
 - `docs/CLINIC_OS_CANON.md`;
 - `docs/PORTAL_AND_ROLE_CANON.md`;
-- `docs/FINANCIAL_OS_CANON.md`.
+- `docs/FINANCIAL_OS_CANON.md`;
+- `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` for repository-wide client/server confidentiality, proprietary-logic, and browser-disclosure law;
+- `docs/KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` for Assurance / Rules & Evidence / Quality Guardian / Expert Grid specialist direction when present on the active candidate branch.
 
 Repository-history and recovery decisions are recorded in `docs/BRANCH_LEDGER.md`; roadmap state is recorded in `docs/RECOVERY_AND_COMPLETION_ROADMAP.md`.
 
@@ -38,6 +42,12 @@ A feature is not wired if a consequential part of that chain is fake, disconnect
 
 Pages are implementation surfaces. **Routes are the product journeys.** Klinikos Intelligence should reason about current state, desired state, missing requirements, available routes, authorized actions and next best step rather than merely choosing a URL.
 
+For confidential/proprietary execution, the implementation boundary is additionally:
+
+`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY PRESENTATION DTO → BROWSER`
+
+The browser receives approved operational truth and permitted actions, not the confidential machinery used to derive them.
+
 ## 3. Persistent identity and lifecycle
 
 One identity may hold multiple roles and evolve through the ecosystem.
@@ -51,6 +61,8 @@ Organizations also evolve:
 `NEW PRACTICE → CLINIC OS → OPERATIONAL MATURITY → REVENUE OPTIMIZATION → GRID PARTICIPATION → MORE CAPACITY → SECOND LOCATION → MULTI-SITE → NETWORK → ENTERPRISE`
 
 The UI adapts to active role, organization, task and permissions without requiring separate identities or disconnected products.
+
+Profession, assignment, effective dates, capability, credential/privilege state, location, purpose, supervision/delegation and other governed context may further constrain authority. A generic `provider` label is never sufficient to grant regulated capability.
 
 ## 4. Core ecosystem engines
 
@@ -70,6 +82,8 @@ Major engines include:
 - Events / Audit / Provenance
 
 These engines must interoperate through shared domain truth, adapters, events and governed routes rather than becoming isolated application silos.
+
+The shared substrate must progressively support profession/authority, multi-location assignments, configuration, patient/coverage/financial-case separation, scheduling/capacity, clinical change, evidence, orders/results, integration reconciliation, terminology, revenue integrity, learning/competency and memory/knowledge without rebuilding those concerns independently inside each engine.
 
 ## 5. Living Home
 
@@ -159,6 +173,8 @@ Patient/Care demand may use Grid capacity only with appropriate permission, prog
 
 Insights consumes operational truth and should produce useful next routes, not dashboard theater.
 
+Cross-domain expert insight that changes one engine must be checked against the others through the Knowledge-to-Architecture Ledger rather than implemented as a local one-off assumption.
+
 ## 9. Grid law
 
 Grid is the healthcare resource orchestration network for people, work, capacity, space, permitted equipment/resources, services, organizations, education capacity, referrals and future policy-governed resource classes.
@@ -173,6 +189,8 @@ Grid may compose multi-party opportunities rather than assuming buyer/seller or 
 Core concepts include participant, capability, resource, demand, requirement/policy, availability, match, offer, agreement, reservation/booking, financial obligation, fulfillment, dispute, incident and reputation/evidence.
 
 Hard eligibility precedes ranking. AI may interpret intent and explain matches; deterministic policy decides eligibility. No invented marketplace inventory, distances or fake empty-market markers. Browser geolocation requires explicit user action. Public coordinates remain precision-reduced while governed exact coordinates stay server-side.
+
+Internal Grid ranking weights, anti-gaming logic, trust/risk heuristics, proprietary matching rules, hidden marketplace economics, and other confidential competitive logic stay server-side by default. The browser receives only the minimum approved match/result projection.
 
 ## 10. Financial and payment law
 
@@ -189,6 +207,8 @@ Browser redirect/return state does **not** establish payment.
 Payment evidence is recorded separately from entitlement.
 
 Browser return state cannot create entitlement, settlement or payout truth.
+
+Private pricing formulas, margin logic, settlement rules, fraud/risk signals, and internal commercial economics are server-confidential unless intentionally published.
 
 ## 11. Pricing and monetization law
 
@@ -226,7 +246,11 @@ It is not authority for authentication, tenant access, RBAC, clinical release, c
 
 PHI/sensitive redaction must occur before unrestricted external planners/tools/providers receive content. Public web research is not a private-data destination.
 
-## 13. Product truth and security
+Zumi hidden prompts, system directives, security/policy prompts, proprietary orchestration logic, internal reasoning, private canonical context, connector credentials, and other confidential implementation details are server-confidential. Client-visible Zumi output must be a safe projection of answer, sources, permitted next actions, blockers, and user-relevant state.
+
+Zumi should progressively reason over structured Klinikos truth — authority, evidence, clinical change, execution state, financial state, Grid state, learning/competency and governed memory — rather than inventing domain truth inside a model response.
+
+## 13. Product truth, security, confidentiality, and trade-secret boundary
 
 No design or ecosystem convergence may weaken:
 
@@ -242,7 +266,29 @@ No design or ecosystem convergence may weaken:
 - clinical governance;
 - same-origin redirect rules;
 - Grid location privacy;
-- AI egress controls.
+- AI egress controls;
+- server/client confidentiality boundaries;
+- proprietary implementation secrecy.
+
+`docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` is authoritative repository-wide law.
+
+Assume everything delivered to the browser can be inspected and retained. Minification, obfuscation, hidden elements, disabled UI, client feature flags, private routes, and a private repository are not secrecy controls.
+
+If information must remain confidential, it remains server-side. This includes, unless explicitly reviewed for disclosure:
+
+- secrets/credentials;
+- Zumi hidden prompts and private orchestration;
+- proprietary rules/evidence logic;
+- Grid/Expert Grid ranking and trust algorithms;
+- risk/anti-abuse/fraud heuristics;
+- private pricing/margin logic;
+- unreleased strategy/roadmap/business data;
+- privileged security and infrastructure details;
+- unnecessary PHI/PII and private operational state.
+
+The browser receives deliberate minimum-necessary DTO/view-model projections, never broad raw database/domain objects by default. Values passed from Server Components into Client Components count as browser disclosure. API responses, static assets, source maps, public env values, client logs, browser storage, telemetry, and errors are all disclosure surfaces.
+
+Frontend authorization is UX only. Server-side repositories/APIs enforce identity, tenant, role, permission, purpose, resource scope, and minimum necessary access.
 
 Demo data is acceptable only in explicit demo/sandbox contexts. Production surfaces prefer real state and truthful empty states.
 
@@ -278,11 +324,17 @@ Concurrent work follows:
 
 Do not force stale branches or destroy concurrent work.
 
+Material frontend/API/security changes additionally require, as applicable, response-minimization review, client/server DTO review, tenant/RBAC checks, cache/no-store verification, error sanitization, secret/public-env review, browser bundle/payload inspection, and third-party telemetry review.
+
 ## 16. Migration/architecture law
 
 Do not big-bang rewrite the repository to aesthetically match the target architecture.
 
 Prefer adapters, shared services, policy modules, route definitions, events, composition and gradual migration. Preserve working models and generalize only where the ecosystem requires it.
+
+Do not move confidential server authority into the frontend merely to simplify a refactor.
+
+Every material expert/product insight that could change multiple engines should first be translated through `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` so shared primitives and dependencies are identified before local implementation.
 
 ## 17. Acceptance gate
 
@@ -296,7 +348,11 @@ The newest Klinikos vision is not complete merely because the homepage looks rig
 - Tenant A never receives Tenant B data through cross-engine routes;
 - mobile, keyboard and accessibility behavior remain sound;
 - external disconnected states remain truthful;
+- confidential proprietary logic is not unnecessarily delivered to the browser;
+- sensitive browser-visible payloads are minimum necessary;
 - CI/build/journey/browser evidence passes.
+
+As these systems mature, representative acceptance should also prove profession/location/capability authority, patient/financial-case separation, scheduling eligibility/capacity, versioned clinical change, order/result correction and reconciliation, credential-readiness effects, and reference-environment negative-access cases.
 
 ## 18. Business test
 
@@ -308,6 +364,8 @@ If no, fix the first failure before expanding scope.
 
 ## 19. North star
 
-**Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events.**
+**Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events. Confidential intelligence stays server-side.**
 
-Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath.
+Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath and returns only the approved result necessary for the user's authorized experience.
+
+Important subject-matter learning is a product asset. It must be preserved as sourced, versioned, cross-domain architecture in the Knowledge-to-Architecture Ledger and then terminate in code, schema, configuration, UX, test, policy, commercial action, or an explicit defer/reject decision — never disappear as an orphan recommendation.

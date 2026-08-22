@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "node scripts/capture-release.mjs && prisma generate && next build",
     "postinstall": "node scripts/postinstall.mjs",
     "render:build": "node scripts/render-build.mjs",
     "start": "node scripts/start.mjs",
@@ -12,12 +12,20 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:mvp": "node scripts/mvp/run-all.mjs",
+    "security:client-boundary": "node scripts/security/browser-confidentiality-gate.mjs",
+    "security:env-boundary": "node scripts/security/server-env-taint-gate.mjs",
+    "security:api-disclosure": "node scripts/security/api-disclosure-gate.mjs",
+    "security:check": "npm run security:client-boundary && npm run security:env-boundary && npm run security:api-disclosure",
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts"
+    "db:seed:sales-demo": "tsx scripts/seed-sales-demo.ts",
+    "verify:release": "node scripts/verify-release.mjs",
+    "verify:code": "node scripts/verify-release.mjs --code-only",
+    "verify:production": "node scripts/verify-production.mjs",
+    "db:seed:grid-demo": "tsx scripts/seed-grid-demo.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",

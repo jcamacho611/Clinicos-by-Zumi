@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { canonicalizeSalesDisplayText } from "@/lib/sales/canonical-display";
+import { demoOffers } from "@/lib/sales-demo-rules";
 
 const customerSurfaces = [
   "src/app/sales/page.tsx",
@@ -39,8 +40,15 @@ describe("canonical sales display", () => {
     expect(rules).toContain('"private_workflow_demo"');
     expect(rules).toContain('"founding_clinic_evaluation"');
     expect(rules).toContain('"founding_clinic_program"');
-    expect(rules).toContain('name: "Clinic Operating Analysis"');
-    expect(rules).toContain('name: "Implementation Blueprint"');
-    expect(rules).toContain('name: "Founding Clinic Implementation"');
+    // The names deliberately no longer live here. `demoOffers` projects them from the
+    // canonical commercial catalog, which is the point of that refactor — asserting the
+    // literal in this file would require the second copy it exists to remove. So assert
+    // the derivation, and assert the names where they actually live.
+    expect(rules).toContain("projectCommercialOffer(clinicCommercialOffers.privateWorkflowReview");
+    expect(rules).not.toMatch(/name:\s*"Clinic Operating Analysis"/);
+
+    expect(demoOffers.private_workflow_demo.name).toBe("Clinic Operating Analysis");
+    expect(demoOffers.founding_clinic_evaluation.name).toBe("Implementation Blueprint");
+    expect(demoOffers.founding_clinic_program.name).toBe("Founding Clinic Implementation");
   });
 });

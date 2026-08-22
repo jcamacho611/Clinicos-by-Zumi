@@ -3,6 +3,7 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { checkSalesIntakeRateLimit, recordSalesIntakeAttempt } from "@/lib/auth/rate-limit";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { getClinicSession } from "@/lib/auth/session";
+import { sealActivationReference } from "@/lib/commercial/analysis-activation-token";
 import { createPreferredCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
@@ -37,6 +38,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await createPublicDemoReservation(await request.json().catch(() => null), metadata);
+    // The signed activation reference travels two ways on purpose. Stripe and Whop carry
+    // it back as a return URL, but the GoDaddy manual rail is a fixed payment link that
+    // carries nothing — so on the rail currently in use the buyer would never receive it.
+    // Returning it here means the activation step is reachable regardless of rail, and
+    // whether or not checkout is ever completed.
+    const activationToken = sealActivationReference(result.reservation.id);
+    const activationPath = activationToken
+      ? `/payments/success?activation=${encodeURIComponent(activationToken)}`
+      : null;
     let checkout: Awaited<ReturnType<typeof createPreferredCommercialCheckout>> | null = null;
     let checkoutNotice = "Your request is saved for human review before payment.";
 
@@ -50,7 +60,11 @@ export async function POST(request: Request) {
           email: result.reservation.contactEmail,
           productKey: "operational_audit",
           expectedAmountCents: result.reservation.priceCents,
-          returnUrl: new URL(`/payments/success?reservation=${encodeURIComponent(result.reservation.id)}`, request.url).toString(),
+          // Signed, not raw. A return URL travels through history, referrers and shared
+          // links; the reservation id alone would let anyone holding one read or write
+          // that engagement. When no signing secret is configured this is null and the
+          // return page falls back to its generic truthful state.
+          returnUrl: new URL(activationPath ?? "/payments/success", request.url).toString(),
         });
         await db.$transaction([
           db.demoReservation.update({
@@ -103,7 +117,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { data: { ...result, checkout, checkoutNotice } },
+      { data: { ...result, checkout, checkoutNotice, activationPath } },
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

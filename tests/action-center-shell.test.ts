@@ -10,9 +10,14 @@ const railRepository = read("src/lib/home/operating-rail.ts");
 
 describe("authenticated action center", () => {
   it("wires the former decorative bell to the real persisted operating rail", () => {
-    expect(shell).toContain('href="/dashboard#action-center"');
+    // The bell pointed at an anchor on Home. That was better than a decorative icon,
+    // but it meant the action centre was a section competing with the briefing rather
+    // than a place you can go, link to, or come back to. It is now a real surface.
+    expect(shell).toContain('href="/action-center"');
     expect(shell).toContain('aria-label="Open action center"');
     expect(shell).not.toContain('aria-label="Notifications"');
+    expect(shell).not.toContain('href="/dashboard#action-center"');
+    // Home keeps its own operating section; the two are no longer the same thing.
     expect(rail).toContain('id="action-center"');
   });
 

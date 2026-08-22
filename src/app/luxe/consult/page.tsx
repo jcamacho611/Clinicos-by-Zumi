@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { LuxeConsultationForm } from "@/components/marketing/luxe-consultation-form";
 import { luxeAcquisitionJourneyEnabled } from "@/lib/luxe-acquisition-journey-token";
 import { configuredLuxeBookingUrl } from "@/lib/luxe-booking-config";
+import { luxeStripeDepositStatus } from "@/lib/luxe-stripe-deposit";
 import { listPublicLuxeServiceOptions } from "@/lib/repositories/luxe-public-conversion-repository";
 
 export const metadata: Metadata = {
@@ -14,9 +15,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function LuxeConsultPage() {
+export default async function LuxeConsultPage({ searchParams }: { searchParams: Promise<{ deposit?: string }> }) {
   const services = await listPublicLuxeServiceOptions().catch(() => []);
-  const bookingAvailable = Boolean(configuredLuxeBookingUrl() && luxeAcquisitionJourneyEnabled());
+  const params = await searchParams;
+  const journeyEnabled = luxeAcquisitionJourneyEnabled();
+  const bookingAvailable = Boolean(configuredLuxeBookingUrl() && journeyEnabled);
+  const stripeDeposit = luxeStripeDepositStatus();
+  const depositAvailable = Boolean(stripeDeposit.publicCheckoutAvailable && journeyEnabled && stripeDeposit.amountCents);
+  const paymentReturned = params.deposit === "returned";
 
   return (
     <main className="min-h-screen bg-[#090608] text-white">
@@ -28,7 +34,7 @@ export default async function LuxeConsultPage() {
       <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12 lg:py-16">
         <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-7">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-rose-200/70">Luxe Medi</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.24em] text-rose-200/70">Luxe Medi</p>
             <p className="mt-2 text-xl font-extrabold tracking-[-.04em]">Consultation request</p>
           </div>
           <Link className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 transition hover:text-white" href="https://luxe-medi.com">
@@ -38,7 +44,7 @@ export default async function LuxeConsultPage() {
 
         <section className="grid gap-12 py-12 lg:grid-cols-[.85fr_1.15fr] lg:items-start lg:gap-20 lg:py-20">
           <div className="lg:sticky lg:top-12">
-            <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/15 bg-rose-200/[.06] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.16em] text-rose-100">
+            <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/15 bg-rose-200/[.06] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-100">
               <Sparkles className="size-3" /> Start with five useful details
             </div>
             <h1 className="mt-7 max-w-xl text-balance text-4xl font-extrabold leading-[.98] tracking-[-.06em] sm:text-5xl lg:text-6xl">
@@ -59,12 +65,18 @@ export default async function LuxeConsultPage() {
               </div>
               <div>
                 <p className="font-extrabold text-white">3. Booking comes later</p>
-                <p className="mt-1 leading-6">If online booking is configured, you can continue to the approved booking rail after sending the inquiry. Opening that rail still does not confirm an appointment or payment.</p>
+                <p className="mt-1 leading-6">If online booking or deposit checkout is configured, you may continue after the inquiry. A redirect never confirms an appointment or payment by itself.</p>
               </div>
             </div>
           </div>
 
-          <LuxeConsultationForm bookingAvailable={bookingAvailable} services={services} />
+          <LuxeConsultationForm
+            bookingAvailable={bookingAvailable}
+            depositAmountCents={stripeDeposit.amountCents}
+            depositAvailable={depositAvailable}
+            paymentReturned={paymentReturned}
+            services={services}
+          />
         </section>
 
         <footer className="border-t border-white/10 py-8 text-[11px] leading-5 text-slate-600">
