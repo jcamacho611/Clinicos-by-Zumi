@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const tokens = fs.readFileSync(path.join(process.cwd(), "src/app/design-tokens.css"), "utf8");
 const atmosphere = fs.readFileSync(path.join(process.cwd(), "src/lib/design/atmosphere.ts"), "utf8");
 const controller = fs.readFileSync(path.join(process.cwd(), "src/components/design/klinikos-atmosphere.tsx"), "utf8");
+const layout = fs.readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
 const livingHome = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-living-gateway.tsx"), "utf8");
 
 function ruleFor(selector: string) {
@@ -48,7 +49,15 @@ describe("Klinikos Obsidian / Marble appearance system", () => {
     expect(atmosphere).toContain('value === "dawn" || value === "day" || value === "golden"');
   });
 
-  it("keeps the canonical public Living Home explicitly Obsidian", () => {
+  it("activates the existing Marble compatibility scope for light operational pages", () => {
+    expect(layout).toContain('className="klinikos-theme-surface"');
+    expect(atmosphere).toContain('grid-marble-surface');
+    expect(controller).toContain('classList.toggle("grid-marble-surface"');
+  });
+
+  it("keeps the canonical public Living Home reference-locked to Obsidian", () => {
+    expect(atmosphere).toContain('location.pathname === "/"');
+    expect(controller).toContain('const referenceLocked = pathname === "/"');
     expect(livingHome).toContain('className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]"');
   });
 });
