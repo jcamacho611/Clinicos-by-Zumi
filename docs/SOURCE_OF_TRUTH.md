@@ -1,6 +1,6 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-18.4`
+Version: `2026-08-22.1`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
@@ -14,6 +14,8 @@ Klinikos is the operating and opportunity infrastructure for the healthcare life
 It is not reducible to an EHR, CRM, clinic app, staffing marketplace, education product, patient portal, billing product, or AI assistant.
 
 The detailed newest ecosystem model is authoritative in `docs/KLINIKOS_ECOSYSTEM_CANON.md`.
+
+The newest accepted **cross-domain translation of expert, operator, clinical, billing, interface/integration, security, commercial, and implementation knowledge into reusable architecture** is authoritative in `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`. The ledger sits below this Source of Truth and below current implementation/runtime truth, but it outranks older/narrower architecture when it records an explicit newer accepted cross-domain correction. It does not by itself change `FEATURE_STATUS` or external-connection truth.
 
 Specialist law is defined in:
 
@@ -60,6 +62,8 @@ Organizations also evolve:
 
 The UI adapts to active role, organization, task and permissions without requiring separate identities or disconnected products.
 
+Profession, assignment, effective dates, capability, credential/privilege state, location, purpose, supervision/delegation and other governed context may further constrain authority. A generic `provider` label is never sufficient to grant regulated capability.
+
 ## 4. Core ecosystem engines
 
 Major engines include:
@@ -78,6 +82,8 @@ Major engines include:
 - Events / Audit / Provenance
 
 These engines must interoperate through shared domain truth, adapters, events and governed routes rather than becoming isolated application silos.
+
+The shared substrate must progressively support profession/authority, multi-location assignments, configuration, patient/coverage/financial-case separation, scheduling/capacity, clinical change, evidence, orders/results, integration reconciliation, terminology, revenue integrity, learning/competency and memory/knowledge without rebuilding those concerns independently inside each engine.
 
 ## 5. Living Home
 
@@ -167,6 +173,8 @@ Patient/Care demand may use Grid capacity only with appropriate permission, prog
 
 Insights consumes operational truth and should produce useful next routes, not dashboard theater.
 
+Cross-domain expert insight that changes one engine must be checked against the others through the Knowledge-to-Architecture Ledger rather than implemented as a local one-off assumption.
+
 ## 9. Grid law
 
 Grid is the healthcare resource orchestration network for people, work, capacity, space, permitted equipment/resources, services, organizations, education capacity, referrals and future policy-governed resource classes.
@@ -239,6 +247,8 @@ It is not authority for authentication, tenant access, RBAC, clinical release, c
 PHI/sensitive redaction must occur before unrestricted external planners/tools/providers receive content. Public web research is not a private-data destination.
 
 Zumi hidden prompts, system directives, security/policy prompts, proprietary orchestration logic, internal reasoning, private canonical context, connector credentials, and other confidential implementation details are server-confidential. Client-visible Zumi output must be a safe projection of answer, sources, permitted next actions, blockers, and user-relevant state.
+
+Zumi should progressively reason over structured Klinikos truth — authority, evidence, clinical change, execution state, financial state, Grid state, learning/competency and governed memory — rather than inventing domain truth inside a model response.
 
 ## 13. Product truth, security, confidentiality, and trade-secret boundary
 
@@ -324,6 +334,8 @@ Prefer adapters, shared services, policy modules, route definitions, events, com
 
 Do not move confidential server authority into the frontend merely to simplify a refactor.
 
+Every material expert/product insight that could change multiple engines should first be translated through `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` so shared primitives and dependencies are identified before local implementation.
+
 ## 17. Acceptance gate
 
 The newest Klinikos vision is not complete merely because the homepage looks right or each module works alone. It is complete only when representative cross-engine journeys work truthfully, including:
@@ -340,6 +352,8 @@ The newest Klinikos vision is not complete merely because the homepage looks rig
 - sensitive browser-visible payloads are minimum necessary;
 - CI/build/journey/browser evidence passes.
 
+As these systems mature, representative acceptance should also prove profession/location/capability authority, patient/financial-case separation, scheduling eligibility/capacity, versioned clinical change, order/result correction and reconciliation, credential-readiness effects, and reference-environment negative-access cases.
+
 ## 18. Business test
 
 Before adding unrelated scope ask:
@@ -353,3 +367,5 @@ If no, fix the first failure before expanding scope.
 **Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events. Confidential intelligence stays server-side.**
 
 Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath and returns only the approved result necessary for the user's authorized experience.
+
+Important subject-matter learning is a product asset. It must be preserved as sourced, versioned, cross-domain architecture in the Knowledge-to-Architecture Ledger and then terminate in code, schema, configuration, UX, test, policy, commercial action, or an explicit defer/reject decision — never disappear as an orphan recommendation.
