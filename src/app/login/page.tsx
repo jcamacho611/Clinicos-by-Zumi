@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { LoginForm } from "@/components/clinic/login-form";
 import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } from "@/lib/auth/config";
-import { getClinicSession } from "@/lib/auth/session";
+import { getAuthenticationSession } from "@/lib/auth/session";
 import { safeReturnTo } from "@/lib/auth/return-to";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   // `returnTo` is canonical. `next` remains supported because older public surfaces
   // emitted it; both values still pass through the same same-origin safety gate.
   const returnTo = safeReturnTo(rawReturnTo ?? legacyNext);
-  const session = await getClinicSession();
+  const session = await getAuthenticationSession();
   if (session) redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
 
   const demoCredentials = isDemoAuthEnabled()
