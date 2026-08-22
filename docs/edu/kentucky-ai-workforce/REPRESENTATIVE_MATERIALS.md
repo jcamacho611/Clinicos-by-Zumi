@@ -44,6 +44,18 @@ The learner must:
 
 No real patient information is required or permitted for the normal exercise.
 
+### Learner submission fields
+
+The participant submits five bounded pieces of evidence so an instructor can distinguish real understanding from a guessed multiple-choice answer:
+
+1. **Unsupported claim:** quote or identify the exact unsupported statement.
+2. **Verification note:** state which scenario fact disproves or fails to support it.
+3. **Boundary decision:** identify the recommendation that exceeds the assigned role and name the appropriate human escalation target.
+4. **Corrected operational draft:** rewrite the administrative summary using only scenario-supported facts.
+5. **Data-minimization note:** identify which information would be inappropriate to send to an unapproved external AI service and explain why.
+
+A learner may use approved assistive technology or an approved alternate response format without changing the assessed learning objective.
+
 ## 3. Sample assessment items
 
 ### Knowledge check
@@ -85,6 +97,32 @@ Learners receive an intentionally flawed AI response and identify:
 | Human oversight | Preserves instructor/supervisor/clinician authority where required | Treats AI as final authority |
 
 Final grading and competency determinations remain instructor-controlled. Model-generated commentary may assist review but cannot independently establish completion or competence.
+
+### Scoring key
+
+Each area is scored by the instructor on a 0–2 scale:
+
+- **2 — Demonstrated:** evidence is accurate, specific, and complete enough to show the learner can perform the behavior independently in the synthetic exercise.
+- **1 — Developing:** the core principle is present but the learner needs correction, prompting, or additional evidence.
+- **0 — Not demonstrated:** the response is missing, materially inaccurate, unsafe, fabricated, or treats AI as authority where human review is required.
+
+Maximum score: **12 points**.
+
+For this representative exercise, an illustrative completion threshold is **10/12 with no zero in Privacy, Role boundary, or Human oversight**. This is a proposed instructional rule for demonstration and proposal purposes, not an SCWDB-approved completion standard. Final institutional thresholds must be configured and approved during implementation.
+
+### Pre/post measurement mapping
+
+A short pre-session diagnostic and post-session check should measure the same core constructs so improvement can be reported without inventing outcome claims:
+
+| Construct | Pre-session item | Post-session evidence |
+| --- | --- | --- |
+| AI limitations | Identify whether confident output can still be wrong | Correctly identifies the unsupported claim in the scenario |
+| Safe prompting / minimum disclosure | Choose what information should be withheld from an unapproved AI tool | Data-minimization note identifies restricted information and rationale |
+| Verification | State whether AI output requires independent checking | Verification note cites the scenario evidence used to check the output |
+| Human authority | Identify when escalation is required | Boundary decision names the correct escalation target |
+| Truthful documentation | Distinguish supported fact from generated content | Corrected operational draft contains only supported facts |
+
+Program reporting should distinguish **participation, completion, assessment performance, and measured pre/post change**. It must not convert course completion into claims of licensure, professional competence, employment, wage gain, or clinical qualification unless separately supported by authorized evidence.
 
 ## 5. Example certificate of completion
 
@@ -131,6 +169,47 @@ By the end of the session, participants should be able to:
 
 The instructor controls lesson pacing, scenario release, rubric interpretation, feedback, final grading, and completion. AI-generated suggestions are advisory and reviewable.
 
+### Facilitation notes
+
+Before the exercise, the instructor should explicitly state that the scenario is synthetic and that no participant should introduce real patient information, employer secrets, credentials, or other confidential data into the exercise. The instructor should model a minimum-disclosure prompt before asking learners to improve it.
+
+During the exercise, the instructor should avoid solving the scenario for the learner. Appropriate prompts include:
+
+- "What fact in the source supports that statement?"
+- "What would you need to verify before acting on that?"
+- "Is that decision inside your assigned role?"
+- "What information could be removed from the prompt without reducing its usefulness?"
+- "Who retains authority for the next action?"
+
+### Debrief prompts
+
+The instructor-led debrief should ask learners to explain reasoning, not merely reveal an answer key:
+
+1. Which AI statement was most persuasive despite lacking evidence?
+2. What verification step changed your confidence in the output?
+3. What is the operational harm if the role-boundary violation is accepted?
+4. What information was unnecessary to include in an AI prompt?
+5. How would the same verification habit apply in a non-healthcare workplace?
+6. When should a worker stop using AI and ask a supervisor or authorized specialist?
+
+### Accessibility and accommodation plan
+
+The instructional objective is responsible decision-making, not speed, fine-motor interaction, or a particular input method. Instructors should be prepared to support approved accommodations such as:
+
+- captioned live instruction and accessible transcripts when available through the selected delivery platform;
+- keyboard-only participation and visible-focus navigation;
+- screen-reader-compatible distributed documents and semantic headings;
+- enlarged text/zoom and reflow-friendly materials;
+- additional response time where an accommodation requires it;
+- an accessible text-based alternative when a drag/drop, visual-only, or pointer-dependent interaction would otherwise block participation;
+- verbal or typed responses when the response mode is not itself the learning objective.
+
+An alternate format must preserve the same assessed construct and human-review requirement. Accommodation records should contain only the minimum information necessary for program administration.
+
+### Instructor calibration
+
+Before first delivery, instructors should score at least two sample learner submissions against the rubric and compare results. Material scoring disagreement should be resolved through a documented calibration discussion so the program does not apply different safety or completion standards across cohorts.
+
 ## 7. Accessibility statement
 
 Klinikos EDU is being built toward WCAG 2.2 AA-oriented practices where practical, including keyboard operation, visible focus, semantic headings and tables, form labels and errors, zoom/reflow, reduced-motion support, mobile layouts, and non-color-only status communication. This statement is an engineering direction and does **not** claim formal WCAG certification or independent conformance audit.
@@ -174,3 +253,19 @@ Instructor review remains authoritative for grading and competency evidence.
 12. Show the certificate-of-completion wording and disclaimer.
 
 Do not imply SCWDB approval, a live Kentucky deployment, real participant outcomes, or a production external integration during this demo unless independently verified evidence exists.
+
+## 11. Evaluator evidence checklist
+
+Before these representative materials are attached to a proposal or used in a finalist demonstration, confirm that the package visibly proves all of the following without relying on marketing assertions:
+
+- a live instructor remains in control of learning and completion;
+- the participant performs an applied task rather than only watching slides;
+- the task requires safe prompting/minimum disclosure;
+- the participant must detect unsupported AI output;
+- the participant must verify before acting;
+- privacy/confidentiality and cybersecurity judgment are exercised;
+- work outside the learner's authority is escalated;
+- assessment has an explicit human-scored rubric;
+- completion evidence is bounded and does not imply licensure or certification;
+- an accessible alternate response path exists where the response mode is not the learning objective;
+- the same instructional method can be adapted to other occupational pathways without falsely claiming those curricula are already complete.
