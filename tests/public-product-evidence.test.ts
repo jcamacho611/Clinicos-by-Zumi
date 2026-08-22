@@ -1,0 +1,67 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { PUBLIC_ACTION_CENTER_EXAMPLE } from "@/lib/marketing/product-evidence";
+
+/**
+ * An outside reviewer read the site and could not say what the product does, then asked
+ * for a pitch deck. The page whose whole job was answering that question was 305 words of
+ * categories with nothing shown. These cover the properties that make the fix real rather
+ * than decorative.
+ */
+describe("public product evidence", () => {
+  const page = readFileSync("src/app/how-it-works/page.tsx", "utf8");
+
+  it("shows the product using the real component, not a drawing of it", () => {
+    // A hand-built mock drifts the first time the component changes, and a picture of a
+    // screen that no longer exists is a false claim about what a buyer is buying.
+    expect(page).toContain('from "@/components/clinic/workspaces/action-center"');
+    expect(page).toContain("<ActionCenterWorkspace");
+    expect(page).toContain("PUBLIC_ACTION_CENTER_EXAMPLE");
+  });
+
+  it("labels the example as an example, in text a reader will see", () => {
+    expect(page).toMatch(/<figcaption/);
+    expect(page).toMatch(/>Example</);
+    expect(page).toContain("rendered by the same component a signed-in clinic uses");
+    expect(page).toMatch(/illustrative/);
+  });
+
+  it("renders no control a signed-out visitor could press", () => {
+    // taskId null is what suppresses the claim/complete controls, which call authenticated
+    // APIs. A public page must not present buttons that cannot work.
+    const items = (PUBLIC_ACTION_CENTER_EXAMPLE.buckets ?? []).flatMap((bucket) => bucket.items);
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.taskId, `${item.id} would render live controls`).toBeNull();
+      expect(item.canClaim).toBe(false);
+      expect(item.canComplete).toBe(false);
+    }
+  });
+
+  it("keeps the example out of the tab order rather than merely unclickable", () => {
+    // The rows link into the authenticated app. Without inert, a keyboard user tabs into
+    // seven links that go nowhere useful; the figcaption carries the same information.
+    expect(page).toMatch(/\n\s*inert\n/);
+  });
+
+  it("puts no person in the example", () => {
+    const items = (PUBLIC_ACTION_CENTER_EXAMPLE.buckets ?? []).flatMap((bucket) => bucket.items);
+    const text = items.map((item) => `${item.title} ${item.detail}`).join(" ");
+
+    // Rows are described by category, risk and team — the same discipline the component
+    // itself follows, because this summary ends up on shared screens.
+    expect(text).not.toMatch(/\b(?:Mr|Mrs|Ms|Dr)\.?\s+[A-Z][a-z]+/);
+    expect(text).not.toMatch(/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/);
+    expect(text).not.toMatch(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/);
+    expect(text).not.toMatch(/\bMRN\b|\bDOB\b|@/);
+    // Every row still carries a real due state, so the screen is not a blank shell.
+    expect(items.some((item) => item.urgency === "overdue")).toBe(true);
+    expect(items.some((item) => item.urgency === "due_soon")).toBe(true);
+  });
+
+  it("stays on the public design system instead of reintroducing a third palette", () => {
+    // This page was light-blue while the rest of the public site is dark rose.
+    expect(page).not.toMatch(/#174ea6|#f7f8fa|bg-white\b/);
+    expect(page).toContain("#050303");
+  });
+});
