@@ -245,6 +245,53 @@ Minimum internal checks before final price approval:
 - 30-day launch staffing cost;
 - curriculum configuration cost for four non-healthcare pathways.
 
+## Working-capital and payment-timing stress test
+
+SCWDB has expressly required bidders to demonstrate administrative and financial capacity, while also stating that the 980-participant figure guarantees no enrollment, class volume, referrals, completions, or payments. The internal bid model therefore has to prove that Klinikos can finance delivery between authorization, performance, invoice acceptance, and cash receipt without assuming a deposit or guaranteed throughput.
+
+For each pricing scenario, model at least four collection cases:
+
+- **30 days after accepted invoice**;
+- **45 days after accepted invoice**;
+- **60 days after accepted invoice**;
+- **90 days after accepted invoice**.
+
+For each case calculate the maximum cumulative cash requirement before receipts using only verified or explicitly assumed costs:
+
+`Peak working capital = unpaid direct labor + unpaid subcontractor obligations + unreimbursed travel + participant/material cost + implementation cost incurred before acceptance + required program administration`
+
+Do not count expected contract revenue as available cash before it is actually received.
+
+### Cash-capacity gates
+
+Before a final price is approved, document:
+
+1. who pays instructors and subcontractors before SCWDB payment is received;
+2. proposed instructor/subcontractor payment timing and whether it is compatible with the modeled collection delay;
+3. travel-booking and reimbursement exposure for requested in-person delivery;
+4. the maximum number of concurrent cohorts Klinikos can finance without degrading delivery;
+5. whether implementation/customization work creates a large pre-revenue cash burn during the 30-day launch window;
+6. the specific source of working capital that supports the proposal — cash on hand, operating revenue, committed owner capital, credit facility, negotiated subcontractor terms, or another documented source;
+7. a contingency if SCWDB payment is delayed beyond the modeled case.
+
+No proposal may claim financial capacity from an unverified bank balance, credit line, financing commitment, investor, grant, or partner. If evidence is unavailable, record the exact document or founder fact required rather than filling the gap with a generic statement.
+
+### Required internal evidence packet
+
+Maintain a private prime-contractor readiness packet containing, as applicable:
+
+- legal entity and banking confirmation;
+- accounting/invoicing workflow and responsible owner;
+- available working-capital evidence appropriate to the RFP's final requirements;
+- instructor and subcontractor rate/payment assumptions;
+- travel authorization and reimbursement assumptions;
+- 30-day launch cash budget;
+- low/expected/high-utilization cash-flow scenarios;
+- records-retention and contract-administration ownership;
+- any financial statements, references, or representations actually requested by the final RFP package.
+
+This packet is internal evidence. Do not attach sensitive banking or financial information unless the RFP expressly requires it and the submission channel is appropriate.
+
 ## Commercial clarification dependencies
 
 Do not lock the final schedule until SCWDB answers or formally addresses:
