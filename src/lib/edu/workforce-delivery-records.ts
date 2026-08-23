@@ -1,6 +1,8 @@
 import type { EduPlatformRole } from "@/lib/edu/edu-roles";
 import type { WorkforceAttendanceStatus } from "@/lib/edu/workforce-delivery-evidence";
 
+export type WorkforceSurveyKind = "participant" | "instructor" | "employer" | "follow_up";
+
 export type WorkforceAttendanceRecordLike = {
   status: WorkforceAttendanceStatus;
   verifiedAt: Date | null;
@@ -12,6 +14,13 @@ export function canManageWorkforceSession(role: EduPlatformRole) {
 
 export function canVerifyWorkforceAttendance(role: EduPlatformRole) {
   return role === "edu_admin" || role === "edu_instructor";
+}
+
+export function canSubmitWorkforceSurveyKind(role: EduPlatformRole, kind: WorkforceSurveyKind) {
+  if (role === "edu_admin") return true;
+  if (role === "edu_instructor") return kind === "instructor";
+  if (role === "edu_student") return kind === "participant" || kind === "follow_up";
+  return false;
 }
 
 export function isVerifiedAttendanceRecord(record: WorkforceAttendanceRecordLike) {
