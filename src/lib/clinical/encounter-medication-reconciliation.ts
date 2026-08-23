@@ -18,6 +18,8 @@ export async function findMedicationReconciliationForEncounter(
       encounterId,
       patientId,
       organizationId,
+      status: "completed",
+      completedAt: { not: null },
     },
     select: {
       id: true,
@@ -28,10 +30,10 @@ export async function findMedicationReconciliationForEncounter(
       medicationIds: true,
       completedAt: true,
     },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }, { id: "desc" }],
   });
 
-  if (!row) return null;
+  if (!row || !row.completedAt) return null;
 
   return {
     id: row.id,
@@ -40,6 +42,6 @@ export async function findMedicationReconciliationForEncounter(
     summary: row.summary,
     medicationCount: row.medicationIds.length,
     discrepancyCount: discrepancyCount(row.discrepancies),
-    completedAt: row.completedAt?.toISOString() ?? null,
+    completedAt: row.completedAt.toISOString(),
   };
 }
