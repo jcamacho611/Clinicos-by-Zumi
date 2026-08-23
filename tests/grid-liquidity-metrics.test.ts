@@ -87,11 +87,19 @@ describe("Grid liquidity metrics", () => {
 
   it("wires liquidity into the existing Grid transaction board instead of creating a second marketplace data source", () => {
     const repository = read("src/lib/grid/transaction-board-repository.ts");
+    const page = read("src/app/(platform)/grid/transactions/page.tsx");
+    const summary = read("src/components/grid/grid-liquidity-summary.tsx");
+
     expect(repository).toContain("computeGridLiquidityMetrics");
     expect(repository).toContain("liquidity");
     expect(repository).toContain("demands");
     expect(repository).toContain("offers");
     expect(repository).toContain("reservations");
     expect(repository).not.toContain("GridLiquidityRecord");
+    expect(page).toContain("GridLiquiditySummary");
+    expect(page).toContain("board.liquidity");
+    expect(summary).toContain("Needs getting offers");
+    expect(summary).toContain("Still need supply");
+    expect(summary).not.toContain("liquidity score");
   });
 });
