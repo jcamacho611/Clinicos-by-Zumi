@@ -38,13 +38,13 @@ type PublicZumiApiResponse = {
 };
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
-const protectedHref = (href: string) => href === "/login" ? "/login" : `/login?next=${encodeURIComponent(href)}`;
+const entryHref = (returnTo: string) => `/access?returnTo=${encodeURIComponent(returnTo)}`;
 const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales"]);
 
 function destinationActionHref(href: string) {
   if (href === "/portal") return "/portal/login";
   if (publicActionPaths.has(href)) return href;
-  return protectedHref(href);
+  return entryHref(href);
 }
 
 function isPublicLivingResolution(value: unknown): value is PublicLivingResolution {
@@ -244,11 +244,11 @@ export function PublicLivingGateway() {
                 <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
               ))}
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
+              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href={entryHref("/login")}>Sign in</Link>
             </nav>
           </details>
 
-          <Link className="reference-auth ml-3 hidden min-h-11 items-center justify-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 px-5 text-[11px] font-semibold text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)] sm:inline-flex" href="/login">
+          <Link className="reference-auth ml-3 hidden min-h-11 items-center justify-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 px-5 text-[11px] font-semibold text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)] sm:inline-flex" href={entryHref("/login")}>
             Sign in
           </Link>
         </header>
@@ -270,9 +270,9 @@ export function PublicLivingGateway() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <Link
                   className="inline-flex items-center gap-2 rounded-full bg-[#e6817b] px-6 py-3 text-sm font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                  href="/operational-audit"
+                  href={entryHref("/operational-audit")}
                 >
-                  See what Klinikos would replace <ArrowRight aria-hidden="true" className="size-4" />
+                  ENTER KLINIKOS <ArrowRight aria-hidden="true" className="size-4" />
                 </Link>
                 <Link
                   className="inline-flex items-center gap-2 rounded-full border border-[#d9918a]/35 px-6 py-3 text-sm font-semibold text-[#f5edeb] transition hover:border-[#efaaa1]/60 hover:bg-[#e6817b]/10"
@@ -319,9 +319,9 @@ export function PublicLivingGateway() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
                 <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
                 <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/grid">Open Grid</Link>
+                <Link className="hover:text-[#efaaa1]" href={entryHref("/grid")}>Enter Grid</Link>
                 <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/edu">Explore EDU</Link>
+                <Link className="hover:text-[#efaaa1]" href={entryHref("/edu")}>Enter EDU</Link>
               </div>
             </section>
           </main>
