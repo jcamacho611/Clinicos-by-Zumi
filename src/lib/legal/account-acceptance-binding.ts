@@ -13,9 +13,11 @@ export type AccountAcceptanceBindingInput = {
   personId: string;
 };
 
+type LegalBindingClient = Pick<Prisma.TransactionClient, "$queryRaw" | "$executeRaw">;
+
 export async function bindAcceptanceToAccountIdentity(
   input: AccountAcceptanceBindingInput,
-  tx: Prisma.TransactionClient = db,
+  tx: LegalBindingClient = db,
 ) {
   const rows = await tx.$queryRaw<Array<{
     id: string;
