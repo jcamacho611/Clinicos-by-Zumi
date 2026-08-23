@@ -34,6 +34,13 @@ describe("free member authentication boundary", () => {
     expect(source).not.toContain("if (account.legacyLinks.length !== 1) return member;");
   });
 
+  it("invalidates a free-member session after a clinic legacy link appears", () => {
+    const source = read("src/lib/auth/account-session.ts");
+    expect(source).toContain('if (claims.kind === "member")');
+    expect(source).toContain("persisted.account.legacyLinks.length > 0");
+    expect(source).toContain("return null;");
+  });
+
   it("does not alter patient portal authentication in this phase", () => {
     const plan = read("docs/superpowers/plans/2026-08-23-universal-account-free-member-phase2.md");
     expect(plan).toContain("patient portal auth is untouched");
