@@ -6,13 +6,24 @@ const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 
 describe("public Grid resource detail", () => {
   it("requires the same active, approved, public gates as Grid discovery", () => {
-    const repository = read("src/lib/grid/resource-repository.ts");
+    const repository = read("src/lib/grid/public-resource-detail.ts");
 
     expect(repository).toContain("findPublicGridResource");
     expect(repository).toContain('"status" = \'active\'');
     expect(repository).toContain('"reviewStatus" = \'approved\'');
     expect(repository).toContain('"visibility" = \'public\'');
     expect(repository).toContain("publicGridCoordinate");
+  });
+
+  it("reduces unstructured policy metadata to minimum-necessary requirement indicators", () => {
+    const repository = read("src/lib/grid/public-resource-detail.ts");
+
+    expect(repository).toContain("credentialRequirementsApply");
+    expect(repository).toContain("insuranceRequirementsApply");
+    expect(repository).toContain("operatorRequirementsApply");
+    expect(repository).toContain("usageRestrictionsApply");
+    expect(repository).not.toContain("reviewedBy:");
+    expect(repository).not.toContain("createdBy:");
   });
 
   it("adds a public detail route that never exposes review internals or owner identifiers", () => {
