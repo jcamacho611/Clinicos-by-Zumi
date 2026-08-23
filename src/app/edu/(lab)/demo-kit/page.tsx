@@ -1,10 +1,12 @@
 import Link from "next/link";
 
 import { EduCommandHeader } from "@/components/edu/edu-shell";
+import { kentuckyCredibility } from "@/lib/edu/kentucky-credibility";
 import { kentuckyDemoKit } from "@/lib/edu/kentucky-demo-kit";
 
 export default function EduDemoKitPage() {
   const kit = kentuckyDemoKit;
+  const credibility = kentuckyCredibility;
 
   return (
     <>
@@ -14,7 +16,43 @@ export default function EduDemoKitPage() {
         title="Demo kit"
       />
       <div className="px-5 py-6 sm:px-8">
-        <section className="border border-[#e28b85]/14 bg-[#12090b]/55 p-5 sm:p-7">
+        <section className="border border-[#e28b85]/18 bg-[#12090b]/65 p-5 sm:p-7" aria-labelledby="why-klinikos-title">
+          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Why Klinikos</p>
+          <h2 className="mt-3 max-w-4xl text-2xl font-semibold text-[#f8efed]" id="why-klinikos-title">Founder-led. Practitioner-informed. Built to be used, not merely presented.</h2>
+          <p className="mt-4 max-w-5xl text-sm leading-7 text-[#bca5a1]">{credibility.positioning}</p>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Founder advantage</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#f8efed]">{credibility.founder.headline}</h3>
+              <p className="mt-3 text-sm leading-6 text-[#bca5a1]">{credibility.founder.summary}</p>
+              <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
+                {credibility.founder.proofPoints.map((point) => <li key={point}>• {point}</li>)}
+              </ul>
+            </article>
+
+            <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Healthcare advantage</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#f8efed]">{credibility.practitioner.headline}</h3>
+              <p className="mt-3 text-sm leading-6 text-[#bca5a1]">{credibility.practitioner.summary}</p>
+              <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
+                {credibility.practitioner.proofPoints.map((point) => <li key={point}>• {point}</li>)}
+              </ul>
+            </article>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {credibility.differentiation.map((item) => (
+              <article className="border border-[#e6817b]/16 bg-[#12090b]/45 p-4" key={item.label}>
+                <h3 className="text-sm font-semibold text-[#efaaa1]">{item.label}</h3>
+                <p className="mt-2 text-xs leading-5 text-[#a98f8b]">{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="mt-4 border-l-2 border-[#e6817b]/45 pl-3 text-[11px] leading-5 text-[#8f7773]">{credibility.practitionerBoundary}</p>
+        </section>
+
+        <section className="mt-6 border border-[#e28b85]/14 bg-[#12090b]/55 p-5 sm:p-7">
           <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Proposed representative materials · not SCWDB-approved</p>
           <h2 className="mt-3 text-xl font-semibold text-[#f8efed]">Sample slide outline</h2>
           <ol className="mt-5 grid gap-2 md:grid-cols-2">
