@@ -23,8 +23,9 @@ describe("patient SMS template policy", () => {
   });
 
   it("does not define marketing or clinical patient SMS templates", () => {
-    expect(PATIENT_SMS_TEMPLATES.some((template) => template.messageClass === "marketing")).toBe(false);
-    expect(PATIENT_SMS_TEMPLATES.some((template) => template.messageClass === "clinical")).toBe(false);
+    const classes = PATIENT_SMS_TEMPLATES.map((template) => String(template.messageClass));
+    expect(classes).not.toContain("marketing");
+    expect(classes).not.toContain("clinical");
   });
 });
 
