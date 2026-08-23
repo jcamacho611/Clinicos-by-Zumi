@@ -25,6 +25,19 @@ describe("entry agreement evidence", () => {
     expect(source).toContain("bindEntryAcceptanceToIdentity");
   });
 
+  it("binds legal evidence without granting roles, credentials, membership, or entitlement", () => {
+    const source = read("src/lib/legal/entry-access.ts");
+    expect(source).toContain('UPDATE "access_gate_acceptances"');
+    expect(source).toContain('INSERT INTO "legal_agreement_events"');
+    expect(source).not.toContain('UPDATE "users"');
+    expect(source).not.toContain('INSERT INTO "organization_memberships"');
+    expect(source).not.toContain('UPDATE "providers"');
+    expect(source).not.toContain('UPDATE "education_enrollments"');
+    expect(source).not.toContain("roleKey:");
+    expect(source).not.toContain("credentialStatus:");
+    expect(source).not.toContain("entitlement:");
+  });
+
   it("requires reviewed exact-version evidence before anonymous acceptance", () => {
     const route = read("src/app/api/access/accept/route.ts");
 
