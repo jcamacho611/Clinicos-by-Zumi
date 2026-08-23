@@ -15,7 +15,13 @@ import { normalizeClinicRole } from "@/lib/auth/rbac";
 import { signSessionToken, verifySessionToken } from "@/lib/auth/token";
 import type { AuthenticatedIdentity, ClinicSession } from "@/lib/auth/types";
 import { buildGlobalAgreement } from "@/lib/legal/global-agreement";
-import { getLegalConfigurationStatus, isLegalGateEnforcementEnabled } from "@/lib/legal/legal-config";
+import { buildEntryAgreement } from "@/lib/legal/entry-agreement";
+import { hasBoundEntryAcceptance } from "@/lib/legal/entry-access";
+import {
+  getLegalConfigurationStatus,
+  isEntryGateEnforcementEnabled,
+  isLegalGateEnforcementEnabled,
+} from "@/lib/legal/legal-config";
 import { hasCurrentAgreementAcceptance } from "@/lib/legal/legal-access";
 
 interface SessionMetadata {
@@ -95,9 +101,18 @@ export const getAuthenticationSession = cache(async () => {
 export const getClinicSession = cache(async () => {
   const session = await getAuthenticationSession();
   if (!session) return null;
-  if (!isLegalGateEnforcementEnabled()) return session;
 
   const legal = getLegalConfigurationStatus();
+
+  // Universal entry replaces the legacy authenticated baseline gate when enabled.
+  // Relationship-specific/additional agreements remain separate legal workflows.
+  if (isEntryGateEnforcementEnabled()) {
+    if (!legal.ready) return null;
+    const accepted = await hasBoundEntryAcceptance(session, buildEntryAgreement(legal.config));
+    return accepted ? session : null;
+  }
+
+  if (!isLegalGateEnforcementEnabled()) return session;
   if (!legal.ready) return null;
 
   const accepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legal.config));
@@ -113,9 +128,17 @@ export async function requireAuthenticationSession() {
 export async function requireClinicSession() {
   const session = await getAuthenticationSession();
   if (!session) redirect("/login");
-  if (!isLegalGateEnforcementEnabled()) return session;
 
   const legal = getLegalConfigurationStatus();
+
+  if (isEntryGateEnforcementEnabled()) {
+    if (!legal.ready) redirect("/access");
+    const accepted = await hasBoundEntryAcceptance(session, buildEntryAgreement(legal.config));
+    if (!accepted) redirect("/access?returnTo=%2Flogin");
+    return session;
+  }
+
+  if (!isLegalGateEnforcementEnabled()) return session;
   if (!legal.ready) redirect("/legal/accept?blocked=configuration");
 
   const accepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legal.config));
