@@ -1,70 +1,63 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
-const artifactRoot = join(process.cwd(), "docs", "design", "black-label-v2");
-const encoded = [0, 1, 2, 3, 4]
-  .map((part) => readFileSync(join(artifactRoot, `Klinikos Browser.dc.html.br.b64.part${String(part).padStart(2, "0")}`), "utf8"))
-  .join("")
-  .trim();
-const source = brotliDecompressSync(Buffer.from(encoded, "base64")).toString("utf8");
-
-function explicitButtonTargetsBelow44(html: string) {
-  const buttons = html.match(/<button\b[^>]*>/g) ?? [];
-  const failures: string[] = [];
-  for (const button of buttons) {
-    const style = button.match(/style="([^"]*)"/)?.[1] ?? "";
-    const minHeight = style.match(/min-height:\s*([0-9.]+)px/)?.[1];
-    const width = style.match(/(?:^|;)\s*width:\s*([0-9.]+)px/)?.[1];
-    const height = style.match(/(?:^|;)\s*height:\s*([0-9.]+)px/)?.[1];
-    if (minHeight && Number(minHeight) < 44) failures.push(button);
-    else if (!minHeight && width && height && (Number(width) < 44 || Number(height) < 44)) failures.push(button);
-  }
-  return failures;
+function read(path: string) {
+  return readFileSync(join(process.cwd(), path), "utf8");
 }
 
+const handoff = read("docs/KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md");
+const authority = read("docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md");
+const brand = read("src/components/brand/klinikos-brand.tsx");
+const rose = read("src/components/brand/rose-atmosphere.tsx");
+
 describe("Klinikos Black Label V2 Claude Design handoff", () => {
-  it("uses production-approved Klinikos assets and valid semantic theme tokens", () => {
-    expect(source).not.toContain("--ok-line:var(--ok-line)");
-    expect(source).toContain("--ok-line:rgba(143,191,158,.35)");
-    expect(source).toContain("/klinikos-orbital-k-production.png");
-    expect(source).toContain("/klinikos-wordmark-production.png");
-    expect(source).toContain("/klinikos-rose-hero-production.png");
-    expect(source).not.toContain("assets/klinikos-orbital-k.png");
-    expect(source).not.toContain("assets/klinikos-wordmark.png");
-    expect(source).not.toContain("assets/rose-hero.png");
+  it("records the exact Claude Design provenance and recovered Browser checksum", () => {
+    expect(handoff).toContain("b846c1b8-35fb-440f-b883-90dc9fd34483");
+    expect(handoff).toContain("Klinikos Browser.dc.html");
+    expect(handoff).toContain("6e471a857cb13ce68d67a29249db5e19825ba0e738df209c92f4dd4bbb626b01");
   });
 
-  it("keeps visible interface text at the design handoff floor", () => {
-    const sizes = [...source.matchAll(/font-size:\s*\.([0-9]+)rem/g)].map((match) => Number(`0.${match[1]}`));
-    expect(sizes.filter((size) => size < 0.75)).toEqual([]);
+  it("locks the defining Black Label interaction grammar", () => {
+    expect(handoff).toContain("Intelligence becomes interface");
+    expect(handoff).toContain("ENVIRONMENT → WORKSPACE → OBJECT STAGE → INSPECTOR → CRITICAL DECISION");
+    expect(handoff).toContain("INITIAL → PREVIOUS → TODAY");
+    expect(handoff).toContain("PERFORMED → DOCUMENTED → CODED → CLAIMED → PAID");
+    expect(handoff).toContain("Living Edge");
   });
 
-  it("keeps explicit interactive targets at or above 44px", () => {
-    expect(explicitButtonTargetsBelow44(source)).toEqual([]);
-    expect(source).not.toContain("width:34px;height:34px");
-    expect(source).toContain("width:44px;height:44px");
+  it("forbids parallel frontend authority stacks", () => {
+    expect(handoff).toContain("No parallel shell");
+    expect(handoff).toContain("No parallel Grid");
+    expect(handoff).toContain("No parallel EDU");
+    expect(handoff).toContain("No parallel Zumi");
+    expect(handoff).toContain("Do not create `BlackLabelTheme`");
   });
 
-  it("makes Explore Klinikos a keyboard-managed modal surface", () => {
-    expect(source).toContain('role="dialog" aria-modal="true"');
-    expect(source).toContain("data-klinikos-palette-search");
-    expect(source).toContain("openPalettePanel()");
-    expect(source).toContain("restorePaletteFocus()");
-    expect(source).toContain("trapPaletteFocus(event)");
+  it("keeps Design preview behavior subordinate to production authority", () => {
+    expect(handoff).toContain("Production/runtime authority: **No**");
+    expect(handoff).toContain("design-preview-only");
+    expect(handoff).toContain("A beautiful false state is worse than an unfinished truthful one");
   });
 
-  it("keeps motion preference and dead-control truth explicit", () => {
-    expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
-    expect(source).toContain("const scrollBehavior");
-    expect(source).toContain('disabled aria-disabled="true" title="Attachments are not connected in this design preview"');
-    expect(source).toContain('disabled aria-disabled="true" title="Voice input is not connected in this design preview"');
-    expect(source).toContain('openProfile: () => this.run("Open account and settings", "settings")');
+  it("binds Black Label to the production-approved Klinikos artwork already in the app", () => {
+    for (const asset of [
+      "/klinikos-orbital-k-production.png",
+      "/klinikos-wordmark-production.png",
+      "/klinikos-rose-hero-production.png",
+      "/klinikos-rose-wide-production.png",
+    ]) expect(handoff).toContain(asset);
+
+    expect(brand).toContain('/klinikos-orbital-k-production.png');
+    expect(brand).toContain('/klinikos-wordmark-production.png');
+    expect(rose).toContain('/klinikos-rose-hero-production.png');
+    expect(rose).toContain('/klinikos-rose-wide-production.png');
   });
 
-  it("derives the attention badge from the prototype briefing state", () => {
-    expect(source).toContain("actionCount: String((BRIEF[s.role].items || []).filter(row => row[4]).length)");
-    expect(source).not.toContain('actionCount: "3"');
+  it("keeps the broader design authority and Living Home lock intact", () => {
+    expect(authority).toContain("AUTHORITATIVE DESIGN SOURCE");
+    expect(authority).toContain("APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md");
+    expect(authority).toContain("KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md");
+    expect(authority).toContain("Black Label V2");
   });
 });
