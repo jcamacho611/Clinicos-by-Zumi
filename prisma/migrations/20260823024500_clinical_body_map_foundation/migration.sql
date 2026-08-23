@@ -46,8 +46,8 @@ CREATE INDEX "clinical_body_map_versions_scope_captured_idx"
   ON "clinical_body_map_versions"("organizationId", "patientId", "contextType", "contextId", "capturedAt");
 CREATE INDEX "clinical_body_map_versions_encounter_idx"
   ON "clinical_body_map_versions"("organizationId", "encounterId", "capturedAt");
-CREATE INDEX "clinical_body_map_versions_supersedes_idx"
-  ON "clinical_body_map_versions"("supersedesVersionId");
+CREATE UNIQUE INDEX "clinical_body_map_versions_supersedes_key"
+  ON "clinical_body_map_versions"("supersedesVersionId") WHERE "supersedesVersionId" IS NOT NULL;
 CREATE UNIQUE INDEX "clinical_body_map_findings_version_finding_key_key"
   ON "clinical_body_map_findings"("bodyMapVersionId", "findingKey");
 CREATE INDEX "clinical_body_map_findings_region_idx"
