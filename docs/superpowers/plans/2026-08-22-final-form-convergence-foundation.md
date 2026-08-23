@@ -61,6 +61,7 @@
 
 - [x] Write the identity schema contract test first.
 - [x] Point Prisma config at the `prisma` schema folder.
+- [x] Explicitly point Prisma migration commands at `prisma/migrations` so multi-file schema adoption cannot orphan the existing migration chain.
 - [x] Add focused multi-file identity models without editing the legacy schema.
 - [x] Add an additive SQL migration with deterministic Person/membership backfill from existing users.
 - [x] Keep foreign keys only between new modeled tables; do not create Prisma-invisible FKs to legacy tables.
@@ -104,6 +105,8 @@ This validates the additive SQL against the current production-shaped database. 
 - [x] Add failing effective-date semantics test first.
 - [x] Implement server-only minimum-necessary relationship reads.
 - [x] Exclude expired/future relationships by default query semantics.
+- [x] Keep `legacyMembershipOrganizationId` explicitly named and documented as non-authoritative compatibility context.
+- [x] Anchor the legacy compatibility membership to the still-authoritative `User.organizationId` before returning context so multiple effective memberships cannot change the compatibility organization by query order.
 - [x] Do not wire any auth/session consumer to the new substrate in this tranche.
 - [ ] Execute focused tests/type-check after Prisma client generation.
 
@@ -124,6 +127,7 @@ This validates the additive SQL against the current production-shaped database. 
 ### Task 5: Verification and exact-head review
 
 - [x] Refresh current `main` and inspect overlapping work.
+- [x] Review Prisma 6.14 multi-file/config semantics against current official Prisma v6 documentation; schema-folder configuration is supported and the migration path is now explicit.
 - [ ] Prisma generate.
 - [ ] Prisma validate.
 - [ ] Apply all migrations to a fresh PostgreSQL database.
