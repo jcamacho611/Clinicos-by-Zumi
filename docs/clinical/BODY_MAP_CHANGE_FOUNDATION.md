@@ -41,18 +41,19 @@ Laterality remains first-class. A left-shoulder finding is not interchangeable w
 
 ### Deterministic change
 
-The current pure comparison layer may produce:
+The current pure comparison layer may produce only evidence-supported deltas from findings that are explicitly documented in both or either compared versions:
 
 - severity improved;
 - severity worsened;
 - severity unchanged;
 - finding added;
-- finding removed only when a non-empty current map provides evidence of an updated map state;
 - functional-impact changed.
 
-An entirely empty current map is insufficient evidence that every prior finding resolved or disappeared. It therefore produces no removal inference.
+**Omission is never clinical resolution.** A finding that appeared previously but is not redrawn or re-documented today is not automatically resolved, removed, improved, or absent. This rule applies whether the current map is empty or contains unrelated findings.
 
-Every emitted delta must carry source evidence references. A genuine removal must cite both the prior finding and the current map version that establishes the later map state.
+The pure comparator therefore does **not** emit a resolution/removal delta from omission. A future persisted resolution workflow must require an explicit clinician-recorded state/event with provenance before Klinikos may present a symptom or finding as resolved.
+
+Every emitted delta must carry the exact source finding evidence that supports it.
 
 ### AI boundary
 
@@ -79,14 +80,15 @@ The provider must be able to update today’s body map without destroying the in
 Once the multi-file Prisma foundation from #245 is merged and current:
 
 1. add additive BodyMap / BodyMapFinding persistence models in the multi-file schema layout;
-2. verify the migration against a disposable Neon branch cloned from the production-shape database before any production deployment;
-3. implement a server-only repository with organization + patient + encounter scoping;
-4. expose a create-new-version command; do not expose update-in-place for historical versions;
-5. emit auditable create/review/amend events;
-6. implement profession/capability authorization for staff capture and provider review;
-7. wire persisted versions into Current Visit as timeline + compare surfaces;
-8. prove the synthetic No-Fault Golden Case in UI and DB-backed journey tests;
-9. extend the broader Clinical Change Graph with PT progression, imaging/results, ADL/function, work status, and other evidence sources without conflating them with BodyMap itself.
+2. add an explicit clinician-recorded finding lifecycle/resolution state rather than deriving resolution from omission;
+3. verify the migration against a disposable Neon branch cloned from the production-shape database before any production deployment;
+4. implement a server-only repository with organization + patient + encounter scoping;
+5. expose a create-new-version command; do not expose update-in-place for historical versions;
+6. emit auditable create/review/resolve/amend events;
+7. implement profession/capability authorization for staff capture and provider review;
+8. wire persisted versions into Current Visit as timeline + compare surfaces;
+9. prove the synthetic No-Fault Golden Case in UI and DB-backed journey tests;
+10. extend the broader Clinical Change Graph with PT progression, imaging/results, ADL/function, work status, and other evidence sources without conflating them with BodyMap itself.
 
 ## Golden Case locked by this foundation
 
