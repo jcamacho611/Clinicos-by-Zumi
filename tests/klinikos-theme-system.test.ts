@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const tokens = fs.readFileSync(path.join(process.cwd(), "src/app/design-tokens.css"), "utf8");
+const convergence = fs.readFileSync(path.join(process.cwd(), "src/app/experience-convergence.css"), "utf8");
 const appearance = fs.readFileSync(path.join(process.cwd(), "src/lib/design/atmosphere.ts"), "utf8");
 const controller = fs.readFileSync(path.join(process.cwd(), "src/components/design/klinikos-atmosphere.tsx"), "utf8");
 const accountPreferences = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/account-preferences.tsx"), "utf8");
@@ -77,5 +78,16 @@ describe("Klinikos Black Label appearance system", () => {
     expect(accountPreferences).toContain("atmosphereForAppearance");
     expect(accountPreferences).toContain('matchMedia("(prefers-color-scheme: dark)")');
     expect(accountPreferences).not.toContain('value === "system" ? "auto"');
+    expect(accountPreferences).not.toContain("color-mix(in_srgb");
+  });
+
+  it("overrides the legacy dark platform color-scheme through the existing convergence layer", () => {
+    expect(convergence).toContain(".klinikos-platform {");
+    expect(convergence).toContain("color-scheme:var(--k-theme-mode)");
+    expect(convergence).toContain("--workspace-text:var(--k-text)");
+    expect(convergence).toContain("--workspace-border:var(--k-line)");
+    expect(convergence).toContain(":where(input,textarea,select) {color-scheme:var(--k-theme-mode)}");
+    expect(convergence).toContain(".grid-marble-surface .k-page");
+    expect(convergence).toContain(".grid-marble-surface .grid-canvas");
   });
 });
