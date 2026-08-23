@@ -36,15 +36,17 @@ describe("immutable BodyMap persistence contract", () => {
     expect(migration).not.toMatch(/supersedesVersionId"\)\s+WHERE/i);
   });
 
-  it("preserves governed 0-10 severity including decimal values and explicit resolution state", () => {
+  it("preserves governed 0-10 severity including decimal values and rejects NULL scale loopholes", () => {
     const schema = read(schemaPath);
     const migration = read(migrationPath);
 
-    expect(schema).toContain("severity          Float?");
-    expect(schema).toContain("severityScale     String?");
-    expect(schema).toContain("clinicalState     String");
-    expect(schema).toContain("resolutionNote    String?");
+    expect(schema).toContain("severity         Float?");
+    expect(schema).toContain("severityScale    String?");
+    expect(schema).toContain("clinicalState    String");
+    expect(schema).toContain("resolutionNote   String?");
     expect(migration).toContain("clinical_body_map_findings_severity_check");
+    expect(migration).toContain('"severity" IS NOT NULL');
+    expect(migration).toContain('"severityScale" IS NOT NULL');
     expect(migration).toContain("clinical_body_map_findings_state_check");
     expect(migration).toContain("clinical_body_map_findings_resolution_check");
     expect(migration).toContain("BETWEEN 0 AND 10");
@@ -102,7 +104,7 @@ describe("immutable BodyMap persistence contract", () => {
     expect(repository).toContain("patientId");
     expect(repository).toContain("encounterId");
     expect(repository).toContain("db.$transaction");
-    expect(repository).toContain("db.clinicalBodyMapVersion.create");
+    expect(repository).toContain("tx.clinicalBodyMapVersion.create");
   });
 
   it("lists versions only through explicit tenant, patient and clinical-context scope with a bounded limit", () => {
