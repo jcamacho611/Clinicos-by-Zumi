@@ -10,6 +10,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { GridTrustWorkspace } from "@/components/grid/grid-trust-workspace";
+import { GovernedTrustSignals } from "@/components/trust/governed-trust-signals";
 import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTrustWorkspace } from "@/lib/grid/trust-workspace-repository";
 
@@ -101,6 +102,7 @@ export default async function GridTrustPage() {
           <h2 className="mt-3 text-3xl font-semibold tracking-[-.04em] text-[#fff8f6]" id="grid-issues-title">Transaction history, disputes, and safety issues stay governed separately.</h2>
         </div>
         <div className="rounded-[1.35rem] border border-[#d6b787]/12 bg-[#d6b787]/[.045] px-4 py-3 text-[12px] leading-5 text-[#d9c2a1]"><TriangleAlert className="mr-2 inline size-4" /><strong className="font-extrabold text-[#efd8ad]">Safety boundary:</strong> this workflow records and routes concerns. It does not diagnose injury, determine malpractice, suspend a participant automatically, or prove that a refund or payout occurred.</div>
+        <div className="mt-5"><GovernedTrustSignals signals={workspace.trustSignals} /></div>
         <div className="mt-5"><GridTrustWorkspace workspace={workspace} /></div>
         <div className="mt-5 rounded-[1.35rem] border border-[#e6817b]/10 bg-[#100708] px-4 py-3 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="mr-2 inline size-4 text-[#efaaa1]" />Open disputes and safety incidents are settlement holds. Closing an issue is a governance record; processor refunds, payout reversals, participant restrictions, and resource suspensions require their own verified execution paths.</div>
       </section>
