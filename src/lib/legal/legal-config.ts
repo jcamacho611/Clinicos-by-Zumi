@@ -11,6 +11,10 @@ export function isLegalGateEnforcementEnabled() {
   return process.env.LEGAL_GATE_ENFORCEMENT_ENABLED === "true";
 }
 
+export function isEntryGateEnforcementEnabled() {
+  return process.env.KLINIKOS_ENTRY_GATE_ENFORCEMENT_ENABLED === "true";
+}
+
 function configuredValue(name: string) {
   const value = process.env[name]?.trim();
   return value ? value : undefined;
