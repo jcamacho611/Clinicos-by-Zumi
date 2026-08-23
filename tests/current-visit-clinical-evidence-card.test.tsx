@@ -85,6 +85,13 @@ describe("Current Visit clinical evidence card", () => {
     expect(markup).toContain("Evidence visibility does not mean the originating order is complete.");
   });
 
+  it("keeps clinical evidence metadata at or above the repository readability floor", () => {
+    const markup = renderToStaticMarkup(<CurrentVisitClinicalEvidenceCard evidence={availableEvidence()} />);
+
+    expect(markup).not.toContain("text-[9px]");
+    expect(markup).not.toContain("text-[10px]");
+  });
+
   it("discloses when a displayed lab panel is partial", () => {
     const evidence = availableEvidence();
     evidence.labs[0] = { ...evidence.labs[0], totalItemCount: 120, itemsTruncated: true };
