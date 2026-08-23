@@ -65,7 +65,26 @@
 - [x] Add an additive SQL migration with deterministic Person/membership backfill from existing users.
 - [x] Keep foreign keys only between new modeled tables; do not create Prisma-invisible FKs to legacy tables.
 - [x] Add compatibility invariants proving current auth/patient boundaries remain.
-- [ ] Execute Prisma generate/validate and fresh-database migration verification.
+- [x] Apply the exact migration SQL to an isolated branch cloned from the current connected production-shaped Neon database and validate row/constraint/index safety.
+- [ ] Execute exact-head Prisma generate/validate on an executable Node runner.
+
+#### Isolated database verification — 2026-08-22 America/New_York
+
+Current connected project resolved to `ClinicOS Production` (`autumn-resonance-23654315`), PostgreSQL 17, default branch `main` (`br-ancient-term-atolp7vw`). Verification used temporary branch `verify-final-form-identity-20260822b` (`br-delicate-hall-atxldeze`) and deleted it after validation. Production was not modified.
+
+Results after applying the exact PR migration SQL:
+- legacy users: 5
+- people: 5
+- organization memberships: 5
+- location assignments: 0
+- orphan memberships: 0
+- inferred legal names: 0
+- unexpected membership types: 0
+- memberships without legacy user provenance: 0
+- only two foreign keys exist on the new identity tables: membership → person and location assignment → membership
+- expected primary, lookup, status, effective-date, and assignment uniqueness indexes exist
+
+This validates the additive SQL against the current production-shaped database. It does **not** substitute for Prisma generate/validate, the complete fresh migration chain, type-check, tests, build, or deployment verification.
 
 ---
 
@@ -104,7 +123,7 @@
 
 ### Task 5: Verification and exact-head review
 
-- [ ] Refresh current `main` and inspect overlapping work.
+- [x] Refresh current `main` and inspect overlapping work.
 - [ ] Prisma generate.
 - [ ] Prisma validate.
 - [ ] Apply all migrations to a fresh PostgreSQL database.
@@ -116,7 +135,7 @@
 - [ ] Security/negative-authorization tests.
 - [ ] Production build/start/health smoke.
 - [ ] Review complete diff for accidental authority widening, PHI exposure, duplicate identity systems or customer-fork behavior.
-- [ ] If Actions fails before checkout, record infrastructure failure accurately; do not call the exact head green.
+- [x] Record GitHub Actions pre-checkout failure accurately when jobs return `steps:null`; do not call the exact head green.
 
 ## Follow-on programs after this foundation
 
