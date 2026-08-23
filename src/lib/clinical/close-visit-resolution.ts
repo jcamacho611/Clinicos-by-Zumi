@@ -61,7 +61,8 @@ export function buildCloseVisitResolution(inputs: CloseVisitInputs): CloseVisitR
   else if (unevaluatedDomains.length > 0) readiness = "not_fully_evaluated";
 
   const noteLocked = inputs.encounterStatus === "Signed" || inputs.encounterStatus === "Locked" || inputs.encounterStatus === "Addendum Needed";
-  const canClaimReadyToClose = readiness === "ready";
+  const lifecycleAllowsCloseClaim = inputs.encounterStatus === "Ready for Review" || inputs.encounterStatus === "Signed" || inputs.encounterStatus === "Locked";
+  const canClaimReadyToClose = readiness === "ready" && lifecycleAllowsCloseClaim;
   const readyForSignature = canClaimReadyToClose && inputs.encounterStatus === "Ready for Review";
   const finalClosureComplete = canClaimReadyToClose && (inputs.encounterStatus === "Signed" || inputs.encounterStatus === "Locked");
 
