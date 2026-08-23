@@ -49,6 +49,12 @@ export const eduNavigation: readonly EduNavGroup[] = [
     ],
   },
   {
+    label: "Proposal",
+    items: [
+      { href: "/edu/demo-kit", label: "Demo kit", icon: "Presentation", roles: PROGRAM_REVIEW },
+    ],
+  },
+  {
     label: "Administration",
     items: [
       { href: "/edu/settings", label: "Settings", icon: "Settings", roles: TEACHING },
@@ -69,6 +75,7 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/courses": ALL_ROLES,
   "/edu/cohorts": [...STAFF, "edu_observer"],
   "/edu/reports": PROGRAM_REVIEW,
+  "/edu/demo-kit": PROGRAM_REVIEW,
   "/edu/scenarios": ALL_ROLES,
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
