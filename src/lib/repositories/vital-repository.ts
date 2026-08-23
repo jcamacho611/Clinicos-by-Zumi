@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { PatientVital } from "@/lib/clinical/vital-types";
 
@@ -14,15 +15,15 @@ const vitalSelect = {
   weightLbs: true,
   heightInches: true,
   bmi: true,
-} as const;
+} as const satisfies Prisma.VitalSelect;
 
-type VitalRow = Awaited<ReturnType<typeof db.vital.findFirst>>;
+type VitalRow = Prisma.VitalGetPayload<{ select: typeof vitalSelect }>;
 
 function decimalNumber(value: { toString(): string } | number | null) {
   return value === null ? null : Number(value.toString());
 }
 
-function mapVital(row: NonNullable<VitalRow>): PatientVital {
+function mapVital(row: VitalRow): PatientVital {
   return {
     id: row.id,
     measuredAt: row.measuredAt.toISOString(),
