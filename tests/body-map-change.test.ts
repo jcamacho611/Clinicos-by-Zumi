@@ -122,34 +122,28 @@ describe("BodyMap longitudinal clinical change", () => {
     ]));
   });
 
-  it("does not infer that all prior findings were removed from an empty current map", () => {
+  it("does not infer resolution when the current body map is empty", () => {
     const emptyToday: BodyMapVersion = { ...today, id: "bm-empty-today", findings: [] };
     expect(compareBodyMapVersions(previous, emptyToday)).toEqual([]);
   });
 
-  it("reports a true map removal only when the current version contains other documented findings", () => {
-    const changedToday: BodyMapVersion = {
+  it("does not infer resolution from omission even when another current finding is documented", () => {
+    const dizzinessOnlyToday: BodyMapVersion = {
       ...today,
-      id: "bm-changed-today",
+      id: "bm-dizziness-only-today",
       findings: [today.findings[1]],
     };
 
-    const deltas = compareBodyMapVersions(previous, changedToday);
+    const deltas = compareBodyMapVersions(previous, dizzinessOnlyToday);
 
-    expect(deltas).toEqual(expect.arrayContaining([
+    expect(deltas).toEqual([
       expect.objectContaining({
-        bodyRegion: "shoulder",
-        laterality: "left",
-        symptom: "pain",
-        kind: "finding_removed",
-        previousValue: "pain",
-        currentValue: null,
-        evidence: [
-          { bodyMapVersionId: "bm-previous", findingId: "finding-shoulder-left-prev" },
-          { bodyMapVersionId: "bm-changed-today", findingId: null },
-        ],
+        bodyRegion: "head",
+        symptom: "dizziness",
+        kind: "finding_added",
       }),
-    ]));
+    ]);
+    expect(deltas.some((delta) => delta.kind === "finding_removed")).toBe(false);
   });
 
   it("reports changed functional impact with evidence from both versions", () => {
@@ -212,6 +206,7 @@ describe("BodyMap longitudinal clinical change", () => {
       "initial -> previous -> today",
       "Current Visit consumes persisted versions, never demo constants",
       "AI may explain deterministic deltas but may not create unsupported findings",
+      "Omission is never clinical resolution",
       "amendment/addendum semantics rather than mutation",
       "does not satisfy P0 #244 by itself",
     ]) {
