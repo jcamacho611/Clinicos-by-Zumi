@@ -95,7 +95,14 @@ async function validateAccountSession(token: string): Promise<AccountSession | n
       return null;
     }
 
-    if (claims.kind === "member") return claims;
+    if (claims.kind === "member") {
+      // A free-member token is valid only while the Account remains organization-
+      // agnostic. Once a clinic compatibility link exists, force re-authentication
+      // and explicit context resolution instead of letting stale member authority
+      // survive the relationship transition.
+      if (persisted.account.legacyLinks.length > 0) return null;
+      return claims;
+    }
 
     const linked = persisted.account.legacyLinks.some((link) => link.legacyUserId === claims.legacyUserId);
     if (!linked) return null;
