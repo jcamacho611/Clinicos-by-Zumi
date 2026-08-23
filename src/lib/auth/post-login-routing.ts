@@ -19,10 +19,14 @@ function defaultProtectedPath(role: ClinicRole) {
  * Authentication and contractual access remain separate truths. When the legal gate
  * is active, the intended same-origin Klinikos route is carried through agreement
  * acceptance rather than being discarded. `safeReturnTo` is the only source of the
- * target, so external origins and malformed paths never enter the redirect chain.
+ * requested target, so external origins and malformed paths never enter the redirect
+ * chain. Legal routes are normalized back to the role default to prevent acceptance
+ * from redirecting into itself.
  */
 export function resolvePostLoginRedirect(input: PostLoginRoutingInput) {
-  const target = safeReturnTo(input.requestedReturnTo) ?? defaultProtectedPath(input.role);
+  const fallback = defaultProtectedPath(input.role);
+  const requestedTarget = safeReturnTo(input.requestedReturnTo);
+  const target = requestedTarget && !requestedTarget.startsWith("/legal/") ? requestedTarget : fallback;
 
   if (!input.legalGateEnabled || input.agreementAccepted) return target;
 
