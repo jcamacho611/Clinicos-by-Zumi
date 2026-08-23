@@ -5,8 +5,7 @@ import type { CurrentVisitMedicationReconciliation } from "@/lib/clinical/curren
 import { db } from "@/lib/db";
 
 function discrepancyCount(value: Prisma.JsonValue | null): number {
-  if (Array.isArray(value)) return value.length;
-  return value === null ? 0 : 1;
+  return Array.isArray(value) ? value.length : 0;
 }
 
 export async function findMedicationReconciliationForEncounter(
