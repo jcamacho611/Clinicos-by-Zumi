@@ -16,6 +16,14 @@ describe("free member signup", () => {
     expect(source).not.toContain("locationAssignment.create");
   });
 
+  it("fails closed on case-variant legacy email collisions before creating a new person", () => {
+    const source = read("src/lib/auth/free-member-signup.ts");
+    expect(source).toContain("tx.user.findFirst");
+    expect(source).toContain('mode: "insensitive"');
+    expect(source.indexOf("tx.user.findFirst")).toBeLessThan(source.indexOf("tx.person.create"));
+    expect(source).not.toContain("tx.user.findUnique({\n        where: { email: input.email }");
+  });
+
   it("keeps public signup feature-flagged until gateway/account convergence is proven", () => {
     expect(existsSync("src/app/api/auth/signup/route.ts")).toBe(true);
     if (!existsSync("src/app/api/auth/signup/route.ts")) return;
