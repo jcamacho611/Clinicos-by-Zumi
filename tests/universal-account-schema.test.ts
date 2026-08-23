@@ -36,4 +36,13 @@ describe("universal account schema", () => {
     expect(sql).toContain("accountid");
     expect(sql).toContain("personid");
   });
+
+  it("keeps Prisma model truth aligned with the legal evidence columns added by migration", () => {
+    const legacySchema = read("prisma/schema.prisma");
+    const accessBlock = legacySchema.split("model AccessGateAcceptance {")[1]?.split("}\n\nmodel Organization")[0] ?? "";
+    expect(accessBlock).toContain("accountId");
+    expect(accessBlock).toContain("personId");
+    expect(accessBlock).toContain("account          Account?");
+    expect(accessBlock).toContain("person           Person?");
+  });
 });
