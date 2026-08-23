@@ -69,6 +69,8 @@ describe("Current Visit clinical evidence projection", () => {
       sourceReference: "LAB-REF-1",
       version: 2,
       correctionOfId: "lab-original",
+      totalItemCount: 1,
+      itemsTruncated: false,
       items: [
         { id: "item-1", name: "Hemoglobin", value: "11.2", unit: "g/dL", range: "12-16", flag: "low", critical: false },
       ],
@@ -115,6 +117,24 @@ describe("Current Visit clinical evidence projection", () => {
 
     expect(evidence.labs.map((item) => item.id)).toEqual(["lab-1", "lab-2", "lab-3", "lab-4", "lab-5", "lab-6"]);
     expect(evidence.imaging.map((item) => item.id)).toEqual(["img-1", "img-2", "img-3", "img-4", "img-5", "img-6"]);
+  });
+
+  it("bounds discrete items in a displayed lab panel and discloses truncation", () => {
+    const items = Array.from({ length: 120 }, (_, index) => ({
+      id: `item-${index + 1}`,
+      name: `Analyte ${index + 1}`,
+      value: String(index + 1),
+      unit: "unit",
+      range: null,
+      flag: null,
+      critical: false,
+    }));
+    const evidence = buildCurrentVisitClinicalEvidence("patient-1", { labs: [lab({ items })], imaging: [] });
+
+    expect(evidence.labs[0].items).toHaveLength(100);
+    expect(evidence.labs[0].items[99].id).toBe("item-100");
+    expect(evidence.labs[0].totalItemCount).toBe(120);
+    expect(evidence.labs[0].itemsTruncated).toBe(true);
   });
 
   it("reports attention counts from explicit source state and never infers order completion", () => {
