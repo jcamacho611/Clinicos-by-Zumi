@@ -6,6 +6,12 @@ import { LoginForm } from "@/components/clinic/login-form";
 import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } from "@/lib/auth/config";
 import { getAuthenticationSession } from "@/lib/auth/session";
 import { safeReturnTo } from "@/lib/auth/return-to";
+import {
+  hasBoundEntryAcceptance,
+  requireEntryAccessForLogin,
+} from "@/lib/legal/entry-access";
+import { buildEntryAgreement } from "@/lib/legal/entry-agreement";
+import { getLegalConfigurationStatus, isEntryGateEnforcementEnabled } from "@/lib/legal/legal-config";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
   const { returnTo: rawReturnTo, next: legacyNext } = await searchParams;
@@ -13,7 +19,23 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   // emitted it; both values still pass through the same same-origin safety gate.
   const returnTo = safeReturnTo(rawReturnTo ?? legacyNext);
   const session = await getAuthenticationSession();
-  if (session) redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
+  const entryGateEnabled = isEntryGateEnforcementEnabled();
+
+  if (session) {
+    if (!entryGateEnabled) {
+      redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
+    }
+
+    const legal = getLegalConfigurationStatus();
+    if (legal.ready && await hasBoundEntryAcceptance(session, buildEntryAgreement(legal.config))) {
+      redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
+    }
+    // A session created before entry-gate activation is not grandfathered silently.
+    // The user proceeds through /access and reauthenticates so the anonymous evidence
+    // can be bound to a fresh persistent auth session.
+  }
+
+  await requireEntryAccessForLogin(returnTo);
 
   const demoCredentials = isDemoAuthEnabled()
     ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD }
@@ -27,14 +49,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <KlinikosWordmark href="/" framed inverse markClassName="h-12 w-12" textClassName="h-[22px] w-[196px]" className="mb-12 gap-3" />
           <p className="text-[12px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#f8efed]">Welcome back.</h1>
-          <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos workspace. Every session remains bound to one authorized organization and role.</p>
+          <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos workspace. Protected product access remains bound to the agreement version you entered through and to the account you authenticate.</p>
           <div className="rose-auth-form mt-8">
             <LoginForm demoCredentials={demoCredentials} returnTo={returnTo} />
           </div>
-          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Considering Klinikos? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/start">Start the Clinic Operating Analysis</Link></p>
+          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">New to the interactive ecosystem? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/access">Enter Klinikos</Link></p>
           <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">Looking for your records? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/portal/login">Open the patient portal</Link></p>
           <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]">
-            <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.
+            <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls. Patient access follows its separate governed portal path.
           </div>
           <p className="mt-8 flex items-center gap-2 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
         </div>
