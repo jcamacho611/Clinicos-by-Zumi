@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 const route = read("src/app/api/portal/phone-verification/route.ts");
 const service = read("src/lib/communications/patient-sms-service.ts");
+const panel = read("src/components/portal/portal-phone-verification.tsx");
 
 describe("patient-controlled Twilio Verify ceremony", () => {
   it("binds organization, patient, account, and destination to the authenticated portal session", () => {
@@ -24,8 +25,8 @@ describe("patient-controlled Twilio Verify ceremony", () => {
     expect(route).toContain("hashtextextended");
     expect(route).toContain("START_LIMIT = 5");
     expect(route).toContain("CHECK_LIMIT = 8");
-    expect(route).toContain('Retry-After": "3600"');
-    expect(route).toContain('Retry-After": "900"');
+    expect(route).toContain('Retry-After\": \"3600\"');
+    expect(route).toContain('Retry-After\": \"900\"');
   });
 
   it("fails closed on unresolved phone-verification economics before any provider call", () => {
@@ -34,6 +35,14 @@ describe("patient-controlled Twilio Verify ceremony", () => {
     expect(route).toContain("verification_funding_not_ready");
     expect(route.indexOf("phoneVerificationSpendReady")).toBeLessThan(route.indexOf("startTwilioPhoneVerification({"));
     expect(route.indexOf("phoneVerificationSpendReady")).toBeLessThan(route.indexOf("checkTwilioPhoneVerification({"));
+  });
+
+  it("projects funding readiness to the patient UI without exposing billing authority or calling the provider", () => {
+    expect(route).toContain("fundingReady: phoneVerificationSpendReady()");
+    expect(panel).toContain("fundingReady: boolean");
+    expect(panel).toContain("!state.fundingReady");
+    expect(panel).toContain("Phone verification is not available until its funding policy is activated.");
+    expect(panel).toContain("disabled={working || !state.fundingReady}");
   });
 
   it("never persists verification codes and records possession only after Twilio approves", () => {
