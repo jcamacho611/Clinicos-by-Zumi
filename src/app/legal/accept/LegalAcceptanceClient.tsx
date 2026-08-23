@@ -144,14 +144,14 @@ export function LegalAcceptanceClient({
       <main className="min-h-screen bg-[#050303] px-5 py-10 text-[#f8efed] sm:px-8 sm:py-14" data-klinikos-ds>
         <div className="mx-auto max-w-3xl rounded-[32px] border border-[#e6817b]/15 bg-[#0b0507] p-7 shadow-2xl shadow-black/40 sm:p-10">
           <div className="grid size-14 place-items-center rounded-full border border-emerald-300/20 bg-emerald-300/[.07] text-emerald-200"><Check className="size-6" /></div>
-          <p className="mt-8 text-[10px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">Klinikos agreement accepted</p>
+          <p className="mt-8 text-[11px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">Klinikos agreement accepted</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#fff8f6]">Your agreement is recorded.</h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[#aa918d]">Your signature is tied to this exact agreement version and document hash. You can keep a copy for your records.</p>
 
           <dl className="mt-8 grid gap-4 rounded-[22px] border border-[#e6817b]/10 bg-[#100708] p-5 text-xs sm:grid-cols-2">
             <div><dt className="uppercase tracking-[.14em] text-[#725d59]">Acceptance ID</dt><dd className="mt-1 break-all text-[#e7d4d1]">{receipt.id}</dd></div>
             <div><dt className="uppercase tracking-[.14em] text-[#725d59]">Version</dt><dd className="mt-1 text-[#e7d4d1]">{receipt.documentVersion}</dd></div>
-            <div className="sm:col-span-2"><dt className="uppercase tracking-[.14em] text-[#725d59]">Document SHA-256</dt><dd className="mt-1 break-all font-mono text-[10px] text-[#bca5a1]">{receipt.documentSha256}</dd></div>
+            <div className="sm:col-span-2"><dt className="uppercase tracking-[.14em] text-[#725d59]">Document SHA-256</dt><dd className="mt-1 break-all font-mono text-[11px] text-[#bca5a1]">{receipt.documentSha256}</dd></div>
             <div><dt className="uppercase tracking-[.14em] text-[#725d59]">Signed</dt><dd className="mt-1 text-[#e7d4d1]">{new Date(receipt.signedAt).toLocaleString()}</dd></div>
             <div><dt className="uppercase tracking-[.14em] text-[#725d59]">Method</dt><dd className="mt-1 capitalize text-[#e7d4d1]">{receipt.signatureMethod || "typed"}</dd></div>
           </dl>
@@ -171,7 +171,7 @@ export function LegalAcceptanceClient({
         <header className="mb-7 flex flex-col gap-4 border-b border-[#e6817b]/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[.28em] text-[#e6817b]">KLINIKOS</p>
-            <p className="mt-3 text-[10px] font-bold uppercase tracking-[.2em] text-[#806965]">Before you enter Klinikos</p>
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-[.2em] text-[#806965]">Before you enter Klinikos</p>
             <h1 className="mt-2 max-w-3xl text-3xl font-light tracking-[-.045em] text-[#fff8f6] sm:text-4xl">Review and sign the agreement governing your protected access.</h1>
           </div>
           <div className="text-xs leading-5 text-[#8f7773] sm:text-right"><p>{account.email}</p><p>{account.organizationName} · {account.role}</p></div>
@@ -180,7 +180,7 @@ export function LegalAcceptanceClient({
         <section className="rounded-[30px] border border-[#e6817b]/14 bg-[#0b0507] p-4 sm:p-7">
           <div className="flex flex-col gap-4 border-b border-[#e6817b]/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div><p className="text-sm font-semibold text-[#fff8f6]">{agreement.title}</p><p className="mt-2 text-xs text-[#8f7773]">Version {agreement.documentVersion} · Effective {agreement.effectiveDate}</p></div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#e6817b]/15 bg-[#e6817b]/[.05] px-3 py-2 text-[10px] font-bold uppercase tracking-[.13em] text-[#eaa29b]"><LockKeyhole className="size-3.5" />Protected access agreement</span>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#e6817b]/15 bg-[#e6817b]/[.05] px-3 py-2 text-[11px] font-bold uppercase tracking-[.13em] text-[#eaa29b]"><LockKeyhole className="size-3.5" />Protected access agreement</span>
           </div>
 
           <div className="mt-5 rounded-[18px] border border-[#d6b787]/12 bg-[#d6b787]/[.035] p-4 text-xs leading-6 text-[#bca5a1]"><strong className="text-[#efd8ad]">Review requirement.</strong> The signature controls remain locked until you reach the end of the complete agreement below. Reaching the end records presentation/review interaction; it does not claim to prove that every word was read.</div>
@@ -202,7 +202,7 @@ export function LegalAcceptanceClient({
                 </section>
               ))}
               <div className="mt-10 border-t border-[#e6817b]/15 pt-8 pb-4 text-center">
-                <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">End of agreement</p>
+                <p className="text-[11px] font-extrabold uppercase tracking-[.22em] text-[#e6817b]">End of agreement</p>
                 <p className="mt-2 text-xs text-[#8f7773]">Legal contact: {agreement.legalContactEmail}</p>
               </div>
             </div>
@@ -214,7 +214,7 @@ export function LegalAcceptanceClient({
         </section>
 
         <section aria-disabled={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><ShieldCheck className="size-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Acknowledgments</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Affirm each required statement.</h2></div></div>
+          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><ShieldCheck className="size-4" /></span><div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Acknowledgments</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Affirm each required statement.</h2></div></div>
           <div className="mt-6 space-y-3">
             {acknowledgments.map(({ key, label }) => (
               <label className="flex cursor-pointer items-start gap-3 rounded-[16px] border border-[#e6817b]/10 bg-[#100708] p-4 text-xs leading-6 text-[#baa19d]" key={key}>
@@ -226,7 +226,7 @@ export function LegalAcceptanceClient({
         </section>
 
         <section aria-disabled={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><FileSignature className="size-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Electronic signature</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Sign intentionally.</h2></div></div>
+          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><FileSignature className="size-4" /></span><div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Electronic signature</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Sign intentionally.</h2></div></div>
           <p className="mt-4 max-w-3xl text-xs leading-6 text-[#8f7773]">By selecting Agree & Sign, you intend the typed signature you provide to authenticate your acceptance of this Agreement and to have the legal effect available to electronic signatures under applicable law. This ceremony is not represented as notarization or a qualified electronic signature.</p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">

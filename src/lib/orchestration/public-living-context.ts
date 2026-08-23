@@ -39,7 +39,19 @@ export function privateDataAnswer(): PublicAnswer {
  * browser's emergency path if the server conversation boundary cannot be reached. They
  * must therefore remain useful on their own rather than behaving like a routing menu.
  */
-const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnswer }> = [
+const PRODUCT_QUESTIONS: ReadonlyArray<{
+  match: RegExp;
+  answer: () => PublicAnswer;
+  /**
+   * True for entries that only acknowledge who the visitor is. A role statement is worth
+   * answering warmly on its own, but it is not the point of a message that also names a
+   * problem — "I run a med spa and my staff keeps forgetting callbacks" is a continuity
+   * request. These yield to the routing rules; every other entry here answers a real
+   * question about the product and must keep winning, so that asking whether the AI makes
+   * clinical decisions gets the human-authority answer rather than a route.
+   */
+  statesRoleOnly?: true;
+}> = [
   {
     match: /\b(?:what(?:'s| is)?\s+(?:this|klinikos|zumi)|who are you|what do you do|what does klinikos do|whats going|what(?:'s| is) going on)\b/i,
     answer: () => ({
@@ -71,6 +83,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
   },
   {
     match: /\b(?:i(?:'m| am)|im)\s+(?:a\s+)?(?:doctor|physician|m\.?d\.?)\b/i,
+    statesRoleOnly: true,
     answer: () => ({
       title: "That gives me a much better starting point.",
       body:
@@ -81,6 +94,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
   },
   {
     match: /\b(?:i own|i run|i operate)\s+(?:my\s+|a\s+|the\s+)?(?:clinic|practice|med spa|medical practice)\b/i,
+    statesRoleOnly: true,
     answer: () => ({
       title: "Then we can focus on the operation, not just the software.",
       body:
@@ -91,6 +105,7 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
   },
   {
     match: /\b(?:i(?:'m| am)|im)\s+(?:an?\s+)?(?:nurse practitioner|np|physician assistant|pa|registered nurse|rn|nurse|therapist|injector)\b/i,
+    statesRoleOnly: true,
     answer: () => ({
       title: "I can tailor this around your healthcare role.",
       body:
@@ -149,6 +164,12 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{ match: RegExp; answer: () => PublicAnsw
 export function answerProductQuestion(prompt: string): PublicAnswer | null {
   const hit = PRODUCT_QUESTIONS.find((entry) => entry.match.test(prompt));
   return hit ? hit.answer() : null;
+}
+
+/** Whether the matching product answer is a bare role acknowledgement — see `statesRoleOnly`. */
+export function productAnswerOnlyStatesRole(prompt: string): boolean {
+  const hit = PRODUCT_QUESTIONS.find((entry) => entry.match.test(prompt));
+  return hit?.statesRoleOnly === true;
 }
 
 /**

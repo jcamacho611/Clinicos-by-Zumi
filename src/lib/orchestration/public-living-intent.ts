@@ -2,6 +2,7 @@ import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engin
 
 import {
   answerProductQuestion,
+  productAnswerOnlyStatesRole,
   escalatingFallback,
   looksLikePrivateDataRequest,
   privateDataAnswer,
@@ -289,8 +290,13 @@ export function resolvePublicLivingIntent(
   // Questions about the product itself. These were unmatched by every routing rule,
   // because no rule described the product, so "what is this" and "what can I do" both
   // reached the generic fallback.
+  // A product answer normally wins: these are real questions about Klinikos, and one of
+  // them — whether the AI makes clinical decisions — must never be answered with a route.
+  // The exception is a bare role acknowledgement, which is deferred until the routing
+  // rules have had their turn, so a problem stated alongside the role still gets found.
   const product = answerProductQuestion(prompt);
-  if (product) {
+  const productYieldsToRouting = product !== null && productAnswerOnlyStatesRole(prompt);
+  if (product && !productYieldsToRouting) {
     return {
       kind: product.destination ? "route" : "conversation",
       title: product.title,
@@ -333,6 +339,23 @@ export function resolvePublicLivingIntent(
       assumption: tied || winner.score === 1 ? winner.rule.assumption : null,
       destination: winner.rule.destination,
       confidence: Math.min(0.92, 0.56 + winner.score * 0.14),
+    };
+  }
+
+  // A destination-less product answer — "I run a med spa", "I'm a nurse" — is the right
+  // reply to a bare role statement, but it must not outrank a routable problem stated in
+  // the same breath. "I run a med spa and my staff keeps forgetting callbacks" names a
+  // continuity problem; answering "tell me where time is wasted" ignores what the person
+  // just said and offers nowhere to go. So the role answer is the fallback here, taken
+  // only once the routing rules have found nothing.
+  if (product) {
+    return {
+      kind: "conversation",
+      title: product.title,
+      body: product.body,
+      assumption: null,
+      destination: null,
+      confidence: 0.8,
     };
   }
 
