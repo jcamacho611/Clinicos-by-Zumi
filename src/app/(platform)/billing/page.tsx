@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BillingWorkspaceReal } from "@/components/clinic/billing-workspace-real";
-import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
+import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
+import { getGridMoney } from "@/lib/money/grid-money";
 import { listBillingTruthWorkspace } from "@/lib/repositories/billing-truth-repository";
 import { listPaymentWorkspace } from "@/lib/repositories/payment-repository";
-import { getGridMoney } from "@/lib/money/grid-money";
+import styles from "./billing-black-label.module.css";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -17,5 +18,10 @@ export default async function BillingPage() {
     listPaymentWorkspace(session.organizationId),
     getGridMoney(session),
   ]);
-  return <BillingWorkspaceReal billing={billing} grid={grid} payments={payments} />;
+
+  return (
+    <div className={styles.stage} data-billing-stage="revenue-integrity">
+      <BillingWorkspaceReal billing={billing} grid={grid} payments={payments} />
+    </div>
+  );
 }
