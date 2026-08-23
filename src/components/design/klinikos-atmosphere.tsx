@@ -6,7 +6,6 @@ import { Check, Moon, Palette, Sparkles, Sun, X } from "lucide-react";
 import {
   atmosphereForPreference,
   KLINIKOS_ATMOSPHERE_STORAGE_KEY,
-  klinikosAtmospherePreferences,
   normalizeAtmospherePreference,
   type KlinikosAtmosphere,
   type KlinikosAtmospherePreference,
