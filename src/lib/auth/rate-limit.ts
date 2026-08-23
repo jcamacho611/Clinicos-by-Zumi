@@ -8,6 +8,7 @@ const onboardingAttempts = new Map<string, AttemptWindow>();
 const salesIntakeAttempts = new Map<string, AttemptWindow>();
 const gridEnrollmentAttempts = new Map<string, AttemptWindow>();
 const luxeLeadIntakeAttempts = new Map<string, AttemptWindow>();
+const memberSignupAttempts = new Map<string, AttemptWindow>();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 8;
 const ONBOARDING_WINDOW_MS = 60 * 60 * 1000;
@@ -18,6 +19,8 @@ const GRID_ENROLLMENT_WINDOW_MS = 60 * 60 * 1000;
 const MAX_GRID_ENROLLMENT_ATTEMPTS = 5;
 const LUXE_LEAD_INTAKE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_LUXE_LEAD_INTAKE_ATTEMPTS = 12;
+const MEMBER_SIGNUP_WINDOW_MS = 60 * 60 * 1000;
+const MAX_MEMBER_SIGNUP_ATTEMPTS = 5;
 
 export function checkLoginRateLimit(key: string) {
   const now = Date.now();
@@ -127,5 +130,26 @@ export function recordLuxeLeadIntakeAttempt(key: string) {
   const current = luxeLeadIntakeAttempts.get(key);
   luxeLeadIntakeAttempts.set(key, !current || current.resetAt <= now
     ? { count: 1, resetAt: now + LUXE_LEAD_INTAKE_WINDOW_MS }
+    : { ...current, count: current.count + 1 });
+}
+
+export function checkMemberSignupRateLimit(key: string) {
+  const now = Date.now();
+  const current = memberSignupAttempts.get(key);
+  if (!current || current.resetAt <= now) {
+    memberSignupAttempts.set(key, { count: 0, resetAt: now + MEMBER_SIGNUP_WINDOW_MS });
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+  return {
+    allowed: current.count < MAX_MEMBER_SIGNUP_ATTEMPTS,
+    retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+  };
+}
+
+export function recordMemberSignupAttempt(key: string) {
+  const now = Date.now();
+  const current = memberSignupAttempts.get(key);
+  memberSignupAttempts.set(key, !current || current.resetAt <= now
+    ? { count: 1, resetAt: now + MEMBER_SIGNUP_WINDOW_MS }
     : { ...current, count: current.count + 1 });
 }
