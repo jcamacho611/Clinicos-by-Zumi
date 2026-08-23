@@ -32,6 +32,20 @@ const updateSchema = z.object({
   }
 });
 
+function redactSmsProviderEvidence<T extends {
+  endpoint?: {
+    normalizedPhone?: string | null;
+    verifiedAt?: string | null;
+    verificationSource?: string | null;
+    verificationProviderReference?: string | null;
+  };
+}>(sms: T): T {
+  if (!sms.endpoint) return sms;
+  const { verificationProviderReference: _providerReference, ...safeEndpoint } = sms.endpoint;
+  void _providerReference;
+  return { ...sms, endpoint: safeEndpoint };
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ patientId: string }> }) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -41,7 +55,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ pati
 
   const state = await getPatientSmsState({ organizationId: session.organizationId, patientId });
   if (!state) return NextResponse.json({ error: "Patient not found." }, { status: 404 });
-  return NextResponse.json({ data: state }, { headers: { "Cache-Control": "private, no-store" } });
+  const data = { ...state, sms: redactSmsProviderEvidence(state.sms) };
+  return NextResponse.json({ data }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ patientId: string }> }) {
@@ -78,5 +93,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
     return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ data: result.sms }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json({ data: redactSmsProviderEvidence(result.sms) }, { headers: { "Cache-Control": "private, no-store" } });
 }
