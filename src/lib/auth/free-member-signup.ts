@@ -106,6 +106,19 @@ export async function createFreeMemberAccount(
         personId: person.id,
       }, tx);
 
+      await tx.accountEvent.create({
+        data: {
+          accountId: account.id,
+          eventType: "account.created",
+          sourceType: "protected_entry_signup",
+          sourceReference: entryProof.acceptance.id,
+          metadata: {
+            entryAgreementKey: entryProof.claims.documentKey,
+            entryAgreementVersion: entryProof.claims.documentVersion,
+          },
+        },
+      });
+
       await tx.accountSession.create({
         data: {
           id: sessionId,
