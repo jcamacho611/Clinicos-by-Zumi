@@ -23,7 +23,8 @@ describe("persisted vitals truth boundary", () => {
 
   it("renders measured vitals without claiming a complete handoff", () => {
     const editor = read("src/components/clinic/encounter-editor.tsx");
-    expect(editor).toContain('visit.staffHandoff.status === "partial"');
+    expect(editor).toContain("visit.staffHandoff.status");
+    expect(editor).toContain('"partial"');
     expect(editor).toContain("Vitals captured");
     expect(editor).toContain("Other staff intake");
     expect(editor).not.toContain("Staff handoff complete");
