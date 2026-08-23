@@ -1,5 +1,10 @@
 import { evaluateWorkforceCompletion } from "@/lib/edu/workforce-delivery-evidence";
 
+export const defaultWorkforceCompletionPolicy = {
+  minimumAttendancePercent: 80,
+  requiredKnowledgePairs: 1,
+} as const;
+
 export type WorkforceCompletionReviewInput = {
   minimumAttendancePercent: number;
   scheduledMinutes: number;
