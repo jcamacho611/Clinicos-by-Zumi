@@ -4,12 +4,14 @@ import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
 import { configureTwilioSmsRouting, getTwilioSmsRoutingConfig } from "@/lib/communications/twilio-integration";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
+import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const NO_STORE = PRIVATE_NO_STORE_HEADERS;
 
 const updateSchema = z.object({
   senderPhone: z.string().trim().min(8).max(32),
   messagingServiceSid: z.string().trim().max(80).optional().nullable(),
+  timeZone: z.string().trim().max(80).optional().nullable(),
   inboundEnabled: z.boolean(),
 });
 
@@ -19,8 +21,15 @@ function routingView(current: Awaited<ReturnType<typeof getTwilioSmsRoutingConfi
     configured: Boolean(routing),
     status: current?.integrationStatus ?? "not_configured",
     senderPhone: routing?.senderPhone ?? null,
+    timeZone: routing?.timeZone ?? null,
     inboundEnabled: routing?.inboundEnabled ?? false,
     messagingServiceConfigured: Boolean(routing?.messagingServiceSid),
+    providerRoutingVerified: Boolean(
+      routing?.providerVerifiedAt
+      && routing.providerPhoneNumberSid
+      && routing.providerMessagingServiceSid
+      && routing.providerMessagingServiceSid === routing.messagingServiceSid,
+    ),
     webhookPath: "/api/webhooks/twilio/sms",
   };
 }
@@ -33,7 +42,7 @@ export async function GET(request: Request) {
 
   const current = await getTwilioSmsRoutingConfig(session.organizationId);
   // Do not expose credential environment names, integration record IDs, actor IDs,
-  // configured timestamps, or full Messaging Service identifiers to the browser.
+  // configured timestamps, or full provider SIDs to the browser.
   return NextResponse.json({ data: routingView(current) }, { headers: NO_STORE });
 }
 
@@ -43,6 +52,11 @@ export async function PATCH(request: Request) {
   const denied = await enforceApiPermission(session, "integrations", "manage", { request, resourceId: "twilio:sms-routing" });
   if (denied) return denied;
 
+  const originDecision = evaluateSameOriginMutation(request);
+  if (!originDecision.allowed) {
+    return NextResponse.json({ error: "Cross-origin mutation blocked." }, { status: 403, headers: NO_STORE });
+  }
+
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid SMS routing configuration." }, { status: 400, headers: NO_STORE });
 
@@ -51,12 +65,16 @@ export async function PATCH(request: Request) {
     actorId: session.userId,
     senderPhone: parsed.data.senderPhone,
     messagingServiceSid: parsed.data.messagingServiceSid,
+    timeZone: parsed.data.timeZone,
     inboundEnabled: parsed.data.inboundEnabled,
   });
 
   if (!result.ok) {
     if (result.reason === "sender_already_assigned") {
       return NextResponse.json({ error: "That sender is already assigned to another Klinikos organization." }, { status: 409, headers: NO_STORE });
+    }
+    if (result.reason === "invalid_timezone") {
+      return NextResponse.json({ error: "Choose a valid IANA timezone for recipient-local SMS policy." }, { status: 400, headers: NO_STORE });
     }
     return NextResponse.json({ error: "Invalid SMS routing configuration." }, { status: 400, headers: NO_STORE });
   }
