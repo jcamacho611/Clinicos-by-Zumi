@@ -9,7 +9,7 @@ import { ZUMI_BASELINE_PERMISSION } from "@/features/zumi/schemas";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
-import { zumiAccessibilitySchema, zumiPresenceSchema, zumiSurfaceForPathname } from "@/features/zumi/presence";
+import { normalizeZumiPresence, zumiAccessibilitySchema, zumiPresenceSchema, zumiSurfaceForPathname } from "@/features/zumi/presence";
 import {
   projectTrustedOrchestrationForClient,
   projectWorkspaceIntelligenceForClient,
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
 
   const entitlements = await resolveOrganizationEntitlements(session.organizationId);
   const capability = parsed.data.webResearch === true ? "public_research" : parsed.data.capability;
-  const presence = zumiPresenceSchema.parse(parsed.data.presence ?? {});
+  const presence = normalizeZumiPresence(zumiPresenceSchema.parse(parsed.data.presence ?? {}));
   const accessibility = zumiAccessibilitySchema.parse(parsed.data.accessibility ?? {});
   const workspace = resolveZumiWorkspaceIntelligence(session, presence);
 
