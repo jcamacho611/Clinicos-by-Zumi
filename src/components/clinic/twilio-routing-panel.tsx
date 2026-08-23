@@ -18,6 +18,7 @@ type RoutingView = {
 };
 
 const endpoint = "/api/integrations/twilio/sms-routing";
+const verifyEndpoint = "/api/integrations/twilio/sms-routing/verify";
 
 export function TwilioRoutingPanel({ canManage }: { canManage: boolean }) {
   const [state, setState] = useState<RoutingView | null>(null);
@@ -82,7 +83,7 @@ export function TwilioRoutingPanel({ canManage }: { canManage: boolean }) {
     setError(null);
     setNotice(null);
     try {
-      const response = await fetch(`${endpoint}/verify`, { method: "POST" });
+      const response = await fetch(verifyEndpoint, { method: "POST" });
       const payload = await response.json() as { data?: { providerRoutingVerified?: boolean; productionSendingAuthorized?: boolean }; error?: string };
       if (!response.ok || !payload.data?.providerRoutingVerified) throw new Error(payload.error || "Twilio could not verify this routing configuration.");
       setNotice("Twilio verified sender ownership and Messaging Service membership. Production patient SMS remains separately gated.");
