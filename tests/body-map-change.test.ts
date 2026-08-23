@@ -143,6 +143,23 @@ describe("BodyMap longitudinal clinical change", () => {
     ]);
   });
 
+  it("rejects cross-patient comparison instead of producing clinical deltas", () => {
+    const wrongPatientToday: BodyMapVersion = { ...today, patientId: "patient-2" };
+    expect(() => compareBodyMapVersions(previous, wrongPatientToday)).toThrow("Body map patient mismatch");
+  });
+
+  it("rejects duplicate structured finding keys instead of silently collapsing evidence", () => {
+    const ambiguousToday: BodyMapVersion = {
+      ...today,
+      findings: [
+        today.findings[0],
+        { ...today.findings[0], id: "finding-shoulder-left-duplicate", severity: 7 },
+      ],
+    };
+
+    expect(() => compareBodyMapVersions(previous, ambiguousToday)).toThrow("Duplicate body map finding key");
+  });
+
   it("reports changed functional impact with evidence from both versions", () => {
     const functionImprovedToday: BodyMapVersion = {
       ...today,
