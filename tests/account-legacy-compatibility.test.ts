@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -38,5 +38,13 @@ describe("legacy user to canonical Account compatibility", () => {
     const source = read("src/lib/auth/account-compatibility.ts");
     expect(source).toContain("assertAllActiveLegacyAccountsCompatible");
     expect(source).toContain("throw new Error");
+  });
+
+  it("exposes the compatibility proof as an operator command", () => {
+    expect(existsSync("scripts/verify-universal-account-compatibility.ts")).toBe(true);
+    const script = read("scripts/verify-universal-account-compatibility.ts");
+    expect(script).toContain("verifyAllActiveLegacyAccountCompatibility");
+    expect(script).toContain("process.exitCode = 1");
+    expect(read("package.json")).toContain('"verify:account-compatibility"');
   });
 });
