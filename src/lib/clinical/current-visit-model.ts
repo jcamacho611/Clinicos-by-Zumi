@@ -1,5 +1,6 @@
 import type { PatientVital } from "@/lib/clinical/vital-types";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
+import { buildVitalChangeSet, type VitalChangeState } from "@/lib/clinical/vital-change";
 import type { Encounter, Patient } from "@/lib/types";
 
 export const CURRENT_VISIT_SECTION_ORDER = [
@@ -74,13 +75,14 @@ export interface CurrentVisitCloseState {
 export interface CurrentVisitModel {
   sectionOrder: CurrentVisitSectionKey[];
   patientSnapshot: CurrentVisitPatientSnapshot;
-  change: CurrentVisitUnavailableState;
+  change: VitalChangeState;
   staffHandoff: CurrentVisitStaffHandoffState;
   closeVisit: CurrentVisitCloseState;
 }
 
 export interface CurrentVisitContext {
   vital?: PatientVital | null;
+  previousVital?: PatientVital | null;
   medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
 }
 
@@ -162,10 +164,7 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       provider: patient.provider,
       location: patient.location,
     },
-    change: {
-      status: "not_available",
-      message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
-    },
+    change: buildVitalChangeSet(context.previousVital, context.vital),
     staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation),
     closeVisit: {
       missingRequiredSections,
