@@ -59,6 +59,12 @@ describe("interoperability lifecycle truth", () => {
     expect(resolveInteroperabilityLifecycle({ status: "active", phase: "controlled_production" }).lifecycle).toBe("CONTROLLED_PRODUCTION");
   });
 
+  it("lets explicit lower lifecycle phases outrank a generic active or connected status", () => {
+    expect(resolveInteroperabilityLifecycle({ status: "active", phase: "contract_pending" }).lifecycle).toBe("CONTRACT_PENDING");
+    expect(resolveInteroperabilityLifecycle({ status: "connected", phase: "credentials_pending" }).lifecycle).toBe("CREDENTIALS_PENDING");
+    expect(resolveInteroperabilityLifecycle({ status: "active", phase: "sandbox" }).lifecycle).toBe("SANDBOX");
+  });
+
   it("lets degraded and disabled truth override optimistic phase labels", () => {
     expect(resolveInteroperabilityLifecycle({ status: "degraded", phase: "production_verified", productionEvidenceRef: "evidence/ref" }).lifecycle).toBe("DEGRADED");
     expect(resolveInteroperabilityLifecycle({ status: "disabled", phase: "production_verified", productionEvidenceRef: "evidence/ref" }).lifecycle).toBe("DISABLED");
