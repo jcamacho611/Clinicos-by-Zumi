@@ -4,6 +4,11 @@ import { z } from "zod";
 import { getPortalSession } from "@/lib/auth/portal-session";
 import { getPatientSmsState, recordPatientPhoneVerification } from "@/lib/communications/patient-sms-service";
 import { checkTwilioPhoneVerification, startTwilioPhoneVerification } from "@/lib/communications/twilio";
+import {
+  tenantVariableSpendFundingReady,
+  variableCostRailPolicy,
+  variableEconomicPolicyResolved,
+} from "@/lib/commercial/variable-cost-rail-registry";
 import { db } from "@/lib/db";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
@@ -22,6 +27,15 @@ function maskPhone(value: string | null) {
   return value ? `••• ••• ${value.slice(-4)}` : null;
 }
 
+function phoneVerificationSpendReady() {
+  const policy = variableCostRailPolicy("phone_verification");
+  if (!policy) return false;
+  if (policy.costOwner === "tenant") return tenantVariableSpendFundingReady(policy);
+  return policy.costOwner === "platform"
+    && policy.fundingMode === "platform_budget"
+    && variableEconomicPolicyResolved(policy);
+}
+
 async function currentState(organizationId: string, patientId: string) {
   const state = await getPatientSmsState({ organizationId, patientId });
   if (!state) return null;
@@ -31,7 +45,8 @@ async function currentState(organizationId: string, patientId: string) {
     && endpoint?.verifiedAt
     && endpoint.normalizedPhone === state.normalizedPhone
     && endpoint.verificationSource === "twilio_verify"
-    && endpoint.verificationProviderReference,
+    && endpoint.verificationProviderReference
+    && /^VE[0-9a-fA-F]{32}$/.test(endpoint.verificationProviderReference),
   );
   return {
     hasPhone: Boolean(state.normalizedPhone),
@@ -112,6 +127,18 @@ function originBlocked(request: Request) {
     : NextResponse.json({ error: "Cross-origin mutation blocked." }, { status: 403, headers: NO_STORE });
 }
 
+async function fundingBlockedResponse(input: { organizationId: string; patientId: string; accountId: string }) {
+  await portalAudit({
+    ...input,
+    action: "communications.sms.phone.verification.blocked",
+    metadata: { reason: "verification_funding_not_ready", providerCalled: false, consentGranted: false },
+  });
+  return NextResponse.json(
+    { error: "Phone verification is not available until its funding policy is activated." },
+    { status: 503, headers: NO_STORE },
+  );
+}
+
 export async function GET() {
   const session = await getPortalSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
@@ -128,6 +155,9 @@ export async function POST(request: Request) {
 
   const smsState = await getPatientSmsState({ organizationId: session.organizationId, patientId: session.patientId });
   if (!smsState?.normalizedPhone) return NextResponse.json({ error: "Your clinic does not have a valid phone number on file." }, { status: 400, headers: NO_STORE });
+  if (!phoneVerificationSpendReady()) {
+    return fundingBlockedResponse({ organizationId: session.organizationId, patientId: session.patientId, accountId: session.accountId });
+  }
 
   const reserved = await reserveVerificationAttempt({
     organizationId: session.organizationId,
@@ -175,6 +205,9 @@ export async function PATCH(request: Request) {
 
   const smsState = await getPatientSmsState({ organizationId: session.organizationId, patientId: session.patientId });
   if (!smsState?.normalizedPhone) return NextResponse.json({ error: "Your clinic does not have a valid phone number on file." }, { status: 400, headers: NO_STORE });
+  if (!phoneVerificationSpendReady()) {
+    return fundingBlockedResponse({ organizationId: session.organizationId, patientId: session.patientId, accountId: session.accountId });
+  }
 
   const reserved = await reserveVerificationAttempt({
     organizationId: session.organizationId,
