@@ -134,9 +134,20 @@ export async function getPersonContextForLegacyUser(
   userId: string,
   at = new Date(),
 ): Promise<PersonContext | null> {
+  // Legacy User.organizationId remains the current session tenant authority. Resolve it
+  // first and use it only to anchor this compatibility projection to the matching
+  // backfilled membership; broader memberships remain contextual and cannot switch the
+  // session tenant by query order.
+  const legacyUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+  if (!legacyUser) return null;
+
   const legacyMembership = await db.organizationMembership.findFirst({
     where: {
       legacyUserId: userId,
+      organizationId: legacyUser.organizationId,
       ...buildEffectiveRelationshipWhere(at),
     },
     select: {
