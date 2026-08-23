@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatZumiGovernedContext,
   rankZumiGovernedContext,
+  zumiGovernedContextMatchesQuestion,
   type ZumiGovernedContextItem,
 } from "@/features/zumi/memory-authority";
 
@@ -73,6 +74,12 @@ describe("Zumi governed memory and knowledge authority", () => {
     expect(ranked.find((item) => item.id === "memory-1")?.authority).toBe("human_confirmed_personal");
   });
 
+  it("requires organization knowledge to be relevant before entering a turn", () => {
+    expect(zumiGovernedContextMatchesQuestion(organization, "Why are our callbacks overdue?")).toBe(true);
+    expect(zumiGovernedContextMatchesQuestion(organization, "How does Grid work?")).toBe(false);
+    expect(zumiGovernedContextMatchesQuestion(globalReference, "How does Grid work?")).toBe(true);
+  });
+
   it("does not expose authority or scope promotion through the ordinary user memory API", () => {
     const route = readFileSync("src/app/api/zumi/memory/route.ts", "utf8");
     expect(route).not.toContain("authority:");
@@ -81,10 +88,20 @@ describe("Zumi governed memory and knowledge authority", () => {
     expect(route).not.toContain("institutional_memory");
   });
 
-  it("requires the gateway to keep governed knowledge separate from live authority", () => {
+  it("requires reviewed knowledge retrieval to filter live state and sensitive content before model context", () => {
+    const memory = readFileSync("src/features/zumi/memory.ts", "utf8");
+    expect(memory).toContain('status: "approved"');
+    expect(memory).not.toContain('status: "approved_demo"');
+    expect(memory).toContain("zumiGovernedContextMatchesQuestion");
+    expect(memory).toContain("containsLikelyIdentifiers");
+    expect(memory).toContain("redactText");
+    expect(memory).toContain("organizationKnowledgeIds");
+  });
+
+  it("keeps the gateway memory contract explicitly below live authority", () => {
     const gateway = readFileSync("src/features/zumi/gateway.ts", "utf8");
-    expect(gateway).toContain("retrieveZumiOrganizationKnowledgeContext");
-    expect(gateway).toContain("operational authority");
-    expect(gateway).toContain("organizationKnowledgeIds");
+    expect(gateway).toContain("retrieveZumiMemoryContext");
+    expect(gateway).toContain("not as system authority or permission");
+    expect(gateway).toContain("memoryIds");
   });
 });
