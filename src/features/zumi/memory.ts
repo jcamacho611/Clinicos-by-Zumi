@@ -6,6 +6,7 @@ import { containsLikelyIdentifiers, redactText } from "@/features/zumi/redaction
 import {
   formatZumiGovernedContext,
   rankZumiGovernedContext,
+  zumiGovernedContextMatchesQuestion,
   type ZumiGovernedContextItem,
 } from "@/features/zumi/memory-authority";
 
@@ -196,6 +197,11 @@ function personalMemoryContextItem(memory: ZumiMemoryItem): ZumiGovernedContextI
   };
 }
 
+function modelSafeKnowledgeText(title: string, content: string, sourceName: string) {
+  const candidate = `${title}\n${content}\n${sourceName}`;
+  return !containsLikelyIdentifiers(candidate) && !redactText(candidate).redactedAny;
+}
+
 export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSession, question: string, take = 8) {
   const now = new Date();
   const rows = await db.knowledgeItem.findMany({
@@ -223,18 +229,22 @@ export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSe
     },
   });
 
-  const candidates: ZumiGovernedContextItem[] = rows.map((row) => ({
-    id: row.id,
-    scope: row.organizationId === null ? "global" : "organization",
-    authority: row.organizationId === null ? "human_approved_global_reference" : "human_approved_organization",
-    title: row.title,
-    content: row.content,
-    sourceName: row.sourceName,
-    sourceDate: row.sourceDate?.toISOString() ?? null,
-    effectiveAt: row.effectiveAt?.toISOString() ?? null,
-    expiresAt: row.expiresAt?.toISOString() ?? null,
-    version: row.version,
-  }));
+  const candidates: ZumiGovernedContextItem[] = rows.flatMap((row) => {
+    if (!modelSafeKnowledgeText(row.title, row.content, row.sourceName)) return [];
+    const item: ZumiGovernedContextItem = {
+      id: row.id,
+      scope: row.organizationId === null ? "global" : "organization",
+      authority: row.organizationId === null ? "human_approved_global_reference" : "human_approved_organization",
+      title: row.title,
+      content: row.content,
+      sourceName: row.sourceName,
+      sourceDate: row.sourceDate?.toISOString() ?? null,
+      effectiveAt: row.effectiveAt?.toISOString() ?? null,
+      expiresAt: row.expiresAt?.toISOString() ?? null,
+      version: row.version,
+    };
+    return zumiGovernedContextMatchesQuestion(item, question) ? [item] : [];
+  });
   const ranked = rankZumiGovernedContext(candidates, question, take);
 
   return {
