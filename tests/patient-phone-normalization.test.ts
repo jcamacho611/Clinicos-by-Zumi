@@ -13,9 +13,16 @@ const base = {
 };
 
 describe("patient phone normalization", () => {
-  it("uses one shared normalization primitive across intake and SMS", () => {
-    expect(normalizePatientPhone).toBe(normalizeKlinikosPhone);
+  it("uses one shared nonblank normalization primitive across intake and SMS", () => {
     expect(normalizeSmsPhone).toBe(normalizeKlinikosPhone);
+    for (const value of ["(212) 555-0123", "+44 20 7946 0958", "020 7946 0958"]) {
+      expect(normalizePatientPhone(value)).toBe(normalizeKlinikosPhone(value));
+    }
+  });
+
+  it("preserves the intentional blank-field difference", () => {
+    expect(normalizePatientPhone("")).toBe("");
+    expect(normalizeSmsPhone("")).toBeNull();
   });
 
   it("canonicalizes common US formatting to E.164", () => {
