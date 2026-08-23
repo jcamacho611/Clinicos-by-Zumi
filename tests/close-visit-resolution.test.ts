@@ -60,6 +60,15 @@ describe("Close Visit resolution", () => {
     ]);
   });
 
+  it("does not claim a Draft encounter is ready to close before the governed review transition", () => {
+    const result = buildCloseVisitResolution(inputs({ encounterStatus: "Draft" }));
+
+    expect(result.readiness).toBe("ready");
+    expect(result.canClaimReadyToClose).toBe(false);
+    expect(result.readyForSignature).toBe(false);
+    expect(result.finalClosureComplete).toBe(false);
+  });
+
   it("separates readiness for human signature from final signed closure", () => {
     const unsigned = buildCloseVisitResolution(inputs({ encounterStatus: "Ready for Review" }));
     const signed = buildCloseVisitResolution(inputs({ encounterStatus: "Locked" }));
