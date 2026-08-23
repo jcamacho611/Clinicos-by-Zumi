@@ -4,6 +4,7 @@ export const zumiSurfaces = [
   "platform",
   "intelligence",
   "grid",
+  "education",
   "clinic_portal",
   "provider_portal",
   "patient_portal",
@@ -81,6 +82,9 @@ export function presenceInstruction(input: {
     accessibility.speechOutput ? "The response may be spoken aloud. Use sentence structure that is easy to follow by ear." : "Speech output is not currently requested.",
     accessibility.keyboardFirst ? "The user is operating keyboard-first. Avoid instructions that assume touch or mouse-only interaction." : "No keyboard-first preference was supplied.",
     accessibility.reducedMotion ? "The user prefers reduced motion. Do not rely on animation to communicate state." : "No reduced-motion preference was supplied.",
+    presence.surface === "education"
+      ? "This is Klinikos EDU. Preserve learner agency and instructor authority. Teach, coach, question, and explain; do not certify competence or silently complete assessed work for the learner."
+      : "This is not an education-specific surface.",
     presence.autonomy === "answer_only"
       ? "Do not propose execution as if it will happen. Answer and explain only."
       : presence.autonomy === "prepare_actions"
