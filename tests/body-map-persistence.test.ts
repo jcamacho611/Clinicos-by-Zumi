@@ -83,6 +83,19 @@ describe("BodyMap persistence input", () => {
     expect(validateBodyMapVersionInput(withStage).ok).toBe(false);
   });
 
+  it("fails closed instead of throwing on malformed runtime text and annotations", () => {
+    const malformed = validInput() as unknown as {
+      capturedAt: Date;
+      source: string;
+      findings: Array<Record<string, unknown>>;
+    };
+    malformed.findings[0].functionalImpact = 42;
+    malformed.findings[0].annotations = ["clinician note", 7];
+
+    expect(() => validateBodyMapVersionInput(malformed as unknown as CreateBodyMapVersionInput)).not.toThrow();
+    expect(validateBodyMapVersionInput(malformed as unknown as CreateBodyMapVersionInput).ok).toBe(false);
+  });
+
   it("normalizes valid clinical input without inventing clinical facts", () => {
     const result = validateBodyMapVersionInput(validInput());
     expect(result.ok).toBe(true);
