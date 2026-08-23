@@ -1,14 +1,41 @@
-# Kentucky AI Workforce Readiness EDU Design
+# Workforce AI Readiness EDU Design
 
 ## Goal
 
-Make the existing Klinikos EDU architecture a credible, reusable institutional workforce-training system that is demonstrably capable of supporting the South Central Workforce Development Board Kentucky AI Workforce Readiness Network RFP without rebuilding EDU or weakening existing authority, tenancy, privacy, or clinical boundaries.
+Make the existing Klinikos EDU architecture a credible, reusable institutional workforce-training system that is demonstrably capable of satisfying the South Central Workforce Development Board Kentucky AI Workforce Readiness Network RFP **without turning the public product into a Kentucky-specific build**.
+
+Kentucky is a capture target and first institutional configuration, not the product identity. The public/product experience must remain reusable for workforce boards, colleges, hospitals, employers, training organizations, and future institutional buyers.
+
+## Product / buyer boundary
+
+The public product must use neutral reusable language such as:
+
+- Workforce AI Readiness
+- AI Industry Accelerator
+- AI-Powered Career Readiness
+- Institutional Programs
+- Occupational Pathways
+- Live Instructor Delivery
+- Applied Workforce Simulation
+
+Public EDU navigation, program pages, product copy, and reusable curriculum identifiers must not expose `Kentucky`, `SCWDB`, or buyer-specific procurement language.
+
+Buyer-specific terms may exist only in controlled configuration/capture artifacts such as:
+
+- private proposal documentation;
+- RFP compliance matrices;
+- pricing and IP schedules;
+- internal/customer configuration records;
+- institution-scoped program branding after an actual customer configuration is selected;
+- proposal/demo presets that are not the global public default.
+
+The architecture must support a customer configuring its own institution/program identity without a code fork. The same engine should be capable of serving Kentucky, another workforce board, a university, a hospital, or an employer with different branding, objectives, reporting fields, and pathway selections.
 
 ## Source contract
 
-This design is governed by the SCWDB RFP issued August 14, 2026 and the posted procurement Q&A. The product must support both required services: a 6–8 hour live instructor-led AI Industry Accelerator with Manufacturing, Construction, Logistics, Healthcare, and Business Operations pathways, and a 2–3 hour live instructor-led AI-Powered Career Readiness workshop. Delivery must support live remote and in-person instruction, with the ability to maintain a routine schedule, verify attendance/completion, administer surveys, support reporting, and launch approved services within 30 days after written notice to proceed.
+This design is informed by the SCWDB RFP issued August 14, 2026 and the posted procurement Q&A. Those requirements function as an aggressive acceptance profile for the reusable product. The platform must support both service families described by that buyer: a 6–8 hour live instructor-led AI Industry Accelerator with Manufacturing, Construction, Logistics, Healthcare, and Business Operations pathways, and a 2–3 hour live instructor-led AI-Powered Career Readiness workshop. Delivery must support live remote and in-person instruction, with the ability to maintain a routine schedule, verify attendance/completion, administer surveys, support reporting, and launch approved institutional services rapidly.
 
-The RFP requires hands-on learning, human review, fact-checking, source verification, privacy/confidentiality/cybersecurity, accessibility, participant take-away resources, completion evidence, representative slides/activities/assessments/certificate or badge/instructor guide, monthly reporting, quarterly curriculum review, and participant-level documentation sufficient for invoicing and audit.
+The target acceptance profile requires hands-on learning, human review, fact-checking, source verification, privacy/confidentiality/cybersecurity, accessibility, participant take-away resources, completion evidence, representative slides/activities/assessments/certificate or badge/instructor guide, reporting, curriculum review, and participant-level documentation sufficient for invoicing and audit.
 
 ## Existing architecture to preserve
 
@@ -20,15 +47,17 @@ No second auth system, tenant model, grading authority, certificate authority, o
 
 ### 1. Institutional program layer
 
-Expose existing `EducationProgram` truth as the organizing level above courses/cohorts. Program-level configuration remains additive and reusable. Kentucky is a seeded proposed template, never a hard-coded institution or claim of SCWDB approval.
+Expose existing `EducationProgram` truth as the organizing level above courses/cohorts. Program-level configuration remains additive and reusable. Customer programs are configuration instances, never hard-coded global institutions.
 
-Programs describe delivery modes, occupational pathway, learning objectives, required modules, completion criteria, instructor-review requirements, reporting expectations, participant-access period, accessibility notes, safety boundaries, and certificate language.
+Programs describe institution branding, delivery modes, occupational pathway, learning objectives, required modules, completion criteria, instructor-review requirements, reporting expectations, participant-access period, accessibility notes, safety boundaries, and certificate language.
 
-### 2. Two service families
+### 2. Two reusable service families
 
-`AI Industry Accelerator` is a reusable program family containing five occupational pathway configurations. Healthcare uses the existing Virtual Clinic Lab and current healthcare curriculum packages. Manufacturing, Construction, Logistics, and Business Operations use the same responsible-AI teaching method and fully specified proposal-ready lesson/scenario content while remaining honest about the absence of a specialized simulation engine for those industries.
+`AI Industry Accelerator` is a reusable program family containing five occupational pathway configurations. Healthcare uses the existing Virtual Clinic Lab and current healthcare curriculum packages. Manufacturing, Construction, Logistics, and Business Operations use the same responsible-AI teaching method and fully specified lesson/scenario content without pretending that a dedicated industrial simulation engine exists where one does not.
 
 `AI-Powered Career Readiness` is a separate reusable program family covering ethical AI-supported job search, truthful resume tailoring, applications, professional communication, interview practice, employer research, privacy, verification, employer policy, and human accountability.
+
+These names describe reusable product capabilities. A customer may rebrand the institutional program at configuration time without changing the underlying engine.
 
 ### 3. Common responsible-AI spine
 
@@ -50,7 +79,7 @@ Instructor surfaces should make program/cohort context, roster state, participan
 
 ### 5. Completion and invoicing evidence
 
-Completion is not registration or attendance alone. A proposed configurable completion rule includes required attendance, completion of required activities, required assessments/practical evidence, and instructor approval. Participant-level completion evidence must retain enough provenance for invoicing, grant monitoring, and audit while avoiding unnecessary sensitive data.
+Completion is not registration or attendance alone. A configurable completion rule includes required attendance, completion of required activities, required assessments/practical evidence, and instructor approval. Participant-level completion evidence must retain enough provenance for invoicing, grant monitoring, and audit while avoiding unnecessary sensitive data.
 
 ### 6. Reporting
 
@@ -58,7 +87,7 @@ A program reporting projection should support enrollment, attendance, completion
 
 ### 7. Accessibility
 
-New EDU surfaces must be keyboard operable, semantically structured, reflow/mobile friendly, non-color-dependent, readable at zoom, compatible with reduced motion, and suitable for screen-reader use. Assessment interactions require non-pointer alternatives. Proposal copy may say WCAG 2.2 AA-oriented practices, but must not claim formal conformance or certification without evidence.
+New EDU surfaces must be keyboard operable, semantically structured, reflow/mobile friendly, non-color-dependent, readable at zoom, compatible with reduced motion, and suitable for screen-reader use. Assessment interactions require non-pointer alternatives. Product copy may say WCAG 2.2 AA-oriented practices, but must not claim formal conformance or certification without evidence.
 
 ### 8. Security and privacy
 
@@ -66,7 +95,9 @@ Normal training remains synthetic-data-first. No real patient data is required. 
 
 ### 9. IP boundary
 
-Pre-existing Klinikos EDU code, Virtual Clinic Lab architecture, reusable curriculum methods, assessment structures, platform components, and security/authorization controls remain pre-existing proprietary Klinikos IP. Kentucky-specific configuration/materials are separate deliverables whose license/reuse rights are subject to contract negotiation.
+Pre-existing Klinikos EDU code, Virtual Clinic Lab architecture, reusable curriculum methods, assessment structures, platform components, and security/authorization controls remain pre-existing proprietary Klinikos IP. Customer-specific configuration/materials are separate deliverables whose license/reuse rights are subject to the applicable contract.
+
+This distinction is strategically important: buyers use and configure our platform; they do not become the owner of the reusable Klinikos engine merely because we configure it for their program.
 
 ### 10. Demo journey
 
@@ -78,27 +109,30 @@ The evaluator demo must truthfully show:
 4. Cohort/roster context.
 5. Instructor-led lesson/session.
 6. Participant activity.
-7. Virtual Clinic Lab for healthcare.
+7. Applied role simulation, including Virtual Clinic Lab for healthcare.
 8. An intentionally flawed AI output.
 9. Learner correction and evidence.
 10. Instructor rubric/review.
 11. Completion/reporting evidence.
 12. Certificate of completion with non-licensure disclaimer.
 
-No fake integration, fake Kentucky deployment, fake participant outcome, or fake certification may be shown.
+The default public demo must use neutral institutional demo branding. A buyer-specific demo may apply that buyer's configuration only when intentionally selected. No fake deployment, fake participant outcome, fake integration, or fake certification may be shown.
 
 ## Implementation boundaries
 
 - Preserve current main as source of implementation truth.
 - Reuse existing EDU database models rather than adding a second program/cohort stack.
 - Prefer typed configuration and read projections before schema migration unless persisted state is required for a real workflow.
-- No Kentucky-only code fork.
+- No customer-specific code fork.
+- No buyer name in global/public EDU product copy or route identity.
 - No automated grading authority.
 - No clinical decision training.
 - No real PHI in normal EDU operation.
 - No new paid provider solely for demo polish.
-- No claim that non-healthcare specialized simulations already exist.
+- No claim that specialized simulations exist where they do not.
 
 ## Acceptance criteria
 
-The build is acceptable when a reviewer can navigate from a reusable program surface into all five pathway outlines and Career Readiness; see live-instructor ownership, participant activities, assessment/rubric rules, synthetic-data boundaries, reporting/completion definitions, and proposal-support materials; and when existing EDU permissions/tests/build remain intact. The implementation must be mergeable without overlap-driven damage to unrelated active Clinic, Grid, identity, trust, or network work.
+The build is acceptable when a reviewer can navigate from a **buyer-neutral reusable program surface** into all five pathway outlines and Career Readiness; see live-instructor ownership, participant activities, assessment/rubric rules, synthetic-data boundaries, reporting/completion definitions, and proposal-support capabilities; configure a specific institutional program without forking code; and when existing EDU permissions/tests/build remain intact.
+
+A source-level brand-boundary test must fail if `Kentucky`, `SCWDB`, or other buyer-specific procurement copy is introduced into global public EDU surfaces. Buyer-specific language remains permitted in private/capture documentation and scoped customer configuration.
