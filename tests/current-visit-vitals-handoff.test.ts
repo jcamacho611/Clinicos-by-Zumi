@@ -89,4 +89,36 @@ describe("Current Visit encounter-linked staff handoff", () => {
     const model = buildCurrentVisitModel(patient, encounter, { vital: null });
     expect(model.staffHandoff.status).toBe("not_available");
   });
+
+  it("does not treat an incomplete blood-pressure pair as a captured vital when no other measurement exists", () => {
+    const incompleteBloodPressureVitals: PatientVital[] = [
+      {
+        ...vital,
+        bloodPressureSystolic: 132,
+        bloodPressureDiastolic: null,
+        heartRate: null,
+        temperatureF: null,
+        oxygenPercent: null,
+        weightLbs: null,
+        heightInches: null,
+        bmi: null,
+      },
+      {
+        ...vital,
+        bloodPressureSystolic: null,
+        bloodPressureDiastolic: 84,
+        heartRate: null,
+        temperatureF: null,
+        oxygenPercent: null,
+        weightLbs: null,
+        heightInches: null,
+        bmi: null,
+      },
+    ];
+
+    for (const incompleteVital of incompleteBloodPressureVitals) {
+      const model = buildCurrentVisitModel(patient, encounter, { vital: incompleteVital });
+      expect(model.staffHandoff.status).toBe("not_available");
+    }
+  });
 });
