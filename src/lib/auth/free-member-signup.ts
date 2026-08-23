@@ -58,9 +58,16 @@ export async function createFreeMemberAccount(
       }
 
       // During migration, an old organization-bound User may exist before its Account
-      // backfill is available in the current runtime. Never create a second Person for it.
-      const legacyUser = await tx.user.findUnique({
-        where: { email: input.email },
+      // backfill is available in the current runtime. Match case-insensitively so a
+      // legacy address such as Person@Example.com cannot be duplicated by a normalized
+      // person@example.com signup and create a second Person identity.
+      const legacyUser = await tx.user.findFirst({
+        where: {
+          email: {
+            equals: input.email,
+            mode: "insensitive",
+          },
+        },
         select: { id: true },
       });
       if (legacyUser) {
