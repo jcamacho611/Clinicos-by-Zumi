@@ -54,6 +54,7 @@ async function currentState(organizationId: string, patientId: string) {
     verified,
     verifiedAt: verified ? endpoint?.verifiedAt ?? null : null,
     verificationSource: verified ? endpoint?.verificationSource ?? null : null,
+    fundingReady: phoneVerificationSpendReady(),
   };
 }
 
