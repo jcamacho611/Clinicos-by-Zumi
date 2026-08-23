@@ -100,7 +100,7 @@ function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitMod
         <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Medication reconciliation</p>
         <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold capitalize text-slate-600">{medicationReconciliation.status.replaceAll("_", " ")}</span>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">{medicationReconciliation.medicationCount} medication{medicationReconciliation.medicationCount === 1 ? "" : "s"} reviewed · {medicationReconciliation.discrepancyCount} discrepanc{medicationReconciliation.discrepancyCount === 1 ? "y" : "ies"}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{medicationReconciliation.medicationCount} medication{medicationReconciliation.medicationCount === 1 ? "" : "s"} in reconciliation · {medicationReconciliation.discrepancyCount} discrepanc{medicationReconciliation.discrepancyCount === 1 ? "y" : "ies"}</p>
       {medicationReconciliation.summary && <p className="mt-2 text-[12px] leading-5 text-slate-700">{medicationReconciliation.summary}</p>}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-slate-400">
         <span>Source: {medicationReconciliation.source.replaceAll("_", " ")}</span>
