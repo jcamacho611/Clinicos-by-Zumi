@@ -67,8 +67,12 @@ export interface PersistedBodyMapVersion {
   findings: PersistedBodyMapFinding[];
 }
 
-const CAPTURE_ROLES = new Set(["clinic_owner", "provider", "clinical_staff"]);
-const REVIEW_ROLES = new Set(["clinic_owner", "provider"]);
+// Business ownership and administration are not clinical credentials.
+// This tranche uses the existing provider/clinical_staff role boundary and fails
+// closed until a richer credential/capability authority is explicitly wired.
+const CLINICIAN_AUTHOR_ROLES = new Set(["provider"]);
+const STAFF_AUTHOR_ROLES = new Set(["clinical_staff"]);
+const REVIEW_ROLES = new Set(["provider"]);
 
 const versionInclude = {
   findings: {
@@ -77,7 +81,6 @@ const versionInclude = {
 } as const satisfies Prisma.ClinicalBodyMapVersionInclude;
 
 type VersionRow = Prisma.ClinicalBodyMapVersionGetPayload<{ include: typeof versionInclude }>;
-
 type ScopedActor = { id: string; roleKey: string };
 
 function toPersistedBodyMapVersion(row: VersionRow): PersistedBodyMapVersion {
@@ -164,19 +167,28 @@ function normalizedFindingRows(findings: CreateBodyMapFindingInput[]) {
   });
 }
 
-async function scopedActor(
-  organizationId: string,
-  actorUserId: string,
-  allowedRoles: ReadonlySet<string>,
-): Promise<ScopedActor> {
+async function scopedActor(organizationId: string, actorUserId: string): Promise<ScopedActor> {
   const actor = await db.user.findFirst({
     where: { id: actorUserId, organizationId, status: "active" },
     select: { id: true, roleKey: true },
   });
-  if (!actor?.roleKey || !allowedRoles.has(actor.roleKey)) {
-    throw new Error("Body map actor lacks authorized clinical capability");
+  if (!actor?.roleKey) {
+    throw new Error("Body map actor is outside the active organization scope");
   }
   return { id: actor.id, roleKey: actor.roleKey };
+}
+
+function requireAuthorRole(actor: ScopedActor, sourceType: BodyMapSourceType) {
+  if (sourceType === "staff_entry") {
+    if (!STAFF_AUTHOR_ROLES.has(actor.roleKey)) {
+      throw new Error("Body map staff-entry provenance requires an authorized clinical-staff actor");
+    }
+    return;
+  }
+
+  if (!CLINICIAN_AUTHOR_ROLES.has(actor.roleKey)) {
+    throw new Error("Body map clinician/import provenance requires an authorized provider actor");
+  }
 }
 
 async function assertClinicalScope(input: CreateBodyMapVersionInput) {
@@ -189,18 +201,18 @@ async function assertClinicalScope(input: CreateBodyMapVersionInput) {
       where: { id: input.encounterId, patientId: input.patientId, organizationId: input.organizationId },
       select: { id: true },
     }),
-    scopedActor(input.organizationId, input.createdByUserId, CAPTURE_ROLES),
+    scopedActor(input.organizationId, input.createdByUserId),
   ]);
 
   if (!patient) throw new Error("Body map patient is outside the authorized organization scope");
   if (!encounter) throw new Error("Body map encounter is outside the authorized patient scope");
 
-  const sourceType = input.sourceType ?? (actor.roleKey === "clinical_staff" ? "staff_entry" : "clinician_entry");
-  if (sourceType === "staff_entry" && actor.roleKey !== "clinical_staff") {
-    throw new Error("Body map staff-entry provenance requires a clinical-staff actor");
-  }
-  if (sourceType !== "staff_entry" && actor.roleKey === "clinical_staff") {
-    throw new Error("Clinical staff cannot claim clinician/reviewed-import BodyMap provenance");
+  const sourceType: BodyMapSourceType = input.sourceType
+    ?? (STAFF_AUTHOR_ROLES.has(actor.roleKey) ? "staff_entry" : "clinician_entry");
+  requireAuthorRole(actor, sourceType);
+
+  if (sourceType === "reviewed_import" && !input.sourceReference?.trim()) {
+    throw new Error("Reviewed BodyMap imports require a source reference");
   }
 
   if (input.supersedesVersionId) {
@@ -289,14 +301,17 @@ export async function recordBodyMapReview(input: {
   outcome: "reviewed" | "needs_amendment";
   reason?: string | null;
 }) {
-  const [version] = await Promise.all([
+  const [version, actor] = await Promise.all([
     db.clinicalBodyMapVersion.findFirst({
       where: { id: input.bodyMapVersionId, organizationId: input.organizationId },
       select: { id: true, organizationId: true, patientId: true, encounterId: true },
     }),
-    scopedActor(input.organizationId, input.actorUserId, REVIEW_ROLES),
+    scopedActor(input.organizationId, input.actorUserId),
   ]);
   if (!version) throw new Error("Body map version is outside the authorized organization scope");
+  if (!REVIEW_ROLES.has(actor.roleKey)) {
+    throw new Error("Body map review requires an authorized provider actor");
+  }
 
   return db.clinicalBodyMapEvent.create({
     data: {
