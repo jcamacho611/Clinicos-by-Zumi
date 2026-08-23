@@ -91,10 +91,8 @@ export function resolveInteroperabilityLifecycle(input: InteroperabilityLifecycl
     return projection("UAT", "The integration is in user-acceptance testing and must not be represented as production verified.");
   }
 
-  if (connectedStates.has(status) || connectedPhases.has(phase)) {
-    return projection("CONNECTED", "A connection is represented, but connection state alone is not production verification.");
-  }
-
+  // An explicit lower lifecycle phase is more specific than a generic legacy
+  // `active` / `connected` status and therefore wins to prevent readiness inflation.
   if (sandboxPhases.has(phase)) {
     return projection("SANDBOX", "The integration is limited to sandbox, test, or development evidence.");
   }
@@ -105,6 +103,10 @@ export function resolveInteroperabilityLifecycle(input: InteroperabilityLifecycl
 
   if (contractPhases.has(phase)) {
     return projection("CONTRACT_PENDING", "Contract, BAA, or equivalent external agreement work remains pending.");
+  }
+
+  if (connectedStates.has(status) || connectedPhases.has(phase)) {
+    return projection("CONNECTED", "A connection is represented, but connection state alone is not production verification.");
   }
 
   const statusKnown = knownPlanningStates.has(status);
