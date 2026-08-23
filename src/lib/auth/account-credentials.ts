@@ -17,6 +17,12 @@ export async function authenticateAccountCredentials(
   const account = await findAccountAuthenticationRecordByEmail(emailInput);
   if (!account?.credential || account.status !== "active" || account.person.status !== "active") return null;
 
+  // Phase-2 authority boundary: copied legacy clinic credentials exist only to prove
+  // migration equivalence. They must not participate in the free-member fallback rail
+  // before the separately reviewed account-auth cutover. This also prevents one wrong
+  // clinic password attempt from mutating lock counters in both credential stores.
+  if (account.legacyLinks.length > 0) return null;
+
   const credential = account.credential;
   const now = new Date();
   if (credential.lockedUntil && credential.lockedUntil > now) return null;
