@@ -49,6 +49,16 @@ describe("Klinikos EDU Black Label academy", () => {
     expect(style).toContain(".workspace");
   });
 
+  it("protects legacy dark-authored EDU tables while deep routes converge", () => {
+    expect(style).toContain('class~="bg-white/[.03]"');
+    expect(style).toContain('class~="bg-white/[.04]"');
+    expect(style).toContain('class~="text-white"');
+    expect(style).toContain("background: var(--edu-surface) !important");
+    expect(style).toContain("color: var(--edu-text) !important");
+    expect(style).toContain('class~="text-[10px]"');
+    expect(style).toContain('class~="text-[11px]"');
+  });
+
   it("keeps touched EDU labels above the Black Label micro-text floor", () => {
     expect(shell).not.toContain('text-[11px]');
     expect(shell).not.toContain('text-[10px]');
