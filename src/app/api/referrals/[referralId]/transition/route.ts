@@ -3,6 +3,7 @@ import { can } from "@/lib/auth/rbac";
 import { getClinicSession } from "@/lib/auth/session";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { recordTrustedPathDomainEvent } from "@/lib/orchestration/path-domain-event-bridge";
+import { recordReferralConsultation } from "@/lib/repositories/referral-consultation-repository";
 import { transitionReferral } from "@/lib/repositories/referral-repository";
 
 const pathEventByAction: Partial<Record<string, string>> = {
@@ -19,7 +20,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ ref
   try {
     const { referralId } = await params;
     const body = await request.json() as { action?: string } & Record<string, unknown>;
-    const updated = await transitionReferral(session, referralId, body);
+    const updated = body.action === "consultation_received"
+      ? await recordReferralConsultation(session, referralId, body)
+      : await transitionReferral(session, referralId, body);
     const eventType = body.action ? pathEventByAction[body.action] : null;
     if (eventType) {
       await recordTrustedPathDomainEvent(session, {
