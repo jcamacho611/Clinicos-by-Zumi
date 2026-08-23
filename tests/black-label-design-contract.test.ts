@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { gunzipSync } from "node:zlib";
+import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 const encoded = readFileSync(
-  join(process.cwd(), "docs", "design", "black-label-v2", "Klinikos Browser.dc.html.gz.b64"),
+  join(process.cwd(), "docs", "design", "black-label-v2", "Klinikos Browser.dc.html.br.b64"),
   "utf8",
 ).trim();
-const source = gunzipSync(Buffer.from(encoded, "base64")).toString("utf8");
+const source = brotliDecompressSync(Buffer.from(encoded, "base64")).toString("utf8");
 
 function explicitButtonTargetsBelow44(html: string) {
   const buttons = html.match(/<button\b[^>]*>/g) ?? [];
