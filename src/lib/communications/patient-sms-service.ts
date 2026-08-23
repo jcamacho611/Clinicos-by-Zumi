@@ -123,13 +123,20 @@ export async function recordPatientSmsPermission(input: {
   return { ok: true as const, sms: readSmsPreferences(next) };
 }
 
+/** Record phone possession only from a successful patient-controlled Twilio Verify ceremony. */
 export async function recordPatientPhoneVerification(input: {
   organizationId: string;
   patientId: string;
-  actorId?: string | null;
-  source: string;
+  actorId: string;
+  actorType: "patient";
+  source: "twilio_verify";
+  providerReference: string;
   verifiedAt?: string;
 }) {
+  if (!/^VE[0-9a-fA-F]{32}$/.test(input.providerReference)) {
+    return { ok: false as const, reason: "invalid_provider_evidence" as const };
+  }
+
   const patient = await patientForSms(input.organizationId, input.patientId);
   if (!patient) return { ok: false as const, reason: "patient_not_found" as const };
   const normalizedPhone = patient.phone ? normalizeSmsPhone(patient.phone) : null;
@@ -142,20 +149,28 @@ export async function recordPatientPhoneVerification(input: {
       normalizedPhone,
       verifiedAt: input.verifiedAt ?? new Date().toISOString(),
       verificationSource: input.source,
+      verificationProviderReference: input.providerReference,
     },
   });
 
   await db.$transaction([
-    db.patient.update({ where: { id: patient.id }, data: { communicationPrefs: json(next), updatedBy: input.actorId ?? undefined } }),
+    db.patient.update({ where: { id: patient.id }, data: { communicationPrefs: json(next) } }),
     db.auditLog.create({
       data: {
         organizationId: input.organizationId,
-        actorId: input.actorId ?? null,
-        actorType: input.actorId ? "user" : "system",
+        actorId: input.actorId,
+        actorType: input.actorType,
         action: "communications.sms.phone.verified",
         resourceType: "patient",
         resourceId: patient.id,
-        metadata: { channel: "sms", source: input.source, consentGranted: false },
+        patientId: patient.id,
+        metadata: {
+          channel: "sms",
+          source: input.source,
+          providerReference: input.providerReference,
+          phoneLast4: normalizedPhone.slice(-4),
+          consentGranted: false,
+        },
       },
     }),
   ]);
