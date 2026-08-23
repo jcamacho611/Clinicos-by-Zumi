@@ -1,3 +1,4 @@
+import type { FrozenGeneratedLegalArtifact } from "@/lib/legal/generated/legal-artifacts";
 import type {
   LegalReviewItem,
   LegalReviewResolution,
@@ -44,18 +45,6 @@ export type GeneratedLegalDocumentEvent = {
   evidenceId?: string;
 };
 
-export type FrozenGeneratedLegalArtifact = {
-  organizationId: string;
-  documentId: string;
-  version: number;
-  fileName: string;
-  mimeType: "application/pdf";
-  sha256: string;
-  byteLength: number;
-  storageKey: string;
-  renderedAt: string;
-};
-
 export type VerifiedGeneratedLegalExecutionEvidence = {
   kind: "ESIGN_PROVIDER" | "OPERATOR_VERIFIED_SIGNED_ARTIFACT";
   verified: true;
@@ -83,6 +72,8 @@ export type GeneratedLegalDocument = {
   counselReviewRequired: true;
   productionApproved: false;
 };
+
+export type GeneratedLegalDocumentRecord = GeneratedLegalDocument;
 
 const allowedTransitions: Record<GeneratedLegalDocumentStatus, readonly GeneratedLegalDocumentStatus[]> = {
   NEEDS_REVIEW: ["APPROVED_FOR_SIGNATURE", "VOID"],
