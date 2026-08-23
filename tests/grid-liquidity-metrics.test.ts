@@ -38,6 +38,7 @@ describe("Grid liquidity metrics", () => {
       demandReservationRate: 0.25,
       offerToReservationRate: 1 / 3,
       reservationFulfillmentRate: 1,
+      sourceWindowComplete: true,
     });
   });
 
@@ -85,6 +86,17 @@ describe("Grid liquidity metrics", () => {
     expect(metrics.demandOfferCoverageRate).toBeNull();
   });
 
+  it("marks metrics as bounded when any transaction-board source reaches its query cap", () => {
+    const metrics = computeGridLiquidityMetrics({
+      demands: [{ id: "d1", status: "open" }],
+      offers: [],
+      reservations: [],
+      sourceWindowComplete: false,
+    });
+
+    expect(metrics.sourceWindowComplete).toBe(false);
+  });
+
   it("wires liquidity into the existing Grid transaction board instead of creating a second marketplace data source", () => {
     const repository = read("src/lib/grid/transaction-board-repository.ts");
     const page = read("src/app/(platform)/grid/transactions/page.tsx");
@@ -95,11 +107,13 @@ describe("Grid liquidity metrics", () => {
     expect(repository).toContain("demands");
     expect(repository).toContain("offers");
     expect(repository).toContain("reservations");
+    expect(repository).toContain("sourceWindowComplete");
     expect(repository).not.toContain("GridLiquidityRecord");
     expect(page).toContain("GridLiquiditySummary");
     expect(page).toContain("board.liquidity");
     expect(summary).toContain("Needs getting offers");
     expect(summary).toContain("Still need supply");
+    expect(summary).toContain("bounded transaction-board window");
     expect(summary).not.toContain("liquidity score");
   });
 });
