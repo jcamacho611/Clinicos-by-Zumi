@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatZumiGovernedContext,
   rankZumiGovernedContext,
+  resolveZumiGovernedContextConflicts,
   zumiGovernedContextMatchesQuestion,
   type ZumiGovernedContextItem,
 } from "@/features/zumi/memory-authority";
@@ -80,6 +81,37 @@ describe("Zumi governed memory and knowledge authority", () => {
     expect(zumiGovernedContextMatchesQuestion(globalReference, "How does Grid work?")).toBe(true);
   });
 
+  it("lets organization-approved knowledge override a same-title global reference for that organization", () => {
+    const globalPolicy: ZumiGovernedContextItem = {
+      ...organization,
+      id: "global-policy",
+      scope: "global",
+      authority: "human_approved_global_reference",
+      content: "Escalate callbacks after 48 hours.",
+      version: 1,
+    };
+    const organizationPolicy: ZumiGovernedContextItem = {
+      ...organization,
+      id: "org-policy",
+      content: "Escalate callbacks after 24 hours.",
+      version: 2,
+    };
+
+    expect(resolveZumiGovernedContextConflicts([globalPolicy, organizationPolicy])).toEqual([organizationPolicy]);
+  });
+
+  it("withholds unresolved same-scope contradictions instead of guessing", () => {
+    const first = { ...organization, id: "conflict-1", content: "Escalate after 24 hours." };
+    const second = { ...organization, id: "conflict-2", content: "Escalate after 12 hours." };
+    expect(resolveZumiGovernedContextConflicts([first, second])).toEqual([]);
+  });
+
+  it("deduplicates identical same-scope knowledge by keeping the newest version", () => {
+    const older = { ...organization, id: "same-1", version: 1 };
+    const newer = { ...organization, id: "same-2", version: 4 };
+    expect(resolveZumiGovernedContextConflicts([older, newer])).toEqual([newer]);
+  });
+
   it("does not expose authority or scope promotion through the ordinary user memory API", () => {
     const route = readFileSync("src/app/api/zumi/memory/route.ts", "utf8");
     expect(route).not.toContain("authority:");
@@ -93,6 +125,7 @@ describe("Zumi governed memory and knowledge authority", () => {
     expect(memory).toContain('status: "approved"');
     expect(memory).not.toContain('status: "approved_demo"');
     expect(memory).toContain("zumiGovernedContextMatchesQuestion");
+    expect(memory).toContain("resolveZumiGovernedContextConflicts");
     expect(memory).toContain("containsLikelyIdentifiers");
     expect(memory).toContain("redactText");
     expect(memory).toContain("organizationKnowledgeIds");
