@@ -40,6 +40,8 @@ Conceptual layers:
 - `AccountCredential` — canonical password credential for Account.
 - `AccountSession` — canonical authenticated session independent of organization.
 - `LegacyUserAccountLink` — transitional adapter from Account to an existing organization-bound legacy User.
+- `AccountEvent` — neutral person/account lifecycle evidence when no organization exists.
+- `AccountEntryAcceptanceBinding` — append-only association of exact protected-entry legal evidence to Account + Person.
 - `OrganizationMembership` — actual effective-dated relationship to an organization.
 - `ClinicSession` — a narrowed organization-authorized workspace context derived only when a real active legacy User/membership/organization context exists.
 - `MemberSession` — authenticated person-level free context with no organization authority.
@@ -86,28 +88,53 @@ LegacyUserAccountLink
 - legacyUserId UNIQUE
 - sourceType
 - createdAt
+
+AccountEvent
+- id
+- accountId
+- eventType
+- sourceType
+- sourceReference?
+- metadata?
+- createdAt
+
+AccountEntryAcceptanceBinding
+- id
+- acceptanceId UNIQUE
+- accountId
+- personId
+- documentKey
+- documentVersion
+- documentSha256
+- boundAt
 ```
 
 The compatibility mapping deliberately avoids modifying the legacy `User` model in this tranche.
+
+`AccountEvent` carries no organization id, clinic role, credential state, entitlement, or patient context. It exists so person-level actions can have durable evidence without fabricating tenant audit data.
+
+`AccountEntryAcceptanceBinding` deliberately leaves the original `AccessGateAcceptance` row immutable. The binding table records the exact acceptance id/key/version/hash associated with Account + Person after the original legal evidence is revalidated. This prevents Prisma drift from hidden legacy-model columns and preserves append-oriented legal evidence.
 
 ## Migration/backfill
 
 The forward migration must:
 
-1. create the four additive account tables;
-2. create one Account for every active/backfilled Person that has an effective legacy membership with `legacyUserId`;
+1. create the additive account, credential, session, legacy-link, account-event, and entry-binding tables;
+2. create one Account for every backfilled Person that has the deterministic current legacy membership with `legacyUserId`;
 3. use the existing legacy User email/name for that Account;
 4. create a LegacyUserAccountLink;
 5. copy the existing AuthCredential password hash and reset/lock metadata into AccountCredential;
 6. never invent credentials for users who do not have a legacy AuthCredential;
-7. never delete or mutate legacy AuthCredential/AuthSession rows in this tranche;
-8. preserve exact uniqueness and fail if ambiguous duplicate account/email mappings would be created.
+7. never delete or mutate legacy User/AuthCredential/AuthSession rows in this tranche;
+8. fail if ambiguous normalized email or Person/current-organization mappings would be created;
+9. record a neutral `account.backfilled_from_legacy_user` AccountEvent;
+10. leave historical `access_gate_acceptances` rows unchanged.
 
 Legacy credentials become compatibility evidence after cutover, not an alternate path that can mint broader authority.
 
 ## Session architecture
 
-Use one canonical browser cookie after cutover. The token represents authenticated account identity first, not clinic authority.
+The new account rail uses a separately persisted account cookie during the proof period. The token represents authenticated account identity first, not clinic authority.
 
 Base account claims:
 
@@ -138,23 +165,25 @@ The token verifier returns a discriminated union.
 
 `requireAccountSession()` authorizes authenticated person-level surfaces.
 
-`requireClinicSession()` narrows only a session with a real active organization relationship and legacy User compatibility context.
+`requireAccountClinicSession()` narrows only a session with a real active organization relationship and legacy User compatibility context, revalidates persisted state, and then projects the existing `ClinicSession` shape.
 
-Existing clinic APIs can continue consuming the existing `ClinicSession` shape through a compatibility projector while the codebase migrates incrementally.
+Existing Clinic OS APIs continue using the current `clinicos_session` / `requireClinicSession()` rail in this tranche. Account-session cutover for clinic users is a later focused migration after exact-head verification.
 
-## Authentication cutover
+## Authentication compatibility during this phase
 
-The credential login resolver becomes Account-first.
+Existing clinic login remains first and authoritative:
 
-For existing staff:
+`email/password → legacy AuthCredential → active User + active Organization → current ClinicSession`
 
-`email/password → AccountCredential → Account → LegacyUserAccountLink → active legacy User + org → clinic-capable authenticated session`
+Only when the legacy clinic rail does not authenticate does the login endpoint try Account credentials.
 
-For a new free member:
+The fallback is deliberately restricted to identities that resolve to **member-only** context:
 
-`email/password → AccountCredential → Account → no legacy link → member session`
+`email/password → AccountCredential → Account → no clinic context → MemberSession`
 
-No free member receives a clinic role, organization id, provider authority, Grid professional verification, EDU completion, seller authority, or patient access merely by signing up.
+If Account authentication resolves a clinic-capable identity, the fallback rejects it rather than creating Clinic OS authority. Existing staff continue through the current clinic rail until the separately verified cutover.
+
+This gives free members durable re-login without turning the migration seam into a second path for clinic authorization.
 
 ## Signup
 
@@ -175,23 +204,31 @@ Creation transaction:
 5. create Person;
 6. create Account;
 7. create AccountCredential;
-8. bind the entry acceptance to Account/Person identity evidence through an account-level legal binding event;
-9. create AccountSession;
-10. route to the authenticated Living Home onboarding state.
+8. verify the original acceptance id/key/version/hash and insert one append-only AccountEntryAcceptanceBinding;
+9. append the neutral `account.created` AccountEvent;
+10. create AccountSession;
+11. route to the authenticated Living Home onboarding state.
+
+All writes above occur in the same serializable transaction. If legal binding or session creation fails, Person/Account/Credential/Event creation rolls back.
 
 The free signup transaction creates **no Organization** and **no OrganizationMembership**.
 
 ## Existing gateway compatibility
 
-Gateway v1 PR #263 currently binds entry acceptance to legacy User + Organization after clinic login because that is the highest safe authority available on main.
+Gateway v1 PR #263 currently binds entry acceptance to legacy User + Organization after clinic login because that is the highest safe authority available on its original mainline.
 
-After Account lands, Gateway gets a small convergence update:
+On this stacked Phase 2 branch, the protected-entry airlock is composed with Account signup so the same server-owned accepted-entry token/evidence can be consumed by free signup.
 
-- bind pre-auth entry evidence to Account/Person first;
-- if login resolves a clinic context, also record the applicable organization context without making organization identity part of the baseline contract identity;
-- free signup can therefore bind the same exact entry evidence without inventing organization context.
+Account-level binding is additive and append-only:
 
-This convergence is a later small PR after both stacks are reviewable.
+- the original acceptance row remains unchanged;
+- exact acceptance id/key/version/hash must match current evidence;
+- the acceptance may not already be organization/user bound for the free-account path;
+- one acceptance id can bind to only one Account/Person identity;
+- a legal agreement event records the binding;
+- no organization, role, credential, Grid, EDU, clinical, payment, or patient authority is granted by the binding.
+
+Clinic-context Gateway convergence remains a later focused reconciliation after the Account rail is verified.
 
 ## Patient boundary
 
@@ -233,16 +270,21 @@ Organization creation remains a separate governed action. It may require commerc
 
 ## Security
 
-- same-origin mutation controls on signup/login;
+- same-origin mutation controls on free signup;
 - strong password policy;
 - existing rate-limit concepts extended to Account;
 - no browser-created authority;
 - account session persisted server-side;
 - session invalidation/revocation server-owned;
-- entry evidence required before free signup when gateway enforcement is enabled;
+- entry evidence required before free signup;
 - account email uniqueness and migration ambiguity fail closed;
+- multi-link account identity does not select a tenant by array/query order;
 - clinic context is re-resolved against active persisted authority rather than trusted solely from JWT claims;
-- no PHI in signup/onboarding analytics.
+- free-member login fallback cannot create Clinic OS sessions;
+- original legal acceptance evidence remains immutable during account binding;
+- no PHI in signup/onboarding analytics or AccountEvent metadata.
+
+Email ownership is not claimed merely because an Account row contains an email. `emailVerifiedAt` remains null until a separately governed verification ceremony succeeds. Consequential email-dependent features must not treat an unverified address as verified identity assurance.
 
 ## Rollout
 
@@ -250,16 +292,20 @@ This phase remains stacked behind PR #245 and cannot merge independently.
 
 Rollout order:
 
-1. PR #245 identity foundation lands and migration is verified;
+1. reconcile PR #245 onto current main and re-run its identity migration proof;
 2. account schema migration passes clean production-shape database rehearsal;
 3. existing user backfill count/equality/credential-copy checks pass;
 4. auth/session compatibility tests pass;
-5. controlled existing staff login succeeds through Account and reaches identical organization context;
+5. controlled existing staff login continues to reach identical legacy organization context;
 6. controlled free signup produces Account+Person with zero organizations;
 7. direct member access to Clinic OS fails closed;
-8. member Living Home onboarding succeeds;
-9. Gateway account-level binding convergence lands;
-10. only then expose public `Create free account` broadly.
+8. member logout/re-login returns to member context and never creates clinic authority;
+9. member Living Home onboarding succeeds;
+10. Gateway account-level binding evidence is proven against the exact agreement hash;
+11. exact-head release gates execute on the reconciled branch;
+12. only then expose public `Create free account` broadly.
+
+`KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED` remains blank/off by default until those gates are satisfied.
 
 ## Non-goals
 
@@ -271,4 +317,5 @@ Rollout order:
 - no patient identity merge;
 - no social login/passkey migration yet;
 - no deletion of legacy User/AuthCredential/AuthSession in this tranche;
-- no production rollout claim while CI/release verification is blocked.
+- no claim that email ownership is verified at account creation;
+- no production rollout claim while exact-head release verification is unavailable.
