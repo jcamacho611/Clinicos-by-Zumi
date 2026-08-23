@@ -17,6 +17,7 @@ model Account {
   credential      AccountCredential?
   sessions        AccountSession[]
   legacyLinks     LegacyUserAccountLink[]
+  events          AccountEvent[]
 
   @@index([status])
   @@map("accounts")
@@ -64,4 +65,22 @@ model LegacyUserAccountLink {
 
   @@index([accountId])
   @@map("legacy_user_account_links")
+}
+
+// AccountEvent is neutral account-lifecycle evidence for person-level actions that
+// happen before a real organization/tenant exists. It is not an authorization store,
+// does not carry clinic roles, and must never be used as a substitute for tenant audit.
+model AccountEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  eventType       String
+  sourceType      String
+  sourceReference String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("account_events")
 }
