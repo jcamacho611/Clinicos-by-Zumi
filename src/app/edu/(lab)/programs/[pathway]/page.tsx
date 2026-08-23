@@ -60,6 +60,17 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
           </aside>
         </section>
 
+        <section className="mt-6 border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7" aria-labelledby="zumi-practice-callout">
+          <p className="text-[10px] font-semibold uppercase tracking-[.15em] text-[#efaaa1]">Klinikos Intelligence</p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-3xl">
+              <h2 className="text-lg font-semibold text-[#f8efed]" id="zumi-practice-callout">Practice with Zumi before work is assessed</h2>
+              <p className="mt-2 text-xs leading-6 text-[#a98f8b]">Learners can ask for coaching or critique of an AI output without handing Zumi the authority to complete assessed work. Instructor-assistance mode is separately role-gated and remains draft-only until a person reviews it.</p>
+            </div>
+            <Link className="border border-[#e6817b]/35 bg-[#e6817b]/10 px-4 py-2 text-xs font-semibold text-[#ffd0ca] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href={`/edu/zumi-practice?pathway=${pathway.key}`}>Open Zumi practice →</Link>
+          </div>
+        </section>
+
         <section className="mt-6 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="takeaway-title">
           <h2 className="text-lg font-semibold text-[#f8efed]" id="takeaway-title">Participant take-away</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
