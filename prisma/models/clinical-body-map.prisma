@@ -1,0 +1,66 @@
+model ClinicalBodyMapVersion {
+  id                  String                   @id @default(cuid())
+  organizationId      String
+  patientId           String
+  encounterId         String
+  contextType         String
+  contextId           String
+  capturedAt          DateTime
+  createdByUserId     String
+  sourceType          String                   @default("clinician_entry")
+  sourceReference     String?
+  supersedesVersionId String?                  @unique
+  createdAt           DateTime                 @default(now())
+  findings            ClinicalBodyMapFinding[]
+  events              ClinicalBodyMapEvent[]
+  supersedesVersion   ClinicalBodyMapVersion?  @relation("ClinicalBodyMapSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededBy        ClinicalBodyMapVersion?  @relation("ClinicalBodyMapSupersession")
+
+  @@index([organizationId, patientId, contextType, contextId, capturedAt])
+  @@index([organizationId, encounterId, capturedAt])
+  @@map("clinical_body_map_versions")
+}
+
+model ClinicalBodyMapFinding {
+  id               String                 @id @default(cuid())
+  bodyMapVersionId String
+  findingKey       String
+  bodyRegion       String
+  laterality       String
+  symptom          String
+  severity         Float?
+  severityScale    String?
+  functionalImpact String?
+  annotations      String[]
+  clinicalState    String                 @default("active")
+  resolutionNote   String?
+  createdAt        DateTime               @default(now())
+  bodyMapVersion   ClinicalBodyMapVersion @relation(fields: [bodyMapVersionId], references: [id], onDelete: Restrict)
+  events           ClinicalBodyMapEvent[]
+
+  @@unique([bodyMapVersionId, findingKey])
+  @@index([bodyRegion, laterality, symptom])
+  @@map("clinical_body_map_findings")
+}
+
+model ClinicalBodyMapEvent {
+  id               String                  @id @default(cuid())
+  organizationId   String
+  patientId        String
+  encounterId      String
+  bodyMapVersionId String
+  findingId        String?
+  eventType        String
+  actorUserId      String
+  occurredAt       DateTime                @default(now())
+  reason           String?
+  sourceReference  String?
+  metadata         Json?
+  bodyMapVersion   ClinicalBodyMapVersion  @relation(fields: [bodyMapVersionId], references: [id], onDelete: Restrict)
+  finding          ClinicalBodyMapFinding? @relation(fields: [findingId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, patientId, occurredAt])
+  @@index([bodyMapVersionId, occurredAt])
+  @@index([findingId, occurredAt])
+  @@map("clinical_body_map_events")
+}
