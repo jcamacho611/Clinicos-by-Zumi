@@ -2,10 +2,12 @@ import { AlertOctagon, Check, Clock3, Workflow } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TaskActions } from "@/components/clinic/care-coordination-actions";
 import { TaskCreateAction } from "@/components/clinic/task-create-action";
+import { UniversalObligationSummary } from "@/components/clinic/universal-obligation-summary";
 import { PageIntro, SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
+import type { UniversalObligationWorkspace } from "@/lib/obligations/universal-obligation-repository";
 import type { CareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
 
-export function TasksWorkspaceReal({ workspace }: { workspace: CareCoordinationWorkspace }) {
+export function TasksWorkspaceReal({ workspace, obligations }: { workspace: CareCoordinationWorkspace; obligations: UniversalObligationWorkspace }) {
   const open = workspace.tasks.filter((task) => task.status !== "completed");
   const urgent = open.filter((task) => task.priority === "urgent" || task.riskLevel === "URGENT").length;
   const dueToday = open.filter((task) => task.dueAt && new Date(task.dueAt).toDateString() === new Date().toDateString()).length;
@@ -22,6 +24,7 @@ export function TasksWorkspaceReal({ workspace }: { workspace: CareCoordinationW
       <StatCard accent="sky" detail="Tenant-filtered work queue" icon={<Workflow className="size-4" />} label="Open" value={String(open.length)} />
       <StatCard accent="teal" detail="Completed in this workspace" icon={<Check className="size-4" />} label="Completed" value={String(workspace.tasks.length - open.length)} />
     </div>
+    <UniversalObligationSummary workspace={obligations} />
     <SectionCard title="Team work queue" description="Every transition requires a human note and produces an audit receipt.">
       <div className="divide-y divide-slate-100">
         {workspace.tasks.map((task) => <div className="p-5" key={task.id}>
