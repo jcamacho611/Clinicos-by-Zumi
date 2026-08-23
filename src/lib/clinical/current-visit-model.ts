@@ -98,19 +98,28 @@ function missingRequiredDocumentation(encounter: Encounter) {
   });
 }
 
+function completedMedicationReconciliation(
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
+): CurrentVisitMedicationReconciliation | null {
+  if (!medicationReconciliation) return null;
+  if (medicationReconciliation.status !== "completed") return null;
+  if (!medicationReconciliation.completedAt) return null;
+  return medicationReconciliation;
+}
+
 function buildStaffHandoff(
   vital?: PatientVital | null,
   medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
 ): CurrentVisitStaffHandoffState {
   const hasVital = Boolean(vital && vitalHasMeasurement(vital));
-  const hasMedicationReconciliation = Boolean(medicationReconciliation);
+  const completedReconciliation = completedMedicationReconciliation(medicationReconciliation);
 
-  if (hasVital && vital && hasMedicationReconciliation && medicationReconciliation) {
+  if (hasVital && vital && completedReconciliation) {
     return {
       status: "partial",
       source: "multiple",
       vital,
-      medicationReconciliation,
+      medicationReconciliation: completedReconciliation,
       message: "Vitals and medication reconciliation are attached to this encounter. Other staff intake remains incomplete until encounter-specific screening, symptom, form, delegated-work, or question evidence is actually persisted.",
     };
   }
@@ -124,11 +133,11 @@ function buildStaffHandoff(
     };
   }
 
-  if (hasMedicationReconciliation && medicationReconciliation) {
+  if (completedReconciliation) {
     return {
       status: "partial",
       source: "medication_reconciliation",
-      medicationReconciliation,
+      medicationReconciliation: completedReconciliation,
       message: "Medication reconciliation is attached to this encounter. Other staff intake remains incomplete until encounter-specific vital, screening, symptom, form, delegated-work, or question evidence is actually persisted.",
     };
   }
