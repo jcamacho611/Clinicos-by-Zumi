@@ -1,16 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { buildCloseVisitResolution, type CloseVisitInputs } from "@/lib/clinical/close-visit-resolution";
 
+const notEvaluated = () => ({ state: "not_evaluated" as const, source: null, evidenceRef: null });
+const evaluated = <TState extends string>(state: TState, domain: string) => ({
+  state,
+  source: `${domain}_repository`,
+  evidenceRef: `${domain}:evidence-1`,
+});
+
 function inputs(overrides: Partial<CloseVisitInputs> = {}): CloseVisitInputs {
   return {
     encounterStatus: "Ready for Review",
     missingRequiredDocumentation: [],
     followUp: "Return in four weeks.",
-    coding: "ready",
-    ordersResults: "resolved",
-    aiReview: "not_applicable",
-    attestations: "complete",
-    chargeReadiness: "ready",
+    coding: evaluated("ready" as const, "coding"),
+    ordersResults: evaluated("resolved" as const, "orders-results"),
+    aiReview: evaluated("not_applicable" as const, "ai-review"),
+    attestations: evaluated("complete" as const, "attestations"),
+    chargeReadiness: evaluated("ready" as const, "charge-readiness"),
     ...overrides,
   };
 }
@@ -29,11 +36,11 @@ describe("Close Visit resolution", () => {
 
   it("never treats unevaluated governed domains as complete", () => {
     const result = buildCloseVisitResolution(inputs({
-      coding: "not_evaluated",
-      ordersResults: "not_evaluated",
-      aiReview: "not_evaluated",
-      attestations: "not_evaluated",
-      chargeReadiness: "not_evaluated",
+      coding: notEvaluated(),
+      ordersResults: notEvaluated(),
+      aiReview: notEvaluated(),
+      attestations: notEvaluated(),
+      chargeReadiness: notEvaluated(),
     }));
 
     expect(result.readiness).toBe("not_fully_evaluated");
@@ -44,13 +51,14 @@ describe("Close Visit resolution", () => {
       "Attestations",
       "Charge readiness",
     ]);
+    expect(result.evidence).toEqual([]);
     expect(result.canClaimReadyToClose).toBe(false);
   });
 
   it("surfaces explicit review/attention states rather than flattening them into incomplete documentation", () => {
     const result = buildCloseVisitResolution(inputs({
-      coding: "needs_review",
-      ordersResults: "needs_attention",
+      coding: evaluated("needs_review" as const, "coding"),
+      ordersResults: evaluated("needs_attention" as const, "orders-results"),
     }));
 
     expect(result.readiness).toBe("needs_review");
@@ -58,6 +66,29 @@ describe("Close Visit resolution", () => {
       "Coding requires review",
       "Orders/results require attention",
     ]);
+  });
+
+  it("preserves source provenance for every evaluated downstream close domain", () => {
+    const result = buildCloseVisitResolution(inputs());
+
+    expect(result.evidence).toEqual([
+      { domain: "Coding", source: "coding_repository", evidenceRef: "coding:evidence-1" },
+      { domain: "Orders/results", source: "orders-results_repository", evidenceRef: "orders-results:evidence-1" },
+      { domain: "AI review", source: "ai-review_repository", evidenceRef: "ai-review:evidence-1" },
+      { domain: "Attestations", source: "attestations_repository", evidenceRef: "attestations:evidence-1" },
+      { domain: "Charge readiness", source: "charge-readiness_repository", evidenceRef: "charge-readiness:evidence-1" },
+    ]);
+  });
+
+  it("fails closed when an evaluated state arrives without usable provenance", () => {
+    const result = buildCloseVisitResolution(inputs({
+      ordersResults: { state: "resolved", source: " ", evidenceRef: "" },
+    }));
+
+    expect(result.readiness).toBe("not_fully_evaluated");
+    expect(result.unevaluatedDomains).toContain("Orders/results");
+    expect(result.evidence.some((item) => item.domain === "Orders/results")).toBe(false);
+    expect(result.canClaimReadyToClose).toBe(false);
   });
 
   it("does not claim a Draft encounter is ready to close before the governed review transition", () => {
@@ -85,8 +116,8 @@ describe("Close Visit resolution", () => {
   it("does not let a signed note manufacture completion for unevaluated external domains", () => {
     const result = buildCloseVisitResolution(inputs({
       encounterStatus: "Signed",
-      ordersResults: "not_evaluated",
-      chargeReadiness: "not_evaluated",
+      ordersResults: notEvaluated(),
+      chargeReadiness: notEvaluated(),
     }));
 
     expect(result.noteLocked).toBe(true);
@@ -95,17 +126,18 @@ describe("Close Visit resolution", () => {
     expect(result.canClaimReadyToClose).toBe(false);
   });
 
-  it("accepts explicit not-applicable states without inventing work that is not required", () => {
+  it("accepts explicit not-applicable states only when they carry governed evidence", () => {
     const result = buildCloseVisitResolution(inputs({
-      coding: "not_applicable",
-      ordersResults: "not_applicable",
-      aiReview: "not_applicable",
-      attestations: "not_required",
-      chargeReadiness: "not_applicable",
+      coding: evaluated("not_applicable" as const, "coding"),
+      ordersResults: evaluated("not_applicable" as const, "orders-results"),
+      aiReview: evaluated("not_applicable" as const, "ai-review"),
+      attestations: evaluated("not_required" as const, "attestations"),
+      chargeReadiness: evaluated("not_applicable" as const, "charge-readiness"),
     }));
 
     expect(result.readiness).toBe("ready");
     expect(result.canClaimReadyToClose).toBe(true);
     expect(result.unevaluatedDomains).toEqual([]);
+    expect(result.evidence).toHaveLength(5);
   });
 });
