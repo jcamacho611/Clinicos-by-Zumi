@@ -1,4 +1,10 @@
 export type BodyLaterality = "left" | "right" | "bilateral" | "midline" | "not_applicable";
+
+/**
+ * A comparison-only role assigned when Klinikos composes longitudinal evidence.
+ * It must not be persisted as authoritative clinical state because today's version
+ * can become the previous version on a later encounter.
+ */
 export type BodyMapStage = "initial" | "previous" | "today";
 
 export interface BodyMapFinding {
@@ -6,6 +12,7 @@ export interface BodyMapFinding {
   bodyRegion: string;
   laterality: BodyLaterality;
   symptom: string;
+  /** Normalized symptom severity on a 0-10 scale where higher means worse. */
   severity: number | null;
   functionalImpact: string | null;
   annotations: string[];
@@ -17,6 +24,7 @@ export interface BodyMapVersion {
   encounterId: string;
   capturedAt: string;
   createdByUserId: string;
+  /** Derived comparison-only role. Persistence must derive this at read/composition time. */
   stage: BodyMapStage;
   findings: BodyMapFinding[];
 }
