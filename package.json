@@ -25,6 +25,7 @@
     "verify:release": "node scripts/verify-release.mjs",
     "verify:code": "node scripts/verify-release.mjs --code-only",
     "verify:production": "node scripts/verify-production.mjs",
+    "verify:account-compatibility": "node --conditions=react-server --import tsx scripts/verify-universal-account-compatibility.ts",
     "db:seed:grid-demo": "tsx scripts/seed-grid-demo.ts"
   },
   "dependencies": {
