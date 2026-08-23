@@ -28,6 +28,13 @@ Every persisted version must preserve exact **creator and captured-at provenance
 
 Browser clients receive only the minimum-necessary BodyMap/Change DTO. They never become the authorization boundary.
 
+The pure comparator also fails closed before computing any clinical delta:
+
+- compared versions must belong to the **same patient**; a patient mismatch is rejected rather than compared;
+- each version must contain **unique structured finding keys**; duplicate body-region + laterality + symptom keys are rejected rather than silently collapsed.
+
+These checks prevent a caller bug or ambiguous source record from manufacturing longitudinal clinical truth.
+
 ### Structured clinical identity
 
 A finding is identified structurally by:
@@ -109,7 +116,8 @@ Expected deterministic output:
 - previous -> today: left-shoulder severity unchanged 6 -> 6;
 - previous -> today: dizziness finding added;
 - every delta includes supporting evidence references;
-- no unsupported resolution, laterality, or clinical-change inference.
+- no unsupported resolution, laterality, or clinical-change inference;
+- cross-patient or structurally ambiguous comparisons fail closed.
 
 ## Non-claims
 
