@@ -8,14 +8,32 @@ function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): Body
   return { bodyMapVersionId: version.id, findingId: finding.id };
 }
 
-export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMapVersion): BodyMapDelta[] {
-  if (current.findings.length === 0) return [];
+function indexFindings(version: BodyMapVersion) {
+  const findingsByKey = new Map<string, BodyMapFinding>();
 
-  const previousByKey = new Map(previous.findings.map((finding) => [bodyMapFindingKey(finding), finding]));
+  for (const finding of version.findings) {
+    const key = bodyMapFindingKey(finding);
+    if (findingsByKey.has(key)) {
+      throw new Error(`Duplicate body map finding key: ${key}`);
+    }
+    findingsByKey.set(key, finding);
+  }
+
+  return findingsByKey;
+}
+
+export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMapVersion): BodyMapDelta[] {
+  if (previous.patientId !== current.patientId) {
+    throw new Error("Body map patient mismatch");
+  }
+
+  const previousByKey = indexFindings(previous);
+  const currentByKey = indexFindings(current);
+  if (currentByKey.size === 0) return [];
+
   const deltas: BodyMapDelta[] = [];
 
-  for (const currentFinding of current.findings) {
-    const key = bodyMapFindingKey(currentFinding);
+  for (const [key, currentFinding] of currentByKey) {
     const previousFinding = previousByKey.get(key);
 
     if (!previousFinding) {
