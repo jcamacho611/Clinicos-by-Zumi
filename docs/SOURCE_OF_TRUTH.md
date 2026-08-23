@@ -1,371 +1,144 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-22.1`
-Status: `AUTHORITATIVE`
+Version: `2026-08-22.2`
+Status: `AUTHORITATIVE OPERATING INDEX`
 
-This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+This file is deliberately concise. It identifies current authority; it does not duplicate every specialist canon.
 
-## 1. Current product definition
+## 1. Truth precedence
 
-The master public brand is **Klinikos**. `Clinicos` is legacy technical spelling only. **Zumi is Klinikos Intelligence**, a subsystem, not the parent brand. **Grid** is the generalized healthcare resource/opportunity/capacity exchange. **Klinikos EDU** is first-class.
+When sources conflict, use this order:
 
-Klinikos is the operating and opportunity infrastructure for the healthcare lifecycle. It connects education, careers, clinical operations, patient demand, workforce, facilities, resources, business ownership, networks, transactions, financial truth, and intelligence through one persistent identity and governed ecosystem.
+1. **Current implementation truth** — code, schema, migrations, tests, exact-head CI and independently verified runtime/production evidence.
+2. **This Source of Truth** — current repository-wide operating law and authority map.
+3. **`docs/KLINIKOS_SUPREME_ARCHITECTURE_CANON.md`** — supreme cross-domain product and architecture law.
+4. **`docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`** — accepted professional/research findings, provenance, rationale and cross-domain implications.
+5. **Specialist canons** — detailed domain law where they do not conflict with the Supreme Canon.
+6. **`docs/FEATURE_STATUS.md`** — capability implementation status.
+7. **`docs/EXTERNAL_DEPENDENCY_MATRIX.md`** — external connection, contract, credential and production-integration status.
+8. Journey/recovery/implementation plans.
+9. Historical canons, old prompts, stale estimates and old PR bodies as preserved reasoning only.
 
-It is not reducible to an EHR, CRM, clinic app, staffing marketplace, education product, patient portal, billing product, or AI assistant.
+A longer or older document does not outrank a newer authoritative correction.
 
-The detailed newest ecosystem model is authoritative in `docs/KLINIKOS_ECOSYSTEM_CANON.md`.
+## 2. Product definition
 
-The newest accepted **cross-domain translation of expert, operator, clinical, billing, interface/integration, security, commercial, and implementation knowledge into reusable architecture** is authoritative in `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`. The ledger sits below this Source of Truth and below current implementation/runtime truth, but it outranks older/narrower architecture when it records an explicit newer accepted cross-domain correction. It does not by itself change `FEATURE_STATUS` or external-connection truth.
+**KLINIKOS is one governed healthcare operating ecosystem.**
 
-Specialist law is defined in:
+Klinikos is not reducible to an EHR/EMR, CRM, clinic app, staffing marketplace, LMS, patient portal, billing product, commerce site or AI assistant.
 
-- `docs/GRID_CANON.md`;
-- `docs/ZUMI_CANON.md`;
-- `docs/EDU_CANON.md`;
-- `docs/CLINIC_OS_CANON.md`;
-- `docs/PORTAL_AND_ROLE_CANON.md`;
-- `docs/FINANCIAL_OS_CANON.md`;
-- `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` for repository-wide client/server confidentiality, proprietary-logic, and browser-disclosure law;
-- `docs/KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` for Assurance / Rules & Evidence / Quality Guardian / Expert Grid specialist direction when present on the active candidate branch.
+**Zumi is Klinikos Intelligence.** It is intelligence/orchestration, never identity, clinical, credential, payment, legal or security authority.
 
-Repository-history and recovery decisions are recorded in `docs/BRANCH_LEDGER.md`; roadmap state is recorded in `docs/RECOVERY_AND_COMPLETION_ROADMAP.md`.
+**Grid is the universal healthcare relationship/resource/capacity/opportunity/transaction network.** Its user language is **I NEED / I HAVE**.
 
-## 2. Wiring law
+**Klinikos EDU** is the education/simulation/competency-evidence/career engine and does not grant professional authority.
 
-In Klinikos, wiring does **not** merely mean links or API calls.
+**Clinic OS** is the healthcare-organization operating engine. **Current Visit** is the provider-facing clinical convergence experience.
 
-The required chain is:
+## 3. Permanent architecture
 
-`VISIBLE UI → USER ACTION → IDENTITY / ACTIVE CONTEXT → INTENT → ROUTE → AUTHORIZATION / ELIGIBILITY → RELEVANT ENGINE(S) → REAL DATA / WORKFLOW → PERSISTENCE / EVENT → TRUTHFUL RESULT → AUDIT / FINANCIAL STATE WHEN REQUIRED → NEXT USEFUL ROUTE`
+Klinikos converges on:
 
-A feature is not wired if a consequential part of that chain is fake, disconnected, unauthorized, non-persistent when persistence is required, or unable to produce a truthful next step.
+**ONE REPO · ONE SHARED SUBSTRATE · ONE IDENTITY FABRIC · ONE AUTHORIZATION FOUNDATION · ONE EVENT FOUNDATION · ONE AUDIT FOUNDATION · ONE FINANCIAL TRUTH · ONE HEALTHCARE RELATIONSHIP GRAPH · MANY CONTEXTUAL EXPERIENCES.**
 
-Pages are implementation surfaces. **Routes are the product journeys.** Klinikos Intelligence should reason about current state, desired state, missing requirements, available routes, authorized actions and next best step rather than merely choosing a URL.
+Migration follows:
 
-For confidential/proprietary execution, the implementation boundary is additionally:
+`PRESERVE → UNDERSTAND → ADAPT → HARDEN → GENERALIZE → EXTEND`
+
+No big-bang rewrite. No second Grid, Zumi, finance system, clinical record, authorization foundation or customer-specific fork.
+
+## 4. Authority and privacy
+
+Consequential authority is server-side and context-aware. A generic role label, UI state, Grid profile, EDU evidence, uploaded credential, AI recommendation, owner title or payment status never widens authorization by itself.
+
+The browser is an inspectable disclosure environment.
 
 `BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY PRESENTATION DTO → BROWSER`
 
-The browser receives approved operational truth and permitted actions, not the confidential machinery used to derive them.
+Anything that must remain confidential remains server-side.
 
-## 3. Persistent identity and lifecycle
+Patient identity remains protected and never automatically becomes public/Grid-visible.
 
-One identity may hold multiple roles and evolve through the ecosystem.
+## 5. Clinical truth
 
-Representative lifecycle:
+Current Visit remains:
 
-`STUDENT → EDU → TRAINING → COMPETENCY → PLACEMENT → CREDENTIAL → GRID ELIGIBILITY → WORK → EXPERIENCE → REPUTATION → INDEPENDENT PRACTICE → CLINIC OWNER → CLINIC OS → MULTI-SITE / NETWORK → EDUCATOR / EMPLOYER / PRECEPTOR`
+`Patient Snapshot → What Changed → Staff Handoff → Today → Clinical → Assessment & Plan → Orders & Results → Documentation & Coding → Close Visit`
 
-Organizations also evolve:
+Longitudinal change is evidence-derived:
 
-`NEW PRACTICE → CLINIC OS → OPERATIONAL MATURITY → REVENUE OPTIMIZATION → GRID PARTICIPATION → MORE CAPACITY → SECOND LOCATION → MULTI-SITE → NETWORK → ENTERPRISE`
+`INITIAL → PRIOR → CURRENT`
 
-The UI adapts to active role, organization, task and permissions without requiring separate identities or disconnected products.
+AI may summarize deterministic clinical change; it may not invent it.
 
-Profession, assignment, effective dates, capability, credential/privilege state, location, purpose, supervision/delegation and other governed context may further constrain authority. A generic `provider` label is never sufficient to grant regulated capability.
+Signed/final clinical history remains attributable and versioned. External completion is never inferred from internal UI state.
 
-## 4. Core ecosystem engines
+## 6. Financial and transaction truth
 
-Major engines include:
+Shared economic semantics remain evidence-based:
 
-- Living Home
-- Klinikos Intelligence / Zumi
-- Clinic OS
-- Grid
-- EDU
-- Care
-- Billing / Financial OS
-- Insights
-- Network / Capacity
-- Identity / Organizations / Roles
-- Credentials / Eligibility / Trust
-- Events / Audit / Provenance
+`AGREEMENT / COMMITMENT → FULFILLMENT CONDITION → FINANCIAL OBLIGATION → VERIFIED PAYMENT EVIDENCE → PAYABLE / PAYOUT EVIDENCE → RECONCILIATION`
 
-These engines must interoperate through shared domain truth, adapters, events and governed routes rather than becoming isolated application silos.
+Use integer cents. **REDIRECT ≠ PAYMENT.** Obligation ≠ payout. Payout request ≠ settlement.
 
-The shared substrate must progressively support profession/authority, multi-location assignments, configuration, patient/coverage/financial-case separation, scheduling/capacity, clinical change, evidence, orders/results, integration reconciliation, terminology, revenue integrity, learning/competency and memory/knowledge without rebuilding those concerns independently inside each engine.
+Pricing is a versioned server-owned policy fabric. There is no universal Grid take rate.
 
-## 5. Living Home
+## 7. Frontend law
 
-Living Home is the primary adaptive operating surface, not a marketing page, static dashboard, category wizard or module catalog.
+**BACKEND COMPLEXITY MAY INCREASE. FRONTEND PERCEIVED COMPLEXITY MUST DECREASE.**
 
-The core question is:
+Living Home is the adaptive front door and increasingly asks:
 
-> **WHAT NEEDS TO HAPPEN?**
+> **WHAT DO YOU NEED?**
 
-When the user submits ordinary language:
+The UI adapts to identity, active organization/location, role, task, permissions and real state. Users should not hunt through module architecture to accomplish ordinary work.
 
-1. keep the user on the same continuous screen when possible;
-2. place the request into the active thread;
-3. begin truthful intelligence/interface progress;
-4. infer the objective without forcing category selection;
-5. retrieve only authorized context;
-6. resolve the relevant route(s)/engine(s);
-7. ask a short clarification only if a consequential fact truly blocks the next governed step;
-8. display useful data, action or workspace directly on the surface;
-9. keep the composer available;
-10. provide a deeper workspace only when it adds value.
+System/Light/Dark are presentation preferences only and never change authority.
 
-Dynamic workspaces may host/adapt Patients, Clinic OS operations, Grid, Care, Billing, Insights, EDU, Network, commercial activation and credential/setup states.
+## 8. External integration truth
 
-## 6. Reference-locked design truth
+Internal models are Klinikos domain truth; vendors and standards live behind adapters.
 
-The approved cinematic Klinikos reference is the authoritative design destination for the converted experience. It is not a mood board.
+Never call an integration live because code, credentials, an adapter or sandbox exists.
 
-The uploaded design package authority is recorded in `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`. The detailed experience law is in `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+External lifecycle may include:
 
-### Visual system
+`PLANNED → CONTRACT_PENDING → CREDENTIALS_PENDING → SANDBOX → CONNECTED → UAT → CONTROLLED_PRODUCTION → PRODUCTION_VERIFIED`
 
-Use:
+plus `DEGRADED`, `DISABLED` and `BLOCKED`.
 
-- obsidian / near-black foundations;
-- black cherry and deep oxblood structural surfaces;
-- warm ivory typography;
-- dusty rose, muted coral, ember pink and rose-gray accents;
-- the approved cinematic rose as the Living Home visual world;
-- restrained intelligence/state glow;
-- editorial composition and generous negative space.
+## 9. Required specialist authorities
 
-Converted product surfaces must not drift back to cyan/teal-dominant generic SaaS styling.
+Read as applicable:
 
-### Approved production assets
+- `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md`
+- `docs/GRID_CANON.md`
+- `docs/ZUMI_CANON.md`
+- `docs/EDU_CANON.md`
+- `docs/CLINIC_OS_CANON.md`
+- `docs/PORTAL_AND_ROLE_CANON.md`
+- `docs/FINANCIAL_OS_CANON.md`
+- `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`
+- `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`
+- current design/wiring canons
+- Assurance/Rules & Evidence specialist canon where present on the active branch
 
-Where present, use:
+The Supreme Canon defines how these domains fit together and wins when cross-domain architecture conflicts.
 
-- `public/klinikos-orbital-k-transparent.png`
-- `public/klinikos-wordmark-transparent.png`
-- `public/klinikos-rose-wide-transparent.png`
-- `public/klinikos-rose-centered-transparent.png`
+## 10. Status truth
 
-Do not substitute opaque black-box images, generic text wordmarks, CSS roses, screenshot slices or unrelated approximations when the approved asset exists.
+Capability labels belong in `docs/FEATURE_STATUS.md` and do not change merely because architecture expands.
 
-## 7. Functional reference shell
+External rail status belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md` and cannot be upgraded without external evidence.
 
-Primary header destinations:
+Manual-but-truthful work is allowed. Fake automation, fake payment, fake verification, fake payout, fake external completion, fake Grid inventory or fabricated clinical truth are prohibited.
 
-**DASHBOARDS · GRID · CARE · EDU · INTELLIGENCE · PROFILE/AUTH**
+## 11. Engineering completion law
 
-Operating rail:
+For material implementation:
 
-**PATIENTS · GRID · CARE · BILLING · INSIGHTS**
+`FETCH CURRENT MAIN → INSPECT OPEN/OVERLAPPING WORK → TEST/IMPLEMENT ON ISOLATED BRANCH → REFRESH MAIN → REVIEW DIFF → VERIFY EXACT HEAD → MERGE EXACT EXPECTED SHA WHEN AUTHORIZED → VERIFY NEW MAIN → VERIFY PRODUCTION SEPARATELY`
 
-Intelligence rail:
+If GitHub Actions fails before checkout, record infrastructure failure truthfully. It is neither passing evidence nor a code-test failure.
 
-**LISTENING → UNDERSTANDING → CONNECTING → PREPARING → READY**
-
-CONNECTING only appears for real retrieval/tool/connector work. READY only appears when a usable result exists. Waiting, blocked, review-required and error states must be truthful when applicable.
-
-Operational cards:
-
-**TODAY'S PRIORITIES · REVENUE OPPORTUNITIES · TEAM WORKFLOW · GRID NETWORK**
-
-These use real data or truthful empty/unavailable state only. Never invent counts, revenue, distance, supply, bookings or completion.
-
-## 8. Cross-engine ecosystem law
-
-Clinic OS can create governed Grid demand/supply from staffing gaps, unused capacity, referral leakage, service needs and other supported operational signals.
-
-Grid outcomes can return to Clinic OS as booking, assignment, operational follow-up, fulfillment, issue and financial/audit state.
-
-EDU can produce competency/placement/credential evidence that contributes to future eligibility only when policy permits.
-
-Patient/Care demand may use Grid capacity only with appropriate permission, progressive disclosure and minimum-necessary privacy.
-
-Insights consumes operational truth and should produce useful next routes, not dashboard theater.
-
-Cross-domain expert insight that changes one engine must be checked against the others through the Knowledge-to-Architecture Ledger rather than implemented as a local one-off assumption.
-
-## 9. Grid law
-
-Grid is the healthcare resource orchestration network for people, work, capacity, space, permitted equipment/resources, services, organizations, education capacity, referrals and future policy-governed resource classes.
-
-Universal expression:
-
-**I NEED** → demand
-**I HAVE** → resource/supply
-
-Grid may compose multi-party opportunities rather than assuming buyer/seller or employer/worker sides.
-
-Core concepts include participant, capability, resource, demand, requirement/policy, availability, match, offer, agreement, reservation/booking, financial obligation, fulfillment, dispute, incident and reputation/evidence.
-
-Hard eligibility precedes ranking. AI may interpret intent and explain matches; deterministic policy decides eligibility. No invented marketplace inventory, distances or fake empty-market markers. Browser geolocation requires explicit user action. Public coordinates remain precision-reduced while governed exact coordinates stay server-side.
-
-Internal Grid ranking weights, anti-gaming logic, trust/risk heuristics, proprietary matching rules, hidden marketplace economics, and other confidential competitive logic stay server-side by default. The browser receives only the minimum approved match/result projection.
-
-## 10. Financial and payment law
-
-Economic routes should converge on shared financial truth:
-
-`OPPORTUNITY → AGREEMENT → BOOKING / RESERVATION → FULFILLMENT → FINANCIAL OBLIGATION → PAYMENT EVIDENCE → PAYOUT / RECONCILIATION → REPORTING`
-
-Use integer cents for financial state.
-
-**REDIRECT ≠ PAYMENT.**
-
-Browser redirect/return state does **not** establish payment.
-
-Payment evidence is recorded separately from entitlement.
-
-Browser return state cannot create entitlement, settlement or payout truth.
-
-Private pricing formulas, margin logic, settlement rules, fraud/risk signals, and internal commercial economics are server-confidential unless intentionally published.
-
-## 11. Pricing and monetization law
-
-The current detailed commercial canon is `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
-
-Primary revenue routes:
-
-- paid operational analysis / workflow review;
-- paid implementation / onboarding;
-- recurring Clinic OS;
-- Grid professional/organization/transaction economics where lawful;
-- EDU individual/institutional economics;
-- multi-location/network/enterprise contracts;
-- customer-funded variable add-ons and external usage.
-
-Customer-funded variable usage should generally follow:
-
-`CUSTOMER PAYMENT / PLAN → ENTITLEMENT → INCLUDED ALLOWANCE → EXTERNAL USAGE → COST LEDGER → OVERAGE / LIMIT → MARGIN`
-
-Do not finance unbounded AI, messaging, voice, maps, verification or external API usage before customer revenue exists.
-
-Historical planning estimates are not production cost truth. Measure real vendor bills and real customer usage.
-
-Known current Operational Audit checkout destination:
-
-`https://f7b959c2-9748-4f7e-9247-7bea69624c5f.paylinks.godaddy.com/`
-
-The app must preserve workflow context around checkout and still verify payment evidence separately.
-
-## 12. Klinikos Intelligence / Zumi law
-
-Zumi may understand, retrieve authorized context, research safe public information, identify unknowns, compare, summarize, prepare and coordinate routes.
-
-It is not authority for authentication, tenant access, RBAC, clinical release, credential eligibility, payment, transaction state or safety.
-
-PHI/sensitive redaction must occur before unrestricted external planners/tools/providers receive content. Public web research is not a private-data destination.
-
-Zumi hidden prompts, system directives, security/policy prompts, proprietary orchestration logic, internal reasoning, private canonical context, connector credentials, and other confidential implementation details are server-confidential. Client-visible Zumi output must be a safe projection of answer, sources, permitted next actions, blockers, and user-relevant state.
-
-Zumi should progressively reason over structured Klinikos truth — authority, evidence, clinical change, execution state, financial state, Grid state, learning/competency and governed memory — rather than inventing domain truth inside a model response.
-
-## 13. Product truth, security, confidentiality, and trade-secret boundary
-
-No design or ecosystem convergence may weaken:
-
-- authentication;
-- tenant isolation;
-- RBAC/resource authorization;
-- minimum necessary access;
-- patient release rules;
-- credential/eligibility gates;
-- payment/settlement truth;
-- auditability/provenance;
-- safety holds;
-- clinical governance;
-- same-origin redirect rules;
-- Grid location privacy;
-- AI egress controls;
-- server/client confidentiality boundaries;
-- proprietary implementation secrecy.
-
-`docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` is authoritative repository-wide law.
-
-Assume everything delivered to the browser can be inspected and retained. Minification, obfuscation, hidden elements, disabled UI, client feature flags, private routes, and a private repository are not secrecy controls.
-
-If information must remain confidential, it remains server-side. This includes, unless explicitly reviewed for disclosure:
-
-- secrets/credentials;
-- Zumi hidden prompts and private orchestration;
-- proprietary rules/evidence logic;
-- Grid/Expert Grid ranking and trust algorithms;
-- risk/anti-abuse/fraud heuristics;
-- private pricing/margin logic;
-- unreleased strategy/roadmap/business data;
-- privileged security and infrastructure details;
-- unnecessary PHI/PII and private operational state.
-
-The browser receives deliberate minimum-necessary DTO/view-model projections, never broad raw database/domain objects by default. Values passed from Server Components into Client Components count as browser disclosure. API responses, static assets, source maps, public env values, client logs, browser storage, telemetry, and errors are all disclosure surfaces.
-
-Frontend authorization is UX only. Server-side repositories/APIs enforce identity, tenant, role, permission, purpose, resource scope, and minimum necessary access.
-
-Demo data is acceptable only in explicit demo/sandbox contexts. Production surfaces prefer real state and truthful empty states.
-
-## 14. Manual but truthful MVP law
-
-Allowed:
-
-- manual payment reconciliation;
-- manual credential review;
-- human dispute review;
-- prepared communication when connector unavailable;
-- manual implementation assistance;
-- manual settlement evidence where clearly represented.
-
-Not allowed:
-
-- fake payment;
-- fake message delivery;
-- fake verification;
-- fake payout;
-- fake external API result;
-- fake Grid supply/distance/availability.
-
-## 15. Engineering law
-
-Canonical public identity is `https://klinikos.io`. Render hostnames are infrastructure only.
-
-When instructed to build, wire, finish or complete, the default stopping condition is **merge-ready**: current with main, implementation complete, meaningful tests, type/lint/test/journey/build gates green, relevant browser/mobile QA, review-clean and mergeable. When explicitly authorized, merge the exact verified head.
-
-Concurrent work follows:
-
-`FETCH → COMPARE → INSPECT → PRESERVE → RE-ANCHOR → TEST → REVIEW → MERGE`
-
-Do not force stale branches or destroy concurrent work.
-
-Material frontend/API/security changes additionally require, as applicable, response-minimization review, client/server DTO review, tenant/RBAC checks, cache/no-store verification, error sanitization, secret/public-env review, browser bundle/payload inspection, and third-party telemetry review.
-
-## 16. Migration/architecture law
-
-Do not big-bang rewrite the repository to aesthetically match the target architecture.
-
-Prefer adapters, shared services, policy modules, route definitions, events, composition and gradual migration. Preserve working models and generalize only where the ecosystem requires it.
-
-Do not move confidential server authority into the frontend merely to simplify a refactor.
-
-Every material expert/product insight that could change multiple engines should first be translated through `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` so shared primitives and dependencies are identified before local implementation.
-
-## 17. Acceptance gate
-
-The newest Klinikos vision is not complete merely because the homepage looks right or each module works alone. It is complete only when representative cross-engine journeys work truthfully, including:
-
-- Clinic need → Grid route → eligible next action;
-- EDU requirement → placement/capacity route;
-- Clinic/Billing/Insights → supported revenue recovery;
-- Grid fulfillment → operational + financial + audit consequences;
-- identity/role/context changes → correct UI and permissions;
-- Tenant A never receives Tenant B data through cross-engine routes;
-- mobile, keyboard and accessibility behavior remain sound;
-- external disconnected states remain truthful;
-- confidential proprietary logic is not unnecessarily delivered to the browser;
-- sensitive browser-visible payloads are minimum necessary;
-- CI/build/journey/browser evidence passes.
-
-As these systems mature, representative acceptance should also prove profession/location/capability authority, patient/financial-case separation, scheduling eligibility/capacity, versioned clinical change, order/result correction and reconciliation, credential-readiness effects, and reference-environment negative-access cases.
-
-## 18. Business test
-
-Before adding unrelated scope ask:
-
-> If a real clinic owner arrived today with money ready, can they understand Klinikos, buy truthfully, activate, enter the new experience, accomplish useful work, and know what is real versus pending?
-
-If no, fix the first failure before expanding scope.
-
-## 19. North star
-
-**Simple frontend. Powerful connected backend. One persistent identity. Many roles. Many routes. Shared governance. Shared financial truth. Shared trust. Shared events. Confidential intelligence stays server-side.**
-
-Living Home asks what needs to happen. Klinikos coordinates the ecosystem underneath and returns only the approved result necessary for the user's authorized experience.
-
-Important subject-matter learning is a product asset. It must be preserved as sourced, versioned, cross-domain architecture in the Knowledge-to-Architecture Ledger and then terminate in code, schema, configuration, UX, test, policy, commercial action, or an explicit defer/reject decision — never disappear as an orphan recommendation.
+Canonical public domain: `https://klinikos.io`. Infrastructure hostnames are not the product identity.
