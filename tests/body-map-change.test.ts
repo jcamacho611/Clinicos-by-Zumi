@@ -134,16 +134,13 @@ describe("BodyMap longitudinal clinical change", () => {
       findings: [today.findings[1]],
     };
 
-    const deltas = compareBodyMapVersions(previous, dizzinessOnlyToday);
-
-    expect(deltas).toEqual([
+    expect(compareBodyMapVersions(previous, dizzinessOnlyToday)).toEqual([
       expect.objectContaining({
         bodyRegion: "head",
         symptom: "dizziness",
         kind: "finding_added",
       }),
     ]);
-    expect(deltas.some((delta) => delta.kind === "finding_removed")).toBe(false);
   });
 
   it("reports changed functional impact with evidence from both versions", () => {
