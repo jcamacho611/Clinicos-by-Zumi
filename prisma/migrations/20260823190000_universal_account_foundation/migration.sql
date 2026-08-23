@@ -57,6 +57,18 @@ CREATE TABLE "legacy_user_account_links" (
     CONSTRAINT "legacy_user_account_links_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "account_events" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "eventType" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "sourceReference" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "account_events_pkey" PRIMARY KEY ("id")
+);
+
 CREATE UNIQUE INDEX "accounts_personId_key" ON "accounts"("personId");
 CREATE UNIQUE INDEX "accounts_primaryEmail_key" ON "accounts"("primaryEmail");
 CREATE INDEX "accounts_status_idx" ON "accounts"("status");
@@ -67,6 +79,10 @@ CREATE UNIQUE INDEX "legacy_user_account_links_legacyUserId_key"
     ON "legacy_user_account_links"("legacyUserId");
 CREATE INDEX "legacy_user_account_links_accountId_idx"
     ON "legacy_user_account_links"("accountId");
+CREATE INDEX "account_events_accountId_createdAt_idx"
+    ON "account_events"("accountId", "createdAt");
+CREATE INDEX "account_events_eventType_createdAt_idx"
+    ON "account_events"("eventType", "createdAt");
 
 ALTER TABLE "accounts"
     ADD CONSTRAINT "accounts_personId_fkey"
@@ -87,6 +103,11 @@ ALTER TABLE "legacy_user_account_links"
     ADD CONSTRAINT "legacy_user_account_links_accountId_fkey"
     FOREIGN KEY ("accountId") REFERENCES "accounts"("id")
     ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "account_events"
+    ADD CONSTRAINT "account_events_accountId_fkey"
+    FOREIGN KEY ("accountId") REFERENCES "accounts"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- Fail closed if a legacy user does not resolve to exactly one Person membership in
 -- its current authoritative User.organizationId. Do not guess which Person owns an
@@ -197,6 +218,27 @@ SELECT
 FROM "auth_credentials" ac
 JOIN "legacy_user_account_links" link
   ON link."legacyUserId" = ac."userId";
+
+-- Record the migration-created canonical accounts as neutral lifecycle evidence.
+-- This is not tenant audit and does not imply a new authorization event.
+INSERT INTO "account_events" (
+    "id",
+    "accountId",
+    "eventType",
+    "sourceType",
+    "sourceReference",
+    "metadata",
+    "createdAt"
+)
+SELECT
+    'account_event_backfill_' || u."id",
+    'account_' || u."id",
+    'account.backfilled_from_legacy_user',
+    'migration',
+    u."id",
+    jsonb_build_object('legacyUserId', u."id"),
+    CURRENT_TIMESTAMP
+FROM "users" u;
 
 -- Extend existing legal evidence so future pre-auth entry acceptance can be bound to
 -- the canonical person/account before any organization context exists. Historical rows
