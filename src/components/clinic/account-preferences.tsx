@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, ExternalLink, LockKeyhole, LogOut, Monitor, Moon, Plug, ShieldCheck, Sun } from "lucide-react";
+import { Check, ExternalLink, FileSignature, LockKeyhole, LogOut, Monitor, Moon, Plug, ShieldCheck, Sun } from "lucide-react";
 import { KLINIKOS_ATMOSPHERE_STORAGE_KEY } from "@/lib/design/atmosphere";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +59,7 @@ export function AccountPreferences({ userName, organizationName, role }: { userN
         <div className="mt-6 space-y-2">
           <Link className="flex min-h-12 items-center gap-3 rounded-xl border border-[#e6817b]/10 bg-[#100708] px-4 text-xs font-semibold text-[#b89f9b] hover:border-[#e6817b]/24 hover:text-[#fff8f6]" href="/access-controls"><LockKeyhole className="size-4 text-[#e6817b]" />Access & sharing<ExternalLink className="ml-auto size-3.5 text-[#655653]" /></Link>
           <Link className="flex min-h-12 items-center gap-3 rounded-xl border border-[#e6817b]/10 bg-[#100708] px-4 text-xs font-semibold text-[#b89f9b] hover:border-[#e6817b]/24 hover:text-[#fff8f6]" href="/integrations"><Plug className="size-4 text-[#e6817b]" />Connections<ExternalLink className="ml-auto size-3.5 text-[#655653]" /></Link>
+          <Link className="flex min-h-12 items-center gap-3 rounded-xl border border-[#e6817b]/10 bg-[#100708] px-4 text-xs font-semibold text-[#b89f9b] hover:border-[#e6817b]/24 hover:text-[#fff8f6]" href="/legal/agreements"><FileSignature className="size-4 text-[#e6817b]" />Signed agreements<ExternalLink className="ml-auto size-3.5 text-[#655653]" /></Link>
         </div>
 
         <form action="/api/auth/logout" className="mt-6" method="post"><button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#e6817b]/16 bg-[#e6817b]/[.07] text-xs font-semibold text-[#efaaa1] hover:bg-[#e6817b]/12" type="submit"><LogOut className="size-4" />Sign out</button></form>

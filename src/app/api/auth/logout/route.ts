@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getClinicSession, revokeClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
+import { getAuthenticationSession, revokeClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
 
 export async function POST(request: Request) {
-  const session = await getClinicSession();
+  const session = await getAuthenticationSession();
   await revokeClinicSession(session).catch(() => undefined);
 
   const response = NextResponse.redirect(new URL("/login", request.url), 303);
