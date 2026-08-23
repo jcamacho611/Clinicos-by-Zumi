@@ -82,7 +82,8 @@ ALTER TABLE "location_assignments"
     FOREIGN KEY ("membershipId") REFERENCES "organization_memberships"("id")
     ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Backfill one durable Person anchor for every existing staff User.
+-- Backfill one durable Person anchor for every existing organization User.
+-- User.name is a display name in the legacy model and is not treated as verified legal identity.
 INSERT INTO "people" (
     "id",
     "displayName",
@@ -97,7 +98,7 @@ INSERT INTO "people" (
 SELECT
     'person_' || "id",
     "name",
-    "name",
+    NULL,
     "email",
     "status",
     'legacy_user',
@@ -107,7 +108,8 @@ SELECT
 FROM "users"
 ON CONFLICT ("id") DO NOTHING;
 
--- Preserve the existing user's organization/role as the first relationship record.
+-- Preserve organization participation without inferring employment.
+-- The existing role remains a compatibility fact, not a professional credential or privilege.
 -- This does NOT alter current authentication or authorization semantics.
 INSERT INTO "organization_memberships" (
     "id",
@@ -128,7 +130,7 @@ SELECT
     'person_' || "id",
     "organizationId",
     "id",
-    'staff',
+    'organization_user',
     "roleKey",
     "status",
     'legacy_user',
