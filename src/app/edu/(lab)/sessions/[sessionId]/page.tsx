@@ -28,8 +28,8 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
         course: { select: { title: true } },
         enrollments: {
           where: { status: { in: ["invited", "active", "completed"] } },
-          select: { id: true, studentName: true, studentEmail: true, status: true },
-          orderBy: [{ studentName: "asc" }, { studentEmail: "asc" }],
+          select: { id: true, studentDisplayName: true, studentEmail: true, status: true },
+          orderBy: [{ studentDisplayName: "asc" }, { studentEmail: "asc" }],
         },
       },
     }),
@@ -61,7 +61,7 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
             const record = attendanceByEnrollment.get(enrollment.id);
             return {
               enrollmentId: enrollment.id,
-              name: enrollment.studentName || enrollment.studentEmail,
+              name: enrollment.studentDisplayName || enrollment.studentEmail,
               email: enrollment.studentEmail,
               status: enrollment.status,
               attendance: record ? {
