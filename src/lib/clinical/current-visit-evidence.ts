@@ -1,6 +1,7 @@
 import type { LabResult, PatientImagingResult } from "@/lib/types";
 
 const MAX_VISIBLE_RESULTS_PER_DOMAIN = 6;
+const MAX_VISIBLE_LAB_ITEMS = 100;
 
 type LabEvidence = Pick<
   LabResult,
@@ -14,8 +15,11 @@ type LabEvidence = Pick<
   | "sourceReference"
   | "version"
   | "correctionOfId"
-  | "items"
->;
+> & {
+  items: LabResult["items"];
+  totalItemCount: number;
+  itemsTruncated: boolean;
+};
 
 type ImagingEvidence = Pick<
   PatientImagingResult,
@@ -84,7 +88,9 @@ export function buildCurrentVisitClinicalEvidence(
     sourceReference: result.sourceReference,
     version: result.version,
     correctionOfId: result.correctionOfId,
-    items: result.items,
+    totalItemCount: result.items.length,
+    itemsTruncated: result.items.length > MAX_VISIBLE_LAB_ITEMS,
+    items: result.items.slice(0, MAX_VISIBLE_LAB_ITEMS),
   }));
 
   const imaging = input.imaging.slice(0, MAX_VISIBLE_RESULTS_PER_DOMAIN).map((result) => ({
