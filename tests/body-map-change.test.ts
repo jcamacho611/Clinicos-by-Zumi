@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { compareBodyMapVersions } from "@/lib/clinical/body-map-change";
 import type { BodyMapVersion } from "@/lib/clinical/body-map-types";
@@ -123,7 +124,6 @@ describe("BodyMap longitudinal clinical change", () => {
 
   it("does not infer that all prior findings were removed from an empty current map", () => {
     const emptyToday: BodyMapVersion = { ...today, id: "bm-empty-today", findings: [] };
-
     expect(compareBodyMapVersions(previous, emptyToday)).toEqual([]);
   });
 
@@ -155,12 +155,7 @@ describe("BodyMap longitudinal clinical change", () => {
   it("reports changed functional impact with evidence from both versions", () => {
     const functionImprovedToday: BodyMapVersion = {
       ...today,
-      findings: [
-        {
-          ...today.findings[0],
-          functionalImpact: "Can now lift arm overhead with mild discomfort",
-        },
-      ],
+      findings: [{ ...today.findings[0], functionalImpact: "Can now lift arm overhead with mild discomfort" }],
     };
 
     const deltas = compareBodyMapVersions(previous, functionImprovedToday);
@@ -182,9 +177,7 @@ describe("BodyMap longitudinal clinical change", () => {
   it("does not mutate historical body-map versions during comparison", () => {
     const beforeInitial = JSON.stringify(initial);
     const beforePrevious = JSON.stringify(previous);
-
     compareBodyMapVersions(initial, previous);
-
     expect(JSON.stringify(initial)).toBe(beforeInitial);
     expect(JSON.stringify(previous)).toBe(beforePrevious);
   });
@@ -205,6 +198,24 @@ describe("BodyMap longitudinal clinical change", () => {
     for (const delta of [...initialToPrevious, ...previousToToday]) {
       expect(delta.evidence.length).toBeGreaterThan(0);
       if (delta.bodyRegion === "shoulder") expect(delta.evidence).toHaveLength(2);
+    }
+  });
+
+  it("locks the follow-on persistence and Current Visit truth contract", () => {
+    const contract = readFileSync("docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md", "utf8");
+
+    for (const requiredInvariant of [
+      "append-only/versioned persistence",
+      "tenant + patient + encounter scoped reads",
+      "Historical versions are never overwritten",
+      "creator and captured-at provenance",
+      "initial -> previous -> today",
+      "Current Visit consumes persisted versions, never demo constants",
+      "AI may explain deterministic deltas but may not create unsupported findings",
+      "amendment/addendum semantics rather than mutation",
+      "does not satisfy P0 #244 by itself",
+    ]) {
+      expect(contract).toContain(requiredInvariant);
     }
   });
 });
