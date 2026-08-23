@@ -2,6 +2,7 @@ export type ZumiGovernedContextScope = "user" | "organization" | "global";
 
 export type ZumiGovernedContextAuthority =
   | "human_confirmed_personal"
+  | "verified_outcome_evidence"
   | "human_approved_organization"
   | "human_approved_global_reference";
 
@@ -16,6 +17,7 @@ export type ZumiGovernedContextItem = {
   effectiveAt: string | null;
   expiresAt: string | null;
   version: number;
+  evidenceIds?: string[];
 };
 
 function terms(value: string) {
@@ -32,6 +34,7 @@ function normalizedTitle(value: string) {
 function authorityWeight(item: ZumiGovernedContextItem) {
   if (item.authority === "human_approved_organization") return 4;
   if (item.authority === "human_approved_global_reference") return 3;
+  if (item.authority === "verified_outcome_evidence") return 2;
   return 1;
 }
 
