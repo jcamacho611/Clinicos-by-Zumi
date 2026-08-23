@@ -1,5 +1,8 @@
 import type { SmsMessageClass } from "@/lib/communications/sms-policy";
 
+export const PATIENT_SMS_TEMPLATE_IDS = ["secure_account_update", "secure_action_required"] as const;
+export type PatientSmsTemplateId = (typeof PATIENT_SMS_TEMPLATE_IDS)[number];
+
 export interface PatientSmsTemplate {
   id: PatientSmsTemplateId;
   subject: string;
@@ -24,8 +27,6 @@ export const PATIENT_SMS_TEMPLATES = [
     phiApproved: false,
   },
 ] as const satisfies readonly PatientSmsTemplate[];
-
-export type PatientSmsTemplateId = (typeof PATIENT_SMS_TEMPLATES)[number]["id"];
 
 export function patientSmsTemplate(id: string): PatientSmsTemplate | null {
   return PATIENT_SMS_TEMPLATES.find((template) => template.id === id) ?? null;
