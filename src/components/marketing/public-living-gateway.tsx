@@ -39,7 +39,7 @@ type PublicZumiApiResponse = {
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const protectedHref = (href: string) => href === "/login" ? "/login" : `/login?next=${encodeURIComponent(href)}`;
-const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales"]);
+const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/start", "/access"]);
 
 function destinationActionHref(href: string) {
   if (href === "/portal") return "/portal/login";
