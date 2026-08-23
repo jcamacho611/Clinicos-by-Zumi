@@ -8,18 +8,14 @@ function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): Body
   return { bodyMapVersionId: version.id, findingId: finding.id };
 }
 
-function versionEvidence(version: BodyMapVersion): BodyMapEvidenceRef {
-  return { bodyMapVersionId: version.id, findingId: null };
-}
-
 export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMapVersion): BodyMapDelta[] {
   if (current.findings.length === 0) return [];
 
   const previousByKey = new Map(previous.findings.map((finding) => [bodyMapFindingKey(finding), finding]));
-  const currentByKey = new Map(current.findings.map((finding) => [bodyMapFindingKey(finding), finding]));
   const deltas: BodyMapDelta[] = [];
 
-  for (const [key, currentFinding] of currentByKey) {
+  for (const currentFinding of current.findings) {
+    const key = bodyMapFindingKey(currentFinding);
     const previousFinding = previousByKey.get(key);
 
     if (!previousFinding) {
@@ -67,21 +63,6 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
         evidence: [findingEvidence(previous, previousFinding), findingEvidence(current, currentFinding)],
       });
     }
-  }
-
-  for (const [key, previousFinding] of previousByKey) {
-    if (currentByKey.has(key)) continue;
-
-    deltas.push({
-      key,
-      bodyRegion: previousFinding.bodyRegion,
-      laterality: previousFinding.laterality,
-      symptom: previousFinding.symptom,
-      kind: "finding_removed",
-      previousValue: previousFinding.symptom,
-      currentValue: null,
-      evidence: [findingEvidence(previous, previousFinding), versionEvidence(current)],
-    });
   }
 
   return deltas;
