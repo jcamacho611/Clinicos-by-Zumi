@@ -46,6 +46,7 @@ export function CurrentVisitClinicalEvidenceCard({ evidence }: { evidence: Curre
             <p className="mt-2 text-[10px] font-bold text-slate-400">{dateLabel(result.resultedAt)} · v{result.version} · {result.source}{result.sourceReference ? ` · ${result.sourceReference}` : ""}</p>
             {result.correctionOfId && <p className="mt-1 text-[10px] font-bold text-slate-500">Correction of prior result {result.correctionOfId}</p>}
             {result.items.length > 0 && <div className="mt-3 space-y-1.5">{result.items.map((item) => <div className="flex flex-wrap items-baseline justify-between gap-2 text-[11px]" key={item.id}><span className="font-bold text-slate-700">{item.name}</span><span className="text-slate-600">{item.value}{item.unit ? ` ${item.unit}` : ""}{item.flag ? ` · ${item.flag}` : ""}</span></div>)}</div>}
+            {result.itemsTruncated && <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold leading-5 text-amber-800">Current Visit is showing a partial panel. The source contains {result.totalItemCount} total source items; review the authoritative lab workspace for the complete result.</p>}
           </div>)}
         </div>
       </div>
