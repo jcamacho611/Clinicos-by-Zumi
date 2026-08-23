@@ -5,6 +5,7 @@ import {
   type ChargeResolutionState,
   type CloseVisitResolution,
   type CodingResolutionState,
+  type GovernedDomainEvaluation,
   type OrdersResultsResolutionState,
 } from "@/lib/clinical/close-visit-resolution";
 import type { PatientVital } from "@/lib/clinical/vital-types";
@@ -79,11 +80,11 @@ export interface CurrentVisitModel {
 }
 
 export interface CurrentVisitCloseEvaluation {
-  coding: CodingResolutionState;
-  ordersResults: OrdersResultsResolutionState;
-  aiReview: AiReviewResolutionState;
-  attestations: AttestationResolutionState;
-  chargeReadiness: ChargeResolutionState;
+  coding: GovernedDomainEvaluation<CodingResolutionState>;
+  ordersResults: GovernedDomainEvaluation<OrdersResultsResolutionState>;
+  aiReview: GovernedDomainEvaluation<AiReviewResolutionState>;
+  attestations: GovernedDomainEvaluation<AttestationResolutionState>;
+  chargeReadiness: GovernedDomainEvaluation<ChargeResolutionState>;
 }
 
 export interface CurrentVisitContext {
@@ -98,12 +99,14 @@ const REQUIRED_DOCUMENTATION = [
   ["Plan", "plan"],
 ] as const satisfies ReadonlyArray<readonly [string, keyof Encounter]>;
 
+const NOT_EVALUATED = { state: "not_evaluated", source: null, evidenceRef: null } as const;
+
 const DEFAULT_CLOSE_EVALUATION: CurrentVisitCloseEvaluation = {
-  coding: "not_evaluated",
-  ordersResults: "not_evaluated",
-  aiReview: "not_evaluated",
-  attestations: "not_evaluated",
-  chargeReadiness: "not_evaluated",
+  coding: NOT_EVALUATED,
+  ordersResults: NOT_EVALUATED,
+  aiReview: NOT_EVALUATED,
+  attestations: NOT_EVALUATED,
+  chargeReadiness: NOT_EVALUATED,
 };
 
 function missingRequiredDocumentation(encounter: Encounter) {
