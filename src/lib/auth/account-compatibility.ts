@@ -17,6 +17,22 @@ export type LegacyAccountCompatibility = {
   compatible: boolean;
 };
 
+export type MissingLegacyAccountCompatibility = {
+  legacyUserId: string;
+  compatible: false;
+  reason: "missing_account_projection";
+};
+
+export type LegacyAccountCompatibilityResult = LegacyAccountCompatibility | MissingLegacyAccountCompatibility;
+
+export type LegacyAccountCompatibilityReport = {
+  total: number;
+  compatibleCount: number;
+  incompatibleCount: number;
+  allCompatible: boolean;
+  results: LegacyAccountCompatibilityResult[];
+};
+
 export async function inspectLegacyAccountCompatibility(
   legacyUserId: string,
 ): Promise<LegacyAccountCompatibility | null> {
@@ -32,14 +48,15 @@ export async function inspectLegacyAccountCompatibility(
   });
   if (!link) return null;
 
+  const now = new Date();
   const matchingMemberships = await db.organizationMembership.findMany({
     where: {
       personId: link.account.personId,
       legacyUserId,
       organizationId: legacyUser.organizationId,
       status: "active",
-      effectiveFrom: { lte: new Date() },
-      OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }],
+      effectiveFrom: { lte: now },
+      OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
     },
     select: { id: true, roleKey: true },
   });
@@ -83,4 +100,47 @@ export async function inspectLegacyAccountCompatibility(
       && sameCredentialSecurityState
       && deterministicMembership,
   };
+}
+
+export async function verifyAllActiveLegacyAccountCompatibility(): Promise<LegacyAccountCompatibilityReport> {
+  const users = await db.user.findMany({
+    where: {
+      status: "active",
+      authCredential: { isNot: null },
+    },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+
+  const results: LegacyAccountCompatibilityResult[] = [];
+  for (const user of users) {
+    const result = await inspectLegacyAccountCompatibility(user.id);
+    results.push(result ?? {
+      legacyUserId: user.id,
+      compatible: false,
+      reason: "missing_account_projection",
+    });
+  }
+
+  const compatibleCount = results.filter((result) => result.compatible).length;
+  const incompatibleCount = results.length - compatibleCount;
+  return {
+    total: results.length,
+    compatibleCount,
+    incompatibleCount,
+    allCompatible: incompatibleCount === 0,
+    results,
+  };
+}
+
+export async function assertAllActiveLegacyAccountsCompatible() {
+  const report = await verifyAllActiveLegacyAccountCompatibility();
+  if (!report.allCompatible) {
+    const failedIds = report.results
+      .filter((result) => !result.compatible)
+      .map((result) => result.legacyUserId)
+      .join(", ");
+    throw new Error(`Universal Account compatibility failed for active legacy user(s): ${failedIds || "unknown"}.`);
+  }
+  return report;
 }
