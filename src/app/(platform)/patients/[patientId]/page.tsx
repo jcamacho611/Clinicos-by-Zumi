@@ -11,6 +11,7 @@ import { listFormSubmissionsForPatient } from "@/lib/repositories/form-repositor
 import { listConsentsForPatient } from "@/lib/repositories/consent-repository";
 import { listMedicationHistoryForPatient } from "@/lib/repositories/medication-repository";
 import { findPatientForOrganization } from "@/lib/repositories/patient-repository";
+import { listVitalsForPatient } from "@/lib/repositories/vital-repository";
 
 export async function generateMetadata({ params }: { params: Promise<{ patientId: string }> }): Promise<Metadata> {
   const { patientId } = await params;
@@ -25,7 +26,7 @@ export default async function PatientPage({ params }: { params: Promise<{ patien
   const { patientId } = await params;
   const session = await requireClinicSession();
   if (!can(session.role, "patients", "read")) notFound();
-  const [patient, encounters, labResults, imagingResults, documents, formSubmissions, consents, medicationHistory] = await Promise.all([
+  const [patient, encounters, labResults, imagingResults, documents, formSubmissions, consents, medicationHistory, vitals] = await Promise.all([
     findPatientForOrganization(patientId, session.organizationId),
     listEncountersForPatient(patientId, session.organizationId),
     listLabResultsForPatient(patientId, session.organizationId),
@@ -34,7 +35,8 @@ export default async function PatientPage({ params }: { params: Promise<{ patien
     listFormSubmissionsForPatient(session.organizationId, patientId),
     listConsentsForPatient(session.organizationId, patientId),
     listMedicationHistoryForPatient(session.organizationId, patientId),
+    listVitalsForPatient(patientId, session.organizationId),
   ]);
   if (!patient) notFound();
-  return <PatientChart consents={consents} documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }} documents={documents} encounters={encounters} formSubmissions={formSubmissions} imagingResults={imagingResults} labResults={labResults} medicationHistory={medicationHistory} medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }} patient={patient} />;
+  return <PatientChart consents={consents} documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }} documents={documents} encounters={encounters} formSubmissions={formSubmissions} imagingResults={imagingResults} labResults={labResults} medicationHistory={medicationHistory} medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }} patient={patient} vitals={vitals} />;
 }
