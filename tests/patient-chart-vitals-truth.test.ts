@@ -34,4 +34,13 @@ describe("patient chart persisted vitals truth", () => {
     expect(repository).toContain('orderBy: { measuredAt: "desc" }');
     expect(repository).toContain("Math.max(1, Math.min(limit, 100))");
   });
+
+  it("does not prefill a clinical observation or fabricate consent confirmation", () => {
+    const actions = read("src/components/clinic/remote-monitoring-actions.tsx");
+    expect(actions).not.toContain('useState("132/84")');
+    expect(actions).not.toContain("consentConfirmed: true");
+    expect(actions).toContain("consentConfirmed");
+    expect(actions).toContain('type="checkbox"');
+    expect(actions).toContain("!consentConfirmed");
+  });
 });
