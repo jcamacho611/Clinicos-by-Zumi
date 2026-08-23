@@ -24,7 +24,10 @@ export type EduNavGroup = {
 
 const ALL_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student", "edu_observer"];
 const STAFF: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant"];
+const FEEDBACK_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student"];
 const TEACHING: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor"];
+const PROGRAM_REVIEW: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_observer"];
+const DELIVERY_REVIEW: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_observer"];
 const CERTIFICATE_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_student"];
 
 export const eduNavigation: readonly EduNavGroup[] = [
@@ -32,17 +35,29 @@ export const eduNavigation: readonly EduNavGroup[] = [
     label: "Lab",
     items: [
       { href: "/edu/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: ALL_ROLES },
+      { href: "/edu/programs", label: "Programs", icon: "Building2", roles: PROGRAM_REVIEW },
       { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
       { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
+      { href: "/edu/sessions", label: "Sessions", icon: "CalendarDays", roles: DELIVERY_REVIEW },
+      { href: "/edu/completions", label: "Completion review", icon: "BadgeCheck", roles: DELIVERY_REVIEW },
+      { href: "/edu/feedback", label: "Feedback", icon: "MessageSquareText", roles: FEEDBACK_ROLES },
+      { href: "/edu/reports", label: "Reports", icon: "BarChart3", roles: PROGRAM_REVIEW },
     ],
   },
   {
     label: "Simulation",
     items: [
+      { href: "/edu/zumi-practice", label: "Zumi practice", icon: "Sparkles", roles: ALL_ROLES },
       { href: "/edu/scenarios", label: "Scenario library", icon: "FlaskConical", roles: ALL_ROLES },
       { href: "/edu/grading", label: "Grading", icon: "ClipboardCheck", roles: STAFF },
       { href: "/edu/competencies", label: "Competencies", icon: "Target", roles: ALL_ROLES },
       { href: "/edu/certificates", label: "Certificates", icon: "Award", roles: CERTIFICATE_ROLES },
+    ],
+  },
+  {
+    label: "Proposal",
+    items: [
+      { href: "/edu/demo-kit", label: "Demo kit", icon: "Presentation", roles: PROGRAM_REVIEW },
     ],
   },
   {
@@ -62,8 +77,15 @@ export function eduNavigationForRole(role: EduPlatformRole): EduNavGroup[] {
 /** Route access contract. Every authenticated EDU route declares its allowed roles. */
 export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/dashboard": ALL_ROLES,
+  "/edu/programs": PROGRAM_REVIEW,
   "/edu/courses": ALL_ROLES,
   "/edu/cohorts": [...STAFF, "edu_observer"],
+  "/edu/sessions": DELIVERY_REVIEW,
+  "/edu/completions": DELIVERY_REVIEW,
+  "/edu/feedback": FEEDBACK_ROLES,
+  "/edu/reports": PROGRAM_REVIEW,
+  "/edu/demo-kit": PROGRAM_REVIEW,
+  "/edu/zumi-practice": ALL_ROLES,
   "/edu/scenarios": ALL_ROLES,
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
@@ -75,7 +97,6 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
 export function canAccessEduRoute(role: EduPlatformRole, route: string) {
   const entry = Object.entries(eduRouteAccess)
     .filter(([prefix]) => route === prefix || route.startsWith(`${prefix}/`))
-    // Longest prefix wins so /edu/lab/[id] resolves to /edu/lab, not a shorter match.
     .sort((a, b) => b[0].length - a[0].length)[0];
   return entry ? entry[1].includes(role) : false;
 }
