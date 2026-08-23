@@ -30,6 +30,8 @@ export interface GridLiquidityMetrics {
   readonly demandReservationRate: number | null;
   readonly offerToReservationRate: number | null;
   readonly reservationFulfillmentRate: number | null;
+  /** False means at least one source query reached its transaction-board cap. */
+  readonly sourceWindowComplete: boolean;
 }
 
 const terminalDemandStatuses = new Set(["fulfilled", "cancelled", "expired"]);
@@ -42,6 +44,7 @@ export function computeGridLiquidityMetrics(input: {
   demands: readonly GridLiquidityDemand[];
   offers: readonly GridLiquidityOffer[];
   reservations: readonly GridLiquidityReservation[];
+  sourceWindowComplete?: boolean;
 }): GridLiquidityMetrics {
   const activeDemands = input.demands.filter((demand) => !terminalDemandStatuses.has(demand.status));
   const demandIdsWithOffers = new Set(input.offers.map((offer) => offer.demandId));
@@ -65,5 +68,6 @@ export function computeGridLiquidityMetrics(input: {
     demandReservationRate: rate(demandsWithReservations, input.demands.length),
     offerToReservationRate: rate(input.reservations.length, input.offers.length),
     reservationFulfillmentRate: rate(fulfilledReservations, input.reservations.length),
+    sourceWindowComplete: input.sourceWindowComplete ?? true,
   };
 }
