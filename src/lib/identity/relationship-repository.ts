@@ -40,7 +40,7 @@ export function buildEffectiveRelationshipWhere(at: Date) {
       { effectiveTo: null },
       { effectiveTo: { gt: at } },
     ],
-  } as const;
+  };
 }
 
 const membershipSelect = {
