@@ -24,6 +24,7 @@ export type EduNavGroup = {
 
 const ALL_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student", "edu_observer"];
 const STAFF: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant"];
+const FEEDBACK_ROLES: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_student"];
 const TEACHING: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor"];
 const PROGRAM_REVIEW: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_observer"];
 const DELIVERY_REVIEW: readonly EduPlatformRole[] = ["edu_admin", "edu_instructor", "edu_assistant", "edu_observer"];
@@ -38,6 +39,7 @@ export const eduNavigation: readonly EduNavGroup[] = [
       { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
       { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
       { href: "/edu/sessions", label: "Sessions", icon: "CalendarDays", roles: DELIVERY_REVIEW },
+      { href: "/edu/feedback", label: "Feedback", icon: "MessageSquareText", roles: FEEDBACK_ROLES },
       { href: "/edu/reports", label: "Reports", icon: "BarChart3", roles: PROGRAM_REVIEW },
     ],
   },
@@ -78,6 +80,7 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/courses": ALL_ROLES,
   "/edu/cohorts": [...STAFF, "edu_observer"],
   "/edu/sessions": DELIVERY_REVIEW,
+  "/edu/feedback": FEEDBACK_ROLES,
   "/edu/reports": PROGRAM_REVIEW,
   "/edu/demo-kit": PROGRAM_REVIEW,
   "/edu/zumi-practice": ALL_ROLES,
