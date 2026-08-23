@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EncounterCodingAddenda } from "@/components/clinic/encounter-coding-addenda";
 import { StatusBadge } from "@/components/clinic/workspace-kit";
+import type { EncounterStaffHandoffProjection } from "@/lib/clinical/encounter-handoff-types";
 import { buildCurrentVisitModel } from "@/lib/clinical/current-visit-model";
-import type { PatientVital } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
 const todaySections = [
@@ -68,31 +68,60 @@ function VitalReading({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p className="text-[9px] font-extrabold uppercase tracking-[.13em] text-slate-400">{label}</p><p className="mt-1 text-[12px] font-extrabold text-slate-800">{value}</p></div>;
 }
 
+function HandoffEvidenceBlock({ children, title }: { children: React.ReactNode; title: string }) {
+  return <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3"><p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-slate-500">{title}</p><div className="mt-2">{children}</div></div>;
+}
+
 function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitModel> }) {
   if (visit.staffHandoff.status !== "partial") {
-    return <><p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p><p className="mt-3 text-[11px] font-bold text-slate-400">Encounter-specific intake will become a governed staff → provider handoff in a later persistence slice.</p></>;
+    return <><p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p><p className="mt-3 text-[11px] font-bold text-slate-400">Encounter-specific intake appears here only after governed evidence is actually persisted.</p></>;
   }
 
-  const vital = visit.staffHandoff.vital;
-  const readings: Array<[string, string] | null> = [
+  const handoff = visit.staffHandoff.projection;
+  const vital = handoff.vital;
+  const readings: Array<[string, string] | null> = vital ? [
     vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic !== null ? ["Blood pressure", `${vital.bloodPressureSystolic}/${vital.bloodPressureDiastolic} mmHg`] : null,
+    vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic === null ? ["Systolic BP", `${vital.bloodPressureSystolic} mmHg`] : null,
+    vital.bloodPressureSystolic === null && vital.bloodPressureDiastolic !== null ? ["Diastolic BP", `${vital.bloodPressureDiastolic} mmHg`] : null,
     vital.heartRate !== null ? ["Heart rate", `${vital.heartRate} bpm`] : null,
     vital.temperatureF !== null ? ["Temperature", `${vital.temperatureF} °F`] : null,
     vital.oxygenPercent !== null ? ["Oxygen", `${vital.oxygenPercent}%`] : null,
     vital.weightLbs !== null ? ["Weight", `${vital.weightLbs} lb`] : null,
     vital.heightInches !== null ? ["Height", `${vital.heightInches} in`] : null,
     vital.bmi !== null ? ["BMI", String(vital.bmi)] : null,
-  ];
+  ] : [];
   const measured = readings.filter((reading): reading is [string, string] => reading !== null);
+  const reconciliation = handoff.medicationReconciliation;
+  const visibleForms = handoff.forms.slice(0, 3);
+  const visibleTasks = handoff.tasks.slice(0, 3);
 
   return <>
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-      <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Vitals captured</p>
-      <p className="text-[10px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
+    <div className="mt-3 grid gap-3 xl:grid-cols-2">
+      <HandoffEvidenceBlock title="Vitals captured">
+        {vital && measured.length > 0 ? <>
+          <p className="text-[10px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">{measured.map(([label, value]) => <VitalReading key={label} label={label} value={value} />)}</div>
+        </> : <p className="text-[11px] text-slate-400">No measured vitals are attached to this encounter.</p>}
+      </HandoffEvidenceBlock>
+
+      <HandoffEvidenceBlock title="Medication reconciliation">
+        {reconciliation ? <>
+          <div className="flex flex-wrap items-center gap-2"><StatusBadge status={reconciliation.status} /><span className="text-[11px] font-bold text-slate-600">{reconciliation.medicationCount} medication{reconciliation.medicationCount === 1 ? "" : "s"}</span></div>
+          <p className={`mt-2 text-[11px] font-bold ${reconciliation.discrepancyCount > 0 ? "text-amber-700" : "text-slate-500"}`}>{reconciliation.discrepancyCount} documented discrepanc{reconciliation.discrepancyCount === 1 ? "y" : "ies"}</p>
+          {reconciliation.summary && <p className="mt-2 text-[11px] leading-5 text-slate-500">{reconciliation.summary}</p>}
+        </> : <p className="text-[11px] text-slate-400">No medication reconciliation is attached to this encounter.</p>}
+      </HandoffEvidenceBlock>
+
+      <HandoffEvidenceBlock title="Forms / screenings">
+        {visibleForms.length > 0 ? <div className="space-y-2">{visibleForms.map((form) => <div className="rounded-lg bg-white p-2" key={form.id}><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-extrabold text-slate-700">{form.templateName}</p><StatusBadge status={form.status} /></div><p className="mt-1 text-[10px] text-slate-400">{form.category} · {form.completionPercent}% complete{form.reviewStage ? ` · ${form.reviewStage.replaceAll("_", " ")} review` : ""}</p></div>)}{handoff.forms.length > visibleForms.length && <p className="text-[10px] font-bold text-slate-400">+ {handoff.forms.length - visibleForms.length} more encounter form{handoff.forms.length - visibleForms.length === 1 ? "" : "s"}</p>}</div> : <p className="text-[11px] text-slate-400">No encounter-linked forms or screenings are persisted.</p>}
+      </HandoffEvidenceBlock>
+
+      <HandoffEvidenceBlock title="Encounter work">
+        {visibleTasks.length > 0 ? <div className="space-y-2">{visibleTasks.map((task) => <div className="rounded-lg bg-white p-2" key={task.id}><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-extrabold text-slate-700">{task.title}</p><StatusBadge status={task.status} /></div><p className="mt-1 text-[10px] text-slate-400">{task.category.replaceAll("_", " ")} · {task.riskLevel.toLowerCase().replaceAll("_", " ")} · {task.ownerAssigned ? "owner assigned" : "unassigned"}</p></div>)}{handoff.tasks.length > visibleTasks.length && <p className="text-[10px] font-bold text-slate-400">+ {handoff.tasks.length - visibleTasks.length} more encounter task{handoff.tasks.length - visibleTasks.length === 1 ? "" : "s"}</p>}</div> : <p className="text-[11px] text-slate-400">No encounter-linked delegated work is persisted.</p>}
+      </HandoffEvidenceBlock>
     </div>
-    <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{measured.map(([label, value]) => <VitalReading key={label} label={label} value={value} />)}</div>
     <p className="mt-3 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p>
-    <p className="mt-2 text-[11px] font-bold text-amber-700">Other staff intake remains incomplete until encounter-specific reconciliation, screening, symptom, or delegated-work evidence is actually persisted.</p>
+    <p className="mt-2 text-[11px] font-bold text-amber-700">Other staff intake remains incomplete until reason-for-visit, symptoms, allergy reconciliation, body-map changes, or other role-governed evidence is actually persisted for this encounter.</p>
   </>;
 }
 
@@ -110,7 +139,7 @@ function NoteFields({
   return <div className="space-y-5">{sections.map((section) => <label className="block" key={section.key}><span className="text-[12px] font-extrabold uppercase tracking-[.13em] text-slate-500">{section.label}</span><textarea className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs leading-6 text-slate-800 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" disabled={!editable} onChange={(event) => updateField(section.key, event.target.value)} rows={section.rows} value={fields[section.key]} /></label>)}</div>;
 }
 
-export function EncounterEditor({ canSign, encounter, patient, vital }: { canSign: boolean; encounter: Encounter; patient: Patient; vital: PatientVital | null }) {
+export function EncounterEditor({ canSign, encounter, handoff, patient }: { canSign: boolean; encounter: Encounter; handoff: EncounterStaffHandoffProjection; patient: Patient }) {
   const router = useRouter();
   const [fields, setFields] = useState<DraftFields>(() => initialDraft(encounter));
   const [status, setStatus] = useState(encounter.status);
@@ -122,7 +151,7 @@ export function EncounterEditor({ canSign, encounter, patient, vital }: { canSig
   const revision = useRef(0);
   const savedRevision = useRef(0);
   const editable = status === "Draft";
-  const visit = buildCurrentVisitModel(patient, { ...encounter, ...fields, status }, { vital });
+  const visit = buildCurrentVisitModel(patient, { ...encounter, ...fields, status }, { handoff });
 
   const saveDraft = useCallback(async (snapshot: DraftFields, targetRevision: number) => {
     if (!editable) return true;
