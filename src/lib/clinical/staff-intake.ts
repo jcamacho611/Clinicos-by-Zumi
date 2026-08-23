@@ -132,8 +132,8 @@ export function buildStaffIntakeHandoff(intake: StaffIntakeSnapshot): StaffIntak
   }
 
   let status: StaffIntakeHandoff["status"] = "ready";
-  if (escalations.length > 0) status = "needs_provider_review";
-  else if (blockers.length > 0) status = "incomplete";
+  if (blockers.length > 0) status = "incomplete";
+  else if (escalations.length > 0) status = "needs_provider_review";
 
   return {
     source: "encounter_staff_intake",
