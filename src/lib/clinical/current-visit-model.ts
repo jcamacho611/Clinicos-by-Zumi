@@ -21,11 +21,22 @@ export interface CurrentVisitUnavailableState {
   message: string;
 }
 
+export interface CurrentVisitMedicationReconciliation {
+  id: string;
+  status: string;
+  source: string;
+  summary: string | null;
+  medicationCount: number;
+  discrepancyCount: number;
+  completedAt: string | null;
+}
+
 export interface CurrentVisitPartialHandoffState {
   status: "partial";
-  source: "encounter_vitals";
+  source: "encounter_vitals" | "medication_reconciliation" | "multiple";
   message: string;
-  vital: PatientVital;
+  vital?: PatientVital;
+  medicationReconciliation?: CurrentVisitMedicationReconciliation;
 }
 
 export type CurrentVisitStaffHandoffState = CurrentVisitUnavailableState | CurrentVisitPartialHandoffState;
@@ -70,6 +81,7 @@ export interface CurrentVisitModel {
 
 export interface CurrentVisitContext {
   vital?: PatientVital | null;
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
 }
 
 const REQUIRED_DOCUMENTATION = [
@@ -86,8 +98,24 @@ function missingRequiredDocumentation(encounter: Encounter) {
   });
 }
 
-function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandoffState {
-  if (vital && vitalHasMeasurement(vital)) {
+function buildStaffHandoff(
+  vital?: PatientVital | null,
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
+): CurrentVisitStaffHandoffState {
+  const hasVital = Boolean(vital && vitalHasMeasurement(vital));
+  const hasMedicationReconciliation = Boolean(medicationReconciliation);
+
+  if (hasVital && vital && hasMedicationReconciliation && medicationReconciliation) {
+    return {
+      status: "partial",
+      source: "multiple",
+      vital,
+      medicationReconciliation,
+      message: "Vitals and medication reconciliation are attached to this encounter. Other staff intake remains incomplete until encounter-specific screening, symptom, form, delegated-work, or question evidence is actually persisted.",
+    };
+  }
+
+  if (hasVital && vital) {
     return {
       status: "partial",
       source: "encounter_vitals",
@@ -95,6 +123,16 @@ function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandof
       message: "Vitals were captured for this encounter. Other staff intake is not yet attached to the governed handoff.",
     };
   }
+
+  if (hasMedicationReconciliation && medicationReconciliation) {
+    return {
+      status: "partial",
+      source: "medication_reconciliation",
+      medicationReconciliation,
+      message: "Medication reconciliation is attached to this encounter. Other staff intake remains incomplete until encounter-specific vital, screening, symptom, form, delegated-work, or question evidence is actually persisted.",
+    };
+  }
+
   return {
     status: "not_available",
     message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
@@ -128,7 +166,7 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       status: "not_available",
       message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
     },
-    staffHandoff: buildStaffHandoff(context.vital),
+    staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation),
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
