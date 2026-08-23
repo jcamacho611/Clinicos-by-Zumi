@@ -47,7 +47,7 @@ export interface CloseVisitResolution {
   finalClosureComplete: boolean;
 }
 
-function hasText(value: string | null | undefined) {
+function hasText(value: string | null | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
@@ -62,15 +62,17 @@ function resolveGovernedState<TState extends string>(
     return evaluation.state;
   }
 
-  if (!hasText(evaluation.source) || !hasText(evaluation.evidenceRef)) {
+  const source = evaluation.source;
+  const evidenceRef = evaluation.evidenceRef;
+  if (!hasText(source) || !hasText(evidenceRef)) {
     unevaluatedDomains.push(domain);
     return "not_evaluated" as TState;
   }
 
   evidence.push({
     domain,
-    source: evaluation.source.trim(),
-    evidenceRef: evaluation.evidenceRef.trim(),
+    source: source.trim(),
+    evidenceRef: evidenceRef.trim(),
   });
   return evaluation.state;
 }
