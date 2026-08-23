@@ -11,6 +11,7 @@ type VerificationState = {
   verified: boolean;
   verifiedAt: string | null;
   verificationSource: string | null;
+  fundingReady: boolean;
 };
 
 const endpoint = "/api/portal/phone-verification";
@@ -110,8 +111,8 @@ export function PortalPhoneVerification() {
           {!state.hasPhone ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">Ask your clinic to add or correct your phone number before verification.</p> : null}
 
           {state.hasPhone && !state.verified ? <div className="space-y-4">
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-5 text-amber-950"><strong>Cost control:</strong> {fundingUnavailable} Klinikos will not silently subsidize or charge this provider call.</div>
-            <Button disabled={working} onClick={sendCode} type="button" variant="secondary">{working && !codeSent ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <MessageSquareText className="size-4" aria-hidden="true" />}{codeSent ? "Send another code" : "Send verification code"}</Button>
+            {!state.fundingReady ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-5 text-amber-950"><strong>Cost control:</strong> {fundingUnavailable} Klinikos will not silently subsidize or charge this provider call.</div> : <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[12px] leading-5 text-emerald-950"><strong>Verification funding available.</strong> Sending a code still proves phone possession only and does not create SMS permission.</div>}
+            <Button disabled={working || !state.fundingReady} onClick={sendCode} type="button" variant="secondary">{working && !codeSent ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <MessageSquareText className="size-4" aria-hidden="true" />}{codeSent ? "Send another code" : "Send verification code"}</Button>
 
             {codeSent ? <div className="max-w-md space-y-3 rounded-2xl border border-[#dce1d8] bg-white p-4">
               <label className="block text-xs font-extrabold text-[#173c34]" htmlFor="portal-phone-code">Verification code</label>
