@@ -69,6 +69,19 @@ CREATE TABLE "account_events" (
     CONSTRAINT "account_events_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "account_entry_acceptance_bindings" (
+    "id" TEXT NOT NULL,
+    "acceptanceId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "personId" TEXT NOT NULL,
+    "documentKey" TEXT NOT NULL,
+    "documentVersion" TEXT NOT NULL,
+    "documentSha256" TEXT NOT NULL,
+    "boundAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "account_entry_acceptance_bindings_pkey" PRIMARY KEY ("id")
+);
+
 CREATE UNIQUE INDEX "accounts_personId_key" ON "accounts"("personId");
 CREATE UNIQUE INDEX "accounts_primaryEmail_key" ON "accounts"("primaryEmail");
 CREATE INDEX "accounts_status_idx" ON "accounts"("status");
@@ -83,6 +96,12 @@ CREATE INDEX "account_events_accountId_createdAt_idx"
     ON "account_events"("accountId", "createdAt");
 CREATE INDEX "account_events_eventType_createdAt_idx"
     ON "account_events"("eventType", "createdAt");
+CREATE UNIQUE INDEX "account_entry_acceptance_bindings_acceptanceId_key"
+    ON "account_entry_acceptance_bindings"("acceptanceId");
+CREATE INDEX "account_entry_acceptance_bindings_accountId_documentKey_documentVersion_idx"
+    ON "account_entry_acceptance_bindings"("accountId", "documentKey", "documentVersion");
+CREATE INDEX "account_entry_acceptance_bindings_personId_idx"
+    ON "account_entry_acceptance_bindings"("personId");
 
 ALTER TABLE "accounts"
     ADD CONSTRAINT "accounts_personId_fkey"
@@ -107,6 +126,16 @@ ALTER TABLE "legacy_user_account_links"
 ALTER TABLE "account_events"
     ADD CONSTRAINT "account_events_accountId_fkey"
     FOREIGN KEY ("accountId") REFERENCES "accounts"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "account_entry_acceptance_bindings"
+    ADD CONSTRAINT "account_entry_acceptance_bindings_accountId_fkey"
+    FOREIGN KEY ("accountId") REFERENCES "accounts"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "account_entry_acceptance_bindings"
+    ADD CONSTRAINT "account_entry_acceptance_bindings_personId_fkey"
+    FOREIGN KEY ("personId") REFERENCES "people"("id")
     ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- Fail closed if a legacy user does not resolve to exactly one Person membership in
@@ -219,8 +248,8 @@ FROM "auth_credentials" ac
 JOIN "legacy_user_account_links" link
   ON link."legacyUserId" = ac."userId";
 
--- Record the migration-created canonical accounts as neutral lifecycle evidence.
--- This is not tenant audit and does not imply a new authorization event.
+-- Record migration-created canonical accounts as neutral lifecycle evidence. This is
+-- not tenant audit and does not imply that any new organization authorization occurred.
 INSERT INTO "account_events" (
     "id",
     "accountId",
@@ -240,27 +269,10 @@ SELECT
     CURRENT_TIMESTAMP
 FROM "users" u;
 
--- Extend existing legal evidence so future pre-auth entry acceptance can be bound to
--- the canonical person/account before any organization context exists. Historical rows
--- remain valid because these columns are nullable.
-ALTER TABLE "access_gate_acceptances"
-    ADD COLUMN IF NOT EXISTS "accountId" TEXT,
-    ADD COLUMN IF NOT EXISTS "personId" TEXT;
-
-CREATE INDEX IF NOT EXISTS "access_gate_acceptances_accountId_document_idx"
-    ON "access_gate_acceptances"("accountId", "documentKey", "documentVersion");
-CREATE INDEX IF NOT EXISTS "access_gate_acceptances_personId_idx"
-    ON "access_gate_acceptances"("personId");
-
-ALTER TABLE "access_gate_acceptances"
-    ADD CONSTRAINT "access_gate_acceptances_accountId_fkey"
-    FOREIGN KEY ("accountId") REFERENCES "accounts"("id")
-    ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE "access_gate_acceptances"
-    ADD CONSTRAINT "access_gate_acceptances_personId_fkey"
-    FOREIGN KEY ("personId") REFERENCES "people"("id")
-    ON DELETE RESTRICT ON UPDATE CASCADE;
-
+-- Protected-entry legal evidence stays in access_gate_acceptances unchanged. Account
+-- binding is represented by account_entry_acceptance_bindings after exact evidence
+-- verification in application code, preserving the historical acceptance row.
+--
 -- Deliberately absent: DROP/DELETE/UPDATE statements against users, auth_credentials,
--- auth_sessions, organizations, organization_memberships, or patient portal auth.
+-- auth_sessions, organizations, organization_memberships, patient portal auth, or
+-- access_gate_acceptances.
