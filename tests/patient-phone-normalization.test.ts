@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { normalizeKlinikosPhone } from "@/lib/phone-normalization";
 import { normalizePatientPhone, patientCreateSchema } from "@/lib/patient-intake-rules";
+import { normalizeSmsPhone } from "@/lib/communications/sms-policy";
 
 const base = {
   firstName: "Maya",
@@ -11,6 +13,11 @@ const base = {
 };
 
 describe("patient phone normalization", () => {
+  it("uses one shared normalization primitive across intake and SMS", () => {
+    expect(normalizePatientPhone).toBe(normalizeKlinikosPhone);
+    expect(normalizeSmsPhone).toBe(normalizeKlinikosPhone);
+  });
+
   it("canonicalizes common US formatting to E.164", () => {
     expect(normalizePatientPhone("(212) 555-0123")).toBe("+12125550123");
     expect(patientCreateSchema.parse({ ...base, phone: "212.555.0123" }).phone).toBe("+12125550123");
