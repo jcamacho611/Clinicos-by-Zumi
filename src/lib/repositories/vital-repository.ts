@@ -49,6 +49,25 @@ export async function findLatestVitalForEncounter(encounterId: string, patientId
   return row ? mapVital(row) : null;
 }
 
+export async function findPreviousVitalForPatient(input: {
+  patientId: string;
+  organizationId: string;
+  before: Date;
+  excludeEncounterId: string;
+}): Promise<PatientVital | null> {
+  const row = await db.vital.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      patientId: input.patientId,
+      measuredAt: { lt: input.before },
+      NOT: { encounterId: input.excludeEncounterId },
+    },
+    select: vitalSelect,
+    orderBy: { measuredAt: "desc" },
+  });
+  return row ? mapVital(row) : null;
+}
+
 export async function listVitalsForPatient(patientId: string, organizationId: string, limit = 100): Promise<PatientVital[]> {
   const rows = await db.vital.findMany({
     where: { organizationId, patientId },
