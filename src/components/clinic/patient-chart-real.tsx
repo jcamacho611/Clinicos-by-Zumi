@@ -1,25 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import * as Tabs from "@radix-ui/react-tabs";
 import {
   Activity,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   ClipboardCheck,
   FileText,
   FlaskConical,
-  HeartPulse,
   Image as ImageIcon,
   Pill,
   ShieldAlert,
   ShieldCheck,
   Stethoscope,
 } from "lucide-react";
+import { StatusBadge } from "@/components/clinic/workspace-kit";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/clinic/workspace-kit";
 import { vitalHasMeasurement, type PatientVital } from "@/lib/clinical/vital-types";
 import type { PatientMedicationHistory } from "@/lib/repositories/medication-repository";
 import type {
@@ -34,8 +33,6 @@ import type {
 import styles from "./patient-chart-black-label.module.css";
 
 const tabs = ["Summary", "Encounters", "Medications", "Vitals", "Labs", "Imaging", "Documents", "Forms & consents"] as const;
-
-type ChartTab = (typeof tabs)[number];
 
 type PatientChartProps = {
   consents: PatientConsentSummary[];
@@ -62,19 +59,23 @@ function formatDate(value: string | null | undefined) {
   return date.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
+function formatBalance(value: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+}
+
 function PatientFact({ label, value }: { label: string; value: string }) {
   return <div className={styles.fact}><p className={styles.factLabel}>{label}</p><p className={styles.factValue}>{value || "Not recorded"}</p></div>;
 }
 
-function Panel({ title, detail, action, children }: { title: string; detail?: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Panel({ title, detail, action, children }: { title: string; detail?: string; action?: ReactNode; children: ReactNode }) {
   return <section className={styles.panel}><div className={styles.panelHeader}><div><h3 className="text-sm font-semibold text-[var(--k-text)]">{title}</h3>{detail ? <p className="mt-1 text-xs leading-5 text-[var(--k-muted)]">{detail}</p> : null}</div>{action}</div>{children}</section>;
 }
 
-function Empty({ children }: { children: React.ReactNode }) {
+function Empty({ children }: { children: ReactNode }) {
   return <div className={styles.empty}>{children}</div>;
 }
 
-function DomainLink({ href, children }: { href: string; children: React.ReactNode }) {
+function DomainLink({ href, children }: { href: string; children: ReactNode }) {
   return <Link className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--k-accent)]" href={href}>{children}<ArrowRight className="size-3.5" aria-hidden="true" /></Link>;
 }
 
@@ -85,6 +86,7 @@ export function PatientChartReal({ consents, documentPermissions, documents, enc
   const formReview = formSubmissions.find((submission) => ["staff_review", "provider_review"].includes(submission.status));
   const documentReview = documents.find((document) => document.status === "active" && document.reviewStatus === "needs_review");
   const measuredVitals = vitals.filter(vitalHasMeasurement);
+  const reviewNeeded = Boolean(imagingReview || labReview || formReview || documentReview);
 
   const reviewTitle = imagingReview
     ? `Review ${imagingReview.title}`
@@ -106,7 +108,7 @@ export function PatientChartReal({ consents, documentPermissions, documents, enc
           ? `${documentReview.category} version ${documentReview.version} is held from patient release until an authorized human completes review.`
           : "This statement applies only to the lab, imaging, form, and document records loaded into this chart. It does not infer the state of an external system.";
 
-  const reviewHref = imagingReview ? "/imaging" : labReview ? "/labs" : formReview ? "/forms" : "/documents";
+  const reviewHref = imagingReview ? "/imaging" : labReview ? "/labs" : formReview ? "/forms" : documentReview ? "/documents" : null;
   const medicationAction = medicationPermissions.canCreate || medicationPermissions.canUpdate || medicationPermissions.canSign ? "Manage medications" : "Open medications";
   const documentAction = documentPermissions.canManage || documentPermissions.canUpdate ? "Manage documents" : "Open documents";
 
@@ -127,7 +129,7 @@ export function PatientChartReal({ consents, documentPermissions, documents, enc
           <PatientFact label="Coverage" value={patient.insurance} />
           <PatientFact label="Provider" value={patient.provider} />
           <PatientFact label="Next visit" value={patient.nextAppointment} />
-          <PatientFact label="Balance" value={`$${patient.balance}`} />
+          <PatientFact label="Balance" value={formatBalance(patient.balance)} />
         </div>
 
         {openEncounter ? <Button asChild variant="primary"><Link href={`/encounters/${openEncounter.id}`}><Stethoscope className="size-4" />Open Current Visit</Link></Button> : <Button asChild variant="secondary"><Link href="/encounters">Open encounters <ArrowRight className="size-4" /></Link></Button>}
@@ -146,7 +148,7 @@ export function PatientChartReal({ consents, documentPermissions, documents, enc
     <Tabs.Root defaultValue="Summary">
       <div className={styles.tabsBar}><Tabs.List className={styles.tabsList} aria-label="Patient record sections">{tabs.map((tab) => <Tabs.Trigger className={styles.tab} key={tab} value={tab}>{tab}</Tabs.Trigger>)}</Tabs.List></div>
 
-      <Tabs.Content className={styles.content} value="Summary"><Summary patient={patient} reviewTitle={reviewTitle} reviewDetail={reviewDetail} reviewHref={reviewHref} encounters={encounters} labResults={labResults} imagingResults={imagingResults} documents={documents} formSubmissions={formSubmissions} /></Tabs.Content>
+      <Tabs.Content className={styles.content} value="Summary"><Summary patient={patient} reviewNeeded={reviewNeeded} reviewTitle={reviewTitle} reviewDetail={reviewDetail} reviewHref={reviewHref} encounters={encounters} labResults={labResults} imagingResults={imagingResults} documents={documents} formSubmissions={formSubmissions} /></Tabs.Content>
       <Tabs.Content className={styles.content} value="Encounters"><EncounterList encounters={encounters} /></Tabs.Content>
       <Tabs.Content className={styles.content} value="Medications"><MedicationList history={medicationHistory} actionLabel={medicationAction} /></Tabs.Content>
       <Tabs.Content className={styles.content} value="Vitals"><VitalsList vitals={measuredVitals} /></Tabs.Content>
@@ -158,7 +160,7 @@ export function PatientChartReal({ consents, documentPermissions, documents, enc
   </div>;
 }
 
-function Summary({ patient, reviewTitle, reviewDetail, reviewHref, encounters, labResults, imagingResults, documents, formSubmissions }: { patient: Patient; reviewTitle: string; reviewDetail: string; reviewHref: string; encounters: Encounter[]; labResults: LabResult[]; imagingResults: PatientImagingResult[]; documents: PatientDocument[]; formSubmissions: PatientFormSubmission[] }) {
+function Summary({ patient, reviewNeeded, reviewTitle, reviewDetail, reviewHref, encounters, labResults, imagingResults, documents, formSubmissions }: { patient: Patient; reviewNeeded: boolean; reviewTitle: string; reviewDetail: string; reviewHref: string | null; encounters: Encounter[]; labResults: LabResult[]; imagingResults: PatientImagingResult[]; documents: PatientDocument[]; formSubmissions: PatientFormSubmission[] }) {
   return <div className={styles.summaryGrid}>
     <Panel title="Clinical snapshot" detail="Patient summary fields already present in the governed patient record."><div className={styles.panelBody}><div className={styles.clinicalTokens}><TokenGroup label="Medications" values={patient.medications} /><TokenGroup label="Allergies" values={patient.allergies} warning /><TokenGroup label="Problems" values={patient.problems} /></div></div></Panel>
 
@@ -173,13 +175,13 @@ function Summary({ patient, reviewTitle, reviewDetail, reviewHref, encounters, l
     </Panel>
 
     <div className="space-y-5">
-      <div className={styles.attention}><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">Needs review</p><h3 className="mt-3 text-lg font-semibold tracking-[-.03em]">{reviewTitle}</h3><p className="mt-2 text-xs leading-6 text-[#c9b5b1]">{reviewDetail}</p><Button asChild className="mt-4 w-full bg-white text-[#241517] hover:bg-[#f5ece9]" size="sm" variant="secondary"><Link href={reviewHref}>Open governed worklist</Link></Button></div>
+      <div className={styles.attention} data-review-needed={reviewNeeded ? "true" : "false"}><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">{reviewNeeded ? "Needs review" : "Review queue"}</p><h3 className="mt-3 text-lg font-semibold tracking-[-.03em]">{reviewTitle}</h3><p className="mt-2 text-xs leading-6 text-[#c9b5b1]">{reviewDetail}</p>{reviewNeeded && reviewHref ? <Button asChild className="mt-4 w-full bg-white text-[#241517] hover:bg-[#f5ece9]" size="sm" variant="secondary"><Link href={reviewHref}>Open governed worklist</Link></Button> : null}</div>
       <Panel title="Record scope"><div className={styles.panelBody}><p className="text-xs leading-6 text-[var(--k-muted)]">This chart shows the patient-scoped records loaded by Klinikos from its current authoritative repositories. A missing row is not interpreted as a normal result, completed referral, cleared care gap, or external-system confirmation.</p></div></Panel>
     </div>
   </div>;
 }
 
-function RecordCount({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function RecordCount({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return <div className="bg-[var(--k-public-surface)] p-4"><div className="flex items-center gap-2 text-[var(--k-accent)]">{icon}<p className="text-xs font-extrabold uppercase tracking-[.1em] text-[var(--k-muted)]">{label}</p></div><p className="mt-2 text-2xl font-semibold tabular-nums text-[var(--k-text)]">{value}</p></div>;
 }
 
@@ -196,7 +198,7 @@ function MedicationList({ history, actionLabel }: { history: PatientMedicationHi
 }
 
 function VitalsList({ vitals }: { vitals: PatientVital[] }) {
-  return <Panel title="Vitals" detail="Persisted measurements only; missing values are not inferred." action={null}><div>{vitals.length ? vitals.map((vital) => <div className={styles.row} key={vital.id}><span className={styles.rowIcon}><Activity className="size-4" /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">{formatVitalSummary(vital)}</p><p className="mt-1 text-xs text-[var(--k-muted)]">Measured {formatDate(vital.measuredAt)}</p></div></div>) : <Empty>No persisted vital measurements are loaded for this patient.</Empty>}</div></Panel>;
+  return <Panel title="Vitals" detail="Persisted measurements only; missing values are not inferred."><div>{vitals.length ? vitals.map((vital) => <div className={styles.row} key={vital.id}><span className={styles.rowIcon}><Activity className="size-4" /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">{formatVitalSummary(vital)}</p><p className="mt-1 text-xs text-[var(--k-muted)]">Measured {formatDate(vital.measuredAt)}</p></div></div>) : <Empty>No persisted vital measurements are loaded for this patient.</Empty>}</div></Panel>;
 }
 
 function formatVitalSummary(vital: PatientVital) {
