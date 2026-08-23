@@ -26,4 +26,11 @@ describe("clinical convergence canon", () => {
     expect(canon).toContain("PERFORMED → CHARGE EXPECTED → CHARGE PRESENT");
     expect(canon).toContain("ordered → transmitted → accepted → performed → resulted → reviewed → communicated → closed");
   });
+
+  it("is discoverable from the repository authority chain", () => {
+    const sourceOfTruth = read("docs/SOURCE_OF_TRUTH.md");
+    const architectureIndex = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+    expect(sourceOfTruth).toContain("docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md");
+    expect(architectureIndex).toContain("docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md");
+  });
 });
