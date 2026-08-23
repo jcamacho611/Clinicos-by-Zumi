@@ -13,15 +13,16 @@ describe("patient chart persisted vitals truth", () => {
   });
 
   it("renders the Vitals tab from a typed persisted-vitals prop", () => {
-    const chart = read("src/components/clinic/patient-chart.tsx");
+    const chart = read("src/components/clinic/patient-chart-real.tsx");
     expect(chart).toContain("PatientVital");
     expect(chart).toContain("vitals: PatientVital[]");
-    expect(chart).toContain("<VitalsTab vitals={vitals}");
+    expect(chart).toContain("<VitalsList vitals={measuredVitals}");
+    expect(chart).toContain("vitals.filter(vitalHasMeasurement)");
   });
 
   it("has a truthful empty state and no fixed clinical measurements", () => {
-    const chart = read("src/components/clinic/patient-chart.tsx");
-    expect(chart).toContain("No vitals recorded for this patient");
+    const chart = read("src/components/clinic/patient-chart-real.tsx");
+    expect(chart).toContain("No persisted vital measurements are loaded for this patient");
     expect(chart).not.toContain('"132/84"');
     expect(chart).not.toContain('"171"');
     expect(chart).not.toContain('"29.4"');
