@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { qualityGaps } from "@/lib/clinic-data";
+import { vitalHasMeasurement, type PatientVital } from "@/lib/clinical/vital-types";
 import type { Encounter, LabResult, Patient, PatientConsentSummary, PatientDocument, PatientFormSubmission, PatientImagingResult, TimelineEvent } from "@/lib/types";
 import type { PatientMedicationHistory } from "@/lib/repositories/medication-repository";
 import { SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -24,7 +25,7 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function PatientChart({ consents, documentPermissions, documents, encounters, formSubmissions, imagingResults, labResults, medicationHistory, medicationPermissions, patient }: { consents: PatientConsentSummary[]; documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; medicationHistory: PatientMedicationHistory; medicationPermissions: { canCreate: boolean; canSign: boolean; canUpdate: boolean }; patient: Patient }) {
+export function PatientChart({ consents, documentPermissions, documents, encounters, formSubmissions, imagingResults, labResults, medicationHistory, medicationPermissions, patient, vitals }: { consents: PatientConsentSummary[]; documentPermissions: { canManage: boolean; canUpdate: boolean }; documents: PatientDocument[]; encounters: Encounter[]; formSubmissions: PatientFormSubmission[]; imagingResults: PatientImagingResult[]; labResults: LabResult[]; medicationHistory: PatientMedicationHistory; medicationPermissions: { canCreate: boolean; canSign: boolean; canUpdate: boolean }; patient: Patient; vitals: PatientVital[] }) {
   const openEncounter = encounters.find((encounter) => encounter.status === "Draft" || encounter.status === "Ready for Review");
   const timeline = buildPatientTimeline(encounters, labResults, imagingResults, medicationHistory, documents, formSubmissions);
   return <div className="space-y-5">
@@ -47,7 +48,7 @@ export function PatientChart({ consents, documentPermissions, documents, encount
       <Tabs.Content className="mt-5 outline-none" value="Medications"><MedicationsTab history={medicationHistory} permissions={medicationPermissions} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Allergies"><ClinicalList title="Allergies and reactions" items={patient.allergies} action="Add allergy" icon={<AlertTriangle className="size-5" />} warning /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Problems"><ClinicalList title="Active problem list" items={patient.problems} action="Add problem" icon={<HeartPulse className="size-5" />} /></Tabs.Content>
-      <Tabs.Content className="mt-5 outline-none" value="Vitals"><VitalsTab /></Tabs.Content>
+      <Tabs.Content className="mt-5 outline-none" value="Vitals"><VitalsTab vitals={vitals} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Labs"><LabsTab results={labResults} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Imaging"><ImagingTab results={imagingResults} /></Tabs.Content>
       <Tabs.Content className="mt-5 outline-none" value="Documents"><DocumentsTab canManage={documentPermissions.canManage} canUpdate={documentPermissions.canUpdate} documents={documents} /></Tabs.Content>
@@ -185,7 +186,28 @@ function ClinicalList({ title, items, action, icon, warning }: { title: string; 
 
 function GenericList({ title, items, icon }: { title: string; items: string[]; icon: React.ReactNode }) { return <SectionCard title={title}><div className="divide-y divide-slate-100">{items.map((item) => <div className="flex items-center gap-3 p-5" key={item}><span className="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-700">{icon}</span><p className="flex-1 text-xs font-extrabold text-slate-800">{item}</p><ChevronRight className="size-4 text-slate-300" /></div>)}</div></SectionCard>; }
 
-function VitalsTab() { return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[["Blood pressure", "132/84", "mmHg"], ["Heart rate", "76", "bpm"], ["Weight", "171", "lb"], ["BMI", "29.4", "kg/m²"], ["Temperature", "98.4", "°F"], ["Oxygen", "98", "%"]].map(([label, value, unit]) => <Card className="p-5" key={label}><Activity className="size-4 text-teal-700" /><p className="mt-5 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">{label}</p><p className="mt-2 text-2xl font-extrabold text-slate-950">{value} <span className="text-[12px] font-bold text-slate-400">{unit}</span></p><p className="mt-2 text-[11px] text-slate-400">Jul 14, 2026 · 9:02 AM</p></Card>)}</div>; }
+function VitalsTab({ vitals }: { vitals: PatientVital[] }) {
+  const measuredVitals = vitals.filter(vitalHasMeasurement);
+  if (measuredVitals.length === 0) {
+    return <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center"><Activity className="mx-auto size-6 text-slate-300" /><p className="mt-3 text-xs font-bold text-slate-700">No vitals recorded for this patient</p><p className="mt-1 text-[12px] text-slate-500">Persisted measurements will appear here after they are captured for this patient.</p></div>;
+  }
+
+  return <div className="space-y-4">{measuredVitals.map((vital) => {
+    const readings: Array<[string, string] | null> = [
+      vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic !== null ? ["Blood pressure", `${vital.bloodPressureSystolic}/${vital.bloodPressureDiastolic} mmHg`] : null,
+      vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic === null ? ["Systolic BP", `${vital.bloodPressureSystolic} mmHg`] : null,
+      vital.bloodPressureSystolic === null && vital.bloodPressureDiastolic !== null ? ["Diastolic BP", `${vital.bloodPressureDiastolic} mmHg`] : null,
+      vital.heartRate !== null ? ["Heart rate", `${vital.heartRate} bpm`] : null,
+      vital.temperatureF !== null ? ["Temperature", `${vital.temperatureF} °F`] : null,
+      vital.oxygenPercent !== null ? ["Oxygen", `${vital.oxygenPercent}%`] : null,
+      vital.weightLbs !== null ? ["Weight", `${vital.weightLbs} lb`] : null,
+      vital.heightInches !== null ? ["Height", `${vital.heightInches} in`] : null,
+      vital.bmi !== null ? ["BMI", String(vital.bmi)] : null,
+    ];
+    const measured = readings.filter((reading): reading is [string, string] => reading !== null);
+    return <Card className="p-5" key={vital.id}><div className="flex flex-wrap items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-teal-50 text-teal-700"><Activity className="size-4" /></span><div><p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-slate-500">Persisted chart measurement</p><p className="mt-1 text-[12px] font-bold text-slate-700">{formatVitalTimestamp(vital.measuredAt)}</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{measured.map(([label, value]) => <div className="rounded-xl bg-slate-50 p-3" key={label}><p className="text-[10px] font-extrabold uppercase tracking-[.12em] text-slate-400">{label}</p><p className="mt-2 text-lg font-extrabold text-slate-950">{value}</p></div>)}</div></Card>;
+  })}</div>;
+}
 
 function LabsTab({ results }: { results: LabResult[] }) {
   return <SectionCard title="Laboratory history" description="Organization-scoped source results, corrections, review state, and patient-release status." action={<Button asChild size="sm" variant="secondary"><Link href="/labs">Open lab worklist <ArrowRight className="size-3.5" /></Link></Button>}><div className="space-y-4 p-5">{results.length ? results.map((result) => <div className={`rounded-2xl border p-5 ${result.critical ? "border-rose-300 bg-rose-50/50" : "border-slate-200"}`} key={result.id}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><span className={`grid size-10 shrink-0 place-items-center rounded-xl ${result.critical ? "bg-rose-600 text-white" : "bg-cyan-50 text-cyan-700"}`}><FlaskConical className="size-5" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{result.panel}</p>{result.version > 1 && <Badge tone="amber">Version {result.version}</Badge>}{result.correctionOfId && <Badge tone="amber">Correction</Badge>}{result.critical && <Badge tone="rose">Source flagged critical</Badge>}</div><p className="mt-1 text-[12px] text-slate-500">{result.vendor} · {formatLabDate(result.resultedAt)} · {result.source}{result.sourceReference ? ` · ${result.sourceReference}` : ""}</p></div><div className="flex flex-wrap gap-2"><StatusBadge status={result.reviewStatus} /><Badge tone={result.patientVisible ? "teal" : "slate"}>{result.patientVisible ? "Released to portal" : "Held from portal"}</Badge><Badge tone={result.abnormalCount ? "rose" : "teal"}>{result.abnormalCount} abnormal</Badge></div></div><div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{result.items.map((item) => <div className={`rounded-xl p-3 ${item.critical ? "bg-rose-100" : "bg-slate-50"}`} key={item.id}><div className="flex items-start justify-between gap-2"><p className="text-[11px] font-bold text-slate-500">{item.name}</p>{item.critical && <Badge tone="rose">Critical source flag</Badge>}</div><p className="mt-2 text-sm font-extrabold text-slate-900">{item.value}{item.unit ? ` ${item.unit}` : ""}</p>{item.range && <p className="mt-1 text-[11px] text-slate-500">Reference {item.range}</p>}{item.flag && <Badge className="mt-2" tone={item.critical ? "rose" : "amber"}>{item.flag.replaceAll("_", " ")}</Badge>}</div>)}</div></div>) : <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center"><FlaskConical className="mx-auto size-6 text-slate-300" /><p className="mt-3 text-xs font-bold text-slate-700">No laboratory results recorded</p><p className="mt-1 text-[12px] text-slate-500">Received results will appear here after organization and patient validation.</p></div>}</div></SectionCard>;
@@ -197,6 +219,12 @@ function ImagingTab({ results }: { results: PatientImagingResult[] }) {
 
 function formatLabDate(value: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
+function formatVitalTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
 }
 
 function BillingTab({ patient }: { patient: Patient }) { return <div className="grid gap-5 lg:grid-cols-3"><Card className="bg-slate-950 p-6 text-white"><p className="text-[11px] font-bold text-slate-400">PATIENT BALANCE</p><p className="mt-3 text-4xl font-extrabold">${patient.balance}</p><Button className="mt-6 w-full bg-white text-slate-950" variant="secondary">Create payment link</Button></Card><Card className="p-6"><p className="text-[11px] font-bold text-slate-400">PRIMARY COVERAGE</p><p className="mt-3 text-lg font-extrabold text-slate-950">{patient.insurance}</p><p className="mt-1 text-xs text-slate-500">{patient.plan}</p><StatusBadge status="Verified" /></Card><Card className="p-6"><p className="text-[11px] font-bold text-slate-400">LATEST CLAIM</p><p className="mt-3 text-lg font-extrabold text-slate-950">CLM-72014</p><p className="mt-1 text-xs text-slate-500">$224 · Jun 18, 2026</p><StatusBadge status="Ready for review" /></Card></div>; }
