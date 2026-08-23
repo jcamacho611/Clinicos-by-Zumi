@@ -69,6 +69,23 @@ describe("governed Current Visit staff intake foundation", () => {
     ]);
   });
 
+  it("keeps required evidence blockers authoritative when provider-review escalations also exist", () => {
+    const handoff = buildStaffIntakeHandoff(intake({
+      reasonForVisit: "   ",
+      symptomUpdates: [],
+      delegatedWork: [
+        { id: "task-1", label: "Medication reconciliation", status: "needs_provider_review", escalationReason: "Patient reports an unverified dose change." },
+      ],
+    }));
+
+    expect(handoff.status).toBe("incomplete");
+    expect(handoff.blockers).toContain("Reason for visit not captured");
+    expect(handoff.blockers).toContain("Symptom updates not documented");
+    expect(handoff.escalations).toEqual([
+      "Medication reconciliation: Patient reports an unverified dose change.",
+    ]);
+  });
+
   it("treats missing symptom updates as unknown rather than as a denial of symptoms", () => {
     const handoff = buildStaffIntakeHandoff(intake({ symptomUpdates: [] }));
 
