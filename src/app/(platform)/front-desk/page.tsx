@@ -5,6 +5,7 @@ import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 import { listCareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
+import styles from "./front-desk-black-label.module.css";
 
 export const metadata: Metadata = { title: "Front desk" };
 
@@ -15,5 +16,5 @@ export default async function FrontDeskPage() {
     listAppointmentsForOrganization(session.organizationId),
     listCareCoordinationWorkspace(session.organizationId, session.userId),
   ]);
-  return <FrontDeskWorkspaceReal appointments={appointments} coordination={coordination} currentUserId={session.userId} />;
+  return <div className={styles.stage}><FrontDeskWorkspaceReal appointments={appointments} coordination={coordination} currentUserId={session.userId} /></div>;
 }
