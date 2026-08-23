@@ -28,6 +28,14 @@ describe("patient-controlled Twilio Verify ceremony", () => {
     expect(route).toContain('Retry-After": "900"');
   });
 
+  it("fails closed on unresolved phone-verification economics before any provider call", () => {
+    expect(route).toContain('variableCostRailPolicy("phone_verification")');
+    expect(route).toContain("phoneVerificationSpendReady");
+    expect(route).toContain("verification_funding_not_ready");
+    expect(route.indexOf("phoneVerificationSpendReady")).toBeLessThan(route.indexOf("startTwilioPhoneVerification({"));
+    expect(route.indexOf("phoneVerificationSpendReady")).toBeLessThan(route.indexOf("checkTwilioPhoneVerification({"));
+  });
+
   it("never persists verification codes and records possession only after Twilio approves", () => {
     expect(route).toContain('result.status !== "approved"');
     expect(route).toContain("codeStored: false");
