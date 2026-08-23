@@ -23,7 +23,7 @@ export interface BodyMapVersion {
 
 export interface BodyMapEvidenceRef {
   bodyMapVersionId: string;
-  findingId: string | null;
+  findingId: string;
 }
 
 export type BodyMapDeltaKind =
@@ -31,7 +31,6 @@ export type BodyMapDeltaKind =
   | "severity_worsened"
   | "severity_unchanged"
   | "finding_added"
-  | "finding_removed"
   | "functional_impact_changed";
 
 export interface BodyMapDelta {
