@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CalendarPlus, FileText, Stethoscope, UserCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, FileText } from "lucide-react";
 import { PageIntro, Person, SectionCard, StatusBadge } from "@/components/clinic/workspace-kit";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,6 @@ type ProviderNextWork = {
   detail: string;
   href: string;
   action: string;
-  encounterId: string | null;
 };
 
 export function ProviderWorkspaceReal({ appointments, encounters }: { appointments: Appointment[]; encounters: Encounter[] }) {
@@ -29,14 +28,14 @@ export function ProviderWorkspaceReal({ appointments, encounters }: { appointmen
   const todayEncounter = todayAppointment ? encounters.find((encounter) => encounter.patientId === todayAppointment.patientId) : undefined;
 
   const nextWork: ProviderNextWork = addendum
-    ? { label: "Addendum needed", title: addendum.patientName, detail: `${addendum.date} · ${addendum.type}`, href: `/encounters/${addendum.id}`, action: "Open addendum", encounterId: addendum.id }
+    ? { label: "Addendum needed", title: addendum.patientName, detail: `${addendum.date} · ${addendum.type}`, href: `/encounters/${addendum.id}`, action: "Open addendum" }
     : review
-      ? { label: "Ready for review", title: review.patientName, detail: `${review.date} · ${review.type}`, href: `/encounters/${review.id}`, action: "Review encounter", encounterId: review.id }
+      ? { label: "Ready for review", title: review.patientName, detail: `${review.date} · ${review.type}`, href: `/encounters/${review.id}`, action: "Review encounter" }
       : draft
-        ? { label: "Resume draft", title: draft.patientName, detail: `${draft.date} · ${draft.type}`, href: `/encounters/${draft.id}`, action: "Resume Current Visit", encounterId: draft.id }
+        ? { label: "Resume draft", title: draft.patientName, detail: `${draft.date} · ${draft.type}`, href: `/encounters/${draft.id}`, action: "Resume Current Visit" }
         : todayAppointment
-          ? { label: "Today's visit", title: todayAppointment.patient, detail: `${todayAppointment.time} · ${todayAppointment.type}`, href: todayEncounter ? `/encounters/${todayEncounter.id}` : `/patients/${todayAppointment.patientId}`, action: todayEncounter ? "Open Current Visit" : "Open patient", encounterId: todayEncounter?.id ?? null }
-          : { label: "Queue clear", title: "No encounter is waiting in this provider queue.", detail: "Open the encounter worklist or Tasks when you need deeper clinical follow-through.", href: "/encounters", action: "Open encounters", encounterId: null };
+          ? { label: "Today's visit", title: todayAppointment.patient, detail: `${todayAppointment.time} · ${todayAppointment.type}`, href: todayEncounter ? `/encounters/${todayEncounter.id}` : `/patients/${todayAppointment.patientId}`, action: todayEncounter ? "Open Current Visit" : "Open patient" }
+          : { label: "Queue clear", title: "No encounter is waiting in this provider queue.", detail: "Open the encounter worklist or Tasks when you need deeper clinical follow-through.", href: "/encounters", action: "Open encounters" };
 
   return <div className={`${styles.stage} space-y-6`}>
     <PageIntro
