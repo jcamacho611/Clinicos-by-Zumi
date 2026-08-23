@@ -6,6 +6,7 @@ import {
   getPatientSmsState,
   recordPatientSmsPermission,
 } from "@/lib/communications/patient-sms-service";
+import type { SmsPreferenceEnvelope } from "@/lib/communications/sms-policy";
 import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const updateSchema = z.object({
@@ -32,14 +33,7 @@ const updateSchema = z.object({
   }
 });
 
-function redactSmsProviderEvidence<T extends {
-  endpoint?: {
-    normalizedPhone?: string | null;
-    verifiedAt?: string | null;
-    verificationSource?: string | null;
-    verificationProviderReference?: string | null;
-  };
-}>(sms: T): T {
+function redactSmsProviderEvidence(sms: SmsPreferenceEnvelope) {
   if (!sms.endpoint) return sms;
   const { verificationProviderReference: _providerReference, ...safeEndpoint } = sms.endpoint;
   void _providerReference;
