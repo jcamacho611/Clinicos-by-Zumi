@@ -86,7 +86,7 @@ const stateNames: Record<string, string> = {
 function jurisdiction(value: string) {
   const trimmed = value.trim();
   const upper = trimmed.toUpperCase();
-  return stateNames[upper] ?? trimmed || "Recipient jurisdiction to be confirmed";
+  return stateNames[upper] ?? (trimmed || "Recipient jurisdiction to be confirmed");
 }
 
 function reviewItem(
