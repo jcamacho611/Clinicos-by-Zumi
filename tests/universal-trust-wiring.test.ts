@@ -110,15 +110,22 @@ describe("universal trust wiring", () => {
     expect(signals.map((signal) => signal.source.recordId)).toEqual(["newer", "older"]);
   });
 
-  it("wires the shared projection into the existing Grid trust workspace rather than a second trust store", () => {
+  it("wires the shared projection beside the existing Grid trust workspace rather than replacing it", () => {
     const repository = read("src/lib/grid/trust-workspace-repository.ts");
-    const component = read("src/components/grid/grid-trust-workspace.tsx");
+    const page = read("src/app/(platform)/grid/trust/page.tsx");
+    const component = read("src/components/trust/governed-trust-signals.tsx");
+    const existingGridWorkspace = read("src/components/grid/grid-trust-workspace.tsx");
 
     expect(repository).toContain("projectGridTrustSignals");
     expect(repository).toContain("trustSignals");
+    expect(page).toContain("GovernedTrustSignals");
+    expect(page).toContain("workspace.trustSignals");
+    expect(page).toContain("GridTrustWorkspace");
     expect(component).toContain("Governed trust signals");
     expect(component).toContain("No automatic penalty");
     expect(repository).not.toContain("UniversalTrustRecord");
+    expect(existingGridWorkspace).toContain("Marketplace disputes");
+    expect(existingGridWorkspace).toContain("Safety incidents");
     expect(component).not.toMatch(/refund completed|participant suspended|license revoked/i);
   });
 });
