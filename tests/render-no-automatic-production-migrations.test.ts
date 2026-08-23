@@ -13,6 +13,11 @@ describe("Render production migration boundary", () => {
     expect(renderBuild).toContain("Render will not apply database migrations automatically");
   });
 
+  it("fails closed when a real Render build has no database connection configured", () => {
+    expect(renderBuild).toContain("Render database verification requires DATABASE_URL or DIRECT_DATABASE_URL");
+    expect(renderBuild).toMatch(/if \(!databaseUrl\)[\s\S]*process\.env\.RENDER === "true"[\s\S]*process\.exit\(1\)/);
+  });
+
   it("never executes migrate deploy inside the Render branch", () => {
     const renderBranch = renderBuild.slice(
       renderBuild.indexOf('if (process.env.RENDER === "true")'),
