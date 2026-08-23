@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateCredentials } from "@/lib/auth/credentials";
 import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
+import { resolvePostLoginRedirect } from "@/lib/auth/post-login-routing";
 import {
   createClinicSession,
   revokeClinicSession,
@@ -13,7 +14,13 @@ import {
   bindEntryAcceptanceToIdentity,
   readAcceptedEntryProof,
 } from "@/lib/legal/entry-access";
-import { isEntryGateEnforcementEnabled } from "@/lib/legal/legal-config";
+import { buildGlobalAgreement } from "@/lib/legal/global-agreement";
+import { hasCurrentAgreementAcceptance } from "@/lib/legal/legal-access";
+import {
+  getLegalConfigurationStatus,
+  isEntryGateEnforcementEnabled,
+  isLegalGateEnforcementEnabled,
+} from "@/lib/legal/legal-config";
 import { ENTRY_GATE_COOKIE_NAME } from "@/lib/legal/entry-token";
 import { isSameOriginMutation } from "@/lib/security/same-origin-post";
 
@@ -100,11 +107,36 @@ export async function POST(request: Request) {
       }
     }
 
+    let redirectTo = returnTo ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard");
+
+    // When the universal entry gate is disabled, preserve the existing authenticated
+    // global-Terms authority and carry the customer's intended safe destination through it.
+    // When universal entry is enabled, the bound entry acceptance is the baseline gate and
+    // relationship-specific/additional agreements remain separate workflows.
+    if (!entryGateEnabled) {
+      const legalGateEnabled = isLegalGateEnforcementEnabled();
+      const legalStatus = legalGateEnabled ? getLegalConfigurationStatus() : null;
+      let agreementAccepted = false;
+
+      if (legalGateEnabled && legalStatus?.ready && !session.demo && process.env.DATABASE_URL) {
+        try {
+          agreementAccepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legalStatus.config));
+        } catch {
+          agreementAccepted = false;
+        }
+      }
+
+      redirectTo = resolvePostLoginRedirect({
+        role: session.role,
+        requestedReturnTo: parsed.data.returnTo,
+        legalGateEnabled,
+        legalConfigurationReady: legalStatus?.ready ?? true,
+        agreementAccepted,
+      });
+    }
+
     clearLoginFailures(key);
-    const response = NextResponse.json({
-      ok: true,
-      redirectTo: returnTo ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard"),
-    });
+    const response = NextResponse.json({ ok: true, redirectTo });
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
     if (entryGateEnabled) {
       response.cookies.set(ENTRY_GATE_COOKIE_NAME, "", {
