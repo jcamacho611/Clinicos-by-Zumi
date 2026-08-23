@@ -230,7 +230,7 @@ export function PublicZumiSiteControl() {
               <textarea className="max-h-28 min-h-11 min-w-0 resize-none bg-transparent px-2 py-3 text-sm outline-none placeholder:text-[#866f6b]" disabled={Boolean(pending)} id="public-zumi-site-input" onChange={(event) => setInput(event.target.value)} onKeyDown={onKeyDown} placeholder="Message Zumi..." rows={1} value={input} />
               <button aria-label={pending ? "Zumi is responding" : "Send message to Zumi"} className="grid size-11 place-items-center rounded-full border border-[#e6817b]/30 bg-[#16090c] disabled:opacity-45" disabled={Boolean(pending) || !input.trim()} type="submit"><ZumiOrb state={pending ? "analyzing" : "observing"} size={30} /></button>
             </div>
-            <p className="mt-2 px-2 text-[10px] leading-4 text-[#8f7773]">Public Zumi cannot open private records or execute clinic changes. Do not enter patient information here.</p>
+            <p className="mt-2 px-2 text-[11px] leading-4 text-[#a8918c]">Public Zumi cannot open private records or execute clinic changes. Do not enter patient information here.</p>
           </form>
         </section>
       )}

@@ -69,6 +69,25 @@ describe("public Zumi conversation", () => {
     expect(operational.destination?.key).toBe("referrals");
   });
 
+  it("still acknowledges a bare role statement rather than routing it somewhere", () => {
+    // The other half of the rule above. Role acknowledgements yield to routing, but a
+    // message that is only a role statement has no problem to route, so it must keep its
+    // own answer instead of falling through to a generic miss.
+    const [role] = converse(["I run a med spa"]);
+    expect(role.body.toLowerCase()).toContain("callbacks");
+    expect(role.destination).toBeNull();
+    expect(role.confidence).toBeGreaterThan(0.25);
+  });
+
+  it("answers an AI-authority question instead of routing on the word 'clinical'", () => {
+    // Deferring role acknowledgements to the routing rules must not drag the rest of the
+    // product answers with it: "clinical decision" matches a routing rule, and sending
+    // this question to a workspace instead of answering it is a safety answer lost.
+    const [ai] = converse(["is the ai making clinical decisions"]);
+    expect(ai.destination, "this is a question to answer, not a place to go").toBeNull();
+    expect(ai.body.toLowerCase()).toMatch(/licensed/);
+  });
+
   it("still reads a genuine hiring request as staffing", () => {
     for (const message of ["I need a nurse Friday", "we need to hire a receptionist"]) {
       expect(converse([message])[0].destination?.key, message).toBe("staffing");

@@ -38,6 +38,11 @@ export interface LegalAcceptanceRecord {
   status: string;
   ipAddress: string | null;
   userAgent: string | null;
+  /* Nullable, and the partial unique index is `WHERE "idempotencyKey" IS NOT NULL`, so
+     older rows carry none. Declared here because these records come back from
+     `SELECT *`: the column has existed since the legal_access_foundation migration and
+     the concurrent-insert path reads it, but the type never admitted it. */
+  idempotencyKey: string | null;
 }
 
 interface StoredAgreementVersion {

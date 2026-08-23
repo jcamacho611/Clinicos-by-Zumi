@@ -65,7 +65,7 @@ function SnapshotList({ empty, items }: { empty: string; items: string[] }) {
 }
 
 function VitalReading({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p className="text-[9px] font-extrabold uppercase tracking-[.13em] text-slate-400">{label}</p><p className="mt-1 text-[12px] font-extrabold text-slate-800">{value}</p></div>;
+  return <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-slate-400">{label}</p><p className="mt-1 text-[12px] font-extrabold text-slate-800">{value}</p></div>;
 }
 
 function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitModel> }) {
@@ -88,7 +88,7 @@ function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitMod
   return <>
     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
       <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Vitals captured</p>
-      <p className="text-[10px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
+      <p className="text-[11px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
     </div>
     <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{measured.map(([label, value]) => <VitalReading key={label} label={label} value={value} />)}</div>
     <p className="mt-3 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p>
@@ -230,15 +230,15 @@ export function EncounterEditor({ canSign, encounter, patient, vital }: { canSig
       </div>
       <div className="grid gap-px bg-slate-100 lg:grid-cols-4">
         <div className="bg-white p-4">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Identity & context</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">Identity & context</p>
           <p className="mt-2 text-[13px] font-extrabold text-slate-900">{visit.patientSnapshot.patientName}</p>
           <p className="mt-1 text-[11px] leading-5 text-slate-500">MRN {visit.patientSnapshot.mrn} · Age {visit.patientSnapshot.age} · {visit.patientSnapshot.preferredLanguage}</p>
           <p className="mt-2 text-[11px] font-bold text-slate-700">Risk: {visit.patientSnapshot.riskLevel}</p>
           {visit.patientSnapshot.riskFlags.length > 0 && <p className="mt-1 text-[11px] leading-5 text-amber-700">{visit.patientSnapshot.riskFlags.join(" · ")}</p>}
         </div>
-        <div className="bg-white p-4"><p className="mb-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Allergies</p><SnapshotList empty="No allergies listed in the current patient summary." items={visit.patientSnapshot.allergies} /></div>
-        <div className="bg-white p-4"><p className="mb-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Medications</p><SnapshotList empty="No medications listed in the current patient summary." items={visit.patientSnapshot.medications} /></div>
-        <div className="bg-white p-4"><p className="mb-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">Problems</p><SnapshotList empty="No active problems listed in the current patient summary." items={visit.patientSnapshot.problems} /></div>
+        <div className="bg-white p-4"><p className="mb-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">Allergies</p><SnapshotList empty="No allergies listed in the current patient summary." items={visit.patientSnapshot.allergies} /></div>
+        <div className="bg-white p-4"><p className="mb-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">Medications</p><SnapshotList empty="No medications listed in the current patient summary." items={visit.patientSnapshot.medications} /></div>
+        <div className="bg-white p-4"><p className="mb-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-400">Problems</p><SnapshotList empty="No active problems listed in the current patient summary." items={visit.patientSnapshot.problems} /></div>
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3 text-[11px] text-slate-500">
         <span><strong className="text-slate-700">Coverage:</strong> {visit.patientSnapshot.insurance || "Not listed"}{visit.patientSnapshot.plan ? ` · ${visit.patientSnapshot.plan}` : ""}</span>

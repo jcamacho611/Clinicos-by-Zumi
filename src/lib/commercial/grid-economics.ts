@@ -249,6 +249,22 @@ export function computeGridPlatformFeeCents(resourceClass: string, grossAmountCe
   if (!policy) return null;
   if (policy.feeModel === "none") return 0;
   if (!gridPolicyHasCounselClearance(policy)) return null;
+  return gridFeeAmountForPolicy(policy, grossAmountCents);
+}
+
+/**
+ * The fee arithmetic on its own, with the legal gates already decided by the caller.
+ *
+ * Separated so the floor and ceiling can be exercised directly. Because no declared
+ * class is counsel-cleared today, every path through `computeGridPlatformFeeCents`
+ * returns before reaching this math, which would otherwise leave the cap that keeps a
+ * large booking from producing a disproportionate fee with no coverage at all.
+ *
+ * This is arithmetic, not authority: it assumes its caller has already checked
+ * clearance, so it must never be exported into a settlement path.
+ */
+export function gridFeeAmountForPolicy(policy: GridFeePolicyDeclaration, grossAmountCents: number): number {
+  if (policy.feeModel === "none") return 0;
   if (policy.feeModel === "fixed_per_transaction") return policy.fixedFeeCents ?? 0;
   const raw = Math.round((grossAmountCents * (policy.percentBps ?? 0)) / 10_000);
   const floored = policy.minimumFeeCents == null ? raw : Math.max(raw, policy.minimumFeeCents);
