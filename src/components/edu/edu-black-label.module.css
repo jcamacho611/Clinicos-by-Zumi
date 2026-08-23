@@ -1,0 +1,124 @@
+.shell {
+  --edu-canvas: var(--k-work-bg, #f6f2ed);
+  --edu-surface: var(--k-public-surface, #fffaf7);
+  --edu-raised: var(--k-public-raised, #f2e9e5);
+  --edu-text: var(--k-text, #311d20);
+  --edu-muted: var(--k-muted, #765f61);
+  --edu-line: var(--k-line, rgba(84, 43, 47, .16));
+  --edu-accent: var(--k-accent, #a84d55);
+  --edu-premium: var(--k-premium, #9f5f55);
+  min-height: 100vh;
+  background: var(--edu-canvas);
+  color: var(--edu-text);
+}
+
+.frame { min-height: 100vh; }
+
+.rail {
+  position: relative;
+  z-index: 20;
+  border-right: 1px solid rgba(226, 139, 133, .11);
+  background: radial-gradient(circle at 26% 4%, rgba(131, 31, 39, .24), transparent 25%), #070304;
+  color: #f8efed;
+}
+
+.railHeader {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: 76px;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(226, 139, 133, .10);
+}
+
+.desktopNav { padding: 1rem .75rem 2rem; }
+.mobileNav { display: none; border-top: 1px solid rgba(226, 139, 133, .10); }
+.mobileNav summary { min-height: 48px; cursor: pointer; list-style: none; padding: .9rem 1.25rem; color: #d9c4c0; font-size: .8125rem; font-weight: 700; }
+.mobileNav summary::-webkit-details-marker { display: none; }
+.mobileNav[open] summary { color: #fff8f6; }
+.navGroup + .navGroup { margin-top: 1.25rem; }
+.navLabel { padding: 0 .5rem; color: #8f7773; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.navList { display: grid; gap: .125rem; margin-top: .5rem; }
+.navLink { display: flex; min-height: 44px; align-items: center; border: 1px solid transparent; border-radius: 12px; padding: .6rem .7rem; color: #cbb6b2; font-size: .875rem; font-weight: 600; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
+.navLink:hover { border-color: rgba(230, 129, 123, .12); background: rgba(230, 129, 123, .055); color: #fff8f6; }
+.navLink:focus-visible,
+.shell :where(button, a[href], input, textarea, select):focus-visible { outline: 2px solid var(--edu-accent); outline-offset: 3px; }
+
+.workspace {
+  min-width: 0;
+  background: radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--edu-accent) 8%, transparent), transparent 26%), var(--edu-canvas);
+  color: var(--edu-text);
+}
+
+.topbar { position: sticky; top: 0; z-index: 15; border-bottom: 1px solid var(--edu-line); background: color-mix(in srgb, var(--edu-surface) 92%, transparent); backdrop-filter: blur(16px); }
+.topbarInner { display: flex; min-height: 68px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; padding: .875rem clamp(1rem, 3vw, 2rem); }
+.classification { display: flex; flex-wrap: wrap; gap: .4rem; }
+.classificationItem { border: 1px solid color-mix(in srgb, var(--edu-accent) 24%, var(--edu-line)); border-radius: 999px; background: color-mix(in srgb, var(--edu-accent) 6%, var(--edu-surface)); padding: .32rem .6rem; color: var(--edu-accent); font-size: .75rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.main { color: var(--edu-text); }
+
+.commandHeader { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--edu-line); padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1rem, 3vw, 2rem); }
+.commandEyebrow { color: var(--edu-accent); font-size: .75rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.commandTitle { margin-top: .45rem; color: var(--edu-text); font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 600; letter-spacing: -.045em; }
+.commandDescription { max-width: 46rem; margin-top: .75rem; color: var(--edu-muted); font-size: .875rem; line-height: 1.65; }
+.empty { border: 1px dashed var(--edu-line); background: var(--edu-surface); padding: 2.5rem 1.5rem; text-align: center; }
+.dashboard { padding: clamp(1rem, 3vw, 2rem); }
+
+.activeWork { position: relative; overflow: hidden; border: 1px solid var(--edu-line); border-radius: 26px; background: var(--edu-surface); box-shadow: var(--k-shadow, 0 20px 60px rgba(63, 32, 36, .10)); }
+.activeWork::before { position: absolute; inset: 0 auto 0 0; width: 2px; background: linear-gradient(180deg, transparent 5%, var(--edu-accent) 32%, var(--edu-accent) 68%, transparent 95%); content: ""; }
+.activeWorkMain { padding: clamp(1.35rem, 3vw, 2rem); }
+.activityStrip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--edu-line); }
+.activityItem { padding: 1rem 1.25rem; }
+.activityItem + .activityItem { border-left: 1px solid var(--edu-line); }
+.activityValue { margin-top: .3rem; color: var(--edu-text); font-size: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.035em; }
+.activityLabel { color: var(--edu-muted); font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+
+/* Legacy EDU compatibility while deeper routes are progressively recomposed.
+ * Old all-dark pages used nearly-transparent white work surfaces. Only those work
+ * surfaces are translated into Marble here; deliberately dark simulations/program
+ * panels retain their authored dark treatment. */
+.main [class~="bg-white/[.03]"],
+.main [class~="bg-white/[.04]"] {
+  background: var(--edu-surface) !important;
+  border-color: var(--edu-line) !important;
+  color: var(--edu-text) !important;
+}
+
+.main [class~="bg-white/[.03]"] [class~="text-white"],
+.main [class~="bg-white/[.04]"] [class~="text-white"] { color: var(--edu-text) !important; }
+.main [class~="bg-white/[.03]"] [class~="text-slate-300"],
+.main [class~="bg-white/[.03]"] [class~="text-slate-400"],
+.main [class~="bg-white/[.04]"] [class~="text-slate-300"],
+.main [class~="bg-white/[.04]"] [class~="text-slate-400"] { color: var(--edu-muted) !important; }
+.main [class~="bg-white/[.03]"] [class~="border-white/10"],
+.main [class~="bg-white/[.04]"] [class~="border-white/10"] { border-color: var(--edu-line) !important; }
+
+/* The prior EDU implementation used 10–11px operational labels throughout. Keep
+ * them readable during route-by-route convergence without changing domain logic. */
+.main [class~="text-[10px]"],
+.main [class~="text-[11px]"] { font-size: .75rem !important; }
+
+@media (min-width: 1024px) {
+  .frame { display: grid; grid-template-columns: 252px minmax(0, 1fr); }
+  .rail { min-height: 100vh; }
+}
+
+@media (max-width: 1023px) {
+  .desktopNav { display: none; }
+  .mobileNav { display: block; }
+  .rail { position: sticky; top: 0; border-right: 0; border-bottom: 1px solid rgba(226, 139, 133, .10); }
+  .topbar { position: relative; }
+}
+
+@media (max-width: 640px) {
+  .railHeader { min-height: 64px; }
+  .classification { width: 100%; }
+  .activityStrip { grid-template-columns: 1fr; }
+  .activityItem + .activityItem { border-top: 1px solid var(--edu-line); border-left: 0; }
+  .activeWork { border-radius: 20px; box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell *,
+  .shell *::before,
+  .shell *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
