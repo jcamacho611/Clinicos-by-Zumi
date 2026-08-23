@@ -98,7 +98,10 @@ export async function getEnrollmentCompletionEvidence(identity: EduIdentity, inp
       FROM education_sessions
       WHERE "institutionId" = ${institutionId}
         AND "cohortId" = ${enrollment.cohortId}
-        AND status IN ('scheduled', 'open', 'completed')
+        AND (
+          status IN ('open', 'completed')
+          OR (status = 'scheduled' AND "endsAt" <= CURRENT_TIMESTAMP)
+        )
       ORDER BY "startsAt" ASC
     `),
     db.$queryRaw<AttendanceEvidenceRow[]>(Prisma.sql`
