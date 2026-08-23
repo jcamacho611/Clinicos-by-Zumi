@@ -37,12 +37,12 @@
 - `LegalReviewItem`
 - `buildNdaDraftPackage(input)`
 
-- [ ] Write tests first for Level 1/2/3 disclosure boundaries, companion-agreement prompts, review-required jurisdiction handling, drafting-target labeling, and crown-jewel exclusions.
-- [ ] Confirm the test source fails because the new module does not exist.
-- [ ] Implement a pure NDA package generator that emits modules, disclosure controls, companion agreements, drafting targets, warnings, and stable review-item keys.
-- [ ] Ensure California/Florida handling creates review prompts rather than automated enforceability conclusions.
-- [ ] Ensure liquidated-damages values are labeled review-required drafting targets, not fines/guaranteed recovery.
-- [ ] Preserve explicit PHI/source-code/credential/key/database/admin exclusions at every disclosure level.
+- [x] Write tests first for Level 1/2/3 disclosure boundaries, companion-agreement prompts, review-required jurisdiction handling, drafting-target labeling, and crown-jewel exclusions.
+- [x] Confirm the test source fails because the new module does not exist.
+- [x] Implement a pure NDA package generator that emits modules, disclosure controls, companion agreements, drafting targets, warnings, and stable review-item keys.
+- [x] Ensure California/Florida handling creates review prompts rather than automated enforceability conclusions.
+- [x] Ensure liquidated-damages values are labeled review-required drafting targets, not fines/guaranteed recovery.
+- [x] Preserve explicit PHI/source-code/credential/key/database/admin exclusions at every disclosure level.
 
 ### Task 2: Review-gated tenant lifecycle
 
@@ -61,15 +61,15 @@
 - `transitionGeneratedLegalDocument(record, nextStatus, event)`
 - `addVerifiedExecutionEvidence(record, evidence)`
 
-- [ ] Write tests first proving generated records require `organizationId` and start `NEEDS_REVIEW`.
-- [ ] Write tests proving unresolved blocking review items prevent approval.
-- [ ] Write tests proving every required signer must have authority confirmed.
-- [ ] Write tests proving `NEEDS_REVIEW -> APPROVED_FOR_SIGNATURE` throws until review/signers are ready.
-- [ ] Write tests proving approval succeeds after explicit review resolutions and signer authority.
-- [ ] Write tests proving illegal transitions throw.
-- [ ] Write tests proving execution is impossible without exact current artifact-hash evidence.
-- [ ] Implement the minimal lifecycle satisfying those contracts.
-- [ ] Keep `productionApproved: false` invariant and expose no function that changes it.
+- [x] Write tests first proving generated records require `organizationId` and start `NEEDS_REVIEW`.
+- [x] Write tests proving unresolved blocking review items prevent approval.
+- [x] Write tests proving every required signer must have authority confirmed.
+- [x] Write tests proving `NEEDS_REVIEW -> APPROVED_FOR_SIGNATURE` throws until review/signers are ready.
+- [x] Write tests proving approval succeeds after explicit review resolutions and signer authority.
+- [x] Write tests proving illegal transitions throw.
+- [x] Write tests proving execution is impossible without exact current artifact-hash evidence.
+- [x] Implement the minimal lifecycle satisfying those contracts.
+- [x] Keep `productionApproved: false` invariant and expose no function that changes it.
 
 ### Task 3: Immutable artifact and tenant-scoped Legal Vault contracts
 
@@ -85,31 +85,39 @@
 - `GeneratedLegalVaultStore`
 - `GENERATED_LEGAL_VAULT_INVARIANTS`
 
-- [ ] Write tests first for non-empty PDF bytes, lowercase 64-character SHA-256, organization-scoped storage keys, and deterministic file naming.
-- [ ] Write source-contract tests requiring `organizationId` on every vault operation.
-- [ ] Write source-contract tests forbidding destructive delete and requiring compare-and-set status transitions.
-- [ ] Implement the artifact helper with Node `crypto` and exact-byte hashing.
-- [ ] Implement the persistence-neutral store interface with organization scope on create/get/list/event/artifact/evidence/status operations.
-- [ ] Keep events/evidence append-only and artifacts immutable by contract.
+- [x] Write tests first for non-empty PDF bytes, lowercase 64-character SHA-256, organization-scoped storage keys, and deterministic file naming.
+- [x] Write source-contract tests requiring `organizationId` on every vault operation.
+- [x] Write source-contract tests forbidding destructive delete and requiring compare-and-set status transitions.
+- [x] Implement the artifact helper with Node `crypto` and exact-byte hashing.
+- [x] Implement the persistence-neutral store interface with organization scope on create/get/list/event/artifact/evidence/status operations.
+- [x] Keep events/evidence append-only and artifacts immutable by contract.
 
 ### Task 4: Current-main compatibility and anti-overwrite guard
 
 **Files:**
 - Create: `tests/legal-generated-documents-compatibility.test.ts`
 
-- [ ] Write source-contract tests proving `src/app/(platform)/admin/legal/page.tsx` still uses `listOrganizationLegalAcceptances` and is not imported/replaced by the generated-document modules.
-- [ ] Prove `src/lib/legal/document-registry.ts` remains unchanged in this branch and does not gain `master_nda` as a mandatory static product document.
-- [ ] Prove generated modules do not import Prisma/db/auth session directly; authorization belongs to future server adapters before persistence invocation.
-- [ ] Prove the generated vault interface requires organization scope instead of document-id-only access.
+- [x] Write source-contract tests proving `src/app/(platform)/admin/legal/page.tsx` still uses `listOrganizationLegalAcceptances` and is not imported/replaced by the generated-document modules.
+- [x] Prove `src/lib/legal/document-registry.ts` remains unchanged in this branch and does not gain `master_nda` as a mandatory static product document.
+- [x] Prove generated modules do not import Prisma/db/auth session directly; authorization belongs to future server adapters before persistence invocation.
+- [x] Prove the generated vault interface requires organization scope instead of document-id-only access.
 
 ### Task 5: Review and PR hygiene
 
-- [ ] Compare branch to current `main` and ensure no Prisma/admin-legal overwrite.
-- [ ] Review the lifecycle against the stale #173 dead-end bug and verify explicit review resolution is now the only approval path.
-- [ ] Review exact artifact-hash execution binding and tenant-scope invariants.
+- [x] Compare branch to current `main` and ensure no Prisma/admin-legal overwrite.
+- [x] Review the lifecycle against the stale #173 dead-end bug and verify explicit review resolution is now the only approval path.
+- [x] Review exact artifact-hash execution binding and tenant-scope invariants.
 - [ ] Open a draft current-main PR only after the pure contracts are internally consistent.
 - [ ] Link stale #173 and close it only after file-by-file useful-concept coverage is accounted for.
 - [ ] Record exact-head GitHub Actions truth; keep draft while jobs return `steps:null` or until the full release gate executes.
+
+## Verification truth
+
+Source-level review caught and corrected two defects before PR creation:
+- invalid mixed nullish/logical jurisdiction fallback syntax;
+- storage-key sanitization that would have altered stable organization/document identifiers.
+
+The branch remains intentionally unclaimed as test/build green until an exact-head runner executes the repository release gate.
 
 ## Deferred persistence tranche
 
