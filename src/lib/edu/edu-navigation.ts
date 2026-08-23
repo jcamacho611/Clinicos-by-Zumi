@@ -44,6 +44,7 @@ export const eduNavigation: readonly EduNavGroup[] = [
   {
     label: "Simulation",
     items: [
+      { href: "/edu/zumi-practice", label: "Zumi practice", icon: "Sparkles", roles: ALL_ROLES },
       { href: "/edu/scenarios", label: "Scenario library", icon: "FlaskConical", roles: ALL_ROLES },
       { href: "/edu/grading", label: "Grading", icon: "ClipboardCheck", roles: STAFF },
       { href: "/edu/competencies", label: "Competencies", icon: "Target", roles: ALL_ROLES },
@@ -79,6 +80,7 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/sessions": DELIVERY_REVIEW,
   "/edu/reports": PROGRAM_REVIEW,
   "/edu/demo-kit": PROGRAM_REVIEW,
+  "/edu/zumi-practice": ALL_ROLES,
   "/edu/scenarios": ALL_ROLES,
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
