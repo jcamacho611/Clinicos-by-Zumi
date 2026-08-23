@@ -25,6 +25,10 @@ function terms(value: string) {
     .filter((term) => term.length >= 3);
 }
 
+function normalizedTitle(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
 function authorityWeight(item: ZumiGovernedContextItem) {
   if (item.authority === "human_approved_organization") return 4;
   if (item.authority === "human_approved_global_reference") return 3;
@@ -36,6 +40,34 @@ export function zumiGovernedContextMatchesQuestion(item: ZumiGovernedContextItem
   if (queryTerms.size === 0) return false;
   const haystack = `${item.title} ${item.content} ${item.sourceName}`.toLowerCase();
   return [...queryTerms].some((term) => haystack.includes(term));
+}
+
+export function resolveZumiGovernedContextConflicts(items: readonly ZumiGovernedContextItem[]) {
+  const grouped = new Map<string, ZumiGovernedContextItem[]>();
+  for (const item of items) {
+    const key = normalizedTitle(item.title) || item.id;
+    grouped.set(key, [...(grouped.get(key) ?? []), item]);
+  }
+
+  const resolved: ZumiGovernedContextItem[] = [];
+  for (const candidates of grouped.values()) {
+    const organizationItems = candidates.filter((item) => item.scope === "organization");
+    const globalItems = candidates.filter((item) => item.scope === "global");
+    const personalItems = candidates.filter((item) => item.scope === "user");
+    const preferred = organizationItems.length
+      ? organizationItems
+      : globalItems.length
+        ? globalItems
+        : personalItems;
+
+    const distinctContent = new Set(preferred.map((item) => item.content.trim()));
+    if (distinctContent.size > 1) continue;
+
+    const newest = [...preferred].sort((a, b) => b.version - a.version)[0];
+    if (newest) resolved.push(newest);
+  }
+
+  return resolved;
 }
 
 export function rankZumiGovernedContext(
