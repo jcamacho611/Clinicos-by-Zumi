@@ -1,0 +1,238 @@
+/*
+ * Klinikos Black Label — Current Visit Object Stage.
+ *
+ * This is deliberately route-scoped. The governed EncounterEditor remains the clinical
+ * authority; this layer changes only material, hierarchy, density and responsive
+ * composition. It consumes the shared Klinikos material tokens and creates no second
+ * clinical editor, theme provider or state model.
+ *
+ * Narrative already present in the editor:
+ * Patient snapshot → What changed → Staff handoff → Today / Clinical →
+ * Assessment & plan → evidence → Documentation & coding → Close visit.
+ */
+
+.stage {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: clamp(14px, 1.8vw, 28px);
+  border: 1px solid var(--k-line);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 84% -4%, color-mix(in srgb, var(--k-accent) 10%, transparent), transparent 26%),
+    linear-gradient(180deg, color-mix(in srgb, var(--k-work-bg) 96%, var(--k-public-raised) 4%), var(--k-work-bg));
+  color: var(--k-text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-text) 5%, transparent);
+  overflow: clip;
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 4%, color-mix(in srgb, var(--k-accent) 32%, transparent) 24%, transparent 78%);
+  opacity: .7;
+}
+
+.stage > :global(div) {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+/* Object Stage anchor. The existing patient/context section becomes the stable visual
+ * center of the encounter. Living Edge is scarce: it appears here, not around every card. */
+.stage > :global(div) > :global(section:first-of-type) {
+  position: sticky;
+  top: 72px;
+  z-index: 24;
+  isolation: isolate;
+  border-color: var(--k-line) !important;
+  border-radius: 22px !important;
+  background: color-mix(in srgb, var(--k-public-surface) 92%, transparent) !important;
+  color: var(--k-text) !important;
+  box-shadow:
+    0 18px 60px color-mix(in srgb, #000 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--k-text) 6%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(112%);
+  -webkit-backdrop-filter: blur(22px) saturate(112%);
+}
+
+.stage > :global(div) > :global(section:first-of-type)::after {
+  content: "";
+  position: absolute;
+  inset: -1px 12% auto 12%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-accent) 66%, transparent), transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--k-accent) 18%, transparent);
+}
+
+/* Quiet the autosave/back row so it reads as instrument telemetry, not page chrome. */
+.stage > :global(div) > :global(div:first-child) {
+  min-height: 30px;
+  padding-inline: 2px;
+}
+
+/* Generic Card component carries a legacy SaaS shadow. In Current Visit, containment is
+ * communicated by material and spacing rather than floating-card theater. */
+.stage [class*="shadow-[0_10px_35px"] {
+  border-color: var(--k-line) !important;
+  background: var(--k-public-surface) !important;
+  box-shadow: none !important;
+}
+.stage [class*="shadow-[0_18px_45px"] {
+  border-color: var(--k-line) !important;
+}
+
+/* Core surfaces. */
+.stage [class~="bg-white"],
+.stage [class*="bg-slate-50"],
+.stage [class*="bg-slate-100"] {
+  background-color: var(--k-public-surface) !important;
+}
+.stage [class*="border-slate-"] {
+  border-color: var(--k-line) !important;
+}
+.stage :global(.text-slate-950),
+.stage :global(.text-slate-900),
+.stage :global(.text-slate-800),
+.stage :global(.text-slate-700) {
+  color: var(--k-text) !important;
+}
+.stage :global(.text-slate-600),
+.stage :global(.text-slate-500),
+.stage :global(.text-slate-400) {
+  color: var(--k-muted) !important;
+}
+
+/* Existing teal/sky legacy accents become the restrained Klinikos intelligence signal.
+ * Clinical semantic states (rose errors and amber warnings/blockers) are intentionally
+ * not remapped: danger/warning meaning must survive the luxury treatment. */
+.stage [class*="text-teal-"],
+.stage [class*="text-sky-"] {
+  color: var(--k-accent) !important;
+}
+.stage [class*="bg-teal-"],
+.stage [class*="bg-sky-50"] {
+  background-color: var(--k-public-raised) !important;
+}
+.stage [class*="border-teal-"],
+.stage [class*="border-sky-"] {
+  border-color: var(--k-line) !important;
+}
+.stage :global(.text-rose-600),
+.stage :global(.text-rose-700) {
+  color: #b64e59 !important;
+}
+.stage :global(.text-amber-700),
+.stage :global(.text-amber-800),
+.stage :global(.text-amber-900) {
+  color: #a56b24 !important;
+}
+.stage [class*="bg-rose-50"] {
+  background-color: color-mix(in srgb, #b64e59 8%, var(--k-public-surface)) !important;
+}
+.stage [class*="bg-amber-50"] {
+  background-color: color-mix(in srgb, #c58a3c 9%, var(--k-public-surface)) !important;
+}
+
+/* Black Label clinical text floor. This only raises legacy metadata; it does not inflate
+ * operative typography or turn the physician workspace into a marketing page. */
+.stage [class*="text-[11px]"] {
+  font-size: .75rem !important;
+  line-height: 1.45 !important;
+}
+.stage [class*="text-[12px]"] {
+  font-size: .75rem !important;
+}
+
+/* Inputs remain instrument-like: flat, calm and obvious, with an authority-colored focus. */
+.stage :global(textarea),
+.stage :global(input),
+.stage :global(select) {
+  border-color: var(--k-line) !important;
+  background: color-mix(in srgb, var(--k-public-raised) 72%, var(--k-public-surface)) !important;
+  color: var(--k-text) !important;
+  box-shadow: none !important;
+}
+.stage :global(textarea)::placeholder,
+.stage :global(input)::placeholder {
+  color: var(--k-muted) !important;
+}
+.stage :global(textarea):focus,
+.stage :global(input):focus,
+.stage :global(select):focus {
+  border-color: var(--k-accent) !important;
+  outline: 2px solid color-mix(in srgb, var(--k-accent) 24%, transparent) !important;
+  outline-offset: 2px;
+}
+
+/* Consequential controls keep a comfortable touch/focus target. */
+.stage :global(button) {
+  min-height: 44px;
+}
+.stage :global(a):focus-visible,
+.stage :global(button):focus-visible,
+.stage :global(textarea):focus-visible,
+.stage :global(input):focus-visible,
+.stage :global(select):focus-visible {
+  outline: 2px solid var(--k-accent) !important;
+  outline-offset: 3px !important;
+}
+
+/* The final signing surface is allowed to remain sober Obsidian even in Marble because
+ * signature/lock is a high-risk clinical decision, not decorative theme content. */
+.stage :global(.bg-slate-950) {
+  background: #070304 !important;
+  color: #f8efed !important;
+  border-color: rgba(226,139,133,.16) !important;
+}
+.stage :global(.bg-slate-950) :global(.text-slate-400) {
+  color: #b89f9b !important;
+}
+
+@media (max-width: 767px) {
+  .stage {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .stage::before {
+    display: block;
+    height: 180px;
+    opacity: .42;
+  }
+
+  .stage > :global(div) > :global(section:first-of-type) {
+    position: relative;
+    top: auto;
+    border-radius: 18px !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .stage :global(textarea),
+  .stage :global(input),
+  .stage :global(select) {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .stage *,
+  .stage *::before,
+  .stage *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
