@@ -36,24 +36,44 @@ Status: **capture and implementation working document**. It does not imply SCWDB
 
 | Requirement | Current truth | Remaining delivery action |
 | --- | --- | --- |
-| Routine weekly/frequent schedule | Program architecture supports recurring cohort/course delivery | Final calendar depends on award, demand, approved instructors, and SCWDB scheduling |
+| Routine weekly/frequent schedule | Program architecture and persisted workforce session substrate support recurring delivery | Final calendar depends on award, demand, approved instructors, and SCWDB scheduling |
 | Recommended/min/max class sizes | **Proposal input still required** | Final values must reflect instructor bench, modality, pathway, and hands-on facilitation capacity |
 | Evening/alternative scheduling | Operationally supportable as staffing/schedule policy | Identify instructor coverage before final proposal |
 | Multi-region in-person capacity | Not proven by software | Staffing/travel plan must identify who can deploy and under what terms |
 | Registration integration with SCWDB scheduling | Existing EDU cohort/enrollment architecture can receive approved participant records | Final transfer method/data dictionary requires SCWDB approval; do not claim live integration |
-| Instructor absence / technology / weather contingency | Must be documented in implementation plan | Maintain backup instructor and reschedule/remote fallback rules |
+| Instructor absence / technology / weather contingency | Documented in implementation/contingency plan | Confirm named backup instructor and operational reschedule/remote fallback coverage before delivery |
 
 ## Participant evidence and reporting
 
 | Requirement | Product status | Truth boundary |
 | --- | --- | --- |
 | Enrollment | Existing EDU enrollment model | Real institution/participant data only after authorized onboarding |
-| Attendance | **Dedicated persisted attendance record not yet verified in current EDU schema** | Do not treat login, invitation acceptance, or enrollment as attendance |
-| Completion | Existing completion/certificate concepts + new completion rules | Attendance alone is insufficient; instructor review remains required |
-| Assessments | Existing scenarios/rubrics/submissions/grades + new common assessment method | AI cannot independently certify competence |
-| Participant survey | Reporting field and contract requirement represented | Survey persistence/approved transfer format must be verified before first delivery |
+| Sessions | **Persisted workforce session substrate exists in production; branch repository/API/UI present** | Production table existence is verified, but the repository migration ledger is not yet reconciled to `20260823043800_edu_workforce_delivery_evidence`; do not call the branch deployed/CI-green |
+| Attendance | **Persisted attendance evidence exists; instructor/admin verification authority is implemented** | Enrollment/login/invitation are not attendance; verification requires explicit evidence and scoped teaching authority |
+| Completion | Existing completion/certificate concepts + deterministic completion rules | Attendance alone is insufficient; required activities/assessments and human instructor approval remain separate |
+| Assessments | Existing scenarios/rubrics/submissions/grades + common assessment method | AI cannot independently certify competence |
+| Participant survey / feedback | **Persisted feedback-response substrate and branch form/API exist** | Do not present synthetic/demo feedback as real participant outcomes; final approved survey fields/transfer rules remain subject to SCWDB |
 | Monthly performance report | Deterministic reporting projection exists for supplied approved records | Do not display synthetic/demo metrics as real outcomes |
-| Quarterly curriculum review | Required program element and docs process | Version material changes; obtain SCWDB approval before material changes where required |
+| Quarterly curriculum review | **Persisted curriculum-version substrate exists in production** | Material changes still require the governed review/approval process and SCWDB approval where contractually required |
+
+## Production schema / migration reconciliation
+
+Read-only verification on 2026-08-23 against the connected production Neon branch confirmed these tables exist:
+- `education_sessions`
+- `education_attendance_records`
+- `education_feedback_responses`
+- `education_curriculum_versions`
+
+Expected primary keys, foreign keys, checks, uniqueness constraints, and lookup indexes are present and validated.
+
+However, `_prisma_migrations` currently has **no entry** for `20260823043800_edu_workforce_delivery_evidence`. The repository migration is intentionally idempotent because the schema was introduced before the migration artifact was committed. The correct reconciliation path is the normal reviewed migration deployment after this branch is mergeable; do not manually fabricate or insert a Prisma migration record.
+
+This means:
+- the production schema exists;
+- the repository has the forward migration artifact;
+- the migration ledger is currently behind the schema;
+- this branch must be preserved and prioritized for safe reconciliation;
+- table existence is not evidence that the exact application branch is deployed or release-verified.
 
 ## Accessibility
 
@@ -83,6 +103,8 @@ The product direction includes keyboard operation, semantic headings/tables, vis
 - [x] all five pathway outlines/sample segments
 - [x] measurement/reporting plan
 - [x] pre-existing IP schedule
+- [x] current Q&A capture delta
+- [x] per-completion pricing stress model
 
 ## Qualification / founder evidence gates
 
@@ -114,7 +136,7 @@ Appendix B requires:
 - optional service pricing;
 - volume tiers for 1–99, 100–249, 250–499, and 500+ completions.
 
-The ~980 participants are a planning target only, not guaranteed revenue. Final proposed rates must be stress-tested against low utilization, uneven pathway demand, travel, cancellation, working capital, and payment timing.
+The ~980 participants are a planning target only, not guaranteed revenue. Final proposed rates must be stress-tested against low utilization, uneven pathway demand, travel, cancellation, working capital, and payment timing. See `PRICING_MODEL.md`.
 
 ## Final proposal gate
 
@@ -132,3 +154,4 @@ Before final submission a skeptical evaluator must be able to answer yes to all:
 10. Is pre-existing Klinikos IP protected and separated from Kentucky-specific deliverables?
 11. Can the approved service launch within 30 days of notice to proceed?
 12. Are all claims about product maturity, customers, integrations, outcomes, and approvals truthful?
+13. Has the production-schema/Prisma-ledger mismatch been reconciled through the normal migration deployment path rather than manual ledger tampering?
