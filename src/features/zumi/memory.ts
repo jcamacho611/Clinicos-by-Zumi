@@ -6,6 +6,7 @@ import { containsLikelyIdentifiers, redactText } from "@/features/zumi/redaction
 import {
   formatZumiGovernedContext,
   rankZumiGovernedContext,
+  resolveZumiGovernedContextConflicts,
   zumiGovernedContextMatchesQuestion,
   type ZumiGovernedContextItem,
 } from "@/features/zumi/memory-authority";
@@ -229,9 +230,9 @@ export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSe
     },
   });
 
-  const candidates: ZumiGovernedContextItem[] = rows.flatMap((row) => {
+  const safeCandidates: ZumiGovernedContextItem[] = rows.flatMap((row) => {
     if (!modelSafeKnowledgeText(row.title, row.content, row.sourceName)) return [];
-    const item: ZumiGovernedContextItem = {
+    return [{
       id: row.id,
       scope: row.organizationId === null ? "global" : "organization",
       authority: row.organizationId === null ? "human_approved_global_reference" : "human_approved_organization",
@@ -242,10 +243,11 @@ export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSe
       effectiveAt: row.effectiveAt?.toISOString() ?? null,
       expiresAt: row.expiresAt?.toISOString() ?? null,
       version: row.version,
-    };
-    return zumiGovernedContextMatchesQuestion(item, question) ? [item] : [];
+    } satisfies ZumiGovernedContextItem];
   });
-  const ranked = rankZumiGovernedContext(candidates, question, take);
+  const resolved = resolveZumiGovernedContextConflicts(safeCandidates);
+  const relevant = resolved.filter((item) => zumiGovernedContextMatchesQuestion(item, question));
+  const ranked = rankZumiGovernedContext(relevant, question, take);
 
   return {
     text: formatZumiGovernedContext(ranked),
