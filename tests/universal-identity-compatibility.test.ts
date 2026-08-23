@@ -18,7 +18,7 @@ describe("universal identity compatibility boundary", () => {
     expect(migration).not.toContain('DROP COLUMN');
   });
 
-  it("keeps patient portal authentication separate from staff relationships", () => {
+  it("keeps patient portal authentication separate from organization relationships", () => {
     expect(legacySchema).toContain("model PortalAccount {");
     expect(identitySchema).not.toContain("patientId");
     expect(identitySchema).not.toContain("PortalAccount");
@@ -34,12 +34,18 @@ describe("universal identity compatibility boundary", () => {
     expect(supreme).toContain("The browser is never authorization authority");
   });
 
-  it("backfills legacy staff relationships without creating hidden foreign keys to legacy domain tables", () => {
+  it("backfills organization relationships without creating hidden foreign keys to legacy domain tables", () => {
     expect(migration).toContain('FROM "users"');
     expect(migration).toContain("'person_' || \"id\"");
     expect(migration).toContain("'orgmem_' || \"id\"");
     expect(migration).not.toContain('REFERENCES "users"');
     expect(migration).not.toContain('REFERENCES "organizations"');
     expect(migration).not.toContain('REFERENCES "locations"');
+  });
+
+  it("does not infer legal identity or employment from a legacy application user", () => {
+    expect(migration).toContain('    NULL,\n    "email",');
+    expect(migration).toContain("'organization_user'");
+    expect(migration).not.toContain("'staff',");
   });
 });
