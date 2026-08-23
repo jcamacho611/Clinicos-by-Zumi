@@ -3,6 +3,10 @@ import Link from "next/link";
 import { EduCommandHeader, EduEmptyState } from "@/components/edu/edu-shell";
 import { db } from "@/lib/db";
 import { getWorkforceDeliverySummary } from "@/lib/edu/workforce-delivery-repository";
+import {
+  listKnowledgeAssessmentAttempts,
+  summarizePairedKnowledgeChange,
+} from "@/lib/edu/workforce-knowledge-repository";
 import { eduInstitutionFilter, resolveEduIdentity } from "@/lib/edu/edu-session";
 
 export const dynamic = "force-dynamic";
@@ -11,22 +15,24 @@ export default async function EduReportsPage() {
   const identity = await resolveEduIdentity();
   if (!identity) return null;
 
-  const [enrolled, completed, submissions, certificates, delivery] = process.env.DATABASE_URL && identity.institutionId
+  const [enrolled, completed, submissions, certificates, delivery, knowledgeAttempts] = process.env.DATABASE_URL && identity.institutionId
     ? await Promise.all([
         db.educationEnrollment.count({ where: eduInstitutionFilter(identity) }),
         db.educationEnrollment.count({ where: { ...eduInstitutionFilter(identity), completedAt: { not: null } } }),
         db.educationSubmission.count({ where: eduInstitutionFilter(identity) }),
         db.educationCertificate.count({ where: eduInstitutionFilter(identity) }),
         getWorkforceDeliverySummary(identity),
+        listKnowledgeAssessmentAttempts(identity),
       ])
-    : [0, 0, 0, 0, { sessions: 0, attendanceRecords: 0, verifiedAttended: 0, verifiedAbsent: 0, unverifiedAttendance: 0, feedbackResponses: 0, curriculumVersions: 0 }];
+    : [0, 0, 0, 0, { sessions: 0, attendanceRecords: 0, verifiedAttended: 0, verifiedAbsent: 0, unverifiedAttendance: 0, feedbackResponses: 0, curriculumVersions: 0 }, []];
 
   const completionPercent = enrolled ? Math.round((completed / enrolled) * 10000) / 100 : 0;
+  const knowledge = summarizePairedKnowledgeChange(knowledgeAttempts);
 
   return (
     <>
       <EduCommandHeader
-        description="Institution-scoped workforce delivery evidence. Enrollment, attendance, completion, feedback, and curriculum provenance remain separate so reports do not manufacture outcomes."
+        description="Institution-scoped workforce delivery evidence. Enrollment, attendance, completion, scored knowledge, feedback, and curriculum provenance remain separate so reports do not manufacture outcomes."
         eyebrow="Program evidence"
         title="Reports"
         actions={<Link className="border border-[#e6817b]/30 px-3 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/programs">View programs</Link>}
@@ -56,9 +62,20 @@ export default async function EduReportsPage() {
               <Metric label="Curriculum versions" value={delivery.curriculumVersions} detail="Versioned teaching-material provenance" />
             </section>
 
+            <section className="mt-6 border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7" aria-labelledby="knowledge-change-title">
+              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Scored learning measurement</p>
+              <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="knowledge-change-title">Pre/post knowledge evidence</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <Metric label="Scored attempts" value={knowledgeAttempts.length} detail="Pre/post knowledge attempts, separate from confidence surveys" />
+                <Metric label="Comparable pairs" value={knowledge.pairedParticipants} detail="Pairs require matching assessment scale and instructor review" />
+                <Metric label="Average change" value={knowledge.averagePercentagePointChange == null ? "Not enough evidence" : `${knowledge.averagePercentagePointChange >= 0 ? "+" : ""}${knowledge.averagePercentagePointChange} pts`} detail="Average percentage-point change across comparable pairs only" />
+              </div>
+              <p className="mt-4 max-w-4xl text-xs leading-6 text-[#8f7773]">Self-reported confidence before/after training is reported separately and is never converted into a knowledge-gain claim. Knowledge change appears only when scored pre/post assessments are comparable and instructor-reviewed.</p>
+            </section>
+
             <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Assessment and completion evidence">
               <div className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5">
-                <h2 className="text-sm font-semibold text-[#f8efed]">Assessment workflow evidence</h2>
+                <h2 className="text-sm font-semibold text-[#f8efed]">Applied assessment evidence</h2>
                 <p className="mt-3 text-3xl font-light tabular-nums text-[#fff8f6]">{submissions}</p>
                 <p className="mt-2 text-xs leading-5 text-[#8f7773]">Persisted scenario submissions across this institution. Final assessment interpretation remains instructor-controlled.</p>
               </div>
@@ -71,12 +88,12 @@ export default async function EduReportsPage() {
 
             <section className="mt-6 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="report-contract">
               <h2 className="text-lg font-semibold text-[#f8efed]" id="report-contract">Institutional workforce reporting contract</h2>
-              <p className="mt-2 max-w-3xl text-xs leading-6 text-[#8f7773]">The reporting layer preserves separate evidence for enrollment, verified attendance, completion, assessments, surveys, and curriculum versions. Customer-specific data dictionaries, retention rules, transfer formats, and invoice fields are configured only after approval.</p>
+              <p className="mt-2 max-w-3xl text-xs leading-6 text-[#8f7773]">The reporting layer preserves separate evidence for enrollment, verified attendance, completion, applied assessments, scored knowledge checks, surveys, and curriculum versions. Customer-specific data dictionaries, retention rules, transfer formats, and invoice fields are configured only after approval.</p>
               <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1] sm:grid-cols-2">
                 <li>• verified attendance and completion documentation</li>
                 <li>• monthly aggregate performance reporting</li>
                 <li>• pathway and delivery-modality distribution</li>
-                <li>• assessment and practical-exercise evidence</li>
+                <li>• applied assessment and pre/post knowledge evidence</li>
                 <li>• participant feedback and instructor-effectiveness measures</li>
                 <li>• issues, corrective action, and curriculum-version history</li>
               </ul>
