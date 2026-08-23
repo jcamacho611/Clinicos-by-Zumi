@@ -63,6 +63,13 @@ export const zumiAccessibilitySchema = z.object({
 export type ZumiPresence = z.infer<typeof zumiPresenceSchema>;
 export type ZumiAccessibility = z.infer<typeof zumiAccessibilitySchema>;
 
+export function zumiSurfaceForPathname(pathname: string): ZumiSurface {
+  if (pathname === "/edu" || pathname.startsWith("/edu/")) return "education";
+  if (pathname === "/grid" || pathname.startsWith("/grid/")) return "grid";
+  if (pathname === "/portal" || pathname.startsWith("/portal/")) return "patient_portal";
+  return "platform";
+}
+
 export function presenceInstruction(input: {
   presence: ZumiPresence;
   accessibility: ZumiAccessibility;
