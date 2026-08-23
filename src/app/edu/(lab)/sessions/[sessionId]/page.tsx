@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 
 import { EduCommandHeader } from "@/components/edu/edu-shell";
 import { WorkforceAttendanceManager } from "@/components/edu/workforce-attendance-manager";
+import { WorkforceFeedbackForm } from "@/components/edu/workforce-feedback-form";
 import { db } from "@/lib/db";
 import { canVerifyWorkforceAttendance } from "@/lib/edu/workforce-delivery-records";
 import { listSessionAttendance, listWorkforceSessions } from "@/lib/edu/workforce-delivery-repository";
 import { resolveEduIdentity } from "@/lib/edu/edu-session";
+import { canSubmitWorkforceFeedback } from "@/lib/edu/workforce-feedback";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,11 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
             };
           })}
         />
+        {canSubmitWorkforceFeedback(identity.role) && identity.role !== "edu_student" && (
+          <div className="mt-6">
+            <WorkforceFeedbackForm participantMode={false} sessionId={session.id} />
+          </div>
+        )}
       </div>
     </>
   );
