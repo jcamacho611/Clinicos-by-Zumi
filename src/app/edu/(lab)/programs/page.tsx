@@ -69,12 +69,14 @@ export default function EduProgramsPage() {
               </div>
             ))}
           </div>
+          <Link className="mt-5 inline-block border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/programs/career-readiness">Open Career Readiness workshop →</Link>
         </section>
 
-        <section aria-label="Program operations" className="mt-6 grid gap-4 lg:grid-cols-3">
+        <section aria-label="Program operations" className="mt-6 grid gap-4 lg:grid-cols-4">
           <Link className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/cohorts"><p className="text-sm font-semibold text-[#f8efed]">Cohorts & rosters</p><p className="mt-2 text-xs leading-5 text-[#8f7773]">Open the real institution-scoped cohort view.</p></Link>
           <Link className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/scenarios"><p className="text-sm font-semibold text-[#f8efed]">Applied scenarios</p><p className="mt-2 text-xs leading-5 text-[#8f7773]">Use synthetic role-based practice and instructor-controlled assignments.</p></Link>
           <Link className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/grading"><p className="text-sm font-semibold text-[#f8efed]">Instructor review</p><p className="mt-2 text-xs leading-5 text-[#8f7773]">Review submissions and release human-owned feedback and completion evidence.</p></Link>
+          <Link className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/reports"><p className="text-sm font-semibold text-[#f8efed]">Program reports</p><p className="mt-2 text-xs leading-5 text-[#8f7773]">See persisted enrollment, completion, submissions, certificates, and explicit readiness gaps.</p></Link>
         </section>
       </div>
     </>
