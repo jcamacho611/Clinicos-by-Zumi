@@ -1,10 +1,10 @@
 import type { BodyMapDelta, BodyMapEvidenceRef, BodyMapFinding, BodyMapVersion } from "./body-map-types";
 
-export function bodyMapFindingKey(finding: BodyMapFinding) {
+export function bodyMapFindingKey(finding: Pick<BodyMapFinding, "bodyRegion" | "laterality" | "symptom">) {
   return [finding.bodyRegion.trim().toLowerCase(), finding.laterality, finding.symptom.trim().toLowerCase()].join("::");
 }
 
-function validateFinding(finding: BodyMapFinding) {
+export function validateBodyMapFinding(finding: Pick<BodyMapFinding, "severity" | "severityScale">) {
   if (finding.severity !== null && finding.severityScale === null) {
     throw new Error("Body map severity scale required");
   }
@@ -23,7 +23,7 @@ function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): Body
 function indexFindings(version: BodyMapVersion) {
   const findingsByKey = new Map<string, BodyMapFinding>();
   for (const finding of version.findings) {
-    validateFinding(finding);
+    validateBodyMapFinding(finding);
     const key = bodyMapFindingKey(finding);
     if (findingsByKey.has(key)) throw new Error(`Duplicate body map finding key: ${key}`);
     findingsByKey.set(key, finding);
