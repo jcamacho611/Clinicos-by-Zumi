@@ -10,8 +10,9 @@ const identitySchema = read("prisma/models/universal-identity.prisma");
 const supreme = read("docs/KLINIKOS_SUPREME_ARCHITECTURE_CANON.md");
 
 describe("universal identity foundation", () => {
-  it("loads Prisma from the schema folder so additive domain model files are supported", () => {
+  it("loads Prisma from the schema folder and points migrate at the existing migration chain", () => {
     expect(prismaConfig).toContain('schema: "prisma"');
+    expect(prismaConfig).toContain('path: "prisma/migrations"');
   });
 
   it("introduces one durable person anchor and effective-dated relationships", () => {
