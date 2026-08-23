@@ -4,11 +4,17 @@ export function bodyMapFindingKey(finding: BodyMapFinding) {
   return [finding.bodyRegion.trim().toLowerCase(), finding.laterality, finding.symptom.trim().toLowerCase()].join("::");
 }
 
-function evidence(version: BodyMapVersion, finding: BodyMapFinding): BodyMapEvidenceRef {
+function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): BodyMapEvidenceRef {
   return { bodyMapVersionId: version.id, findingId: finding.id };
 }
 
+function versionEvidence(version: BodyMapVersion): BodyMapEvidenceRef {
+  return { bodyMapVersionId: version.id, findingId: null };
+}
+
 export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMapVersion): BodyMapDelta[] {
+  if (current.findings.length === 0) return [];
+
   const previousByKey = new Map(previous.findings.map((finding) => [bodyMapFindingKey(finding), finding]));
   const currentByKey = new Map(current.findings.map((finding) => [bodyMapFindingKey(finding), finding]));
   const deltas: BodyMapDelta[] = [];
@@ -25,7 +31,7 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
         kind: "finding_added",
         previousValue: null,
         currentValue: currentFinding.symptom,
-        evidence: [evidence(current, currentFinding)],
+        evidence: [findingEvidence(current, currentFinding)],
       });
       continue;
     }
@@ -45,15 +51,11 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
         kind,
         previousValue: previousFinding.severity,
         currentValue: currentFinding.severity,
-        evidence: [evidence(previous, previousFinding), evidence(current, currentFinding)],
+        evidence: [findingEvidence(previous, previousFinding), findingEvidence(current, currentFinding)],
       });
     }
 
-    if (
-      previousFinding.functionalImpact !== null &&
-      currentFinding.functionalImpact !== null &&
-      previousFinding.functionalImpact !== currentFinding.functionalImpact
-    ) {
+    if (previousFinding.functionalImpact !== currentFinding.functionalImpact) {
       deltas.push({
         key,
         bodyRegion: currentFinding.bodyRegion,
@@ -62,7 +64,7 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
         kind: "functional_impact_changed",
         previousValue: previousFinding.functionalImpact,
         currentValue: currentFinding.functionalImpact,
-        evidence: [evidence(previous, previousFinding), evidence(current, currentFinding)],
+        evidence: [findingEvidence(previous, previousFinding), findingEvidence(current, currentFinding)],
       });
     }
   }
@@ -78,7 +80,7 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
       kind: "finding_removed",
       previousValue: previousFinding.symptom,
       currentValue: null,
-      evidence: [evidence(previous, previousFinding)],
+      evidence: [findingEvidence(previous, previousFinding), versionEvidence(current)],
     });
   }
 
