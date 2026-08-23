@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const page = fs.readFileSync(path.join(process.cwd(), "src/app/grid/browse/page.tsx"), "utf8");
 const map = fs.readFileSync(path.join(process.cwd(), "src/components/grid/grid-live-map.tsx"), "utf8");
+const mapRenderer = fs.readFileSync(path.join(process.cwd(), "src/components/grid/google-grid-map.tsx"), "utf8");
 const marketplace = fs.readFileSync(path.join(process.cwd(), "src/components/grid/marketplace-browser.tsx"), "utf8");
 const resources = fs.readFileSync(path.join(process.cwd(), "src/components/grid/universal-resource-browser.tsx"), "utf8");
 const system = fs.readFileSync(path.join(process.cwd(), "src/lib/design/marketplace-system.ts"), "utf8");
@@ -67,5 +68,16 @@ describe("Grid Black Label spatial discovery", () => {
     expect(system).toContain('eyebrow: "text-xs');
     expect(system).not.toContain('text-[11px]');
     expect(map).toContain("min-h-11");
+  });
+
+  it("uses rose/oxblood marker identity with accessible marker hit targets", () => {
+    expect(mapRenderer).not.toContain('color: "#174ea6"');
+    expect(mapRenderer).toContain('color: "#e6817b"');
+    expect(mapRenderer).toContain('color: point.id === selectedPointId ? "#702631" : "#b9575b"');
+    expect(mapRenderer).toContain('element.style.width = "44px"');
+    expect(mapRenderer).toContain('element.style.height = "44px"');
+    expect(mapRenderer).toContain("var(--k-public-surface)");
+    expect(mapRenderer).toContain("var(--k-text)");
+    expect(mapRenderer).toContain("var(--k-muted)");
   });
 });
