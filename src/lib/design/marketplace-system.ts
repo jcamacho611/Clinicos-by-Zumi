@@ -36,7 +36,7 @@ export const marketplaceSurfaces = {
   card: "border border-[var(--k-line)] bg-[var(--k-public-surface)]",
   cardInteractive:
     "border border-[var(--k-line)] bg-[var(--k-public-surface)] transition-[border-color,background-color] duration-200 hover:border-[var(--k-accent)] focus-within:border-[var(--k-accent)]",
-  filterBar: "sticky top-0 z-30 border-b border-[var(--k-line)] bg-[var(--k-public-surface)]/92 backdrop-blur-xl",
+  filterBar: "sticky top-0 z-30 border-b border-[var(--k-line)] bg-[var(--k-public-surface)] backdrop-blur-xl",
   chip: "min-h-[44px] rounded-full border px-3.5 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--k-accent)]",
   chipIdle: "border-[var(--k-line)] bg-[var(--k-public-surface)] text-[var(--k-muted)] hover:text-[var(--k-text)]",
   chipActive: "border-[var(--k-accent)] bg-[var(--k-public-raised)] text-[var(--k-text)]",
