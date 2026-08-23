@@ -13,15 +13,14 @@ model ClinicalBodyMapVersion {
   createdByUserId     String
   sourceType          String                   @default("clinician_entry")
   sourceReference     String?
-  supersedesVersionId String?
+  supersedesVersionId String?                  @unique
   createdAt           DateTime                 @default(now())
   findings            ClinicalBodyMapFinding[]
   supersedesVersion   ClinicalBodyMapVersion?  @relation("BodyMapSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
-  supersededBy        ClinicalBodyMapVersion[] @relation("BodyMapSupersession")
+  supersededBy        ClinicalBodyMapVersion?  @relation("BodyMapSupersession")
 
   @@index([organizationId, patientId, contextType, contextId, capturedAt])
   @@index([organizationId, encounterId, capturedAt])
-  @@index([supersedesVersionId])
   @@map("clinical_body_map_versions")
 }
 
