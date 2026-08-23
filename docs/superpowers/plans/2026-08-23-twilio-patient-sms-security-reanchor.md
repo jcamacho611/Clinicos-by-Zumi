@@ -1,113 +1,131 @@
 # Twilio Patient SMS Security Re-anchor Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** this plan has been executed incrementally using test-first/source-contract checks. Full exact-head repository CI remains mandatory before merge.
 
-**Goal:** Re-anchor the missing patient-SMS security controls from stale PR #150 onto current `main` while preserving current commercial variable-cost funding authority and current inbound signed-webhook behavior.
+**Goal:** Re-anchor the valuable patient-SMS security controls from stale PR #150 onto current `main` without importing its stale history, while preserving current tenant, consent, PHI, commercial funding, and webhook authorities.
 
-**Architecture:** Keep `sms-policy.ts`, tenant scoping, same-origin mutation checks, the current variable-cost rail registry, and the existing outbound port as shared authorities. Add a small deterministic template/quiet-hours policy; strengthen the Twilio adapter and tenant routing evidence; restore patient-controlled Twilio Verify; and replace the latent arbitrary-body patient send contract with a template-only governed send that must pass consent, phone possession, production, routing, time, and commercial funding gates.
+**Architecture:** Keep current-main SMS policy, tenant scoping, same-origin mutation guard, commercial variable-cost registry, and outbound port as shared authorities. Patient SMS is a fixed-template, non-PHI, multi-gate rail. Phone possession, messaging permission, provider routing proof, economic authority, and production enablement remain separate facts.
 
-**Tech Stack:** Next.js App Router, TypeScript, Prisma/PostgreSQL, Vitest, Twilio REST/Verify APIs.
+**Tech stack:** Next.js App Router, TypeScript, Prisma/PostgreSQL, Vitest, Twilio REST/Verify APIs.
 
-**Spec:** `docs/TWILIO_SMS_PRODUCTION_RUNBOOK.md` from #150 is historical source material; current authority is `docs/KLINIKOS_SUPREME_ARCHITECTURE_CANON.md`, current `main`, and Twilio's current official API/webhook documentation.
+## Global constraints
 
-## Global Constraints
-
-- No PHI or clinical SMS in this tranche.
-- No arbitrary user/staff supplied patient-SMS body.
-- Staff cannot grant marketing SMS or clinical SMS permission.
-- Phone possession is separate from consent.
-- Routing configuration is not provider verification.
-- Provider verification is not production authorization.
-- Existing `tenantVariableSpendFundingReady(variableCostRailPolicy("patient_sms"))` remains mandatory.
-- Inbound webhook signature validation is not weakened or rewritten here.
-- No production/live claim without controlled provider evidence.
-- No schema migration is required for this tranche; routing/verification evidence uses existing JSON/audit stores.
+- No PHI or clinical patient SMS in this tranche.
+- No arbitrary staff/user-supplied patient-SMS body.
+- No staff-created marketing or clinical SMS grant.
+- Phone possession is separate from messaging permission.
+- Routing configuration is separate from provider verification.
+- Provider verification is separate from production authorization.
+- Provider credentials never establish customer funding.
+- `KLINIKOS_SMS_PRODUCTION_ENABLED` remains false/blank by default.
+- Current `patient_sms` micro-funding authority remains fail-closed.
+- Current `phone_verification` economics remain fail-closed while ownership/funding is unresolved.
+- No production/live claim without deployed provider + audit evidence.
 
 ---
 
-### Task 1: Fixed non-PHI templates and quiet-hours policy
+## Task 1 — Fixed non-PHI templates and quiet-hours policy
 
-**Files:**
-- Create: `src/lib/communications/sms-templates.ts`
-- Create/modify: `tests/sms-template-policy.test.ts`
+- [x] Added failing/contract coverage for unknown templates, no marketing/clinical template, IANA timezone validation, and 09:00–20:00 local boundary.
+- [x] Added `src/lib/communications/sms-templates.ts`.
+- [x] Added server-owned transactional/operational templates only.
+- [x] Added deterministic timezone/quiet-hours policy.
+- [x] Focused deterministic template/time assertions passed.
 
-**Interfaces:**
-- Produces `PatientSmsTemplateId`, `patientSmsTemplate(id)`, `isIanaTimeZone(zone)`, and `evaluateSmsQuietHours({ timeZone, now })`.
-- Templates are server-owned, fixed text, `phiApproved: false`, and map only to transactional/operational classes.
+## Task 2 — Twilio transport and tenant routing provider proof
 
-- [ ] Write failing tests proving unknown template rejection, no marketing/clinical template, IANA timezone validation, 09:00 inclusive, 20:00 exclusive, and invalid timezone fail-closed.
-- [ ] Execute the pure tests/logic and confirm RED against current main because the module does not exist.
-- [ ] Add the minimal deterministic implementation.
-- [ ] Execute focused GREEN assertions.
-- [ ] Commit only the template policy and tests.
+- [x] Hardened exact Twilio SID/credential evidence shapes.
+- [x] Added explicit tenant sender + Messaging Service transport.
+- [x] Added request timeouts and malformed-provider-evidence rejection.
+- [x] Added serialized tenant sender assignment.
+- [x] Added IANA timezone to tenant routing.
+- [x] Added provider proof of sender ownership + Messaging Service membership.
+- [x] Routing edits invalidate prior provider proof.
+- [x] Verification refuses stale proof if routing changes during provider call.
+- [x] Provider proof explicitly returns `productionSendingAuthorized:false`.
+- [x] Raw provider verification identifiers remain server-side.
+- [x] Omitted Messaging Service/timezone values preserve existing server-side configuration so the browser does not need raw existing provider IDs.
+- [x] Focused mocked-provider adapter assertions passed.
 
-### Task 2: Twilio transport + tenant routing provider proof
+## Task 3 — Patient-controlled phone-possession verification
 
-**Files:**
-- Modify: `src/lib/communications/twilio.ts`
-- Modify: `src/lib/communications/twilio-integration.ts`
-- Modify: `src/app/api/integrations/twilio/sms-routing/route.ts`
-- Create: `src/app/api/integrations/twilio/sms-routing/verify/route.ts`
-- Modify/add: `tests/twilio-communications.test.ts`, `tests/twilio-inbound-routing-contract.test.ts`
+- [x] Added authenticated portal Verify route.
+- [x] Portal session binds organization, patient, account, and destination.
+- [x] Caller cannot select another patient/org/phone.
+- [x] Start/check mutations require same origin.
+- [x] Attempt reservations are rate-limited and serialized.
+- [x] Verification codes are never persisted.
+- [x] Only Twilio `approved` + valid `VE...` evidence can record possession.
+- [x] Possession is tied to current normalized chart phone.
+- [x] Possession never creates SMS permission.
+- [x] Current unresolved `phone_verification` economics block provider calls before Twilio invocation.
+- [x] Patient UI receives only a `fundingReady` boolean, masked phone, and verification state.
+- [x] Paid Verify action disables while funding is unresolved and can become usable when policy is legitimately activated.
 
-**Interfaces:**
-- `sendTwilioSms({ to, body, from?, messagingServiceSid?, env? })` accepts explicit tenant sender + Messaging Service and validates AC/SK/MG/PN/VE/VA shapes where applicable.
-- `verifyTwilioSmsRouting({ senderPhone, messagingServiceSid, env? })` proves ownership + sender-pool membership through Twilio.
-- `TwilioSmsRoutingConfig` gains `timeZone`, `providerVerifiedAt`, `providerPhoneNumberSid`, `providerMessagingServiceSid`.
-- Any routing edit clears provider-verification evidence.
-- Verification endpoint is same-origin + integration-manage protected and returns `productionSendingAuthorized:false`.
+## Task 4 — Template-only governed patient send
 
-- [ ] Add RED contract cases for invalid exact SID shapes, routing edit invalidation, provider proof requirement, and timezone.
-- [ ] Confirm current-main behavior fails those contracts.
-- [ ] Implement the minimal adapter/routing changes with request timeouts and advisory-lock serialization for sender assignment.
-- [ ] Execute focused GREEN assertions for pure parsing/state transitions; keep provider network calls unclaimed without credentials.
-- [ ] Commit.
+- [x] Removed the governed arbitrary-body patient-SMS export.
+- [x] Added `sendAuthorizedPatientSmsTemplate({ templateId, ... })`.
+- [x] Gate order covers template, tenant patient, permission/suppression, current phone possession, production switch, tenant routing, provider proof, quiet hours, commercial funding, and provider acceptance.
+- [x] Outbound transport carries tenant sender + Messaging Service without becoming authorization authority.
+- [x] Current `patient_sms` commercial micro-funding fail-closed behavior from main is preserved.
+- [x] `.env.example` documents the production switch as a final gate, not a live-state claim.
 
-### Task 3: Patient-controlled phone-possession verification
+## Task 5 — Inbound Twilio HTTP trust boundary discovered during adversarial review
 
-**Files:**
-- Create: `src/app/api/portal/phone-verification/route.ts`
-- Modify: `src/lib/communications/patient-sms-service.ts`
-- Add/modify: `tests/portal-phone-verification-contract.test.ts`, `tests/patient-sms-service-contract.test.ts`
+- [x] Require configured inbound Auth Token + valid AccountSid.
+- [x] Require form-urlencoded requests.
+- [x] Stream and cap request body at 64 KiB.
+- [x] Reject duplicate form keys.
+- [x] Require canonical HTTPS production URL.
+- [x] Validate signature before tenant resolution/mutation.
+- [x] Require signed AccountSid match.
+- [x] Require strict SMS/MMS MessageSid shape.
+- [x] Preserve fail-closed tenant/patient ambiguity, replay locking, START-without-consent, and no-body-persistence behavior.
+- [x] Restore Twilio's published signature-validation vector plus URL/body-tamper regression coverage.
+- [x] Restore dedicated same-origin mutation regression coverage.
 
-**Interfaces:**
-- Portal session determines organization/patient/account; caller never supplies another patient/org/phone.
-- Verification target is the patient's current normalized chart phone.
-- Start limit 5/hour; check limit 8/15 minutes using audit evidence.
-- Code is never persisted.
-- `recordPatientPhoneVerification` accepts only governed source `twilio_verify` in the restored path.
-- Verification is recorded only when Twilio returns `status === "approved"` with valid provider evidence.
+## Task 6 — Normalized patient-phone lookup and intake consistency discovered during review
 
-- [ ] Add RED source/behavior contracts for session-bound identity, same-origin mutation, rate limits, no code storage, and approved-only recording.
-- [ ] Confirm route is absent/current contract fails.
-- [ ] Implement route + minimal service typing.
-- [ ] Execute focused deterministic checks where possible.
-- [ ] Commit.
+- [x] Added additive non-unique expression index migration `20260823010000_patient_sms_phone_lookup_index`.
+- [x] Query expression matches index expression exactly.
+- [x] Preserved duplicate/shared phone numbers as valid data; application fails closed on ambiguous ordinary inbound matches.
+- [x] Applied migration on disposable Neon branch cloned from production parent.
+- [x] Verified index existence and planner compatibility with exact application lookup.
+- [x] Deleted disposable Neon branch; production database untouched.
+- [x] Added canonical new-patient phone normalization: U.S. 10-digit → E.164, explicit international `+` preserved, ambiguous non-U.S. bare numbers rejected, blank allowed.
 
-### Task 4: Template-only governed patient send with all gates
+## Task 7 — Governed operator, patient, and staff UI discovered during review
 
-**Files:**
-- Modify: `src/lib/communications/patient-sms-service.ts`
-- Modify: `src/lib/communications/outbound.ts`
-- Modify: `.env.example`
-- Modify/add: `tests/patient-sms-service-contract.test.ts`, `tests/sms-template-policy.test.ts`, `tests/twilio-communications.test.ts`
+- [x] Added `/integrations/twilio` permission-gated routing page.
+- [x] Added governed routing panel with safe boolean provider state and no direct provider calls/secrets.
+- [x] Added `/portal/verify-phone` patient-controlled verification page.
+- [x] Added visible authenticated portal entry point.
+- [x] Patient UI shows masked phone only and truthful funding readiness.
+- [x] Added staff SMS permission/suppression panel on current patient chart while preserving newer vitals support.
+- [x] Staff panel uses `consents` read/update RBAC.
+- [x] Staff API projection is minimum-necessary: masked phone, current verification boolean/time/source, suppression, and reduced permission evidence.
+- [x] Full normalized phone, Twilio Verify SID, actor IDs, evidence-reference strings, and inbound event IDs are not needed by the staff browser projection.
+- [x] Staff cannot clear STOP suppression, grant marketing, grant clinical SMS, or manufacture a grant from staff-only documentation.
 
-**Interfaces:**
-- Replace the latent `sendAuthorizedPatientSms({ body, ... })` contract with `sendAuthorizedPatientSmsTemplate({ templateId, ... })`.
-- Required gates, in order: approved fixed non-PHI template; tenant patient; current SMS consent/suppression policy; current phone possession matches current chart phone; explicit `KLINIKOS_SMS_PRODUCTION_ENABLED=true`; configured tenant sender + Messaging Service + timezone + inbound STOP routing; current provider verification matching routing; quiet-hours pass; current patient-SMS commercial funding ready; outbound provider acceptance returns real SID.
-- Outbound port accepts optional `sender` and `messagingServiceSid`, but no other domain can infer patient authorization from transport success.
+## Task 8 — Security governance / production truth
 
-- [ ] Add RED contract asserting arbitrary-body export is absent and every gate exists.
-- [ ] Confirm current-main service fails because arbitrary body send exists and hardened gates are absent.
-- [ ] Implement minimal service/port changes while preserving the current variable-cost funding gate.
-- [ ] Execute focused GREEN source/pure assertions.
-- [ ] Update `.env.example` with `KLINIKOS_SMS_PRODUCTION_ENABLED=""` and truthful comments.
-- [ ] Commit.
+- [x] Restored bounded custom-validator exception at `docs/security/TWILIO_WEBHOOK_VALIDATION_EXCEPTION.md`.
+- [x] Confirmed P0 issue #160 remains open as the maintained-Twilio-SDK exit gate.
+- [x] Exception expires/requires explicit review on 2026-09-18.
+- [x] Added current-main production runbook with current migration ID and current economic blockers.
+- [x] Runbook does not claim Twilio, Verify, messaging registration, PHI, or production sending is live.
 
-### Final verification / review
+## Final verification / review
 
-- [ ] Compare branch to current main for unrelated changes.
-- [ ] Adversarially review tenant scope, consent/possession separation, provider proof invalidation, PHI boundaries, and financial-spend gate.
-- [ ] Run focused pure Node assertions for deterministic modules.
-- [ ] Run repository release gate only when a runner/dependency environment is available; do not infer green from focused tests.
-- [ ] Keep PR draft while GitHub Actions has `runner_id:0` / `steps:null` or until an equivalent exact-head full release gate executes.
+- [x] Compared branch to current main repeatedly; no stale #150 commit history was imported.
+- [x] Adversarially reviewed tenant scope, consent/possession separation, provider-proof invalidation, PHI boundaries, financial-spend gate, API evidence minimization, and inbound HTTP trust boundary.
+- [x] Performed focused deterministic/template/Twilio-adapter assertions and disposable Neon migration proof.
+- [ ] Run full exact-head release gate: Prisma generate/validate, clean migration chain, type-check, lint, full tests, DB-backed journeys, production build, security check, startup/health.
+- [ ] Execute deployed controlled Twilio routing → Verify → fixed non-PHI send → STOP → blocked resend → START → replay proof after economic/provider prerequisites are legitimately ready.
+- [ ] Replace temporary custom webhook validator with maintained Twilio SDK per #160 before the exception deadline, unless explicitly reviewed/renewed.
+- [ ] Keep PR draft while GitHub Actions remains unable to provision a runner (`runner_id:0` / `steps:null`) or until equivalent exact-head release evidence exists.
+
+## Current truth
+
+The branch is a **current-main security re-anchor**, not a production-live claim. Production remains intentionally fail-closed at multiple independent layers, including the production switch and current variable-cost economic policies.
