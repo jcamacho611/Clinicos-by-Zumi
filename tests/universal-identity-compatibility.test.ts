@@ -28,6 +28,9 @@ describe("universal identity compatibility boundary", () => {
   it("uses new relationship records as read-only context rather than an authorization shortcut", () => {
     expect(repository).toContain('import "server-only"');
     expect(repository).toContain("getPersonContextForLegacyUser");
+    expect(repository).toContain("legacyMembershipOrganizationId");
+    expect(repository).not.toContain("defaultOrganizationId");
+    expect(repository).toContain("not session tenant authority");
     expect(repository).not.toContain("authorize");
     expect(repository).not.toContain("setSession");
     expect(repository).not.toContain("switchOrganization");
