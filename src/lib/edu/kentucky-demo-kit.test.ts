@@ -17,4 +17,15 @@ describe("Kentucky evaluator demo kit", () => {
     expect(kentuckyDemoKit.authorityStatement.toLowerCase()).toContain("instructor");
     expect(kentuckyDemoKit.authorityStatement.toLowerCase()).toContain("final");
   });
+
+  it("provides a complete clickable evaluator journey through product evidence", () => {
+    const journey = kentuckyDemoKit.evaluatorJourney;
+    expect(journey.length).toBeGreaterThanOrEqual(8);
+    expect(journey.some((step) => step.href.includes("/edu/programs"))).toBe(true);
+    expect(journey.some((step) => step.href.includes("/edu/zumi-practice"))).toBe(true);
+    expect(journey.some((step) => step.href.includes("/edu/sessions"))).toBe(true);
+    expect(journey.some((step) => step.href.includes("/edu/grading"))).toBe(true);
+    expect(journey.some((step) => step.href.includes("/edu/reports"))).toBe(true);
+    expect(journey.some((step) => step.href.includes("/edu/certificates"))).toBe(true);
+  });
 });
