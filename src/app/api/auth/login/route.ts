@@ -15,6 +15,7 @@ import {
 } from "@/lib/legal/entry-access";
 import { isEntryGateEnforcementEnabled } from "@/lib/legal/legal-config";
 import { ENTRY_GATE_COOKIE_NAME } from "@/lib/legal/entry-token";
+import { isSameOriginMutation } from "@/lib/security/same-origin-post";
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -30,6 +31,13 @@ function accessHref(returnTo: string | null) {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginMutation(request)) {
+    return NextResponse.json(
+      { error: "Same-origin request required." },
+      { status: 403, headers: { "Cache-Control": "private, no-store" } },
+    );
+  }
+
   const parsed = loginSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Enter a valid email address and password." }, { status: 400 });
