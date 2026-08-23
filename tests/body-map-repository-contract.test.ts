@@ -41,14 +41,14 @@ describe("BodyMap repository contract", () => {
     expect(repository).not.toContain("bodyMapFinding.delete");
   });
 
-  it("uses tenant-scoped explicit-select reads instead of returning raw ORM records", () => {
+  it("uses tenant-scoped explicit-select reads with deterministic latest ordering", () => {
     expect(repository).toContain("const bodyMapVersionSelect");
     expect(repository).toContain("select: bodyMapVersionSelect");
     expect(repository).toContain("listBodyMapVersionsForPatient");
     expect(repository).toContain("findLatestBodyMapVersionForEncounter");
     expect(repository).toContain("where: { organizationId, patientId }");
     expect(repository).toContain("where: { organizationId, patientId, encounterId }");
-    expect(repository).toContain('orderBy: { capturedAt: "desc" }');
+    expect(repository).toContain('orderBy: [{ capturedAt: "desc" }, { createdAt: "desc" }]');
   });
 
   it("keeps audit metadata bounded and excludes finding clinical content", () => {
