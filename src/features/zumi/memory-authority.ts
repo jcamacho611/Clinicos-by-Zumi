@@ -31,6 +31,13 @@ function authorityWeight(item: ZumiGovernedContextItem) {
   return 1;
 }
 
+export function zumiGovernedContextMatchesQuestion(item: ZumiGovernedContextItem, question: string) {
+  const queryTerms = new Set(terms(question));
+  if (queryTerms.size === 0) return false;
+  const haystack = `${item.title} ${item.content} ${item.sourceName}`.toLowerCase();
+  return [...queryTerms].some((term) => haystack.includes(term));
+}
+
 export function rankZumiGovernedContext(
   items: readonly ZumiGovernedContextItem[],
   question: string,
