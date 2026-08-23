@@ -13,9 +13,10 @@ Start every material run with:
 5. for **any frontend, API, Zumi, Grid, Quality/Assurance, pricing, security, analytics, admin, integration, or client-visible work**, read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing;
 6. for any work involving production, vendors, secrets, payments, AI, maps, communications, healthcare rails, or deployment, read `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` and `docs/EXTERNAL_DEPENDENCY_MATRIX.md` before making claims or edits;
 7. for **any Zumi shell/control, public UX, product-comprehension, navigation, SEO, metadata, sitemap, robots, indexing, or growth-surface work**, read `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` before editing;
-8. for **any Zumi conversation, routing, role/goal understanding, public intelligence, fallback/degraded behavior, quick-reply, provider, memory/context, or assistant-response work**, read `docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` before editing.
+8. for **any Zumi conversation, routing, role/goal understanding, public intelligence, fallback/degraded behavior, quick-reply, provider, memory/context, or assistant-response work**, read `docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` before editing;
+9. for **any encounter, Current Visit, clinical-template, intake/staff-handoff, longitudinal-change, body-map, clinical-AI, clinical coding, order/result convergence, or close-visit work**, read `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md` before editing.
 
-For Grid, Zumi, EDU, Clinic OS, portal/role, finance, design, pricing, Assurance/Quality Guardian/Expert Grid, or security-boundary work, read the corresponding specialist canon before editing. For recovery work, read `docs/BRANCH_LEDGER.md` and preserve all listed local/remote history.
+For Grid, Zumi, EDU, Clinic OS, clinical convergence, portal/role, finance, design, pricing, Assurance/Quality Guardian/Expert Grid, or security-boundary work, read the corresponding specialist canon before editing. For recovery work, read `docs/BRANCH_LEDGER.md` and preserve all listed local/remote history.
 
 ## Environment truth law
 
@@ -89,6 +90,22 @@ Permanent rules:
 - the exact `hey → what can we do → like what → im a doctor → i own my practice too → we keep missing callbacks → how could you help` regression must remain covered in provider-disabled/degraded mode.
 
 A Zumi change that makes additional user context produce a less useful answer, reintroduces standalone dead-end copy, exposes raw conversation-state internals to the client, or weakens public/authenticated authority separation is a merge blocker.
+
+## Clinical convergence law
+
+`docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md` is repository-wide law for provider-facing clinical convergence.
+
+Permanent rules:
+
+- Current Visit is the provider-facing convergence surface; domain modules remain governed work queues and authoritative repositories;
+- structured longitudinal change is deterministic clinical truth; AI may summarize it but must not invent it;
+- staff handoff is encounter-specific and role-governed; general patient summary data must not be mislabeled as completed intake;
+- draft/review/sign/lock/addendum boundaries remain explicit human-governed encounter states;
+- specialty breadth should come from reusable versioned clinical components/configuration rather than incompatible product forks;
+- encounter UI may surface order/result/revenue state, but it may not infer external completion or duplicate authoritative domain truth into client-owned state;
+- training, AI output, Grid profiles, templates and administrative ownership never independently create clinical authority.
+
+A change that makes the clinical UI more visually integrated while weakening clinical truth, provenance, authorization, signature, tenant isolation, or external-connection honesty is a merge blocker.
 
 ## Default completion condition
 
