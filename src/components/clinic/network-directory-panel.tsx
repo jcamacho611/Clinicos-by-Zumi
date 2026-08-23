@@ -59,9 +59,9 @@ function NetworkConnectionActions({ organization, canManage }: { organization: N
   return <Button disabled={busy} onClick={transition} size="sm" variant={action === "suspend" ? "secondary" : "primary"}>{busy ? "Saving..." : action === "approve" ? "Approve relationship" : action === "restore" ? "Restore relationship" : "Pause relationship"}</Button>;
 }
 
-function ConnectionRequestForm({ data, canCreate }: { data: NetworkDirectoryWorkspace; canCreate: boolean }) {
+function ConnectionRequestForm({ data, canCreate, initialTargetOrganizationId = "" }: { data: NetworkDirectoryWorkspace; canCreate: boolean; initialTargetOrganizationId?: string }) {
   const router = useRouter();
-  const [targetOrganizationId, setTargetOrganizationId] = useState("");
+  const [targetOrganizationId, setTargetOrganizationId] = useState(initialTargetOrganizationId);
   const [allowedPurposes, setAllowedPurposes] = useState<string[]>(["treatment"]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -91,6 +91,7 @@ function ConnectionRequestForm({ data, canCreate }: { data: NetworkDirectoryWork
   }
 
   return <form className="space-y-4" onSubmit={submit}>
+    {initialTargetOrganizationId && <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-[12px] leading-5 text-sky-900"><span className="font-extrabold">Accepted invitation:</span> counterpart preselected. Choose only the purposes this relationship actually needs; invitation acceptance itself did not create network access.</div>}
     <label className="block"><span className="text-[11px] font-extrabold uppercase tracking-[.16em] text-slate-400">Participating clinic</span><select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-sky-400" onChange={(event) => setTargetOrganizationId(event.target.value)} value={targetOrganizationId}><option value="">Choose an organization</option>{data.organizations.filter((organization) => !organization.isCurrent && !organization.connection).map((organization) => <option key={organization.id} value={organization.id}>{organization.name} · {organization.clinicType}</option>)}</select></label>
     <fieldset><legend className="text-[11px] font-extrabold uppercase tracking-[.16em] text-slate-400">Requested purposes</legend><div className="mt-2 grid gap-2">{PURPOSES.map(([value, label]) => <label className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-xs font-bold ${allowedPurposes.includes(value) ? "border-sky-300 bg-sky-50 text-sky-900" : "border-slate-200 text-slate-600"}`} key={value}><input checked={allowedPurposes.includes(value)} className="accent-sky-600" onChange={() => togglePurpose(value)} type="checkbox" />{label}</label>)}</div></fieldset>
     <Button className="w-full" disabled={busy || !targetOrganizationId || allowedPurposes.length === 0} type="submit" variant="primary">{busy ? "Sending request..." : "Request clinic connection"}<ChevronRight className="size-4" /></Button>
@@ -98,7 +99,7 @@ function ConnectionRequestForm({ data, canCreate }: { data: NetworkDirectoryWork
   </form>;
 }
 
-export function NetworkDirectoryPanel({ data, canCreate, canManage }: { data: NetworkDirectoryWorkspace; canCreate: boolean; canManage: boolean }) {
+export function NetworkDirectoryPanel({ data, canCreate, canManage, initialTargetOrganizationId = "" }: { data: NetworkDirectoryWorkspace; canCreate: boolean; canManage: boolean; initialTargetOrganizationId?: string }) {
   const connectedCount = data.organizations.filter((organization) => organization.connection?.status === "active").length;
   const verifiedFacilities = data.organizations.flatMap((organization) => organization.facilities).filter((facility) => facility.status === "verified").length;
   const providerCount = data.organizations.reduce((count, organization) => count + organization.providers.length, 0);
@@ -121,7 +122,7 @@ export function NetworkDirectoryPanel({ data, canCreate, canManage }: { data: Ne
         </div>)}</div>
       </SectionCard>
 
-      <div className="space-y-6"><SectionCard title="Request a relationship" description="The receiving organization approves its side. A request never grants chart access by itself."><div className="p-5"><ConnectionRequestForm canCreate={canCreate} data={data} /></div></SectionCard><SectionCard title="Sharing agreements" description="Agreements narrow what a connected clinic may request; they do not replace patient consent."><div className="space-y-3 p-4">{data.agreements.length ? data.agreements.map((agreement) => <div className="rounded-xl border border-slate-200 p-3" key={agreement.id}><div className="flex items-start gap-2"><Check className="mt-0.5 size-4 text-teal-600" /><div className="min-w-0"><p className="text-xs font-extrabold text-slate-900">{agreement.sourceName} → {agreement.targetName}</p><p className="mt-1 text-[12px] text-slate-500">{agreement.allowedPurposes.join(" · ")} · {agreement.dataCategories.length} categories</p></div><StatusBadge status={agreement.status} /></div></div>) : <p className="p-2 text-xs text-slate-500">No sharing agreements yet.</p>}</div></SectionCard></div>
+      <div className="space-y-6"><SectionCard title="Request a relationship" description="The receiving organization approves its side. A request never grants chart access by itself."><div className="p-5"><ConnectionRequestForm canCreate={canCreate} data={data} initialTargetOrganizationId={initialTargetOrganizationId} /></div></SectionCard><SectionCard title="Sharing agreements" description="Agreements narrow what a connected clinic may request; they do not replace patient consent."><div className="space-y-3 p-4">{data.agreements.length ? data.agreements.map((agreement) => <div className="rounded-xl border border-slate-200 p-3" key={agreement.id}><div className="flex items-start gap-2"><Check className="mt-0.5 size-4 text-teal-600" /><div className="min-w-0"><p className="text-xs font-extrabold text-slate-900">{agreement.sourceName} → {agreement.targetName}</p><p className="mt-1 text-[12px] text-slate-500">{agreement.allowedPurposes.join(" · ")} · {agreement.dataCategories.length} categories</p></div><StatusBadge status={agreement.status} /></div></div>) : <p className="p-2 text-xs text-slate-500">No sharing agreements yet.</p>}</div></SectionCard></div>
     </section>
 
     <section className="grid gap-6 xl:grid-cols-[1.15fr_.85fr]">
