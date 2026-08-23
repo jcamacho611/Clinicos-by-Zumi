@@ -32,17 +32,16 @@ describe("universal account schema", () => {
     expect(sql).not.toContain("drop table \"auth_credentials\"");
     expect(sql).not.toContain("drop table \"auth_sessions\"");
     expect(sql).not.toContain("delete from \"users\"");
-    expect(sql).toContain("access_gate_acceptances");
-    expect(sql).toContain("accountid");
-    expect(sql).toContain("personid");
   });
 
-  it("keeps Prisma model truth aligned with the legal evidence columns added by migration", () => {
-    const legacySchema = read("prisma/schema.prisma");
-    const accessBlock = legacySchema.split("model AccessGateAcceptance {")[1]?.split("}\n\nmodel Organization")[0] ?? "";
-    expect(accessBlock).toContain("accountId");
-    expect(accessBlock).toContain("personId");
-    expect(accessBlock).toContain("account          Account?");
-    expect(accessBlock).toContain("person           Person?");
+  it("binds protected-entry evidence through a separate append-only account table", () => {
+    const accountSchema = read("prisma/models/universal-account.prisma");
+    expect(accountSchema).toContain("model AccountEntryAcceptanceBinding {");
+    expect(accountSchema).toContain("acceptanceId    String   @unique");
+    expect(accountSchema).toContain('@@map("account_entry_acceptance_bindings")');
+
+    const sql = read("prisma/migrations/20260823190000_universal_account_foundation/migration.sql");
+    expect(sql).toContain('CREATE TABLE "account_entry_acceptance_bindings"');
+    expect(sql).not.toContain('ALTER TABLE "access_gate_acceptances"\n    ADD COLUMN');
   });
 });
