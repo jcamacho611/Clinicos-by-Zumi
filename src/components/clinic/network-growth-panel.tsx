@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Check, MailPlus, Network, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, MailPlus, Network, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SectionCard, StatCard, StatusBadge } from "@/components/clinic/workspace-kit";
@@ -19,17 +20,116 @@ export function NetworkGrowthPanel({ data, canCreate, canManage }: { data: Netwo
   const [specialty, setSpecialty] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setMessage(null);
-    const response = await fetch("/api/network/invitations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteeName: name, inviteeEmail: email || null, inviteeType: type, targetOrganizationId: target || null, specialty: specialty || null, notes: "Created from the connected-care growth workspace." }) });
+    event.preventDefault();
+    setBusy(true);
+    setMessage(null);
+    const response = await fetch("/api/network/invitations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ inviteeName: name, inviteeEmail: email || null, inviteeType: type, targetOrganizationId: target || null, specialty: specialty || null, notes: "Created from the connected-care growth workspace." }),
+    });
     const payload = await response.json().catch(() => null) as { error?: string } | null;
     setBusy(false);
-    if (!response.ok) { setMessage(payload?.error ?? "Invitation could not be created."); return; }
-    setMessage(target ? "Invitation sent to the selected organization." : "Partner application recorded for manual verification."); setName("New connected-care partner"); setEmail(""); setTarget(""); setSpecialty(""); router.refresh();
+    if (!response.ok) {
+      setMessage(payload?.error ?? "Invitation could not be created.");
+      return;
+    }
+    setMessage(target ? "Invitation sent to the selected organization." : "Partner application recorded for manual verification.");
+    setName("New connected-care partner");
+    setEmail("");
+    setTarget("");
+    setSpecialty("");
+    router.refresh();
   }
+
   async function transition(id: string, action: "verify" | "accept" | "reject" | "cancel" | "suspend" | "restore") {
-    const response = await fetch(`/api/network/invitations/${id}/transition`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action, note: `Human network operator recorded ${action} after reviewing participation status.` }) });
-    if (response.ok) router.refresh(); else setMessage(((await response.json().catch(() => null)) as { error?: string } | null)?.error ?? "Invitation transition failed.");
+    const response = await fetch(`/api/network/invitations/${id}/transition`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action, note: `Human network operator recorded ${action} after reviewing participation status.` }),
+    });
+    if (response.ok) router.refresh();
+    else setMessage(((await response.json().catch(() => null)) as { error?: string } | null)?.error ?? "Invitation transition failed.");
   }
-  return <div className="space-y-6"><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6"><StatCard accent="sky" detail="Active verified links" icon={<Network className="size-4" />} label="Active connections" value={String(data.insights.activeConnections)} /><StatCard accent="amber" detail="Awaiting response or review" icon={<MailPlus className="size-4" />} label="Pending invitations" value={String(data.insights.pendingInvitations)} /><StatCard accent="teal" detail="Accepted participation" icon={<Check className="size-4" />} label="Accepted" value={String(data.insights.acceptedInvitations)} /><StatCard accent="slate" detail="Outbound partner outreach" icon={<MailPlus className="size-4" />} label="Sent" value={String(data.insights.sentInvitations)} /><StatCard accent="sky" detail="Referral records with destination" icon={<Network className="size-4" />} label="Connected referrals" value={String(data.insights.connectedReferralCount)} /><StatCard accent="rose" detail="Coverage categories not represented" icon={<ShieldCheck className="size-4" />} label="Specialty gaps" value={String(data.insights.specialtyGaps.length)} /></section><div className="grid gap-6 xl:grid-cols-[.75fr_1.25fr]"><SectionCard title="Invite a trusted partner" description="Known ClinicOS organizations receive a targeted invitation. Outside partners remain in a manual verification queue until identity and participation are reviewed."><form className="space-y-3 p-5" onSubmit={submit}><div className="grid gap-3 sm:grid-cols-2"><input aria-label="Partner name" className="h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-sky-400" onChange={(event) => setName(event.target.value)} value={name} /><input aria-label="Partner email" className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-400" onChange={(event) => setEmail(event.target.value)} placeholder="Contact email" type="email" value={email} /></div><div className="grid gap-3 sm:grid-cols-2"><select aria-label="Partner type" className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold" onChange={(event) => setType(event.target.value)} value={type}>{types.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><input aria-label="Partner specialty" className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-400" onChange={(event) => setSpecialty(event.target.value)} placeholder="Specialty or service" value={specialty} /></div><select aria-label="Known target organization" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold" onChange={(event) => setTarget(event.target.value)} value={target}><option value="">External partner / manual verification</option>{data.organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name} · {organization.clinicType}</option>)}</select><Button className="w-full" disabled={busy || !canCreate || name.trim().length < 2} type="submit" variant="primary">{busy ? "Recording..." : canCreate ? "Create invitation" : "Read-only access"}<MailPlus className="size-4" /></Button>{message && <p className="rounded-xl bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">{message}</p>}</form></SectionCard><SectionCard title="Coverage and adoption insight" description="These are operational signals, not guarantees of network availability or service quality."><div className="space-y-4 p-5"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-slate-400">Specialty gaps to recruit</p><div className="mt-2 flex flex-wrap gap-2">{data.insights.specialtyGaps.map((gap) => <Badge key={gap} tone="rose">{gap}</Badge>)}{!data.insights.specialtyGaps.length && <Badge tone="teal">No configured gaps</Badge>}</div></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[11px] font-bold text-slate-400">REFERRAL VOLUME</p><p className="mt-1 text-xl font-black text-slate-950">{data.insights.referralCount}</p><p className="mt-1 text-[12px] text-slate-500">Captured in this workspace</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-[11px] font-bold text-slate-400">NETWORK VALUE</p><p className="mt-1 text-xl font-black text-slate-950">{data.insights.activeConnections + data.insights.acceptedInvitations}</p><p className="mt-1 text-[12px] text-slate-500">Active links plus accepted invitations</p></div></div></div></SectionCard></div><SectionCard title="Verification and participation queue" description="Verify, accept, reject, pause, restore, or cancel with an auditable human note. Acceptance does not silently grant chart access."><div className="divide-y divide-slate-100">{data.invitations.map((invitation) => <div className="p-5" key={invitation.id}><div className="flex flex-wrap items-start gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{invitation.inviteeName}</p><StatusBadge status={invitation.inviteeType} /><StatusBadge status={invitation.status} /></div><p className="mt-1 text-[12px] text-slate-500">{invitation.invitingOrganization} → {invitation.targetOrganization ?? "External manual verification"}{invitation.specialty ? ` · ${invitation.specialty}` : ""}{invitation.inviteeEmail ? ` · ${invitation.inviteeEmail}` : ""}</p></div><div className="flex flex-wrap gap-2">{canManage && invitation.status === "pending_verification" && <Button onClick={() => transition(invitation.id, "verify")} size="sm" variant="secondary">Verify</Button>}{canManage && ["sent", "verified"].includes(invitation.status) && (invitation.targetOrganizationId === data.currentOrganizationId || !invitation.targetOrganizationId) && <Button onClick={() => transition(invitation.id, "accept")} size="sm" variant="primary">Accept</Button>}{canManage && ["sent", "verified", "accepted"].includes(invitation.status) && <Button onClick={() => transition(invitation.id, invitation.status === "accepted" ? "suspend" : "cancel")} size="sm" variant="secondary">{invitation.status === "accepted" ? "Suspend" : "Cancel"}</Button>}{canManage && invitation.status === "suspended" && <Button onClick={() => transition(invitation.id, "restore")} size="sm" variant="primary">Restore</Button>}</div></div>{invitation.notes && <p className="mt-3 rounded-xl bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">{invitation.notes}</p>}<p className="mt-3 text-[11px] text-slate-400">Updated {new Date(invitation.updatedAt).toLocaleString()}</p></div>)}{!data.invitations.length && <p className="p-5 text-xs text-slate-500">No invitations or partner applications yet.</p>}</div></SectionCard></div>;
+
+  return <div className="space-y-6">
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <StatCard accent="sky" detail="Active verified links" icon={<Network className="size-4" />} label="Active connections" value={String(data.insights.activeConnections)} />
+      <StatCard accent="amber" detail="Awaiting response or review" icon={<MailPlus className="size-4" />} label="Pending invitations" value={String(data.insights.pendingInvitations)} />
+      <StatCard accent="teal" detail="Accepted participation" icon={<Check className="size-4" />} label="Accepted" value={String(data.insights.acceptedInvitations)} />
+      <StatCard accent="rose" detail="Accepted but relationship not requested" icon={<ArrowRight className="size-4" />} label="Setup needed" value={String(data.insights.relationshipSetupNeeded)} />
+      <StatCard accent="sky" detail="Referral records with destination" icon={<Network className="size-4" />} label="Connected referrals" value={String(data.insights.connectedReferralCount)} />
+      <StatCard accent="rose" detail="Coverage categories not represented" icon={<ShieldCheck className="size-4" />} label="Specialty gaps" value={String(data.insights.specialtyGaps.length)} />
+    </section>
+
+    <div className="grid gap-6 xl:grid-cols-[.75fr_1.25fr]">
+      <SectionCard title="Invite a trusted partner" description="Known ClinicOS organizations receive a targeted invitation. Outside partners remain in a manual verification queue until identity and participation are reviewed.">
+        <form className="space-y-3 p-5" onSubmit={submit}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input aria-label="Partner name" className="h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-sky-400" onChange={(event) => setName(event.target.value)} value={name} />
+            <input aria-label="Partner email" className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-400" onChange={(event) => setEmail(event.target.value)} placeholder="Contact email" type="email" value={email} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select aria-label="Partner type" className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold" onChange={(event) => setType(event.target.value)} value={type}>{types.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+            <input aria-label="Partner specialty" className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-400" onChange={(event) => setSpecialty(event.target.value)} placeholder="Specialty or service" value={specialty} />
+          </div>
+          <select aria-label="Known target organization" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold" onChange={(event) => setTarget(event.target.value)} value={target}>
+            <option value="">External partner / manual verification</option>
+            {data.organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name} · {organization.clinicType}</option>)}
+          </select>
+          <Button className="w-full" disabled={busy || !canCreate || name.trim().length < 2} type="submit" variant="primary">{busy ? "Recording..." : canCreate ? "Create invitation" : "Read-only access"}<MailPlus className="size-4" /></Button>
+          {message && <p className="rounded-xl bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">{message}</p>}
+        </form>
+      </SectionCard>
+
+      <SectionCard title="Coverage and adoption insight" description="These are operational signals, not guarantees of network availability or service quality.">
+        <div className="space-y-4 p-5">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-slate-400">Specialty gaps to recruit</p>
+            <div className="mt-2 flex flex-wrap gap-2">{data.insights.specialtyGaps.map((gap) => <Badge key={gap} tone="rose">{gap}</Badge>)}{!data.insights.specialtyGaps.length && <Badge tone="teal">No configured gaps</Badge>}</div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl bg-slate-50 p-3"><p className="text-[11px] font-bold text-slate-400">REFERRAL VOLUME</p><p className="mt-1 text-xl font-black text-slate-950">{data.insights.referralCount}</p><p className="mt-1 text-[12px] text-slate-500">Captured in this workspace</p></div>
+            <div className="rounded-xl bg-slate-50 p-3"><p className="text-[11px] font-bold text-slate-400">RELATIONSHIP SETUP</p><p className="mt-1 text-xl font-black text-slate-950">{data.insights.relationshipSetupNeeded}</p><p className="mt-1 text-[12px] text-slate-500">Accepted invitations still needing a purpose-scoped connection request</p></div>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+
+    {data.relationshipGaps.length > 0 && <SectionCard title="Relationship setup still needed" description="Acceptance proves participation intent. The relationship still needs an explicit purpose-scoped request and receiving-organization approval before it becomes active.">
+      <div className="divide-y divide-slate-100">
+        {data.relationshipGaps.map((gap) => <div className="flex flex-wrap items-center gap-4 p-5" key={gap.invitationId}>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-extrabold text-slate-900">{gap.counterpartName}</p>
+            <p className="mt-1 text-[12px] text-slate-500">Invitation accepted{gap.specialty ? ` · ${gap.specialty}` : ""}. No network relationship request currently represents this connection.</p>
+          </div>
+          <Link className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-extrabold text-white hover:bg-slate-800" href={`/network/directory?connect=${encodeURIComponent(gap.counterpartOrganizationId)}`}>Set relationship purpose <ArrowRight className="size-4" /></Link>
+        </div>)}
+      </div>
+    </SectionCard>}
+
+    <SectionCard title="Verification and participation queue" description="Verify, accept, reject, pause, restore, or cancel with an auditable human note. Acceptance does not silently grant chart access.">
+      <div className="divide-y divide-slate-100">
+        {data.invitations.map((invitation) => <div className="p-5" key={invitation.id}>
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-slate-900">{invitation.inviteeName}</p><StatusBadge status={invitation.inviteeType} /><StatusBadge status={invitation.status} /></div>
+              <p className="mt-1 text-[12px] text-slate-500">{invitation.invitingOrganization} → {invitation.targetOrganization ?? "External manual verification"}{invitation.specialty ? ` · ${invitation.specialty}` : ""}{invitation.inviteeEmail ? ` · ${invitation.inviteeEmail}` : ""}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {canManage && invitation.status === "pending_verification" && <Button onClick={() => transition(invitation.id, "verify")} size="sm" variant="secondary">Verify</Button>}
+              {canManage && ["sent", "verified"].includes(invitation.status) && (invitation.targetOrganizationId === data.currentOrganizationId || !invitation.targetOrganizationId) && <Button onClick={() => transition(invitation.id, "accept")} size="sm" variant="primary">Accept</Button>}
+              {canManage && ["sent", "verified", "accepted"].includes(invitation.status) && <Button onClick={() => transition(invitation.id, invitation.status === "accepted" ? "suspend" : "cancel")} size="sm" variant="secondary">{invitation.status === "accepted" ? "Suspend" : "Cancel"}</Button>}
+              {canManage && invitation.status === "suspended" && <Button onClick={() => transition(invitation.id, "restore")} size="sm" variant="primary">Restore</Button>}
+            </div>
+          </div>
+          {invitation.notes && <p className="mt-3 rounded-xl bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">{invitation.notes}</p>}
+          <p className="mt-3 text-[11px] text-slate-400">Updated {new Date(invitation.updatedAt).toLocaleString()}</p>
+        </div>)}
+        {!data.invitations.length && <p className="p-5 text-xs text-slate-500">No invitations or partner applications yet.</p>}
+      </div>
+    </SectionCard>
+  </div>;
 }
