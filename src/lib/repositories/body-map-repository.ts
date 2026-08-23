@@ -220,7 +220,7 @@ export async function listBodyMapVersionsForPatient(
   const rows = await db.bodyMapVersion.findMany({
     where: { organizationId, patientId },
     select: bodyMapVersionSelect,
-    orderBy: { capturedAt: "desc" },
+    orderBy: [{ capturedAt: "desc" }, { createdAt: "desc" }],
     take: Math.max(1, Math.min(limit, 100)),
   });
   return rows.map(mapBodyMapVersion);
@@ -234,7 +234,7 @@ export async function findLatestBodyMapVersionForEncounter(
   const row = await db.bodyMapVersion.findFirst({
     where: { organizationId, patientId, encounterId },
     select: bodyMapVersionSelect,
-    orderBy: { capturedAt: "desc" },
+    orderBy: [{ capturedAt: "desc" }, { createdAt: "desc" }],
   });
   return row ? mapBodyMapVersion(row) : null;
 }
