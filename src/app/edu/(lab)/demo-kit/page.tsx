@@ -52,6 +52,27 @@ export default function EduDemoKitPage() {
           <p className="mt-4 border-l-2 border-[#e6817b]/45 pl-3 text-[11px] leading-5 text-[#8f7773]">{credibility.practitionerBoundary}</p>
         </section>
 
+        <section className="mt-6 border border-[#e6817b]/20 bg-[#0d0708]/75 p-5 sm:p-7" aria-labelledby="evaluator-journey-title">
+          <div className="max-w-4xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Live evaluator walkthrough</p>
+            <h2 className="mt-2 text-xl font-semibold text-[#f8efed]" id="evaluator-journey-title">One product story, from program configuration to completion evidence</h2>
+            <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Each step opens the real Klinikos EDU surface behind the claim. The walkthrough uses proposed/demo configuration and synthetic training data; it does not imply SCWDB approval, deployment, or participant outcomes.</p>
+          </div>
+          <ol className="mt-6 grid gap-3 lg:grid-cols-3">
+            {kit.evaluatorJourney.map((step) => (
+              <li className="border border-[#e28b85]/12 bg-[#12090b]/45 p-4" key={step.step}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Step {step.step}</span>
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-[#e6817b]" />
+                </div>
+                <h3 className="mt-3 text-sm font-semibold text-[#f8efed]">{step.label}</h3>
+                <p className="mt-2 min-h-20 text-xs leading-5 text-[#a98f8b]">{step.detail}</p>
+                <Link className="mt-4 inline-flex border border-[#e6817b]/30 px-3 py-2 text-[11px] font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href={step.href}>Open evidence →</Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+
         <section className="mt-6 border border-[#e28b85]/14 bg-[#12090b]/55 p-5 sm:p-7">
           <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Proposed representative materials · not SCWDB-approved</p>
           <h2 className="mt-3 text-xl font-semibold text-[#f8efed]">Sample slide outline</h2>
@@ -123,7 +144,8 @@ export default function EduDemoKitPage() {
 
         <nav className="mt-6 flex flex-wrap gap-3" aria-label="Demo kit actions">
           <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/programs">Programs</Link>
-          <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/cohorts">Cohorts</Link>
+          <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/zumi-practice?pathway=healthcare">Zumi practice</Link>
+          <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/sessions">Sessions & attendance</Link>
           <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/grading">Instructor review</Link>
           <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/reports">Reports</Link>
         </nav>
