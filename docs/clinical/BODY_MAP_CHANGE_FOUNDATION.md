@@ -20,6 +20,16 @@ Production implementation must use **append-only/versioned persistence**. A new 
 
 Signed or locked encounter history must use **amendment/addendum semantics rather than mutation** when a correction is required.
 
+### Comparison roles are derived, not persisted
+
+**Comparison roles are derived, not persisted.** `initial`, `previous`, and `today` describe the role an immutable version plays in a particular longitudinal comparison. They are not permanent clinical attributes of a stored BodyMap version.
+
+A version captured as today's evidence during one encounter can become the previous evidence during a later encounter. Persisting `stage=today` or `stage=previous` as authoritative state would therefore create stale truth.
+
+The pure domain type may carry a comparison-only role for an in-memory comparison projection, but the persistence schema must store immutable facts such as source encounter, patient, organization, capture time, creator, revision/provenance, and findings. The server composition layer derives comparison roles when it selects evidence.
+
+PR #276 owns the encounter-level rule for identifying the eligible prior finalized encounter. BodyMap persistence must not duplicate that decision as a stored stage flag.
+
 ### Scope and provenance
 
 Production repositories must enforce **tenant + patient + encounter scoped reads** and writes through authenticated server capabilities.
@@ -31,7 +41,8 @@ Browser clients receive only the minimum-necessary BodyMap/Change DTO. They neve
 The pure comparator fails closed before computing a clinical delta when:
 
 - compared versions belong to different patients;
-- a version contains duplicate structured finding keys.
+- a version contains duplicate structured finding keys;
+- normalized symptom severity is non-finite or outside the governed scale.
 
 These checks prevent caller bugs or ambiguous source records from manufacturing longitudinal clinical truth.
 
@@ -46,6 +57,14 @@ A finding is identified structurally by:
 - source finding identifier.
 
 Laterality remains first-class. A left-shoulder finding is not interchangeable with a right-shoulder finding.
+
+### Severity semantics
+
+The BodyMap `severity` field in this foundation is a **0–10 normalized symptom-severity scale**, where **higher values mean worse severity**. Only values from 0 through 10 inclusive are valid comparison evidence.
+
+That semantic boundary is what makes `severity_improved` and `severity_worsened` deterministic. The comparator fails closed rather than assigning clinical direction to an invalid or incompatible value.
+
+A ROM, strength, or another structured measure is **not** BodyMap severity. Those measurements require their own typed clinical evidence with scale/unit/direction semantics and should enter the broader Clinical Change Graph as separate evidence sources. Klinikos must not reuse the BodyMap severity comparator for measurements where higher does not necessarily mean worse.
 
 ### Deterministic change
 
@@ -91,17 +110,18 @@ PR #271 is the current-main lifelong identity and Prisma multi-file foundation. 
 
 The persistence tranche should:
 
-1. add additive BodyMap / BodyMapFinding persistence models;
+1. add additive BodyMap / BodyMapFinding persistence models that store immutable source facts, not `initial/previous/today` stage labels;
 2. add explicit clinician-recorded finding lifecycle/resolution state rather than deriving resolution from omission;
-3. verify migration against a disposable Neon branch cloned from production shape before production deployment;
-4. implement a server-only repository with organization + patient + encounter scoping;
-5. expose create-new-version commands, never update-in-place for historical versions;
-6. emit auditable create/review/resolve/amend events;
-7. enforce profession/capability authorization for staff capture and provider review;
-8. use PR #276 for encounter-level prior-source selection;
-9. wire persisted versions into Current Visit as timeline + comparison evidence after the Current Visit convergence branch is reconciled;
-10. prove the synthetic No-Fault Golden Case in UI and DB-backed journey tests;
-11. extend broader Clinical Change with PT progression, imaging/results, ADL/function, work status, and other evidence sources without conflating them with BodyMap itself.
+3. record the scale/meaning required for any future non-severity structured measurement rather than overloading the 0–10 severity field;
+4. verify migration against a disposable Neon branch cloned from production shape before production deployment;
+5. implement a server-only repository with organization + patient + encounter scoping;
+6. expose create-new-version commands, never update-in-place for historical versions;
+7. emit auditable create/review/resolve/amend events;
+8. enforce profession/capability authorization for staff capture and provider review;
+9. use PR #276 for encounter-level prior-source selection;
+10. wire persisted versions into Current Visit as timeline + comparison evidence after the Current Visit convergence branch is reconciled;
+11. prove the synthetic No-Fault Golden Case in UI and DB-backed journey tests;
+12. extend broader Clinical Change with PT progression, imaging/results, ADL/function, work status, and other evidence sources without conflating them with BodyMap itself.
 
 ## Golden Case
 
