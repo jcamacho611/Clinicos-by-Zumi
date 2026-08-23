@@ -48,14 +48,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
       data-klinikos-ds
       data-klinikos-atmosphere="night"
-      data-klinikos-atmosphere-preference="auto"
+      data-klinikos-atmosphere-preference="system"
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: klinikosAtmosphereBootstrap }} />
       </head>
       <body className="klinikos-cinematic-root">
         <a className="klinikos-skip-link" href="#klinikos-page-content">Skip to main content</a>
-        <div id="klinikos-page-content" tabIndex={-1}>{children}</div>
+        <div id="klinikos-page-content" className="klinikos-theme-surface" tabIndex={-1}>{children}</div>
         <PublicZumiSiteControl />
         <KlinikosAtmosphereController />
       </body>
