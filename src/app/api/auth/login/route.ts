@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateCredentials } from "@/lib/auth/credentials";
 import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
+import { resolvePostLoginRedirect } from "@/lib/auth/post-login-routing";
 import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
-import { safeReturnTo } from "@/lib/auth/return-to";
+import { buildGlobalAgreement } from "@/lib/legal/global-agreement";
+import { hasCurrentAgreementAcceptance } from "@/lib/legal/legal-access";
+import { getLegalConfigurationStatus, isLegalGateEnforcementEnabled } from "@/lib/legal/legal-config";
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -36,13 +39,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email or password is incorrect." }, { status: 401 });
     }
 
-    const { token } = await createClinicSession(identity, {
+    const { session, token } = await createClinicSession(identity, {
       ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
       userAgent: request.headers.get("user-agent") ?? undefined,
     });
     clearLoginFailures(key);
 
-    const response = NextResponse.json({ ok: true, redirectTo: safeReturnTo(parsed.data.returnTo) ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard") });
+    const legalGateEnabled = isLegalGateEnforcementEnabled();
+    const legalStatus = legalGateEnabled ? getLegalConfigurationStatus() : null;
+    let agreementAccepted = false;
+
+    if (legalGateEnabled && legalStatus?.ready && !session.demo && process.env.DATABASE_URL) {
+      try {
+        agreementAccepted = await hasCurrentAgreementAcceptance(session, buildGlobalAgreement(legalStatus.config));
+      } catch {
+        // Fail closed without discarding the authenticated session. The legal page will
+        // retry its own evidence read and explain the blocker rather than granting
+        // product access or treating a lookup failure as acceptance.
+        agreementAccepted = false;
+      }
+    }
+
+    const redirectTo = resolvePostLoginRedirect({
+      role: session.role,
+      requestedReturnTo: parsed.data.returnTo,
+      legalGateEnabled,
+      legalConfigurationReady: legalStatus?.ready ?? true,
+      agreementAccepted,
+    });
+
+    const response = NextResponse.json({ ok: true, redirectTo });
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
     response.headers.set("Cache-Control", "no-store");
     return response;
