@@ -85,8 +85,9 @@ export function bodyMapFindingPersistenceKey(finding: Pick<CreateBodyMapFindingI
   ].join("::");
 }
 
-function normalizedNullableText(value: string | null) {
+function normalizedNullableText(value: unknown) {
   if (value === null) return null;
+  if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : null;
 }
@@ -125,7 +126,8 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
     if (!CLINICAL_STATES.has(finding.clinicalState)) errors.push(`Finding ${index + 1}: clinical state is invalid.`);
 
     if (finding.severity !== null && (
-      !Number.isFinite(finding.severity)
+      typeof finding.severity !== "number"
+      || !Number.isFinite(finding.severity)
       || !Number.isInteger(finding.severity)
       || finding.severity < 0
       || finding.severity > 10
@@ -148,12 +150,20 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
     if (seenKeys.has(key)) errors.push(`Duplicate BodyMap finding identity: ${key}.`);
     seenKeys.add(key);
 
-    const annotations = Array.isArray(finding.annotations)
-      ? finding.annotations.map((annotation) => annotation.trim())
-      : [];
-    if (!Array.isArray(finding.annotations) || finding.annotations.some((annotation) => typeof annotation !== "string")) {
+    const functionalImpact = normalizedNullableText(finding.functionalImpact);
+    if (functionalImpact === undefined) errors.push(`Finding ${index + 1}: functional impact must be text or null.`);
+
+    const radiation = normalizedNullableText(finding.radiation);
+    if (radiation === undefined) errors.push(`Finding ${index + 1}: radiation must be text or null.`);
+
+    const annotationValues = Array.isArray(finding.annotations) ? finding.annotations : [];
+    const annotationsAreStrings = annotationValues.every((annotation) => typeof annotation === "string");
+    if (!Array.isArray(finding.annotations) || !annotationsAreStrings) {
       errors.push(`Finding ${index + 1}: annotations must contain only strings.`);
     }
+    const annotations = annotationsAreStrings
+      ? (annotationValues as string[]).map((annotation) => annotation.trim())
+      : [];
 
     normalizedFindings.push({
       findingKey: key,
@@ -162,8 +172,8 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
       symptom,
       severity: finding.severity,
       clinicalState: finding.clinicalState,
-      functionalImpact: normalizedNullableText(finding.functionalImpact),
-      radiation: normalizedNullableText(finding.radiation),
+      functionalImpact: functionalImpact ?? null,
+      radiation: radiation ?? null,
       annotations,
       sourceObservation: finding.sourceObservation,
     });
