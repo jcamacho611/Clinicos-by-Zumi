@@ -9,10 +9,13 @@ const accountPreferences = fs.readFileSync(path.join(process.cwd(), "src/compone
 const layout = fs.readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
 const livingHome = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-living-gateway.tsx"), "utf8");
 
-function ruleFor(selector: string) {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = tokens.match(new RegExp(`${escaped}\\s*\\{([\\s\\S]*?)\\}`));
-  return match?.[1] ?? "";
+function ruleContaining(selector: string) {
+  const selectorIndex = tokens.indexOf(selector);
+  if (selectorIndex < 0) return "";
+  const braceIndex = tokens.indexOf("{", selectorIndex);
+  const endIndex = tokens.indexOf("}", braceIndex);
+  if (braceIndex < 0 || endIndex < 0) return "";
+  return tokens.slice(braceIndex + 1, endIndex);
 }
 
 describe("Klinikos Black Label appearance system", () => {
@@ -43,8 +46,8 @@ describe("Klinikos Black Label appearance system", () => {
   });
 
   it("gives Marble and Obsidian distinct semantic material blocks", () => {
-    const marble = ruleFor('html:root[data-klinikos-atmosphere="day"]');
-    const obsidian = ruleFor('html:root[data-klinikos-atmosphere="night"]');
+    const marble = ruleContaining('html:root[data-klinikos-atmosphere="day"]');
+    const obsidian = ruleContaining('html:root[data-klinikos-atmosphere="night"]');
     expect(marble).not.toBe("");
     expect(obsidian).not.toBe("");
     expect(marble).toContain("--k-theme-mode:light");
