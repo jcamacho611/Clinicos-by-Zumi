@@ -79,7 +79,7 @@ const vital: PatientVital = {
 
 const medicationReconciliation = {
   id: "recon-1",
-  status: "completed",
+  status: "completed" as const,
   source: "staff_review",
   summary: "Medication list reviewed with the patient.",
   medicationCount: 3,
@@ -88,7 +88,7 @@ const medicationReconciliation = {
 };
 
 describe("Current Visit medication reconciliation handoff", () => {
-  it("surfaces encounter-linked medication reconciliation without inventing a completed full handoff", () => {
+  it("surfaces completed encounter-linked medication reconciliation without inventing a completed full handoff", () => {
     const model = buildCurrentVisitModel(patient, encounter, { medicationReconciliation });
 
     expect(model.staffHandoff.status).toBe("partial");
@@ -100,7 +100,7 @@ describe("Current Visit medication reconciliation handoff", () => {
     expect(model.staffHandoff.message).toContain("Other staff intake remains incomplete");
   });
 
-  it("composes vitals and medication reconciliation as separate authoritative sources", () => {
+  it("composes vitals and completed medication reconciliation as separate authoritative sources", () => {
     const model = buildCurrentVisitModel(patient, encounter, { vital, medicationReconciliation });
 
     expect(model.staffHandoff.status).toBe("partial");
@@ -111,7 +111,31 @@ describe("Current Visit medication reconciliation handoff", () => {
     expect(model.staffHandoff.message).toContain("Vitals and medication reconciliation are attached");
   });
 
-  it("wires the authoritative reconciliation record into Current Visit without changing medication authority", () => {
+  it("does not surface draft or reopened reconciliation as completed staff handoff evidence", () => {
+    for (const candidate of [
+      { ...medicationReconciliation, status: "draft", completedAt: null },
+      { ...medicationReconciliation, status: "reopened" },
+      { ...medicationReconciliation, status: "completed", completedAt: null },
+    ]) {
+      const model = buildCurrentVisitModel(patient, encounter, { medicationReconciliation: candidate });
+      expect(model.staffHandoff.status).toBe("not_available");
+    }
+  });
+
+  it("still surfaces valid vitals when medication reconciliation is not completed", () => {
+    const model = buildCurrentVisitModel(patient, encounter, {
+      vital,
+      medicationReconciliation: { ...medicationReconciliation, status: "reopened" },
+    });
+
+    expect(model.staffHandoff.status).toBe("partial");
+    if (model.staffHandoff.status !== "partial") throw new Error("expected partial handoff");
+    expect(model.staffHandoff.source).toBe("encounter_vitals");
+    expect(model.staffHandoff.vital).toEqual(vital);
+    expect(model.staffHandoff.medicationReconciliation).toBeUndefined();
+  });
+
+  it("wires only completed authoritative reconciliation records into Current Visit without changing medication authority", () => {
     const page = read("src/app/(platform)/encounters/[encounterId]/page.tsx");
     const editor = read("src/components/clinic/encounter-editor.tsx");
     const repository = read("src/lib/clinical/encounter-medication-reconciliation.ts");
@@ -125,5 +149,7 @@ describe("Current Visit medication reconciliation handoff", () => {
     expect(repository).toContain("organizationId");
     expect(repository).toContain("patientId");
     expect(repository).toContain("encounterId");
+    expect(repository).toContain('status: "completed"');
+    expect(repository).toContain("completedAt: { not: null }");
   });
 });
