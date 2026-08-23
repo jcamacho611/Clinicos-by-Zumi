@@ -37,6 +37,15 @@ describe("universal entry gateway", () => {
     expect(bindIndex).toBeGreaterThan(authenticateIndex);
   });
 
+  it("requires same-origin login mutation before legal evidence can bind", () => {
+    const route = read("src/app/api/auth/login/route.ts");
+    const originCheckIndex = route.indexOf("isSameOriginMutation");
+    const authenticateIndex = route.indexOf("authenticateCredentials(parsed.data.email");
+
+    expect(originCheckIndex).toBeGreaterThan(-1);
+    expect(originCheckIndex).toBeLessThan(authenticateIndex);
+  });
+
   it("has an anonymous review endpoint instead of reusing authenticated legal review authority", () => {
     expect(existsSync("src/app/api/access/review/route.ts")).toBe(true);
     if (!existsSync("src/app/api/access/review/route.ts")) return;
