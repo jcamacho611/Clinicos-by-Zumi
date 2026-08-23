@@ -5,19 +5,20 @@
 // Legacy User/AuthCredential/AuthSession stay in place during the migration window.
 
 model Account {
-  id              String                  @id @default(cuid())
-  personId        String                  @unique
-  primaryEmail    String                  @unique
-  displayName     String
-  status          String                  @default("active")
-  emailVerifiedAt DateTime?
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  person          Person                  @relation(fields: [personId], references: [id], onDelete: Restrict)
-  credential      AccountCredential?
-  sessions        AccountSession[]
-  legacyLinks     LegacyUserAccountLink[]
-  events          AccountEvent[]
+  id                      String                          @id @default(cuid())
+  personId                String                          @unique
+  primaryEmail            String                          @unique
+  displayName             String
+  status                  String                          @default("active")
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  person                  Person                          @relation(fields: [personId], references: [id], onDelete: Restrict)
+  credential              AccountCredential?
+  sessions                AccountSession[]
+  legacyLinks             LegacyUserAccountLink[]
+  events                  AccountEvent[]
+  entryAcceptanceBindings AccountEntryAcceptanceBinding[]
 
   @@index([status])
   @@map("accounts")
@@ -83,4 +84,24 @@ model AccountEvent {
   @@index([accountId, createdAt])
   @@index([eventType, createdAt])
   @@map("account_events")
+}
+
+// Protected-entry acceptance remains immutable in its original legal-evidence table.
+// This append-only association binds exact acceptance/version/hash evidence to the
+// canonical person/account without adding user, organization, role, or entitlement authority.
+model AccountEntryAcceptanceBinding {
+  id              String   @id @default(cuid())
+  acceptanceId    String   @unique
+  accountId       String
+  personId        String
+  documentKey     String
+  documentVersion String
+  documentSha256  String
+  boundAt         DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  person          Person   @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, documentKey, documentVersion])
+  @@index([personId])
+  @@map("account_entry_acceptance_bindings")
 }
