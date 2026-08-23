@@ -31,6 +31,15 @@ describe("Twilio tenant routing provider verification", () => {
     expect(integration).toContain("invalid_timezone");
   });
 
+  it("preserves an existing Messaging Service and timezone when the operator omits unchanged provider fields", () => {
+    expect(integration).toContain("requestedMessagingServiceSid === undefined");
+    expect(integration).toContain("currentRouting?.messagingServiceSid ?? null");
+    expect(integration).toContain("requestedTimeZone === undefined");
+    expect(integration).toContain("currentRouting?.timeZone ?? null");
+    expect(configRoute).toContain("messagingServiceSid: parsed.data.messagingServiceSid");
+    expect(configRoute).toContain("timeZone: parsed.data.timeZone");
+  });
+
   it("proves provider routing through a separate same-origin action without authorizing production sending", () => {
     expect(verifyRoute).toContain("verifyAndRecordTwilioSmsRouting");
     expect(verifyRoute).toContain("evaluateSameOriginMutation(request)");
