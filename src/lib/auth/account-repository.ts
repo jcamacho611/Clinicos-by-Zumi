@@ -32,21 +32,22 @@ export async function resolveAccountIdentity(
   // No organization relationship is a valid free-member state.
   if (account.legacyLinks.length === 0) return member;
 
-  // Context switching is deliberately deferred. More than one legacy workspace link
-  // cannot be selected by array order; authenticate the Person only and require a
-  // later explicit context-selection flow instead of silently choosing a tenant.
-  if (account.legacyLinks.length !== 1) return member;
+  // Migration safety: an Account with any legacy clinic link must never degrade into
+  // a free-member login path. More than one link requires a future explicit context
+  // selector; inconsistent, inactive, or stale linked clinic state fails closed.
+  if (account.legacyLinks.length !== 1) return null;
 
   const legacyLink = account.legacyLinks[0];
   const legacyUser = await db.user.findUnique({
     where: { id: legacyLink.legacyUserId },
     include: { organization: true },
   });
-  if (!legacyUser || legacyUser.status !== "active" || legacyUser.organization.status !== "active") return member;
+  if (!legacyUser || legacyUser.status !== "active" || legacyUser.organization.status !== "active") return null;
 
   // The compatibility link must remain consistent with the canonical email. If the
-  // data diverges, do not manufacture clinic authority from a stale relationship.
-  if (legacyUser.email.trim().toLowerCase() !== account.primaryEmail) return member;
+  // data diverges, fail closed instead of admitting a linked clinic identity as a
+  // plain member with potentially stale copied credentials.
+  if (legacyUser.email.trim().toLowerCase() !== account.primaryEmail) return null;
 
   return {
     ...member,
