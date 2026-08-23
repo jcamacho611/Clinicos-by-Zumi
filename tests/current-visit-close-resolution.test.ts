@@ -62,6 +62,12 @@ function encounter(overrides: Partial<Encounter> = {}): Encounter {
   };
 }
 
+const evidence = <TState extends string>(state: TState, domain: string) => ({
+  state,
+  source: `${domain}_repository`,
+  evidenceRef: `${domain}:record-1`,
+});
+
 describe("Current Visit close-resolution projection", () => {
   it("defaults downstream close domains to not evaluated rather than implying completion", () => {
     const model = buildCurrentVisitModel(patient, encounter());
@@ -74,23 +80,43 @@ describe("Current Visit close-resolution projection", () => {
       "Attestations",
       "Charge readiness",
     ]);
+    expect(model.closeVisit.resolution.evidence).toEqual([]);
     expect(model.closeVisit.resolution.canClaimReadyToClose).toBe(false);
   });
 
-  it("projects explicit governed close evidence when supplied by authoritative services", () => {
+  it("projects explicit governed close evidence only when source provenance is supplied", () => {
     const model = buildCurrentVisitModel(patient, encounter(), {
       closeEvaluation: {
-        coding: "ready",
-        ordersResults: "resolved",
-        aiReview: "not_applicable",
-        attestations: "complete",
-        chargeReadiness: "ready",
+        coding: evidence("ready" as const, "coding"),
+        ordersResults: evidence("resolved" as const, "orders-results"),
+        aiReview: evidence("not_applicable" as const, "ai-review"),
+        attestations: evidence("complete" as const, "attestations"),
+        chargeReadiness: evidence("ready" as const, "charge-readiness"),
       },
     });
 
     expect(model.closeVisit.resolution.readiness).toBe("ready");
     expect(model.closeVisit.resolution.readyForSignature).toBe(true);
     expect(model.closeVisit.resolution.finalClosureComplete).toBe(false);
+    expect(model.closeVisit.resolution.evidence).toHaveLength(5);
+    expect(model.closeVisit.resolution.evidence.find((item) => item.domain === "Orders/results")).toEqual({
+      domain: "Orders/results",
+      source: "orders-results_repository",
+      evidenceRef: "orders-results:record-1",
+    });
+  });
+
+  it("fails closed when a caller claims resolution without usable provenance", () => {
+    const model = buildCurrentVisitModel(patient, encounter(), {
+      closeEvaluation: {
+        ordersResults: { state: "resolved", source: "", evidenceRef: " " },
+      },
+    });
+
+    expect(model.closeVisit.resolution.readiness).toBe("not_fully_evaluated");
+    expect(model.closeVisit.resolution.unevaluatedDomains).toContain("Orders/results");
+    expect(model.closeVisit.resolution.evidence.some((item) => item.domain === "Orders/results")).toBe(false);
+    expect(model.closeVisit.resolution.canClaimReadyToClose).toBe(false);
   });
 
   it("keeps a signed encounter externally incomplete when downstream evidence was never evaluated", () => {
