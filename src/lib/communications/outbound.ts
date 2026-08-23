@@ -13,8 +13,7 @@ import { sendTwilioSms, twilioApiKeyCredentials } from "@/lib/communications/twi
  * The distinction this port exists to preserve, in order of increasing truth:
  *
  *   `no_connector`  — nothing is configured for this channel.
- *   `no_sender`     — a connector is configured, but Klinikos has no code that sends
- *                     on this channel.
+ *   `no_sender`     — a connector is configured, but no valid sender is available.
  *   `provider_error`— a real send was attempted and the provider refused it.
  *   `accepted`      — a provider accepted the message and returned a reference.
  *
@@ -30,6 +29,10 @@ export type OutboundMessage = {
   to: string;
   subject: string;
   body: string;
+  /** Explicit sender identity when the channel requires tenant-owned routing. */
+  sender?: string;
+  /** Provider policy container associated with the explicit sender. */
+  messagingServiceSid?: string;
 };
 
 export type OutboundResult =
@@ -78,6 +81,7 @@ const resendEmailAdapter: OutboundAdapter = {
         subject: message.subject,
         text: message.body,
       }),
+      signal: AbortSignal.timeout(10_000),
     }).catch(() => null);
 
     if (!response) return { ok: false, reason: "provider_error", detail: "The email provider could not be reached." };
@@ -89,20 +93,25 @@ const resendEmailAdapter: OutboundAdapter = {
   },
 };
 
-/**
- * SMS via Twilio Messaging Service using a restricted API-key SID/secret.
- * PHI/clinical message authorization remains a separate fail-closed policy decision.
- */
 const twilioSmsAdapter: OutboundAdapter = {
   channel: "sms",
   provider: "twilio",
   connectorId: "twilio",
-  configured: (env) => Boolean(twilioApiKeyCredentials(env) && env.TWILIO_MESSAGING_SERVICE_SID?.trim()),
+  // Credentials prove that the provider rail exists. Tenant sender/Messaging Service
+  // truth is a separate governed decision carried on each patient message.
+  configured: (env) => Boolean(twilioApiKeyCredentials(env)),
   send: async (message, env) => {
-    const result = await sendTwilioSms({ to: message.to, body: message.body, env });
+    const result = await sendTwilioSms({
+      to: message.to,
+      body: message.body,
+      from: message.sender,
+      messagingServiceSid: message.messagingServiceSid,
+      env,
+    });
     if (result.ok) return { ok: true, providerReference: result.sid, provider: "twilio" };
     if (result.reason === "invalid_recipient") return { ok: false, reason: "invalid_recipient", detail: result.detail };
     if (result.reason === "not_configured") return { ok: false, reason: "no_connector", detail: result.detail };
+    if (result.reason === "no_sender") return { ok: false, reason: "no_sender", detail: result.detail };
     return { ok: false, reason: "provider_error", detail: result.detail };
   },
 };
