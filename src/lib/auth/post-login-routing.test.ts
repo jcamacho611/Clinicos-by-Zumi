@@ -52,6 +52,16 @@ describe("post-login route continuity", () => {
     })).toBe("/legal/accept?returnTo=%2Fdashboard");
   });
 
+  it("does not preserve a legal route as the post-acceptance target", () => {
+    expect(resolvePostLoginRedirect({
+      role: "provider",
+      requestedReturnTo: "/legal/accept?returnTo=%2Fpatients",
+      legalGateEnabled: true,
+      legalConfigurationReady: true,
+      agreementAccepted: false,
+    })).toBe("/legal/accept?returnTo=%2Fdashboard");
+  });
+
   it("uses the Grid opportunity route as the contractor default", () => {
     expect(resolvePostLoginRedirect({
       role: "contractor",
