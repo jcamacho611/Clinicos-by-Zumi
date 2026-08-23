@@ -23,7 +23,7 @@ export interface BodyMapVersion {
 
 export interface BodyMapEvidenceRef {
   bodyMapVersionId: string;
-  findingId: string;
+  findingId: string | null;
 }
 
 export type BodyMapDeltaKind =
