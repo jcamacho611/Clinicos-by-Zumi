@@ -40,12 +40,14 @@ describe("free member signup", () => {
     expect(page).not.toContain("requireClinicSession");
   });
 
-  it("binds legal evidence only to account/person in the account seam", () => {
+  it("binds legal evidence only to account/person through append-only evidence", () => {
     expect(existsSync("src/lib/legal/account-acceptance-binding.ts")).toBe(true);
     if (!existsSync("src/lib/legal/account-acceptance-binding.ts")) return;
     const source = read("src/lib/legal/account-acceptance-binding.ts");
+    expect(source).toContain('INSERT INTO "account_entry_acceptance_bindings"');
     expect(source).toContain("accountId");
     expect(source).toContain("personId");
+    expect(source).not.toContain('UPDATE "access_gate_acceptances"');
     expect(source).not.toContain('SET "organizationId"');
     expect(source).not.toContain('SET "userId"');
   });
