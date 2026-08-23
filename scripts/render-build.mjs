@@ -34,8 +34,15 @@ run(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"], {
 });
 
 if (!databaseUrl) {
+  if (process.env.RENDER === "true") {
+    console.error(
+      "Render database verification requires DATABASE_URL or DIRECT_DATABASE_URL. Refusing to deploy without a verified production database contract.",
+    );
+    process.exit(1);
+  }
+
   console.warn(
-    "DATABASE_URL is not configured during the build. The application was built without database migration verification.",
+    "DATABASE_URL is not configured. The application was built without database migration verification.",
   );
   process.exit(0);
 }
