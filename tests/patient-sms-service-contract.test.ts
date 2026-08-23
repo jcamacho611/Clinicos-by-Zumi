@@ -57,6 +57,12 @@ describe("patient SMS service architecture", () => {
     expect(service).toContain("/^VE[0-9a-fA-F]{32}$/");
   });
 
+  it("keeps the raw Twilio verification reference server-side when staff reads SMS preferences", () => {
+    expect(route).toContain("redactSmsProviderEvidence");
+    expect(route).toContain("verificationProviderReference: _providerReference");
+    expect(route).not.toContain("NextResponse.json({ data: state }");
+  });
+
   it("requires configured and provider-verified tenant routing before transport", () => {
     expect(service).toContain("routing.senderPhone");
     expect(service).toContain("routing.messagingServiceSid");
