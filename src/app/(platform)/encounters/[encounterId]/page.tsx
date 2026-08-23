@@ -10,8 +10,9 @@ import { listImagingResultsForPatient } from "@/lib/repositories/imaging-reposit
 import { listLabResultsForPatient } from "@/lib/repositories/lab-repository";
 import { findPatientForOrganization } from "@/lib/repositories/patient-repository";
 import { findLatestVitalForEncounter } from "@/lib/repositories/vital-repository";
+import styles from "./current-visit-black-label.module.css";
 
-export const metadata: Metadata = { title: "Encounter note" };
+export const metadata: Metadata = { title: "Current Visit" };
 
 export default async function EncounterPage({ params }: { params: Promise<{ encounterId: string }> }) {
   const { encounterId } = await params;
@@ -29,12 +30,17 @@ export default async function EncounterPage({ params }: { params: Promise<{ enco
     }),
   ]);
   if (!patient) notFound();
-  return <EncounterEditor
-    canSign={can(session.role, "encounters", "sign")}
-    clinicalEvidence={clinicalEvidence}
-    encounter={encounter}
-    medicationReconciliation={medicationReconciliation}
-    patient={patient}
-    vital={vital}
-  />;
+
+  return (
+    <div className={styles.stage} data-current-visit-stage="object-stage">
+      <EncounterEditor
+        canSign={can(session.role, "encounters", "sign")}
+        clinicalEvidence={clinicalEvidence}
+        encounter={encounter}
+        medicationReconciliation={medicationReconciliation}
+        patient={patient}
+        vital={vital}
+      />
+    </div>
+  );
 }
