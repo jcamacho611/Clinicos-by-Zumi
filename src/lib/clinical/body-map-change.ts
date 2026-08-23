@@ -8,10 +8,21 @@ function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): Body
   return { bodyMapVersionId: version.id, findingId: finding.id };
 }
 
+function assertValidFinding(finding: BodyMapFinding) {
+  if (finding.severity !== null && (
+    !Number.isFinite(finding.severity)
+    || finding.severity < 0
+    || finding.severity > 10
+  )) {
+    throw new Error(`Invalid body map severity for finding ${finding.id}`);
+  }
+}
+
 function indexFindings(version: BodyMapVersion) {
   const findingsByKey = new Map<string, BodyMapFinding>();
 
   for (const finding of version.findings) {
+    assertValidFinding(finding);
     const key = bodyMapFindingKey(finding);
     if (findingsByKey.has(key)) {
       throw new Error(`Duplicate body map finding key: ${key}`);
