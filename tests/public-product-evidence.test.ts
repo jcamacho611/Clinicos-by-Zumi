@@ -9,21 +9,25 @@ import { PUBLIC_ACTION_CENTER_EXAMPLE } from "@/lib/marketing/product-evidence";
  * than decorative.
  */
 describe("public product evidence", () => {
-  const page = readFileSync("src/app/how-it-works/page.tsx", "utf8");
+  // The honesty-critical parts live in one component so the homepage and the explainer
+  // cannot drift apart or disagree about how the example is labelled.
+  const figure = readFileSync("src/components/marketing/product-evidence-figure.tsx", "utf8");
+  const howItWorks = readFileSync("src/app/how-it-works/page.tsx", "utf8");
+  const homeSection = readFileSync("src/components/marketing/product-evidence-section.tsx", "utf8");
 
   it("shows the product using the real component, not a drawing of it", () => {
     // A hand-built mock drifts the first time the component changes, and a picture of a
     // screen that no longer exists is a false claim about what a buyer is buying.
-    expect(page).toContain('from "@/components/clinic/workspaces/action-center"');
-    expect(page).toContain("<ActionCenterWorkspace");
-    expect(page).toContain("PUBLIC_ACTION_CENTER_EXAMPLE");
+    expect(figure).toContain('from "@/components/clinic/workspaces/action-center"');
+    expect(figure).toContain("<ActionCenterWorkspace");
+    expect(figure).toContain("PUBLIC_ACTION_CENTER_EXAMPLE");
   });
 
   it("labels the example as an example, in text a reader will see", () => {
-    expect(page).toMatch(/<figcaption/);
-    expect(page).toMatch(/>Example</);
-    expect(page).toContain("rendered by the same component a signed-in clinic uses");
-    expect(page).toMatch(/illustrative/);
+    expect(figure).toMatch(/<figcaption/);
+    expect(figure).toMatch(/>Example</);
+    expect(figure).toContain("rendered by the same component a signed-in clinic uses");
+    expect(figure).toMatch(/illustrative/);
   });
 
   it("renders no control a signed-out visitor could press", () => {
@@ -41,7 +45,16 @@ describe("public product evidence", () => {
   it("keeps the example out of the tab order rather than merely unclickable", () => {
     // The rows link into the authenticated app. Without inert, a keyboard user tabs into
     // seven links that go nowhere useful; the figcaption carries the same information.
-    expect(page).toMatch(/\n\s*inert\n/);
+    expect(figure).toMatch(/\n\s*inert\n/);
+  });
+
+  it("answers the question on the page people actually land on", () => {
+    // The reviewer never reached the explainer. Evidence one click away is evidence the
+    // person who needed it did not see, so the homepage carries the same figure.
+    expect(homeSection).toContain("<ProductEvidenceFigure");
+    expect(howItWorks).toContain("<ProductEvidenceFigure");
+    const home = readFileSync("src/app/page.tsx", "utf8");
+    expect(home).toContain("<ProductEvidenceSection />");
   });
 
   it("puts no person in the example", () => {
@@ -61,7 +74,7 @@ describe("public product evidence", () => {
 
   it("stays on the public design system instead of reintroducing a third palette", () => {
     // This page was light-blue while the rest of the public site is dark rose.
-    expect(page).not.toMatch(/#174ea6|#f7f8fa|bg-white\b/);
-    expect(page).toContain("#050303");
+    expect(howItWorks).not.toMatch(/#174ea6|#f7f8fa|bg-white\b/);
+    expect(howItWorks).toContain("#050303");
   });
 });
