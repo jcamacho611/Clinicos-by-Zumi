@@ -37,7 +37,7 @@ Status: **capture and implementation working document**. It does not imply SCWDB
 | Requirement | Current truth | Remaining delivery action |
 | --- | --- | --- |
 | Routine weekly/frequent schedule | Persisted workforce sessions support recurring delivery | Final calendar depends on award, demand, approved instructors, and SCWDB scheduling |
-| Recommended/min/max class sizes | **Proposal input still required** | Final values must reflect instructor bench, modality, pathway, and hands-on facilitation capacity |
+| Recommended/min/max class sizes | **Proposal operating standard documented** | `COHORT_SIZE_AND_DELIVERY_CAPACITY.md`: Industry Accelerator remote 8 minimum / 12–15 recommended / 18 one-instructor maximum; in-person 8 / 12–16 / 20. Career Readiness remote 8 / 15 / 20; in-person 8 / 15–18 / 20. Reconcile against September 4 addenda, named instructor bench, accessibility needs, and final contract terms before submission. |
 | Evening/alternative scheduling | Operationally supportable as staffing/schedule policy | Identify instructor coverage before final proposal |
 | Multi-region in-person capacity | Not proven by software | Staffing/travel plan must identify who can deploy and under what terms |
 | Registration integration with SCWDB scheduling | Existing EDU cohort/enrollment architecture can receive approved participant records | Final transfer method/data dictionary requires SCWDB approval; do not claim live integration |
