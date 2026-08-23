@@ -16,6 +16,8 @@ model ClinicalBodyMapVersion {
   supersedesVersionId String?
   createdAt           DateTime                 @default(now())
   findings            ClinicalBodyMapFinding[]
+  supersedesVersion   ClinicalBodyMapVersion?  @relation("BodyMapSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededBy        ClinicalBodyMapVersion[] @relation("BodyMapSupersession")
 
   @@index([organizationId, patientId, contextType, contextId, capturedAt])
   @@index([organizationId, encounterId, capturedAt])
