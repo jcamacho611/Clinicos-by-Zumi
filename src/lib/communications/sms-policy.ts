@@ -1,5 +1,7 @@
 import "server-only";
 
+import { normalizeKlinikosPhone } from "@/lib/phone-normalization";
+
 export const smsMessageClasses = ["transactional", "operational", "marketing", "clinical"] as const;
 export type SmsMessageClass = (typeof smsMessageClasses)[number];
 export type SmsPermissionStatus = "unknown" | "granted" | "denied" | "revoked";
@@ -48,22 +50,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-export function normalizeSmsPhone(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  if (trimmed.startsWith("+")) {
-    const digits = trimmed.slice(1).replace(/[^0-9]/g, "");
-    const normalized = `+${digits}`;
-    return /^\+[1-9]\d{7,14}$/.test(normalized) ? normalized : null;
-  }
-
-  // Klinikos is currently US-first. A bare 10-digit number is normalized to +1.
-  // Anything else must arrive in explicit E.164 form rather than guessing a country.
-  const digits = trimmed.replace(/[^0-9]/g, "");
-  if (/^\d{10}$/.test(digits)) return `+1${digits}`;
-  return null;
-}
+export const normalizeSmsPhone = normalizeKlinikosPhone;
 
 export function readSmsPreferences(value: unknown): SmsPreferenceEnvelope {
   if (!isRecord(value) || !isRecord(value.klinikosSms) || value.klinikosSms.version !== 1) {
