@@ -1,10 +1,10 @@
-# Kentucky AI Workforce Readiness EDU Implementation Plan
+# Workforce AI Readiness EDU Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the existing Klinikos EDU foundation into a reusable, demo-ready institutional workforce-training experience aligned to the SCWDB Kentucky AI Workforce Readiness Network RFP.
+**Goal:** Turn the existing Klinikos EDU foundation into a reusable, demo-ready institutional workforce-training product whose capabilities satisfy the SCWDB Kentucky AI Workforce Readiness Network acceptance profile without branding the public product around a single buyer.
 
-**Architecture:** Reuse the existing EDU institution/program/course/cohort/scenario/rubric/submission/grade/certificate substrate. Add typed reusable workforce-program and pathway configuration, then expose it through role-authorized EDU surfaces. Do not add a second LMS schema or Kentucky-specific product fork. Proposal-support materials live under one canonical docs path.
+**Architecture:** Reuse the existing EDU institution/program/course/cohort/scenario/rubric/submission/grade/certificate substrate. Add typed reusable workforce-program and pathway configuration, then expose it through role-authorized EDU surfaces. Buyer-specific requirements are represented as private/configurable presets and proposal documents, never a product fork or global public brand.
 
 **Tech Stack:** Next.js App Router, React, TypeScript, Prisma/PostgreSQL, Vitest, existing Klinikos EDU role/session/navigation architecture.
 
@@ -17,10 +17,11 @@
 - Ordinary EDU training remains synthetic-data-first; no real PHI is required.
 - All five Industry Accelerator pathways plus Career Readiness must be represented.
 - Healthcare remains nonclinical/administrative and must not teach regulated clinical decision-making.
-- Kentucky content is a proposed/configurable template, never represented as SCWDB-approved.
+- Public/global EDU product copy must remain buyer-neutral; no `Kentucky`, `SCWDB`, or procurement-specific buyer language in global product surfaces.
+- Buyer-specific branding/configuration may be applied through scoped institutional configuration and private proposal/capture materials.
 - No second auth system, tenant system, grading authority, certificate authority, or parallel LMS database.
 - Accessibility is a delivery requirement; do not claim formal WCAG certification without evidence.
-- Pre-existing Klinikos IP remains distinguishable from Kentucky-specific deliverables.
+- Pre-existing Klinikos IP remains distinguishable from customer-specific deliverables.
 
 ---
 
@@ -34,10 +35,10 @@
 - Produces: `workforceAiLiteracyModules`, `workforceAiOccupationalPathways`, `getWorkforceAiLiteracyModule(key)`, `getWorkforceAiOccupationalPathway(key)`.
 - Consumes: existing `EduSimulationRole`.
 
-- [ ] Write tests asserting five common responsible-AI modules, live-instructor authority, verification/privacy requirements, and truthful pathway maturity.
-- [ ] Run the focused test and confirm RED because the production module does not exist.
+- [x] Write tests asserting five common responsible-AI modules, live-instructor authority, verification/privacy requirements, and truthful pathway maturity.
+- [x] Establish RED because the production module does not exist on the branch.
 - [ ] Implement the smallest typed curriculum module/pathway definitions that satisfy the tests.
-- [ ] Run the focused test and confirm GREEN.
+- [ ] Run/inspect focused verification and confirm GREEN when executable CI is available.
 - [ ] Commit.
 
 ### Task 2: Institutional program and completion contracts
@@ -57,41 +58,59 @@
 - [ ] Run focused test and confirm GREEN.
 - [ ] Commit.
 
-### Task 3: Five-pathway Kentucky program catalog
+### Task 3: Reusable five-pathway workforce program catalog
 
 **Files:**
-- Create: `src/lib/edu/kentucky-ai-workforce.test.ts`
-- Create: `src/lib/edu/kentucky-ai-workforce.ts`
+- Create: `src/lib/edu/workforce-ai-program.test.ts`
+- Create: `src/lib/edu/workforce-ai-program.ts`
 
 **Interfaces:**
-- Produces: `kentuckyAiWorkforceProgram`, `kentuckyIndustryPathways`, `kentuckyCareerReadinessWorkshop`, pathway/session lookup helpers.
+- Produces: `workforceAiReadinessProgram`, `industryAcceleratorPathways`, `careerReadinessWorkshop`, pathway/session lookup helpers, buyer-neutral program identifiers.
 - Consumes: Tasks 1–2.
 
-- [ ] Write tests asserting Service A + Service B, five pathways, 6–8 hour accelerator duration, 2–3 hour career workshop duration, remote/in-person delivery, proposed-template status, healthcare nonclinical boundary, and all pathway sample exercises.
+- [ ] Write tests asserting Service A + Service B capability, five pathways, 6–8 hour accelerator duration, 2–3 hour career workshop duration, remote/in-person delivery, healthcare nonclinical boundary, and all pathway sample exercises.
+- [ ] Write brand-boundary assertions that public program objects contain no `Kentucky` or `SCWDB` strings.
 - [ ] Run focused test and confirm RED.
-- [ ] Implement the complete proposal-ready typed program catalog with common module spine plus pathway-specific outcomes/exercises/human-authority boundaries.
+- [ ] Implement the complete reusable typed program catalog with common module spine plus pathway-specific outcomes/exercises/human-authority boundaries.
 - [ ] Run focused test and confirm GREEN.
 - [ ] Commit.
 
-### Task 4: Program and pathway evaluator UI
+### Task 4: Buyer-neutral program and pathway evaluator UI
 
 **Files:**
 - Modify: `src/lib/edu/edu-navigation.ts`
 - Create: `src/app/edu/(lab)/programs/page.tsx`
 - Create: `src/app/edu/(lab)/programs/[pathway]/page.tsx`
-- Create: `tests/edu-kentucky-program-ui.test.ts`
+- Create: `tests/edu-workforce-program-ui.test.ts`
 
 **Interfaces:**
 - Consumes: Task 3 catalog and existing `EduCommandHeader`.
 - Produces: role-gated `/edu/programs` and pathway detail surfaces.
 
-- [ ] Write source/contract tests asserting route authorization, all five pathways, Career Readiness, proposed-template disclosure, live-instructor copy, and real links into cohorts/scenarios/grading.
+- [ ] Write source/contract tests asserting route authorization, all five pathways, Career Readiness, live-instructor copy, real links into cohorts/scenarios/grading, and **absence of buyer-specific public copy**.
 - [ ] Run test and confirm RED.
-- [ ] Add role-authorized navigation and program/pathway pages using existing EDU shell conventions.
+- [ ] Add role-authorized navigation and reusable program/pathway pages using existing EDU shell conventions.
 - [ ] Run focused test and confirm GREEN.
 - [ ] Commit.
 
-### Task 5: Instructor delivery and completion evidence projection
+### Task 5: Customer/institution configuration boundary
+
+**Files:**
+- Create: `src/lib/edu/institution-program-config.test.ts`
+- Create: `src/lib/edu/institution-program-config.ts`
+
+**Interfaces:**
+- Produces: a safe institution-scoped configuration contract for program display name, organization name, branding metadata, selected pathways, delivery mode, reporting fields, completion policy, participant access period, and customer-specific notices.
+- Consumes: Tasks 2–3 reusable product definitions.
+
+- [ ] Write tests proving a customer configuration can rebrand the reusable program without changing product identifiers or curriculum source-of-truth.
+- [ ] Assert that configuration cannot remove instructor authority, non-licensure certificate boundaries, or synthetic-data safety requirements.
+- [ ] Run test and confirm RED.
+- [ ] Implement minimal typed configuration/validation helpers; do not persist a second tenant/program store.
+- [ ] Run focused test and confirm GREEN.
+- [ ] Commit.
+
+### Task 6: Instructor delivery and completion evidence projection
 
 **Files:**
 - Create: `src/lib/edu/workforce-program-reporting.test.ts`
@@ -109,30 +128,32 @@
 - [ ] Run focused test and confirm GREEN.
 - [ ] Commit.
 
-### Task 6: Canonical SCWDB proposal-support package
+### Task 7: Canonical buyer capture package
 
 **Files:**
-- Create: `docs/edu/kentucky-ai-workforce/REPRESENTATIVE_MATERIALS.md`
-- Create: `docs/edu/kentucky-ai-workforce/OCCUPATIONAL_PATHWAY_OUTLINES.md`
-- Create: `docs/edu/kentucky-ai-workforce/MEASUREMENT_AND_REPORTING_PLAN.md`
-- Create: `docs/edu/kentucky-ai-workforce/RFP_COMPLIANCE_MATRIX.md`
+- Create/maintain: `docs/edu/kentucky-ai-workforce/REPRESENTATIVE_MATERIALS.md`
+- Create/maintain: `docs/edu/kentucky-ai-workforce/OCCUPATIONAL_PATHWAY_OUTLINES.md`
+- Create/maintain: `docs/edu/kentucky-ai-workforce/MEASUREMENT_AND_REPORTING_PLAN.md`
+- Create/maintain: `docs/edu/kentucky-ai-workforce/RFP_COMPLIANCE_MATRIX.md`
 - Create: `docs/edu/kentucky-ai-workforce/IP_SCHEDULE.md`
 
 **Interfaces:**
-- Canonical proposal content mirrors product truth from Tasks 1–5.
+- Private/capture proposal content mirrors reusable product truth from Tasks 1–6.
 
-- [ ] Add representative slide outline, participant activities, assessments, rubric, certificate/badge wording, instructor guide, accessibility statement, security/data statement, human-AI authority statement, five pathway outlines/sample lesson segments, reporting model, compliance matrix, and pre-existing/Kentucky-specific IP schedule.
+- [ ] Add/maintain representative slide outline, participant activities, assessments, rubric, certificate/badge wording, instructor guide, accessibility statement, security/data statement, human-AI authority statement, five pathway outlines/sample lesson segments, reporting model, compliance matrix, and pre-existing/customer-specific IP schedule.
 - [ ] Ensure every unverified capability is labeled proposed/configurable.
+- [ ] Ensure buyer-specific names remain in capture/configuration materials rather than global public product source.
 - [ ] Commit.
 
-### Task 7: Full EDU verification and PR
+### Task 8: Full EDU verification and PR
 
 **Files:**
 - No production file required unless verification reveals a defect.
 
 - [ ] Compare branch against `main` and confirm no unrelated overlap.
-- [ ] Run/inspect focused tests for Tasks 1–5.
+- [ ] Run/inspect focused tests for Tasks 1–6.
 - [ ] Run available repository quality gates: Prisma validate/generate where applicable, type-check, lint, tests, build/start, and EDU-specific checks.
 - [ ] If GitHub Actions fails before checkout/jobs execute, record infrastructure unavailable rather than declaring code red or green.
-- [ ] Inspect program pages for keyboard semantics, mobile/reflow-safe classes, clear disclosure text, and non-color-only meaning.
+- [ ] Inspect program pages for keyboard semantics, mobile/reflow-safe classes, clear safety/disclosure text, and non-color-only meaning.
+- [ ] Search global EDU product files for forbidden buyer-specific strings and fail the release gate if found.
 - [ ] Open a detailed PR listing implemented product truth, proposal-material truth, unverified/external dependencies, and remaining founder inputs.
