@@ -9,6 +9,7 @@ import { WorkspaceRenderer, workspaceSlugs } from "@/components/clinic/workspace
 import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
 import { requireClinicSession } from "@/lib/auth/session";
 import { workspaceMeta } from "@/lib/navigation";
+import { listUniversalObligations } from "@/lib/obligations/universal-obligation-repository";
 import { listCareCoordinationWorkspace } from "@/lib/repositories/care-coordination-repository";
 import { listInsuranceWorkspace } from "@/lib/repositories/insurance-repository";
 import { listQualityCommandCenter } from "@/lib/repositories/quality-command-center-repository";
@@ -27,7 +28,11 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
   const session = await requireClinicSession();
   if (!canAccessWorkspace(session.role, workspace)) return notFound();
   if (workspace === "tasks") {
-    return <TasksWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+    const [taskWorkspace, obligations] = await Promise.all([
+      listCareCoordinationWorkspace(session.organizationId, session.userId),
+      listUniversalObligations(session.organizationId),
+    ]);
+    return <TasksWorkspaceReal workspace={taskWorkspace} obligations={obligations} />;
   }
   if (workspace === "messages") {
     return <MessagesWorkspaceReal />;
