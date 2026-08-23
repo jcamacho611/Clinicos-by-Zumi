@@ -1,0 +1,43 @@
+// Immutable structured BodyMap capture substrate.
+// Comparison roles such as initial/previous/today are derived at read time and
+// are never persisted as mutable labels on a historical capture.
+
+model ClinicalBodyMapVersion {
+  id                  String                   @id @default(cuid())
+  organizationId      String
+  patientId           String
+  encounterId         String
+  contextType         String
+  contextId           String
+  capturedAt          DateTime
+  createdByUserId     String
+  sourceType          String                   @default("clinician_entry")
+  sourceReference     String?
+  supersedesVersionId String?
+  createdAt           DateTime                 @default(now())
+  findings            ClinicalBodyMapFinding[]
+
+  @@index([organizationId, patientId, contextType, contextId, capturedAt])
+  @@index([organizationId, encounterId, capturedAt])
+  @@index([supersedesVersionId])
+  @@map("clinical_body_map_versions")
+}
+
+model ClinicalBodyMapFinding {
+  id               String                 @id @default(cuid())
+  bodyMapVersionId String
+  findingKey       String
+  bodyRegion       String
+  laterality       String
+  symptom          String
+  severity         Int?
+  severityScale    String?
+  functionalImpact String?
+  annotations      String[]               @default([])
+  createdAt        DateTime               @default(now())
+  bodyMapVersion   ClinicalBodyMapVersion @relation(fields: [bodyMapVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([bodyMapVersionId, findingKey])
+  @@index([bodyRegion, laterality, symptom])
+  @@map("clinical_body_map_findings")
+}
