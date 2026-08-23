@@ -1,5 +1,11 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
+
+function read(relative: string) {
+  return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
+}
 
 describe("public Zumi access and typo routing", () => {
   it("understands the reported 'what sgoing on' typo as page context instead of generic fallback", () => {
@@ -29,5 +35,15 @@ describe("public Zumi access and typo routing", () => {
     const result = resolvePublicLivingIntent("log in");
 
     expect(result.destination).toMatchObject({ key: "signin", href: "/login" });
+  });
+
+  it("keeps the real access-verification route public on both public Zumi surfaces", () => {
+    const livingHome = read("src/components/marketing/public-living-gateway.tsx");
+    const siteControl = read("src/components/marketing/public-zumi-site-control.tsx");
+
+    expect(livingHome).toContain('"/access"');
+    expect(siteControl).toContain('"/access"');
+    expect(livingHome).toContain("publicActionPaths.has(href)");
+    expect(siteControl).toContain("publicActionPaths.has(href)");
   });
 });
