@@ -1,3 +1,5 @@
+import type { PatientVital } from "@/lib/clinical/vital-types";
+import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
 export const CURRENT_VISIT_SECTION_ORDER = [
@@ -18,6 +20,15 @@ export interface CurrentVisitUnavailableState {
   status: "not_available";
   message: string;
 }
+
+export interface CurrentVisitPartialHandoffState {
+  status: "partial";
+  source: "encounter_vitals";
+  message: string;
+  vital: PatientVital;
+}
+
+export type CurrentVisitStaffHandoffState = CurrentVisitUnavailableState | CurrentVisitPartialHandoffState;
 
 export interface CurrentVisitPatientSnapshot {
   patientName: string;
@@ -53,8 +64,12 @@ export interface CurrentVisitModel {
   sectionOrder: CurrentVisitSectionKey[];
   patientSnapshot: CurrentVisitPatientSnapshot;
   change: CurrentVisitUnavailableState;
-  staffHandoff: CurrentVisitUnavailableState;
+  staffHandoff: CurrentVisitStaffHandoffState;
   closeVisit: CurrentVisitCloseState;
+}
+
+export interface CurrentVisitContext {
+  vital?: PatientVital | null;
 }
 
 const REQUIRED_DOCUMENTATION = [
@@ -71,7 +86,22 @@ function missingRequiredDocumentation(encounter: Encounter) {
   });
 }
 
-export function buildCurrentVisitModel(patient: Patient, encounter: Encounter): CurrentVisitModel {
+function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandoffState {
+  if (vital && vitalHasMeasurement(vital)) {
+    return {
+      status: "partial",
+      source: "encounter_vitals",
+      vital,
+      message: "Vitals were captured for this encounter. Other staff intake is not yet attached to the governed handoff.",
+    };
+  }
+  return {
+    status: "not_available",
+    message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
+  };
+}
+
+export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, context: CurrentVisitContext = {}): CurrentVisitModel {
   const missingRequiredSections = missingRequiredDocumentation(encounter);
 
   return {
@@ -98,10 +128,7 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter): 
       status: "not_available",
       message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
     },
-    staffHandoff: {
-      status: "not_available",
-      message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
-    },
+    staffHandoff: buildStaffHandoff(context.vital),
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
