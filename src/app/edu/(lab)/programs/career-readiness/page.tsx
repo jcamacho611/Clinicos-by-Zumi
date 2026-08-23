@@ -1,21 +1,21 @@
 import Link from "next/link";
 
 import { EduCommandHeader } from "@/components/edu/edu-shell";
-import { kentuckyCareerReadinessWorkshop } from "@/lib/edu/kentucky-ai-workforce";
+import { careerReadinessWorkshop } from "@/lib/edu/workforce-ai-program";
 
 export default function EduCareerReadinessPage() {
-  const workshop = kentuckyCareerReadinessWorkshop;
+  const workshop = careerReadinessWorkshop;
 
   return (
     <>
       <EduCommandHeader
-        description="A proposed two-to-three-hour live workshop for responsible, truthful AI-assisted job search and employment readiness."
+        description="A reusable two-to-three-hour live workshop for responsible, truthful AI-assisted job search and employment readiness."
         eyebrow="AI-Powered Career Readiness"
-        title={workshop.title}
+        title={workshop.label}
       />
       <div className="px-5 py-6 sm:px-8">
         <section className="border border-[#e28b85]/14 bg-[#12090b]/55 p-5 sm:p-7" aria-labelledby="career-overview">
-          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Proposed demo template · not SCWDB-approved</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#efaaa1]">Reusable workforce workshop</p>
           <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
             <div>
               <h2 className="text-xl font-semibold text-[#f8efed]" id="career-overview">What participants practice</h2>
@@ -26,7 +26,7 @@ export default function EduCareerReadinessPage() {
               </ul>
             </div>
             <dl className="grid content-start gap-3 text-xs">
-              <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Duration</dt><dd className="mt-1 font-semibold text-[#f8efed]">2–3 hours</dd></div>
+              <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Duration</dt><dd className="mt-1 font-semibold text-[#f8efed]">{workshop.durationHours.min}–{workshop.durationHours.max} hours</dd></div>
               <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Delivery</dt><dd className="mt-1 font-semibold text-[#f8efed]">Live remote · in person · hybrid</dd></div>
               <div><dt className="text-[#8f7773]">Final responsibility</dt><dd className="mt-1 leading-5 text-[#f8efed]">Learner + instructor human review</dd></div>
             </dl>
@@ -53,7 +53,13 @@ export default function EduCareerReadinessPage() {
           <div className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 sm:p-7">
             <h2 className="text-lg font-semibold text-[#f8efed]">Completion evidence</h2>
             <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
-              {workshop.completionEvidence.map((item) => <li key={item}>• {item}</li>)}
+              {[
+                "Verified participation in the required live session",
+                "Completed truthful resume or job-search practice artifact",
+                "Completed verification/privacy exercise",
+                "Required assessment or instructor-reviewed activity",
+                "Instructor confirmation of completion criteria",
+              ].map((item) => <li key={item}>• {item}</li>)}
             </ul>
           </div>
           <div className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 sm:p-7">
@@ -65,6 +71,7 @@ export default function EduCareerReadinessPage() {
 
         <nav className="mt-6 flex flex-wrap gap-3" aria-label="Career readiness actions">
           <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/programs">← All programs</Link>
+          <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/sessions">Live delivery →</Link>
           <Link className="border border-[#e6817b]/30 px-4 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/reports">Program evidence →</Link>
         </nav>
       </div>
