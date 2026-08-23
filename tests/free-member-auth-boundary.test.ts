@@ -25,6 +25,15 @@ describe("free member authentication boundary", () => {
     expect(source).toContain("organization");
   });
 
+  it("never downgrades a legacy-linked account into free-member authentication", () => {
+    const source = read("src/lib/auth/account-repository.ts");
+    expect(source).toContain("if (account.legacyLinks.length === 0) return member;");
+    expect(source).toContain("if (account.legacyLinks.length !== 1) return null;");
+    expect(source).toContain("if (!legacyUser || legacyUser.status !== \"active\" || legacyUser.organization.status !== \"active\") return null;");
+    expect(source).toContain("if (legacyUser.email.trim().toLowerCase() !== account.primaryEmail) return null;");
+    expect(source).not.toContain("if (account.legacyLinks.length !== 1) return member;");
+  });
+
   it("does not alter patient portal authentication in this phase", () => {
     const plan = read("docs/superpowers/plans/2026-08-23-universal-account-free-member-phase2.md");
     expect(plan).toContain("patient portal auth is untouched");
