@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateCredentials } from "@/lib/auth/credentials";
 import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
-import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
+import {
+  createClinicSession,
+  revokeClinicSession,
+  SESSION_COOKIE_NAME,
+  sessionCookieOptions,
+} from "@/lib/auth/session";
 import { safeReturnTo } from "@/lib/auth/return-to";
+import {
+  bindEntryAcceptanceToIdentity,
+  readAcceptedEntryProof,
+} from "@/lib/legal/entry-access";
+import { isEntryGateEnforcementEnabled } from "@/lib/legal/legal-config";
+import { ENTRY_GATE_COOKIE_NAME } from "@/lib/legal/entry-token";
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -11,12 +22,20 @@ const loginSchema = z.object({
   returnTo: z.string().max(500).optional().nullable(),
 });
 
+function accessHref(returnTo: string | null) {
+  const loginTarget = returnTo
+    ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+    : "/login";
+  return `/access?returnTo=${encodeURIComponent(loginTarget)}`;
+}
+
 export async function POST(request: Request) {
   const parsed = loginSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Enter a valid email address and password." }, { status: 400 });
   }
 
+  const returnTo = safeReturnTo(parsed.data.returnTo);
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ipAddress = forwardedFor || request.headers.get("x-real-ip") || "unknown";
   const key = `${ipAddress}:${parsed.data.email.toLowerCase()}`;
@@ -29,6 +48,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const entryGateEnabled = isEntryGateEnforcementEnabled();
+  const entryProof = entryGateEnabled ? await readAcceptedEntryProof() : null;
+  if (entryGateEnabled && !entryProof) {
+    return NextResponse.json(
+      {
+        error: "Enter Klinikos through the protected-entry agreement before signing in.",
+        redirectTo: accessHref(returnTo),
+      },
+      { status: 403, headers: { "Cache-Control": "private, no-store" } },
+    );
+  }
+
   try {
     const identity = await authenticateCredentials(parsed.data.email, parsed.data.password);
     if (!identity) {
@@ -36,15 +67,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email or password is incorrect." }, { status: 401 });
     }
 
-    const { token } = await createClinicSession(identity, {
+    const { session, token } = await createClinicSession(identity, {
       ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
       userAgent: request.headers.get("user-agent") ?? undefined,
     });
-    clearLoginFailures(key);
 
-    const response = NextResponse.json({ ok: true, redirectTo: safeReturnTo(parsed.data.returnTo) ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard") });
+    if (entryGateEnabled && entryProof) {
+      try {
+        await bindEntryAcceptanceToIdentity({
+          acceptanceId: entryProof.acceptance.id,
+          entrySessionId: entryProof.claims.entrySessionId,
+          documentKey: entryProof.claims.documentKey,
+          documentVersion: entryProof.claims.documentVersion,
+          documentSha256: entryProof.claims.documentSha256,
+          identity,
+          authSessionId: session.sessionId,
+        });
+      } catch {
+        await revokeClinicSession(session);
+        return NextResponse.json(
+          { error: "Protected-entry evidence could not be bound to this account. Re-enter Klinikos and try again.", redirectTo: accessHref(returnTo) },
+          { status: 409, headers: { "Cache-Control": "private, no-store" } },
+        );
+      }
+    }
+
+    clearLoginFailures(key);
+    const response = NextResponse.json({
+      ok: true,
+      redirectTo: returnTo ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard"),
+    });
     response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
-    response.headers.set("Cache-Control", "no-store");
+    if (entryGateEnabled) {
+      response.cookies.set(ENTRY_GATE_COOKIE_NAME, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+      });
+    }
+    response.headers.set("Cache-Control", "private, no-store");
     return response;
   } catch {
     return NextResponse.json({ error: "Sign-in is temporarily unavailable." }, { status: 503 });
