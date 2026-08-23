@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildCurrentVisitClinicalEvidence } from "@/lib/clinical/current-visit-evidence";
+import {
+  buildCurrentVisitClinicalEvidence,
+  loadCurrentVisitClinicalEvidence,
+} from "@/lib/clinical/current-visit-evidence";
 import type { LabResult, PatientImagingResult } from "@/lib/types";
 
 function lab(overrides: Partial<LabResult> = {}): LabResult {
@@ -138,6 +141,28 @@ describe("Current Visit clinical evidence projection", () => {
     const evidence = buildCurrentVisitClinicalEvidence("patient-1", { labs: [], imaging: [] });
 
     expect(evidence.status).toBe("none_available");
+    expect(evidence.externalCompletion).toBe("not_inferred");
+  });
+
+  it("loads labs and imaging with the exact encounter patient and organization scope before projecting", async () => {
+    const calls: Array<[string, string, string]> = [];
+    const evidence = await loadCurrentVisitClinicalEvidence("patient-1", "org-1", {
+      listLabsForPatient: async (patientId, organizationId) => {
+        calls.push(["labs", patientId, organizationId]);
+        return [lab()];
+      },
+      listImagingForPatient: async (patientId, organizationId) => {
+        calls.push(["imaging", patientId, organizationId]);
+        return [imaging()];
+      },
+    });
+
+    expect(calls).toEqual([
+      ["labs", "patient-1", "org-1"],
+      ["imaging", "patient-1", "org-1"],
+    ]);
+    expect(evidence.labs[0].id).toBe("lab-1");
+    expect(evidence.imaging[0].id).toBe("img-1");
     expect(evidence.externalCompletion).toBe("not_inferred");
   });
 });
