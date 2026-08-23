@@ -1,0 +1,67 @@
+// Additive lifelong identity foundation.
+//
+// These records do not replace current authentication or tenant authority.
+// Existing User.organizationId remains the current session/default organization
+// until a separately tested authorization-context migration adopts memberships.
+
+model Person {
+  id              String                   @id @default(cuid())
+  displayName     String?
+  legalName       String?
+  primaryEmail    String?
+  status          String                   @default("active")
+  sourceType      String                   @default("system")
+  sourceReference String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  memberships     OrganizationMembership[]
+
+  @@index([primaryEmail])
+  @@index([status])
+  @@map("people")
+}
+
+model OrganizationMembership {
+  id                  String               @id @default(cuid())
+  personId            String
+  organizationId      String
+  legacyUserId        String?
+  membershipType      String
+  roleKey             String?
+  status              String               @default("active")
+  sourceType          String               @default("legacy_user")
+  sourceReference     String?
+  effectiveFrom       DateTime             @default(now())
+  effectiveTo         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  person              Person               @relation(fields: [personId], references: [id], onDelete: Cascade)
+  locationAssignments LocationAssignment[]
+
+  @@index([personId, status])
+  @@index([organizationId, status])
+  @@index([legacyUserId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("organization_memberships")
+}
+
+model LocationAssignment {
+  id              String                 @id @default(cuid())
+  membershipId    String
+  locationId      String
+  roleKey         String?
+  professionKey   String?
+  status          String                 @default("active")
+  effectiveFrom   DateTime               @default(now())
+  effectiveTo     DateTime?
+  sourceType      String                 @default("organization")
+  sourceReference String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  membership      OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, locationId, effectiveFrom])
+  @@index([locationId, status])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("location_assignments")
+}
