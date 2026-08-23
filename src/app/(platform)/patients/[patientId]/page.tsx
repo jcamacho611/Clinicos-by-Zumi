@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PatientChart } from "@/components/clinic/patient-chart";
+import { PatientChartReal } from "@/components/clinic/patient-chart-real";
 import { can } from "@/lib/auth/rbac";
 import { getClinicSession, requireClinicSession } from "@/lib/auth/session";
-import { listEncountersForPatient } from "@/lib/repositories/encounter-repository";
-import { listLabResultsForPatient } from "@/lib/repositories/lab-repository";
-import { listImagingResultsForPatient } from "@/lib/repositories/imaging-repository";
-import { listDocumentsForPatient } from "@/lib/repositories/document-repository";
-import { listFormSubmissionsForPatient } from "@/lib/repositories/form-repository";
 import { listConsentsForPatient } from "@/lib/repositories/consent-repository";
+import { listDocumentsForPatient } from "@/lib/repositories/document-repository";
+import { listEncountersForPatient } from "@/lib/repositories/encounter-repository";
+import { listFormSubmissionsForPatient } from "@/lib/repositories/form-repository";
+import { listImagingResultsForPatient } from "@/lib/repositories/imaging-repository";
+import { listLabResultsForPatient } from "@/lib/repositories/lab-repository";
 import { listMedicationHistoryForPatient } from "@/lib/repositories/medication-repository";
 import { findPatientForOrganization } from "@/lib/repositories/patient-repository";
 import { listVitalsForPatient } from "@/lib/repositories/vital-repository";
@@ -38,5 +38,17 @@ export default async function PatientPage({ params }: { params: Promise<{ patien
     listVitalsForPatient(patientId, session.organizationId),
   ]);
   if (!patient) notFound();
-  return <PatientChart consents={consents} documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }} documents={documents} encounters={encounters} formSubmissions={formSubmissions} imagingResults={imagingResults} labResults={labResults} medicationHistory={medicationHistory} medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }} patient={patient} vitals={vitals} />;
+  return <PatientChartReal
+    consents={consents}
+    documentPermissions={{ canManage: can(session.role, "documents", "manage"), canUpdate: can(session.role, "documents", "update") }}
+    documents={documents}
+    encounters={encounters}
+    formSubmissions={formSubmissions}
+    imagingResults={imagingResults}
+    labResults={labResults}
+    medicationHistory={medicationHistory}
+    medicationPermissions={{ canCreate: can(session.role, "medications", "create"), canSign: can(session.role, "medications", "sign"), canUpdate: can(session.role, "medications", "update") }}
+    patient={patient}
+    vitals={vitals}
+  />;
 }
