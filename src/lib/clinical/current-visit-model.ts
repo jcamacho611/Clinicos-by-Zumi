@@ -1,3 +1,12 @@
+import {
+  buildCloseVisitResolution,
+  type AiReviewResolutionState,
+  type AttestationResolutionState,
+  type ChargeResolutionState,
+  type CloseVisitResolution,
+  type CodingResolutionState,
+  type OrdersResultsResolutionState,
+} from "@/lib/clinical/close-visit-resolution";
 import type { PatientVital } from "@/lib/clinical/vital-types";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
@@ -58,6 +67,7 @@ export interface CurrentVisitCloseState {
   procedureCount: number;
   externalCompletion: "not_inferred";
   presentationOnly: true;
+  resolution: CloseVisitResolution;
 }
 
 export interface CurrentVisitModel {
@@ -68,8 +78,17 @@ export interface CurrentVisitModel {
   closeVisit: CurrentVisitCloseState;
 }
 
+export interface CurrentVisitCloseEvaluation {
+  coding: CodingResolutionState;
+  ordersResults: OrdersResultsResolutionState;
+  aiReview: AiReviewResolutionState;
+  attestations: AttestationResolutionState;
+  chargeReadiness: ChargeResolutionState;
+}
+
 export interface CurrentVisitContext {
   vital?: PatientVital | null;
+  closeEvaluation?: Partial<CurrentVisitCloseEvaluation>;
 }
 
 const REQUIRED_DOCUMENTATION = [
@@ -78,6 +97,14 @@ const REQUIRED_DOCUMENTATION = [
   ["Assessment", "assessment"],
   ["Plan", "plan"],
 ] as const satisfies ReadonlyArray<readonly [string, keyof Encounter]>;
+
+const DEFAULT_CLOSE_EVALUATION: CurrentVisitCloseEvaluation = {
+  coding: "not_evaluated",
+  ordersResults: "not_evaluated",
+  aiReview: "not_evaluated",
+  attestations: "not_evaluated",
+  chargeReadiness: "not_evaluated",
+};
 
 function missingRequiredDocumentation(encounter: Encounter) {
   return REQUIRED_DOCUMENTATION.flatMap(([label, key]) => {
@@ -103,6 +130,13 @@ function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandof
 
 export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, context: CurrentVisitContext = {}): CurrentVisitModel {
   const missingRequiredSections = missingRequiredDocumentation(encounter);
+  const closeEvaluation = { ...DEFAULT_CLOSE_EVALUATION, ...context.closeEvaluation };
+  const closeResolution = buildCloseVisitResolution({
+    encounterStatus: encounter.status,
+    missingRequiredDocumentation: missingRequiredSections,
+    followUp: encounter.followUp,
+    ...closeEvaluation,
+  });
 
   return {
     sectionOrder: [...CURRENT_VISIT_SECTION_ORDER],
@@ -132,12 +166,13 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
-      noteLocked: encounter.status === "Signed" || encounter.status === "Locked",
+      noteLocked: closeResolution.noteLocked,
       encounterStatus: encounter.status,
       diagnosisCount: encounter.diagnoses.length,
       procedureCount: encounter.procedures.length,
       externalCompletion: "not_inferred",
       presentationOnly: true,
+      resolution: closeResolution,
     },
   };
 }
