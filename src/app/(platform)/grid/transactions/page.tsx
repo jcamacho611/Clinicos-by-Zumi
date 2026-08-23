@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Map, ShieldAlert, ShieldCheck } from "lucide-react";
+import { GridLiquiditySummary } from "@/components/grid/grid-liquidity-summary";
 import { GridTransactionCommand } from "@/components/grid/grid-transaction-command";
 import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTransactionBoard } from "@/lib/grid/transaction-board-repository";
@@ -30,6 +31,7 @@ export default async function GridTransactionsPage() {
 
     <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-amber-200/[.045] px-4 py-3 text-[12px] leading-5 text-amber-100/70"><ShieldCheck className="mr-2 inline size-4" /><strong className="font-extrabold text-amber-100">Current boundary:</strong> this surface remains synthetic/demo gated. Manual GoDaddy payment evidence is not processor verification, financial obligations are not automated payouts, and active disputes or safety incidents hold normal settlement.</div>
 
+    <div className="mt-6"><GridLiquiditySummary metrics={board.liquidity} /></div>
     <div className="mt-6"><GridTransactionCommand board={board} /></div>
   </main>;
 }
