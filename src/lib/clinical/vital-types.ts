@@ -12,9 +12,9 @@ export interface PatientVital {
 }
 
 export function vitalHasMeasurement(vital: PatientVital) {
-  return [
-    vital.bloodPressureSystolic,
-    vital.bloodPressureDiastolic,
+  const hasCompleteBloodPressure = vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic !== null;
+
+  return hasCompleteBloodPressure || [
     vital.heartRate,
     vital.temperatureF,
     vital.oxygenPercent,
