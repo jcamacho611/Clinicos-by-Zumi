@@ -29,19 +29,23 @@ describe("consultation evidence repository wiring", () => {
     expect(consultationRepositorySource).toContain('["demographics", "referrals"]');
   });
 
-  it("uses the governed evidence guard and atomically binds only an unbound approved document", () => {
+  it("uses the governed evidence guard and locks the exact current document row before referral transition", () => {
     expect(consultationRepositorySource).toContain("buildConsultationDocumentEvidence");
-    expect(consultationRepositorySource).toContain('evidence.referralBinding === "bind_on_receipt"');
-    expect(consultationRepositorySource).toContain('referralId: null');
+    expect(consultationRepositorySource).toContain('const expectedReferralId = evidence.referralBinding === "bind_on_receipt" ? null : referral.id;');
+    expect(consultationRepositorySource).toContain("referralId: expectedReferralId");
     expect(consultationRepositorySource).toContain('data: { referralId: referral.id }');
     expect(consultationRepositorySource).toContain('Consultation document changed. Refresh and try again.');
   });
 
-  it("keeps consultation received separate from referral closure and records both domain audits", () => {
-    expect(consultationRepositorySource).toContain('status: "consultation_received"');
-    expect(consultationRepositorySource).not.toContain('status: "closed"');
+  it("emits a document-link audit only for a newly created referral binding", () => {
+    expect(consultationRepositorySource).toContain('if (evidence.referralBinding === "bind_on_receipt")');
     expect(consultationRepositorySource).toContain('eventType: "referral_linked"');
     expect(consultationRepositorySource).toContain('action: "document.referral_linked"');
+  });
+
+  it("keeps consultation received separate from referral closure and records the referral domain audit", () => {
+    expect(consultationRepositorySource).toContain('status: "consultation_received"');
+    expect(consultationRepositorySource).not.toContain('status: "closed"');
     expect(consultationRepositorySource).toContain('action: "referral.consultation_received"');
     expect(consultationRepositorySource).not.toContain('encryptedContent: true');
   });
