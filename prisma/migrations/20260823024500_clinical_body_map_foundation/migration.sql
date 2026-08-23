@@ -42,7 +42,7 @@ CREATE TABLE "clinical_body_map_findings" (
       CHECK ("laterality" IN ('left','right','bilateral','midline','not_applicable')),
     CONSTRAINT "clinical_body_map_findings_severity_check"
       CHECK (("severity" IS NULL AND "severityScale" IS NULL)
-        OR ("severityScale" = 'zero_to_ten' AND "severity" BETWEEN 0 AND 10)),
+        OR ("severity" IS NOT NULL AND "severityScale" IS NOT NULL AND "severityScale" = 'zero_to_ten' AND "severity" BETWEEN 0 AND 10)),
     CONSTRAINT "clinical_body_map_findings_state_check"
       CHECK ("clinicalState" IN ('active','resolved')),
     CONSTRAINT "clinical_body_map_findings_resolution_check"
