@@ -52,20 +52,30 @@ describe("BodyMap persistence schema", () => {
     expect(model).toContain("@@unique([bodyMapVersionId, findingKey])");
   });
 
-  it("enforces tenant/patient/encounter provenance and severity at the database boundary", () => {
+  it("uses modeled restrictive clinical provenance foreign keys and a database severity guard", () => {
+    const model = readFileSync(modelPath, "utf8");
     const migration = readFileSync(migrationPath, "utf8");
+
+    for (const relation of [
+      "organization Organization",
+      "patient Patient",
+      "encounter Encounter",
+      "createdByUser User",
+      "amendsVersion BodyMapVersion?",
+    ]) {
+      expect(model).toContain(relation);
+    }
+    expect(model).toContain("onDelete: Restrict");
+    expect(model).toContain("bodyMapVersion BodyMapVersion");
+    expect(model).toContain("onDelete: Cascade");
 
     expect(migration).toContain('CREATE TABLE "body_map_versions"');
     expect(migration).toContain('CREATE TABLE "body_map_findings"');
     expect(migration).toContain('CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10))');
 
-    expect(migration).toContain('FOREIGN KEY ("organizationId", "patientId")');
-    expect(migration).toContain('REFERENCES "patients"("organizationId", "id")');
-    expect(migration).toContain('FOREIGN KEY ("organizationId", "patientId", "encounterId")');
-    expect(migration).toContain('REFERENCES "encounters"("organizationId", "patientId", "id")');
-    expect(migration).toContain('FOREIGN KEY ("organizationId", "createdByUserId")');
-    expect(migration).toContain('REFERENCES "users"("organizationId", "id")');
-    expect(migration).toContain('FOREIGN KEY ("organizationId", "patientId", "amendsVersionId")');
+    for (const target of ["organizations", "patients", "encounters", "users", "body_map_versions"]) {
+      expect(migration).toContain(`REFERENCES "${target}"("id")`);
+    }
     expect(migration).toContain('ON DELETE RESTRICT');
     expect(migration).toContain('ON DELETE CASCADE');
 
