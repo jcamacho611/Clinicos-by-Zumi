@@ -3,6 +3,7 @@ import "server-only";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
+import { deriveAcceptedRelationshipGaps } from "@/lib/network-growth-continuity";
 import { networkInvitationSchema, networkInvitationTransitionSchema } from "@/lib/network-growth-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -25,12 +26,28 @@ export async function listNetworkGrowthWorkspace(session: ClinicSession) {
   for (const facility of facilities) if (facility.organizationId === session.organizationId && facility.specialty) specialtyCounts.set(facility.specialty, (specialtyCounts.get(facility.specialty) ?? 0) + 1);
   const knownSpecialties = ["Cardiology", "Behavioral Health", "Orthopedics", "Imaging", "Laboratory", "Pharmacy"];
   const gaps = knownSpecialties.filter((specialty) => !specialtyCounts.has(specialty));
-  await db.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "network.growth_accessed", resourceType: "network_growth", resourceId: session.organizationId, metadata: { invitationCount: invitations.length, activeConnections: connections.filter((connection) => connection.status === "active").length } } });
+  const relationshipGaps = deriveAcceptedRelationshipGaps({
+    currentOrganizationId: session.organizationId,
+    invitations: invitations.map((invitation) => ({
+      id: invitation.id,
+      status: invitation.status,
+      invitingOrganizationId: invitation.invitingOrganizationId,
+      targetOrganizationId: invitation.targetOrganizationId,
+      invitingOrganizationName: invitation.invitingOrganization.name,
+      targetOrganizationName: invitation.targetOrganization?.name ?? null,
+      inviteeName: invitation.inviteeName,
+      inviteeType: invitation.inviteeType,
+      specialty: invitation.specialty,
+    })),
+    connections,
+  });
+  await db.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "network.growth_accessed", resourceType: "network_growth", resourceId: session.organizationId, metadata: { invitationCount: invitations.length, activeConnections: connections.filter((connection) => connection.status === "active").length, relationshipSetupNeeded: relationshipGaps.length } } });
   return {
     currentOrganizationId: session.organizationId,
     invitations: invitations.map((invitation) => ({ id: invitation.id, inviteeType: invitation.inviteeType, inviteeName: invitation.inviteeName, inviteeEmail: invitation.inviteeEmail, specialty: invitation.specialty, location: invitation.location, status: invitation.status, notes: invitation.notes, invitingOrganization: invitation.invitingOrganization.name, targetOrganization: invitation.targetOrganization?.name ?? null, invitingOrganizationId: invitation.invitingOrganizationId, targetOrganizationId: invitation.targetOrganizationId, expiresAt: iso(invitation.expiresAt), createdAt: invitation.createdAt.toISOString(), updatedAt: invitation.updatedAt.toISOString() })),
     organizations: organizations.filter((organization) => organization.id !== session.organizationId).map((organization) => ({ ...organization })),
-    insights: { activeConnections: connections.filter((connection) => connection.status === "active").length, pendingConnections: connections.filter((connection) => connection.status === "pending").length, sentInvitations: invitations.filter((invitation) => invitation.invitingOrganizationId === session.organizationId).length, pendingInvitations: invitations.filter((invitation) => ["sent", "pending_verification", "verified"].includes(invitation.status)).length, acceptedInvitations: invitations.filter((invitation) => invitation.status === "accepted").length, referralCount: referrals.length, connectedReferralCount: referrals.filter((referral) => referral.destinationOrganizationId).length, specialtyGaps: gaps, coverageOrganizations: new Set(facilities.filter((facility) => facility.organizationId === session.organizationId).map((facility) => facility.organizationId)).size + 1 },
+    relationshipGaps,
+    insights: { activeConnections: connections.filter((connection) => connection.status === "active").length, pendingConnections: connections.filter((connection) => connection.status === "pending").length, sentInvitations: invitations.filter((invitation) => invitation.invitingOrganizationId === session.organizationId).length, pendingInvitations: invitations.filter((invitation) => ["sent", "pending_verification", "verified"].includes(invitation.status)).length, acceptedInvitations: invitations.filter((invitation) => invitation.status === "accepted").length, relationshipSetupNeeded: relationshipGaps.length, referralCount: referrals.length, connectedReferralCount: referrals.filter((referral) => referral.destinationOrganizationId).length, specialtyGaps: gaps, coverageOrganizations: new Set(facilities.filter((facility) => facility.organizationId === session.organizationId).map((facility) => facility.organizationId)).size + 1 },
     auditHistory: audits.map((audit) => ({ id: audit.id, action: audit.action, createdAt: audit.createdAt.toISOString() })),
   };
 }
