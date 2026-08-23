@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildStaffIntakeHandoff,
   type StaffIntakeSnapshot,
+  type StaffSymptomUpdate,
 } from "@/lib/clinical/staff-intake";
 
 function intake(overrides: Partial<StaffIntakeSnapshot> = {}): StaffIntakeSnapshot {
@@ -74,6 +75,21 @@ describe("governed Current Visit staff intake foundation", () => {
     expect(handoff.symptomEvidenceStatus).toBe("not_documented");
     expect(handoff.status).toBe("incomplete");
     expect(handoff.blockers).toContain("Symptom updates not documented");
+  });
+
+  it("does not let staff encode provider-level clinical resolution in the intake layer", () => {
+    const patientReportedResolution: StaffSymptomUpdate["state"] = "patient_reports_resolved";
+
+    expect(patientReportedResolution).toBe("patient_reports_resolved");
+  });
+
+  it("requires immutable body-map version evidence when staff marks the body-map update completed", () => {
+    const handoff = buildStaffIntakeHandoff(intake({
+      bodyMapUpdate: { status: "completed", bodyMapVersionId: null },
+    }));
+
+    expect(handoff.status).toBe("incomplete");
+    expect(handoff.blockers).toContain("Completed body-map update missing version evidence");
   });
 
   it("produces a ready handoff only when the required governed intake evidence is explicitly present", () => {
