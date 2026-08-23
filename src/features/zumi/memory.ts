@@ -196,17 +196,6 @@ function personalMemoryContextItem(memory: ZumiMemoryItem): ZumiGovernedContextI
   };
 }
 
-export async function retrieveZumiMemoryContext(session: ClinicSession, question: string, take = 12) {
-  const memories = await listZumiMemories(session, { take: Math.max(4, Math.min(take, 20)) });
-  if (!memories.length) return { text: "", memoryIds: [] as string[] };
-
-  const ranked = rankZumiGovernedContext(memories.map(personalMemoryContextItem), question, 8);
-  return {
-    text: formatZumiGovernedContext(ranked),
-    memoryIds: ranked.map((memory) => memory.id),
-  };
-}
-
 export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSession, question: string, take = 8) {
   const now = new Date();
   const rows = await db.knowledgeItem.findMany({
@@ -251,5 +240,31 @@ export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSe
   return {
     text: formatZumiGovernedContext(ranked),
     knowledgeIds: ranked.map((item) => item.id),
+  };
+}
+
+export async function retrieveZumiMemoryContext(session: ClinicSession, question: string, take = 12) {
+  const [memories, organizationKnowledge] = await Promise.all([
+    listZumiMemories(session, { take: Math.max(4, Math.min(take, 20)) }),
+    retrieveZumiOrganizationKnowledgeContext(session, question, 8).catch((error: unknown) => {
+      console.warn("[zumi] approved organization knowledge unavailable; continuing with personal memory only.", error);
+      return { text: "", knowledgeIds: [] as string[] };
+    }),
+  ]);
+
+  const personalRanked = rankZumiGovernedContext(memories.map(personalMemoryContextItem), question, 8);
+  const personalText = formatZumiGovernedContext(personalRanked);
+  const sections = [
+    personalText ? `Personal durable memory — context only, never permission or live domain truth:\n${personalText}` : "",
+    organizationKnowledge.text
+      ? `Human-approved organization/reference knowledge — reviewed context, still not live clinical, credential, payment, eligibility, authorization, or transaction truth:\n${organizationKnowledge.text}`
+      : "",
+  ].filter(Boolean);
+
+  return {
+    text: sections.join("\n\n"),
+    memoryIds: [...personalRanked.map((memory) => memory.id), ...organizationKnowledge.knowledgeIds],
+    personalMemoryIds: personalRanked.map((memory) => memory.id),
+    organizationKnowledgeIds: organizationKnowledge.knowledgeIds,
   };
 }
