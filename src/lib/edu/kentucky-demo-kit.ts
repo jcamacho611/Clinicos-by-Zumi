@@ -1,4 +1,15 @@
 export const kentuckyDemoKit = {
+  evaluatorJourney: [
+    { step: 1, label: "Institutional program", detail: "Open the reusable workforce program layer and show both required service families plus all five Industry Accelerator pathways.", href: "/edu/programs" },
+    { step: 2, label: "Healthcare pathway", detail: "Show the strongest applied pathway: responsible, nonclinical healthcare AI with operational scenarios and explicit human authority.", href: "/edu/programs/healthcare" },
+    { step: 3, label: "Zumi workforce practice", detail: "Demonstrate governed coaching and AI-output critique. Zumi can teach and explain; it cannot complete assessed work or certify competence.", href: "/edu/zumi-practice?pathway=healthcare" },
+    { step: 4, label: "Virtual Clinic Lab", detail: "Enter synthetic role-based healthcare simulation and demonstrate workflow practice without real PHI.", href: "/edu/scenarios" },
+    { step: 5, label: "Live instructor session", detail: "Show a scheduled instructor-led session with modality, curriculum/material provenance, roster, and verified attendance evidence.", href: "/edu/sessions" },
+    { step: 6, label: "Instructor review", detail: "Show submission review, rubric scoring, feedback, and the human-controlled assessment boundary.", href: "/edu/grading" },
+    { step: 7, label: "Program reporting", detail: "Show enrollment, verified attendance, completion, assessment, feedback, and curriculum-version evidence as separate reportable facts.", href: "/edu/reports" },
+    { step: 8, label: "Completion evidence", detail: "Show completion records and certificate language that documents learning without implying licensure or independent professional certification.", href: "/edu/certificates" },
+    { step: 9, label: "Career Readiness", detail: "Show the separate 2–3 hour AI-Powered Career Readiness service, including truthful resume/application/interview support and privacy/verification boundaries.", href: "/edu/programs/career-readiness" },
+  ],
   slideOutline: [
     "What generative AI is and is not",
     "Where AI can improve workplace productivity",
