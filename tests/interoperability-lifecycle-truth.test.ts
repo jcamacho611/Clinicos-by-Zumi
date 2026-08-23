@@ -1,8 +1,12 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   INTEROPERABILITY_LIFECYCLE,
   resolveInteroperabilityLifecycle,
 } from "@/lib/integrations/interoperability-lifecycle";
+
+const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 
 describe("interoperability lifecycle truth", () => {
   it("defines the canonical external integration lifecycle", () => {
@@ -66,5 +70,19 @@ describe("interoperability lifecycle truth", () => {
     expect(result.productionVerified).toBe(false);
     expect(result.productionClaimAllowed).toBe(false);
     expect(result.reason).toContain("not recognized");
+  });
+
+  it("projects canonical lifecycle into System Health instead of treating raw vendor state as production truth", () => {
+    const repository = read("src/lib/repositories/system-health-repository.ts");
+    const workspace = read("src/components/clinic/system-health-workspace.tsx");
+
+    expect(repository).toContain("resolveInteroperabilityLifecycle");
+    expect(repository).toContain("lifecycle");
+    expect(repository).toContain("productionVerified");
+    expect(repository).toContain("productionClaimAllowed");
+    expect(workspace).toContain("Connection lifecycle");
+    expect(workspace).toContain("Production verified");
+    expect(workspace).toContain("Not production verified");
+    expect(workspace).not.toMatch(/status === ["']connected["'].*Production verified/);
   });
 });
