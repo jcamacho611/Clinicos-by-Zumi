@@ -28,7 +28,13 @@ export type PersonContext = {
   personId: string;
   displayName: string | null;
   legacyUserId: string;
-  defaultOrganizationId: string;
+  /**
+   * Organization id carried by the effective legacy-user membership projection.
+   * This is provenance/context only. Current session tenant authority continues to
+   * come from the validated legacy User.organizationId until a separately reviewed
+   * active-context authorization migration is implemented.
+   */
+  legacyMembershipOrganizationId: string;
   activeMemberships: OrganizationMembershipView[];
 };
 
@@ -151,7 +157,7 @@ export async function getPersonContextForLegacyUser(
     personId: legacyMembership.person.id,
     displayName: legacyMembership.person.displayName,
     legacyUserId: userId,
-    defaultOrganizationId: legacyMembership.organizationId,
+    legacyMembershipOrganizationId: legacyMembership.organizationId,
     activeMemberships: await listActiveOrganizationMemberships(legacyMembership.person.id, at),
   };
 }
