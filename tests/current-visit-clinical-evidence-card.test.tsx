@@ -18,6 +18,8 @@ function availableEvidence(): CurrentVisitClinicalEvidence {
         sourceReference: "LAB-REF-1",
         version: 2,
         correctionOfId: "lab-original",
+        totalItemCount: 1,
+        itemsTruncated: false,
         items: [
           { id: "item-1", name: "Hemoglobin", value: "11.2", unit: "g/dL", range: "12-16", flag: "low", critical: false },
         ],
@@ -33,6 +35,8 @@ function availableEvidence(): CurrentVisitClinicalEvidence {
         sourceReference: "LAB-REF-2",
         version: 3,
         correctionOfId: "lab-2-v2",
+        totalItemCount: 0,
+        itemsTruncated: false,
         items: [],
       },
     ],
@@ -79,6 +83,16 @@ describe("Current Visit clinical evidence card", () => {
     expect(markup).toContain("Urgent source flag");
     expect(markup).toContain("No acute fracture.");
     expect(markup).toContain("Evidence visibility does not mean the originating order is complete.");
+  });
+
+  it("discloses when a displayed lab panel is partial", () => {
+    const evidence = availableEvidence();
+    evidence.labs[0] = { ...evidence.labs[0], totalItemCount: 120, itemsTruncated: true };
+    const markup = renderToStaticMarkup(<CurrentVisitClinicalEvidenceCard evidence={evidence} />);
+
+    expect(markup).toContain("Current Visit is showing a partial panel.");
+    expect(markup).toContain("120 total source items");
+    expect(markup).toContain("authoritative lab workspace");
   });
 
   it("describes empty evidence as unavailable rather than normal", () => {
