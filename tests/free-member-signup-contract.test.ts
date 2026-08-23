@@ -24,6 +24,13 @@ describe("free member signup", () => {
     expect(route).toContain("isSameOriginMutation");
   });
 
+  it("documents the free-member rollout flag as disabled by default", () => {
+    const env = read(".env.example");
+    expect(env).toContain('KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED=""');
+    expect(env).toContain("account migration");
+    expect(env).toContain("member -> Clinic OS denial");
+  });
+
   it("routes successful free membership into member onboarding rather than Clinic OS", () => {
     expect(existsSync("src/app/member/page.tsx")).toBe(true);
     if (!existsSync("src/app/member/page.tsx")) return;
