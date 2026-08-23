@@ -1,4 +1,4 @@
-import type { PatientVital } from "@/lib/clinical/vital-types";
+import type { EncounterStaffHandoffProjection } from "@/lib/clinical/encounter-handoff-types";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
@@ -23,9 +23,14 @@ export interface CurrentVisitUnavailableState {
 
 export interface CurrentVisitPartialHandoffState {
   status: "partial";
-  source: "encounter_vitals";
   message: string;
-  vital: PatientVital;
+  projection: EncounterStaffHandoffProjection;
+  evidence: {
+    vital: boolean;
+    medicationReconciliation: boolean;
+    forms: number;
+    tasks: number;
+  };
 }
 
 export type CurrentVisitStaffHandoffState = CurrentVisitUnavailableState | CurrentVisitPartialHandoffState;
@@ -69,7 +74,7 @@ export interface CurrentVisitModel {
 }
 
 export interface CurrentVisitContext {
-  vital?: PatientVital | null;
+  handoff?: EncounterStaffHandoffProjection | null;
 }
 
 const REQUIRED_DOCUMENTATION = [
@@ -86,18 +91,33 @@ function missingRequiredDocumentation(encounter: Encounter) {
   });
 }
 
-function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandoffState {
-  if (vital && vitalHasMeasurement(vital)) {
+function buildStaffHandoff(handoff?: EncounterStaffHandoffProjection | null): CurrentVisitStaffHandoffState {
+  if (!handoff) {
     return {
-      status: "partial",
-      source: "encounter_vitals",
-      vital,
-      message: "Vitals were captured for this encounter. Other staff intake is not yet attached to the governed handoff.",
+      status: "not_available",
+      message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
     };
   }
+
+  const evidence = {
+    vital: Boolean(handoff.vital && vitalHasMeasurement(handoff.vital)),
+    medicationReconciliation: handoff.medicationReconciliation !== null,
+    forms: handoff.forms.length,
+    tasks: handoff.tasks.length,
+  };
+
+  if (!evidence.vital && !evidence.medicationReconciliation && evidence.forms === 0 && evidence.tasks === 0) {
+    return {
+      status: "not_available",
+      message: "No encounter-specific staff handoff evidence is persisted yet. Do not infer intake findings from the patient summary.",
+    };
+  }
+
   return {
-    status: "not_available",
-    message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
+    status: "partial",
+    projection: handoff,
+    evidence,
+    message: "Encounter-linked staff evidence is available. Other staff intake remains incomplete unless it is separately persisted, reviewed, and governed for this encounter.",
   };
 }
 
@@ -128,7 +148,7 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       status: "not_available",
       message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
     },
-    staffHandoff: buildStaffHandoff(context.vital),
+    staffHandoff: buildStaffHandoff(context.handoff),
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
