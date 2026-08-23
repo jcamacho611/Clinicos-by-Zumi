@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canManageWorkforceSession,
+  canSubmitWorkforceSurveyKind,
   canVerifyWorkforceAttendance,
   isVerifiedAttendanceRecord,
   summarizeAttendanceRecords,
@@ -20,6 +21,15 @@ describe("workforce delivery record policy", () => {
     expect(canVerifyWorkforceAttendance("edu_admin")).toBe(true);
     expect(canVerifyWorkforceAttendance("edu_instructor")).toBe(true);
     expect(canVerifyWorkforceAttendance("edu_assistant")).toBe(false);
+  });
+
+  it("does not let a learner impersonate instructor or employer feedback", () => {
+    expect(canSubmitWorkforceSurveyKind("edu_student", "participant")).toBe(true);
+    expect(canSubmitWorkforceSurveyKind("edu_student", "follow_up")).toBe(true);
+    expect(canSubmitWorkforceSurveyKind("edu_student", "instructor")).toBe(false);
+    expect(canSubmitWorkforceSurveyKind("edu_student", "employer")).toBe(false);
+    expect(canSubmitWorkforceSurveyKind("edu_instructor", "instructor")).toBe(true);
+    expect(canSubmitWorkforceSurveyKind("edu_admin", "employer")).toBe(true);
   });
 
   it("does not treat unverified presence as verified attendance", () => {
