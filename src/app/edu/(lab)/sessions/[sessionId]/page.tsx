@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { EduCommandHeader } from "@/components/edu/edu-shell";
 import { WorkforceAttendanceManager } from "@/components/edu/workforce-attendance-manager";
 import { WorkforceFeedbackForm } from "@/components/edu/workforce-feedback-form";
+import { WorkforceKnowledgeAssessmentManager } from "@/components/edu/workforce-knowledge-assessment-manager";
 import { db } from "@/lib/db";
 import { canVerifyWorkforceAttendance } from "@/lib/edu/workforce-delivery-records";
 import { listSessionAttendance, listWorkforceSessions } from "@/lib/edu/workforce-delivery-repository";
@@ -27,6 +28,7 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
       select: {
         id: true,
         name: true,
+        courseId: true,
         course: { select: { title: true } },
         enrollments: {
           where: { status: { in: ["invited", "active", "completed"] } },
@@ -40,13 +42,20 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
   if (!cohort) notFound();
 
   const attendanceByEnrollment = new Map(attendance.map((record) => [record.enrollmentId, record]));
+  const roster = cohort.enrollments.map((enrollment) => ({
+    enrollmentId: enrollment.id,
+    name: enrollment.studentDisplayName || enrollment.studentEmail,
+    email: enrollment.studentEmail,
+    status: enrollment.status,
+    attendance: attendanceByEnrollment.get(enrollment.id) ?? null,
+  }));
 
   return (
     <>
       <EduCommandHeader
         eyebrow={`${session.deliveryMode.replaceAll("_", " ")} · ${session.status}`}
         title={session.title}
-        description={`${cohort.course.title} · ${cohort.name}. Attendance shown here is evidence for this specific live session, not a proxy derived from enrollment or login.`}
+        description={`${cohort.course.title} · ${cohort.name}. Attendance and assessment evidence shown here are tied to this specific instructor-led session rather than inferred from enrollment or login.`}
         actions={<Link className="border border-[#e6817b]/30 px-3 py-2 text-xs font-semibold text-[#efaaa1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e6817b]" href="/edu/sessions">All sessions</Link>}
       />
       <div className="px-5 py-6 sm:px-8">
@@ -59,23 +68,28 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
         <WorkforceAttendanceManager
           canVerify={canVerifyWorkforceAttendance(identity.role)}
           sessionId={session.id}
-          roster={cohort.enrollments.map((enrollment) => {
-            const record = attendanceByEnrollment.get(enrollment.id);
-            return {
-              enrollmentId: enrollment.id,
-              name: enrollment.studentDisplayName || enrollment.studentEmail,
-              email: enrollment.studentEmail,
-              status: enrollment.status,
-              attendance: record ? {
-                status: record.status,
-                evidenceSource: record.evidenceSource,
-                verifiedAt: record.verifiedAt?.toISOString() ?? null,
-                minutesPresent: record.minutesPresent,
-                evidenceNote: record.evidenceNote,
-              } : null,
-            };
-          })}
+          roster={roster.map((item) => ({
+            enrollmentId: item.enrollmentId,
+            name: item.name,
+            email: item.email,
+            status: item.status,
+            attendance: item.attendance ? {
+              status: item.attendance.status,
+              evidenceSource: item.attendance.evidenceSource,
+              verifiedAt: item.attendance.verifiedAt?.toISOString() ?? null,
+              minutesPresent: item.attendance.minutesPresent,
+              evidenceNote: item.attendance.evidenceNote,
+            } : null,
+          }))}
         />
+        {(identity.role === "edu_admin" || identity.role === "edu_instructor") && (
+          <WorkforceKnowledgeAssessmentManager
+            cohortId={cohort.id}
+            courseId={cohort.courseId}
+            sessionId={session.id}
+            roster={roster.map((item) => ({ enrollmentId: item.enrollmentId, name: item.name, email: item.email }))}
+          />
+        )}
         {canSubmitWorkforceFeedback(identity.role) && identity.role !== "edu_student" && (
           <div className="mt-6">
             <WorkforceFeedbackForm participantMode={false} sessionId={session.id} />
