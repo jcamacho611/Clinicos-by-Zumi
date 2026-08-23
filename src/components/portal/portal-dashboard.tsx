@@ -1,42 +1,142 @@
-import { CalendarDays, CheckCircle2, ChevronRight, ClipboardCheck, Download, FileCheck2, FileText, HeartPulse, History, LockKeyhole, MessageCircle, ReceiptText, ShieldCheck, Video } from "lucide-react";
+import type { ReactNode } from "react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  Download,
+  FileCheck2,
+  FileText,
+  History,
+  LockKeyhole,
+  MessageCircle,
+  ReceiptText,
+  ShieldCheck,
+  Video,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { PortalDashboard as PortalDashboardData } from "@/lib/repositories/portal-repository";
+import styles from "./portal-black-label.module.css";
 
-function formatMoney(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100); }
-function formatDate(value: string | null) { return value ? new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "Date pending"; }
-function statusLabel(value: string) { return value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+function formatMoney(cents: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+}
+
+function formatDate(value: string | null) {
+  return value
+    ? new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+    : "Date pending";
+}
+
+function statusLabel(value: string) {
+  return value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export function PortalDashboard({ data, organizationName }: { data: PortalDashboardData; organizationName: string }) {
   const pendingForms = data.forms.filter((form) => !["completed", "cancelled"].includes(form.status));
-  const nextAppointment = [...data.appointments].filter((appointment) => new Date(appointment.startsAt) >= new Date() && !["CANCELLED", "NO_SHOW"].includes(appointment.status)).sort((left, right) => left.startsAt.localeCompare(right.startsAt))[0];
-  return <main className="min-h-screen bg-[#f3f0e8] text-[#173c34]">
-    <header className="border-b border-[#d8ddd4] bg-[#f8f6f0]/90 backdrop-blur"><div className="mx-auto flex max-w-7xl items-center gap-4 px-5 py-4 sm:px-8"><span className="grid size-11 place-items-center rounded-2xl bg-[#153f37] text-[#e7d182]"><HeartPulse className="size-5" /></span><div><p className="text-xs font-extrabold">{organizationName}</p><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#748b83]">Private patient portal</p></div><div className="ml-auto flex items-center gap-3"><Badge tone="teal"><LockKeyhole className="mr-1 size-3" /> Patient-only session</Badge><form action="/api/portal/auth/logout" method="post"><Button size="sm" type="submit" variant="secondary">Sign out</Button></form></div></div></header>
-    <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
-      {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /api/portal/records/snapshot is a file download, not a page. <Link> does client-side navigation and would break the download. */}
-      <section className="relative overflow-hidden rounded-[36px] bg-[#153f37] p-7 text-white shadow-[0_24px_70px_rgba(21,63,55,.18)] sm:p-10"><div className="absolute -right-16 -top-20 size-72 rounded-full border border-[#e7d182]/30" /><div className="absolute -right-4 -top-4 size-44 rounded-full border border-[#a8d8c6]/30" /><p className="text-[12px] font-extrabold uppercase tracking-[.2em] text-[#a8d8c6]">Welcome back</p><h1 className="mt-4 max-w-2xl font-serif text-4xl font-semibold leading-none tracking-[-.045em] sm:text-6xl">{data.patient.displayName}, your next step is clear.</h1><p className="mt-5 max-w-2xl text-sm leading-7 text-[#c7dbd4]">Only records explicitly released by your care team appear here. Clinical drafts and internal files stay inside the clinic workspace.</p><div className="mt-7 flex flex-wrap gap-2"><Badge tone="amber">MRN {data.patient.mrn}</Badge><Badge tone="teal">Preferred language: {data.patient.preferredLanguage}</Badge></div><div className="mt-6 max-w-2xl rounded-2xl border border-white/10 bg-white/[.06] p-4"><a className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#e7d182] px-4 text-xs font-extrabold text-[#173c34] transition hover:bg-[#f0df9d]" href="/api/portal/records/snapshot"><Download className="size-4" aria-hidden="true" />Export portal snapshot</a><p className="mt-3 text-[11px] leading-5 text-[#c7dbd4]">Downloads a portable JSON snapshot of information currently available in this portal. It is not represented as your complete medical record or complete designated record set. Contact the clinic for a complete records-access or transfer request.</p></div></section>
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <PortalStat icon={<CalendarDays className="size-5" />} label="Next appointment" value={nextAppointment ? formatDate(nextAppointment.startsAt) : "No visit scheduled"} />
-        <PortalStat icon={<ClipboardCheck className="size-5" />} label="Forms to finish" value={String(pendingForms.length)} />
-        <PortalStat icon={<FileCheck2 className="size-5" />} label="Released records" value={String(data.records.length)} />
-        <PortalStat icon={<ReceiptText className="size-5" />} label="Current balance" value={formatMoney(data.financial.balanceCents)} />
-      </section>
-      <section className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_.95fr]">
-        <div className="space-y-6">
-          <PortalPanel icon={<CalendarDays className="size-4" />} title="Appointments" subtitle="Your clinic schedule, not a generic calendar.">{data.appointments.length ? data.appointments.map((appointment) => <div className="flex flex-wrap items-center gap-4 border-t border-[#e7e7df] px-5 py-4 first:border-0" key={appointment.id}><span className="grid size-10 place-items-center rounded-2xl bg-[#dceee7] text-[#276c5e]">{appointment.telemedicine ? <Video className="size-4" /> : <CalendarDays className="size-4" />}</span><div className="min-w-0 flex-1"><p className="text-xs font-extrabold text-[#173c34]">{appointment.type}</p><p className="mt-1 text-[12px] text-[#72867f]">{formatDate(appointment.startsAt)} · {appointment.provider}</p></div><Badge tone={appointment.status === "COMPLETED" ? "teal" : "sky"}>{statusLabel(appointment.status)}</Badge></div>) : <PortalEmpty text="No appointments are available." />}</PortalPanel>
-          <PortalPanel icon={<FileText className="size-4" />} title="Released records" subtitle="Every item below has an explicit clinic release decision.">{data.records.length ? data.records.map((record) => <article className="border-t border-[#e7e7df] px-5 py-4 first:border-0" key={`${record.kind}-${record.id}`}><div className="flex items-start gap-4"><span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-[#f1e7c6] text-[#7a6320]"><FileCheck2 className="size-4" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-extrabold text-[#173c34]">{record.title}</p><Badge tone="slate">{record.kind}</Badge></div><p className="mt-2 line-clamp-3 text-[12px] leading-5 text-[#657b73]">{record.detail}</p><p className="mt-2 text-[11px] font-bold text-[#8a9a94]">Released {formatDate(record.releasedAt)}</p></div></div></article>) : <PortalEmpty text="Your clinic has not released any records yet." />}</PortalPanel>
+  const nextAppointment = [...data.appointments]
+    .filter((appointment) => new Date(appointment.startsAt) >= new Date() && !["CANCELLED", "NO_SHOW"].includes(appointment.status))
+    .sort((left, right) => left.startsAt.localeCompare(right.startsAt))[0];
+
+  return <main className={styles.portal}>
+    <header className={styles.header}>
+      <div className={`${styles.headerInner} flex items-center gap-3`}>
+        <span className={styles.brandMark}><ShieldCheck className="size-5" aria-hidden="true" /></span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-[var(--k-text)]">{organizationName}</p>
+          <p className="mt-0.5 text-xs font-semibold uppercase tracking-[.14em] text-[var(--k-muted)]">Private patient portal</p>
         </div>
-        <div className="space-y-6">
-          <PortalPanel icon={<ClipboardCheck className="size-4" />} title="Forms" subtitle="Assignments stay bound to your patient identity.">{data.forms.length ? data.forms.map((form) => <div className="flex items-center gap-3 border-t border-[#e7e7df] px-5 py-4 first:border-0" key={form.id}><span className="grid size-9 place-items-center rounded-xl bg-[#dceee7] text-[#276c5e]">{form.status === "completed" ? <CheckCircle2 className="size-4" /> : <ClipboardCheck className="size-4" />}</span><div className="flex-1"><p className="text-xs font-extrabold">Patient form</p><p className="mt-1 text-[11px] text-[#748b83]">{form.dueAt ? `Due ${formatDate(form.dueAt)}` : "No due date"}</p></div><Badge tone={form.status === "completed" ? "teal" : "amber"}>{statusLabel(form.status)}</Badge></div>) : <PortalEmpty text="No forms are assigned." />}</PortalPanel>
-          <PortalPanel icon={<ReceiptText className="size-4" />} title="Billing" subtitle="Amounts are shown without placing health details in payment descriptions."><div className="p-5"><p className="text-[12px] font-bold uppercase tracking-[.14em] text-[#7b8e87]">Balance due</p><p className="mt-2 font-serif text-4xl font-semibold text-[#173c34]">{formatMoney(data.financial.balanceCents)}</p><p className="mt-2 text-[11px] text-[#879791]">As of {formatDate(data.financial.asOf)}</p></div>{data.financial.invoices.map((invoice) => <div className="flex items-center gap-3 border-t border-[#e7e7df] px-5 py-4" key={invoice.id}><div className="flex-1"><p className="text-xs font-extrabold">Statement {invoice.number}</p><p className="mt-1 text-[11px] text-[#748b83]">{formatMoney(invoice.balanceCents)} remaining · due {formatDate(invoice.dueAt)}</p></div><Badge tone="sky">{statusLabel(invoice.status)}</Badge></div>)}</PortalPanel>
-          <PortalPanel icon={<History className="size-4" />} title="Access history" subtitle="You can see when your portal identity accessed this record.">{data.accessHistory.slice(0, 8).map((event) => <div className="flex items-center gap-3 border-t border-[#e7e7df] px-5 py-3 first:border-0" key={event.id}><ShieldCheck className="size-4 text-[#3b7c6e]" /><div className="flex-1"><p className="text-[12px] font-extrabold">{statusLabel(event.action.replace("portal.", ""))}</p><p className="mt-1 text-[11px] text-[#81928c]">{formatDate(event.createdAt)}</p></div></div>)}</PortalPanel>
-          <div className="rounded-[28px] bg-[#ede3bf] p-6"><div className="flex items-start gap-4"><MessageCircle className="mt-1 size-5 text-[#715c1c]" /><div><p className="text-sm font-extrabold text-[#493f20]">Need help from the office?</p><p className="mt-2 text-[12px] leading-5 text-[#74642c]">Secure messaging and refill/referral requests are the next portal workflow slice. For urgent symptoms, call 911 or go to the nearest emergency room.</p></div><ChevronRight className="ml-auto size-4 text-[#8d7a38]" /></div></div>
+        <div className="ml-auto flex items-center gap-2">
+          <Badge tone="slate"><LockKeyhole className="mr-1 size-3" /> Patient-only session</Badge>
+          <form action="/api/portal/auth/logout" method="post"><Button size="sm" type="submit" variant="secondary">Sign out</Button></form>
+        </div>
+      </div>
+    </header>
+
+    <div className={styles.main}>
+      <section className={styles.nextStep} data-patient-next-step aria-labelledby="portal-next-step-title">
+        <div className={styles.nextStepMain}>
+          <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[var(--k-accent)]">Welcome back, {data.patient.displayName}</p>
+          <h1 id="portal-next-step-title" className="mt-3 text-3xl font-semibold tracking-[-.05em] text-[var(--k-text)] sm:text-4xl">Your next step</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--k-muted)]">Only records explicitly released by your care team appear here. Clinical drafts and internal clinic files stay inside the clinic workspace.</p>
+
+          {nextAppointment ? <div className={styles.appointment}>
+            <span className={styles.appointmentIcon}>{nextAppointment.telemedicine ? <Video className="size-5" aria-hidden="true" /> : <CalendarDays className="size-5" aria-hidden="true" />}</span>
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[.13em] text-[var(--k-muted)]">Next appointment</p>
+              <p className="mt-1 text-xl font-semibold tracking-[-.03em] text-[var(--k-text)]">{nextAppointment.type}</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--k-muted)]">{formatDate(nextAppointment.startsAt)} · {nextAppointment.provider}</p>
+            </div>
+            <Badge tone={nextAppointment.status === "COMPLETED" ? "teal" : "sky"}>{statusLabel(nextAppointment.status)}</Badge>
+          </div> : <div className={styles.appointment}>
+            <span className={styles.appointmentIcon}><CalendarDays className="size-5" aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[.13em] text-[var(--k-muted)]">Next appointment</p>
+              <p className="mt-1 text-lg font-semibold text-[var(--k-text)]">No visit is currently scheduled.</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--k-muted)]">Contact the clinic if you need to arrange care.</p>
+            </div>
+          </div>}
+        </div>
+
+        <div className={styles.summary} aria-label="Portal summary">
+          <div className={styles.summaryItem}><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">Forms to finish</p><p className="mt-1 text-lg font-semibold tabular-nums text-[var(--k-text)]">{pendingForms.length}</p></div>
+          <div className={styles.summaryItem}><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">Released information</p><p className="mt-1 text-lg font-semibold tabular-nums text-[var(--k-text)]">{data.records.length}</p></div>
+          <div className={styles.summaryItem}><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">Current balance</p><p className="mt-1 text-lg font-semibold tabular-nums text-[var(--k-text)]">{formatMoney(data.financial.balanceCents)}</p></div>
         </div>
       </section>
+
+      <div className={styles.contentGrid}>
+        <div className={styles.stack}>
+          <PortalPanel icon={<CalendarDays className="size-4" />} title="Appointments" subtitle="Your clinic schedule, in one place.">
+            {data.appointments.length ? data.appointments.map((appointment) => <div className={`${styles.row} flex flex-wrap items-center gap-4`} key={appointment.id}>
+              <span className={styles.rowIcon}>{appointment.telemedicine ? <Video className="size-4" aria-hidden="true" /> : <CalendarDays className="size-4" aria-hidden="true" />}</span>
+              <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">{appointment.type}</p><p className="mt-1 text-xs leading-5 text-[var(--k-muted)]">{formatDate(appointment.startsAt)} · {appointment.provider}</p></div>
+              <Badge tone={appointment.status === "COMPLETED" ? "teal" : "sky"}>{statusLabel(appointment.status)}</Badge>
+            </div>) : <PortalEmpty text="No appointments are available." />}
+          </PortalPanel>
+
+          <PortalPanel icon={<FileText className="size-4" />} title="Released information" subtitle="Every item below has an explicit clinic release decision.">
+            <div className="border-b border-[var(--k-line)] p-5">
+              <a className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--k-line)] bg-[var(--k-public-raised)] px-4 text-xs font-semibold text-[var(--k-text)]" href="/api/portal/records/snapshot"><Download className="size-4" aria-hidden="true" />Export portal snapshot</a>
+              <p className="mt-3 max-w-2xl text-xs leading-5 text-[var(--k-muted)]">Downloads a portable JSON snapshot of information currently available in this portal. It is not represented as your complete medical record or complete designated record set. Contact the clinic for a complete records-access or transfer request.</p>
+            </div>
+            {data.records.length ? data.records.map((record) => <article className={styles.row} key={`${record.kind}-${record.id}`}>
+              <div className="flex items-start gap-4"><span className={styles.rowIcon}><FileCheck2 className="size-4" aria-hidden="true" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-[var(--k-text)]">{record.title}</p><Badge tone="slate">{record.kind}</Badge></div><p className="mt-2 line-clamp-3 text-xs leading-5 text-[var(--k-muted)]">{record.detail}</p><p className="mt-2 text-xs font-semibold text-[var(--k-muted)]">Released {formatDate(record.releasedAt)}</p></div></div>
+            </article>) : <PortalEmpty text="Your clinic has not released any information yet." />}
+          </PortalPanel>
+        </div>
+
+        <div className={styles.stack}>
+          <PortalPanel icon={<ClipboardCheck className="size-4" />} title="Forms" subtitle="Forms assigned to your patient identity.">
+            {data.forms.length ? data.forms.map((form) => <div className={`${styles.row} flex items-center gap-3`} key={form.id}>
+              <span className={styles.rowIcon}>{form.status === "completed" ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <ClipboardCheck className="size-4" aria-hidden="true" />}</span>
+              <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">Patient form</p><p className="mt-1 text-xs text-[var(--k-muted)]">{form.dueAt ? `Due ${formatDate(form.dueAt)}` : "No due date"}</p></div>
+              <Badge tone={form.status === "completed" ? "teal" : "amber"}>{statusLabel(form.status)}</Badge>
+            </div>) : <PortalEmpty text="No forms are assigned." />}
+          </PortalPanel>
+
+          <PortalPanel icon={<ReceiptText className="size-4" />} title="Billing" subtitle="Amounts are shown without placing health details in payment descriptions.">
+            <div className={styles.balance}><p className="text-xs font-extrabold uppercase tracking-[.13em] text-[var(--k-muted)]">Balance due</p><p className={`${styles.balanceValue} mt-2 text-3xl font-semibold text-[var(--k-text)]`}>{formatMoney(data.financial.balanceCents)}</p><p className="mt-2 text-xs text-[var(--k-muted)]">As of {formatDate(data.financial.asOf)}</p></div>
+            {data.financial.invoices.map((invoice) => <div className={`${styles.row} flex items-center gap-3`} key={invoice.id}><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">Statement {invoice.number}</p><p className="mt-1 text-xs tabular-nums text-[var(--k-muted)]">{formatMoney(invoice.balanceCents)} remaining · due {formatDate(invoice.dueAt)}</p></div><Badge tone="sky">{statusLabel(invoice.status)}</Badge></div>)}
+          </PortalPanel>
+
+          <PortalPanel icon={<History className="size-4" />} title="Access history" subtitle="See when this portal identity accessed your information.">
+            {data.accessHistory.slice(0, 8).map((event) => <div className={`${styles.row} flex items-center gap-3`} key={event.id}><ShieldCheck className="size-4 shrink-0 text-[var(--k-accent)]" aria-hidden="true" /><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[var(--k-text)]">{statusLabel(event.action.replace("portal.", ""))}</p><p className="mt-1 text-xs text-[var(--k-muted)]">{formatDate(event.createdAt)}</p></div></div>)}
+          </PortalPanel>
+
+          <div className={styles.help}>
+            <div className="flex items-start gap-4"><MessageCircle className="mt-0.5 size-5 shrink-0 text-[var(--k-premium)]" aria-hidden="true" /><div><p className="text-sm font-semibold text-[var(--k-text)]">Need help from the office?</p><p className="mt-2 text-xs leading-6 text-[var(--k-muted)]">Use the contact information your clinic has already provided for scheduling, records, billing, or other non-urgent questions. If this is a medical emergency, call 911 or go to the nearest emergency department.</p></div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>;
 }
 
-function PortalStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="rounded-[24px] border border-[#dce1d8] bg-[#faf9f5] p-5"><span className="grid size-10 place-items-center rounded-2xl bg-[#dceee7] text-[#276c5e]">{icon}</span><p className="mt-5 text-[11px] font-extrabold uppercase tracking-[.14em] text-[#748b83]">{label}</p><p className="mt-2 text-sm font-extrabold text-[#173c34]">{value}</p></div>; }
-function PortalPanel({ children, icon, subtitle, title }: { children: React.ReactNode; icon: React.ReactNode; subtitle: string; title: string }) { return <section className="overflow-hidden rounded-[28px] border border-[#dce1d8] bg-[#faf9f5]"><div className="flex items-start gap-3 border-b border-[#e7e7df] p-5"><span className="grid size-9 place-items-center rounded-xl bg-[#153f37] text-[#e7d182]">{icon}</span><div><h2 className="text-sm font-extrabold text-[#173c34]">{title}</h2><p className="mt-1 text-[12px] leading-5 text-[#748b83]">{subtitle}</p></div></div>{children}</section>; }
-function PortalEmpty({ text }: { text: string }) { return <p className="p-5 text-xs text-[#748b83]">{text}</p>; }
+function PortalPanel({ children, icon, subtitle, title }: { children: ReactNode; icon: ReactNode; subtitle: string; title: string }) {
+  return <section className={styles.panel}><div className={styles.panelHeader}><span className={styles.panelIcon}>{icon}</span><div><h2 className="text-base font-semibold tracking-[-.02em] text-[var(--k-text)]">{title}</h2><p className="mt-1 text-xs leading-5 text-[var(--k-muted)]">{subtitle}</p></div></div>{children}</section>;
+}
+
+function PortalEmpty({ text }: { text: string }) {
+  return <p className="p-5 text-sm text-[var(--k-muted)]">{text}</p>;
+}
