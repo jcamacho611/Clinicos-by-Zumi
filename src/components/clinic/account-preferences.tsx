@@ -74,7 +74,7 @@ export function AccountPreferences({ userName, organizationName, role }: { userN
           <Link className="flex min-h-12 items-center gap-3 rounded-xl border border-[var(--k-line)] bg-[var(--k-public-raised)] px-4 text-xs font-semibold text-[var(--k-muted)] transition hover:text-[var(--k-text)]" href="/legal/agreements"><FileSignature className="size-4 text-[var(--k-accent)]" />Signed agreements<ExternalLink className="ml-auto size-3.5" /></Link>
         </div>
 
-        <form action="/api/auth/logout" className="mt-6" method="post"><button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--k-line)] bg-[color-mix(in_srgb,var(--k-accent)_8%,transparent)] text-xs font-semibold text-[var(--k-accent)] transition hover:bg-[color-mix(in_srgb,var(--k-accent)_13%,transparent)]" type="submit"><LogOut className="size-4" />Sign out</button></form>
+        <form action="/api/auth/logout" className="mt-6" method="post"><button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--k-line)] bg-[var(--k-public-raised)] text-xs font-semibold text-[var(--k-accent)] transition hover:text-[var(--k-text)]" type="submit"><LogOut className="size-4" />Sign out</button></form>
       </section>
 
       <section className="rounded-[28px] border border-[var(--k-line)] bg-[var(--k-public-surface)] p-6 text-[var(--k-text)] shadow-[var(--k-shadow)] sm:p-8">
@@ -86,7 +86,7 @@ export function AccountPreferences({ userName, organizationName, role }: { userN
             const selected = appearance === key;
             return (
               <button className="flex min-h-11 w-full items-center gap-4 py-5 text-left" key={key} onClick={() => choose(key)} type="button" aria-pressed={selected}>
-                <span className={cn("grid size-11 place-items-center rounded-full border", selected ? "border-[var(--k-accent)] bg-[color-mix(in_srgb,var(--k-accent)_12%,transparent)] text-[var(--k-accent)]" : "border-[var(--k-line)] bg-[var(--k-public-raised)] text-[var(--k-muted)]")}><Icon className="size-4" /></span>
+                <span className={cn("grid size-11 place-items-center rounded-full border", selected ? "border-[var(--k-accent)] bg-[var(--k-public-raised)] text-[var(--k-accent)]" : "border-[var(--k-line)] bg-[var(--k-public-raised)] text-[var(--k-muted)]")}><Icon className="size-4" /></span>
                 <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[var(--k-text)]">{label}</span><span className="mt-1 block text-xs leading-5 text-[var(--k-muted)]">{description}</span></span>
                 {selected ? <Check className="size-4 text-[var(--k-accent)]" /> : null}
               </button>
