@@ -37,6 +37,12 @@ describe("universal identity compatibility boundary", () => {
     expect(supreme).toContain("The browser is never authorization authority");
   });
 
+  it("anchors legacy membership context to the still-authoritative legacy user organization", () => {
+    expect(repository).toContain("db.user.findUnique");
+    expect(repository).toContain("organizationId: legacyUser.organizationId");
+    expect(repository.indexOf("db.user.findUnique")).toBeLessThan(repository.indexOf("db.organizationMembership.findFirst"));
+  });
+
   it("backfills organization relationships without creating hidden foreign keys to legacy domain tables", () => {
     expect(migration).toContain('FROM "users"');
     expect(migration).toContain("'person_' || \"id\"");
