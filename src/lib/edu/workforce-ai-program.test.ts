@@ -24,6 +24,11 @@ describe("reusable workforce AI program", () => {
   it("keeps durations compatible with institutional live training", () => {
     expect(workforceAiReadinessProgram.industryAccelerator.durationHours).toEqual({ min: 6, max: 8 });
     expect(careerReadinessWorkshop.durationHours).toEqual({ min: 2, max: 3 });
+    for (const pathway of industryAcceleratorPathways) {
+      const minutes = pathway.lessonSequence.reduce((total, segment) => total + segment.minutes, 0);
+      expect(minutes).toBeGreaterThanOrEqual(360);
+      expect(minutes).toBeLessThanOrEqual(480);
+    }
   });
 
   it("supports live remote and in-person delivery", () => {
@@ -49,10 +54,13 @@ describe("reusable workforce AI program", () => {
     expect(text).not.toContain("prescribe");
   });
 
-  it("gives every pathway an applied exercise and explicit human-authority boundary", () => {
+  it("gives every pathway an applied exercise, sample lesson, and explicit human-authority boundary", () => {
     for (const pathway of industryAcceleratorPathways) {
       expect(pathway.appliedExercise.title.length).toBeGreaterThan(0);
       expect(pathway.appliedExercise.participantTasks.length).toBeGreaterThan(1);
+      expect(pathway.sampleLessonSegment.scenario.length).toBeGreaterThan(40);
+      expect(pathway.sampleLessonSegment.instructorPrompts.length).toBeGreaterThanOrEqual(2);
+      expect(pathway.sampleLessonSegment.learnerEvidence.length).toBeGreaterThanOrEqual(2);
       expect(pathway.humanAuthorityBoundary.length).toBeGreaterThan(20);
     }
   });
