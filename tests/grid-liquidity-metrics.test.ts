@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { computeGridLiquidityMetrics } from "@/lib/grid/liquidity-metrics";
+
+const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 
 describe("Grid liquidity metrics", () => {
   it("measures demand coverage, reservation conversion, fulfillment, and unsupplied demand from governed records", () => {
@@ -79,5 +83,15 @@ describe("Grid liquidity metrics", () => {
     expect(metrics.activeDemands).toBe(0);
     expect(metrics.unsuppliedActiveDemands).toBe(0);
     expect(metrics.demandOfferCoverageRate).toBeNull();
+  });
+
+  it("wires liquidity into the existing Grid transaction board instead of creating a second marketplace data source", () => {
+    const repository = read("src/lib/grid/transaction-board-repository.ts");
+    expect(repository).toContain("computeGridLiquidityMetrics");
+    expect(repository).toContain("liquidity");
+    expect(repository).toContain("demands");
+    expect(repository).toContain("offers");
+    expect(repository).toContain("reservations");
+    expect(repository).not.toContain("GridLiquidityRecord");
   });
 });
