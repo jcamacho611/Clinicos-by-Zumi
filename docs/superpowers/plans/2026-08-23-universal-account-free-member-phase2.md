@@ -2,9 +2,9 @@
 
 **Goal:** Add the canonical Account authentication principal on top of PR #245's lifelong Person substrate, migrate existing staff credentials compatibly, and support a real free person-level account with no fake organization.
 
-**Base:** PR #245 head `96bd205bfbe6543bcf435abe9eb2488d4dadee91`.
+**Base:** PR #245 head `96bd205bfbe6543bcf435abe9eb2488d4dadee91`. Before merge, reconcile onto current `main` and re-run all migration/release proof.
 
-**Hard invariants:** no organization is created for free signup; `MemberSession` cannot satisfy Clinic OS authorization; existing patient portal auth is untouched; legacy User/AuthCredential/AuthSession are preserved during migration; exact-head release verification remains required before merge.
+**Hard invariants:** no organization is created for free signup; `MemberSession` cannot satisfy Clinic OS authorization; existing patient portal auth is untouched; legacy User/AuthCredential/AuthSession are preserved during migration; exact-head release verification remains required before merge; historical protected-entry acceptance rows are not mutated merely to attach Account identity.
 
 ## Task 1 — RED contracts
 
@@ -13,6 +13,9 @@ Create tests first:
 - `tests/universal-account-schema.test.ts`
 - `tests/free-member-auth-boundary.test.ts`
 - `tests/free-member-signup-contract.test.ts`
+- `tests/account-legacy-compatibility.test.ts`
+- `tests/free-member-account-event.test.ts`
+- `tests/free-member-relogin.test.ts`
 
 Lock:
 
@@ -21,12 +24,14 @@ Lock:
 - no organizationId on Account;
 - free signup source contains no Organization create/membership create;
 - session types distinguish `member` and `clinic`;
-- `requireClinicSession` rejects member context;
+- member context cannot become Clinic OS context;
 - patient PortalAccount files are untouched;
 - migration copies existing credentials but does not delete legacy auth rows;
-- legal acceptance extension supports nullable accountId/personId evidence without changing old rows.
+- neutral account lifecycle evidence exists without tenant audit fabrication;
+- protected-entry Account binding is append-only and does not mutate historical acceptance rows;
+- free members can re-login after the initial signup session without creating clinic authority.
 
-Commit RED tests before production files.
+Commit RED contracts before each corresponding production change.
 
 ## Task 2 — Additive account schema + migration
 
@@ -41,6 +46,8 @@ Models:
 - AccountCredential
 - AccountSession
 - LegacyUserAccountLink
+- AccountEvent
+- AccountEntryAcceptanceBinding
 
 Migration:
 
@@ -48,11 +55,13 @@ Migration:
 - unique Account primaryEmail;
 - unique Account personId;
 - unique LegacyUserAccountLink legacyUserId;
+- unique AccountEntryAcceptanceBinding acceptanceId;
 - backfill only from deterministic Person ↔ legacy membership ↔ User mappings;
 - copy AuthCredential hashes/status to AccountCredential;
-- add nullable `accountId` and `personId` columns + indexes to `access_gate_acceptances` if absent;
+- create neutral account backfill events;
 - never delete/update legacy User/AuthCredential/AuthSession data;
-- fail transaction on ambiguous email/person mapping.
+- never mutate historical AccessGateAcceptance rows merely to attach Account identity;
+- fail transaction on ambiguous normalized email/person mapping.
 
 ## Task 3 — Account repository and credentials
 
@@ -87,10 +96,11 @@ Account credential auth resolves:
 - valid AccountCredential;
 - active Account/Person;
 - optional LegacyUserAccountLink;
-- if linked, active legacy User + active org + normalized clinic role;
-- otherwise member identity.
+- if exactly one linked, active legacy User + active org + normalized clinic role;
+- if no links, member identity;
+- if multiple legacy links, member identity until an explicit context-selection design exists.
 
-No credential success alone grants organization context.
+No credential success alone grants organization context. Query ordering must never silently choose a tenant.
 
 ## Task 4 — Canonical account session token
 
@@ -125,8 +135,7 @@ Schema:
 - name 2–140 chars;
 - normalized email;
 - strong password >=12 with lower/upper/number/symbol;
-- optional safe same-origin returnTo;
-- entry acceptance id/token seam only when gateway convergence is available/enforced.
+- accepted protected-entry evidence from the server-owned Gateway cookie/proof.
 
 Transaction:
 
@@ -135,38 +144,58 @@ Transaction:
 - create Person;
 - create Account;
 - create AccountCredential;
+- revalidate exact protected-entry acceptance id/key/version/hash;
+- insert one append-only AccountEntryAcceptanceBinding;
+- append neutral `account.created` AccountEvent;
 - create AccountSession;
 - no Organization/User/OrganizationMembership/LocationAssignment creation;
-- write minimum audit/evidence event to an account-scoped audit seam or account event table if available; do not fabricate tenant audit data.
+- no tenant audit fabrication.
 
-Until Gateway #263 is merged/reconciled, public signup remains feature-flagged off with `KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED`.
+Public signup remains feature-flagged off with `KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED` until migration, compatibility, Gateway, and release gates are satisfied.
 
 ## Task 6 — Existing staff compatibility proof
 
 Add compatibility helper/test that compares legacy credential identity to Account credential identity for backfilled users:
 
 - same user id through LegacyUserAccountLink;
-- same organization id;
+- same organization id through the deterministic current membership;
 - same normalized role;
 - no broader memberships used to switch tenant;
 - legacy password hash copied exactly, not rehashed from unknown plaintext;
-- locked/reset state retained.
+- lock/reset/password-change state retained.
 
-Do not flip the legacy login endpoint to Account auth in this phase. Cutover is a later focused PR after release gates execute.
+Do not flip the legacy clinic login endpoint to Account auth in this phase. Cutover is a later focused PR after release gates execute.
 
-## Task 7 — Legal evidence account-binding seam
+## Task 7 — Durable free-member re-login
+
+Extend the existing login route conservatively:
+
+1. attempt existing legacy clinic authentication first, unchanged;
+2. only if it does not authenticate, attempt Account credentials;
+3. if Account resolves clinic context, reject the fallback and keep clinic authorization on the legacy rail;
+4. if Account resolves member-only context, create AccountSession and route to `/member`;
+5. never create `clinicos_session` from the member fallback.
+
+This prevents a free Account from becoming one-session-only without creating an alternate Clinic OS authorization rail.
+
+## Task 8 — Legal evidence account-binding seam
 
 Create:
 
 - `src/lib/legal/account-acceptance-binding.ts`
 
-The helper binds an existing anonymous protected-entry acceptance to accountId/personId by exact acceptance id/key/version/hash only when currently unbound at account level.
+The helper:
 
-It does not set userId/organizationId and cannot grant any product authority.
+- verifies exact original acceptance id/key/version/hash and signed/current state;
+- requires the free-account acceptance not already be legacy user/organization bound;
+- never updates the original AccessGateAcceptance row;
+- inserts one unique AccountEntryAcceptanceBinding;
+- handles same-binding replay idempotently;
+- fails closed on conflicting replay;
+- appends a neutral legal agreement event;
+- grants no product authority.
 
-Gateway convergence later calls this before optional clinic-context binding.
-
-## Task 8 — First authenticated member landing
+## Task 9 — First authenticated member landing
 
 Create:
 
@@ -182,25 +211,46 @@ This is intentionally minimal and rose-native:
 
 Do not duplicate Living Home internals yet.
 
-## Task 9 — Documentation and rollout flags
+## Task 10 — Documentation and rollout flags
 
-Update `.env.example` on this stacked branch with:
+Update `.env.example` with:
 
 `KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED=""`
 
 Document that this remains off until:
 
-- PR #245 lands;
-- account migration verified;
+- PR #245 is reconciled onto current main and lands;
+- account migration is verified on production-shaped disposable infrastructure;
 - staff compatibility proof succeeds;
-- Gateway account binding reconciled;
-- member → Clinic OS denial proven;
+- Gateway account binding is reconciled;
+- member → Clinic OS denial is proven;
+- free-member logout/re-login works without creating clinic authority;
 - exact-head release gate executes.
 
-## Task 10 — Verification / PR
+## Task 11 — Reconcile current main
 
-Focused source tests, Prisma validation, TypeScript/lint/security/release commands when executable.
+Current main has advanced beyond the original `4638b33...` baseline and contains gate repairs that were locally verified. Before review/merge:
 
-Open a draft PR with base `canon/final-form-convergence-2026-08-22` so dependency is explicit.
+- re-anchor or reconcile PR #245 onto latest main;
+- preserve current-main fixes rather than replaying stale versions;
+- refresh this Phase 2 stack from the reconciled identity head;
+- audit overlapping auth/legal files from Gateway #263;
+- keep only one authoritative implementation of each entry/auth/legal seam.
 
-Do not merge while PR #245 or release-gate infrastructure remains unresolved.
+## Task 12 — Verification / PR
+
+Run, on the exact reconciled head when executable:
+
+- Prisma generate + validate;
+- full fresh PostgreSQL migration chain;
+- universal identity migration rehearsal;
+- account migration rehearsal;
+- staff compatibility verifier;
+- focused account/auth/legal source and executable tests;
+- TypeScript;
+- lint;
+- security checks;
+- production build/start smoke;
+- repository release commands.
+
+Open a draft PR with the dependency explicit only after fresh verification evidence is available. Do not merge while PR #245 or release-gate infrastructure remains unresolved.
