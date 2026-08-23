@@ -8,6 +8,7 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
   const { pathway: pathwayKey } = await params;
   const pathway = industryAcceleratorPathways.find((entry) => entry.key === pathwayKey);
   if (!pathway) notFound();
+  const totalMinutes = pathway.lessonSequence.reduce((total, segment) => total + segment.minutes, 0);
 
   return (
     <>
@@ -29,11 +30,53 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
               </ul>
             </div>
             <dl className="grid content-start gap-3 text-xs">
-              <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Duration</dt><dd className="mt-1 font-semibold text-[#f8efed]">6–8 hours</dd></div>
+              <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Designed duration</dt><dd className="mt-1 font-semibold text-[#f8efed]">{totalMinutes / 60} hours</dd></div>
+              <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">RFP delivery range</dt><dd className="mt-1 font-semibold text-[#f8efed]">6–8 hours</dd></div>
               <div className="border-b border-[#e28b85]/10 pb-3"><dt className="text-[#8f7773]">Delivery</dt><dd className="mt-1 font-semibold text-[#f8efed]">Live remote · in person · hybrid</dd></div>
               <div><dt className="text-[#8f7773]">Final authority</dt><dd className="mt-1 leading-5 text-[#f8efed]">Human instructor and workplace-authorized personnel</dd></div>
             </dl>
           </div>
+        </section>
+
+        <section className="mt-6 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="lesson-sequence-title">
+          <div className="max-w-3xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Live instructor-led sequence</p>
+            <h2 className="mt-2 text-xl font-semibold text-[#f8efed]" id="lesson-sequence-title">What the 7-hour pathway actually contains</h2>
+            <p className="mt-2 text-xs leading-6 text-[#8f7773]">Timing is a proposed reusable instructional design and can be adjusted within an approved 6–8 hour delivery while preserving learning objectives and required evidence.</p>
+          </div>
+          <ol className="mt-6 grid gap-3 lg:grid-cols-2">
+            {pathway.lessonSequence.map((segment, index) => (
+              <li className="grid grid-cols-[52px_1fr] gap-3 border border-[#e28b85]/10 bg-[#12090b]/40 p-4" key={segment.title}>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">{String(index + 1).padStart(2, "0")}</p>
+                  <p className="mt-1 text-xs font-semibold tabular-nums text-[#efaaa1]">{segment.minutes}m</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#f8efed]">{segment.title}</h3>
+                  <p className="mt-2 text-xs leading-5 text-[#a98f8b]">{segment.purpose}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_.9fr]" aria-labelledby="sample-lesson-title">
+          <article className="border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7">
+            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Representative lesson segment</p>
+            <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="sample-lesson-title">{pathway.sampleLessonSegment.title}</h2>
+            <p className="mt-4 text-sm leading-6 text-[#bca5a1]">{pathway.sampleLessonSegment.scenario}</p>
+            <h3 className="mt-6 text-xs font-semibold uppercase tracking-[.12em] text-[#8f7773]">Instructor prompts</h3>
+            <ul className="mt-3 grid gap-2 text-xs leading-5 text-[#bca5a1]">
+              {pathway.sampleLessonSegment.instructorPrompts.map((prompt) => <li key={prompt}>• {prompt}</li>)}
+            </ul>
+          </article>
+          <aside className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7">
+            <h2 className="text-lg font-semibold text-[#f8efed]">Learner evidence</h2>
+            <p className="mt-2 text-xs leading-5 text-[#8f7773]">The learner must leave a reviewable artifact. Watching the instructor or opening the software is not treated as evidence of competency.</p>
+            <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
+              {pathway.sampleLessonSegment.learnerEvidence.map((item) => <li className="border border-[#e28b85]/10 bg-[#12090b]/35 p-3" key={item}>{item}</li>)}
+            </ul>
+          </aside>
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_.85fr]" aria-labelledby="exercise-title">
