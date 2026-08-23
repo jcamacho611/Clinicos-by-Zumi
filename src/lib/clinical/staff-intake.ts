@@ -17,7 +17,7 @@ export interface ReconciliationState {
 export interface StaffSymptomUpdate {
   id: string;
   label: string;
-  state: "reported" | "improved" | "worsened" | "unchanged" | "resolved_by_clinician";
+  state: "reported" | "improved" | "worsened" | "unchanged" | "patient_reports_resolved";
   note: string | null;
 }
 
@@ -108,6 +108,9 @@ export function buildStaffIntakeHandoff(intake: StaffIntakeSnapshot): StaffIntak
   if (symptomEvidenceStatus === "not_documented") blockers.push("Symptom updates not documented");
 
   if (intake.bodyMapUpdate.status === "not_reviewed") blockers.push("Body-map update not reviewed");
+  if (intake.bodyMapUpdate.status === "completed" && !hasText(intake.bodyMapUpdate.bodyMapVersionId)) {
+    blockers.push("Completed body-map update missing version evidence");
+  }
   if (intake.bodyMapUpdate.status === "needs_provider_review") {
     escalations.push("Body-map update requires provider review");
   }
