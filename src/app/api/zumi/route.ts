@@ -9,7 +9,7 @@ import { ZUMI_BASELINE_PERMISSION } from "@/features/zumi/schemas";
 import { zumiGatewayStatus } from "@/features/zumi/providers";
 import { openZumiConversation, sealZumiConversation } from "@/features/zumi/conversation-state";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
-import { zumiAccessibilitySchema, zumiPresenceSchema } from "@/features/zumi/presence";
+import { zumiAccessibilitySchema, zumiPresenceSchema, zumiSurfaceForPathname } from "@/features/zumi/presence";
 import {
   projectTrustedOrchestrationForClient,
   projectWorkspaceIntelligenceForClient,
@@ -60,7 +60,7 @@ function presenceFromGet(request: Request) {
   const pathname = url.searchParams.get("pathname")?.slice(0, 500) || "/dashboard";
   return zumiPresenceSchema.parse({
     pathname,
-    surface: pathname.startsWith("/grid") ? "grid" : pathname.startsWith("/portal") ? "patient_portal" : "platform",
+    surface: zumiSurfaceForPathname(pathname),
   });
 }
 
