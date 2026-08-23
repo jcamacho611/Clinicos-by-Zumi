@@ -1,6 +1,6 @@
 # KLINIKOS — Black Label V2 Claude Design Handoff
 
-Version: `2026-08-23.1`  
+Version: `2026-08-23.2`  
 Status: `AUTHORITATIVE AUTHENTICATED EXPERIENCE REFERENCE`  
 Production/runtime authority: **No** — current application code, schema, authorization, feature status, integration evidence and release verification remain authoritative for live behavior.
 
@@ -10,31 +10,28 @@ This handoff preserves and completes the Claude Design workspace supplied by the
 
 `https://claude.ai/design/p/b846c1b8-35fb-440f-b883-90dc9fd34483?file=Klinikos+Browser.dc.html&via=share`
 
-The supplied design package included `Klinikos Browser.dc.html`, prior Klinikos design iterations, generated design-system tokens/bundle, approved brand assets, interaction/responsive/motion handoff material, and reference screenshots. Claude Design reached its usage limit before final cleanup. The recovered Browser reference was audited and minimally corrected rather than recreated.
+The supplied package included `Klinikos Browser.dc.html`, earlier Klinikos design iterations, generated design-system tokens/bundle, approved brand assets, interaction/responsive/motion guidance and reference screenshots. Claude Design reached its usage limit before its final cleanup. The Browser reference was recovered from the supplied package, audited and corrected rather than recreated.
 
-Canonical recovered Browser source SHA-256:
+Corrected recovered Browser SHA-256:
 
 `6e471a857cb13ce68d67a29249db5e19825ba0e738df209c92f4dd4bbb626b01`
 
-The exact recovered source is stored losslessly as a Brotli-compressed Base64 audit artifact under:
-
-`docs/design/black-label-v2/Klinikos Browser.dc.html.br.b64.part00` through `part04`.
-
-Use `scripts/restore-black-label-design.mjs` to reconstruct and verify the source.
+The exact corrected HTML is retained as the source artifact from the 2026-08-23 design handoff and is identified by this checksum. GitHub stores this authority/specification rather than an unreliable connector-transcribed copy of the large exported HTML. The checksum is the identity boundary for comparing any future re-import of the recovered Browser artifact.
 
 ## 2. Authority relationship
 
-This handoff is the latest authenticated-product visual and interaction reference where it conflicts with older experimental design prose. It **does not** replace:
+This file is the later authenticated-product design addendum to:
 
-- `docs/SOURCE_OF_TRUTH.md` for product/runtime truth;
-- `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for the broader design package law;
-- `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md` for the exact first-visit Living Home reference lock;
-- current authorization, clinical, financial, credential, eligibility, privacy or integration authority;
-- current production code merely because a Design prototype renders an interaction.
+- `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`
+- `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`
+- `docs/APPROVED_LIVING_HOME_REFERENCE_2026-08-16.md`
+- `docs/SOURCE_OF_TRUTH.md`
 
-The first-visit public Living Home stays reference-locked. Black Label V2 principally advances the **authenticated operating environment**, deeper workspaces, role-aware composition, and the interaction grammar connecting them.
+The exact first-visit public Living Home remains reference-locked. Black Label V2 advances the authenticated operating environment, deeper workspaces, role-aware composition and interaction grammar.
 
-## 3. Black Label V2 north star
+A prototype is design evidence, not deployment evidence. It cannot create clinical authority, payment truth, eligibility, credential status, integration status, patient notification, attendance, competency, marketplace liquidity or any other live state.
+
+## 3. North star
 
 The required impression is:
 
@@ -44,22 +41,32 @@ Never:
 
 > This product is trying hard to look futuristic.
 
-The product-wide rule remains:
+The product-wide law remains:
 
 > **The complexity belongs to Klinikos, not to the person using Klinikos.**
 
-The defining behavior is:
+The defining Black Label behavior is:
 
 > **Intelligence becomes interface.**
 
-When Klinikos has authorized structured truth, Zumi should preferentially materialize the most useful governed interface rather than defaulting to paragraphs of chat.
+When Klinikos has structured, authorized truth, Zumi should preferentially materialize the most useful governed interface rather than defaulting to paragraphs of chat.
 
-## 4. Canonical experience grammar
+## 4. Quiet power
 
-### Quiet power
-Luxury comes from proportion, rhythm, typography, material hierarchy, information design, negative space, precision, motion restraint, responsiveness and truthful behavior — never gold gradients, glass everywhere, neon, giant SaaS cards or generic AI-purple styling.
+Luxury comes from proportion, rhythm, typography, material hierarchy, information design, negative space, precision, motion restraint, responsiveness and truthful behavior.
 
-### Adaptive spatial shell
+Do not use luxury as permission for:
+
+- gold-gradient decoration;
+- glass everywhere;
+- neon;
+- generic AI-purple styling;
+- giant SaaS statistic-card walls;
+- oversized marketing typography inside operational work;
+- arbitrary visual effects that slow routine care or operations.
+
+## 5. Adaptive spatial shell
+
 The conceptual depth model is:
 
 `ENVIRONMENT → WORKSPACE → OBJECT STAGE → INSPECTOR → CRITICAL DECISION`
@@ -67,7 +74,8 @@ The conceptual depth model is:
 Browser/history correctness remains real. Spatial continuity is an experience layer, not a replacement for routes.
 
 ### Object Stage
-A consequential object may become the temporary center of the experience, including Patient, Encounter, Claim, Result, Referral, Grid Resource, Grid Demand, Grid Match, Transaction, Professional, Student, Organization, Task, Order or Case.
+
+A consequential domain object may become the temporary center of the experience, including Patient, Encounter, Claim, Result, Referral, Grid Resource, Grid Demand, Grid Match, Transaction, Professional, Student, Organization, Task, Order or Case.
 
 The Stage answers:
 
@@ -78,21 +86,28 @@ The Stage answers:
 - What can I do?
 - What happens next?
 
-### Narrative data
-Prefer operational stories such as:
+## 6. Narrative data
+
+Prefer operational stories to disconnected metrics:
 
 - `BEFORE → NOW → NEXT`
 - `INITIAL → PREVIOUS → TODAY`
 - `EXPECTED → ACTUAL → GAP`
 - `NEED → ELIGIBLE → AVAILABLE → ACTION`
+- `REQUEST → OFFER → RESERVATION → FULFILLMENT`
 - `PERFORMED → DOCUMENTED → CODED → CLAIMED → PAID`
 - `ORDERED → RESULTED → REVIEWED → INFORMED → CLOSED`
 - `LEARN → PRACTICE → EVIDENCE → COMPETENCY → OPPORTUNITY`
 
-### Living Edge
-Use scarce rose/ember luminance to indicate meaningful user/system attention. It is a signature accent, not a border around every surface.
+Time is a first-class visual dimension. Past evidence, active work and future expectations must not become visually ambiguous.
 
-## 5. Material and theme law
+## 7. Living Edge
+
+**Living Edge** is the scarce warm rose/ember luminance used to indicate meaningful user/system attention, active objects or unresolved consequential state.
+
+It may appear as a subtle edge, interior bloom or controlled active-state gradient. It must remain scarce. When every surface glows, nothing matters.
+
+## 8. Material and theme law
 
 Authenticated operational appearance remains one coherent customer-facing system:
 
@@ -100,80 +115,97 @@ Authenticated operational appearance remains one coherent customer-facing system
 - Light = **Marble**
 - Dark = **Obsidian**
 
-Do not create `BlackLabelTheme`, `ThemeProvider2`, `LuxuryMode`, a Grid theme, an EDU theme, or another theme hierarchy.
+Do not create `BlackLabelTheme`, `ThemeProvider2`, `LuxuryMode`, `NewDarkTheme`, a Grid theme or an EDU theme.
 
-### Obsidian family
-Use near-black / black-cherry / oxblood-shadow / raised-wine depth with warm ivory text and restrained dusty-rose / ember attention.
+### Obsidian
 
-### Marble family
-Use warm architectural ivory / bone / limestone surfaces, graphite ink, oxblood authority and subtle rose-quartz contextual selection. Marble is not plain white plus burgundy buttons.
+Use near-black, black-cherry, oxblood-shadow and raised-wine depth with warm ivory text and restrained dusty-rose / ember attention.
 
-### Later color authority
-Where older design-package prose references cyan/Aegean, it must not reintroduce a generic cyan-heavy product identity over this later Black Label direction. Such colors may survive only where a current semantic signal deliberately retains them and where they remain compatible with the present token system. Black-cherry, burgundy, dusty rose, muted coral/ember and warm ivory are the later visual language for the Black Label operating environment.
+### Marble
 
-## 6. Domain-specific expression
+Use warm architectural ivory, bone and limestone surfaces, graphite ink, oxblood authority and subtle rose-quartz contextual selection. Marble is not plain white plus burgundy buttons.
 
-Same design DNA, different operating density:
+Where older package prose references cyan/Aegean, it must not reintroduce a generic cyan-heavy identity over this later Black Label direction. Such colors may survive only as deliberate semantic signals where current product tokens require them.
 
-- **Living Home:** cinematic, contemplative, intent-first.
+## 9. Two legitimate densities
+
+### Contemplative
+
+Used for Living Home, patient next-step experiences, EDU orientation, major insight and completion moments.
+
+Traits: negative space, strong hierarchy, few competing elements, cinematic composition.
+
+### Operative
+
+Used for Current Visit, front desk, billing, claims, result review, Grid transaction operations, staff queues and administration.
+
+Traits: high information value per pixel, scanning efficiency, precise typography, keyboard efficiency and minimal decorative space.
+
+Same brand. Different operating density.
+
+## 10. Domain expression
+
+- **Living Home:** cinematic, intent-first and able to recompose around work.
 - **Current Visit:** surgical quiet and precision instrumentation.
 - **Clinical Change:** `INITIAL → PREVIOUS → TODAY`, evidence-backed and omission-safe.
 - **Front Desk:** zero-friction operative density.
-- **Billing / Financial OS:** private-banking precision, tabular numerals, exception-first revenue truth.
-- **Grid:** architectural cartography, synchronized map + ledger, eligibility before ranking.
+- **Billing / Financial OS:** private-banking precision, tabular numerals and exception-first revenue truth.
+- **Grid:** architectural cartography, synchronized map + ledger and eligibility before ranking.
 - **EDU:** editorial academy progression that converges into authentic simulation UI.
-- **Patient:** private hospitality, next-step-first, low cognitive burden.
+- **Patient:** private hospitality, next-step-first and low cognitive burden.
 - **Zumi:** persistent operating intelligence; conversation is a control plane, not the whole interface.
 
-## 7. Recovered Browser corrections
+## 11. Recovered Browser corrections
 
-The recovered Claude Design Browser was corrected before preservation:
+The recovered Claude Browser was corrected before this handoff was locked:
 
 1. Fixed the self-referential Obsidian success-line token.
-2. Rebound Orbital K, wordmark and hero rose references to the production-approved Klinikos asset paths already used by the app.
-3. Raised interface text below the approximately 12px design handoff floor.
-4. Raised explicit interactive targets and Grid map markers to the 44px target floor used by the handoff.
-5. Upgraded `Explore Klinikos` / command palette to an `aria-modal` keyboard-managed surface with focus entry, focus trapping and trigger-focus restoration.
-6. Made JavaScript scrolling respect `prefers-reduced-motion` rather than relying only on CSS motion rules.
-7. Disabled attachment and voice controls in the design preview rather than presenting no-op controls as live.
+2. Rebound Orbital K, wordmark and rose references to the production-approved Klinikos asset paths already used by the application.
+3. Raised interface text below the approximately 12px handoff floor.
+4. Raised explicit interaction targets and Grid map markers to the 44px handoff target floor.
+5. Upgraded `Explore Klinikos` / command palette to an `aria-modal` keyboard-managed surface with focus entry, trapping and trigger-focus restoration.
+6. Made JavaScript scrolling honor `prefers-reduced-motion`.
+7. Disabled attachment and voice controls in the design preview instead of presenting inert controls as live.
 8. Routed the profile control to the prototype settings experience instead of leaving it inert.
-9. Derived the attention count from the prototype briefing state rather than hard-coding `3`.
-10. Preserved the role switcher as an explicit **design-preview-only** control; production roles remain identity/relationship/authorization governed.
+9. Derived the attention count from prototype briefing state rather than hard-coding `3`.
+10. Preserved the role switcher as **design-preview-only**. Production roles remain identity, relationship and authorization governed.
 
-These corrections improve the reference; they do not create production capability.
+These corrections improve the reference. They do not create production capability.
 
-## 8. Production-approved assets
+## 12. Production-approved artwork
 
-The current application already owns the approved production art paths and should remain the source for implementation:
+Production conversion must use the approved source assets already owned by the application:
 
 - `/klinikos-orbital-k-production.png`
 - `/klinikos-wordmark-production.png`
 - `/klinikos-rose-hero-production.png`
 - `/klinikos-rose-wide-production.png`
 
-Do not copy the Claude export's generated asset wrappers into a new production asset system when the governed production assets already exist.
+Do not create another asset authority because Claude Design generated its own wrappers or export directory.
 
-## 9. Generated Claude Design runtime boundary
+## 13. No parallel frontend authority
 
-The Claude Design `_ds` bundle, generated token package and standalone runtime are **reference tooling**, not authority to introduce another application framework.
+The Claude Design `_ds` bundle, generated tokens and standalone runtime are reference tooling, not authority to introduce another application framework.
 
 Production conversion must reuse/reconcile the current Klinikos implementation:
 
 - existing brand components;
 - existing rose atmosphere system;
-- existing application shell/navigation;
-- existing route/auth model;
+- existing shell/navigation;
+- existing routes and authentication;
 - existing domain repositories and server-owned DTOs;
 - existing audit/security boundaries;
-- current Marble/Obsidian theme work, including reconciliation with PR #240 rather than creating another theme stack.
+- the existing Marble/Obsidian theme tranche, including reconciliation with PR #240 rather than a second theme stack.
 
-No parallel shell. No parallel Grid. No parallel EDU. No parallel Zumi. No parallel identity, finance, audit or theme authority.
+**No parallel shell.**  
+**No parallel Grid.**  
+**No parallel EDU.**  
+**No parallel Zumi.**  
+No parallel identity, financial, audit or theme authority.
 
-## 10. Truth boundary for prototype data
+## 14. Truth states
 
-The Browser reference contains design-preview data and state demonstrations. Those exist to specify hierarchy, motion, density and interaction, not to claim real patients, revenue, payments, credentials, eligibility, results, integrations, attendance, outcomes or marketplace liquidity.
-
-Production implementation must continue to distinguish:
+The production experience must distinguish, when governing data supports the distinction:
 
 - loading;
 - empty;
@@ -186,32 +218,32 @@ Production implementation must continue to distinguish:
 - ready;
 - verified/completed only when governing evidence exists.
 
-A beautiful false state is worse than an unfinished truthful one.
+**A beautiful false state is worse than an unfinished truthful one.**
 
-## 11. Implementation order
+## 15. Production conversion sequence
 
-Convert the real application through shared primitives and real workflows, not by embedding the prototype wholesale:
+Convert the real application through shared primitives and real workflows rather than embedding the prototype wholesale:
 
-1. Reconcile existing Auto / Marble / Obsidian theme work and semantic material tokens.
-2. Converge the current authenticated shell/navigation and role/context emphasis.
-3. Implement the Black Label Object Stage / inspector primitives where real routes benefit.
-4. Living Home authenticated recomposition and Zumi interface-materialization.
-5. Current Visit + Clinical Change signature experience.
-6. Front Desk operative flow.
-7. Billing / Revenue Integrity narrative progression.
-8. Grid map + ledger + transaction experience.
-9. EDU learner/instructor/simulation expression.
-10. Patient portal private-hospitality expression.
-11. Random deep-route convergence, state torture tests, mobile and accessibility gates.
+1. Reconcile existing Auto / Marble / Obsidian work and semantic material tokens.
+2. Converge the authenticated shell/navigation and role/context emphasis.
+3. Introduce Object Stage / inspector primitives where existing routes benefit.
+4. Build authenticated Living Home recomposition and Zumi interface-materialization.
+5. Complete Current Visit + Clinical Change signature experience.
+6. Converge Front Desk operative flow.
+7. Converge Billing / Revenue Integrity narrative progression.
+8. Converge Grid map + ledger + transaction experience.
+9. Converge EDU learner/instructor/simulation expression.
+10. Converge patient portal private-hospitality expression.
+11. Run random deep-route, state-torture, mobile, theme and accessibility gates.
 
-The generated Browser reference is the design target during this conversion; current product truth determines what can be wired and claimed.
+The Black Label reference determines experience quality. Current product truth determines what can be wired and claimed.
 
-## 12. Acceptance law
+## 16. Acceptance law
 
-A production screen is not Black Label merely because it looks similar. It must survive:
+A production screen is not Black Label merely because it resembles a screenshot. It must survive:
 
 - real authorization/context;
-- truthful real/clearly-synthetic data;
+- truthful real or clearly synthetic data;
 - loading/empty/partial/error/blocked states;
 - keyboard, pointer and touch;
 - reduced motion;
