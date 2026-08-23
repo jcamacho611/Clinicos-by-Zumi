@@ -96,6 +96,53 @@ describe("BodyMap persistence input", () => {
     expect(validateBodyMapVersionInput(malformed as unknown as CreateBodyMapVersionInput).ok).toBe(false);
   });
 
+  it.each([null, 7, "finding", [], true])(
+    "fails closed instead of throwing when a findings entry is not an object: %j",
+    (badFinding) => {
+      const malformed = { ...validInput(), findings: [badFinding] } as unknown as CreateBodyMapVersionInput;
+      expect(() => validateBodyMapVersionInput(malformed)).not.toThrow();
+      expect(validateBodyMapVersionInput(malformed).ok).toBe(false);
+    },
+  );
+
+  it("rejects sourceObservation values that are not recursively JSON-safe", () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+
+    const unsafeValues = [
+      { value: undefined },
+      { value: Number.NaN },
+      { value: Number.POSITIVE_INFINITY },
+      { value: () => "unsafe" },
+      { value: 1n },
+      { value: new Date("2026-08-23T18:00:00.000Z") },
+      circular,
+    ];
+
+    for (const sourceObservation of unsafeValues) {
+      const result = validateBodyMapVersionInput(validInput({
+        findings: [{ ...validInput().findings[0], sourceObservation: sourceObservation as never }],
+      }));
+      expect(result.ok).toBe(false);
+    }
+  });
+
+  it("accepts recursively JSON-safe sourceObservation evidence without modifying it", () => {
+    const sourceObservation = {
+      source: "structured_exam",
+      verified: true,
+      score: 4,
+      details: { maneuvers: ["abduction", "rotation"], note: null },
+    };
+    const result = validateBodyMapVersionInput(validInput({
+      findings: [{ ...validInput().findings[0], sourceObservation }],
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.findings[0].sourceObservation).toEqual(sourceObservation);
+  });
+
   it("normalizes valid clinical input without inventing clinical facts", () => {
     const result = validateBodyMapVersionInput(validInput());
     expect(result.ok).toBe(true);
