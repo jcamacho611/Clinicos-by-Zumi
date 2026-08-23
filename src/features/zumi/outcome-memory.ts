@@ -1,8 +1,8 @@
 import { containsLikelyIdentifiers, redactText } from "@/features/zumi/redaction";
 import type { ZumiGovernedContextItem } from "@/features/zumi/memory-authority";
 
-export const VERIFIED_OUTCOME_AUDIT_ACTIONS = ["task.complete"] as const;
-export type VerifiedOutcomeAuditAction = (typeof VERIFIED_OUTCOME_AUDIT_ACTIONS)[number];
+export type VerifiedOutcomeAuditAction = "task.complete";
+export const VERIFIED_OUTCOME_AUDIT_ACTIONS: VerifiedOutcomeAuditAction[] = ["task.complete"];
 
 export type ZumiVerifiedOutcomeEvidence = {
   auditEventId: string;
@@ -20,7 +20,7 @@ export type ZumiVerifiedOutcomeEvidence = {
 const MAX_EVENT_TO_SOURCE_DRIFT_MS = 15 * 60 * 1_000;
 
 export function isVerifiedOutcomeAuditAction(action: string): action is VerifiedOutcomeAuditAction {
-  return (VERIFIED_OUTCOME_AUDIT_ACTIONS as readonly string[]).includes(action);
+  return (VERIFIED_OUTCOME_AUDIT_ACTIONS as string[]).includes(action);
 }
 
 function safeSubject(subject: string) {
