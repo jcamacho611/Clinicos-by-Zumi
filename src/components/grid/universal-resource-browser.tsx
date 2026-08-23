@@ -87,7 +87,7 @@ export function UniversalResourceBrowser({ resources, intent }: { resources: Pub
           </div>
           <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-extrabold uppercase tracking-[.1em] text-[#655451]"><span className="rounded-full border border-[#e3d8d3] px-2 py-1">{label(resource.policyClass)}</span>{resource.subtype && <span className="rounded-full border border-[#e3d8d3] px-2 py-1">{resource.subtype}</span>}</div>
           <div className="mt-5 flex items-end justify-between gap-4 border-t border-[#ece3df] pt-4"><span className="text-[11px] font-extrabold uppercase tracking-[.1em] text-[#6d5c58]">Terms / rate</span><strong className="text-sm text-[#241517]">{money(resource)}</strong></div>
-          <Link className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#a8474e] px-4 text-[11px] font-extrabold text-[#a8474e] hover:bg-[#a8474e] hover:text-white" href={`/login?returnTo=${encodeURIComponent(`/grid/resources/request/${resource.id}?from=discovery`)}`}>Start governed request <ArrowRight className="size-3.5" /></Link>
+          <Link className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#a8474e] px-4 text-[11px] font-extrabold text-[#a8474e] hover:bg-[#a8474e] hover:text-white" href={`/grid/resource/${resource.id}`}>View details <ArrowRight className="size-3.5" /></Link>
         </article>)}
       </div>}
     </div>
