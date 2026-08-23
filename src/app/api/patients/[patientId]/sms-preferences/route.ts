@@ -6,6 +6,7 @@ import {
   getPatientSmsState,
   recordPatientSmsPermission,
 } from "@/lib/communications/patient-sms-service";
+import type { SmsMessageClass, SmsPermissionEvidence } from "@/lib/communications/sms-policy";
 import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 const updateSchema = z.object({
@@ -32,6 +33,54 @@ const updateSchema = z.object({
   }
 });
 
+const staffVisibleClasses = ["transactional", "operational", "marketing"] as const satisfies readonly SmsMessageClass[];
+
+function maskPhone(value: string | null) {
+  return value ? `••• ••• ${value.slice(-4)}` : null;
+}
+
+function staffPermissionView(evidence: SmsPermissionEvidence | undefined) {
+  if (!evidence) return undefined;
+  return {
+    status: evidence.status,
+    source: evidence.source,
+    capturedAt: evidence.capturedAt,
+    policyVersion: evidence.policyVersion ?? null,
+  };
+}
+
+function staffSmsView(state: NonNullable<Awaited<ReturnType<typeof getPatientSmsState>>>) {
+  const endpoint = state.sms.endpoint;
+  const currentPhoneVerified = Boolean(
+    state.normalizedPhone
+    && endpoint?.normalizedPhone === state.normalizedPhone
+    && endpoint?.verifiedAt
+    && endpoint.verificationSource === "twilio_verify"
+    && endpoint.verificationProviderReference
+    && /^VE[0-9a-fA-F]{32}$/.test(endpoint.verificationProviderReference),
+  );
+  const permissions = Object.fromEntries(
+    staffVisibleClasses.flatMap((messageClass) => {
+      const evidence = staffPermissionView(state.sms.permissions[messageClass]);
+      return evidence ? [[messageClass, evidence]] : [];
+    }),
+  );
+
+  return {
+    patientId: state.patientId,
+    hasPhone: Boolean(state.normalizedPhone),
+    maskedPhone: maskPhone(state.normalizedPhone),
+    currentPhoneVerified,
+    currentPhoneVerifiedAt: currentPhoneVerified ? endpoint?.verifiedAt ?? null : null,
+    currentPhoneVerificationSource: currentPhoneVerified ? endpoint?.verificationSource ?? null : null,
+    sms: {
+      suppressedAt: state.sms.suppressedAt ?? null,
+      suppressionReason: state.sms.suppressionReason ?? null,
+      permissions,
+    },
+  };
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ patientId: string }> }) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -41,7 +90,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ pati
 
   const state = await getPatientSmsState({ organizationId: session.organizationId, patientId });
   if (!state) return NextResponse.json({ error: "Patient not found." }, { status: 404 });
-  return NextResponse.json({ data: state }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json({ data: staffSmsView(state) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ patientId: string }> }) {
@@ -78,5 +127,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
     return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ data: result.sms }, { headers: { "Cache-Control": "private, no-store" } });
+  const state = await getPatientSmsState({ organizationId: session.organizationId, patientId });
+  if (!state) return NextResponse.json({ error: "Patient not found." }, { status: 404 });
+  return NextResponse.json({ data: staffSmsView(state) }, { headers: { "Cache-Control": "private, no-store" } });
 }

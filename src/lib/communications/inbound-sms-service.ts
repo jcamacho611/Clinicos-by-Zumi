@@ -41,9 +41,10 @@ async function resolvePatientByInboundPhone(organizationId: string, from: string
   const normalizedPhone = normalizeSmsPhone(from);
   if (!normalizedPhone) return { ok: false as const, reason: "invalid_source" as const };
 
-  // Match the same conservative normalization rule used by the product policy without
-  // requiring a new indexed column in this slice. Limit 2 is deliberate: duplicates
-  // fail closed rather than choosing a patient by query order.
+  // The exact expression below is backed by `patients_org_sms_phone_normalized_idx`.
+  // Keep the SQL and migration expression aligned. Duplicates are valid contact data;
+  // LIMIT 2 is deliberate so an ambiguous number fails closed rather than choosing a
+  // patient by query order.
   const rows = await db.$queryRaw<Array<{ id: string }>>(Prisma.sql`
     SELECT "id"
       FROM "patients"
