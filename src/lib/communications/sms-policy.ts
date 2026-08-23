@@ -19,6 +19,7 @@ export type SmsPreferenceEnvelope = {
     normalizedPhone?: string | null;
     verifiedAt?: string | null;
     verificationSource?: string | null;
+    verificationProviderReference?: string | null;
   };
   suppressedAt?: string | null;
   suppressionReason?: string | null;
