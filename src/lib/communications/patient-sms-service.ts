@@ -14,6 +14,12 @@ import {
   type SmsPermissionStatus,
 } from "@/lib/communications/sms-policy";
 import {
+  evaluateSmsQuietHours,
+  patientSmsTemplate,
+  type PatientSmsTemplateId,
+} from "@/lib/communications/sms-templates";
+import { getTwilioSmsRoutingConfig } from "@/lib/communications/twilio-integration";
+import {
   tenantVariableSpendFundingReady,
   variableCostRailPolicy,
 } from "@/lib/commercial/variable-cost-rail-registry";
@@ -47,6 +53,7 @@ async function audit(input: {
       action: input.action,
       resourceType: "patient",
       resourceId: input.patientId,
+      patientId: input.patientId,
       metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
@@ -108,6 +115,7 @@ export async function recordPatientSmsPermission(input: {
         action: "communications.sms.permission.changed",
         resourceType: "patient",
         resourceId: patient.id,
+        patientId: patient.id,
         metadata: {
           channel: "sms",
           messageClass: input.messageClass,
@@ -199,6 +207,7 @@ export async function suppressPatientSms(input: {
         action: "communications.sms.suppressed",
         resourceType: "patient",
         resourceId: patient.id,
+        patientId: patient.id,
         metadata: { channel: "sms", reason: input.reason, providerEventId: input.eventId ?? null },
       },
     }),
@@ -213,6 +222,13 @@ export type PatientSmsSendResult =
       reason:
         | "patient_not_found"
         | "missing_phone"
+        | "template_not_allowed"
+        | "phone_not_verified"
+        | "production_disabled"
+        | "routing_not_configured"
+        | "routing_not_provider_verified"
+        | "invalid_timezone"
+        | "quiet_hours"
         | "commercial_funding_not_ready"
         | "invalid_recipient"
         | "permission_missing"
@@ -225,16 +241,23 @@ export type PatientSmsSendResult =
       detail: string;
     };
 
-export async function sendAuthorizedPatientSms(input: {
+/**
+ * Canonical patient SMS send. The caller chooses only a server-owned template ID; every
+ * consequential authority remains server-side and fail-closed.
+ */
+export async function sendAuthorizedPatientSmsTemplate(input: {
   organizationId: string;
   patientId: string;
   actorId?: string | null;
-  messageClass: SmsMessageClass;
-  subject?: string;
-  body: string;
-  containsPhi?: boolean;
+  templateId: PatientSmsTemplateId;
+  now?: Date;
   env?: OutboundEnv;
 }): Promise<PatientSmsSendResult> {
+  const template = patientSmsTemplate(input.templateId);
+  if (!template || template.phiApproved !== false) {
+    return { ok: false, reason: "template_not_allowed", detail: "SMS template is not approved for the fixed non-PHI patient rail." };
+  }
+
   const patient = await patientForSms(input.organizationId, input.patientId);
   if (!patient) return { ok: false, reason: "patient_not_found", detail: "Patient was not found in this organization." };
   if (!patient.phone) return { ok: false, reason: "missing_phone", detail: "Patient has no phone number." };
@@ -242,19 +265,98 @@ export async function sendAuthorizedPatientSms(input: {
   const decision = evaluateSmsPermission({
     communicationPrefs: patient.communicationPrefs,
     phone: patient.phone,
-    messageClass: input.messageClass,
-    containsPhi: input.containsPhi,
+    messageClass: template.messageClass,
+    containsPhi: false,
   });
-
   if (!decision.allowed) {
     await audit({
       organizationId: input.organizationId,
       actorId: input.actorId,
       action: "communications.sms.send.blocked",
       patientId: patient.id,
-      metadata: { channel: "sms", messageClass: input.messageClass, reason: decision.reason, containsPhi: Boolean(input.containsPhi) },
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: decision.reason, containsPhi: false },
     });
     return { ok: false as const, reason: decision.reason, detail: decision.detail };
+  }
+
+  const smsState = readSmsPreferences(patient.communicationPrefs);
+  const verification = smsState.endpoint;
+  if (
+    !verification?.verifiedAt
+    || verification.normalizedPhone !== decision.normalizedPhone
+    || verification.verificationSource !== "twilio_verify"
+    || !verification.verificationProviderReference
+    || !/^VE[0-9a-fA-F]{32}$/.test(verification.verificationProviderReference)
+  ) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: "phone_not_verified" },
+    });
+    return { ok: false, reason: "phone_not_verified", detail: "The patient's current phone number must be verified through the patient-controlled verification flow before SMS can send." };
+  }
+
+  const env = input.env ?? process.env;
+  if (env.KLINIKOS_SMS_PRODUCTION_ENABLED?.trim().toLowerCase() !== "true") {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: "production_disabled" },
+    });
+    return { ok: false, reason: "production_disabled", detail: "Production patient SMS remains disabled until controlled live proof is complete." };
+  }
+
+  const integration = await getTwilioSmsRoutingConfig(input.organizationId);
+  const routing = integration?.routing;
+  if (!routing?.senderPhone || !routing.messagingServiceSid || !routing.inboundEnabled || !routing.timeZone) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: "routing_not_configured" },
+    });
+    return { ok: false, reason: "routing_not_configured", detail: "Tenant sender, Messaging Service, inbound STOP routing, and timezone must be configured before patient SMS." };
+  }
+
+  if (
+    !routing.providerVerifiedAt
+    || !routing.providerPhoneNumberSid
+    || !/^PN[0-9a-fA-F]{32}$/.test(routing.providerPhoneNumberSid)
+    || !routing.providerMessagingServiceSid
+    || routing.providerMessagingServiceSid !== routing.messagingServiceSid
+  ) {
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: "routing_not_provider_verified" },
+    });
+    return { ok: false, reason: "routing_not_provider_verified", detail: "Twilio must verify the tenant sender and Messaging Service relationship before patient SMS can send." };
+  }
+
+  const quietHours = evaluateSmsQuietHours({ timeZone: routing.timeZone, now: input.now });
+  if (!quietHours.allowed) {
+    const reason = quietHours.reason === "quiet_hours" ? "quiet_hours" : "invalid_timezone";
+    await audit({
+      organizationId: input.organizationId,
+      actorId: input.actorId,
+      action: "communications.sms.send.blocked",
+      patientId: patient.id,
+      metadata: { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason },
+    });
+    return {
+      ok: false,
+      reason,
+      detail: reason === "quiet_hours"
+        ? "Ordinary patient SMS is held outside 09:00-20:00 recipient-local time."
+        : "Tenant SMS timezone is invalid.",
+    };
   }
 
   const economicPolicy = variableCostRailPolicy("patient_sms");
@@ -266,7 +368,8 @@ export async function sendAuthorizedPatientSms(input: {
       patientId: patient.id,
       metadata: {
         channel: "sms",
-        messageClass: input.messageClass,
+        templateId: template.id,
+        messageClass: template.messageClass,
         reason: "commercial_funding_not_ready",
         economicPolicy: economicPolicy?.economicReadiness ?? "missing",
       },
@@ -281,9 +384,11 @@ export async function sendAuthorizedPatientSms(input: {
   const result = await deliverOutbound({
     channel: "sms",
     to: decision.normalizedPhone,
-    subject: input.subject ?? "Klinikos notification",
-    body: input.body,
-  }, input.env);
+    sender: routing.senderPhone,
+    messagingServiceSid: routing.messagingServiceSid,
+    subject: template.subject,
+    body: template.body,
+  }, env);
 
   await audit({
     organizationId: input.organizationId,
@@ -291,8 +396,15 @@ export async function sendAuthorizedPatientSms(input: {
     action: result.ok ? "communications.sms.send.accepted" : "communications.sms.send.failed",
     patientId: patient.id,
     metadata: result.ok
-      ? { channel: "sms", messageClass: input.messageClass, provider: result.provider, providerReference: result.providerReference }
-      : { channel: "sms", messageClass: input.messageClass, reason: result.reason },
+      ? {
+          channel: "sms",
+          templateId: template.id,
+          messageClass: template.messageClass,
+          provider: result.provider,
+          providerReference: result.providerReference,
+          routingProviderVerified: true,
+        }
+      : { channel: "sms", templateId: template.id, messageClass: template.messageClass, reason: result.reason },
   });
 
   return result;
