@@ -24,4 +24,19 @@ describe("legacy user to canonical Account compatibility", () => {
     expect(repository).toContain("account.legacyLinks.length !== 1");
     expect(repository).toContain("return member");
   });
+
+  it("provides a batch proof for every active credentialed legacy staff user", () => {
+    const source = read("src/lib/auth/account-compatibility.ts");
+    expect(source).toContain("verifyAllActiveLegacyAccountCompatibility");
+    expect(source).toContain('status: "active"');
+    expect(source).toContain("authCredential: { isNot: null }");
+    expect(source).toContain("incompatibleCount");
+    expect(source).toContain("allCompatible");
+  });
+
+  it("provides a fail-closed assertion for rollout gates", () => {
+    const source = read("src/lib/auth/account-compatibility.ts");
+    expect(source).toContain("assertAllActiveLegacyAccountsCompatible");
+    expect(source).toContain("throw new Error");
+  });
 });
