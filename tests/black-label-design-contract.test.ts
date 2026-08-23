@@ -3,10 +3,11 @@ import { join } from "node:path";
 import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
-const encoded = readFileSync(
-  join(process.cwd(), "docs", "design", "black-label-v2", "Klinikos Browser.dc.html.br.b64"),
-  "utf8",
-).trim();
+const artifactRoot = join(process.cwd(), "docs", "design", "black-label-v2");
+const encoded = [0, 1, 2, 3, 4]
+  .map((part) => readFileSync(join(artifactRoot, `Klinikos Browser.dc.html.br.b64.part${String(part).padStart(2, "0")}`), "utf8"))
+  .join("")
+  .trim();
 const source = brotliDecompressSync(Buffer.from(encoded, "base64")).toString("utf8");
 
 function explicitButtonTargetsBelow44(html: string) {
