@@ -36,6 +36,7 @@ export const eduNavigation: readonly EduNavGroup[] = [
       { href: "/edu/programs", label: "Programs", icon: "Building2", roles: PROGRAM_REVIEW },
       { href: "/edu/courses", label: "Courses", icon: "BookOpen", roles: ALL_ROLES },
       { href: "/edu/cohorts", label: "Cohorts", icon: "Users", roles: [...STAFF, "edu_observer"] },
+      { href: "/edu/reports", label: "Reports", icon: "BarChart3", roles: PROGRAM_REVIEW },
     ],
   },
   {
@@ -67,6 +68,7 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
   "/edu/programs": PROGRAM_REVIEW,
   "/edu/courses": ALL_ROLES,
   "/edu/cohorts": [...STAFF, "edu_observer"],
+  "/edu/reports": PROGRAM_REVIEW,
   "/edu/scenarios": ALL_ROLES,
   "/edu/lab": ["edu_student", "edu_instructor", "edu_admin", "edu_assistant"],
   "/edu/grading": STAFF,
@@ -78,7 +80,6 @@ export const eduRouteAccess: Record<string, readonly EduPlatformRole[]> = {
 export function canAccessEduRoute(role: EduPlatformRole, route: string) {
   const entry = Object.entries(eduRouteAccess)
     .filter(([prefix]) => route === prefix || route.startsWith(`${prefix}/`))
-    // Longest prefix wins so /edu/lab/[id] resolves to /edu/lab, not a shorter match.
     .sort((a, b) => b[0].length - a[0].length)[0];
   return entry ? entry[1].includes(role) : false;
 }
