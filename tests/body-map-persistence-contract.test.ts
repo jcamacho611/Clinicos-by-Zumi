@@ -107,6 +107,24 @@ describe("immutable BodyMap persistence contract", () => {
     expect(repository).toContain("tx.clinicalBodyMapVersion.create");
   });
 
+  it("never converts clinic ownership or administration into clinical author/reviewer authority", () => {
+    const repository = read(repositoryPath);
+
+    expect(repository).toContain('const CLINICIAN_AUTHOR_ROLES = new Set(["provider"]);');
+    expect(repository).toContain('const STAFF_AUTHOR_ROLES = new Set(["clinical_staff"]);');
+    expect(repository).toContain('const REVIEW_ROLES = new Set(["provider"]);');
+    expect(repository).not.toMatch(/CLINICIAN_AUTHOR_ROLES[^;]*clinic_owner/s);
+    expect(repository).not.toMatch(/REVIEW_ROLES[^;]*clinic_owner/s);
+    expect(repository).not.toMatch(/REVIEW_ROLES[^;]*administrator/s);
+  });
+
+  it("requires provenance for reviewed imports rather than accepting an untraceable clinical source", () => {
+    const repository = read(repositoryPath);
+
+    expect(repository).toContain('sourceType === "reviewed_import"');
+    expect(repository).toContain("Reviewed BodyMap imports require a source reference");
+  });
+
   it("lists versions only through explicit tenant, patient and clinical-context scope with a bounded limit", () => {
     const repository = read(repositoryPath);
 
