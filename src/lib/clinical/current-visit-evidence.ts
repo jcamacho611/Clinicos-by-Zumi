@@ -49,6 +49,11 @@ export interface CurrentVisitClinicalEvidence {
   externalCompletion: "not_inferred";
 }
 
+export interface CurrentVisitEvidenceReaders {
+  listLabsForPatient: (patientId: string, organizationId: string) => Promise<LabResult[]>;
+  listImagingForPatient: (patientId: string, organizationId: string) => Promise<PatientImagingResult[]>;
+}
+
 function assertPatientMatch(
   patientId: string,
   labs: LabResult[],
@@ -112,4 +117,17 @@ export function buildCurrentVisitClinicalEvidence(
     },
     externalCompletion: "not_inferred",
   };
+}
+
+export async function loadCurrentVisitClinicalEvidence(
+  patientId: string,
+  organizationId: string,
+  readers: CurrentVisitEvidenceReaders,
+): Promise<CurrentVisitClinicalEvidence> {
+  const [labs, imaging] = await Promise.all([
+    readers.listLabsForPatient(patientId, organizationId),
+    readers.listImagingForPatient(patientId, organizationId),
+  ]);
+
+  return buildCurrentVisitClinicalEvidence(patientId, { labs, imaging });
 }
