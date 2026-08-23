@@ -3,6 +3,11 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
 import { containsLikelyIdentifiers, redactText } from "@/features/zumi/redaction";
+import {
+  formatZumiGovernedContext,
+  rankZumiGovernedContext,
+  type ZumiGovernedContextItem,
+} from "@/features/zumi/memory-authority";
 
 export const zumiMemoryKinds = ["preference", "working_style", "project_context", "strategy"] as const;
 export type ZumiMemoryKind = (typeof zumiMemoryKinds)[number];
@@ -12,6 +17,7 @@ export type ZumiMemoryItem = {
   kind: ZumiMemoryKind;
   title: string;
   content: string;
+  version: number;
   updatedAt: Date;
   expiresAt: Date | null;
 };
@@ -61,7 +67,7 @@ export async function listZumiMemories(session: ClinicSession, options: { kind?:
     },
     orderBy: { updatedAt: "desc" },
     take,
-    select: { id: true, layer: true, title: true, content: true, updatedAt: true, expiresAt: true },
+    select: { id: true, layer: true, title: true, content: true, version: true, updatedAt: true, expiresAt: true },
   });
 
   return rows.map((row): ZumiMemoryItem => ({
@@ -69,6 +75,7 @@ export async function listZumiMemories(session: ClinicSession, options: { kind?:
     kind: (row.layer.split(":").at(-1) ?? "preference") as ZumiMemoryKind,
     title: row.title.includes(":") ? row.title.slice(row.title.indexOf(":") + 1) : row.title,
     content: row.content,
+    version: row.version,
     updatedAt: row.updatedAt,
     expiresAt: row.expiresAt,
   }));
@@ -174,22 +181,75 @@ export async function forgetZumiMemory(session: ClinicSession, memoryId: string)
   return true;
 }
 
+function personalMemoryContextItem(memory: ZumiMemoryItem): ZumiGovernedContextItem {
+  return {
+    id: memory.id,
+    scope: "user",
+    authority: "human_confirmed_personal",
+    title: `[${memory.kind}] ${memory.title}`,
+    content: memory.content,
+    sourceName: MEMORY_SOURCE,
+    sourceDate: memory.updatedAt.toISOString(),
+    effectiveAt: memory.updatedAt.toISOString(),
+    expiresAt: memory.expiresAt?.toISOString() ?? null,
+    version: memory.version,
+  };
+}
+
 export async function retrieveZumiMemoryContext(session: ClinicSession, question: string, take = 12) {
   const memories = await listZumiMemories(session, { take: Math.max(4, Math.min(take, 20)) });
   if (!memories.length) return { text: "", memoryIds: [] as string[] };
 
-  const queryTerms = new Set(question.toLowerCase().split(/[^a-z0-9]+/).filter((term) => term.length >= 3));
-  const ranked = memories
-    .map((memory) => {
-      const haystack = `${memory.title} ${memory.content}`.toLowerCase();
-      const score = [...queryTerms].reduce((sum, term) => sum + (haystack.includes(term) ? 2 : 0), 0) + (memory.kind === "preference" || memory.kind === "working_style" ? 1 : 0);
-      return { memory, score };
-    })
-    .sort((a, b) => b.score - a.score || b.memory.updatedAt.getTime() - a.memory.updatedAt.getTime())
-    .slice(0, 8);
+  const ranked = rankZumiGovernedContext(memories.map(personalMemoryContextItem), question, 8);
+  return {
+    text: formatZumiGovernedContext(ranked),
+    memoryIds: ranked.map((memory) => memory.id),
+  };
+}
+
+export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSession, question: string, take = 8) {
+  const now = new Date();
+  const rows = await db.knowledgeItem.findMany({
+    where: {
+      AND: [
+        { OR: [{ organizationId: session.organizationId }, { organizationId: null }] },
+        { status: "approved" },
+        { NOT: { sourceName: MEMORY_SOURCE } },
+        { OR: [{ effectiveAt: null }, { effectiveAt: { lte: now } }] },
+        { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      ],
+    },
+    orderBy: [{ updatedAt: "desc" }],
+    take: 60,
+    select: {
+      id: true,
+      organizationId: true,
+      title: true,
+      content: true,
+      sourceName: true,
+      sourceDate: true,
+      effectiveAt: true,
+      expiresAt: true,
+      version: true,
+    },
+  });
+
+  const candidates: ZumiGovernedContextItem[] = rows.map((row) => ({
+    id: row.id,
+    scope: row.organizationId === null ? "global" : "organization",
+    authority: row.organizationId === null ? "human_approved_global_reference" : "human_approved_organization",
+    title: row.title,
+    content: row.content,
+    sourceName: row.sourceName,
+    sourceDate: row.sourceDate?.toISOString() ?? null,
+    effectiveAt: row.effectiveAt?.toISOString() ?? null,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
+    version: row.version,
+  }));
+  const ranked = rankZumiGovernedContext(candidates, question, take);
 
   return {
-    text: ranked.map(({ memory }) => `- [${memory.kind}] ${memory.title}: ${memory.content}`).join("\n"),
-    memoryIds: ranked.map(({ memory }) => memory.id),
+    text: formatZumiGovernedContext(ranked),
+    knowledgeIds: ranked.map((item) => item.id),
   };
 }
