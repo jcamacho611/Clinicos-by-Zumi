@@ -152,7 +152,12 @@ export async function getGridTransactionBoard(session: ClinicSession) {
   const settledToYouCents = obligations
     .filter((line) => line.beneficiaryType === "organization" && line.beneficiaryReference === session.organizationId && line.status === "settled")
     .reduce((sum, line) => sum + line.amountCents, 0);
-  const liquidity = computeGridLiquidityMetrics({ demands, offers, reservations });
+  const liquidity = computeGridLiquidityMetrics({
+    demands,
+    offers,
+    reservations,
+    sourceWindowComplete: demands.length < 100 && offers.length < 150 && reservations.length < 150,
+  });
 
   return {
     organizationId: session.organizationId,
