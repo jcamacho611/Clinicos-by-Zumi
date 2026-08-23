@@ -87,12 +87,16 @@ export async function configureTwilioSmsRouting(input: {
 }) {
   const senderPhone = normalizeSmsPhone(input.senderPhone);
   if (!senderPhone) return { ok: false as const, reason: "invalid_sender" as const };
-  const messagingServiceSid = input.messagingServiceSid?.trim() || null;
-  if (messagingServiceSid && !validMessagingServiceSid(messagingServiceSid)) {
+
+  const requestedMessagingServiceSid = input.messagingServiceSid === undefined
+    ? undefined
+    : input.messagingServiceSid?.trim() || null;
+  if (requestedMessagingServiceSid && !validMessagingServiceSid(requestedMessagingServiceSid)) {
     return { ok: false as const, reason: "invalid_messaging_service_sid" as const };
   }
-  const timeZone = input.timeZone?.trim() || null;
-  if (timeZone && !isIanaTimeZone(timeZone)) return { ok: false as const, reason: "invalid_timezone" as const };
+
+  const requestedTimeZone = input.timeZone === undefined ? undefined : input.timeZone?.trim() || null;
+  if (requestedTimeZone && !isIanaTimeZone(requestedTimeZone)) return { ok: false as const, reason: "invalid_timezone" as const };
 
   const configuredAt = new Date().toISOString();
   return db.$transaction(async (tx) => {
@@ -116,6 +120,14 @@ export async function configureTwilioSmsRouting(input: {
       select: { id: true, config: true },
     });
     const currentConfig = parseConfig(current?.config);
+    const currentRouting = readTwilioSmsRoutingConfig(current?.config);
+    const messagingServiceSid = requestedMessagingServiceSid === undefined
+      ? currentRouting?.messagingServiceSid ?? null
+      : requestedMessagingServiceSid;
+    const timeZone = requestedTimeZone === undefined
+      ? currentRouting?.timeZone ?? null
+      : requestedTimeZone;
+
     const nextConfig = {
       ...currentConfig,
       sms: {
