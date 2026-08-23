@@ -121,6 +121,64 @@ describe("BodyMap longitudinal clinical change", () => {
     ]));
   });
 
+  it("does not infer that all prior findings were removed from an empty current map", () => {
+    const emptyToday: BodyMapVersion = { ...today, id: "bm-empty-today", findings: [] };
+
+    expect(compareBodyMapVersions(previous, emptyToday)).toEqual([]);
+  });
+
+  it("reports a true map removal only when the current version contains other documented findings", () => {
+    const changedToday: BodyMapVersion = {
+      ...today,
+      id: "bm-changed-today",
+      findings: [today.findings[1]],
+    };
+
+    const deltas = compareBodyMapVersions(previous, changedToday);
+
+    expect(deltas).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        bodyRegion: "shoulder",
+        laterality: "left",
+        symptom: "pain",
+        kind: "finding_removed",
+        previousValue: "pain",
+        currentValue: null,
+        evidence: [
+          { bodyMapVersionId: "bm-previous", findingId: "finding-shoulder-left-prev" },
+          { bodyMapVersionId: "bm-changed-today", findingId: null },
+        ],
+      }),
+    ]));
+  });
+
+  it("reports changed functional impact with evidence from both versions", () => {
+    const functionImprovedToday: BodyMapVersion = {
+      ...today,
+      findings: [
+        {
+          ...today.findings[0],
+          functionalImpact: "Can now lift arm overhead with mild discomfort",
+        },
+      ],
+    };
+
+    const deltas = compareBodyMapVersions(previous, functionImprovedToday);
+
+    expect(deltas).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        bodyRegion: "shoulder",
+        kind: "functional_impact_changed",
+        previousValue: "Difficulty lifting arm overhead",
+        currentValue: "Can now lift arm overhead with mild discomfort",
+        evidence: [
+          { bodyMapVersionId: "bm-previous", findingId: "finding-shoulder-left-prev" },
+          { bodyMapVersionId: "bm-today", findingId: "finding-shoulder-left-today" },
+        ],
+      }),
+    ]));
+  });
+
   it("does not mutate historical body-map versions during comparison", () => {
     const beforeInitial = JSON.stringify(initial);
     const beforePrevious = JSON.stringify(previous);
