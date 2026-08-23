@@ -5,16 +5,18 @@
 // until a separately tested authorization-context migration adopts memberships.
 
 model Person {
-  id              String                   @id @default(cuid())
-  displayName     String?
-  legalName       String?
-  primaryEmail    String?
-  status          String                   @default("active")
-  sourceType      String                   @default("system")
-  sourceReference String?
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
-  memberships     OrganizationMembership[]
+  id                      String                          @id @default(cuid())
+  displayName             String?
+  legalName               String?
+  primaryEmail            String?
+  status                  String                          @default("active")
+  sourceType              String                          @default("system")
+  sourceReference         String?
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  memberships             OrganizationMembership[]
+  account                 Account?
+  entryAcceptanceBindings AccountEntryAcceptanceBinding[]
 
   @@index([primaryEmail])
   @@index([status])

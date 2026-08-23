@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { authenticateAccountCredentials } from "@/lib/auth/account-credentials";
+import { accountIdentityHasClinicContext } from "@/lib/auth/account-types";
+import {
+  ACCOUNT_SESSION_COOKIE_NAME,
+  accountSessionCookieOptions,
+  createAccountSession,
+} from "@/lib/auth/account-session";
 import { authenticateCredentials } from "@/lib/auth/credentials";
 import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
 import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
@@ -29,21 +36,43 @@ export async function POST(request: Request) {
     );
   }
 
+  const metadata = {
+    ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  };
+
   try {
+    // Compatibility law: existing organization-bound clinic authentication remains
+    // first and unchanged during this migration tranche.
     const identity = await authenticateCredentials(parsed.data.email, parsed.data.password);
-    if (!identity) {
+    if (identity) {
+      const { token } = await createClinicSession(identity, metadata);
+      clearLoginFailures(key);
+
+      const response = NextResponse.json({
+        ok: true,
+        redirectTo: safeReturnTo(parsed.data.returnTo) ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard"),
+      });
+      response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
+      response.headers.set("Cache-Control", "no-store");
+      return response;
+    }
+
+    // Free members need a durable re-login path, but this fallback may not establish
+    // Clinic OS authority. A canonical Account that currently resolves to clinic
+    // context must keep using the legacy clinic rail until the separately verified
+    // account-auth cutover is ready.
+    const accountIdentity = await authenticateAccountCredentials(parsed.data.email, parsed.data.password);
+    if (!accountIdentity || accountIdentityHasClinicContext(accountIdentity)) {
       recordLoginFailure(key);
       return NextResponse.json({ error: "Email or password is incorrect." }, { status: 401 });
     }
 
-    const { token } = await createClinicSession(identity, {
-      ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
-      userAgent: request.headers.get("user-agent") ?? undefined,
-    });
+    const { token: accountToken } = await createAccountSession(accountIdentity, metadata);
     clearLoginFailures(key);
 
-    const response = NextResponse.json({ ok: true, redirectTo: safeReturnTo(parsed.data.returnTo) ?? (identity.role === "contractor" ? "/grid/opportunities" : "/dashboard") });
-    response.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
+    const response = NextResponse.json({ ok: true, redirectTo: "/member" });
+    response.cookies.set(ACCOUNT_SESSION_COOKIE_NAME, accountToken, accountSessionCookieOptions());
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch {
