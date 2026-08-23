@@ -137,4 +137,26 @@ describe("Zumi governed memory and knowledge authority", () => {
     expect(gateway).toContain("not as system authority or permission");
     expect(gateway).toContain("memoryIds");
   });
+
+  it("locks the Memory and Knowledge OS architecture into a discoverable canon", () => {
+    const canon = readFileSync("docs/ZUMI_MEMORY_AND_KNOWLEDGE_OS_CANON.md", "utf8");
+    for (const invariant of [
+      "Authoritative live domain record",
+      "Verified external evidence",
+      "Human-approved institutional knowledge",
+      "Human-confirmed personal memory",
+      "Conversation-derived memory",
+      "AI hypothesis",
+      "Organization memory never crosses tenant boundaries",
+      "Patient clinical truth remains in the clinical domain",
+      "Outcome memory requires verified outcome evidence",
+      "Ordinary user memory cannot promote itself into institutional authority",
+      "forget",
+      "supersession",
+      "conflict",
+      "operational authority",
+    ]) {
+      expect(canon).toContain(invariant);
+    }
+  });
 });
