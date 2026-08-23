@@ -92,10 +92,39 @@ function normalizedNullableText(value: unknown) {
   return normalized.length > 0 ? normalized : null;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isJsonSafeValue(value: unknown, ancestors = new WeakSet<object>()): boolean {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value !== "object") return false;
+
+  const objectValue = value as object;
+  if (ancestors.has(objectValue)) return false;
+  ancestors.add(objectValue);
+
+  try {
+    if (Array.isArray(value)) {
+      return value.every((item) => isJsonSafeValue(item, ancestors));
+    }
+    if (!isPlainRecord(value)) return false;
+    return Object.values(value).every((item) => isJsonSafeValue(item, ancestors));
+  } catch {
+    return false;
+  } finally {
+    ancestors.delete(objectValue);
+  }
+}
+
 export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): BodyMapValidationResult {
   const errors: string[] = [];
-  const runtimeInput = input as CreateBodyMapVersionInput & Record<string, unknown>;
+  if (!isPlainRecord(input)) return { ok: false, errors: ["BodyMap payload must be an object."] };
 
+  const runtimeInput = input as CreateBodyMapVersionInput & Record<string, unknown>;
   if ("stage" in runtimeInput) {
     errors.push("BodyMap comparison stage is derived and must not be persisted.");
   }
@@ -116,7 +145,13 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
   const seenKeys = new Set<string>();
   const normalizedFindings: ValidatedBodyMapFindingInput[] = [];
 
-  for (const [index, finding] of input.findings.entries()) {
+  for (const [index, rawFinding] of input.findings.entries()) {
+    if (!isPlainRecord(rawFinding)) {
+      errors.push(`Finding ${index + 1}: finding must be an object.`);
+      continue;
+    }
+
+    const finding = rawFinding as unknown as CreateBodyMapFindingInput;
     const bodyRegion = typeof finding.bodyRegion === "string" ? finding.bodyRegion.trim() : "";
     const symptom = typeof finding.symptom === "string" ? finding.symptom.trim() : "";
 
@@ -135,11 +170,9 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
       errors.push(`Finding ${index + 1}: severity must be a whole number from 0 through 10 or null.`);
     }
 
-    if (finding.sourceObservation !== null && (
-      typeof finding.sourceObservation !== "object"
-      || Array.isArray(finding.sourceObservation)
-    )) {
-      errors.push(`Finding ${index + 1}: source observation must be an object or null.`);
+    const sourceObservation = finding.sourceObservation;
+    if (sourceObservation !== null && (!isPlainRecord(sourceObservation) || !isJsonSafeValue(sourceObservation))) {
+      errors.push(`Finding ${index + 1}: source observation must be a recursively JSON-safe object or null.`);
     }
 
     const key = bodyMapFindingPersistenceKey({
@@ -175,7 +208,9 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
       functionalImpact: functionalImpact ?? null,
       radiation: radiation ?? null,
       annotations,
-      sourceObservation: finding.sourceObservation,
+      sourceObservation: sourceObservation !== null && isPlainRecord(sourceObservation) && isJsonSafeValue(sourceObservation)
+        ? sourceObservation
+        : null,
     });
   }
 
