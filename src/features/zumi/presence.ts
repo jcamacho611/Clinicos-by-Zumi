@@ -70,6 +70,16 @@ export function zumiSurfaceForPathname(pathname: string): ZumiSurface {
   return "platform";
 }
 
+/**
+ * Treat route-derived product context as stronger than a browser-supplied surface.
+ * This prevents a caller on an EDU route from labelling itself as generic platform
+ * and thereby losing the education-specific learner/instructor authority posture.
+ */
+export function normalizeZumiPresence(input: ZumiPresence): ZumiPresence {
+  if (!input.pathname) return input;
+  return { ...input, surface: zumiSurfaceForPathname(input.pathname) };
+}
+
 export function presenceInstruction(input: {
   presence: ZumiPresence;
   accessibility: ZumiAccessibility;
