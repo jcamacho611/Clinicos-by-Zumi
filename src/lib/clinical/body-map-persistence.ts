@@ -1,3 +1,4 @@
+import { bodyMapFindingIdentityKey } from "@/lib/clinical/body-map-identity";
 import type { BodyLaterality } from "@/lib/clinical/body-map-types";
 
 export type BodyMapFindingClinicalState = "active" | "resolved";
@@ -92,20 +93,8 @@ function isBodyMapCaptureSource(value: string): value is BodyMapCaptureSource {
   return CAPTURE_SOURCES.has(value as BodyMapCaptureSource);
 }
 
-function normalizeFindingIdentitySegment(value: string) {
-  return value
-    .normalize("NFKC")
-    .replace(/\s+/gu, " ")
-    .trim()
-    .toLowerCase();
-}
-
 export function bodyMapFindingPersistenceKey(finding: Pick<CreateBodyMapFindingInput, "bodyRegion" | "laterality" | "symptom">) {
-  return [
-    normalizeFindingIdentitySegment(finding.bodyRegion),
-    finding.laterality,
-    normalizeFindingIdentitySegment(finding.symptom),
-  ].join("::");
+  return bodyMapFindingIdentityKey(finding);
 }
 
 function normalizedNullableText(value: unknown) {
