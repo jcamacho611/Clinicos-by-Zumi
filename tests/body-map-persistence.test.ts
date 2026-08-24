@@ -27,11 +27,11 @@ function validInput(overrides: Partial<CreateBodyMapVersionInput> = {}): CreateB
 }
 
 describe("BodyMap persistence input", () => {
-  it("normalizes finding identity deterministically", () => {
+  it("normalizes finding identity deterministically across case, Unicode width, and whitespace", () => {
     expect(bodyMapFindingPersistenceKey({
-      bodyRegion: "  Left Shoulder ",
+      bodyRegion: "  Left\u3000\u3000Shoulder ",
       laterality: "left",
-      symptom: " PAIN ",
+      symptom: " ＰＡＩＮ ",
     })).toBe("left shoulder::left::pain");
   });
 
@@ -44,6 +44,13 @@ describe("BodyMap persistence input", () => {
       expect(result.ok).toBe(false);
     },
   );
+
+  it("rejects resolved findings that still carry nonzero symptom severity", () => {
+    const result = validateBodyMapVersionInput(validInput({
+      findings: [{ ...validInput().findings[0], clinicalState: "resolved", severity: 6 }],
+    }));
+    expect(result.ok).toBe(false);
+  });
 
   it("rejects an empty BodyMap version because omission has no resolution meaning", () => {
     const result = validateBodyMapVersionInput(validInput({ findings: [] }));
@@ -84,7 +91,7 @@ describe("BodyMap persistence input", () => {
     const result = validateBodyMapVersionInput(validInput({
       findings: [
         first,
-        { ...first, bodyRegion: " left shoulder ", symptom: "pain", severity: 7 },
+        { ...first, bodyRegion: " left\u3000shoulder ", symptom: "ＰＡＩＮ", severity: 7 },
       ],
     }));
 
@@ -100,11 +107,14 @@ describe("BodyMap persistence input", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("rejects invalid capture time and unknown comparison-role persistence", () => {
-    expect(validateBodyMapVersionInput(validInput({ capturedAt: new Date("invalid") })).ok).toBe(false);
+  it("rejects invalid or materially future capture time and unknown comparison-role persistence", () => {
+    const now = new Date("2026-08-23T18:00:00.000Z");
+    expect(validateBodyMapVersionInput(validInput({ capturedAt: new Date("invalid") }), now).ok).toBe(false);
+    expect(validateBodyMapVersionInput(validInput({ capturedAt: new Date("2026-08-23T18:06:00.000Z") }), now).ok).toBe(false);
+    expect(validateBodyMapVersionInput(validInput({ capturedAt: new Date("2026-08-23T18:05:00.000Z") }), now).ok).toBe(true);
 
     const withStage = { ...validInput(), stage: "today" } as CreateBodyMapVersionInput & { stage: string };
-    expect(validateBodyMapVersionInput(withStage).ok).toBe(false);
+    expect(validateBodyMapVersionInput(withStage, now).ok).toBe(false);
   });
 
   it("fails closed instead of throwing on malformed runtime text and annotations", () => {
