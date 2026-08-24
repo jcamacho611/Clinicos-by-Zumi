@@ -31,10 +31,10 @@ const lanes = [
 ] as const;
 
 const laneCopy: Record<string, { eyebrow: string; title: string; body: string; note?: string }> = {
-  all: { eyebrow: "Explore Grid", title: "Start with the map. Then narrow the exchange around what you need.", body: "Grid is the exchange layer for healthcare people, work, spaces, products, equipment, services, organizations, education, and capacity. Public inventory appears only after it is reviewed and published." },
+  all: { eyebrow: "Explore Grid", title: "Start with the map. Narrow the exchange around what you need.", body: "Grid is the exchange layer for healthcare people, work, spaces, products, equipment, services, organizations, education, and capacity. Public inventory appears only after it is reviewed and published." },
   work: { eyebrow: "Find work", title: "See opportunities that match how and where you want to work.", body: "Grid is expanding around demand, availability, and work opportunities while preserving credential and jurisdiction gates for regulated roles.", note: "Direct shift and job-opportunity inventory remains on the clinician/provider demand path." },
   provider: { eyebrow: "Find a provider", title: "Find available healthcare professionals and provider capacity.", body: "Browse provider-backed services, availability, settings, and review state. Regulated work remains gated by the applicable credential and malpractice review rules." },
-  space: { eyebrow: "Find space", title: "Find rooms, chairs, clinics, and available treatment capacity.", body: "Reviewed healthcare-space resources can now be published as universal Grid capacity alongside marketplace-visible clinic locations." },
+  space: { eyebrow: "Find space", title: "Find rooms, chairs, clinics, and available treatment capacity.", body: "Reviewed healthcare-space resources can be published as universal Grid capacity alongside marketplace-visible clinic locations." },
   product: { eyebrow: "Find products & supplies", title: "Find permitted healthcare products, supplies, and seller inventory.", body: "General supply inventory can be reviewed and published through its own policy class. Restricted or regulated products remain blocked from generic marketplace transactions." },
   equipment: { eyebrow: "Find equipment", title: "Find rentable equipment and approved operational capacity.", body: "Reviewed equipment owners can publish capacity, permitted use, rates, restrictions, and real availability windows without forcing the listing into a provider workflow." },
   service: { eyebrow: "Find a service", title: "Find healthcare business and operational services through Grid.", body: "Business services use their own policy class so billing, consulting, IT, recruiting, credentialing, and other non-clinical work are not forced through clinical credential rules." },
@@ -81,39 +81,43 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
   const mapProviders = mapListings.map((listing) => ({ id: listing.id, serviceName: listing.serviceName, providerName: listing.provider.displayName, providerType: listing.provider.providerType, serviceAreas: listing.serviceAreas, states: listing.states, onCallNow: listing.provider.onCallNow }));
   const mapResources = matchingResources.map((resource) => ({ id: resource.id, title: resource.title, resourceType: resource.resourceType, city: resource.city, state: resource.state, latitude: resource.latitude, longitude: resource.longitude }));
 
+  const laneClass = (selected: boolean) => selected
+    ? "border-[var(--k-accent)] bg-[var(--k-text)] text-[var(--k-work-bg)]"
+    : "border-[var(--k-line)] bg-[var(--k-public-surface)] text-[var(--k-muted)] hover:text-[var(--k-text)]";
+
   return (
     <main className={marketplaceSurfaces.page}>
-      <header className="border-b border-[#e8ded9] bg-[#fffdf9]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center gap-4 px-5 sm:px-8">
+      <header className="border-b border-[var(--k-line)] bg-[var(--k-public-surface)]/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-4 px-5 sm:px-8">
           <KlinikosWordmark href="/grid" framed markClassName="h-10 w-10" textClassName="h-[20px] w-[176px]" className="gap-3" />
-          <span className="hidden text-[11px] font-extrabold uppercase tracking-[.17em] text-[#a8474e] md:block">Grid discovery</span>
-          <Link className="ml-auto hidden text-xs font-semibold text-[#756461] hover:text-[#241517] sm:block" href="/grid">I have something</Link>
-          <Link className="ml-4 flex min-h-[44px] items-center rounded-full bg-[#241517] px-4 text-xs font-semibold text-white hover:bg-[#47262b]" href="/login">Sign in</Link>
+          <span className="hidden text-xs font-extrabold uppercase tracking-[.17em] text-[var(--k-accent)] md:block">Grid discovery</span>
+          <Link className="ml-auto hidden text-xs font-semibold text-[var(--k-muted)] hover:text-[var(--k-text)] sm:block" href="/grid">I have something</Link>
+          <Link className="ml-4 flex min-h-11 items-center rounded-full bg-[var(--k-text)] px-4 text-xs font-semibold text-[var(--k-work-bg)]" href="/login">Sign in</Link>
         </div>
       </header>
 
-      <section className="border-b border-[#e8ded9] bg-[#fffdf9]">
-        <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8 lg:py-14">
+      <section className="border-b border-[var(--k-line)] bg-[var(--k-public-surface)]">
+        <div className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8 lg:py-9">
           <GridExchangeField initialIntent={activeIntent as GridIntentKind} initialQuery={safeQuery} />
-          <div className="mt-7 flex flex-wrap gap-2">
-            <Link className={`rounded-full border px-3 py-2 text-[11px] font-extrabold ${activeIntent === "all" ? "border-[#a8474e] bg-[#a8474e] text-white" : "border-[#e8ded9] text-[#756461] hover:border-[#d7c7c1] hover:text-[#241517]"}`} href="/grid/browse">Everything</Link>
-            {lanes.map(([key, Icon, laneLabel]) => <Link className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[11px] font-extrabold ${activeIntent === key ? "border-[#a8474e] bg-[#a8474e] text-white" : "border-[#e8ded9] text-[#756461] hover:border-[#d7c7c1] hover:text-[#241517]"}`} href={`/grid/browse?intent=${key}`} key={key}><Icon className="size-3.5" />{laneLabel}</Link>)}
-          </div>
+          <nav aria-label="Grid discovery lanes" className="mt-5 flex flex-wrap gap-2">
+            <Link className={`min-h-11 rounded-full border px-3 py-2 text-xs font-extrabold ${laneClass(activeIntent === "all")}`} href="/grid/browse">Everything</Link>
+            {lanes.map(([key, Icon, laneLabel]) => <Link className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-extrabold ${laneClass(activeIntent === key)}`} href={`/grid/browse?intent=${key}`} key={key}><Icon className="size-3.5" />{laneLabel}</Link>)}
+          </nav>
 
-          <div className="mt-9 grid gap-8 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
-            <div>
+          <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="max-w-4xl">
               <p className={marketplaceSurfaces.eyebrow}>{copy.eyebrow}</p>
-              <h1 className={`mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl ${marketplaceSurfaces.headline}`}>{copy.title}</h1>
-              <p className="mt-5 max-w-3xl text-sm leading-7 text-[#756461]">{copy.body}</p>
-              {copy.note && <p className="mt-4 max-w-3xl border-l-2 border-[#9b7c45] pl-4 text-[12px] leading-5 text-[#756145]">{copy.note}</p>}
+              <h1 className={`mt-3 max-w-4xl text-3xl sm:text-4xl ${marketplaceSurfaces.headline}`}>{copy.title}</h1>
+              <p className="mt-3 max-w-3xl text-[13px] leading-6 text-[var(--k-muted)]">{copy.body}</p>
+              {copy.note && <p className="mt-3 max-w-3xl border-l-2 border-[var(--k-premium)] pl-4 text-xs leading-5 text-[var(--k-muted)]">{copy.note}</p>}
             </div>
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <Link className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#a8474e] px-5 text-xs font-semibold text-white hover:bg-[#8f3941]" href="/grid">I have something <ArrowRight className="size-4" /></Link>
-              <Link className="inline-flex min-h-[44px] items-center rounded-full border border-[#d7c7c1] px-5 text-xs font-semibold text-[#241517] hover:border-[#a8474e]/40" href="/grid">Change goal</Link>
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--k-accent)] px-5 text-xs font-semibold text-white" href="/grid">I have something <ArrowRight className="size-4" /></Link>
+              <Link className="inline-flex min-h-11 items-center rounded-full border border-[var(--k-line)] bg-[var(--k-public-surface)] px-5 text-xs font-semibold text-[var(--k-text)]" href="/grid">Change goal</Link>
             </div>
           </div>
 
-          <p className="mt-6 flex max-w-4xl gap-2.5 rounded-[16px] border border-[#e8ded9] bg-[#f7f3ef] px-4 py-3 text-[12px] leading-5 text-[#756461]"><ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#9b7c45]" /><span>{LISTING_NOT_VERIFICATION_NOTICE} {MARKETPLACE_SYNTHETIC_NOTICE}</span></p>
+          <p className="mt-5 flex max-w-5xl gap-2.5 border-t border-[var(--k-line)] pt-4 text-xs leading-5 text-[var(--k-muted)]"><ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--k-premium)]" /><span>{LISTING_NOT_VERIFICATION_NOTICE} {MARKETPLACE_SYNTHETIC_NOTICE}</span></p>
         </div>
       </section>
 
@@ -121,11 +125,11 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
       <UniversalResourceBrowser resources={matchingResources} intent={activeIntent} />
       {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} initialWeekdays={temporalWeekdays} listings={laneListings} />}
 
-      <footer className="border-t border-[#e8ded9] bg-[#fffdf9]">
+      <footer className="border-t border-[var(--k-line)] bg-[var(--k-public-surface)]">
         <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8">
-          <Link className="inline-flex items-center gap-2 text-xs font-semibold text-[#756461] hover:text-[#241517]" href="/grid"><ArrowLeft aria-hidden="true" className="size-4" /> Back to Grid</Link>
-          <p className="mt-4 max-w-4xl text-[11px] leading-6 text-[#756461]">Grid does not employ listed participants or direct clinical care. Regulated opportunities require the applicable review and eligibility gates. A request starts a governed connection workflow and does not itself guarantee availability, authorize treatment, or prove that a transaction has settled.</p>
-          <div className="mt-5 flex flex-wrap gap-5 text-[11px] font-semibold"><Link className="text-[#756461] hover:text-[#241517]" href="/legal/grid">Grid marketplace terms</Link><Link className="text-[#756461] hover:text-[#241517]" href="/legal/privacy">Privacy notice</Link></div>
+          <Link className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/grid"><ArrowLeft aria-hidden="true" className="size-4" /> Back to Grid</Link>
+          <p className="mt-3 max-w-4xl text-xs leading-6 text-[var(--k-muted)]">Grid does not employ listed participants or direct clinical care. Regulated opportunities require the applicable review and eligibility gates. A request starts a governed connection workflow and does not itself guarantee availability, authorize treatment, or prove that a transaction has settled.</p>
+          <div className="mt-4 flex flex-wrap gap-5 text-xs font-semibold"><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/grid">Grid marketplace terms</Link><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/privacy">Privacy notice</Link></div>
         </div>
       </footer>
     </main>

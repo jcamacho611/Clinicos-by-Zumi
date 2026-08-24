@@ -1,3 +1,13 @@
+import {
+  buildCloseVisitResolution,
+  type AiReviewResolutionState,
+  type AttestationResolutionState,
+  type ChargeResolutionState,
+  type CloseVisitResolution,
+  type CodingResolutionState,
+  type GovernedDomainEvaluation,
+  type OrdersResultsResolutionState,
+} from "@/lib/clinical/close-visit-resolution";
 import type { PatientVital } from "@/lib/clinical/vital-types";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
@@ -21,11 +31,22 @@ export interface CurrentVisitUnavailableState {
   message: string;
 }
 
+export interface CurrentVisitMedicationReconciliation {
+  id: string;
+  status: string;
+  source: string;
+  summary: string | null;
+  medicationCount: number;
+  discrepancyCount: number;
+  completedAt: string | null;
+}
+
 export interface CurrentVisitPartialHandoffState {
   status: "partial";
-  source: "encounter_vitals";
+  source: "encounter_vitals" | "medication_reconciliation" | "multiple";
   message: string;
-  vital: PatientVital;
+  vital?: PatientVital;
+  medicationReconciliation?: CurrentVisitMedicationReconciliation;
 }
 
 export type CurrentVisitStaffHandoffState = CurrentVisitUnavailableState | CurrentVisitPartialHandoffState;
@@ -58,6 +79,7 @@ export interface CurrentVisitCloseState {
   procedureCount: number;
   externalCompletion: "not_inferred";
   presentationOnly: true;
+  resolution: CloseVisitResolution;
 }
 
 export interface CurrentVisitModel {
@@ -68,8 +90,18 @@ export interface CurrentVisitModel {
   closeVisit: CurrentVisitCloseState;
 }
 
+export interface CurrentVisitCloseEvaluation {
+  coding: GovernedDomainEvaluation<CodingResolutionState>;
+  ordersResults: GovernedDomainEvaluation<OrdersResultsResolutionState>;
+  aiReview: GovernedDomainEvaluation<AiReviewResolutionState>;
+  attestations: GovernedDomainEvaluation<AttestationResolutionState>;
+  chargeReadiness: GovernedDomainEvaluation<ChargeResolutionState>;
+}
+
 export interface CurrentVisitContext {
   vital?: PatientVital | null;
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
+  closeEvaluation?: Partial<CurrentVisitCloseEvaluation>;
 }
 
 const REQUIRED_DOCUMENTATION = [
@@ -79,6 +111,16 @@ const REQUIRED_DOCUMENTATION = [
   ["Plan", "plan"],
 ] as const satisfies ReadonlyArray<readonly [string, keyof Encounter]>;
 
+const NOT_EVALUATED = { state: "not_evaluated", source: null, evidenceRef: null } as const;
+
+const DEFAULT_CLOSE_EVALUATION: CurrentVisitCloseEvaluation = {
+  coding: NOT_EVALUATED,
+  ordersResults: NOT_EVALUATED,
+  aiReview: NOT_EVALUATED,
+  attestations: NOT_EVALUATED,
+  chargeReadiness: NOT_EVALUATED,
+};
+
 function missingRequiredDocumentation(encounter: Encounter) {
   return REQUIRED_DOCUMENTATION.flatMap(([label, key]) => {
     const value = encounter[key];
@@ -86,8 +128,33 @@ function missingRequiredDocumentation(encounter: Encounter) {
   });
 }
 
-function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandoffState {
-  if (vital && vitalHasMeasurement(vital)) {
+function completedMedicationReconciliation(
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
+): CurrentVisitMedicationReconciliation | null {
+  if (!medicationReconciliation) return null;
+  if (medicationReconciliation.status !== "completed") return null;
+  if (!medicationReconciliation.completedAt) return null;
+  return medicationReconciliation;
+}
+
+function buildStaffHandoff(
+  vital?: PatientVital | null,
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
+): CurrentVisitStaffHandoffState {
+  const hasVital = Boolean(vital && vitalHasMeasurement(vital));
+  const completedReconciliation = completedMedicationReconciliation(medicationReconciliation);
+
+  if (hasVital && vital && completedReconciliation) {
+    return {
+      status: "partial",
+      source: "multiple",
+      vital,
+      medicationReconciliation: completedReconciliation,
+      message: "Vitals and medication reconciliation are attached to this encounter. Other staff intake remains incomplete until encounter-specific screening, symptom, form, delegated-work, or question evidence is actually persisted.",
+    };
+  }
+
+  if (hasVital && vital) {
     return {
       status: "partial",
       source: "encounter_vitals",
@@ -95,6 +162,16 @@ function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandof
       message: "Vitals were captured for this encounter. Other staff intake is not yet attached to the governed handoff.",
     };
   }
+
+  if (completedReconciliation) {
+    return {
+      status: "partial",
+      source: "medication_reconciliation",
+      medicationReconciliation: completedReconciliation,
+      message: "Medication reconciliation is attached to this encounter. Other staff intake remains incomplete until encounter-specific vital, screening, symptom, form, delegated-work, or question evidence is actually persisted.",
+    };
+  }
+
   return {
     status: "not_available",
     message: "No encounter-specific staff handoff is attached yet. Do not infer intake findings from the patient summary.",
@@ -103,6 +180,13 @@ function buildStaffHandoff(vital?: PatientVital | null): CurrentVisitStaffHandof
 
 export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, context: CurrentVisitContext = {}): CurrentVisitModel {
   const missingRequiredSections = missingRequiredDocumentation(encounter);
+  const closeEvaluation = { ...DEFAULT_CLOSE_EVALUATION, ...context.closeEvaluation };
+  const closeResolution = buildCloseVisitResolution({
+    encounterStatus: encounter.status,
+    missingRequiredDocumentation: missingRequiredSections,
+    followUp: encounter.followUp,
+    ...closeEvaluation,
+  });
 
   return {
     sectionOrder: [...CURRENT_VISIT_SECTION_ORDER],
@@ -128,16 +212,17 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       status: "not_available",
       message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
     },
-    staffHandoff: buildStaffHandoff(context.vital),
+    staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation),
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
-      noteLocked: encounter.status === "Signed" || encounter.status === "Locked",
+      noteLocked: closeResolution.noteLocked,
       encounterStatus: encounter.status,
       diagnosisCount: encounter.diagnoses.length,
       procedureCount: encounter.procedures.length,
       externalCompletion: "not_inferred",
       presentationOnly: true,
+      resolution: closeResolution,
     },
   };
 }

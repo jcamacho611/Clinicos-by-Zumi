@@ -273,6 +273,8 @@ register cannot silently fall behind.
 | `LUXE_RECOVERY_REVIEW.md` | Luxe human-review law |
 | `DECISIONS_2026-08-16.md` | Decision record |
 | `ZUMI_CLOUDFLARE.md` | Cloudflare inference notes |
+| `KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md` | Black Label experience ceiling and design handoff |
+| `KLINIKOS_BLACK_LABEL_PRODUCTION_INTEGRATION_MAP_2026-08-23.md` | Black Label surface-to-implementation map |
 | `KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md` | This document |
 
 ### Status indexes — authoritative for status, and only for status

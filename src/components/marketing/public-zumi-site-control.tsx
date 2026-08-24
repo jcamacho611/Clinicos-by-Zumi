@@ -29,7 +29,7 @@ type PublicZumiSuggestion = { id: string; label: string; prompt: string };
 type Turn = { id: number; prompt: string; resolution: PublicLivingResolution; suggestions: PublicZumiSuggestion[] };
 type ApiResponse = { data?: { resolution?: unknown; suggestions?: unknown } };
 
-const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit"]);
+const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/access"]);
 
 function destinationHref(href: string) {
   if (href === "/login") return "/login";

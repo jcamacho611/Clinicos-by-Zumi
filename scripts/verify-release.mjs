@@ -1,32 +1,26 @@
 #!/usr/bin/env node
 /**
- * The canonical release gate: one command that proves a candidate can actually ship.
+ * The canonical release gate: one command that proves a candidate can actually ship
+ * through Klinikos' production host, Render.
  *
- * Why this exists in this form:
+ * The full gate deliberately reproduces the repository's Render contract:
  *
- * Every check below already existed as a separate npm script, and each was run by hand
- * in whatever order someone remembered. That is how a candidate reaches production with
- * a green test suite and migrations that cannot apply — the repository has done exactly
- * that before, when nine migrations referenced Prisma model names instead of their
- * mapped table names and nothing ever tried them against an empty database.
+ *   npm ci --include=dev --ignore-scripts
+ *   npm run render:build
+ *   npm start
  *
- * So the ordering here is deliberate rather than cosmetic:
+ * It adds schema, security, type, lint, tests, disposable-database migration proof,
+ * MVP journeys, startup, and health around that host contract. The extra checks make the
+ * gate stricter than Render without creating a second build path.
  *
- *   - Schema validation precedes migration, because an invalid schema makes every later
- *     failure a misleading symptom of itself.
- *   - Migrations run against a DISPOSABLE, EMPTY database. A migration that only works
- *     on a database which already has the tables is not a migration, and running this
- *     against a populated database would prove the opposite of what it claims.
- *   - The production build runs before startup, and startup before health, because each
- *     is meaningless without the one before it.
- *
- * The database rule is enforced, not documented. `assertDisposableDatabase` refuses to
- * run when the target looks like production or when it is not empty, because "verify"
- * that drops someone's data is worse than no verify at all.
+ * Database safety is enforced. The full gate may run only against an empty disposable
+ * database. Both DATABASE_URL and DIRECT_DATABASE_URL are pinned to that same verified
+ * disposable URL before `render:build`, because the production build script prefers
+ * DIRECT_DATABASE_URL when it exists.
  *
  * Usage:
- *   npm run verify:release          full gate, needs a disposable DATABASE_URL
- *   npm run verify:code             the checks that need no database
+ *   npm run verify:release          full Render-aligned gate; needs disposable DATABASE_URL
+ *   npm run verify:code             code-only gate; no migration/journey/startup proof
  */
 
 import { spawn, spawnSync } from "node:child_process";
@@ -34,6 +28,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const CODE_ONLY = process.argv.includes("--code-only");
 const startedAt = Date.now();
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
 /** Hosts that are never acceptable targets for a gate that migrates an empty database. */
 const PRODUCTION_MARKERS = [
@@ -42,11 +37,9 @@ const PRODUCTION_MARKERS = [
 ];
 
 /**
- * A connection string that `prisma generate` and `prisma validate` can parse.
- *
- * Neither command opens a connection, so the value only has to be well-formed. Returning
- * the real URL when there is one keeps the check honest for anyone reading the output;
- * the placeholder only stands in when the environment has nothing usable.
+ * Prisma generate/validate parse the schema but do not need a live connection. Give them
+ * a syntactically valid URL when no usable database URL is configured so failures report
+ * schema truth rather than an irrelevant connection-string error.
  */
 function schemaParseUrl(configured) {
   const usable = configured?.startsWith("postgresql://") || configured?.startsWith("postgres://");
@@ -72,29 +65,24 @@ function run(name, command, args, options = {}) {
   return result.stdout ?? "";
 }
 
-/**
- * Refuse to run the migration gate against anything that could be real.
- *
- * Two independent checks, because either alone is easy to fool: the URL must not look
- * like a managed production host, and the database must actually be empty. An empty
- * database cannot be someone's production data, whatever the hostname claims.
- */
+/** Refuse to run the migration gate against anything that could be real. */
 async function assertDisposableDatabase(url) {
   if (!url) {
     throw new Error(
-      "DATABASE_URL is not set. The release gate migrates an empty database and will not " +
-      "guess a target. Point it at a disposable database, or run `npm run verify:code`.",
+      "DATABASE_URL is not set. The release gate reproduces Render against an EMPTY " +
+      "disposable database and will not guess a target. Point it at a disposable database, " +
+      "or run `npm run verify:code`.",
     );
   }
   if (process.env.VERIFY_ALLOW_PRODUCTION_DATABASE === "true") {
-    log("info", "VERIFY_ALLOW_PRODUCTION_DATABASE=true — production-host check bypassed by explicit request");
+    log("info", "VERIFY_ALLOW_PRODUCTION_DATABASE=true — managed-host check bypassed by explicit request");
   } else {
     const marker = PRODUCTION_MARKERS.find((host) => url.includes(host));
     if (marker) {
       throw new Error(
         `DATABASE_URL points at ${marker}, which looks like a managed production host. ` +
-        "This gate applies migrations to an empty database and must never run there. " +
-        "Set VERIFY_ALLOW_PRODUCTION_DATABASE=true only if you genuinely intend that.",
+        "This gate reproduces Render migrations and must never run there. " +
+        "Set VERIFY_ALLOW_PRODUCTION_DATABASE=true only for a genuinely disposable target.",
       );
     }
   }
@@ -109,9 +97,8 @@ async function assertDisposableDatabase(url) {
     const tables = Number(rows?.[0]?.count ?? 0);
     if (tables > 0) {
       throw new Error(
-        `The target database already has ${tables} table(s). Migrations must be proven ` +
-        "against an EMPTY database — applying them to a populated one proves nothing " +
-        "about a fresh deploy, which is the failure this gate exists to catch.",
+        `The target database already has ${tables} table(s). The Render migration path ` +
+        "must be proven against an EMPTY database before release.",
       );
     }
   } finally {
@@ -119,7 +106,7 @@ async function assertDisposableDatabase(url) {
   }
 }
 
-/** Poll until the server answers or the deadline passes. Never a bare sleep. */
+/** Poll until the server answers or the deadline passes. Never use a blind sleep. */
 async function waitForHealth(url, timeoutMs = 90_000) {
   const deadline = Date.now() + timeoutMs;
   let lastError = "no response";
@@ -146,54 +133,69 @@ async function main() {
     log("ok", `${name} (${((Date.now() - began) / 1000).toFixed(1)}s)`);
   };
 
-  // 1. Install integrity. `npm ci` is the only install that proves the lockfile
-  //    describes a resolvable, complete tree — which is what the host will install.
-  await record("install integrity", () => run("install integrity", "npm", ["ci", "--ignore-scripts"], { quiet: true }));
+  // Render's install command, verbatim from render.yaml.
+  await record("Render install integrity", () => run(
+    "Render install integrity",
+    npmCommand,
+    ["ci", "--include=dev", "--ignore-scripts"],
+    { quiet: true },
+  ));
 
-  // 2-3. The client must generate and the schema must be valid before anything reads it.
-  //
-  // Both only parse the schema; neither connects. But the datasource block reads
-  // DATABASE_URL, so an unset or placeholder value fails them with a connection-string
-  // error that has nothing to do with the schema. Supply a syntactically valid throwaway
-  // URL when the real one is missing or obviously a placeholder, so these steps report on
-  // the schema rather than on the environment.
   const parseOnlyUrl = { DATABASE_URL: schemaParseUrl(process.env.DATABASE_URL) };
   await record("prisma generate", () => run("prisma generate", "npx", ["prisma", "generate"], { quiet: true, env: parseOnlyUrl }));
   await record("prisma validate", () => run("prisma validate", "npx", ["prisma", "validate"], { quiet: true, env: parseOnlyUrl }));
 
-  // 4. Migrations, against an empty disposable database.
-  if (CODE_ONLY) {
-    log("skip", "empty-database migration (skipped: --code-only)");
-  } else {
-    await record("empty-database migration", async () => {
-      await assertDisposableDatabase(process.env.DATABASE_URL);
-      run("migrate deploy", "npx", ["prisma", "migrate", "deploy"], { quiet: true });
-    });
-  }
+  // Confidentiality is checked before any production bundle is created.
+  await record("source confidentiality", () => run("source confidentiality", npmCommand, ["run", "security:check"]));
 
-  // 5-7. Static and behavioural correctness.
   await record("type-check", () => run("type-check", "npx", ["tsc", "--noEmit"]));
   await record("lint", () => run("lint", "npx", ["eslint", "."]));
   await record("tests", () => run("tests", "npx", ["vitest", "run"], { quiet: true }));
 
-  // 8. Journeys exercise the database end to end, so they need the migrated schema.
   if (CODE_ONLY) {
-    log("skip", "MVP journeys (skipped: --code-only)");
+    // Code-only still proves the production compilation path, but intentionally avoids
+    // render:build because that command owns migrate deploy when a database URL exists.
+    await record("production build", () => run("production build", npmCommand, ["run", "build"], {
+      quiet: true,
+      env: { NODE_ENV: "production" },
+    }));
+    await record("post-build confidentiality", () => run("post-build confidentiality", npmCommand, ["run", "security:check"]));
+    log("skip", "Render migration, MVP journeys, production startup and health (skipped: --code-only)");
   } else {
-    await record("MVP journeys", () => run("MVP journeys", "node", ["scripts/mvp/run-all.mjs"], { quiet: true }));
-  }
+    const disposableDatabaseUrl = process.env.DATABASE_URL;
+    await record("disposable database safety", () => assertDisposableDatabase(disposableDatabaseUrl));
 
-  // 9. The production build. A candidate that does not compile cannot ship.
-  await record("production build", () => run("production build", "npm", ["run", "build"], { quiet: true }));
+    const renderEnv = {
+      NODE_ENV: "production",
+      DATABASE_URL: disposableDatabaseUrl,
+      DIRECT_DATABASE_URL: disposableDatabaseUrl,
+    };
 
-  // 10-11. Startup and health. A build that will not boot is not a release.
-  if (CODE_ONLY) {
-    log("skip", "production startup and health (skipped: --code-only)");
-  } else {
-    await record("production startup and health", async () => {
+    // Render's build command, including build-before-migrate ordering, exactly as the
+    // production host invokes it after npm ci.
+    await record("Render build + migration", () => run(
+      "Render build + migration",
+      npmCommand,
+      ["run", "render:build"],
+      { quiet: true, env: renderEnv },
+    ));
+
+    // Re-scan after the production bundle exists.
+    await record("post-build confidentiality", () => run("post-build confidentiality", npmCommand, ["run", "security:check"]));
+
+    await record("MVP journeys", () => run(
+      "MVP journeys",
+      "node",
+      ["scripts/mvp/run-all.mjs"],
+      { quiet: true, env: renderEnv },
+    ));
+
+    // Render's start command is `npm start`; reproduce that command rather than invoking
+    // the implementation script directly.
+    await record("Render startup and health", async () => {
       const port = process.env.VERIFY_PORT ?? "3111";
-      const child = spawn("node", ["scripts/start.mjs"], {
-        env: { ...process.env, PORT: port, NODE_ENV: "production" },
+      const child = spawn(npmCommand, ["start"], {
+        env: { ...process.env, ...renderEnv, PORT: port },
         stdio: ["ignore", "pipe", "pipe"],
       });
       let output = "";
@@ -214,7 +216,7 @@ async function main() {
   const total = ((Date.now() - startedAt) / 1000).toFixed(1);
   log("ok", `release gate passed — ${steps.length} checks in ${total}s`);
   if (CODE_ONLY) {
-    log("info", "This was --code-only: migrations, journeys, startup and health were NOT proven.");
+    log("info", "This was --code-only: Render migration, journeys, startup and health were NOT proven.");
   }
 }
 

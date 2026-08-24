@@ -26,7 +26,14 @@ describe("persisted vitals truth boundary", () => {
     expect(editor).toContain("visit.staffHandoff.status");
     expect(editor).toContain('"partial"');
     expect(editor).toContain("Vitals captured");
-    expect(editor).toContain("Other staff intake");
+    // The editor renders the handoff message rather than composing its own claim, so the
+    // caveat is asserted where it is authored. Requiring the literal in the component
+    // would only prove the sentence had been copied into a second place.
+    expect(editor).toContain("visit.staffHandoff.message");
     expect(editor).not.toContain("Staff handoff complete");
+
+    const model = read("src/lib/clinical/current-visit-model.ts");
+    expect(model).toContain("Other staff intake");
+    expect(model).not.toContain("Staff handoff complete");
   });
 });

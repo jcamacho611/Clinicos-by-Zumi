@@ -8,11 +8,13 @@ import {
   LoaderCircle, LockKeyhole, Save, ShieldCheck, Signature, Sparkles,
   Stethoscope, UserCheck,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CurrentVisitClinicalEvidenceCard } from "@/components/clinic/current-visit-clinical-evidence";
 import { EncounterCodingAddenda } from "@/components/clinic/encounter-coding-addenda";
 import { StatusBadge } from "@/components/clinic/workspace-kit";
-import { buildCurrentVisitModel } from "@/lib/clinical/current-visit-model";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import type { CurrentVisitClinicalEvidence } from "@/lib/clinical/current-visit-evidence";
+import { buildCurrentVisitModel, type CurrentVisitMedicationReconciliation } from "@/lib/clinical/current-visit-model";
 import type { PatientVital } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
@@ -70,11 +72,12 @@ function VitalReading({ label, value }: { label: string; value: string }) {
 
 function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitModel> }) {
   if (visit.staffHandoff.status !== "partial") {
-    return <><p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p><p className="mt-3 text-[11px] font-bold text-slate-400">Encounter-specific intake will become a governed staff → provider handoff in a later persistence slice.</p></>;
+    return <><p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p><p className="mt-3 text-[11px] font-bold text-slate-400">Encounter-specific screening, symptoms, forms, delegated work, and staff questions remain unavailable until their governed evidence is persisted.</p></>;
   }
 
   const vital = visit.staffHandoff.vital;
-  const readings: Array<[string, string] | null> = [
+  const medicationReconciliation = visit.staffHandoff.medicationReconciliation;
+  const readings: Array<[string, string] | null> = vital ? [
     vital.bloodPressureSystolic !== null && vital.bloodPressureDiastolic !== null ? ["Blood pressure", `${vital.bloodPressureSystolic}/${vital.bloodPressureDiastolic} mmHg`] : null,
     vital.heartRate !== null ? ["Heart rate", `${vital.heartRate} bpm`] : null,
     vital.temperatureF !== null ? ["Temperature", `${vital.temperatureF} °F`] : null,
@@ -82,17 +85,33 @@ function StaffHandoff({ visit }: { visit: ReturnType<typeof buildCurrentVisitMod
     vital.weightLbs !== null ? ["Weight", `${vital.weightLbs} lb`] : null,
     vital.heightInches !== null ? ["Height", `${vital.heightInches} in`] : null,
     vital.bmi !== null ? ["BMI", String(vital.bmi)] : null,
-  ];
+  ] : [];
   const measured = readings.filter((reading): reading is [string, string] => reading !== null);
 
   return <>
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-      <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Vitals captured</p>
-      <p className="text-[11px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
-    </div>
-    <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{measured.map(([label, value]) => <VitalReading key={label} label={label} value={value} />)}</div>
+    {vital && <>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Vitals captured</p>
+        <p className="text-[11px] font-bold text-slate-400">{new Date(vital.measuredAt).toLocaleString()}</p>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{measured.map(([label, value]) => <VitalReading key={label} label={label} value={value} />)}</div>
+    </>}
+
+    {medicationReconciliation && <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] font-extrabold uppercase tracking-[.13em] text-teal-700">Medication reconciliation</p>
+        <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold capitalize text-slate-600">{medicationReconciliation.status.replaceAll("_", " ")}</span>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-500">{medicationReconciliation.medicationCount} medication{medicationReconciliation.medicationCount === 1 ? "" : "s"} in reconciliation · {medicationReconciliation.discrepancyCount} discrepanc{medicationReconciliation.discrepancyCount === 1 ? "y" : "ies"}</p>
+      {medicationReconciliation.summary && <p className="mt-2 text-[12px] leading-5 text-slate-700">{medicationReconciliation.summary}</p>}
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-400">
+        <span>Source: {medicationReconciliation.source.replaceAll("_", " ")}</span>
+        {medicationReconciliation.completedAt && <span>Completed {new Date(medicationReconciliation.completedAt).toLocaleString()}</span>}
+      </div>
+    </div>}
+
     <p className="mt-3 text-[12px] leading-5 text-slate-500">{visit.staffHandoff.message}</p>
-    <p className="mt-2 text-[11px] font-bold text-amber-700">Other staff intake remains incomplete until encounter-specific reconciliation, screening, symptom, or delegated-work evidence is actually persisted.</p>
+    <p className="mt-2 text-[11px] font-bold text-amber-700">This remains a partial handoff. Screening, symptom, form, delegated-work, and staff-question evidence is not inferred from the patient summary.</p>
   </>;
 }
 
@@ -110,7 +129,14 @@ function NoteFields({
   return <div className="space-y-5">{sections.map((section) => <label className="block" key={section.key}><span className="text-[12px] font-extrabold uppercase tracking-[.13em] text-slate-500">{section.label}</span><textarea className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs leading-6 text-slate-800 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" disabled={!editable} onChange={(event) => updateField(section.key, event.target.value)} rows={section.rows} value={fields[section.key]} /></label>)}</div>;
 }
 
-export function EncounterEditor({ canSign, encounter, patient, vital }: { canSign: boolean; encounter: Encounter; patient: Patient; vital: PatientVital | null }) {
+export function EncounterEditor({ canSign, clinicalEvidence, encounter, medicationReconciliation, patient, vital }: {
+  canSign: boolean;
+  clinicalEvidence: CurrentVisitClinicalEvidence;
+  encounter: Encounter;
+  medicationReconciliation: CurrentVisitMedicationReconciliation | null;
+  patient: Patient;
+  vital: PatientVital | null;
+}) {
   const router = useRouter();
   const [fields, setFields] = useState<DraftFields>(() => initialDraft(encounter));
   const [status, setStatus] = useState(encounter.status);
@@ -122,7 +148,7 @@ export function EncounterEditor({ canSign, encounter, patient, vital }: { canSig
   const revision = useRef(0);
   const savedRevision = useRef(0);
   const editable = status === "Draft";
-  const visit = buildCurrentVisitModel(patient, { ...encounter, ...fields, status }, { vital });
+  const visit = buildCurrentVisitModel(patient, { ...encounter, ...fields, status }, { vital, medicationReconciliation });
 
   const saveDraft = useCallback(async (snapshot: DraftFields, targetRevision: number) => {
     if (!editable) return true;
@@ -280,11 +306,7 @@ export function EncounterEditor({ canSign, encounter, patient, vital }: { canSig
           </div>
         </Card>
 
-        <Card className="p-5">
-          <p className="text-sm font-extrabold text-slate-950">Orders & results</p>
-          <p className="mt-2 text-[12px] leading-5 text-slate-500">This first convergence slice does not duplicate lab, imaging, medication, or referral state into the encounter. Those governed workspaces remain authoritative until encounter-native order/result projections are added.</p>
-          <p className="mt-3 text-[11px] font-bold text-slate-400">External completion is never inferred from the encounter presentation.</p>
-        </Card>
+        <CurrentVisitClinicalEvidenceCard evidence={clinicalEvidence} />
 
         <Card className="p-5">
           <p className="text-sm font-extrabold text-slate-950">Documentation & coding</p>

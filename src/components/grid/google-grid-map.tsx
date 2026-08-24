@@ -195,20 +195,32 @@ export function GoogleGridMap({
         const visibleCoordinates: GridCoordinates[] = [];
         if (userLocation) {
           visibleCoordinates.push(userLocation);
-          const marker = new maplibre.Marker({ color: "#174ea6" })
+          const marker = new maplibre.Marker({ color: "#e6817b" })
             .setLngLat([userLocation.longitude, userLocation.latitude])
             .addTo(map);
-          marker.getElement().setAttribute("title", "You are here");
+          const element = marker.getElement();
+          element.style.width = "44px";
+          element.style.height = "44px";
+          element.style.display = "grid";
+          element.style.placeItems = "center";
+          element.setAttribute("title", "You are here");
+          element.setAttribute("aria-label", "You are here");
           markers.push(marker);
         }
 
         for (const point of usablePoints) {
           visibleCoordinates.push(point);
-          const marker = new maplibre.Marker({ color: point.id === selectedPointId ? "#7f1d1d" : "#b4234d" })
+          const marker = new maplibre.Marker({ color: point.id === selectedPointId ? "#702631" : "#b9575b" })
             .setLngLat([point.longitude, point.latitude])
             .addTo(map);
           const element = marker.getElement();
-          element.setAttribute("title", `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`);
+          const label = `${point.title}${point.city || point.state ? ` · ${[point.city, point.state].filter(Boolean).join(", ")}` : ""}`;
+          element.style.width = "44px";
+          element.style.height = "44px";
+          element.style.display = "grid";
+          element.style.placeItems = "center";
+          element.setAttribute("title", label);
+          element.setAttribute("aria-label", label);
           element.setAttribute("role", "button");
           element.setAttribute("tabindex", "0");
           const select = () => onPointSelect?.(point.id);
@@ -272,7 +284,7 @@ export function GoogleGridMap({
         ? "Map centered on reviewed Grid inventory"
         : "Map ready for your location";
 
-  return <div className="relative min-h-[460px] overflow-hidden bg-[#eef3f6]">
+  return <div className="relative min-h-[460px] overflow-hidden bg-[var(--k-public-raised)]">
     <iframe
       className={`absolute inset-0 size-full border-0 ${providerState === "fallback" ? "block" : "hidden"}`}
       loading="lazy"
@@ -284,18 +296,18 @@ export function GoogleGridMap({
     <div ref={elementRef} className={`absolute inset-0 ${providerState === "fallback" ? "invisible" : "visible"}`} aria-label="Klinikos Grid map showing your location and reviewed resources" />
 
     <div className="absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] flex-wrap gap-2">
-      <button className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-4 text-[11px] font-extrabold text-[#0b1220] shadow-sm hover:border-[#8f213e] disabled:cursor-wait" disabled={locationState === "locating"} onClick={requestLocation} type="button">
-        {locationState === "locating" ? <LoaderCircle className="size-4 animate-spin text-[#8f213e]" /> : <Crosshair className="size-4 text-[#8f213e]" />}
+      <button className="inline-flex min-h-11 items-center gap-2 border border-[var(--k-line)] bg-[var(--k-public-surface)] px-4 text-xs font-extrabold text-[var(--k-text)] shadow-sm hover:border-[var(--k-accent)] disabled:cursor-wait" disabled={locationState === "locating"} onClick={requestLocation} type="button">
+        {locationState === "locating" ? <LoaderCircle className="size-4 animate-spin text-[var(--k-accent)]" /> : <Crosshair className="size-4 text-[var(--k-accent)]" />}
         {locationState === "found" ? "Centered on you" : "Use my location"}
       </button>
-      {providerState === "fallback" && <a className="inline-flex min-h-11 items-center gap-2 border border-[#cbd3dd] bg-white px-3 text-[12px] font-bold text-[#5b6675] shadow-sm hover:text-[#0b1220]" href={openStreetMapUrl(fallbackCenter, false, fallbackHasMarker)} rel="noreferrer" target="_blank">Open full map <ExternalLink className="size-3.5" /></a>}
+      {providerState === "fallback" && <a className="inline-flex min-h-11 items-center gap-2 border border-[var(--k-line)] bg-[var(--k-public-surface)] px-3 text-xs font-bold text-[var(--k-muted)] shadow-sm hover:text-[var(--k-text)]" href={openStreetMapUrl(fallbackCenter, false, fallbackHasMarker)} rel="noreferrer" target="_blank">Open full map <ExternalLink className="size-3.5" /></a>}
     </div>
 
-    {providerState === "loading" && <div className="absolute inset-0 grid place-items-center bg-white/75"><p className="text-xs font-extrabold text-[#8f213e]">Opening the Grid map…</p></div>}
+    {providerState === "loading" && <div className="absolute inset-0 grid place-items-center bg-[var(--k-public-surface)]/80"><p className="text-xs font-extrabold text-[var(--k-accent)]">Opening the Grid map…</p></div>}
 
     <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-2 border border-[#d5dae0] bg-white/95 px-3 py-2 text-[12px] font-bold text-[#5b6675] shadow-sm">
-        {locationState === "found" ? <Navigation className="size-3.5 text-[#8f213e]" /> : locationState === "denied" || locationState === "unavailable" ? <ShieldCheck className="size-3.5 text-[#9a7a1f]" /> : <MapPin className="size-3.5 text-[#8f213e]" />}
+      <span className="inline-flex items-center gap-2 border border-[var(--k-line)] bg-[var(--k-public-surface)]/95 px-3 py-2 text-xs font-bold text-[var(--k-muted)] shadow-sm">
+        {locationState === "found" ? <Navigation className="size-3.5 text-[var(--k-accent)]" /> : locationState === "denied" || locationState === "unavailable" ? <ShieldCheck className="size-3.5 text-[var(--k-premium)]" /> : <MapPin className="size-3.5 text-[var(--k-accent)]" />}
         {locationState === "found"
           ? "Real distance is now calculated from your location"
           : locationState === "denied"
@@ -306,8 +318,8 @@ export function GoogleGridMap({
                 ? "Choose location access for real distance"
                 : "No reviewed public Grid pins yet"}
       </span>
-      {providerState === "openfreemap" && <span className="border border-[#d5dae0] bg-white/95 px-3 py-2 text-[12px] font-bold text-[#5b6675] shadow-sm">OpenFreeMap · no Google credential required</span>}
-      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
+      {providerState === "openfreemap" && <span className="border border-[var(--k-line)] bg-[var(--k-public-surface)]/95 px-3 py-2 text-xs font-bold text-[var(--k-muted)] shadow-sm">OpenFreeMap · no Google credential required</span>}
+      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
     </div>
   </div>;
 }

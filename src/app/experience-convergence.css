@@ -25,14 +25,63 @@
   outline-offset: 3px;
 }
 
+/* Black Label material convergence.
+ * `cinematic-global.css` predates customer-selectable Marble and hard-codes the
+ * platform/native control scheme to dark. This later, deliberately narrow layer is the
+ * correct place to reconcile that legacy assumption into the single theme authority.
+ * The command rail may stay Obsidian; the sustained-work surface and native controls
+ * must follow the active material. */
+.klinikos-platform {
+  --workspace-panel:var(--k-public-surface);
+  --workspace-panel-raised:var(--k-public-raised);
+  --workspace-border:var(--k-line);
+  --workspace-text:var(--k-text);
+  --workspace-muted:var(--k-muted);
+  --workspace-accent:var(--k-accent);
+  color-scheme:var(--k-theme-mode);
+}
+.klinikos-platform .klinikos-workspace {color:var(--workspace-text)}
+.klinikos-platform .klinikos-workspace :where(h1,h2,h3,h4,h5,h6) {color:var(--workspace-text)}
+.klinikos-platform .klinikos-workspace :where(input,textarea,select) {color-scheme:var(--k-theme-mode)}
+.klinikos-platform .klinikos-workspace :where(input,textarea,select):not([type="checkbox"]):not([type="radio"]) {border-color:var(--workspace-border)}
+
+/* Marble compatibility for shared Klinikos primitives that the older cinematic layer
+ * forces dark. This applies only when the root page surface has entered Marble. */
+.klinikos-cinematic-root .grid-marble-surface .k-page,
+.klinikos-cinematic-root .grid-marble-surface .k-hero {
+  background-color:var(--k-work-bg)!important;
+  color:var(--k-text)!important;
+}
+.klinikos-cinematic-root .grid-marble-surface .k-surface,
+.klinikos-cinematic-root .grid-marble-surface .k-raised {
+  background:var(--k-public-surface)!important;
+  border-color:var(--k-line)!important;
+  color:var(--k-text)!important;
+}
+.klinikos-cinematic-root .grid-marble-surface .k-text {color:var(--k-text)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-muted {color:var(--k-muted)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-kicker,
+.klinikos-cinematic-root .grid-marble-surface .k-accent {color:var(--k-accent)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-premium {color:var(--k-premium)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-rule {border-color:var(--k-line)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-input-shell {
+  border-color:var(--k-line)!important;
+  background:var(--k-public-surface)!important;
+  box-shadow:var(--k-shadow)!important;
+}
+.klinikos-cinematic-root .grid-marble-surface .k-input-shell :where(input,textarea) {color:var(--k-text)!important}
+.klinikos-cinematic-root .grid-marble-surface .k-input-shell :where(input,textarea)::placeholder {color:var(--k-muted)!important}
+.klinikos-cinematic-root .grid-marble-surface .sales-canvas,
+.klinikos-cinematic-root .grid-marble-surface .grid-canvas {color-scheme:light}
+
 /* Premium light-mode readability. Existing atmosphere logic remains the single theme
  * authority; these rules simply prevent cinematic text treatments from becoming faint
- * on the paper/day surfaces. */
+ * on the Marble surfaces. */
 html[data-klinikos-atmosphere="day"] .klinikos-platform,
 html[data-klinikos-atmosphere="dawn"] .klinikos-platform,
 html[data-klinikos-atmosphere="golden"] .klinikos-platform {
-  --mode-background:#f6f2ed;
-  --mode-header:rgba(252,249,245,.94);
+  --mode-background:var(--k-work-bg);
+  --mode-header:var(--k-work-header);
 }
 html[data-klinikos-atmosphere="day"] .k-muted,
 html[data-klinikos-atmosphere="dawn"] .k-muted,

@@ -53,6 +53,37 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{
   statesRoleOnly?: true;
 }> = [
   {
+    // Exact production transcript typo: "what sgoing on". Treat the separated possessive
+    // fragment as the visitor asking what this page/product is, not as an unresolved turn.
+    match: /^\s*what\s+sgoing(?:\s+on)?[?.! ]*$/i,
+    answer: () => ({
+      title: "You’re in Klinikos.",
+      body:
+        "This is the public front door to Klinikos. Tell me what you are trying to run, fix, find, learn, or get done and I’ll point you toward the most useful next step. Private clinic records and actions stay behind sign-in.",
+      destination: null,
+    }),
+  },
+  {
+    // Public sign-up language must follow current product truth. `/access` is a real
+    // work-email evaluation/access-verification flow; universal self-serve account
+    // creation is separately gated and must not be implied by this answer.
+    match: /^\s*(?:sign\s*up|signup|join(?:\s+klinikos)?|create(?:\s+an?)?\s+account|request\s+access|get\s+access|new\s+account)[?.! ]*$/i,
+    answer: () => ({
+      title: "Let’s get you into the right access path.",
+      body:
+        "If you’re new and evaluating Klinikos, request access with a work email and complete verification. That is the current access path; it does not mean unrestricted self-serve account creation is already enabled. If you already have authorized access, sign in instead.",
+      destination: { key: "explore", href: "/access", action: "Request Klinikos access" },
+    }),
+  },
+  {
+    match: /^\s*(?:sign\s*in|signin|log\s*in|login|i already have access)[?.! ]*$/i,
+    answer: () => ({
+      title: "Welcome back.",
+      body: "If your Klinikos access is already authorized, sign in to continue to your governed workspace.",
+      destination: { key: "signin", href: "/login", action: "Sign in to Klinikos" },
+    }),
+  },
+  {
     match: /\b(?:what(?:'s| is)?\s+(?:this|klinikos|zumi)|who are you|what do you do|what does klinikos do|whats going|what(?:'s| is) going on)\b/i,
     answer: () => ({
       title: KLINIKOS_ONE_LINE,
