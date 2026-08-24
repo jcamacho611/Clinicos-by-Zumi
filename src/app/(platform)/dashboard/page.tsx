@@ -13,6 +13,13 @@ import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-re
 import { listRecentPathSignals } from "@/lib/orchestration/path-signal-repository";
 import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 
+function roleDisplayName(role: string) {
+  return role
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
   const session = await requireClinicSession();
   if (session.role === "contractor") redirect("/grid");
@@ -41,29 +48,53 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // status object also names the selected adapter, which is deployment detail the
   // browser has no reason to receive.
   const gatewayStatus = zumiGatewayStatus();
+  const operatingSignals = [
+    `${activePaths.length} active ${activePaths.length === 1 ? "Path" : "Paths"}`,
+    `${livingAppointments.length} loaded ${livingAppointments.length === 1 ? "visit" : "visits"}`,
+    ...(gridSignals.length > 0
+      ? [`${gridSignals.length} Grid ${gridSignals.length === 1 ? "signal" : "signals"}`]
+      : []),
+    gatewayStatus.available ? "Zumi connected" : "Deterministic command mode",
+  ];
 
   return (
-    <div className="space-y-16">
+    <div className="unicorn-dashboard" data-klinikos-role={session.role}>
+      <div className="unicorn-operating-context" aria-label="Current operating context">
+        <div className="unicorn-operating-context__identity">
+          <span className="unicorn-operating-context__kicker">Living Home</span>
+          <strong>{session.organizationName}</strong>
+          <span>{roleDisplayName(session.role)}</span>
+        </div>
+        <div className="unicorn-operating-context__signals" aria-label="Loaded operating context">
+          {operatingSignals.map((signal) => (
+            <span className="unicorn-context-chip" key={signal}>{signal}</span>
+          ))}
+        </div>
+      </div>
+
       {verifiedFirstLogin && launchBriefing ? (
         <ClinicFirstLoginLaunch organizationName={session.organizationName} briefing={launchBriefing} />
       ) : null}
-      <LivingHome
-        appointments={livingAppointments}
-        canActOnGridSignals={canActOnClinicGridSignal(session)}
-        canOpenPatientRecord={can(session.role, "patients", "read")}
-        firstName={firstName}
-        initialGuidance={pathGuidance}
-        initialPaths={activePaths}
-        intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
-        onboardingComplete={verifiedFirstLogin}
-        eduReadiness={eduReadiness}
-        gridSignals={gridSignals}
-        opportunity={rail.opportunity}
-        organizationName={session.organizationName}
-        rail={rail.destinations}
-        recentSignals={recentPathSignals}
-        role={session.role}
-      />
+
+      <section className="unicorn-living-shell" aria-label="Klinikos Living Home">
+        <LivingHome
+          appointments={livingAppointments}
+          canActOnGridSignals={canActOnClinicGridSignal(session)}
+          canOpenPatientRecord={can(session.role, "patients", "read")}
+          firstName={firstName}
+          initialGuidance={pathGuidance}
+          initialPaths={activePaths}
+          intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
+          onboardingComplete={verifiedFirstLogin}
+          eduReadiness={eduReadiness}
+          gridSignals={gridSignals}
+          opportunity={rail.opportunity}
+          organizationName={session.organizationName}
+          rail={rail.destinations}
+          recentSignals={recentPathSignals}
+          role={session.role}
+        />
+      </section>
     </div>
   );
 }
