@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { gridFeePolicySchema } from "@/lib/grid/financial-rules";
+import { evaluateGridFeePolicyScope } from "@/lib/commercial/monetization-policy";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 type FeePolicyRow = {
@@ -57,6 +58,20 @@ export async function listGridFeePolicies(session: ClinicSession) {
 export async function createGridFeePolicy(session: ClinicSession, rawInput: unknown) {
   await requirePlatformAdmin(session);
   const input = gridFeePolicySchema.parse(rawInput);
+
+  // A persisted policy row is what the allocator actually reads, so the declared
+  // monetization gate has to be applied here rather than only in the declaration
+  // module. Refusing at write time keeps a prohibited fee out of the table entirely.
+  const monetization = evaluateGridFeePolicyScope({
+    scopeKind: input.scopeKind,
+    scopeValue: input.scopeValue ?? null,
+    platformFeeBps: input.platformFeeBps,
+    platformFeeFlatCents: input.platformFeeFlatCents,
+  });
+  if (!monetization.permitted) {
+    throw new NetworkAccessError(monetization.reason, 409);
+  }
+
   const id = randomUUID();
 
   return db.$transaction(async (tx) => {
@@ -93,6 +108,8 @@ export async function createGridFeePolicy(session: ClinicSession, rawInput: unkn
           platformFeeBps: input.platformFeeBps,
           platformFeeFlatCents: input.platformFeeFlatCents,
           status: "active",
+          monetizationOutcome: monetization.outcome,
+          monetizationFeeClass: monetization.feeClass,
         },
       },
     });

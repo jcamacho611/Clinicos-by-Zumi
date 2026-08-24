@@ -6,6 +6,7 @@ import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { computePlatformFeeCents } from "@/lib/grid/financial-rules";
+import { evaluateGridMonetizationPolicy } from "@/lib/commercial/monetization-policy";
 import { reservationHasActiveGridIssues } from "@/lib/grid/trust-repository";
 import { computeGridFinancialSplit } from "@/lib/grid/transaction-state";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
@@ -83,6 +84,21 @@ async function resolveFeePolicy(client: Prisma.TransactionClient, context: Finan
   if (!policy) {
     throw new NetworkAccessError("No active Klinikos Grid fee policy applies to this fulfilled transaction.", 409);
   }
+
+  // Re-check at settlement rather than trusting the row. A `default`-scoped policy is
+  // resolved for any transaction with no more specific row, so without this the
+  // fallback would silently apply a percentage to a referral or to patient care. Rows
+  // persisted before the write-time gate existed are caught here too.
+  const monetization = evaluateGridMonetizationPolicy({
+    resourceKind: context.resourceKind,
+    demandKind: context.demandKind,
+    platformFeeBps: policy.platformFeeBps,
+    platformFeeFlatCents: policy.platformFeeFlatCents,
+  });
+  if (!monetization.permitted) {
+    throw new NetworkAccessError(monetization.reason, 409);
+  }
+
   return policy;
 }
 
