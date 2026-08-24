@@ -1,0 +1,71 @@
+enum BodyMapLaterality {
+  left
+  right
+  bilateral
+  midline
+  not_applicable
+}
+
+enum BodyMapFindingState {
+  active
+  resolved
+}
+
+enum BodyMapCaptureSource {
+  clinical_capture
+  staff_intake
+  provider_review
+  structured_import
+}
+
+/// Immutable clinical evidence captured for one encounter at one point in time.
+///
+/// organizationId / patientId / encounterId / createdByUserId intentionally remain
+/// explicit provenance identifiers. The server repository validates that all four
+/// belong to the same tenant/context before insert. Comparison roles such as
+/// initial/previous/today are derived at read time and are never persisted here.
+model BodyMapVersion {
+  id              String               @id @default(cuid())
+  organizationId  String
+  patientId       String
+  encounterId     String
+  createdByUserId String
+  capturedAt      DateTime
+  source          BodyMapCaptureSource @default(clinical_capture)
+  amendsVersionId String?
+  createdAt       DateTime             @default(now())
+  findings        BodyMapFinding[]
+  amendsVersion   BodyMapVersion?      @relation("BodyMapVersionAmendment", fields: [amendsVersionId], references: [id], onDelete: Restrict)
+  amendments      BodyMapVersion[]     @relation("BodyMapVersionAmendment")
+
+  @@index([organizationId, patientId, capturedAt])
+  @@index([organizationId, encounterId, capturedAt])
+  @@index([organizationId, amendsVersionId])
+  @@map("body_map_versions")
+}
+
+/// One structured finding inside an immutable BodyMap version.
+///
+/// clinicalState is explicit evidence. A prior finding omitted from a later version is
+/// NOT resolved; resolution exists only when a clinician records a finding with
+/// clinicalState=resolved in a new version.
+model BodyMapFinding {
+  id                String              @id @default(cuid())
+  bodyMapVersionId  String
+  findingKey        String
+  bodyRegion        String
+  laterality        BodyMapLaterality
+  symptom           String
+  severity          Int?
+  clinicalState     BodyMapFindingState @default(active)
+  functionalImpact  String?
+  radiation         String?
+  annotations       String[]            @default([])
+  sourceObservation Json?
+  createdAt         DateTime            @default(now())
+  bodyMapVersion    BodyMapVersion      @relation(fields: [bodyMapVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([bodyMapVersionId, findingKey])
+  @@index([bodyMapVersionId, bodyRegion, laterality])
+  @@map("body_map_findings")
+}
