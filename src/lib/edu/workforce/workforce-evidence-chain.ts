@@ -12,16 +12,27 @@ export type WorkforceEvidenceInput = {
 export type WorkforceEvidenceStageStatus = "satisfied" | "action_required" | "blocked";
 
 export function projectWorkforceEvidenceChain(input: WorkforceEvidenceInput) {
-  const prerequisites = {
-    enrollment: input.enrolled,
-    session: input.enrolled && input.sessionScheduled,
-    attendance: input.enrolled && input.sessionScheduled && input.attendanceVerified,
-    applied_evidence: input.attendanceVerified && input.appliedEvidenceSatisfied,
-    knowledge: input.attendanceVerified && input.knowledgeSatisfied,
-    instructor_review: input.appliedEvidenceSatisfied && input.knowledgeSatisfied && input.instructorReviewed,
-    completion_approval: input.instructorReviewed && input.completionApproved,
-    credential: input.completionApproved && input.credentialIssued,
-    reporting: input.completionApproved,
+  const enrollment = input.enrolled;
+  const session = enrollment && input.sessionScheduled;
+  const attendance = session && input.attendanceVerified;
+  const appliedEvidence = attendance && input.appliedEvidenceSatisfied;
+  const knowledge = attendance && input.knowledgeSatisfied;
+  const instructorReviewReady = appliedEvidence && knowledge;
+  const instructorReview = instructorReviewReady && input.instructorReviewed;
+  const completionApproval = instructorReview && input.completionApproved;
+  const credential = completionApproval && input.credentialIssued;
+  const reporting = completionApproval;
+
+  const states = {
+    enrollment,
+    session,
+    attendance,
+    applied_evidence: appliedEvidence,
+    knowledge,
+    instructor_review: instructorReview,
+    completion_approval: completionApproval,
+    credential,
+    reporting,
   } as const;
 
   const order = [
@@ -37,14 +48,16 @@ export function projectWorkforceEvidenceChain(input: WorkforceEvidenceInput) {
   ] as const;
 
   return order.map((key) => {
-    const satisfied = prerequisites[key];
-    const priorKey = order[Math.max(0, order.indexOf(key) - 1)];
-    const priorSatisfied = key === "enrollment" ? true : prerequisites[priorKey];
-    const humanAction = key === "completion_approval" && priorSatisfied && !satisfied;
+    if (states[key]) return { key, status: "satisfied" as const };
 
-    return {
-      key,
-      status: satisfied ? "satisfied" : humanAction ? "action_required" : "blocked",
-    } as const;
+    if (key === "instructor_review" && instructorReviewReady && !input.instructorReviewed) {
+      return { key, status: "action_required" as const };
+    }
+
+    if (key === "completion_approval" && instructorReview && !input.completionApproved) {
+      return { key, status: "action_required" as const };
+    }
+
+    return { key, status: "blocked" as const };
   });
 }
