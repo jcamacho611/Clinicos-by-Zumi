@@ -5,10 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
-import {
-  resolvePublicLivingIntent,
-  type PublicLivingResolution,
-} from "@/lib/orchestration/public-living-intent";
+import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 import {
   KLINIKOS_ECONOMIC_THESIS,
   KLINIKOS_HUMAN_AUTHORITY,
@@ -108,6 +105,15 @@ const navItems = [
   { label: "Trust", href: "/trust" },
 ] as const;
 
+const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
+  kind: "conversation",
+  title: "I can't reach Klinikos right now",
+  body: "Your message didn't get through, so I'd rather say so than guess. Try again in a moment.",
+  assumption: null,
+  destination: null,
+  confidence: 0,
+};
+
 export function PublicLivingGateway() {
   const [intent, setIntent] = useState("");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
@@ -143,7 +149,6 @@ export function PublicLivingGateway() {
       if (turns[index].resolution.confidence > 0.25) break;
       unresolvedTurns += 1;
     }
-    const fallback = resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns);
     const history = turns
       .flatMap((turn) => ([
         { role: "user" as const, content: turn.prompt },
@@ -161,7 +166,9 @@ export function PublicLivingGateway() {
     activeRequest.current?.abort();
     activeRequest.current = controller;
 
-    let resolution = fallback;
+    // No local resolution: the routing engine is server-side, so an unreachable server
+    // means honest degraded guidance rather than an invented answer.
+    let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
 
     try {
@@ -171,6 +178,8 @@ export function PublicLivingGateway() {
         body: JSON.stringify({
           question: prompt,
           history,
+          priorResolution,
+          unresolvedTurns,
           sessionId: publicConversationId(),
           surface: window.location.pathname,
         }),
