@@ -8,7 +8,7 @@ Authority: doctor-defined Current Visit P0 acceptance gate (#244), current Klini
 
 This foundation defines the immutable clinical domain contract for structured body-map history and deterministic longitudinal comparison. It exists so Klinikos can show **initial -> previous -> today** without replacing history, inventing clinical change, or allowing AI prose to become the source of clinical truth.
 
-The current feature branch now implements the backend persistence substrate: additive BodyMap version/finding schema, migration, deterministic input validation, append-only server repository, explicit amendment lineage, explicit finding state, bounded audit events, and scoped read DTOs. The exact migration has been exercised successfully on a disposable Neon branch cloned from the production-shaped database and that branch was deleted without applying changes to production.
+The current feature branch implements the backend persistence substrate: additive BodyMap version/finding schema, migration, deterministic input validation, append-only server repository, explicit amendment lineage, explicit finding state, governed capture-source codes, bounded audit events, and scoped read DTOs. The final migration has been exercised successfully on a disposable Neon branch cloned from the production-shaped database and that branch was deleted without applying changes to production.
 
 This work **does not satisfy P0 #244 by itself**. It does not yet provide staff/provider BodyMap authoring UI, profession/capability action wiring, Current Visit BodyMap presentation, persisted-to-comparator composition, broader Clinical Change aggregation, or production PHI approval.
 
@@ -42,9 +42,22 @@ The BodyMap repository is server-only and uses **tenant + patient + encounter sc
 - active actor belongs to the organization;
 - amendment source, when supplied, belongs to the same organization, patient, and encounter.
 
-Every persisted version preserves exact creator and captured-at provenance, plus patient, encounter, organization, source, and optional amendment lineage.
+Every persisted version preserves exact creator and captured-at provenance, plus patient, encounter, organization, governed source, and optional amendment lineage.
 
-Audit events are written in the same database transaction as the BodyMap version. Audit metadata records bounded provenance such as actor, encounter, finding count, source, and amendment reference; it does not duplicate the clinical finding payload into audit metadata.
+BodyMap capture sources are machine-governed values only:
+
+- `clinical_capture`;
+- `staff_intake`;
+- `provider_review`;
+- `structured_import`.
+
+Free-text source values are rejected by deterministic validation and by the PostgreSQL enum. This keeps narrative or PHI-like prose out of a field that is also copied into bounded audit metadata.
+
+A BodyMap version must contain at least one explicit finding. An empty version is rejected because omission has no resolution meaning.
+
+Materially future-dated evidence is rejected. The deterministic validator allows no more than five minutes of clock skew beyond the validation clock so future timestamps cannot silently reorder longitudinal evidence.
+
+Audit events are written in the same database transaction as the BodyMap version. Audit metadata records bounded provenance such as actor, encounter, finding count, governed source, and amendment reference; it does not duplicate the clinical finding payload into audit metadata.
 
 Browser clients are not part of this persistence tranche. Future clients must receive only minimum-necessary BodyMap/Change DTOs and must never become the authorization boundary.
 
@@ -58,7 +71,7 @@ A finding is identified structurally by:
 - source BodyMap version;
 - source finding identifier.
 
-The persistence layer also stores a deterministic normalized `findingKey` and enforces uniqueness within a single immutable BodyMap version.
+The persistence layer stores a deterministic normalized `findingKey` and enforces uniqueness within a single immutable BodyMap version. Identity normalization applies Unicode NFKC normalization, collapses whitespace, trims, and normalizes case before constructing the key so visually equivalent findings cannot bypass duplicate detection through width/case/spacing variations.
 
 Laterality remains first-class. A left-shoulder finding is not interchangeable with a right-shoulder finding.
 
@@ -71,7 +84,9 @@ This is enforced twice:
 1. deterministic TypeScript validation before the write transaction;
 2. a PostgreSQL check constraint in the migration.
 
-The disposable Neon proof confirmed that severity `11` is rejected by PostgreSQL itself.
+A finding explicitly marked `resolved` may carry only severity `0` or null. Contradictory resolved state with nonzero severity is rejected by both application validation and PostgreSQL.
+
+The final disposable Neon proof confirmed that severity `11` and `resolved + severity 6` are rejected by PostgreSQL itself.
 
 A ROM, strength, or another structured measure is **not** BodyMap severity. Those measurements require their own typed clinical evidence with scale/unit/direction semantics and should enter the broader Clinical Change Graph as separate evidence sources. Klinikos must not reuse the BodyMap severity comparator for measurements where higher does not necessarily mean worse.
 
@@ -116,15 +131,21 @@ Feature-branch implementation consists of:
   - immutable child `BodyMapFinding`;
   - `BodyMapLaterality`;
   - `BodyMapFindingState`;
+  - `BodyMapCaptureSource`;
   - no persisted `initial/previous/today` field.
 - `prisma/migrations/20260823200000_body_map_persistence_v1/migration.sql`
   - additive tables/enums/indexes;
-  - severity check;
+  - severity and resolved-state check constraints;
+  - governed capture-source enum;
   - restrictive amendment lineage;
   - child findings cascade only with their owning BodyMap version.
 - `src/lib/clinical/body-map-persistence.ts`
-  - deterministic normalization and validation;
+  - deterministic Unicode/whitespace identity normalization and validation;
+  - governed capture-source validation;
+  - empty-version rejection;
+  - material future-time rejection with bounded clock skew;
   - duplicate identity rejection;
+  - explicit resolved/severity consistency;
   - malformed runtime payload fail-closed behavior;
   - deliberate persisted DTO types.
 - `src/lib/repositories/body-map-repository.ts`
@@ -136,42 +157,38 @@ Feature-branch implementation consists of:
   - deterministic latest ordering by captured time then created time;
   - no update/delete API for historical BodyMap rows.
 
-## Disposable Neon migration proof
+## Final disposable Neon migration proof
 
-The exact migration was applied to temporary branch:
+The final exact migration was applied to temporary branch:
 
-- project: `ClinicOS Production`
-- temporary branch name: `body-map-persistence-v1-proof-20260823`
-- temporary branch id: `br-holy-night-aticpk05`
-- parent: production-shaped branch `br-ancient-term-atolp7vw`
+- project: `ClinicOS Production`;
+- temporary branch name: `body-map-persistence-v1-final-proof-20260823`;
+- temporary branch id: `br-icy-wave-athu3nht`;
+- parent: production-shaped branch `br-ancient-term-atolp7vw`.
 
 Observed after migration and before synthetic BodyMap data:
 
-- legacy patients: 6
-- legacy encounters: 4
-- legacy users: 5
-- BodyMap versions: 0
-- BodyMap findings: 0
-- BodyMap indexes including primary/unique indexes: 7
-- severity check present: 1
-- amendment `RESTRICT` FK present: 1
-- finding-owner `CASCADE` FK present: 1
-- laterality enum values: left/right/bilateral/midline/not_applicable
-- finding-state enum values: active/resolved
+- legacy patients: 6;
+- legacy encounters: 4;
+- legacy users: 5;
+- capture-source enum: clinical_capture/staff_intake/provider_review/structured_import;
+- resolved-severity check present: 1;
+- existing severity check present;
+- BodyMap amendment/finding ownership constraints created by the migration.
 
-Synthetic-only proof then stored:
+Synthetic-only proof then confirmed:
 
-- initial left-shoulder pain severity 8;
-- previous left-shoulder pain severity 6;
-- today left-shoulder pain severity 6;
-- newly documented dizziness;
-- one explicit resolved amendment state.
-
-Post-proof legacy counts remained exactly 6 patients / 4 encounters / 5 users. An attempted severity 11 insert failed at `body_map_findings_severity_check`.
+- a `provider_review` BodyMap version can be inserted;
+- active left-shoulder pain severity 6 can be inserted;
+- explicit resolved right-shoulder pain severity 0 can be inserted;
+- free-text capture source is rejected by PostgreSQL;
+- active severity 11 is rejected by PostgreSQL;
+- resolved severity 6 is rejected by PostgreSQL;
+- legacy counts remain exactly 6 patients / 4 encounters / 5 users.
 
 The temporary branch was then deleted. **No migration or synthetic data was applied to production.**
 
-The Neon whole-branch schema-diff endpoint returned HTTP 413 because the production-shaped schema is too large for that endpoint; direct catalog verification was used instead.
+Earlier disposable proofs were superseded by this final proof after the capture-source and resolved-severity constraints were added.
 
 ## Current Visit and prior-encounter contract
 
