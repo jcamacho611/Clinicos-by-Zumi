@@ -1,0 +1,670 @@
+/*
+ * Klinikos Unicorn Experience, tranche 1.
+ *
+ * This layer is intentionally presentation-only. The authenticated Living Home keeps
+ * its existing Path, Zumi, schedule, Grid, EDU, permission and evidence authorities.
+ * Marble and Obsidian change material, depth and atmosphere, never truth or behavior.
+ */
+
+.unicorn-dashboard {
+  --unicorn-gutter: clamp(16px, 2.7vw, 40px);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: clamp(24px, 3vw, 44px);
+  min-height: calc(100vh - 80px);
+  margin-inline: calc(var(--unicorn-gutter) * -1);
+  padding: clamp(18px, 2.2vw, 32px) var(--unicorn-gutter) clamp(56px, 7vw, 104px);
+  overflow: clip;
+  color: var(--k-text);
+  background: var(--k-work-bg);
+}
+
+.unicorn-dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: var(--k-ambient);
+}
+
+.unicorn-dashboard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  height: 260px;
+  pointer-events: none;
+  opacity: .5;
+}
+
+.unicorn-operating-context {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  width: min(100%, 1460px);
+  margin-inline: auto;
+  padding: 0 2px 20px;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.unicorn-operating-context__identity {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.unicorn-operating-context__kicker {
+  color: var(--k-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.unicorn-operating-context__identity strong {
+  overflow: hidden;
+  color: var(--k-text);
+  font-size: clamp(18px, 1.8vw, 25px);
+  font-weight: 650;
+  letter-spacing: -.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unicorn-operating-context__identity > span:last-child {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .02em;
+}
+
+.unicorn-operating-context__signals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.unicorn-context-chip {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  padding: 8px 13px;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+.unicorn-living-shell {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 1540px);
+  min-height: 760px;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--k-line);
+  border-radius: clamp(24px, 2.4vw, 38px);
+  box-shadow: var(--k-shadow);
+  transition:
+    background-color 320ms var(--ease-standard),
+    border-color 320ms var(--ease-standard),
+    box-shadow 320ms var(--ease-standard);
+}
+
+.unicorn-living-shell::before,
+.unicorn-living-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.unicorn-living-shell::before {
+  inset: 0;
+  z-index: -2;
+}
+
+.unicorn-living-shell::after {
+  z-index: -1;
+  width: min(68vw, 1060px);
+  aspect-ratio: 1 / .88;
+  top: -78px;
+  left: 50%;
+  translate: -50% 0;
+  opacity: .18;
+  background: url('/klinikos-rose-hero-production.png') center top / contain no-repeat;
+  filter: saturate(.72) contrast(1.05);
+  transition: opacity 420ms var(--ease-standard), filter 420ms var(--ease-standard);
+}
+
+/* Keep the existing Living Home behavior, but let the new shell own the stage. */
+.unicorn-living-shell > [data-klinikos-ds] {
+  position: relative;
+  z-index: 1;
+  min-height: 760px;
+  margin-inline: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.unicorn-living-shell > [data-klinikos-ds] > div {
+  max-width: 1460px !important;
+  padding: clamp(44px, 5.2vw, 78px) clamp(22px, 4vw, 64px) clamp(52px, 6vw, 92px) !important;
+}
+
+.unicorn-living-shell #living-home-title {
+  max-width: 900px !important;
+  margin-top: clamp(28px, 3vw, 46px) !important;
+  font-size: clamp(3.35rem, 7.4vw, 7.25rem) !important;
+  font-weight: 220 !important;
+  line-height: .86 !important;
+  letter-spacing: -.073em !important;
+  text-wrap: balance;
+}
+
+.unicorn-living-shell #living-home-title > span:last-child {
+  display: inline-block;
+  margin-top: .08em;
+  text-shadow: 0 0 40px color-mix(in srgb, var(--k-accent) 15%, transparent);
+}
+
+.unicorn-living-shell #living-home-title + p {
+  max-width: 640px !important;
+  margin-top: 26px !important;
+  font-size: clamp(13px, 1.1vw, 15px) !important;
+  line-height: 1.75 !important;
+}
+
+.unicorn-living-shell form:has(#living-home-composer) {
+  max-width: 900px !important;
+  margin-top: clamp(34px, 4vw, 56px) !important;
+}
+
+.unicorn-living-shell form:has(#living-home-composer) > div {
+  position: relative;
+  min-height: 108px;
+  padding: 19px 22px 16px !important;
+  overflow: hidden;
+  border-radius: 28px !important;
+  backdrop-filter: blur(22px) saturate(1.1);
+  transition:
+    border-color 220ms var(--ease-standard),
+    background-color 220ms var(--ease-standard),
+    box-shadow 220ms var(--ease-standard),
+    transform 220ms var(--ease-standard);
+}
+
+.unicorn-living-shell form:has(#living-home-composer) > div:focus-within {
+  border-color: color-mix(in srgb, var(--k-accent) 58%, var(--k-line)) !important;
+  transform: translateY(-1px);
+}
+
+.unicorn-living-shell #living-home-composer {
+  min-height: 52px !important;
+  padding: 5px 0 !important;
+  font-size: clamp(14px, 1.2vw, 16px) !important;
+  font-weight: 520;
+  line-height: 1.65 !important;
+  caret-color: var(--k-accent);
+}
+
+.unicorn-living-shell #living-home-composer::placeholder {
+  color: color-mix(in srgb, var(--k-muted) 76%, transparent);
+}
+
+/* Zumi visually belongs to the composer rather than floating in a corner. */
+.unicorn-living-shell form:has(#living-home-composer) + div {
+  position: relative;
+  z-index: 4;
+  width: max-content;
+  margin: -17px auto 0 !important;
+}
+
+.unicorn-living-shell form:has(#living-home-composer) + div > :first-child {
+  filter: drop-shadow(0 16px 34px color-mix(in srgb, var(--k-accent) 22%, transparent));
+}
+
+.unicorn-living-shell [aria-label="Progress on your request"] {
+  position: relative;
+  min-width: 132px;
+}
+
+.unicorn-living-shell [aria-label="Progress on your request"]::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 4px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--k-accent), var(--k-line) 42%, transparent 100%);
+  opacity: .48;
+}
+
+.unicorn-living-shell [aria-label="Progress on your request"] li {
+  position: relative;
+  z-index: 1;
+}
+
+.unicorn-living-shell [aria-label="Progress on your request"] li > span:first-child {
+  box-shadow: 0 0 0 5px var(--k-work-bg);
+}
+
+.unicorn-living-shell [aria-label="Klinikos destinations"] {
+  min-width: 118px;
+}
+
+.unicorn-living-shell [aria-label="Klinikos destinations"] button {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--k-public-raised) 70%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-text) 5%, transparent);
+}
+
+.unicorn-living-shell [aria-label="Klinikos destinations"] button::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.unicorn-living-shell [aria-label="Klinikos destinations"] button:hover,
+.unicorn-living-shell [aria-label="Klinikos destinations"] button:focus-visible {
+  border-color: var(--k-accent) !important;
+  color: var(--k-accent) !important;
+}
+
+/* Materialized work should read as an Object Stage, not another dashboard card. */
+.unicorn-living-shell section[aria-labelledby="workspace-title"] {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--k-public-raised) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-text) 4%, transparent);
+  backdrop-filter: blur(22px);
+}
+
+.unicorn-living-shell section[aria-labelledby="workspace-title"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--k-accent), transparent 72%);
+}
+
+/* Existing operations stay visible, but gain the same editorial material hierarchy. */
+.unicorn-living-shell [data-klinikos-object-stage],
+.unicorn-living-shell section[aria-labelledby^="focus-"] {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-text) 4%, transparent);
+}
+
+/* ------------------------------ OBSIDIAN ------------------------------ */
+html:root[data-klinikos-atmosphere="night"] .unicorn-dashboard::after {
+  background: linear-gradient(180deg, rgba(230, 129, 123, .055), transparent);
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-operating-context {
+  border-color: rgba(230, 129, 123, .18);
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-context-chip {
+  border-color: rgba(230, 129, 123, .17);
+  background: rgba(18, 8, 10, .46);
+  color: #cfb6b2;
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell {
+  border-color: rgba(230, 129, 123, .18);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(119, 28, 35, .24), transparent 34%),
+    radial-gradient(circle at 84% 10%, rgba(230, 129, 123, .07), transparent 24%),
+    linear-gradient(180deg, #050303 0%, #090506 55%, #070404 100%);
+  box-shadow:
+    0 42px 130px rgba(0, 0, 0, .48),
+    inset 0 1px 0 rgba(255, 221, 217, .025);
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell::before {
+  background:
+    radial-gradient(ellipse at 50% 32%, transparent 0%, rgba(3, 2, 2, .04) 42%, rgba(3, 2, 2, .64) 78%, rgba(3, 2, 2, .92) 100%),
+    linear-gradient(90deg, rgba(3, 2, 2, .44), transparent 18%, transparent 82%, rgba(3, 2, 2, .44));
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell::after {
+  opacity: .2;
+  filter: saturate(.74) brightness(.66) contrast(1.12);
+  mix-blend-mode: screen;
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell form:has(#living-home-composer) > div {
+  border-color: rgba(230, 129, 123, .26) !important;
+  background:
+    radial-gradient(circle at 72% 100%, rgba(147, 39, 46, .15), transparent 36%),
+    rgba(21, 9, 12, .70) !important;
+  box-shadow:
+    0 28px 86px rgba(31, 5, 8, .38),
+    inset 0 1px 0 rgba(255, 232, 228, .026);
+}
+
+html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell section[aria-labelledby="workspace-title"] {
+  border-color: rgba(230, 129, 123, .19) !important;
+  background: rgba(12, 6, 8, .82);
+}
+
+/* ------------------------------- MARBLE ------------------------------- */
+html:root[data-klinikos-atmosphere="day"] .unicorn-dashboard,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-dashboard,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-dashboard {
+  background: #f6f2ed;
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-dashboard::after,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-dashboard::after,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-dashboard::after {
+  background: linear-gradient(180deg, rgba(168, 77, 85, .045), transparent);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-operating-context,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-operating-context,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-operating-context {
+  border-color: rgba(84, 43, 47, .15);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-context-chip,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-context-chip,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-context-chip {
+  border-color: rgba(84, 43, 47, .14);
+  background: rgba(255, 252, 248, .66);
+  color: #6d5659;
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell {
+  border-color: rgba(84, 43, 47, .13);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(168, 77, 85, .065), transparent 31%),
+    radial-gradient(circle at 90% 4%, rgba(159, 95, 85, .04), transparent 22%),
+    linear-gradient(180deg, #fbf8f4 0%, #f6f2ed 58%, #f2ece7 100%);
+  box-shadow:
+    0 30px 92px rgba(63, 32, 36, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .84);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell::before,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell::before,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell::before {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .34), transparent 24%, transparent 76%, rgba(126, 73, 75, .025)),
+    radial-gradient(ellipse at 50% 26%, rgba(255, 255, 255, .68), transparent 58%);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell::after,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell::after,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell::after {
+  opacity: 0;
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell #living-home-title > span:last-child,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell #living-home-title > span:last-child,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell #living-home-title > span:last-child {
+  text-shadow: none;
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell form:has(#living-home-composer) > div,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell form:has(#living-home-composer) > div,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell form:has(#living-home-composer) > div {
+  border-color: rgba(84, 43, 47, .15) !important;
+  background: rgba(255, 252, 248, .79) !important;
+  box-shadow:
+    0 20px 58px rgba(63, 32, 36, .075),
+    inset 0 1px 0 rgba(255, 255, 255, .92);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell [aria-label="Klinikos destinations"] button,
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell [aria-label="Klinikos destinations"] button,
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell [aria-label="Klinikos destinations"] button {
+  background: rgba(255, 252, 248, .58);
+}
+
+html:root[data-klinikos-atmosphere="day"] .unicorn-living-shell section[aria-labelledby="workspace-title"],
+html:root[data-klinikos-atmosphere="dawn"] .unicorn-living-shell section[aria-labelledby="workspace-title"],
+html:root[data-klinikos-atmosphere="golden"] .unicorn-living-shell section[aria-labelledby="workspace-title"] {
+  border-color: rgba(84, 43, 47, .14) !important;
+  background: rgba(255, 252, 248, .72);
+  box-shadow: 0 22px 58px rgba(63, 32, 36, .07);
+}
+
+/* ----------------------------- RECOMPOSITION ----------------------------- */
+@media (min-width: 1120px) {
+  .unicorn-living-shell [aria-label="Progress on your request"] {
+    padding-top: 112px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] {
+    padding-top: 112px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] > div {
+    width: 108px;
+  }
+}
+
+@media (max-width: 1119px) {
+  .unicorn-dashboard {
+    margin-inline: -20px;
+    padding-inline: clamp(18px, 3.2vw, 34px);
+  }
+
+  .unicorn-operating-context {
+    align-items: flex-start;
+  }
+
+  .unicorn-living-shell {
+    min-height: 0;
+  }
+
+  .unicorn-living-shell::after {
+    width: min(110vw, 900px);
+    top: -34px;
+  }
+
+  .unicorn-living-shell > [data-klinikos-ds] {
+    min-height: 0;
+  }
+
+  .unicorn-living-shell [aria-label="Progress on your request"] {
+    width: 100%;
+    padding: 0 !important;
+    border-bottom: 1px solid var(--k-line);
+    padding-bottom: 20px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Progress on your request"]::before {
+    top: auto;
+    right: 8px;
+    bottom: 3px;
+    left: 8px;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(90deg, var(--k-accent), var(--k-line) 45%, transparent);
+  }
+
+  .unicorn-living-shell [aria-label="Progress on your request"] li > span:first-child {
+    box-shadow: 0 0 0 4px var(--k-work-bg);
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] {
+    width: 100%;
+    min-width: 0;
+    padding-top: 4px !important;
+    border-top: 1px solid var(--k-line);
+  }
+}
+
+@media (max-width: 767px) {
+  .unicorn-dashboard {
+    --unicorn-gutter: 16px;
+    gap: 22px;
+    min-height: 100vh;
+    margin-inline: -16px;
+    padding: 14px 16px 64px;
+    overflow-x: clip;
+  }
+
+  .unicorn-operating-context {
+    display: grid;
+    gap: 16px;
+    padding-bottom: 16px;
+  }
+
+  .unicorn-operating-context__identity strong {
+    max-width: min(100%, 26ch);
+    white-space: normal;
+  }
+
+  .unicorn-operating-context__signals {
+    justify-content: flex-start;
+    gap: 7px;
+  }
+
+  .unicorn-context-chip {
+    min-height: 34px;
+    padding: 7px 10px;
+    white-space: normal;
+  }
+
+  .unicorn-living-shell {
+    min-height: 0;
+    border-radius: 22px;
+  }
+
+  .unicorn-living-shell::after {
+    top: 8px;
+    width: 145vw;
+    opacity: .11;
+  }
+
+  .unicorn-living-shell > [data-klinikos-ds] > div {
+    padding: 30px 17px 54px !important;
+  }
+
+  .unicorn-living-shell #living-home-title {
+    margin-top: 24px !important;
+    font-size: clamp(3rem, 16.5vw, 5.2rem) !important;
+    line-height: .89 !important;
+    letter-spacing: -.068em !important;
+  }
+
+  .unicorn-living-shell #living-home-title + p {
+    margin-top: 22px !important;
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  .unicorn-living-shell form:has(#living-home-composer) {
+    margin-top: 28px !important;
+  }
+
+  .unicorn-living-shell form:has(#living-home-composer) > div {
+    min-height: 112px;
+    padding: 15px 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .unicorn-living-shell form:has(#living-home-composer) + div {
+    margin-top: -12px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Progress on your request"] {
+    gap: 12px 18px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Progress on your request"]::before {
+    display: none;
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 8px !important;
+    justify-items: center;
+    padding-top: 24px !important;
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] > div {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .unicorn-living-shell section[aria-labelledby="workspace-title"] {
+    border-radius: 18px !important;
+  }
+
+  .unicorn-living-shell section[aria-labelledby="workspace-title"] dl > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 3px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .unicorn-dashboard {
+    padding-inline: 12px;
+  }
+
+  .unicorn-operating-context__signals {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .unicorn-context-chip {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .unicorn-living-shell::after {
+    opacity: .07;
+  }
+
+  .unicorn-living-shell > [data-klinikos-ds] > div {
+    padding-inline: 14px !important;
+  }
+
+  .unicorn-living-shell #living-home-title {
+    font-size: clamp(2.8rem, 17vw, 4.4rem) !important;
+  }
+
+  .unicorn-living-shell [aria-label="Klinikos destinations"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unicorn-dashboard::after,
+  .unicorn-living-shell,
+  .unicorn-living-shell::after,
+  .unicorn-living-shell form:has(#living-home-composer) > div,
+  .unicorn-living-shell [aria-label="Klinikos destinations"] button {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .unicorn-living-shell form:has(#living-home-composer) > div:focus-within {
+    transform: none;
+  }
+}
