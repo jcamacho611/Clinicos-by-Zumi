@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 
 import { EduCommandHeader, EduEmptyState } from "@/components/edu/edu-shell";
 import { WorkforceCompletionReviewTable } from "@/components/edu/workforce-completion-review-table";
-import { db } from "@/lib/db";
-import { eduCohortFilter, eduInstitutionFilter, resolveEduIdentity } from "@/lib/edu/edu-session";
-import { getEnrollmentCompletionEvidence } from "@/lib/edu/workforce-completion-repository";
+import { resolveEduIdentity } from "@/lib/edu/edu-session";
+import { listWorkforceCompletionEvidence } from "@/lib/edu/workforce-completion-repository";
 import { defaultWorkforceCompletionPolicy } from "@/lib/edu/workforce-completion-review";
 
 export const dynamic = "force-dynamic";
@@ -16,21 +15,13 @@ export default async function EduCompletionsPage() {
   if (!identity) return null;
   if (!ALLOWED.has(identity.role)) redirect("/edu/dashboard");
 
-  const enrollments = identity.institutionId && process.env.DATABASE_URL
-    ? await db.educationEnrollment.findMany({
-        where: { ...eduInstitutionFilter(identity), ...eduCohortFilter(identity), status: { in: ["active", "completed"] } },
-        select: { id: true },
-        orderBy: { studentDisplayName: "asc" },
-        take: 150,
+  const reviews = identity.institutionId && process.env.DATABASE_URL
+    ? await listWorkforceCompletionEvidence(identity, {
+        minimumAttendancePercent: defaultWorkforceCompletionPolicy.minimumAttendancePercent,
+        requiredKnowledgePairs: defaultWorkforceCompletionPolicy.requiredKnowledgePairs,
+        limit: 150,
       })
     : [];
-
-  const reviews = await Promise.all(enrollments.map((enrollment) => getEnrollmentCompletionEvidence(identity, {
-    enrollmentId: enrollment.id,
-    minimumAttendancePercent: defaultWorkforceCompletionPolicy.minimumAttendancePercent,
-    requiredKnowledgePairs: defaultWorkforceCompletionPolicy.requiredKnowledgePairs,
-    instructorApproved: false,
-  })));
 
   return (
     <>
