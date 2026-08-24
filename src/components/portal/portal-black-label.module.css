@@ -185,8 +185,7 @@
 
 /* Secondary text comes from the shared material rather than the legacy slate ramp, so
    the portal stops carrying a second palette for the same semantic role. Restricted to
-   the muted shades on purpose: darker slate is primary text and already resolves
-   through --k-text on `.portal`. */
+   the muted shades: darker slate is primary text and already resolves via --k-text. */
 .portal :where([class*="text-slate-400"], [class*="text-slate-500"], [class*="text-slate-600"]) {
   color: var(--k-muted);
 }
