@@ -76,7 +76,10 @@ describe("BodyMap persistence schema", () => {
     expect(migration).toContain('"source" "BodyMapCaptureSource" NOT NULL DEFAULT \'clinical_capture\'');
     expect(migration).toContain('CREATE TABLE "body_map_versions"');
     expect(migration).toContain('CREATE TABLE "body_map_findings"');
+    expect(migration).toContain('CONSTRAINT "body_map_findings_severity_check"');
     expect(migration).toContain('CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10))');
+    expect(migration).toContain('CONSTRAINT "body_map_findings_resolved_severity_check"');
+    expect(migration).toContain('CHECK ("clinicalState" <> \'resolved\' OR "severity" IS NULL OR "severity" = 0)');
     expect(migration).toMatch(/REFERENCES\s+"body_map_versions"\("id"\)\s+ON DELETE RESTRICT/);
     expect(migration).toMatch(/REFERENCES\s+"body_map_versions"\("id"\)\s+ON DELETE CASCADE/);
 
