@@ -59,18 +59,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="unicorn-dashboard" data-klinikos-role={session.role}>
-      <div className="unicorn-operating-context" aria-label="Current operating context">
+      <section className="unicorn-operating-context" aria-label="Current operating context">
         <div className="unicorn-operating-context__identity">
           <span className="unicorn-operating-context__kicker">Living Home</span>
           <strong>{session.organizationName}</strong>
           <span>{roleDisplayName(session.role)}</span>
         </div>
-        <div className="unicorn-operating-context__signals" aria-label="Loaded operating context">
+        <div className="unicorn-operating-context__signals" aria-label="Loaded operating context" role="group">
           {operatingSignals.map((signal) => (
             <span className="unicorn-context-chip" key={signal}>{signal}</span>
           ))}
         </div>
-      </div>
+      </section>
 
       {verifiedFirstLogin && launchBriefing ? (
         <ClinicFirstLoginLaunch organizationName={session.organizationName} briefing={launchBriefing} />
