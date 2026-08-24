@@ -66,6 +66,8 @@ export type BodyMapValidationResult =
   | { ok: true; value: ValidatedBodyMapVersionInput }
   | { ok: false; errors: string[] };
 
+const FUTURE_CAPTURE_TOLERANCE_MS = 5 * 60 * 1000;
+
 const LATERALITIES = new Set<BodyLaterality>([
   "left",
   "right",
@@ -90,11 +92,19 @@ function isBodyMapCaptureSource(value: string): value is BodyMapCaptureSource {
   return CAPTURE_SOURCES.has(value as BodyMapCaptureSource);
 }
 
+function normalizeFindingIdentitySegment(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export function bodyMapFindingPersistenceKey(finding: Pick<CreateBodyMapFindingInput, "bodyRegion" | "laterality" | "symptom">) {
   return [
-    finding.bodyRegion.trim().toLowerCase(),
+    normalizeFindingIdentitySegment(finding.bodyRegion),
     finding.laterality,
-    finding.symptom.trim().toLowerCase(),
+    normalizeFindingIdentitySegment(finding.symptom),
   ].join("::");
 }
 
@@ -133,7 +143,10 @@ function isJsonSafeValue(value: unknown, ancestors = new WeakSet<object>()): boo
   }
 }
 
-export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): BodyMapValidationResult {
+export function validateBodyMapVersionInput(
+  input: CreateBodyMapVersionInput,
+  now = new Date(),
+): BodyMapValidationResult {
   const errors: string[] = [];
   if (!isPlainRecord(input)) return { ok: false, errors: ["BodyMap payload must be an object."] };
 
@@ -143,8 +156,13 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
   }
 
   const capturedTime = input.capturedAt instanceof Date ? input.capturedAt.getTime() : Number.NaN;
+  const nowTime = now instanceof Date ? now.getTime() : Number.NaN;
   if (!Number.isFinite(capturedTime)) {
     errors.push("BodyMap capturedAt must be a valid timestamp.");
+  } else if (!Number.isFinite(nowTime)) {
+    errors.push("BodyMap validation clock must be a valid timestamp.");
+  } else if (capturedTime > nowTime + FUTURE_CAPTURE_TOLERANCE_MS) {
+    errors.push("BodyMap capturedAt cannot be materially future-dated.");
   }
 
   const sourceCandidate = typeof input.source === "string" ? input.source.trim() : "";
@@ -187,6 +205,9 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
       || finding.severity > 10
     )) {
       errors.push(`Finding ${index + 1}: severity must be a whole number from 0 through 10 or null.`);
+    }
+    if (finding.clinicalState === "resolved" && typeof finding.severity === "number" && finding.severity !== 0) {
+      errors.push(`Finding ${index + 1}: resolved findings may only carry severity 0 or null.`);
     }
 
     const sourceObservation = finding.sourceObservation;
