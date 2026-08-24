@@ -19,13 +19,22 @@ describe("Render production migration boundary", () => {
   });
 
   it("never executes migrate deploy inside the Render branch", () => {
+    /* Anchor on the deploy-detection branch, not the first RENDER guard — the first one
+       is the missing-DATABASE_URL refusal. And assert the call, not the literal: the
+       prisma argv now lives in the migrationStatus() helper at the top of the file, so
+       requiring the raw '"migrate", "status"' string inside the branch checked where the
+       code no longer is while the behaviour was correct all along. */
     const renderBranch = renderBuild.slice(
-      renderBuild.indexOf('if (process.env.RENDER === "true")'),
+      renderBuild.indexOf("Render build detected"),
       renderBuild.indexOf("KLINIKOS_ALLOW_MIGRATION_DEPLOY"),
     );
 
     expect(renderBranch).not.toContain('"migrate", "deploy"');
-    expect(renderBranch).toContain('"migrate", "status"');
+    expect(renderBranch).toContain("migrationStatus(");
+    // The helper it calls must be the status command and nothing else.
+    const helper = renderBuild.slice(renderBuild.indexOf("function migrationStatus"), renderBuild.indexOf("const databaseUrl"));
+    expect(helper).toContain('"migrate", "status"');
+    expect(helper).not.toContain('"migrate", "deploy"');
   });
 
   it("allows migrate deploy only for an explicitly marked disposable verification build", () => {

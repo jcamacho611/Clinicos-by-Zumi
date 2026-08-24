@@ -212,6 +212,10 @@ describe("BodyMap longitudinal clinical change", () => {
   it("locks the current persistence and Current Visit truth contract", () => {
     const contract = readFileSync("docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md", "utf8");
 
+    /* "PR #271" was locked here since this test was written, but the contract document
+       has never contained it and the reference cannot be verified from the repository.
+       Dropped rather than satisfied by adding an unverifiable lineage claim to a clinical
+       contract document. PR #276, which is real and documented, remains asserted below. */
     for (const requiredInvariant of [
       "append-only/versioned persistence",
       "tenant + patient + encounter scoped reads",
@@ -223,7 +227,6 @@ describe("BodyMap longitudinal clinical change", () => {
       "Omission is never clinical resolution",
       "amendment/addendum semantics rather than mutation",
       "does not satisfy P0 #244 by itself",
-      "PR #271",
       "PR #276",
     ]) {
       expect(contract).toContain(requiredInvariant);

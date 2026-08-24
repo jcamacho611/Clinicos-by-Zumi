@@ -148,7 +148,7 @@ describe("BodyMap persistence input", () => {
       { value: Number.NaN },
       { value: Number.POSITIVE_INFINITY },
       { value: () => "unsafe" },
-      { value: 1n },
+      { value: BigInt(1) },
       { value: new Date("2026-08-23T18:00:00.000Z") },
       circular,
     ];

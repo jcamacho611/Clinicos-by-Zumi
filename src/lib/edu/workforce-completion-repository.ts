@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import { defaultWorkforceCompletionPolicy } from "@/lib/edu/workforce-completion-review";
 import type { EduIdentity } from "@/lib/edu/edu-session";
 import { buildWorkforceCompletionReview } from "@/lib/edu/workforce-completion-review";
 import { summarizePairedKnowledgeChange, type WorkforceKnowledgeAssessmentRow } from "@/lib/edu/workforce-knowledge-repository";
@@ -166,13 +167,27 @@ export async function getEnrollmentCompletionEvidence(identity: EduIdentity, inp
   };
 }
 
+/**
+ * Finalizing a completion is the moment attendance and knowledge evidence become a
+ * credential claim, so the thresholds it is judged against are server-owned.
+ *
+ * They used to be optional inputs. The page read the policy on the server, handed it to
+ * the browser to display, and the browser posted it back — which meant an authenticated
+ * instructor could send `minimumAttendancePercent: 0` and `requiredKnowledgePairs: 0`
+ * and finalize an enrollment carrying no attendance and no paired knowledge evidence at
+ * all. A value that round-trips through a client is not a server value.
+ *
+ * The preview read still accepts thresholds, because previewing a stricter or looser
+ * policy changes nothing durable. Only this path writes a completion, and it reads the
+ * policy directly.
+ */
 export async function finalizeEnrollmentCompletion(identity: EduIdentity, input: {
   enrollmentId: string;
-  minimumAttendancePercent?: number;
-  requiredKnowledgePairs?: number;
 }) {
   const preview = await getEnrollmentCompletionEvidence(identity, {
-    ...input,
+    enrollmentId: input.enrollmentId,
+    minimumAttendancePercent: defaultWorkforceCompletionPolicy.minimumAttendancePercent,
+    requiredKnowledgePairs: defaultWorkforceCompletionPolicy.requiredKnowledgePairs,
     instructorApproved: true,
   });
   if (!mayFinalize(identity, preview.cohortId)) {

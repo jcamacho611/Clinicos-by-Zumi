@@ -28,6 +28,14 @@ function migrationStatus(env) {
 const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 
 // Compile first so an invalid candidate never changes a database.
+// The application is built before the database is touched so a compile failure never
+// reaches a migration step. Render then only verifies migration status; it refuses to
+// apply migrations automatically.
+//
+// That ordering does not remove the schema rule: during a rolling deploy the old and new
+// application versions run simultaneously, so any migration must still remain
+// backward-compatible with the previous app for the length of the rollout. Expand first,
+// deploy, backfill, and only contract in a later release.
 console.log("Building Klinikos for production before database verification...");
 run(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"], {
   env: process.env,

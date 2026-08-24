@@ -42,6 +42,24 @@ function requireMeasurementAuthority(identity: EduIdentity) {
   }
 }
 
+/**
+ * Instructors may only record scores for cohorts they are assigned to.
+ *
+ * The enrollment lookup below scopes by institution and by the cohortId the caller
+ * supplied — which means an instructor holding another cohort's identifiers could write
+ * already-reviewed pre/post scores for its participants and corrupt completion evidence
+ * outside their scope. Institution membership is not cohort assignment.
+ *
+ * Same rule the completion repository already applies to finalization: admins are
+ * institution-wide, instructors are scoped to their assignments.
+ */
+function requireCohortScope(identity: EduIdentity, cohortId: string) {
+  if (identity.role === "edu_admin") return;
+  if (!identity.cohortIds.includes(cohortId)) {
+    throw new Error("This cohort is not within your assigned instructional scope.");
+  }
+}
+
 export async function recordKnowledgeAssessmentAttempt(identity: EduIdentity, input: {
   courseId: string;
   cohortId: string;
@@ -55,6 +73,7 @@ export async function recordKnowledgeAssessmentAttempt(identity: EduIdentity, in
   completedAt?: Date;
 }) {
   requireMeasurementAuthority(identity);
+  requireCohortScope(identity, input.cohortId);
   const institutionId = requireInstitution(identity);
   const assessmentKey = input.assessmentKey.trim();
   const attemptNumber = input.attemptNumber ?? 1;

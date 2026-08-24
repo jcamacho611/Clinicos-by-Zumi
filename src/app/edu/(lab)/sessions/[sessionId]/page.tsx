@@ -41,8 +41,20 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
   ]);
   if (!cohort) notFound();
 
+  /* Roster rows carry a participant's name, email and attendance evidence — peer PII and
+     an educational record. Teaching staff need the whole cohort to run a session; a
+     participant needs only their own row. Without this narrowing, any student who could
+     open a session in their own cohort read the entire roster.
+
+     The filter is applied to what was loaded rather than to what is rendered: hiding rows
+     in markup would still ship every classmate's email to the browser. */
+  const isTeachingStaff = canVerifyWorkforceAttendance(identity.role);
+  const visibleEnrollments = isTeachingStaff
+    ? cohort.enrollments
+    : cohort.enrollments.filter((enrollment) => enrollment.id === identity.enrollmentId);
+
   const attendanceByEnrollment = new Map(attendance.map((record) => [record.enrollmentId, record]));
-  const roster = cohort.enrollments.map((enrollment) => ({
+  const roster = visibleEnrollments.map((enrollment) => ({
     enrollmentId: enrollment.id,
     name: enrollment.studentDisplayName || enrollment.studentEmail,
     email: enrollment.studentEmail,

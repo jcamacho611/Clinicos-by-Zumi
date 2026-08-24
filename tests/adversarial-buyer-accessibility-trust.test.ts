@@ -119,10 +119,16 @@ describe("adversarial buyer and accessibility baseline", () => {
   });
 
   it("builds the application before applying deployment migrations", () => {
-    const build = renderBuild.indexOf("Building Klinikos for production before database migration");
-    const migrate = renderBuild.indexOf("Application build passed. Applying Klinikos database migrations");
+    /* Render no longer applies migrations automatically — it builds, then verifies
+       migration status and refuses to deploy on drift. That is strictly safer than the
+       build-then-migrate ordering this originally locked, so assert the current contract:
+       the build still runs first, and the database step that follows it is a check. */
+    const build = renderBuild.indexOf("Building Klinikos for production before database verification");
+    const verify = renderBuild.indexOf("Verifying migration status without mutating the database");
     expect(build).toBeGreaterThan(0);
-    expect(migrate).toBeGreaterThan(build);
+    expect(verify).toBeGreaterThan(build);
+    // The deploy path stays behind the explicit disposable-verification flag.
+    expect(renderBuild.indexOf("KLINIKOS_ALLOW_MIGRATION_DEPLOY")).toBeGreaterThan(verify);
     // The rule lives in a wrapped comment, so match the prose with comment markers and
     // line breaks flattened rather than requiring it to sit on one physical line.
     const prose = renderBuild.replace(/^\s*\/\/ ?/gm, "").replace(/\s+/g, " ");

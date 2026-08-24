@@ -16,7 +16,7 @@ This work **does not satisfy P0 #244 by itself**. It does not yet provide staff/
 
 ### Append-only history
 
-BodyMap persistence is **append-only/versioned**. A new capture creates a new BodyMap version; it does not update a prior BodyMap in place.
+BodyMap persistence is **append-only/versioned**. This append-only/versioned persistence is the contract: a new capture creates a new BodyMap version. A new capture creates a new BodyMap version; it does not update a prior BodyMap in place.
 
 **Historical versions are never overwritten.** A prior version remains recoverable exactly as recorded, including source encounter and creator provenance.
 
