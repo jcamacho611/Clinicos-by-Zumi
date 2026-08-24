@@ -15,6 +15,13 @@ CREATE TYPE "BodyMapFindingState" AS ENUM (
   'resolved'
 );
 
+CREATE TYPE "BodyMapCaptureSource" AS ENUM (
+  'clinical_capture',
+  'staff_intake',
+  'provider_review',
+  'structured_import'
+);
+
 CREATE TABLE "body_map_versions" (
   "id" TEXT NOT NULL,
   "organizationId" TEXT NOT NULL,
@@ -22,7 +29,7 @@ CREATE TABLE "body_map_versions" (
   "encounterId" TEXT NOT NULL,
   "createdByUserId" TEXT NOT NULL,
   "capturedAt" TIMESTAMP(3) NOT NULL,
-  "source" TEXT NOT NULL DEFAULT 'clinical_capture',
+  "source" "BodyMapCaptureSource" NOT NULL DEFAULT 'clinical_capture',
   "amendsVersionId" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
