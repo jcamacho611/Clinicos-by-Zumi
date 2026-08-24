@@ -16,7 +16,8 @@ function claim(overrides: Partial<RevenueClaimSnapshot> = {}): RevenueClaimSnaps
   };
 }
 
-const NO_RAIL = { externalRailConnected: false };
+const NOW = new Date("2026-08-24T00:00:00.000Z");
+const NO_RAIL = { externalRailConnected: false, now: NOW };
 
 /**
  * "Why hasn't this been paid?" should be answerable as a path rather than a paragraph.
@@ -82,6 +83,18 @@ describe("revenue integrity path", () => {
     expect(adjudicated?.evidence).toContain("Authorization not attached.");
     expect(denied.nextAction).toContain("appeal is due 2026-09-15");
     expect(denied.stages.find((stage) => stage.key === "paid")?.state).toBe("attention");
+  });
+
+  it("does not read a passed appeal deadline as one still approaching", () => {
+    /* Found in live data, not in a fixture: every synthetic denial carried a future date,
+       so "appeal is due 2026-08-01" rendered three weeks later looked open. A closed
+       window is a different decision and has to say so. */
+    const lapsed = buildRevenueIntegrityPath(
+      claim({ status: "DENIED", openDenials: [{ reason: "Modifier review.", appealDueAt: "2026-08-01T00:00:00.000Z" }] }),
+      NO_RAIL,
+    );
+    expect(lapsed.nextAction).toContain("Appeal window closed 2026-08-01");
+    expect(lapsed.nextAction).not.toContain("is due");
   });
 
   it("distinguishes missing coding from a missing superbill", () => {

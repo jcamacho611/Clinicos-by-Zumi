@@ -104,8 +104,13 @@ const ADJUDICATED = new Set(["DENIED", "PAID", "PATIENT_BALANCE", "APPEALED", "C
 
 export function buildRevenueIntegrityPath(
   claim: RevenueClaimSnapshot,
-  options: { readonly externalRailConnected: boolean },
+  options: {
+    readonly externalRailConnected: boolean;
+    /** Injected so "is this appeal still open?" is testable rather than clock-dependent. */
+    readonly now?: Date;
+  },
 ): RevenueIntegrityPath {
+  const now = options.now ?? new Date();
   const rail = options.externalRailConnected;
   /* Anything a payer or clearinghouse would have to confirm can only ever be an internal
      record while no rail is connected. This is the single place that rule is applied. */
@@ -230,7 +235,7 @@ export function buildRevenueIntegrityPath(
   return {
     stages,
     firstUnresolved,
-    nextAction: nextActionFor(stages, denial, rail),
+    nextAction: nextActionFor(stages, denial, rail, now),
     externalRailConnected: rail,
   };
 }
@@ -240,6 +245,7 @@ function nextActionFor(
   stages: readonly RevenueStage[],
   denial: { readonly reason: string; readonly appealDueAt: string | null } | null,
   rail: boolean,
+  now: Date,
 ): string {
   const blocked = stages.find((stage) => stage.state === "attention");
 
@@ -248,9 +254,15 @@ function nextActionFor(
   if (blocked?.key === "claim_ready") return "Review the claim and mark it ready to submit.";
   if (blocked?.key === "accepted") return "Review the rejection and correct the claim before resubmitting.";
   if (denial) {
-    return denial.appealDueAt
-      ? `Resolve the denial — appeal is due ${denial.appealDueAt.slice(0, 10)}.`
-      : "Resolve the denial before this claim can be paid.";
+    if (!denial.appealDueAt) return "Resolve the denial before this claim can be paid.";
+    const due = denial.appealDueAt.slice(0, 10);
+    /* A deadline that has already passed is a different situation from one approaching,
+       and reading "due 2026-08-01" three weeks later invites someone to treat a missed
+       window as still open. Live data surfaced this; every synthetic denial had a future
+       date. */
+    return new Date(denial.appealDueAt).getTime() < now.getTime()
+      ? `Appeal window closed ${due}. Confirm whether this denial can still be reworked.`
+      : `Resolve the denial — appeal is due ${due}.`;
   }
   if (blocked) return "This claim needs review before it can move forward.";
 
