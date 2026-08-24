@@ -59,7 +59,7 @@ export function WorkforceKnowledgeAssessmentManager({
 
   return (
     <section className="mt-6 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="knowledge-measurement-title">
-      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Measured learning evidence</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Measured learning evidence</p>
       <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="knowledge-measurement-title">Pre/post knowledge assessment</h2>
       <p className="mt-2 max-w-3xl text-xs leading-6 text-[#a98f8b]">Record scored knowledge checks separately from participant confidence surveys. Only comparable, instructor-reviewed pre/post attempts are eligible for knowledge-change reporting.</p>
 

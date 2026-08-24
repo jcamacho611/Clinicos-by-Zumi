@@ -63,7 +63,7 @@ export default async function EduReportsPage() {
             </section>
 
             <section className="mt-6 border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7" aria-labelledby="knowledge-change-title">
-              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Scored learning measurement</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Scored learning measurement</p>
               <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="knowledge-change-title">Pre/post knowledge evidence</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <Metric label="Scored attempts" value={knowledgeAttempts.length} detail="Pre/post knowledge attempts, separate from confidence surveys" />
@@ -108,7 +108,7 @@ export default async function EduReportsPage() {
 function Metric({ label, value, detail }: { label: string; value: string | number; detail: string }) {
   return (
     <div className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{label}</p>
       <p className="mt-2 text-3xl font-light tabular-nums text-[#fff8f6]">{value}</p>
       <p className="mt-2 text-xs leading-5 text-[#8f7773]">{detail}</p>
     </div>

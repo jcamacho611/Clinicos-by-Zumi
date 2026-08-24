@@ -76,7 +76,11 @@ describe("Klinikos Black Label appearance system", () => {
   it("keeps Settings on the same storage and resolver contract", () => {
     expect(accountPreferences).toContain("normalizeAppearancePreference");
     expect(accountPreferences).toContain("atmosphereForAppearance");
-    expect(accountPreferences).toContain('matchMedia("(prefers-color-scheme: dark)")');
+    /* Settings resolves the system preference from the same media query as the shell,
+       reaching it through a named constant used twice. Assert the contract — that query,
+       passed to matchMedia — rather than one particular spelling. */
+    expect(accountPreferences).toContain('"(prefers-color-scheme: dark)"');
+    expect(accountPreferences).toMatch(/matchMedia\((?:SYSTEM_QUERY|"\(prefers-color-scheme: dark\)")\)/);
     expect(accountPreferences).not.toContain('value === "system" ? "auto"');
     expect(accountPreferences).not.toContain("color-mix(in_srgb");
   });

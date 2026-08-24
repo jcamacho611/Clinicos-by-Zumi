@@ -44,6 +44,17 @@ describe("ClinicOS authorization contract", () => {
       for (const block of blocks) {
         if (!block[2].includes("getClinicSession")) continue;
         if (/can\(session\.role|enforceApiPermission|canUseBreakGlass|canReviewRecordRequests/.test(block[2])) continue;
+        /* EDU authorizes through a second legitimate boundary. resolveEduIdentity requires
+           a clinic session, resolves the caller's enrollments, derives an EDU platform role
+           by precedence and scopes to one institution — returning null when the caller has
+           no enrollment and no clinic role granting EDU admin.
+
+           Calling it is not enough to count. The route must also test the result and deny
+           with 403 — routes vary between `!identity` and `!identity?.institutionId`, and
+           several add a role check on top. Recognising the call alone would let a route
+           resolve identity, ignore the answer, and still pass this guard. */
+        const edu = /resolveEduIdentity/.test(block[2]) && /!identity\b/.test(block[2]) && /\b403\b/.test(block[2]);
+        if (edu) continue;
         if (path.endsWith("/auth/logout/route.ts")) continue;
         missing.push(`${path.replace(process.cwd(), "")}:${block[1]}`);
       }

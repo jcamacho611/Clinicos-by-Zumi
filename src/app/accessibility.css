@@ -56,3 +56,44 @@
     box-shadow: none;
   }
 }
+
+/* Deep-link arrival marker.
+ *
+ * The Action Center links a reviewer to one escalation among many. Arriving at the
+ * right list with no idea which row sent you is where the handoff was being dropped, so
+ * the targeted record announces itself.
+ *
+ * Carried by an outline and a leading bar, not by colour alone: the marker has to
+ * survive greyscale, forced-colors and colour-blindness, because the whole point is
+ * being able to pick this row out of a list. The fade is a courtesy for people who can
+ * see motion and is removed entirely for anyone who has asked not to. */
+.klinikos-deep-target:target,
+.klinikos-deep-target[data-klinikos-arrived] {
+  outline: 2px solid var(--accent-intelligence, #e6817b);
+  outline-offset: 3px;
+  position: relative;
+}
+
+.klinikos-deep-target:target::before,
+.klinikos-deep-target[data-klinikos-arrived]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -3px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent-intelligence, #e6817b);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .klinikos-deep-target:target,
+  .klinikos-deep-target[data-klinikos-arrived] {
+    animation: klinikos-deep-target-settle 1.6s ease-out 1;
+  }
+
+  @keyframes klinikos-deep-target-settle {
+    from { outline-color: var(--accent-intelligence, #e6817b); }
+    60% { outline-color: var(--accent-intelligence, #e6817b); }
+    to { outline-color: color-mix(in oklab, var(--accent-intelligence, #e6817b) 55%, transparent); }
+  }
+}

@@ -71,7 +71,7 @@ export function WorkforceSessionManager({
       <section aria-labelledby="session-list-title">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Delivery calendar</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Delivery calendar</p>
             <h2 className="mt-1 text-lg font-semibold text-[#f8efed]" id="session-list-title">Instructional sessions</h2>
           </div>
           <p className="text-xs tabular-nums text-[#8f7773]">{sessions.length} recorded</p>
@@ -88,7 +88,7 @@ export function WorkforceSessionManager({
               <article className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5" key={session.id}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#e6817b]">{session.deliveryMode.replaceAll("_", " ")} · {session.status}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#e6817b]">{session.deliveryMode.replaceAll("_", " ")} · {session.status}</p>
                     <h3 className="mt-1 text-base font-semibold text-[#f8efed]">{session.title}</h3>
                     <p className="mt-1 text-xs text-[#8f7773]">{cohort ? `${cohort.courseTitle} · ${cohort.name}` : "Scoped cohort"}</p>
                   </div>
@@ -111,7 +111,7 @@ export function WorkforceSessionManager({
 
       <aside>
         <div className="border border-[#e28b85]/12 bg-[#0d0708]/80 p-5 sm:p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Instructor control</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Instructor control</p>
           <h2 className="mt-1 text-lg font-semibold text-[#f8efed]">Schedule a live session</h2>
           {!canManage ? (
             <p className="mt-3 text-xs leading-6 text-[#8f7773]">You can review delivery records, but only an instructor or education administrator can schedule a class.</p>

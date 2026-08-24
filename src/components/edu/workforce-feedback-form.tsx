@@ -54,7 +54,7 @@ export function WorkforceFeedbackForm({
 
   return (
     <section className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="workforce-feedback-title">
-      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Program improvement evidence</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Program improvement evidence</p>
       <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="workforce-feedback-title">
         {participantMode ? "Participant session feedback" : "Instructor session reflection"}
       </h2>

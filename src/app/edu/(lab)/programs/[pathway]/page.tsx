@@ -40,7 +40,7 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
 
         <section className="mt-6 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="lesson-sequence-title">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Live instructor-led sequence</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Live instructor-led sequence</p>
             <h2 className="mt-2 text-xl font-semibold text-[#f8efed]" id="lesson-sequence-title">What the 7-hour pathway actually contains</h2>
             <p className="mt-2 text-xs leading-6 text-[#8f7773]">Timing is a proposed reusable instructional design and can be adjusted within an approved 6–8 hour delivery while preserving learning objectives and required evidence.</p>
           </div>
@@ -48,7 +48,7 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
             {pathway.lessonSequence.map((segment, index) => (
               <li className="grid grid-cols-[52px_1fr] gap-3 border border-[#e28b85]/10 bg-[#12090b]/40 p-4" key={segment.title}>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">{String(index + 1).padStart(2, "0")}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">{String(index + 1).padStart(2, "0")}</p>
                   <p className="mt-1 text-xs font-semibold tabular-nums text-[#efaaa1]">{segment.minutes}m</p>
                 </div>
                 <div>
@@ -62,7 +62,7 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
 
         <section className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_.9fr]" aria-labelledby="sample-lesson-title">
           <article className="border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7">
-            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Representative lesson segment</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Representative lesson segment</p>
             <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="sample-lesson-title">{pathway.sampleLessonSegment.title}</h2>
             <p className="mt-4 text-sm leading-6 text-[#bca5a1]">{pathway.sampleLessonSegment.scenario}</p>
             <h3 className="mt-6 text-xs font-semibold uppercase tracking-[.12em] text-[#8f7773]">Instructor prompts</h3>
@@ -104,7 +104,7 @@ export default async function EduPathwayPage({ params }: { params: Promise<{ pat
         </section>
 
         <section className="mt-6 border border-[#e6817b]/18 bg-[#12090b]/55 p-5 sm:p-7" aria-labelledby="zumi-practice-callout">
-          <p className="text-[10px] font-semibold uppercase tracking-[.15em] text-[#efaaa1]">Klinikos Intelligence</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[.15em] text-[#efaaa1]">Klinikos Intelligence</p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
             <div className="max-w-3xl">
               <h2 className="text-lg font-semibold text-[#f8efed]" id="zumi-practice-callout">Practice with Zumi before work is assessed</h2>

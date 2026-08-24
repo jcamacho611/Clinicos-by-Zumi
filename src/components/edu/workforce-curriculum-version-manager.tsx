@@ -85,7 +85,7 @@ export function WorkforceCurriculumVersionManager({
   return (
     <section className="mt-8 border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="curriculum-version-title">
       <div className="max-w-4xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Delivery provenance</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Delivery provenance</p>
         <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="curriculum-version-title">Curriculum versions</h2>
         <p className="mt-2 text-xs leading-6 text-[#a98f8b]">Create a version before delivery, send it through review, and activate it only after approval. Sessions can record the curriculum/material version that was actually taught.</p>
       </div>

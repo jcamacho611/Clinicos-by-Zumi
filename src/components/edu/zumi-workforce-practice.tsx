@@ -100,7 +100,7 @@ export function ZumiWorkforcePractice({
       </aside>
 
       <section className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="zumi-practice-title">
-        <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Governed workforce intelligence</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#efaaa1]">Governed workforce intelligence</p>
         <h2 className="mt-2 text-xl font-semibold text-[#f8efed]" id="zumi-practice-title">{mode.label}</h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#a98f8b]">{mode.authorityBoundary}</p>
 
@@ -144,7 +144,7 @@ export function ZumiWorkforcePractice({
             <article className="border border-[#e28b85]/14 bg-[#12090b]/55 p-5 sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <ZumiAssistantOrb active label="Zumi response" />
-                <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">{reply.modelGenerated ? "Model-generated practice guidance" : "Deterministic guidance"}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">{reply.modelGenerated ? "Model-generated practice guidance" : "Deterministic guidance"}</span>
               </div>
               <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[#d4c1bd]">{reply.answer}</p>
               <p className="mt-5 border-t border-[#e28b85]/10 pt-4 text-[11px] leading-5 text-[#8f7773]">{reply.authorityBoundary}</p>

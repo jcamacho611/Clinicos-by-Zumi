@@ -56,7 +56,7 @@ export function WorkforceCompletionReviewTable({
   return (
     <section className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7" aria-labelledby="completion-review-title">
       <div className="max-w-4xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Human completion authority</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Human completion authority</p>
         <h2 className="mt-2 text-lg font-semibold text-[#f8efed]" id="completion-review-title">Completion review</h2>
         <p className="mt-2 text-xs leading-6 text-[#a98f8b]">Current demo policy requires at least {minimumAttendancePercent}% verified instructional time, all assigned applied work released after grading, required comparable knowledge evidence, and explicit instructor/admin approval. Contract-specific rules remain configurable before live delivery.</p>
       </div>

@@ -40,8 +40,10 @@ export function FrontDeskWorkspaceReal({ appointments, coordination, currentUser
     />
 
     <section data-front-desk-operative-strip className="overflow-hidden border-y border-[var(--k-line)] bg-[var(--k-public-surface)]" aria-label="Front desk operational summary">
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4">
-        {operativeMetrics.map(({ label, value, detail, icon: Icon }, index) => <div className={`min-w-0 px-5 py-4 ${index > 0 ? "border-t border-[var(--k-line)] sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""}`} key={label}>
+      {/* One continuous strip, not a four-up card grid: the figures read left to right
+          as a single instrument and flow rather than snapping to a fixed column count. */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap">
+        {operativeMetrics.map(({ label, value, detail, icon: Icon }, index) => <div className={`min-w-0 flex-1 sm:min-w-[13rem] px-5 py-4 ${index > 0 ? "border-t border-[var(--k-line)] sm:border-l sm:border-t-0" : ""}`} key={label}>
           <div className="flex items-center justify-between gap-3"><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">{label}</p><Icon className="size-4 text-[var(--k-accent)]" aria-hidden="true" /></div>
           <p className="mt-2 text-2xl font-semibold tabular-nums tracking-[-.04em] text-[var(--k-text)]">{value}</p>
           <p className="mt-1 text-xs leading-5 text-[var(--k-muted)]">{detail}</p>

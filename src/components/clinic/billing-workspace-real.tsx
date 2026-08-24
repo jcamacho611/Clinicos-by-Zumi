@@ -44,8 +44,10 @@ export function BillingWorkspaceReal({ billing, grid, payments }: { billing: Bil
     />
 
     <section data-revenue-integrity-strip className="overflow-hidden border-y border-[var(--k-line)] bg-[var(--k-public-surface)]" aria-label="Revenue integrity summary">
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4">
-        {revenueMetrics.map(({ label, value, detail, icon: Icon, tone }, index) => <div className={`relative min-w-0 px-5 py-5 sm:px-6 ${index > 0 ? "border-t border-[var(--k-line)] sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""}`} data-financial-tone={tone} key={label}>
+      {/* One continuous strip, not a four-up card grid: the figures read left to right
+          as a single instrument and flow rather than snapping to a fixed column count. */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap">
+        {revenueMetrics.map(({ label, value, detail, icon: Icon, tone }, index) => <div className={`relative min-w-0 flex-1 sm:min-w-[14rem] px-5 py-5 sm:px-6 ${index > 0 ? "border-t border-[var(--k-line)] sm:border-l sm:border-t-0" : ""}`} data-financial-tone={tone} key={label}>
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-extrabold uppercase tracking-[.13em] text-[var(--k-muted)]">{label}</p>
             <Icon className={`size-4 ${tone === "danger" ? "text-rose-600" : tone === "attention" ? "text-amber-700" : "text-[var(--k-accent)]"}`} aria-hidden="true" />

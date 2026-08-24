@@ -97,6 +97,9 @@ export function PortalDashboard({ data, organizationName }: { data: PortalDashbo
 
           <PortalPanel icon={<FileText className="size-4" />} title="Released information" subtitle="Every item below has an explicit clinic release decision.">
             <div className="border-b border-[var(--k-line)] p-5">
+              {/* A file download, not a page navigation. next/link would client-navigate
+                  and prefetch a JSON response rather than hand the browser a file. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--k-line)] bg-[var(--k-public-raised)] px-4 text-xs font-semibold text-[var(--k-text)]" href="/api/portal/records/snapshot"><Download className="size-4" aria-hidden="true" />Export portal snapshot</a>
               <p className="mt-3 max-w-2xl text-xs leading-5 text-[var(--k-muted)]">Downloads a portable JSON snapshot of information currently available in this portal. It is not represented as your complete medical record or complete designated record set. Contact the clinic for a complete records-access or transfer request.</p>
             </div>

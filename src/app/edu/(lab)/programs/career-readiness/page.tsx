@@ -40,7 +40,7 @@ export default function EduCareerReadinessPage() {
               <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5" key={activity.key}>
                 <h3 className="text-sm font-semibold text-[#fff8f6]">{activity.title}</h3>
                 <p className="mt-2 text-xs leading-5 text-[#a98f8b]">{activity.purpose}</p>
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">Must not do</p>
+                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[.12em] text-[#8f7773]">Must not do</p>
                 <ul className="mt-2 grid gap-1 text-xs leading-5 text-[#bca5a1]">
                   {activity.prohibited.map((item) => <li key={item}>• {item}</li>)}
                 </ul>

@@ -15,12 +15,19 @@ describe("Render release contract", () => {
   });
 
   it("keeps confidentiality gates on both sides of the production build", () => {
-    const firstSecurityGate = verifyRelease.indexOf('"security:check"');
-    const renderBuild = verifyRelease.indexOf('"render:build"');
-    const secondSecurityGate = verifyRelease.indexOf('"security:check"', firstSecurityGate + 1);
+    /* The gate scans before any bundle exists and again once it does, on both build
+       paths. Raw file offsets cannot express that: the code-only branch is written above
+       the render branch, so its post-build scan sits textually before the render:build
+       call while still running after its own build. Anchor on each build invocation. */
+    const codeOnlyBuild = verifyRelease.indexOf('["run", "build"]');
+    const renderBuild = verifyRelease.indexOf('["run", "render:build"]');
+    const gates = [...verifyRelease.matchAll(/"security:check"/g)].map((match) => match.index ?? -1);
 
-    expect(firstSecurityGate).toBeGreaterThan(-1);
-    expect(renderBuild).toBeGreaterThan(firstSecurityGate);
-    expect(secondSecurityGate).toBeGreaterThan(renderBuild);
+    expect(codeOnlyBuild).toBeGreaterThan(-1);
+    expect(renderBuild).toBeGreaterThan(-1);
+    expect(gates.length).toBeGreaterThanOrEqual(3);
+    expect(gates[0]).toBeLessThan(Math.min(codeOnlyBuild, renderBuild));
+    expect(gates.some((gate) => gate > codeOnlyBuild && gate < renderBuild)).toBe(true);
+    expect(gates.some((gate) => gate > renderBuild)).toBe(true);
   });
 });

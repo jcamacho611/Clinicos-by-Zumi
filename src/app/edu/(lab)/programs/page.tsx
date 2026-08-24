@@ -46,7 +46,7 @@ export default function EduProgramsPage() {
                 href={`/edu/programs/${pathway.key}`}
                 key={pathway.key}
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">6–8 hours · live instructor-led</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">6–8 hours · live instructor-led</p>
                 <h3 className="mt-2 text-lg font-semibold text-[#fff8f6] group-hover:text-[#efaaa1]">{pathway.label}</h3>
                 <p className="mt-3 text-xs leading-6 text-[#a98f8b]">{pathway.objective}</p>
                 <p className="mt-4 text-xs font-semibold text-[#efaaa1]">Open pathway →</p>

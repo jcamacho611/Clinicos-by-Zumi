@@ -103,7 +103,7 @@ export default async function EduSessionDetailPage({ params }: { params: Promise
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-[#e28b85]/12 bg-[#12090b]/45 p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{label}</p>
       <p className="mt-2 text-xs leading-5 text-[#f8efed]">{value}</p>
     </div>
   );

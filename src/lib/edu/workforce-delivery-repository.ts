@@ -321,12 +321,12 @@ export async function getWorkforceDeliverySummary(identity: EduIdentity) {
   ).length;
 
   return {
-    sessions: Number(sessions[0]?.count ?? 0n),
+    sessions: Number(sessions[0]?.count ?? BigInt(0)),
     attendanceRecords: attendance.length,
     verifiedAttended,
     verifiedAbsent,
     unverifiedAttendance: attendance.length - verifiedAttended - verifiedAbsent,
-    feedbackResponses: Number(feedback[0]?.count ?? 0n),
-    curriculumVersions: Number(curriculumVersions[0]?.count ?? 0n),
+    feedbackResponses: Number(feedback[0]?.count ?? BigInt(0)),
+    curriculumVersions: Number(curriculumVersions[0]?.count ?? BigInt(0)),
   };
 }

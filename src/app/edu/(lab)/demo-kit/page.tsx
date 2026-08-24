@@ -23,7 +23,7 @@ export default function EduDemoKitPage() {
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Founder advantage</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Founder advantage</p>
               <h3 className="mt-2 text-lg font-semibold text-[#f8efed]">{credibility.founder.headline}</h3>
               <p className="mt-3 text-sm leading-6 text-[#bca5a1]">{credibility.founder.summary}</p>
               <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
@@ -32,7 +32,7 @@ export default function EduDemoKitPage() {
             </article>
 
             <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Healthcare advantage</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Healthcare advantage</p>
               <h3 className="mt-2 text-lg font-semibold text-[#f8efed]">{credibility.practitioner.headline}</h3>
               <p className="mt-3 text-sm leading-6 text-[#bca5a1]">{credibility.practitioner.summary}</p>
               <ul className="mt-4 grid gap-2 text-xs leading-5 text-[#bca5a1]">
@@ -62,7 +62,7 @@ export default function EduDemoKitPage() {
             {kit.evaluatorJourney.map((step) => (
               <li className="border border-[#e28b85]/12 bg-[#12090b]/45 p-4" key={step.step}>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Step {step.step}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Step {step.step}</span>
                   <span aria-hidden="true" className="size-1.5 rounded-full bg-[#e6817b]" />
                 </div>
                 <h3 className="mt-3 text-sm font-semibold text-[#f8efed]">{step.label}</h3>
@@ -88,7 +88,7 @@ export default function EduDemoKitPage() {
 
         <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Participant activity and certificate">
           <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5 sm:p-7">
-            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Participant activity</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Participant activity</p>
             <h2 className="mt-2 text-lg font-semibold text-[#f8efed]">{kit.participantActivity.title}</h2>
             <p className="mt-2 text-xs text-[#efaaa1]">Role: {kit.participantActivity.role}</p>
             <p className="mt-4 text-sm leading-6 text-[#bca5a1]">{kit.participantActivity.task}</p>
@@ -96,7 +96,7 @@ export default function EduDemoKitPage() {
           </article>
 
           <article className="border border-[#e28b85]/12 bg-[#12090b]/45 p-5 sm:p-7">
-            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Certificate specimen</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Certificate specimen</p>
             <div className="mt-4 border border-[#efaaa1]/20 p-6 text-center">
               <p className="text-xs uppercase tracking-[.18em] text-[#8f7773]">Klinikos EDU</p>
               <h2 className="mt-4 text-2xl font-light text-[#fff8f6]">{kit.certificate.title}</h2>
@@ -111,7 +111,7 @@ export default function EduDemoKitPage() {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {kit.assessmentItems.map((item) => (
               <article className="border border-[#e28b85]/12 bg-[#0d0708]/70 p-5" key={item.type}>
-                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{item.type.replaceAll("_", " ")}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">{item.type.replaceAll("_", " ")}</p>
                 <h3 className="mt-2 text-sm font-semibold text-[#f8efed]">{item.prompt}</h3>
                 <p className="mt-3 text-xs leading-6 text-[#bca5a1]"><span className="font-semibold text-[#efaaa1]">Expected principle:</span> {item.expectedPrinciple}</p>
               </article>

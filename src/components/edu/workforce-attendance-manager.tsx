@@ -63,7 +63,7 @@ export function WorkforceAttendanceManager({
     <section aria-labelledby="roster-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Evidence roster</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8f7773]">Evidence roster</p>
           <h2 className="mt-1 text-lg font-semibold text-[#f8efed]" id="roster-title">Participant attendance</h2>
         </div>
         <p className="text-xs tabular-nums text-[#8f7773]">{roster.length} enrolled in cohort</p>
@@ -83,7 +83,7 @@ export function WorkforceAttendanceManager({
                 <p className="mt-1 text-xs text-[#8f7773]">{person.email}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Current evidence</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-[#8f7773]">Current evidence</p>
                 <p className="mt-1 text-xs text-[#bca5a1]">{person.attendance?.status ?? "not recorded"}</p>
                 <p className="mt-1 text-[11px] text-[#695754]">{person.attendance?.verifiedAt ? `verified ${new Date(person.attendance.verifiedAt).toLocaleString()}` : "not verified"}</p>
               </div>
