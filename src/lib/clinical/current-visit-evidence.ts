@@ -115,11 +115,16 @@ export function buildCurrentVisitClinicalEvidence(
     status: labs.length || imaging.length ? "available" : "none_available",
     labs,
     imaging,
+    /* Counted over everything the repository returned, not over the truncated display
+       arrays. The display is bounded to MAX_VISIBLE_RESULTS_PER_DOMAIN; counting the
+       bounded copy meant a critical result sitting in position seven or later produced
+       no badge at all, so genuinely unresolved clinical work looked handled. Attention
+       must describe the authorized set; truncation may only shorten what is shown. */
     attention: {
-      labNeedsReview: labs.filter((result) => result.reviewStatus === "Needs Review").length,
-      criticalLabs: labs.filter((result) => result.critical).length,
-      correctedLabs: labs.filter((result) => result.reviewStatus === "Corrected").length,
-      urgentImaging: imaging.filter((result) => result.urgentSourceFlag).length,
+      labNeedsReview: input.labs.filter((result) => result.reviewStatus === "Needs Review").length,
+      criticalLabs: input.labs.filter((result) => result.critical).length,
+      correctedLabs: input.labs.filter((result) => result.reviewStatus === "Corrected").length,
+      urgentImaging: input.imaging.filter((result) => result.urgentSourceFlag).length,
     },
     externalCompletion: "not_inferred",
   };

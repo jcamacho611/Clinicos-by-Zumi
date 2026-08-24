@@ -6,10 +6,11 @@ import { resolveEduIdentity } from "@/lib/edu/edu-session";
 import { finalizeEnrollmentCompletion } from "@/lib/edu/workforce-completion-repository";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 
+/* Only the enrollment. Completion thresholds are policy, not a request parameter — see
+   finalizeEnrollmentCompletion. Accepting them here let a caller send zeros and finalize
+   an enrollment with no evidence behind it. */
 const finalizeSchema = z.object({
   enrollmentId: z.string().trim().min(1).max(128),
-  minimumAttendancePercent: z.number().min(0).max(100).optional(),
-  requiredKnowledgePairs: z.number().int().min(0).max(20).optional(),
 });
 
 function fail(message: string, status: 400 | 401 | 403 | 404 | 409) {
