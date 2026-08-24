@@ -3,20 +3,17 @@
  * The canonical release gate: one command that proves a candidate can actually ship
  * through Klinikos' production host, Render.
  *
- * The full gate deliberately reproduces the repository's Render contract:
+ * The full gate deliberately reproduces the repository's Render install/build/start
+ * contract while keeping database mutation isolated to a verified disposable target.
  *
  *   npm ci --include=dev --ignore-scripts
  *   npm run render:build
  *   npm start
  *
  * It adds schema, security, type, lint, tests, disposable-database migration proof,
- * MVP journeys, startup, and health around that host contract. The extra checks make the
- * gate stricter than Render without creating a second build path.
- *
- * Database safety is enforced. The full gate may run only against an empty disposable
- * database. Both DATABASE_URL and DIRECT_DATABASE_URL are pinned to that same verified
- * disposable URL before `render:build`, because the production build script prefers
- * DIRECT_DATABASE_URL when it exists.
+ * MVP journeys, startup, and health around that host contract. Production Render builds
+ * are status-only for migrations; this verifier explicitly unlocks migration deployment
+ * only after proving its target is an empty disposable database.
  *
  * Usage:
  *   npm run verify:release          full Render-aligned gate; needs disposable DATABASE_URL
@@ -81,7 +78,7 @@ async function assertDisposableDatabase(url) {
     if (marker) {
       throw new Error(
         `DATABASE_URL points at ${marker}, which looks like a managed production host. ` +
-        "This gate reproduces Render migrations and must never run there. " +
+        "This gate applies migrations and must never run there. " +
         "Set VERIFY_ALLOW_PRODUCTION_DATABASE=true only for a genuinely disposable target.",
       );
     }
@@ -97,7 +94,7 @@ async function assertDisposableDatabase(url) {
     const tables = Number(rows?.[0]?.count ?? 0);
     if (tables > 0) {
       throw new Error(
-        `The target database already has ${tables} table(s). The Render migration path ` +
+        `The target database already has ${tables} table(s). The migration path ` +
         "must be proven against an EMPTY database before release.",
       );
     }
@@ -133,7 +130,6 @@ async function main() {
     log("ok", `${name} (${((Date.now() - began) / 1000).toFixed(1)}s)`);
   };
 
-  // Render's install command, verbatim from render.yaml.
   await record("Render install integrity", () => run(
     "Render install integrity",
     npmCommand,
@@ -145,22 +141,18 @@ async function main() {
   await record("prisma generate", () => run("prisma generate", "npx", ["prisma", "generate"], { quiet: true, env: parseOnlyUrl }));
   await record("prisma validate", () => run("prisma validate", "npx", ["prisma", "validate"], { quiet: true, env: parseOnlyUrl }));
 
-  // Confidentiality is checked before any production bundle is created.
   await record("source confidentiality", () => run("source confidentiality", npmCommand, ["run", "security:check"]));
-
   await record("type-check", () => run("type-check", "npx", ["tsc", "--noEmit"]));
   await record("lint", () => run("lint", "npx", ["eslint", "."]));
   await record("tests", () => run("tests", "npx", ["vitest", "run"], { quiet: true }));
 
   if (CODE_ONLY) {
-    // Code-only still proves the production compilation path, but intentionally avoids
-    // render:build because that command owns migrate deploy when a database URL exists.
     await record("production build", () => run("production build", npmCommand, ["run", "build"], {
       quiet: true,
       env: { NODE_ENV: "production" },
     }));
     await record("post-build confidentiality", () => run("post-build confidentiality", npmCommand, ["run", "security:check"]));
-    log("skip", "Render migration, MVP journeys, production startup and health (skipped: --code-only)");
+    log("skip", "Disposable migration, MVP journeys, production startup and health (skipped: --code-only)");
   } else {
     const disposableDatabaseUrl = process.env.DATABASE_URL;
     await record("disposable database safety", () => assertDisposableDatabase(disposableDatabaseUrl));
@@ -169,18 +161,16 @@ async function main() {
       NODE_ENV: "production",
       DATABASE_URL: disposableDatabaseUrl,
       DIRECT_DATABASE_URL: disposableDatabaseUrl,
+      KLINIKOS_ALLOW_MIGRATION_DEPLOY: "disposable-verification",
     };
 
-    // Render's build command, including build-before-migrate ordering, exactly as the
-    // production host invokes it after npm ci.
-    await record("Render build + migration", () => run(
-      "Render build + migration",
+    await record("Render build + disposable migration", () => run(
+      "Render build + disposable migration",
       npmCommand,
       ["run", "render:build"],
       { quiet: true, env: renderEnv },
     ));
 
-    // Re-scan after the production bundle exists.
     await record("post-build confidentiality", () => run("post-build confidentiality", npmCommand, ["run", "security:check"]));
 
     await record("MVP journeys", () => run(
@@ -190,8 +180,6 @@ async function main() {
       { quiet: true, env: renderEnv },
     ));
 
-    // Render's start command is `npm start`; reproduce that command rather than invoking
-    // the implementation script directly.
     await record("Render startup and health", async () => {
       const port = process.env.VERIFY_PORT ?? "3111";
       const child = spawn(npmCommand, ["start"], {
@@ -216,7 +204,7 @@ async function main() {
   const total = ((Date.now() - startedAt) / 1000).toFixed(1);
   log("ok", `release gate passed — ${steps.length} checks in ${total}s`);
   if (CODE_ONLY) {
-    log("info", "This was --code-only: Render migration, journeys, startup and health were NOT proven.");
+    log("info", "This was --code-only: disposable migration, journeys, startup and health were NOT proven.");
   }
 }
 
