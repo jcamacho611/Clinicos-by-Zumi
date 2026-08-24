@@ -1,6 +1,7 @@
 import type { BodyLaterality } from "@/lib/clinical/body-map-types";
 
 export type BodyMapFindingClinicalState = "active" | "resolved";
+export type BodyMapCaptureSource = "clinical_capture" | "staff_intake" | "provider_review" | "structured_import";
 export type BodyMapSourceObservation = Record<string, unknown> | null;
 
 export interface CreateBodyMapFindingInput {
@@ -15,6 +16,7 @@ export interface CreateBodyMapFindingInput {
   sourceObservation: BodyMapSourceObservation;
 }
 
+/** Raw, untrusted mutation input. Validation narrows source into BodyMapCaptureSource. */
 export interface CreateBodyMapVersionInput {
   capturedAt: Date;
   source: string;
@@ -28,7 +30,7 @@ export interface ValidatedBodyMapFindingInput extends CreateBodyMapFindingInput 
 
 export interface ValidatedBodyMapVersionInput {
   capturedAt: Date;
-  source: string;
+  source: BodyMapCaptureSource;
   findings: ValidatedBodyMapFindingInput[];
 }
 
@@ -54,7 +56,7 @@ export interface PersistedBodyMapVersion {
   encounterId: string;
   createdByUserId: string;
   capturedAt: string;
-  source: string;
+  source: BodyMapCaptureSource;
   amendsVersionId: string | null;
   createdAt: string;
   findings: PersistedBodyMapFinding[];
@@ -76,6 +78,17 @@ const CLINICAL_STATES = new Set<BodyMapFindingClinicalState>([
   "active",
   "resolved",
 ]);
+
+const CAPTURE_SOURCES = new Set<BodyMapCaptureSource>([
+  "clinical_capture",
+  "staff_intake",
+  "provider_review",
+  "structured_import",
+]);
+
+function isBodyMapCaptureSource(value: string): value is BodyMapCaptureSource {
+  return CAPTURE_SOURCES.has(value as BodyMapCaptureSource);
+}
 
 export function bodyMapFindingPersistenceKey(finding: Pick<CreateBodyMapFindingInput, "bodyRegion" | "laterality" | "symptom">) {
   return [
@@ -134,12 +147,18 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
     errors.push("BodyMap capturedAt must be a valid timestamp.");
   }
 
-  const source = typeof input.source === "string" ? input.source.trim() : "";
-  if (!source) errors.push("BodyMap source is required.");
+  const sourceCandidate = typeof input.source === "string" ? input.source.trim() : "";
+  const source = isBodyMapCaptureSource(sourceCandidate) ? sourceCandidate : null;
+  if (source === null) {
+    errors.push("BodyMap source must be a governed machine capture source.");
+  }
 
   if (!Array.isArray(input.findings)) {
     errors.push("BodyMap findings must be an array.");
     return { ok: false, errors };
+  }
+  if (input.findings.length === 0) {
+    errors.push("BodyMap must contain at least one explicit finding; omission has no resolution meaning.");
   }
 
   const seenKeys = new Set<string>();
@@ -214,7 +233,7 @@ export function validateBodyMapVersionInput(input: CreateBodyMapVersionInput): B
     });
   }
 
-  if (errors.length > 0) return { ok: false, errors };
+  if (errors.length > 0 || source === null) return { ok: false, errors };
 
   return {
     ok: true,
