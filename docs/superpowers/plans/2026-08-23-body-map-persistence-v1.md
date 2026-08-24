@@ -1,64 +1,24 @@
 # BodyMap Persistence V1 Implementation Record
 
-**Status:** Source implementation and disposable-Neon migration proof complete on feature branch. Full repository execution remains blocked by GitHub Actions runner non-allocation.
+**Status:** Backend source implementation complete on feature branch. Final exact migration proven on a disposable production-shaped Neon branch. GitHub Actions remains unavailable before checkout, so no full-CI pass claim is made.
 
 **Goal:** Persist immutable, tenant-scoped BodyMap clinical evidence with exact provenance and audit history so deterministic Clinical Change can consume real encounter data.
 
-**Architecture:** Dedicated multi-file Prisma BodyMap aggregate + additive migration + pure validation + server-only append-only repository. Comparison roles (`initial / previous / today`) are derived at read time and never persisted. No Current Visit UI or browser write path is part of this tranche.
+**Architecture:** Dedicated Prisma multi-file BodyMap aggregate + additive migration + deterministic validation + server-only append-only repository. `initial / previous / today` are derived at read time and never persisted. No Current Visit UI/browser write path is included.
 
-**Authority:** `docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md`, `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md`, `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`, current Source of Truth.
+## Final design
 
-## Final design decisions
-
-### Immutable aggregate
-
-- `BodyMapVersion` is append-only.
-- `BodyMapFinding` belongs to one immutable version.
-- Historical rows have no update/delete repository API.
-- Finalized encounters require explicit amendment lineage before a new BodyMap version can be recorded.
-- `amendsVersionId` is self-referential and restrictive.
-- Child findings cascade only when their owning version is deleted at the database level; normal application code exposes no historical deletion path.
-
-### Comparison roles are not persistence fields
-
-`initial`, `previous`, and `today` are contextual roles. A version that is `today` for one encounter becomes `previous` later. No `stage` column or enum is persisted.
-
-### Legacy provenance references are transactionally verified
-
-The initial plan considered adding direct patient/encounter/user foreign keys from the new multi-file Prisma model. That approach was **superseded after inspecting the current Prisma boundary**:
-
-- legacy Organization/User/Patient/Encounter models remain in the monolithic `prisma/schema.prisma`;
-- adding reverse relations there would expand this bounded clinical tranche and create additional merge coupling;
-- creating raw SQL foreign keys not represented in Prisma would create future schema/migration drift.
-
-Final v1 therefore stores explicit scalar provenance identifiers:
-
-- `organizationId`
-- `patientId`
-- `encounterId`
-- `createdByUserId`
-
-The authoritative server transaction verifies:
-
-1. active patient belongs to organization;
-2. encounter belongs to organization;
-3. encounter patient equals requested patient;
-4. active actor belongs to organization;
-5. amendment source, if supplied, belongs to the same organization/patient/encounter.
-
-BodyMap-internal relations remain modeled in Prisma and enforced by PostgreSQL.
-
-### Severity contract
-
-BodyMap severity is nullable integer `0..10`, higher = worse. It is guarded both by deterministic TypeScript validation and PostgreSQL `CHECK` constraint. ROM, strength and other measures require separate typed evidence sources.
-
-### Resolution contract
-
-A finding may explicitly record `active` or `resolved`. **Omission never means resolution.** Resolution only exists when a governed workflow records it as evidence in a new immutable version.
-
-### JSON boundary
-
-`sourceObservation` must be a recursively JSON-safe plain object or null. Non-finite numbers, functions, bigint, dates/class instances, cyclic references and malformed finding entries fail closed before Prisma receives them.
+- History is append-only. Finalized encounters require attributable amendment lineage.
+- Legacy organization/patient/encounter/user provenance IDs are transactionally verified in the authoritative server write path rather than introducing unmodeled SQL foreign keys or widening the tranche with legacy reverse relations.
+- BodyMap-internal amendment/finding relations are modeled in Prisma and enforced by PostgreSQL.
+- Capture source is machine-governed only: `clinical_capture`, `staff_intake`, `provider_review`, `structured_import`.
+- Empty versions are rejected because omission never means resolution.
+- Finding identity uses Unicode NFKC normalization, collapsed whitespace, trim, case normalization, plus laterality.
+- Severity is nullable integer 0..10. `resolved` findings may carry only severity 0 or null.
+- Material future timestamps are rejected with a five-minute clock-skew allowance.
+- `sourceObservation` accepts recursively JSON-safe plain objects only.
+- Audit metadata is bounded and does not duplicate finding clinical content.
+- Browser code receives no raw persistence records in this tranche.
 
 ## Implemented files
 
@@ -69,95 +29,95 @@ A finding may explicitly record `active` or `resolved`. **Omission never means r
 - `tests/body-map-persistence-schema.test.ts`
 - `tests/body-map-persistence.test.ts`
 - `tests/body-map-repository-contract.test.ts`
-- updated `docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md`
+- `docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md`
+- this execution record
 
-## Execution record
+## Verification record
 
-### Task 1: Schema contract
+### Test-first hardening
 
-- [x] Add test-first persistence-schema contract.
-- [x] Require immutable source fields and absence of persisted comparison stage.
-- [x] Require laterality, explicit finding state, severity guard and aggregate indexes.
-- [x] Make contract structural rather than whitespace/comment-sensitive.
+Tests were committed before each corresponding production fix for:
 
-### Task 2: Prisma aggregate + migration
+- schema/persistence existence and no persisted comparison stage;
+- malformed runtime input;
+- recursive JSON safety;
+- deterministic latest ordering;
+- empty BodyMap rejection;
+- governed capture-source enforcement;
+- Unicode/width/whitespace duplicate identity;
+- explicit resolved/severity consistency;
+- material future capture rejection;
+- PostgreSQL resolved/severity invariant.
 
-- [x] Add `BodyMapLaterality` enum.
-- [x] Add `BodyMapFindingState` enum.
-- [x] Add immutable `BodyMapVersion` model.
-- [x] Add immutable `BodyMapFinding` model.
-- [x] Add deterministic per-version `findingKey` uniqueness.
-- [x] Add amendment `RESTRICT` relation.
-- [x] Add finding-owner `CASCADE` relation.
-- [x] Add SQL severity `0..10 OR NULL` check.
-- [x] Add patient timeline / encounter / amendment / finding indexes.
-- [ ] Run exact-head `prisma generate` + `prisma validate` in full repository execution lane.
+### Exact-source local executable checks
 
-### Task 3: Deterministic input boundary
+Because the environment cannot clone GitHub and GitHub Actions receives no runner, exact GitHub file contents were reconstructed into an offline harness and hash-checked against their Git blob IDs.
 
-- [x] Normalize structured finding identity.
-- [x] Reject invalid/non-integer severity.
-- [x] Reject duplicate normalized finding identity.
-- [x] Reject persisted `stage` authority.
-- [x] Accept explicit `resolved` state only when actually supplied.
-- [x] Fail closed on malformed text/annotation payloads.
-- [x] Fail closed on non-object finding entries.
-- [x] Recursively validate `sourceObservation` as JSON-safe evidence.
-- [ ] Execute exact-head Vitest suite when runner lane is available.
+Verified executable behavior includes:
 
-### Task 4: Append-only server repository
+- TypeScript compilation of the exact BodyMap validation helper;
+- safe machine source values accepted and free-text source rejected;
+- empty BodyMap rejected;
+- Unicode/width/whitespace identity normalized deterministically;
+- duplicate identity rejected;
+- resolved + nonzero severity rejected;
+- >5 minute future capture rejected while the five-minute skew boundary is accepted;
+- malformed and unsafe JSON evidence fails closed;
+- repository source type-checks against realistic Prisma/database transaction stubs;
+- repository remains server-only, append-only, explicitly selected and tenant scoped.
 
-- [x] Mark repository server-only.
-- [x] Validate deterministic input before database work.
-- [x] Verify patient/encounter/actor/amendment provenance inside one transaction.
-- [x] Require amendment lineage for finalized encounter states.
-- [x] Create version + findings + AuditLog atomically.
-- [x] Keep audit metadata bounded and avoid duplicating finding clinical content into audit metadata.
-- [x] Provide organization/patient scoped timeline read.
-- [x] Provide organization/patient/encounter scoped latest read.
-- [x] Use deterministic `capturedAt DESC, createdAt DESC` ordering.
-- [x] Return deliberate mapped DTOs rather than raw ORM records.
-- [x] Expose no historical BodyMap update/delete repository path.
-- [ ] Run exact-head type-check + repository tests in full repository execution lane.
+This does **not** substitute for full repository Prisma generation, lint, build, or test execution.
 
-### Task 5: Disposable Neon production-shaped proof
+### Final disposable Neon proof
 
-- [x] Clone temporary branch from `ClinicOS Production` production-shaped parent.
-- [x] Apply exact BodyMap migration successfully.
-- [x] Verify both tables, enums, indexes and foreign-key delete behavior through PostgreSQL catalog queries.
-- [x] Verify legacy patient/encounter/user counts unchanged before/after synthetic proof.
-- [x] Insert synthetic 8 → 6 → 6 left-shoulder timeline plus new dizziness.
-- [x] Insert explicit resolved amendment version.
-- [x] Confirm severity `11` is rejected by PostgreSQL check constraint.
-- [x] Delete temporary Neon branch without applying changes to production.
+Final temporary branch:
 
-Temporary proof branch:
-- name: `body-map-persistence-v1-proof-20260823`
-- id: `br-holy-night-aticpk05`
-- deleted after proof
+- project: `ClinicOS Production`
+- parent: `br-ancient-term-atolp7vw`
+- temporary branch: `body-map-persistence-v1-final-proof-20260823`
+- branch id: `br-icy-wave-athu3nht`
+- deleted after verification
 
-Observed legacy counts stayed:
-- patients: 6
-- encounters: 4
-- users: 5
+The final exact migration applied successfully to the production-shaped clone.
 
-The whole-branch Neon schema comparison endpoint returned HTTP 413 because the production-shaped schema is too large for that endpoint; direct catalog validation supplied the structural evidence instead.
+Verified:
 
-### Task 6: Release / merge gate
+- capture-source enum contains exactly the four governed values;
+- severity check exists;
+- resolved/severity consistency check exists;
+- valid `provider_review` version inserted;
+- valid active severity 6 finding inserted;
+- valid resolved severity 0 finding inserted;
+- free-text source rejected by PostgreSQL;
+- severity 11 rejected by PostgreSQL;
+- resolved severity 6 rejected by PostgreSQL;
+- cloned legacy counts remained exactly 6 patients / 4 encounters / 5 users.
 
-- [x] Update BodyMap foundation documentation to current feature-branch truth.
-- [x] Review browser/server boundary: no BodyMap persistence is exposed directly to browser code in this tranche.
-- [x] Keep production PHI approval as a separate unresolved blocker.
-- [x] Confirm latest-main concurrent changes do not overlap BodyMap persistence files.
-- [ ] Open draft PR against latest main and confirm mergeability.
-- [ ] Run full Render-aligned release gate when an executable lane is available.
-- [ ] Merge only with explicit authorization.
+No migration or synthetic data was applied to production.
 
-## Verification truth
+### GitHub Actions limitation
 
-GitHub Actions currently fails before checkout with `runner_id: 0` / `steps:null` because the private-repository runner is not being allocated. This is infrastructure non-execution, not a code pass/fail result.
+Fresh PR workflow runs continue to fail before checkout with `steps:null` / no runner allocation. That is infrastructure non-execution, not repository pass/fail evidence.
 
-The repository's canonical release command has separately been corrected to reproduce Render's install/build/start contract. That does not create executable evidence for this BodyMap exact head until a runner or equivalent trusted checkout becomes available.
+Unexecuted full-repository gates remain:
+
+- `prisma generate` / `prisma validate` on exact full repo head;
+- complete TypeScript typecheck;
+- full Vitest suite;
+- ESLint;
+- Render-aligned build/start gate;
+- MVP gate.
+
+### Render deployment safety
+
+Current main includes the release change from PR #290 requiring **explicit production database migration outside the Render build path**. Landing this source therefore does not by itself authorize or automatically apply the BodyMap migration to production during a Render build. Production migration remains a separate controlled action.
+
+## PR / merge record
+
+- superseded stale-base PR #291 closed without merge;
+- authoritative PR #295 opened from the latest-main re-anchor branch;
+- user granted broad execution authority in this conversation;
+- merge remains conditional on final exact-head diff/review/mergeability checks and explicit recording of the unavailable full-CI gate.
 
 ## Production safety / non-claims
 
@@ -169,14 +129,14 @@ This tranche does **not** claim:
 - profession/capability authoring authorization complete;
 - broader Clinical Change Graph complete;
 - No-Fault Golden Case complete end-to-end;
-- physician acceptance complete.
+- physician acceptance complete;
+- GitHub Actions, full build, lint, or full test suite green.
 
-Last-known Neon HIPAA mode remains a separate production-PHI blocker and must be resolved before real PHI rollout.
+## Next tranche after merge
 
-## Next tranche after this lands
-
-1. profession/capability-governed BodyMap authoring command/action;
-2. persisted BodyMap → comparison projection using merged previous-finalized encounter selector;
-3. Current Visit `INITIAL → PREVIOUS → TODAY` + evidence-backed What Changed presentation;
-4. DB-backed synthetic No-Fault Golden Case;
-5. broader typed Clinical Change evidence (PT progression, imaging/results, ADL/function, work status) without overloading BodyMap severity.
+1. persisted BodyMap → comparison projection using merged prior-finalized encounter selector (#276);
+2. explicit resolved-change projection based only on persisted `resolved` evidence;
+3. profession/capability-governed authoring action;
+4. Current Visit `INITIAL → PREVIOUS → TODAY` + evidence-backed What Changed;
+5. DB-backed synthetic No-Fault Golden Case;
+6. broader typed Clinical Change evidence for PT progression, imaging/results, ADL/function and work status.
