@@ -1,4 +1,5 @@
 export type BodyLaterality = "left" | "right" | "bilateral" | "midline" | "not_applicable";
+export type BodyMapFindingClinicalState = "active" | "resolved";
 
 /**
  * A comparison-only role assigned when Klinikos composes longitudinal evidence.
@@ -14,6 +15,8 @@ export interface BodyMapFinding {
   symptom: string;
   /** Normalized symptom severity on a 0-10 scale where higher means worse. */
   severity: number | null;
+  /** Explicit recorded state. Omission is never interpreted as resolved. */
+  clinicalState: BodyMapFindingClinicalState;
   functionalImpact: string | null;
   annotations: string[];
 }
@@ -39,6 +42,7 @@ export type BodyMapDeltaKind =
   | "severity_worsened"
   | "severity_unchanged"
   | "finding_added"
+  | "finding_resolved"
   | "functional_impact_changed";
 
 export interface BodyMapDelta {
