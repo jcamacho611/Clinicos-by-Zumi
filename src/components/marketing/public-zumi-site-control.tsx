@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
-import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const PUBLIC_PATHS = new Set([
@@ -37,6 +37,15 @@ function destinationHref(href: string) {
   if (publicActionPaths.has(href)) return href;
   return `/login?next=${encodeURIComponent(href)}`;
 }
+
+const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
+  kind: "conversation",
+  title: "I can't reach Klinikos right now",
+  body: "Your message didn't get through, so I'd rather say so than guess. Try again in a moment.",
+  assumption: null,
+  destination: null,
+  confidence: 0,
+};
 
 function isResolution(value: unknown): value is PublicLivingResolution {
   if (!value || typeof value !== "object") return false;
@@ -112,7 +121,6 @@ export function PublicZumiSiteControl() {
     if (!prompt || pending) return;
 
     const prior = turns[turns.length - 1]?.resolution ?? null;
-    const fallback = resolvePublicLivingIntent(prompt, prior);
     const history = turns.flatMap((turn) => [
       { role: "user" as const, content: turn.prompt },
       { role: "assistant" as const, content: `${turn.resolution.title}\n${turn.resolution.body}` },
@@ -125,7 +133,9 @@ export function PublicZumiSiteControl() {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
-    let resolution = fallback;
+    // No local resolution: the routing engine is server-side, so an unreachable server
+    // means honest degraded guidance rather than an invented answer.
+    let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
 
     try {
@@ -134,7 +144,14 @@ export function PublicZumiSiteControl() {
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
         signal: controller.signal,
-        body: JSON.stringify({ question: prompt, history, sessionId: sessionId(), surface: pathname }),
+        body: JSON.stringify({
+          question: prompt,
+          history,
+          priorResolution: prior,
+          unresolvedTurns: turns.length,
+          sessionId: sessionId(),
+          surface: pathname,
+        }),
       });
       if (response.ok) {
         const payload = await response.json() as ApiResponse;

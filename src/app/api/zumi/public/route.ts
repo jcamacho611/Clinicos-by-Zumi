@@ -4,6 +4,7 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { publicZumiDurableQuotaAttested } from "@/features/zumi/public-quota-attestation";
 import { resolvePublicZumiTurn } from "@/features/zumi/public-intelligence";
+import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 
 export const maxDuration = 20;
 
@@ -16,8 +17,29 @@ const NO_STORE_HEADERS = {
   Vary: "Origin",
 } as const;
 
+/**
+ * The prior resolution is the exact DTO this route already sent the browser, handed
+ * back so the deterministic fallback can be reproduced server-side. It is public,
+ * flat, and re-validated here rather than trusted.
+ */
+const priorResolutionSchema = z.object({
+  kind: z.enum(["conversation", "route"]),
+  title: z.string().trim().max(400),
+  body: z.string().trim().max(4_000),
+  assumption: z.string().trim().max(400).nullable().default(null),
+  destination: z.object({
+    key: z.string().trim().max(60),
+    href: z.string().trim().max(400).regex(/^\/(?!\/)/),
+    action: z.string().trim().max(200),
+    label: z.string().trim().max(200).optional(),
+  }).passthrough().nullable().default(null),
+  confidence: z.number().min(0).max(1),
+});
+
 const requestSchema = z.object({
   question: z.string().trim().min(1).max(1_200),
+  priorResolution: priorResolutionSchema.nullish().default(null),
+  unresolvedTurns: z.number().int().min(0).max(24).default(0),
   history: z.array(z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().trim().min(1).max(600),
@@ -109,15 +131,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That message could not be processed." }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
-  // The client already has a deterministic public fallback. If the durable quota
-  // authority is absent, unavailable, or did not attest this request, fail closed here
-  // so the browser uses that no-cost path rather than letting spoofable forwarded-IP
-  // metadata authorize paid model execution.
+  // If the durable quota authority is absent, unavailable, or did not attest this
+  // request, fail closed against paid model execution rather than letting spoofable
+  // forwarded-IP metadata authorize it.
+  //
+  // The no-cost path stays no-cost: `resolvePublicLivingIntent` is a pure deterministic
+  // function with no model call. It used to run in the browser, which shipped Klinikos
+  // routing logic to every visitor of the public site. It now runs here, and the
+  // browser receives only the resolved presentation DTO.
   if (!publicZumiDurableQuotaAttested(request)) {
-    return NextResponse.json(
-      { error: "Public intelligence is temporarily using local guidance." },
-      { status: 503, headers: { ...NO_STORE_HEADERS, "Retry-After": "60" } },
+    const local = resolvePublicLivingIntent(
+      parsed.data.question,
+      (parsed.data.priorResolution ?? null) as PublicLivingResolution | null,
+      parsed.data.unresolvedTurns,
     );
+    return NextResponse.json({
+      data: {
+        resolution: {
+          kind: local.kind,
+          title: local.title,
+          body: local.body,
+          assumption: local.assumption,
+          destination: local.destination,
+          confidence: local.confidence,
+        },
+        suggestions: [],
+        // Truthful marker: this turn was answered by deterministic guidance, not by the
+        // full public intelligence path.
+        degraded: true,
+      },
+    }, { headers: { ...NO_STORE_HEADERS, "Retry-After": "60" } });
   }
 
   const result = await resolvePublicZumiTurn(parsed.data);

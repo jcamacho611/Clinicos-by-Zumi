@@ -90,12 +90,27 @@ describe("public Living Home conversation and accessibility contract", () => {
 
   it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {
     expect(source).toContain('fetch("/api/zumi/public"');
-    expect(source).toContain("resolvePublicLivingIntent");
-    expect(source).toContain("let unresolvedTurns = 0");
-    expect(source).toContain("resolvePublicLivingIntent(prompt, priorResolution, unresolvedTurns)");
     expect(source).toContain("Public Zumi can answer general Klinikos questions");
     expect(publicRoute).toContain("resolvePublicZumiTurn");
     expect(publicRoute).not.toContain("getClinicSession");
+
+    // The escalating deterministic path is still exercised, and still receives the
+    // prior resolution and the unresolved-turn count. It moved to the server: shipping
+    // the routing engine to the browser disclosed Klinikos routing logic to every
+    // visitor of the public site, which the frontend trade-secret canon forbids.
+    expect(source).toContain("let unresolvedTurns = 0");
+    expect(source).toContain("priorResolution,");
+    expect(source).toContain("unresolvedTurns,");
+    expect(publicRoute).toContain("resolvePublicLivingIntent(");
+    expect(publicRoute).toContain("parsed.data.unresolvedTurns");
+
+    // The engine itself must not reach the browser bundle. A type-only import is
+    // erased at compile time and is therefore not a disclosure; a value import is.
+    expect(source).not.toContain("resolvePublicLivingIntent(prompt");
+    expect(source).toContain('import type { PublicLivingResolution }');
+
+    // An unreachable server must degrade honestly rather than invent an answer.
+    expect(source).toContain("I can't reach Klinikos right now");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
     expect(source).not.toContain("Assumption:");
