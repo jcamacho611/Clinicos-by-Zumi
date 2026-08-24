@@ -12,6 +12,7 @@ describe("BodyMap persistence schema", () => {
     expect(model).toContain("model BodyMapFinding");
     expect(model).toMatch(/enum\s+BodyMapLaterality\s*\{/);
     expect(model).toMatch(/enum\s+BodyMapFindingState\s*\{[\s\S]*\bactive\b[\s\S]*\bresolved\b[\s\S]*\}/);
+    expect(model).toMatch(/enum\s+BodyMapCaptureSource\s*\{[\s\S]*\bclinical_capture\b[\s\S]*\bstaff_intake\b[\s\S]*\bprovider_review\b[\s\S]*\bstructured_import\b[\s\S]*\}/);
 
     for (const field of [
       "organizationId",
@@ -24,6 +25,7 @@ describe("BodyMap persistence schema", () => {
       expect(model).toMatch(new RegExp(`\\b${field}\\s+`));
     }
 
+    expect(model).toMatch(/\bsource\s+BodyMapCaptureSource\b/);
     expect(model).not.toMatch(/\bstage\s+[A-Za-z]/);
     expect(model).not.toMatch(/enum\s+BodyMapStage\b/);
   });
@@ -67,6 +69,11 @@ describe("BodyMap persistence schema", () => {
     expect(model).toMatch(/bodyMapVersion\s+BodyMapVersion\b/);
     expect(model).toContain("onDelete: Cascade");
 
+    expect(migration).toContain('CREATE TYPE "BodyMapCaptureSource" AS ENUM');
+    for (const source of ["clinical_capture", "staff_intake", "provider_review", "structured_import"]) {
+      expect(migration).toContain(`'${source}'`);
+    }
+    expect(migration).toContain('"source" "BodyMapCaptureSource" NOT NULL DEFAULT \'clinical_capture\'');
     expect(migration).toContain('CREATE TABLE "body_map_versions"');
     expect(migration).toContain('CREATE TABLE "body_map_findings"');
     expect(migration).toContain('CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10))');
