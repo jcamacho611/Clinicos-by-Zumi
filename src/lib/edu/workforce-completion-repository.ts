@@ -3,7 +3,16 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
-import type { EduIdentity } from "@/lib/edu/edu-session";
+import {
+  eduCohortFilter,
+  eduInstitutionFilter,
+  type EduIdentity,
+} from "@/lib/edu/edu-session";
+import {
+  buildBatchWorkforceCompletionEvidence,
+  type BatchCompletionAttendance,
+  type BatchCompletionSession,
+} from "@/lib/edu/workforce/workforce-completion-batch";
 import { buildWorkforceCompletionReview } from "@/lib/edu/workforce-completion-review";
 import { summarizePairedKnowledgeChange, type WorkforceKnowledgeAssessmentRow } from "@/lib/edu/workforce-knowledge-repository";
 
@@ -40,6 +49,9 @@ type AttendanceEvidenceRow = {
   minutesPresent: number | null;
 };
 
+type BatchSessionEvidenceRow = BatchCompletionSession;
+type BatchAttendanceEvidenceRow = BatchCompletionAttendance;
+
 function requireInstitution(identity: EduIdentity) {
   if (!identity.institutionId) throw new Error("Education institution context is required.");
   return identity.institutionId;
@@ -67,6 +79,139 @@ function verifiedMinutesForSession(session: SessionEvidenceRow, attendance: Atte
   if (attendance.status === "present") return Math.min(attendance.minutesPresent ?? total, total);
   if (attendance.status === "partial") return Math.min(attendance.minutesPresent ?? 0, total);
   return 0;
+}
+
+/**
+ * Batch read path for institutional Completion Review.
+ *
+ * The original page called `getEnrollmentCompletionEvidence` once per participant,
+ * multiplying sessions/attendance/activity/submission/knowledge queries by roster size.
+ * This function loads each evidence family once for the accessible enrollment set and
+ * then applies the same deterministic completion policy in memory.
+ *
+ * Finalization intentionally does NOT use this batch projection. The consequential
+ * write path re-reads one enrollment through `getEnrollmentCompletionEvidence` inside
+ * the existing authority boundary immediately before completion is finalized.
+ */
+export async function listWorkforceCompletionEvidence(identity: EduIdentity, input?: {
+  minimumAttendancePercent?: number;
+  requiredKnowledgePairs?: number;
+  limit?: number;
+}): Promise<WorkforceCompletionEvidence[]> {
+  const institutionId = requireInstitution(identity);
+  const minimumAttendancePercent = input?.minimumAttendancePercent ?? 80;
+  const requiredKnowledgePairs = input?.requiredKnowledgePairs ?? 1;
+  const limit = Math.min(Math.max(input?.limit ?? 150, 1), 500);
+
+  const enrollments = await db.educationEnrollment.findMany({
+    where: {
+      ...eduInstitutionFilter(identity),
+      ...eduCohortFilter(identity),
+      status: { in: ["active", "completed"] },
+    },
+    select: {
+      id: true,
+      cohortId: true,
+      studentDisplayName: true,
+      studentEmail: true,
+      status: true,
+      completedAt: true,
+      cohort: { select: { courseId: true } },
+    },
+    orderBy: [{ studentDisplayName: "asc" }, { studentEmail: "asc" }],
+    take: limit,
+  });
+
+  if (!enrollments.length) return [];
+
+  const enrollmentIds = enrollments.map((enrollment) => enrollment.id);
+  const cohortIds = [...new Set(enrollments.map((enrollment) => enrollment.cohortId))];
+
+  const [sessions, attendance, requiredActivityGroups, gradedActivityGroups, knowledgeRows] = await Promise.all([
+    db.$queryRaw<BatchSessionEvidenceRow[]>(Prisma.sql`
+      SELECT id, "cohortId", "startsAt", "endsAt"
+      FROM education_sessions
+      WHERE "institutionId" = ${institutionId}
+        AND "cohortId" IN (${Prisma.join(cohortIds)})
+        AND (
+          status IN ('open', 'completed')
+          OR (status = 'scheduled' AND "endsAt" <= CURRENT_TIMESTAMP)
+        )
+      ORDER BY "startsAt" ASC
+    `),
+    db.$queryRaw<BatchAttendanceEvidenceRow[]>(Prisma.sql`
+      SELECT "sessionId", "enrollmentId", status, "verifiedAt", "minutesPresent"
+      FROM education_attendance_records
+      WHERE "institutionId" = ${institutionId}
+        AND "enrollmentId" IN (${Prisma.join(enrollmentIds)})
+    `),
+    db.educationScenarioAssignment.groupBy({
+      by: ["cohortId"],
+      where: {
+        institutionId,
+        cohortId: { in: cohortIds },
+        status: { not: "draft" },
+      },
+      _count: { _all: true },
+    }),
+    db.educationSubmission.groupBy({
+      by: ["enrollmentId"],
+      where: {
+        institutionId,
+        enrollmentId: { in: enrollmentIds },
+        grade: { is: { releasedToStudent: true } },
+      },
+      _count: { _all: true },
+    }),
+    db.$queryRaw<WorkforceKnowledgeAssessmentRow[]>(Prisma.sql`
+      SELECT * FROM education_knowledge_assessment_attempts
+      WHERE "institutionId" = ${institutionId}
+        AND "enrollmentId" IN (${Prisma.join(enrollmentIds)})
+      ORDER BY "completedAt" DESC
+    `),
+  ]);
+
+  const requiredActivitiesByCohort = new Map(
+    requiredActivityGroups.map((row) => [row.cohortId, row._count._all]),
+  );
+  const gradedActivitiesByEnrollment = new Map(
+    gradedActivityGroups
+      .filter((row): row is typeof row & { enrollmentId: string } => Boolean(row.enrollmentId))
+      .map((row) => [row.enrollmentId, row._count._all]),
+  );
+
+  const knowledgeRowsByEnrollment = new Map<string, WorkforceKnowledgeAssessmentRow[]>();
+  for (const row of knowledgeRows) {
+    knowledgeRowsByEnrollment.set(row.enrollmentId, [
+      ...(knowledgeRowsByEnrollment.get(row.enrollmentId) ?? []),
+      row,
+    ]);
+  }
+  const knowledgeByEnrollment = new Map(
+    [...knowledgeRowsByEnrollment.entries()].map(([enrollmentId, rows]) => [
+      enrollmentId,
+      summarizePairedKnowledgeChange(rows),
+    ]),
+  );
+
+  return buildBatchWorkforceCompletionEvidence({
+    minimumAttendancePercent,
+    requiredKnowledgePairs,
+    enrollments: enrollments.map((enrollment) => ({
+      id: enrollment.id,
+      cohortId: enrollment.cohortId,
+      courseId: enrollment.cohort.courseId,
+      studentDisplayName: enrollment.studentDisplayName,
+      studentEmail: enrollment.studentEmail,
+      status: enrollment.status,
+      completedAt: enrollment.completedAt,
+    })),
+    sessions,
+    attendance,
+    requiredActivitiesByCohort,
+    gradedActivitiesByEnrollment,
+    knowledgeByEnrollment,
+  });
 }
 
 export async function getEnrollmentCompletionEvidence(identity: EduIdentity, input: {

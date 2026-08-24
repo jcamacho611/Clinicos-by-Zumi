@@ -84,6 +84,16 @@ const PRODUCT_QUESTIONS: ReadonlyArray<{
     }),
   },
   {
+    match: /\b(?:workforce board|workforce development board|workforce system|regional workforce|workforce training|ai workforce training|industry accelerator|career readiness training)\b/i,
+    answer: () => ({
+      title: "Klinikos EDU is already built for live workforce delivery.",
+      body:
+        "Klinikos EDU already has institutional programs, cohorts, live instructor-led sessions, five occupational pathways, Career Readiness, governed Zumi practice, verified attendance, instructor-controlled completion, certificates and reporting. "
+        + "A workforce-board engagement configures that existing engine for the buyer’s pathways, reporting, accessibility, approved tools and delivery model rather than starting from a greenfield training platform.",
+      destination: { key: "edu", href: "/edu", action: "See Workforce delivery in EDU" },
+    }),
+  },
+  {
     match: /\b(?:what(?:'s| is)?\s+(?:this|klinikos|zumi)|who are you|what do you do|what does klinikos do|whats going|what(?:'s| is) going on)\b/i,
     answer: () => ({
       title: KLINIKOS_ONE_LINE,
