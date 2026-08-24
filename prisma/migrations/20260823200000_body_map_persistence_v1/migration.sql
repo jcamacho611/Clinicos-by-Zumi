@@ -53,7 +53,9 @@ CREATE TABLE "body_map_findings" (
 
   CONSTRAINT "body_map_findings_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "body_map_findings_severity_check"
-    CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10))
+    CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10)),
+  CONSTRAINT "body_map_findings_resolved_severity_check"
+    CHECK ("clinicalState" <> 'resolved' OR "severity" IS NULL OR "severity" = 0)
 );
 
 CREATE INDEX "body_map_versions_organizationId_patientId_capturedAt_idx"
