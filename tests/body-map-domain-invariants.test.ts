@@ -17,6 +17,7 @@ function version(id: string, severity: number | null): BodyMapVersion {
       laterality: "left",
       symptom: "pain",
       severity,
+      clinicalState: "active",
       functionalImpact: null,
       annotations: [],
     }],
