@@ -11,6 +11,13 @@ enum BodyMapFindingState {
   resolved
 }
 
+enum BodyMapCaptureSource {
+  clinical_capture
+  staff_intake
+  provider_review
+  structured_import
+}
+
 /// Immutable clinical evidence captured for one encounter at one point in time.
 ///
 /// organizationId / patientId / encounterId / createdByUserId intentionally remain
@@ -18,18 +25,18 @@ enum BodyMapFindingState {
 /// belong to the same tenant/context before insert. Comparison roles such as
 /// initial/previous/today are derived at read time and are never persisted here.
 model BodyMapVersion {
-  id              String           @id @default(cuid())
+  id              String               @id @default(cuid())
   organizationId  String
   patientId       String
   encounterId     String
   createdByUserId String
   capturedAt      DateTime
-  source          String           @default("clinical_capture")
+  source          BodyMapCaptureSource @default(clinical_capture)
   amendsVersionId String?
-  createdAt       DateTime         @default(now())
+  createdAt       DateTime             @default(now())
   findings        BodyMapFinding[]
-  amendsVersion   BodyMapVersion?  @relation("BodyMapVersionAmendment", fields: [amendsVersionId], references: [id], onDelete: Restrict)
-  amendments      BodyMapVersion[] @relation("BodyMapVersionAmendment")
+  amendsVersion   BodyMapVersion?      @relation("BodyMapVersionAmendment", fields: [amendsVersionId], references: [id], onDelete: Restrict)
+  amendments      BodyMapVersion[]     @relation("BodyMapVersionAmendment")
 
   @@index([organizationId, patientId, capturedAt])
   @@index([organizationId, encounterId, capturedAt])
