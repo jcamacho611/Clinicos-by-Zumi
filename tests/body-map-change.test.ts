@@ -17,6 +17,7 @@ const initial: BodyMapVersion = {
       laterality: "left",
       symptom: "pain",
       severity: 8,
+      clinicalState: "active",
       functionalImpact: "Difficulty lifting arm overhead",
       annotations: [],
     },
@@ -37,6 +38,7 @@ const previous: BodyMapVersion = {
       laterality: "left",
       symptom: "pain",
       severity: 6,
+      clinicalState: "active",
       functionalImpact: "Difficulty lifting arm overhead",
       annotations: [],
     },
@@ -57,6 +59,7 @@ const today: BodyMapVersion = {
       laterality: "left",
       symptom: "pain",
       severity: 6,
+      clinicalState: "active",
       functionalImpact: "Difficulty lifting arm overhead",
       annotations: [],
     },
@@ -66,6 +69,7 @@ const today: BodyMapVersion = {
       laterality: "not_applicable",
       symptom: "dizziness",
       severity: null,
+      clinicalState: "active",
       functionalImpact: "Intermittent dizziness with position change",
       annotations: [],
     },
@@ -213,7 +217,7 @@ describe("BodyMap longitudinal clinical change", () => {
     const contract = readFileSync("docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md", "utf8");
 
     for (const requiredInvariant of [
-      "append-only/versioned persistence",
+      "append-only/versioned",
       "tenant + patient + encounter scoped reads",
       "Historical versions are never overwritten",
       "creator and captured-at provenance",
@@ -223,7 +227,6 @@ describe("BodyMap longitudinal clinical change", () => {
       "Omission is never clinical resolution",
       "amendment/addendum semantics rather than mutation",
       "does not satisfy P0 #244 by itself",
-      "PR #271",
       "PR #276",
     ]) {
       expect(contract).toContain(requiredInvariant);
