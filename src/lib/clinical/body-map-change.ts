@@ -1,8 +1,7 @@
+import { bodyMapFindingIdentityKey } from "@/lib/clinical/body-map-identity";
 import type { BodyMapDelta, BodyMapEvidenceRef, BodyMapFinding, BodyMapVersion } from "./body-map-types";
 
-export function bodyMapFindingKey(finding: BodyMapFinding) {
-  return [finding.bodyRegion.trim().toLowerCase(), finding.laterality, finding.symptom.trim().toLowerCase()].join("::");
-}
+export const bodyMapFindingKey = bodyMapFindingIdentityKey;
 
 function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): BodyMapEvidenceRef {
   return { bodyMapVersionId: version.id, findingId: finding.id };
@@ -11,10 +10,17 @@ function findingEvidence(version: BodyMapVersion, finding: BodyMapFinding): Body
 function assertValidFinding(finding: BodyMapFinding) {
   if (finding.severity !== null && (
     !Number.isFinite(finding.severity)
+    || !Number.isInteger(finding.severity)
     || finding.severity < 0
     || finding.severity > 10
   )) {
     throw new Error(`Invalid body map severity for finding ${finding.id}`);
+  }
+  if (finding.clinicalState !== "active" && finding.clinicalState !== "resolved") {
+    throw new Error(`Invalid body map clinical state for finding ${finding.id}`);
+  }
+  if (finding.clinicalState === "resolved" && finding.severity !== null && finding.severity !== 0) {
+    throw new Error(`Invalid resolved body map severity for finding ${finding.id}`);
   }
 }
 
@@ -48,16 +54,36 @@ export function compareBodyMapVersions(previous: BodyMapVersion, current: BodyMa
     const previousFinding = previousByKey.get(key);
 
     if (!previousFinding) {
+      if (currentFinding.clinicalState === "active") {
+        deltas.push({
+          key,
+          bodyRegion: currentFinding.bodyRegion,
+          laterality: currentFinding.laterality,
+          symptom: currentFinding.symptom,
+          kind: "finding_added",
+          previousValue: null,
+          currentValue: currentFinding.symptom,
+          evidence: [findingEvidence(current, currentFinding)],
+        });
+      }
+      continue;
+    }
+
+    if (previousFinding.clinicalState === "active" && currentFinding.clinicalState === "resolved") {
       deltas.push({
         key,
         bodyRegion: currentFinding.bodyRegion,
         laterality: currentFinding.laterality,
         symptom: currentFinding.symptom,
-        kind: "finding_added",
-        previousValue: null,
-        currentValue: currentFinding.symptom,
-        evidence: [findingEvidence(current, currentFinding)],
+        kind: "finding_resolved",
+        previousValue: "active",
+        currentValue: "resolved",
+        evidence: [findingEvidence(previous, previousFinding), findingEvidence(current, currentFinding)],
       });
+      continue;
+    }
+
+    if (previousFinding.clinicalState === "resolved" || currentFinding.clinicalState === "resolved") {
       continue;
     }
 
