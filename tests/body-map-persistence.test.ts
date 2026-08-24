@@ -45,6 +45,30 @@ describe("BodyMap persistence input", () => {
     },
   );
 
+  it("rejects an empty BodyMap version because omission has no resolution meaning", () => {
+    const result = validateBodyMapVersionInput(validInput({ findings: [] }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join(" ")).toContain("at least one explicit finding");
+  });
+
+  it.each(["clinical_capture", "staff_intake", "provider_review", "structured_import"])(
+    "accepts governed machine capture source %s",
+    (source) => {
+      expect(validateBodyMapVersionInput(validInput({ source })).ok).toBe(true);
+    },
+  );
+
+  it.each([
+    "Patient says left shoulder hurts after crash at Flatbush Ave",
+    "free text",
+    "clinical capture",
+    "clinical_capture/../../notes",
+    "",
+  ])("rejects ungoverned or free-text capture source %j", (source) => {
+    const result = validateBodyMapVersionInput(validInput({ source }));
+    expect(result.ok).toBe(false);
+  });
+
   it("rejects blank structured identity fields", () => {
     expect(validateBodyMapVersionInput(validInput({
       findings: [{ ...validInput().findings[0], bodyRegion: "   " }],
