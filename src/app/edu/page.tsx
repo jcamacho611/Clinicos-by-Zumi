@@ -5,19 +5,28 @@ import { Button } from "@/components/ui/button";
 import { curriculumPackages } from "@/lib/edu/edu-curriculum";
 import { eduSimulationRoleCatalog } from "@/lib/edu/edu-roles";
 import { CREDENTIAL_DISCLAIMER, SYNTHETIC_DATA_LABELS, SYNTHETIC_DATA_NOTICE } from "@/lib/edu/edu-safety";
+import {
+  careerReadinessWorkshop,
+  industryAcceleratorPathways,
+  workforceAiReadinessProgram,
+} from "@/lib/edu/workforce-ai-program";
+import { SCWDB_WORKFORCE_CONFIGURATION } from "@/lib/edu/workforce/workforce-configuration";
+import { SCWDB_HEALTHCARE_EVALUATOR_DEMO } from "@/lib/edu/workforce/workforce-demo";
+import { WORKFORCE_APPLIED_LEARNING_LOOP } from "@/lib/edu/workforce/workforce-learning-framework";
 
 /**
  * Public Klinikos EDU landing page.
  *
- * The curriculum, seats, and safety language are rendered from the same modules the
- * application enforces, so this page cannot advertise a package, a role, or a
- * boundary that the product does not actually implement.
+ * The curriculum, seats, Workforce pathways, and safety language are rendered from
+ * the same modules the application enforces, so this page cannot advertise a
+ * package, role, pathway, or authority boundary that the product does not actually
+ * implement.
  */
 
 export const metadata = {
-  title: "Klinikos EDU — Virtual Clinic Lab",
+  title: "Klinikos EDU — Applied Healthcare & Workforce Learning",
   description:
-    "A synthetic, role-based clinic operations simulator for healthcare education. Students operate a simulated clinic using synthetic training data only.",
+    "Klinikos EDU combines synthetic healthcare simulation with live instructor-led AI workforce training, applied occupational pathways, human-reviewed assessment, verified delivery evidence, and institutional reporting.",
 };
 
 export default function KlinikosEduPage() {
@@ -29,7 +38,7 @@ export default function KlinikosEduPage() {
             <BrandMark />
             <div>
               <p className="text-sm font-extrabold tracking-[-.03em]">Klinikos EDU</p>
-              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9a7a1f]">Virtual Clinic Lab</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9a7a1f]">Applied learning infrastructure</p>
             </div>
           </Link>
           <Link className="ml-auto text-xs font-bold text-slate-600 hover:text-slate-950" href="/">Klinikos</Link>
@@ -51,7 +60,7 @@ export default function KlinikosEduPage() {
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg"><Link href="/edu/dashboard">Enter the lab <ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
-            <Button asChild size="lg" variant="secondary"><Link href="#curriculum">Explore curriculum</Link></Button>
+            <Button asChild size="lg" variant="secondary"><Link href="#workforce">Explore Workforce AI</Link></Button>
           </div>
           <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-slate-500">
             <li className="flex items-center gap-1.5"><ShieldCheck aria-hidden="true" className="size-3.5 text-teal-700" /> Synthetic training data by default</li>
@@ -98,7 +107,106 @@ export default function KlinikosEduPage() {
         </div>
       </section>
 
-      <section aria-labelledby="roles-heading" className="border-y border-slate-200 bg-white">
+      <section aria-labelledby="workforce-heading" className="border-y border-slate-300 bg-[#101317] text-white" id="workforce">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">{workforceAiReadinessProgram.label}</p>
+              <h2 className="mt-3 max-w-4xl text-3xl font-extrabold tracking-[-.045em] sm:text-4xl" id="workforce-heading">
+                Already built for live workforce delivery.
+              </h2>
+              <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                Klinikos EDU already combines programs, cohorts, live sessions, applied scenarios, assessments, verified attendance,
+                Instructor-controlled completion, certificates and institutional reporting. Workforce customers configure the existing
+                engine instead of funding a new training platform from zero.
+              </p>
+            </div>
+            <div className="border-l border-white/15 pl-5 text-sm leading-7 text-slate-300">
+              <p className="font-bold text-white">Implementation posture</p>
+              <p className="mt-2">Use the existing platform foundation to configure, validate, rehearse and launch customer-specific Workforce delivery.</p>
+              <p className="mt-2 text-xs text-slate-400">
+                This is reusable institutional infrastructure. Customer branding, reporting fields, approved tools and final curriculum configuration remain scoped and reviewed.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 grid border border-white/15 lg:grid-cols-2">
+            <article className="border-b border-white/15 p-5 sm:p-7 lg:border-b-0 lg:border-r">
+              <p className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">6–8 hours · live instructor-led</p>
+              <h3 className="mt-2 text-xl font-extrabold">AI Industry Accelerator</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-300">
+                One responsible-AI spine, five occupational contexts, hands-on verification and human authority boundaries.
+              </p>
+              <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+                {industryAcceleratorPathways.map((pathway) => (
+                  <li className="border-t border-white/10 pt-2 text-sm font-bold text-white" key={pathway.key}>{pathway.label}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="p-5 sm:p-7">
+              <p className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#efaaa1]">2–3 hours · live instructor-led</p>
+              <h3 className="mt-2 text-xl font-extrabold">{careerReadinessWorkshop.label}</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-300">
+                Practical job-search, resume, application, communication and interview use of AI without manufacturing qualifications or replacing the learner’s own experience.
+              </p>
+              <p className="mt-5 text-xs leading-6 text-slate-400">
+                {careerReadinessWorkshop.module.activities.length} applied activities currently define the workshop, including resume truth checking, job-search strategy, application alignment, professional communication, interview practice and responsible AI after hire.
+              </p>
+            </article>
+          </div>
+
+          <div className="mt-10">
+            <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">How participants learn</p>
+            <ol className="mt-4 grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-7">
+              {WORKFORCE_APPLIED_LEARNING_LOOP.map((stage, index) => (
+                <li className="bg-[#101317] p-4" key={stage.key}>
+                  <p className="text-[11px] font-bold text-[#efaaa1]">0{index + 1}</p>
+                  <p className="mt-2 text-sm font-extrabold">{stage.label}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">{stage.purpose}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="mt-10 grid gap-6 border-y border-white/15 py-8 lg:grid-cols-[1fr_1fr]">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#efaaa1]">Synthetic scenario · evaluator-ready</p>
+              <h3 className="mt-2 text-2xl font-extrabold">{SCWDB_HEALTHCARE_EVALUATOR_DEMO.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-slate-300">
+                The authoritative synthetic referral status is <strong className="text-white">{SCWDB_HEALTHCARE_EVALUATOR_DEMO.hiddenFailure.authoritativeStatus}</strong>.
+                A deliberately flawed AI practice response says <strong className="text-white">{SCWDB_HEALTHCARE_EVALUATOR_DEMO.hiddenFailure.aiClaim}</strong>.
+                The learner must catch the unsupported change, verify the source, correct the communication and explain the escalation boundary.
+              </p>
+            </div>
+            <div className="text-sm leading-7 text-slate-300">
+              <p className="font-bold text-white">Human authority stays visible.</p>
+              <p className="mt-2">Zumi may help learners practice, challenge a draft, explain uncertainty and support instructor preparation.</p>
+              <p className="mt-2">Zumi cannot approve completion, establish attendance, grant licensure or professional authority, or turn a training certificate into employment eligibility.</p>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div className="border-t border-white/20 pt-3">
+              <p className="font-extrabold">{SCWDB_WORKFORCE_CONFIGURATION.serviceLevels.launchCalendarDays}-day launch model</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">Configuration and acceptance use the existing platform foundation rather than a greenfield LMS build.</p>
+            </div>
+            <div className="border-t border-white/20 pt-3">
+              <p className="font-extrabold">{SCWDB_WORKFORCE_CONFIGURATION.serviceLevels.attendanceCompletionBusinessDays}-business-day delivery evidence</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">The current public-sector configuration separates enrollment, verified attendance and completion.</p>
+            </div>
+            <div className="border-t border-white/20 pt-3">
+              <p className="font-extrabold">No participant-paid AI subscription</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">The current workforce-board configuration does not require participants to purchase a personal AI subscription.</p>
+            </div>
+            <div className="border-t border-white/20 pt-3">
+              <p className="font-extrabold">Instructor-controlled completion</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">AI output never becomes the official attendance, grade, competency or completion decision.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="roles-heading" className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
           <div className="max-w-3xl">
             <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#9a7a1f]">Eight seats, one clinic</p>
