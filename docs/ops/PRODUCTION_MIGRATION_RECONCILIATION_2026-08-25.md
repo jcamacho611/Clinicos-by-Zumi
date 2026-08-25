@@ -159,6 +159,26 @@ WHERE  finished_at IS NULL;
 
 ---
 
+## 4a. Disposable-database proof — already performed
+
+Performed on 2026-08-25 against a throwaway PostgreSQL 16 cluster, not production.
+
+- `prisma migrate deploy` applied all 62 migrations from empty, including the four that
+  are pending in production. **No errors.**
+- `prisma migrate status` then reported *Database schema is up to date!*
+- The identity migration was replayed a second time by hand to test the idempotency it
+  was rewritten for. Every `CREATE` reported *already exists, skipping*, both guarded
+  constraint blocks succeeded, and both backfills reported `INSERT 0 0`. **Zero errors.**
+  That is the property that matters if production already holds some of these objects:
+  the migration converges instead of failing mid-set and recording a failed migration.
+- Orphan check on `organization_memberships` returned 0.
+
+This does not replace §4 below. It proves the migration set is sound and replay-safe on
+a real PostgreSQL; it says nothing about the *specific state of production*, which is
+what §3 exists to establish. Run §3 and §4 against a copy of production before §5.
+
+---
+
 ## 4. Disposable-branch proof — required before touching production
 
 Do not apply to production first. Prove the exact sequence against a throwaway copy.
