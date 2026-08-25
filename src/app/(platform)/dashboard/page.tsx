@@ -8,6 +8,7 @@ import { getClinicLaunchBriefing } from "@/lib/commercial/clinic-launch-briefing
 import { canActOnClinicGridSignal, detectClinicGridSignals } from "@/lib/ecosystem/clinic-grid-bridge";
 import { resolveEduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import { getHomeOperatingRail } from "@/lib/home/operating-rail";
+import { projectLivingHomePaths } from "@/lib/home/living-home-presentation";
 import { resolvePathGuidanceList } from "@/lib/orchestration/path-guidance-engine";
 import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
 import { listRecentPathSignals } from "@/lib/orchestration/path-signal-repository";
@@ -40,6 +41,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]);
   const livingAppointments = appointments.filter((appointment) => appointment.status !== "Cancelled");
   const pathGuidance = resolvePathGuidanceList(session, activePaths);
+  const livingPathViews = projectLivingHomePaths(activePaths, pathGuidance);
   const firstName = session.name.split(/\s+/)[0] || "there";
   const verifiedFirstLogin = Boolean(launchRequested && launchBriefing?.verifiedFirstLogin);
 
@@ -82,8 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           canActOnGridSignals={canActOnClinicGridSignal(session)}
           canOpenPatientRecord={can(session.role, "patients", "read")}
           firstName={firstName}
-          initialGuidance={pathGuidance}
-          initialPaths={activePaths}
+          initialPaths={livingPathViews}
           intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
           onboardingComplete={verifiedFirstLogin}
           eduReadiness={eduReadiness}
