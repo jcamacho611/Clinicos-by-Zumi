@@ -4,6 +4,7 @@ import { RiskLevel } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { db } from "@/lib/db";
 import type { UrgentSignalCategory } from "@/lib/safety/urgent-signal";
+import { SELF_HARM_VISIBLE_ROLES } from "@/lib/safety/self-harm-visibility";
 
 /**
  * Turning an emergency signal into something a person is responsible for.
@@ -53,9 +54,6 @@ export type UrgentEscalationOutcome =
     }
   | { readonly recorded: false; readonly reason: "unavailable" };
 
-/** Who may see a self-harm escalation. Mirrors the repository filter on the queue. */
-const SELF_HARM_VISIBLE_ROLES = ["clinic_owner", "administrator", "provider"];
-
 /**
  * Is there anybody who will see this?
  *
@@ -73,7 +71,7 @@ async function hasEligibleViewer(session: ClinicSession, category: UrgentSignalC
       where: {
         organizationId: session.organizationId,
         status: "active",
-        ...(category === "self_harm" ? { roleKey: { in: SELF_HARM_VISIBLE_ROLES } } : {}),
+        ...(category === "self_harm" ? { roleKey: { in: [...SELF_HARM_VISIBLE_ROLES] } } : {}),
       },
     });
     return eligible > 0;

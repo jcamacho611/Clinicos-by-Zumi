@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { createHandoffSchema, transitionEscalationSchema, transitionHandoffSchema, transitionTaskSchema } from "@/lib/care-coordination-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 import { resolveEscalationWaiting } from "@/lib/safety/escalation-waiting";
+import { hidesSelfHarmFrom } from "@/lib/safety/self-harm-visibility";
 
 type Transaction = Prisma.TransactionClient;
 
@@ -24,25 +25,6 @@ async function requireHandoff(tx: Transaction, organizationId: string, handoffId
   const handoff = await tx.careHandoff.findFirst({ where: { id: handoffId, organizationId } });
   if (!handoff) throw new NetworkAccessError("Care handoff not found for this organization.", 404);
   return handoff;
-}
-
-/**
- * Roles that may see that a colleague reported a self-harm signal.
- *
- * `escalations:read` is granted widely — billers, quality analysts and viewers all have
- * it. That is right for an overdue referral and wrong for a colleague's mental-health
- * crisis, which arrived in the same queue when urgent signals began being recorded.
- * Follow-up belongs to the people who can actually act on staff welfare.
- */
-const SELF_HARM_VISIBLE_TO: ReadonlySet<string> = new Set([
-  "clinic_owner",
-  "administrator",
-  "provider",
-]);
-
-function hidesSelfHarmFrom(role: string | undefined) {
-  // No role means no basis for the disclosure. Fail closed.
-  return !role || !SELF_HARM_VISIBLE_TO.has(role);
 }
 
 export async function listCareCoordinationWorkspace(organizationId: string, userId?: string, role?: string) {
