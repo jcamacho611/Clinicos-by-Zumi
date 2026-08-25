@@ -77,11 +77,61 @@ export async function recordUrgentSignalEscalation(
       select: { id: true },
     });
 
+    await notifyUrgentSignal(session, category);
+
     return { recorded: true, escalationId: escalation.id, alreadyOpen: false };
   } catch {
     // Deliberately swallowed. The caller still returns the emergency message; the only
     // thing lost is the clinic-side record, and saying so truthfully is the caller's job.
     return { recorded: false, reason: "unavailable" };
+  }
+}
+
+/**
+ * Reach someone who is not already looking at the queue.
+ *
+ * Recipients follow the convention already used for a critical lab result: active
+ * clinic owners and providers. Copying that rather than inventing a rule keeps one
+ * answer to "who hears about something clinically urgent".
+ *
+ * Deliberately not sent for `self_harm`. In a clinic tool the person typing is a member
+ * of staff, and a broadcast to every owner and provider that a named colleague may be
+ * suicidal is a disclosure with employment and stigma consequences that nobody consented
+ * to. The escalation is still created and still appears in the queue, sorted ahead of
+ * everything else once it is overdue, so the signal is not lost — it is simply not
+ * announced to a wide audience. Anyone who wants that behaviour should choose it
+ * deliberately rather than inherit it from a default.
+ *
+ * Failure here must never downgrade the escalation, which already exists by this point.
+ */
+async function notifyUrgentSignal(session: ClinicSession, category: UrgentSignalCategory) {
+  if (category !== "life_threatening") return;
+
+  try {
+    const recipients = await db.user.findMany({
+      where: {
+        organizationId: session.organizationId,
+        status: "active",
+        roleKey: { in: ["clinic_owner", "provider"] },
+      },
+      select: { id: true },
+    });
+    if (!recipients.length) return;
+
+    await db.notification.createMany({
+      data: recipients.map((recipient) => ({
+        organizationId: session.organizationId,
+        userId: recipient.id,
+        type: "urgent_signal",
+        title: "Routine automation stopped for a possible emergency",
+        // No patient, no name, and nothing that was typed. Someone opens the queue to
+        // find out more; the notification exists to make them open it.
+        body: "Someone described a possible emergency in Klinikos. An urgent review is open and nobody has been contacted.",
+      })),
+    });
+  } catch {
+    // The escalation stands on its own. A notification that could not be written is a
+    // smaller failure than an escalation reported as unrecorded.
   }
 }
 
