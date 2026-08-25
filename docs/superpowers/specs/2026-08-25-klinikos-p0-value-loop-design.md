@@ -6,14 +6,14 @@
 
 ## 1. Goal
 
-Build the smallest product sequence that simultaneously improves commercial conversion, physician value, clinic operating clarity, revenue proof, customer acquisition, and long-term platform architecture without creating a parallel app or weakening existing authority boundaries.
+Build the smallest product sequence that simultaneously improves commercial conversion, physician value, clinic operating clarity, revenue proof, customer acquisition, and long-term platform architecture without creating a parallel app or weakening authority boundaries.
 
 The approved P0 value loop is:
 
 `PUBLIC OPERATING MAP`
-→ `PAID / QUALIFIED COMMERCIAL ENTRY`
+→ `QUALIFIED / PAID COMMERCIAL ENTRY`
 → `ROLE-AWARE LIVING HOME`
-→ `UNIVERSAL UNFINISHED-WORK PROJECTION`
+→ `UNFINISHED-WORK PROJECTION`
 → `GOLDEN CURRENT VISIT`
 → `CLINICAL CHANGE / BODYMAP`
 → `REVENUE-INTEGRITY CONTINUATION`
@@ -27,15 +27,18 @@ At the approved baseline:
 
 - `main` is `cdd425d8c6d468047a4c3f42b8fb5d26939be26e`.
 - `main` branch protection and required status checks are disabled.
-- hosted GitHub Actions has repeatedly failed before execution because jobs are not receiving runners; local verification therefore cannot be represented as hosted-CI proof.
-- authenticated Living Home still imports `@/lib/orchestration/intent-engine` and `@/lib/orchestration/path-engine` into a client component, despite the public routing engine having already been moved server-side.
-- Current Visit exists and already preserves encounter draft/review/sign/lock/addendum authority.
-- Current Visit already renders Patient Snapshot, a truthful unavailable `What changed` state, partial Staff Handoff from vitals/medication reconciliation, note sections, existing coding, audit, and Close Visit presentation.
-- persisted immutable `BodyMapVersion` / `BodyMapFinding` evidence exists on `main`; authoring UI and longitudinal INITIAL/PREVIOUS/TODAY composition are not yet complete.
-- `close-visit-resolution.ts` already defines governed evaluation slots for coding, orders/results, AI review, attestations, and charge readiness.
-- Clinic OS → Grid bridge already detects truthful operational signals without automatically publishing them.
-- public marketing already includes a browser-only free `Clinic continuity check`; it is not yet the full Operating Map acquisition product described here.
-- commercial execution remains the near-term business bottleneck; this design must improve the path from visitor → qualified buyer → paid work → first value → recurring value.
+- GitHub Actions has repeatedly failed before checkout because jobs are not receiving runners; local verification is not hosted-CI proof.
+- `.github/workflows/quality.yml` already identifies the runner condition as account-level and contains the `verify` and `deploy-contract` jobs. Do not weaken it to make a badge green.
+- authenticated Living Home currently value-imports `@/lib/orchestration/intent-engine` and `@/lib/orchestration/path-engine` into client code, while the public routing engine has already been moved server-side.
+- Current Visit exists and preserves encounter draft/review/sign/lock/addendum authority.
+- Current Visit already renders Patient Snapshot, truthful unavailable `What changed`, partial Staff Handoff from vitals/medication reconciliation, note sections, coding, audit, and Close Visit.
+- immutable `BodyMapVersion` / `BodyMapFinding` persistence and a deterministic BodyMap comparator are merged on main; Current Visit authoring/composition for `INITIAL → PREVIOUS → TODAY` is not complete.
+- `close-visit-resolution.ts` already defines governed slots for coding, orders/results, AI review, attestations, and charge readiness.
+- canonical claim-level revenue truth already exists through `revenue-integrity-path.ts` / `revenue-integrity-repository.ts`.
+- Clinic OS → Grid already detects truthful operational signals without auto-publishing them.
+- public `/klinikos` already contains a browser-only free Clinic continuity check. It is useful but is not yet the canonical Operating Map acquisition product.
+- current commercial payment/sales architecture already separates checkout redirect from verified payment evidence.
+- commercial execution remains the near-term business bottleneck.
 
 ## 3. Product laws
 
@@ -54,14 +57,14 @@ No UI may infer:
 - clinical resolution from omission;
 - provider review from result existence;
 - patient notification from provider review;
-- charge/payment/revenue realization from a potential opportunity;
+- charge/payment/revenue realization from a potential review item;
 - credential/licensure from profile, education, or self-description.
 
 ### 3.3 Authority law
 
 A projection may aggregate and explain truth. It may not become a second authority store.
 
-P0 must preserve authoritative repositories for encounters, tasks, referrals, results, forms, finance, Grid, EDU, identity, audit, and payment evidence.
+P0 preserves authoritative repositories for encounters, appointments, Paths, referrals/results/forms where used, finance, Grid, EDU, identity, audit, and payment evidence.
 
 ### 3.4 Frontend law
 
@@ -82,101 +85,86 @@ Each major role should answer one dominant question:
 Before broad product expansion:
 
 1. preserve exact-head release verification;
-2. resolve the authenticated browser disclosure of `intent-engine` / `path-engine` by moving deterministic resolution/runtime work behind server capabilities or projecting only minimum-necessary DTOs;
-3. repair/confirm hosted CI runner availability without weakening tests;
-4. enable branch protection only after required checks are reliable enough not to deadlock development;
-5. reconcile stale/open clinical, EDU, identity, and architecture PRs so no competing authority or duplicate migration is accidentally merged.
+2. move authenticated deterministic intent and Path runtime evaluation out of client bundles;
+3. return strict minimum-necessary intent and Path-presentation DTOs;
+4. confirm/repair GitHub Actions runner availability without weakening `quality.yml`;
+5. reconcile stale/open clinical, EDU, identity, and architecture PRs;
+6. after hosted checks reliably execute, require `Quality / verify` and `Quality / deploy-contract` on protected `main` through GitHub branch/ruleset settings.
+
+Branch protection is not marked complete until repository metadata confirms it.
 
 ### 4.2 P0.1 Universal unfinished-work projection
 
-Introduce a read-only projection named `NeedsAction`.
+Introduce a browser-safe read-only `NeedsActionItem`.
 
-It is not a new task database.
+It is not a task database and is never directly completed by a user.
 
 ```ts
-export type NeedsActionState = "needs_you" | "waiting" | "needs_review" | "blocked" | "ready" | "done";
-
-export type NeedsActionDomain =
-  | "appointment"
-  | "path"
-  | "referral"
-  | "result"
-  | "form"
-  | "encounter"
-  | "revenue"
-  | "grid";
+export type NeedsActionState = "needs_you" | "waiting" | "needs_review" | "blocked" | "ready";
+export type NeedsActionDomain = "appointment" | "path" | "encounter" | "revenue" | "grid";
 
 export interface NeedsActionItem {
   id: string;
   domain: NeedsActionDomain;
-  sourceId: string;
-  organizationId: string;
-  patientId: string | null;
   ownerLabel: string | null;
   title: string;
   reason: string;
   state: NeedsActionState;
   urgency: "routine" | "soon" | "urgent";
   dueAt: string | null;
-  href: string | null;
-  evidenceRef: string;
+  action:
+    | { kind: "href"; href: string }
+    | { kind: "focus_appointment"; appointmentId: string }
+    | null;
 }
 ```
 
-Rules:
+Browser DTO intentionally omits organization ID, patient ID, evidence refs, capability IDs, policy/ranking internals, and raw domain objects.
 
-- no raw ORM objects;
-- no private ranking weights;
-- no new mutable lifecycle;
-- stable deterministic IDs derived from domain + source ID;
-- every item names its source/evidence;
-- role filtering occurs server-side before DTO delivery;
-- PHI is minimum necessary for the current authenticated experience;
-- a source-domain state change makes the projection disappear or change; users never manually “complete” the projection itself.
+Initial projector sources:
 
-Initial P0 sources should be deliberately narrow:
+1. appointment readiness currently implemented by Living Home `attentionReasons`;
+2. server-produced Path guidance.
 
-1. current appointment readiness already represented by `attentionReasons`;
-2. Path guidance blockers / review / waiting states;
-3. close-visit blockers / escalations from governed Current Visit evaluation;
-4. one revenue-integrity exception type once its server-side evidence source exists.
+Later P0 source adapters add:
 
-Do not ingest every domain in the first PR.
+3. Current Visit/encounter blockers where evidence is safe for that role;
+4. Revenue Review for roles with billing read;
+5. Grid capacity/work signals when the source signal is already authorized.
+
+A source-domain state change causes the item to change/disappear. There is no `completeNeedsAction()` API.
 
 ### 4.3 P0.2 Role-aware Living Home
 
-Living Home consumes server-produced `NeedsActionItem[]` and presents a role-specific operating picture.
+Dashboard composes and groups the projection on the server.
 
-Owner grouping:
+Representative grouping:
 
+**Owner**
 - Needs attention
 - Money to review
 - Capacity
-- Team / waiting
+- Waiting
 
-Provider grouping:
-
+**Provider**
 - Next clinical work
 - Needs review
 - Waiting
 
-Front desk grouping:
-
+**Front desk**
 - Patients not ready
-- Waiting on patient
-- Waiting on outside party
+- Waiting
 
-Biller grouping:
-
+**Biller**
 - Payment blockers
-- Coding/review blockers
-- Waiting on payer/external rail, when real evidence exists
+- Money to review
+- Waiting
 
-Frontend does not expose `NeedsAction`, path IDs, capability IDs, state-machine names, or internal rule names.
+The frontend never displays `NeedsAction`, path IDs, capability IDs, internal rule codes, or evidence refs as customer copy.
 
 ### 4.4 P0.3 Golden Current Visit
 
-The Golden Current Visit remains the existing encounter route and lifecycle.
+Golden Current Visit remains the existing encounter route/lifecycle.
 
 Target sequence:
 
@@ -192,139 +180,170 @@ Target sequence:
 
 P0 clinical additions:
 
-1. persisted encounter-specific staff handoff for a bounded set of fields, preserving profession/role authority;
-2. deterministic BodyMap composition for `INITIAL / PREVIOUS / TODAY` from immutable persisted versions;
-3. deterministic Clinical Change projection for BodyMap + selected already-structured domains, not AI inference;
-4. Current Visit visual integration of BodyMap and change evidence;
-5. evidence-linked coding support remains suggestions/human-reviewed only;
-6. close-visit evaluation consumes real governed evidence where available.
+1. append-only encounter-specific Staff Handoff evidence;
+2. V1 authoring fail-closed to existing `provider` and `clinical_staff` roles, without pretending a generic role proves MA/LPN/RN profession;
+3. deterministic BodyMap composition for `INITIAL / PREVIOUS / TODAY` using merged immutable persistence, the existing prior-finalized-encounter selector, and the existing comparator;
+4. Current Visit visual integration of longitudinal BodyMap change;
+5. coding remains human-reviewed/evidence-linked;
+6. close-visit evaluation consumes governed evidence only.
 
-The Golden Case is No-Fault/MSK because it stress-tests longitudinal symptoms, functional change, BodyMap, treatment progression, case context, documentation, coding, and financial continuation without requiring a separate specialty app.
+Golden synthetic case:
+
+```text
+Initial: left shoulder pain 8
+Previous: left shoulder pain 6
+Today: left shoulder pain 6 + new dizziness
+```
+
+Expected deterministic change:
+
+```text
+8 → 6 = severity improved
+6 → 6 = unchanged
+new dizziness = finding added
+```
+
+No omission becomes resolution.
 
 ### 4.5 P0.4 Revenue-integrity continuation
 
 P0 does not attempt autonomous claims or full RCM replacement.
 
-It proves the universal financial continuity model:
+Existing canonical claim progression remains:
 
 `PERFORMED`
 → `DOCUMENTED`
-→ `CODE SUPPORTED`
-→ `CHARGE EXPECTED`
-→ `CHARGE PRESENT`
+→ `CODED`
+→ `CLAIM READY`
+→ `SUBMITTED`
+→ `ACCEPTED`
+→ `ADJUDICATED`
+→ `PAID`
+→ `RECONCILED`.
 
-The first supported exception is:
+P0 adds one high-confidence **pre-claim** review condition:
 
-> a governed service/encounter event exists, the configured rule says a charge is expected, and no corresponding charge record/evidence is present.
+> a finalized encounter has a human-reviewed superbill with non-empty diagnosis/procedure evidence, but no ClaimDraft in the same organization is linked to the encounter/superbill.
 
-This creates a **Revenue Review Item**, never a recovered-revenue claim.
+This creates:
 
-Required user language:
+```text
+Billing path may need review
+```
 
-- “May need review”
-- “Charge not found”
-- “Evidence incomplete”
+with `amountCents = null` unless another authoritative source provides an amount.
 
-Prohibited language:
+P0 also projects existing claim-level facts such as missing coding and open denials through the same safe `RevenueReviewItem` vocabulary.
 
-- “Recovered” unless actually collected and reconciled
-- “Lost revenue” unless evidence proves loss
-- “Guaranteed revenue”
+Required language:
 
-Revenue Review feeds the `NeedsAction` projection for owner/biller roles.
+- Billing path may need review
+- Needs review
+- Open denial
+- Amount under review
+
+Prohibited unless independently proven:
+
+- lost revenue
+- recovered revenue
+- guaranteed recovery
+
+Revenue Review feeds Billing and, for roles with billing-read permission, Living Home.
 
 ### 4.6 P0.5 Public Operating Map
 
-The public Operating Map expands the existing free continuity check into a useful no-PHI acquisition experience.
+The Operating Map converts the existing continuity check into a canonical public acquisition product.
 
-Input remains deliberately non-sensitive:
+Input is strict enumeration only:
 
-- organization setting;
-- operational pain areas;
-- optional rough scale bands such as locations/providers/staff, only when commercially useful;
-- no patient data;
-- no production credentials;
-- no diagnosis/claim data.
+**Setting**
+- independent practice owner
+- practice manager/administrator
+- provider
+- clinical staff
+- multi-site operator
+- student/newly licensed
+
+**Pain areas**
+- recall/follow-up
+- referral closure
+- result acknowledgment
+- prior authorization
+- no-show recovery
+- intake/consent
+- charge/claim readiness
+- coverage/staffing
+- idle rooms/chairs
+
+No patient data, arbitrary clinical free text, production credentials, diagnoses, or claim data.
 
 Output:
 
-- selected workflow map;
-- where continuity may be breaking based only on visitor answers;
+- a workflow map for each selected area;
+- exactly what the visitor selected;
 - what Klinikos would inspect first;
-- what Klinikos could handle;
-- what must remain external;
-- next commercial action.
+- what remains externally authoritative;
+- a commercial next action.
 
-The map must clearly label any estimate or hypothesis as such.
+It never claims Klinikos actually inspected the clinic.
 
-Primary CTA: `Review this with Klinikos` or the currently approved equivalent from canonical messaging tests.
+Canonical route: `/operating-map`.
 
-The Operating Map should route into the existing governed sales/commercial path rather than creating a second CRM/payment system.
+Homepage clinic-acquisition CTA target: `/operating-map`, candidate CTA locked in the P0 plan as **Map my clinic**. Existing `/operational-audit` remains a separate paid/commercial path.
+
+Commercial handoff reuses `POST /api/sales/reservations`; payment/price/activation truth remains server-owned.
 
 ### 4.7 P0.6 Evidence and analytics
 
-Analytics must measure the entire P0 value loop without sending PHI to inappropriate third parties.
+P0 uses first-party allowlisted product interaction events only where the event cannot be derived from an authoritative source.
 
-Required commercial events:
+Interaction taxonomy:
 
-- public page viewed;
-- Operating Map started;
-- Operating Map completed;
-- commercial CTA clicked;
-- sales reservation/intake started;
-- checkout intent created;
-- independently verified payment;
-- implementation started;
-- first product value event;
-- recurring conversion when/if real.
-
-Required product value events:
-
-- NeedsAction surfaced;
-- NeedsAction source resolved;
+- Operating Map started/completed/commercial CTA clicked;
+- Living Home opened;
+- unfinished-work item/group interaction;
 - Current Visit opened;
-- Current Visit reaches governed ready-for-review/signature milestone;
-- revenue review item surfaced/resolved;
-- Grid draft created from an actual Clinic OS signal.
+- real ready-for-review transition value event;
+- Revenue Review opened;
+- Grid draft opened from an actual Clinic OS signal.
 
-Analytics event payloads must use coarse identifiers or internal opaque IDs and must not contain patient name, DOB, MRN, diagnosis, free-text note content, claim number, or other unnecessary PHI.
+Sales reservations are read from DemoReservation/DemoReservationEvent truth. Verified payments are read from Financial OS/payment evidence. Analytics does not copy those states and pretend to be authority.
+
+P0 analytics payloads contain no patient/encounter/claim IDs, PHI, diagnosis, note text, claim number, arbitrary URL, IP address, user-agent, or referrer. Authenticated event identity is derived from the server clinic session.
 
 ## 5. UX / Black Label requirements
 
-P0 uses the current shared Marble / Obsidian system.
+P0 uses the current shared Marble / Obsidian system, not a second theme.
 
-No second theme framework.
+Required verification:
 
-Requirements:
-
-- 390 / 768 / 1024 / 1440 / 1920 responsive checks;
+- 390 / 768 / 1024 / 1440 / 1920 widths;
 - 200% zoom;
 - visible keyboard focus;
-- reduced-motion support;
-- minimum consequential control target approximately 44px;
-- plain-language state labels;
-- no dashboard card wall;
-- operative density for Current Visit / front desk / billing;
+- reduced motion;
+- consequential controls around 44px minimum target;
+- plain-language states;
+- no generic KPI/card wall;
+- operative density for Current Visit/front desk/billing;
 - contemplative density for public acquisition and high-level Living Home.
 
 ## 6. Commercial acceptance criteria
 
-P0 is commercially successful only when it creates evidence for this sequence:
+P0 must create measurable evidence for:
 
 `VISITOR`
-→ `UNDERSTANDS KLINIKOS`
-→ `USES OPERATING MAP`
-→ `TAKES COMMERCIAL NEXT STEP`
-→ `PAYS / ENTERS QUALIFIED SALES PATH`
-→ `RECEIVES IMPLEMENTATION`
-→ `REACHES FIRST PRODUCT VALUE`
-→ `EXPANDS / CONVERTS TO RECURRING VALUE`.
+→ `OPERATING MAP`
+→ `COMMERCIAL NEXT STEP`
+→ `RESERVATION / VERIFIED PAYMENT WHEN REAL`
+→ `IMPLEMENTATION`
+→ `FIRST PRODUCT VALUE`
+→ `RECURRING / EXPANSION WHEN REAL`.
 
-No stage may be marked complete from intent alone.
+No stage may be marked complete from intent, click, redirect, or estimate alone.
 
 ## 7. Explicitly deferred from P0
 
-Preserve on the roadmap, but do not make them dependencies for this value loop:
+Preserve on the roadmap, but do not make dependencies of this loop:
 
 - nationwide Grid liquidity;
 - live marketplace payout settlement;
@@ -333,7 +352,7 @@ Preserve on the roadmap, but do not make them dependencies for this value loop:
 - autonomous coding/claims submission;
 - full payer/clearinghouse automation;
 - unrestricted universal free-member rollout before abuse/security gates;
-- all enterprise SSO/SCIM features;
+- full enterprise SSO/SCIM expansion;
 - white-label platform;
 - developer marketplace;
 - every possible AI agent;
@@ -341,29 +360,29 @@ Preserve on the roadmap, but do not make them dependencies for this value loop:
 
 ## 8. Dependency order
 
-Implementation plans execute in this order unless a current-main reconciliation proves a safer order:
+Implement in this sequence unless newest-main reconciliation proves a hard conflict:
 
-1. `2026-08-25-p0-release-control-and-confidentiality.md`
-2. `2026-08-25-p0-universal-work-projection-and-living-home.md`
-3. `2026-08-25-p0-golden-current-visit-and-clinical-change.md`
-4. `2026-08-25-p0-revenue-integrity-continuity.md`
-5. `2026-08-25-p0-operating-map-acquisition.md`
-6. `2026-08-25-p0-analytics-and-conversion-evidence.md`
+1. `docs/superpowers/plans/2026-08-25-p0-release-control-and-confidentiality.md`
+2. `docs/superpowers/plans/2026-08-25-p0-universal-work-projection-and-living-home.md`
+3. `docs/superpowers/plans/2026-08-25-p0-golden-current-visit-and-clinical-change.md`
+4. `docs/superpowers/plans/2026-08-25-p0-revenue-integrity-continuity.md`
+5. `docs/superpowers/plans/2026-08-25-p0-operating-map-acquisition.md`
+6. `docs/superpowers/plans/2026-08-25-p0-analytics-and-conversion-evidence.md`
 
-Some tasks can proceed in isolated branches after interfaces are locked, but merge order must preserve the dependency graph.
+Isolated branches may proceed after the interfaces they depend on are locked, but merge order must preserve the authority graph.
 
 ## 9. P0 success test
 
 P0 is not done because six PRs merge.
 
-It is done when a truthful end-to-end demonstration can show:
+It is done only when an end-to-end truthful demonstration proves:
 
-1. a public visitor understands the problem and completes the Operating Map;
-2. the visitor can enter a real commercial next step;
-3. an activated clinic owner sees actual unfinished work in Living Home;
-4. a provider opens one Golden Current Visit and sees real longitudinal evidence, not demo claims;
-5. a real governed financial gap becomes a truthful Revenue Review item;
-6. the underlying source state can be resolved and the projection updates;
-7. each consequential action remains tenant-scoped, authorized, auditable, and evidence-backed;
-8. no proprietary routing/policy engine needs to ship to the browser to create the experience;
-9. the funnel and product value events can be measured without inappropriate PHI leakage.
+1. a public visitor completes the no-PHI Operating Map and can take a real commercial next step;
+2. an activated clinic owner sees real authorized unfinished work in Living Home;
+3. a provider opens the Golden Current Visit and sees persisted longitudinal evidence, not demo inference;
+4. the Golden BodyMap case produces deterministic expected change;
+5. a reviewed-coding-without-claim condition becomes a Revenue Review item with no invented dollar amount;
+6. creating the legitimate source-domain follow-up changes/removes the projection;
+7. consequential actions remain tenant-scoped, authorized, auditable, and evidence-backed;
+8. authenticated Living Home ships no `intent-engine` or `path-engine` implementation to the browser;
+9. sales/payment/product analytics preserve their separate authorities and emit no inappropriate PHI.
