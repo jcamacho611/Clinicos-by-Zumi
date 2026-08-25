@@ -14,6 +14,10 @@ The governing operating question is:
 
 > **What needs to happen next?**
 
+The governing public-discovery law is:
+
+> **Broadly discoverable outside. Deeply orchestrated inside.**
+
 The governing business objective is:
 
 > Build a product that creates measurable customer value, becomes recurring infrastructure, progressively consolidates fragmented vendor workflows, compounds through Grid, Network, EDU, identity, evidence and Zumi, and can be operated with enterprise-grade security, reliability and discipline.
@@ -46,6 +50,15 @@ Before material work, read current repository/runtime truth and then read these 
 22. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
 23. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
 24. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
+25. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
+26. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
+27. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
+28. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
+29. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
+30. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
+31. `src/lib/public-capability-registry.ts`
+32. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
+33. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
 
 Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Source-locked requirements determine **what user needs may not silently disappear**.
 
@@ -85,6 +98,29 @@ The UI should answer:
 
 Professional detail may appear secondarily for expert users.
 
+## Public capability exposure law
+
+Do not bury a major healthcare capability merely because it lives inside a broader backend domain.
+
+Every major market-recognized capability must be evaluated across:
+
+- public discovery / SEO
+- authenticated product discovery
+- Zumi vocabulary/tools
+- backend authority
+- data/state/events
+- external integrations
+- security/privacy/legal gates
+- monetization/entitlement
+- analytics/value evidence
+- customer/network expansion
+
+`src/lib/public-capability-registry.ts` is the machine-readable discovery contract.
+
+A registry record does **not** mean the route is implemented. Reconcile it against current `src/app` routes and preserve truthful maturity.
+
+Telemedicine is the canonical cross-cutting example: it must connect public discovery, scheduling, patient access, consent, insurance/authorization, video, Current Visit, documentation, coding, claims/payment, follow-up and analytics rather than being treated as an isolated video button.
+
 ## Current Visit law
 
 Current Visit already exists. Do not create a second encounter editor or second clinical authority.
@@ -93,13 +129,19 @@ Preserve and perfect the existing convergence sequence:
 
 `PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY → CLINICAL → ASSESSMENT & PLAN → ORDERS & RESULTS → DOCUMENTATION & CODING → CLOSE VISIT`
 
+The clinician should experience a medical visit, not the software architecture underneath it.
+
 ## Zumi law
 
-Zumi is the intelligence/orchestration layer, not final authority.
+Zumi is the intelligence/orchestration layer, not a parallel source of truth.
 
 Architecture:
 
-`UNDERSTAND → GOVERNED VALIDATION → AUTHORIZED EXECUTION → EVIDENCE → EXPLANATION`
+`UNDERSTAND → EVIDENCE/RESEARCH → GOVERNED VALIDATION → AUTHORIZED EXECUTION → EVIDENCE → EXPLANATION`
+
+Delegated-autonomy rule:
+
+> If the user has the legal, organizational and product authority to perform an action, Klinikos supports the action, policy permits delegation, and the user granted Zumi permission, Zumi should be able to perform it for the user.
 
 Use autonomy levels:
 
@@ -107,8 +149,10 @@ Use autonomy levels:
 - L1 recommend
 - L2 prepare
 - L3 execute after authorized approval
-- L4 explicitly authorized low-risk deterministic autopilot
-- L5 prohibited autonomy for diagnosis, clinical signature, prescription authority, professional licensure, patient consent, high-risk clinical judgment, unauthorized payments or other authority that must remain human/deterministic/external.
+- L4 standing delegation for pre-authorized low-risk deterministic workflows
+- L5 non-delegable authority such as diagnosis, clinical signature, prescription authority, professional licensure/credential truth, patient consent, high-risk clinical judgment, unauthorized payments or authority the user does not possess.
+
+For consequential or changing information Zumi should retrieve current authoritative sources, rank evidence, identify conflict/staleness, preserve provenance, communicate uncertainty and connect research to governed action.
 
 ## Vendor replacement law
 
@@ -117,6 +161,14 @@ For every external vendor/system classify:
 `CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE`, or `NEVER REPLACE` where recreating an authoritative/regulatory rail is irrational.
 
 Own the customer workflow first. Make external providers swappable adapters. Internalize high-value layers when customer value, margin, retention, reliability and regulatory feasibility justify it.
+
+## Ecosystem expansion law
+
+Do not limit Klinikos to currently named modules or sectors.
+
+For newly discovered healthcare activities ask whether they can be represented through existing universal primitives, authority, obligation/work, evidence, Grid, Network, Financial OS, Zumi and Integration Hub.
+
+Prefer extension through configuration, policy packs, adapters, resource types, workflows and specialty packs before creating isolated products.
 
 ## Hyperscale strategy law
 
@@ -132,6 +184,7 @@ Continuously ask:
 
 - What workflow still leaves Klinikos?
 - What still uses phone, fax, email, paper, spreadsheet or memory?
+- What major capability exists inside the product but cannot be discovered publicly?
 - What unused resource can become supply?
 - What need can become Grid demand?
 - What shortage can EDU address?
@@ -167,9 +220,10 @@ Agents must proactively identify and schedule them at the correct dependency poi
 1. Fetch current `main` and record exact SHA.
 2. Inspect relevant open PRs and recent commits.
 3. Reconcile current implementation with source-locked requirements.
-4. Identify the single vertical slice being advanced.
-5. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
-6. For architectural work, present design and obtain approval before implementation.
+4. For public/product-discovery work, reconcile against `public-capability-registry.ts` and the SEO/category taxonomy.
+5. Identify the single vertical slice being advanced.
+6. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
+7. For architectural work, present design and obtain approval before implementation.
 
 ## During implementation
 
@@ -183,9 +237,11 @@ Prefer TDD for features/bug fixes. Do not create parallel authorities.
 
 A capability is not done until the supported path works:
 
-`VISIBLE UI → USER UNDERSTANDS STATE → IDENTITY/CONTEXT → AUTHORIZATION → DOMAIN AUTHORITY → REAL DATA/EXTERNAL EVIDENCE → PERSISTENCE/EVENT → TRUTHFUL RESULT → AUDIT/RECONCILIATION → NEXT ACTION`
+`DISCOVERY → USER UNDERSTANDS → IDENTITY/CONTEXT → AUTHORIZATION/ELIGIBILITY → DOMAIN AUTHORITY → REAL DATA/EXTERNAL EVIDENCE → PERSISTENCE/EVENT → TRUTHFUL RESULT → AUDIT/RECONCILIATION → NEXT ACTION → VALUE EVIDENCE`
 
 A route, component, mock, adapter or browser redirect alone is not completion.
+
+For major public capabilities, also require a canonical capability record, substantive public page or documented no-index/private-only decision, internal links, Zumi vocabulary, entitlement class, analytics and truthful integration state.
 
 ## End-of-session output
 
@@ -196,6 +252,7 @@ Report:
 - what was verified
 - what remains blocked
 - source-locked requirements advanced
+- public-capability gaps closed/discovered
 - new opportunities discovered
 - risks introduced/reduced
 - commercial/customer value
