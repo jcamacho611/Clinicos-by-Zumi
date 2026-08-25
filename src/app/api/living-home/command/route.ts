@@ -17,14 +17,15 @@ const commandSchema = z.object({
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "tasks", "create", { request });
-  if (denied) return denied;
 
   try {
     const { text } = commandSchema.parse(await request.json());
     const resolved = resolveIntentDeterministically(text);
     const pathId = resolved.candidatePathIds[0] ?? null;
 
+    // A direct surface answer is navigation, not a task mutation. The shared lookup
+    // already filters by the authenticated role through canOpen(...), so preserve the
+    // pre-boundary behavior and do not require tasks:create merely to name a surface.
     if (!pathId) {
       const surface = resolveSurfaceLookup(text, session.role);
       if (surface) {
@@ -56,6 +57,11 @@ export async function POST(request: Request) {
       };
       return NextResponse.json(payload);
     }
+
+    // Path creation is consequential. Preserve the same task-create authority the
+    // existing /api/paths mutation requires, and check it before any persistence call.
+    const denied = await enforceApiPermission(session, "tasks", "create", { request });
+    if (denied) return denied;
 
     const snapshot = await createPathInstance(session, { pathId, goal: text });
     const guidance = resolvePathGuidance(session, snapshot);
