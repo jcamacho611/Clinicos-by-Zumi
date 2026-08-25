@@ -44,6 +44,8 @@ Before material work, read current repository/runtime truth and then read these 
 20. `governance/KLINIKOS_FINAL_FORM_BUSINESS_PLAN.md`
 21. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
 22. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
+23. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
+24. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
 
 Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Source-locked requirements determine **what user needs may not silently disappear**.
 
@@ -115,6 +117,12 @@ For every external vendor/system classify:
 `CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE`, or `NEVER REPLACE` where recreating an authoritative/regulatory rail is irrational.
 
 Own the customer workflow first. Make external providers swappable adapters. Internalize high-value layers when customer value, margin, retention, reliability and regulatory feasibility justify it.
+
+## Hyperscale strategy law
+
+Do not cap Klinikos at SaaS revenue. Design for the possibility that Klinikos becomes infrastructure through which large amounts of healthcare work, claims, payments, capacity, workforce activity and other legitimate economic flows move.
+
+Always distinguish platform revenue from economic/transaction volume. Use the hyperscale strategy to test architecture and opportunity, not to fabricate forecasts.
 
 ## Unicorn discovery law
 
