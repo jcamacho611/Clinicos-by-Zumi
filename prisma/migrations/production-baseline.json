@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "lastMigrationAppliedInProduction": "20260819120000_expert_support_requests",
+  "observedAt": "2026-08-25",
+  "evidence": "docs/ops/PRODUCTION_MIGRATION_RECONCILIATION_2026-08-25.md section 2 — prisma migrate status against production reported exactly four unapplied migrations, all dated 2026-08-23.",
+  "note": "Every migration ordered after this one is treated as possibly-unapplied in production and therefore must carry an approved, checksum-matched production-release.json before Render can deploy. Move this marker forward only from observed production migrate status output, never from assumption."
+}

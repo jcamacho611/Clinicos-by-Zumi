@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260823053000_edu_knowledge_assessment_evidence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "7ac0cfbf81d1a196170492d5a4ed12f79a5e2fb3abcf2c7ed6b58b809b39d2e1",
+  "approvalReference": "Production migration approval and P0 release recovery, 2026-08-25",
+  "rationale": "Adds the EDU knowledge assessment evidence table and its indexes, all written IF NOT EXISTS for the same already-present-without-history condition recorded on 2026-08-23. No pre-existing table is altered and no data is removed."
+}

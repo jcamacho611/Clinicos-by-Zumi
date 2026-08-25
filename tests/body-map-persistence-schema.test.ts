@@ -74,8 +74,10 @@ describe("BodyMap persistence schema", () => {
       expect(migration).toContain(`'${source}'`);
     }
     expect(migration).toContain('"source" "BodyMapCaptureSource" NOT NULL DEFAULT \'clinical_capture\'');
-    expect(migration).toContain('CREATE TABLE "body_map_versions"');
-    expect(migration).toContain('CREATE TABLE "body_map_findings"');
+    // Written IF NOT EXISTS so the migration converges when production schema
+    // reconciliation created the tables before Prisma recorded the migration.
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS "body_map_versions"');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS "body_map_findings"');
     expect(migration).toContain('CONSTRAINT "body_map_findings_severity_check"');
     expect(migration).toContain('CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10))');
     expect(migration).toContain('CONSTRAINT "body_map_findings_resolved_severity_check"');
