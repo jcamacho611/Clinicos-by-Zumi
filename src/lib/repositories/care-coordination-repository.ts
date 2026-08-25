@@ -6,6 +6,7 @@ import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { createHandoffSchema, transitionEscalationSchema, transitionHandoffSchema, transitionTaskSchema } from "@/lib/care-coordination-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import { resolveEscalationWaiting } from "@/lib/safety/escalation-waiting";
 
 type Transaction = Prisma.TransactionClient;
 
@@ -42,7 +43,16 @@ export async function listCareCoordinationWorkspace(organizationId: string, user
     providers,
     handoffs: handoffs.map((handoff) => ({ ...handoff, patientName: patientName(patientsById.get(handoff.patientId)), patientMrn: patientsById.get(handoff.patientId)?.mrn ?? "Unknown MRN", senderName: providerLabel(handoff.senderId), receiverName: providerLabel(handoff.receiverId), dueAt: iso(handoff.dueAt), acknowledgedAt: iso(handoff.acknowledgedAt), resolvedAt: iso(handoff.resolvedAt), createdAt: handoff.createdAt.toISOString(), updatedAt: handoff.updatedAt.toISOString() })),
     tasks: tasks.map((task) => ({ ...task, patientName: task.patientId ? patientName(patientsById.get(task.patientId)) : "Organization task", dueAt: iso(task.dueAt), completedAt: iso(task.completedAt), createdAt: task.createdAt.toISOString(), updatedAt: task.updatedAt.toISOString() })),
-    escalations: escalations.map((escalation) => ({ ...escalation, patientName: escalation.patientId ? patientName(patientsById.get(escalation.patientId)) : "Organization escalation", reviewedAt: iso(escalation.reviewedAt), createdAt: escalation.createdAt.toISOString(), updatedAt: escalation.updatedAt.toISOString() })),
+    escalations: escalations.map((escalation) => ({
+      ...escalation,
+      patientName: escalation.patientId ? patientName(patientsById.get(escalation.patientId)) : "Organization escalation",
+      // How long this has gone unacknowledged, computed here rather than stored, so the
+      // queue shows silence rather than only showing what happened.
+      waiting: resolveEscalationWaiting({ status: escalation.status, riskLevel: escalation.riskLevel, createdAt: escalation.createdAt }),
+      reviewedAt: iso(escalation.reviewedAt),
+      createdAt: escalation.createdAt.toISOString(),
+      updatedAt: escalation.updatedAt.toISOString(),
+    })),
     notifications: notifications.map((notification) => ({ ...notification, readAt: iso(notification.readAt), createdAt: notification.createdAt.toISOString(), updatedAt: notification.updatedAt.toISOString() })),
   };
 }
