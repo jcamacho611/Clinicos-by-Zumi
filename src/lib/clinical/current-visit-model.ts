@@ -9,6 +9,7 @@ import {
   type OrdersResultsResolutionState,
 } from "@/lib/clinical/close-visit-resolution";
 import type { PatientVital } from "@/lib/clinical/vital-types";
+import { handoffAttributionFor, type ClinicalRecorder, type HandoffAttribution } from "@/lib/clinical/staff-handoff-attribution";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
@@ -45,6 +46,12 @@ export interface CurrentVisitPartialHandoffState {
   status: "partial";
   source: "encounter_vitals" | "medication_reconciliation" | "multiple";
   message: string;
+  /**
+   * Who recorded the vitals in this handoff. Present on every partial handoff so the
+   * encounter always answers the question, including when the answer is that nobody
+   * was recorded — silence would read as though attribution did not matter.
+   */
+  vitalAttribution: HandoffAttribution;
   vital?: PatientVital;
   medicationReconciliation?: CurrentVisitMedicationReconciliation;
 }
@@ -100,6 +107,8 @@ export interface CurrentVisitCloseEvaluation {
 
 export interface CurrentVisitContext {
   vital?: PatientVital | null;
+  /** Null until the vitals record persists who took the measurement. */
+  vitalRecorder?: ClinicalRecorder | null;
   medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
   closeEvaluation?: Partial<CurrentVisitCloseEvaluation>;
 }
@@ -140,14 +149,17 @@ function completedMedicationReconciliation(
 function buildStaffHandoff(
   vital?: PatientVital | null,
   medicationReconciliation?: CurrentVisitMedicationReconciliation | null,
+  vitalRecorder?: ClinicalRecorder | null,
 ): CurrentVisitStaffHandoffState {
   const hasVital = Boolean(vital && vitalHasMeasurement(vital));
   const completedReconciliation = completedMedicationReconciliation(medicationReconciliation);
+  const vitalAttribution = handoffAttributionFor(vitalRecorder);
 
   if (hasVital && vital && completedReconciliation) {
     return {
       status: "partial",
       source: "multiple",
+      vitalAttribution,
       vital,
       medicationReconciliation: completedReconciliation,
       message: "Vitals and medication reconciliation are attached to this encounter. Other staff intake remains incomplete until encounter-specific screening, symptom, form, delegated-work, or question evidence is actually persisted.",
@@ -158,6 +170,7 @@ function buildStaffHandoff(
     return {
       status: "partial",
       source: "encounter_vitals",
+      vitalAttribution,
       vital,
       message: "Vitals were captured for this encounter. Other staff intake is not yet attached to the governed handoff.",
     };
@@ -167,6 +180,7 @@ function buildStaffHandoff(
     return {
       status: "partial",
       source: "medication_reconciliation",
+      vitalAttribution,
       medicationReconciliation: completedReconciliation,
       message: "Medication reconciliation is attached to this encounter. Other staff intake remains incomplete until encounter-specific vital, screening, symptom, form, delegated-work, or question evidence is actually persisted.",
     };
@@ -212,7 +226,7 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       status: "not_available",
       message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
     },
-    staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation),
+    staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation, context.vitalRecorder),
     closeVisit: {
       missingRequiredSections,
       requiredDocumentationComplete: missingRequiredSections.length === 0,
