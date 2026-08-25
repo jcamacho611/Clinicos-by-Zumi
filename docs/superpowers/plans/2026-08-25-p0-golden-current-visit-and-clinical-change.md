@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the existing Current Visit into a doctor-grade Golden Case that truthfully shows encounter-specific staff handoff plus deterministic `INITIAL → PREVIOUS → TODAY` BodyMap/Clinical Change evidence while preserving all existing encounter, coding, signature, and audit authority.
+**Goal:** Turn the existing Current Visit into a doctor-grade Golden Case that truthfully shows encounter-specific staff handoff plus deterministic `INITIAL → PREVIOUS → TODAY` BodyMap/Clinical Change evidence while preserving encounter, coding, signature, and audit authority.
 
-**Architecture:** Reuse the existing Current Visit route, `EncounterEditor`, immutable BodyMap persistence, deterministic BodyMap comparator, prior-finalized-encounter selector, vitals, medication reconciliation, labs/imaging evidence, and encounter lifecycle. Add one bounded encounter-handoff persistence domain and one server-side longitudinal composition layer. AI may explain structured change later but does not generate the underlying change.
+**Architecture:** Reuse the current encounter route/editor, immutable BodyMap persistence, deterministic BodyMap comparator, prior-finalized-encounter selector, vitals, medication reconciliation, labs/imaging evidence, and encounter lifecycle. Add one append-only encounter-handoff evidence domain and one server-side longitudinal composition layer. AI may later explain structured change but cannot generate the underlying change.
 
 **Tech Stack:** Next.js, React, TypeScript, Prisma multi-file schema, PostgreSQL, Vitest, existing BodyMap repository/comparator and encounter repositories.
 
@@ -13,58 +13,63 @@
 ## Global Constraints
 
 - Preserve `DRAFT → READY_FOR_REVIEW → SIGNED → LOCKED` and separately attributable addenda.
-- Never overwrite a prior BodyMap version.
+- Never overwrite a prior BodyMap or Staff Handoff version.
 - Omission is never resolution.
-- Comparison roles `initial`, `previous`, and `today` are derived, never persisted as permanent clinical facts.
-- `selectPreviousFinalizedEncounter(...)` from `src/lib/clinical/previous-finalized-encounter.ts` remains the historical encounter-selection authority.
-- `compareBodyMapVersions(...)` from `src/lib/clinical/body-map-change.ts` remains deterministic change authority for BodyMap deltas.
-- Current Visit consumes minimum-necessary DTOs only.
-- No AI-created diagnoses, exam findings, laterality, order state, coding finalization, or note signature.
-- MA/LPN/RN distinctions may be displayed only from verified/authorized professional context. A generic clinic role must not be relabeled as a specific profession.
-- A schema-bearing PR must not merge until migration history is reconciled and an approved disposable-database proof passes.
+- `initial`, `previous`, `today` are derived comparison roles, never stored as permanent clinical facts.
+- `selectPreviousFinalizedEncounter(...)` from `src/lib/clinical/previous-finalized-encounter.ts` remains historical encounter-selection authority.
+- `compareBodyMapVersions(...)` from `src/lib/clinical/body-map-change.ts` remains BodyMap delta authority.
+- Current Visit receives minimum-necessary DTOs only.
+- No AI-created diagnosis, exam finding, laterality, order state, final code, or signature.
+- Current RBAC gives broad encounter privileges to some business roles. This plan MUST NOT treat those generic rights as permission to author clinical handoff evidence. V1 handoff authoring is fail-closed to authenticated `provider` and `clinical_staff` roles only, matching existing clinical workflow authority without claiming a specific MA/LPN/RN profession. A later verified profession/capability layer may narrow this further.
+- A schema-bearing PR must not merge until migration history is reconciled and a disposable-database proof passes.
 
 ---
 
-### Task 1: Correct the BodyMap documentation status before extending it
+### Task 1: Reconcile stale BodyMap documentation status
 
 **Files:**
 - Modify: `docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md`
-- Test: existing feature-status/document-register tests.
+- Test: `tests/canonical-truth-drift.test.ts`
 
-**Interfaces:**
-- Produces documentation that matches current `main`, where BodyMap persistence from PR #295 is already merged.
+- [ ] **Step 1: Write/extend the truth-drift assertion if current tests do not already guard BodyMap status**
 
-- [ ] **Step 1: Update only stale status language**
+Require the document to state that the persistence substrate is merged on current main while keeping UI/production-PHI/full-Clinical-Change claims explicitly incomplete.
 
-Replace feature-branch-only claims with evidence-classified current-main truth. Preserve non-claims about UI, production PHI, and full Clinical Change.
-
-- [ ] **Step 2: Run documentation/status guards**
-
-Use the repository’s existing doc-register/feature-status tests. Do not upgrade production deployment status without runtime evidence.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Run RED if the new assertion was required**
 
 ```bash
-git add docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md
+npm test -- tests/canonical-truth-drift.test.ts
+```
+
+- [ ] **Step 3: Correct the stale feature-branch language only**
+
+Do not claim production migration/deployment from merge status.
+
+- [ ] **Step 4: Verify GREEN and commit**
+
+```bash
+npm test -- tests/canonical-truth-drift.test.ts
+git add docs/clinical/BODY_MAP_CHANGE_FOUNDATION.md tests/canonical-truth-drift.test.ts
 git commit -m "docs(clinical): reconcile BodyMap foundation with current main"
 ```
 
-### Task 2: Persist a bounded encounter-specific staff handoff
+### Task 2: Persist append-only encounter-specific Staff Handoff evidence
 
 **Files:**
 - Create: `prisma/models/clinical-encounter-handoff.prisma`
-- Create: `prisma/migrations/<timestamp>_encounter_staff_handoff_v1/migration.sql`
+- Create: `prisma/migrations/20260825050000_encounter_staff_handoff_v1/migration.sql`
 - Create: `src/lib/clinical/encounter-staff-handoff.ts`
 - Create: `src/lib/repositories/encounter-staff-handoff-repository.ts`
 - Create: `tests/encounter-staff-handoff-validation.test.ts`
 - Create: `tests/encounter-staff-handoff-repository-contract.test.ts`
 
 **Interfaces:**
-- Produces immutable or append-oriented handoff evidence for a single encounter.
 
-Recommended V1 data contract:
+Use this V1 runtime contract:
 
 ```ts
+export const ENCOUNTER_HANDOFF_SOURCES = ["staff_intake", "provider_review"] as const;
+
 export interface EncounterStaffHandoffInput {
   reasonForVisit: string | null;
   symptomSummary: string | null;
@@ -73,74 +78,128 @@ export interface EncounterStaffHandoffInput {
   delegatedWorkSummary: string | null;
   providerQuestions: string[];
   capturedAt: string;
-  source: "staff_intake" | "nursing_intake" | "provider_review";
+  source: typeof ENCOUNTER_HANDOFF_SOURCES[number];
 }
 ```
 
-Persistence must also carry organization, patient, encounter, actor, creation timestamp, and optional supersession/amendment lineage if the chosen model is append-only versioned.
+Use this additive persistence shape:
 
-- [ ] **Step 1: Write failing validation tests**
+```prisma
+enum EncounterStaffHandoffSource {
+  STAFF_INTAKE
+  PROVIDER_REVIEW
+}
 
-Prove:
+model EncounterStaffHandoffVersion {
+  id                  String                      @id @default(cuid())
+  organizationId      String
+  patientId           String
+  encounterId         String
+  createdByUserId     String
+  source              EncounterStaffHandoffSource
+  reasonForVisit      String?                     @db.Text
+  symptomSummary      String?                     @db.Text
+  screeningSummary    String?                     @db.Text
+  formReadinessSummary String?                    @db.Text
+  delegatedWorkSummary String?                    @db.Text
+  providerQuestions   Json
+  capturedAt          DateTime
+  supersedesVersionId String?
+  createdAt           DateTime                    @default(now())
 
-- at least one meaningful field/question is required;
-- future timestamps beyond bounded clock skew fail;
-- empty/whitespace provider questions are removed or rejected deterministically;
-- free-text `source` outside the governed enum fails;
-- payload size is bounded.
+  supersedes          EncounterStaffHandoffVersion?  @relation("EncounterHandoffSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededBy        EncounterStaffHandoffVersion[]  @relation("EncounterHandoffSupersession")
+
+  @@index([organizationId, patientId, encounterId, capturedAt])
+  @@index([supersedesVersionId])
+  @@map("encounter_staff_handoff_versions")
+}
+```
+
+Legacy patient/encounter/user ownership remains transactionally verified in the repository, matching the current multi-file BodyMap pattern rather than widening this tranche with reverse relations.
+
+- [ ] **Step 1: Write failing validator tests**
+
+Enforce:
+
+- at least one meaningful summary/question;
+- max 4,000 characters for each summary;
+- max 10 provider questions, 500 characters each;
+- empty questions rejected;
+- capture time no more than five minutes in the future;
+- only the two governed sources above;
+- JSON-safe input.
 
 - [ ] **Step 2: Write failing repository contract tests**
 
-Assert server-only, organization + patient + encounter scope, actor scope, same-transaction audit, explicit select DTOs, and no broad raw ORM return.
+Assert `import "server-only"`, `db.$transaction`, active organization-scoped patient/actor checks, organization/patient encounter match, supersession source belongs to same organization/patient/encounter, append-only create, same-transaction bounded audit, explicit selects, and no update/delete repository path.
 
-- [ ] **Step 3: Implement schema/migration + validator + repository**
+- [ ] **Step 3: Implement schema, SQL migration, validator, DTO mapping, repository**
 
-Do not store `MA`, `LPN`, or `RN` as an unverified self-selected profession. Store the authenticated actor and current role context; attach verified profession evidence only if a current authoritative source is actually available at implementation time.
+Repository entry point:
 
-- [ ] **Step 4: Disposable database proof**
+```ts
+export async function createEncounterStaffHandoffVersion(input: {
+  organizationId: string;
+  patientId: string;
+  encounterId: string;
+  supersedesVersionId?: string | null;
+  fields: EncounterStaffHandoffInput;
+  actor: { userId: string; role: ClinicRole; ipAddress?: string; userAgent?: string };
+}): Promise<CreateEncounterStaffHandoffResult>;
+```
 
-Run fresh migration chain and then this migration on an approved disposable PostgreSQL/Neon branch. Prove constraints at the DB layer for governed source, required association, and lineage rules.
+Fail closed unless `actor.role === "provider" || actor.role === "clinical_staff"`.
 
-- [ ] **Step 5: Focused tests and commit**
+Map source automatically at the route/repository boundary:
+
+```ts
+provider       -> provider_review
+clinical_staff -> staff_intake
+```
+
+Never let the client choose `provider_review`.
+
+- [ ] **Step 4: Prove migration on an approved disposable database**
+
+Run the full fresh migration chain, create valid evidence, reject invalid enum/empty evidence/invalid supersession, confirm expected indexes, then delete the disposable branch without applying to production.
+
+- [ ] **Step 5: Verify and commit**
 
 ```bash
-npm test -- tests/encounter-staff-handoff-validation.test.ts tests/encounter-staff-handoff-repository-contract.test.ts
+npx prisma generate
 npx prisma validate
+npm test -- tests/encounter-staff-handoff-validation.test.ts tests/encounter-staff-handoff-repository-contract.test.ts
 git add prisma src/lib/clinical/encounter-staff-handoff.ts src/lib/repositories/encounter-staff-handoff-repository.ts tests
 git commit -m "feat(clinical): persist encounter staff handoff evidence"
 ```
 
-### Task 3: Add governed handoff write/read API
+### Task 3: Add governed Staff Handoff read/write API
 
 **Files:**
 - Create: `src/app/api/encounters/[encounterId]/handoff/route.ts`
-- Test: `tests/encounter-staff-handoff-route.test.ts`
-- Reuse: current clinic session/RBAC helpers.
+- Create: `tests/encounter-staff-handoff-route.test.ts`
+- Reuse: `src/lib/auth/session.ts`
+- Reuse: `src/lib/repositories/encounter-repository.ts`
 
 **Interfaces:**
-- `GET` returns latest/current handoff DTO for authorized encounter.
-- `POST` appends a new handoff version only when caller has the existing safe clinical-intake/write capability.
+- `GET`: latest handoff DTO for an encounter, only after current encounter-read permission and tenant scope succeed.
+- `POST`: append new handoff version for `provider` or `clinical_staff` only.
 
-- [ ] **Step 1: Write authorization tests first**
+- [ ] **Step 1: Write failing authorization tests**
 
-Prove:
+Prove unauthenticated denied, cross-tenant indistinguishable from missing, `clinic_owner` and `administrator` denied clinical handoff authoring despite their generic encounter permissions, provider allowed, clinical_staff allowed, front desk/biller/case manager denied.
 
-- unauthenticated caller denied;
-- cross-tenant encounter denied/not found;
-- owner/admin does not gain clinical write merely from business ownership;
-- provider may review/write only according to existing encounter permissions;
-- generic staff path does not claim a verified profession.
+- [ ] **Step 2: Implement route**
 
-- [ ] **Step 2: Implement route using repository only**
+Resolve organization, patient, encounter, actor, and source from server/session truth. Request body contains only handoff fields plus optional `supersedesVersionId`.
 
-No client-supplied organization/patient authority. Resolve them from session + encounter.
-
-- [ ] **Step 3: Verify focused tests**
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Verify and commit**
 
 ```bash
-git commit -am "feat(clinical): add governed staff handoff route"
+npm test -- tests/encounter-staff-handoff-route.test.ts tests/encounter-staff-handoff-repository-contract.test.ts
+git add src/app/api/encounters/'[encounterId]'/handoff/route.ts tests/encounter-staff-handoff-route.test.ts
+git commit -m "feat(clinical): add governed staff handoff route"
 ```
 
 ### Task 4: Compose persisted BodyMap roles for Current Visit
@@ -151,6 +210,7 @@ git commit -am "feat(clinical): add governed staff handoff route"
 - Reuse: `src/lib/clinical/previous-finalized-encounter.ts`
 - Reuse: `src/lib/clinical/body-map-change.ts`
 - Reuse: `src/lib/repositories/body-map-repository.ts`
+- Reuse: `src/lib/repositories/encounter-repository.ts`
 
 **Interfaces:**
 
@@ -175,178 +235,138 @@ export async function loadCurrentVisitBodyMapChange(input: {
 }): Promise<CurrentVisitBodyMapChange>;
 ```
 
-- [ ] **Step 1: Write the Golden Case failing test**
-
-Use the canonical case:
+- [ ] **Step 1: Write the Golden Case RED test**
 
 ```text
 Initial: left shoulder pain 8
 Previous: left shoulder pain 6
-Today: left shoulder pain 6 + new dizziness
+Today: left shoulder pain 6 + dizziness
 ```
 
-Expected:
+Expect `severity_improved 8→6`, `severity_unchanged 6→6`, and `dizziness finding_added`, each with exact BodyMap version/finding refs.
 
-```text
-initial -> previous = severity_improved 8 -> 6
-previous -> today = severity_unchanged 6 -> 6
-previous -> today = dizziness finding_added
-```
+- [ ] **Step 2: Add fail-closed tests**
 
-Every delta must retain exact BodyMap version/finding evidence refs.
-
-- [ ] **Step 2: Add failure/partial tests**
-
-Prove:
-
-- no maps = `not_available`;
-- today only = `partial`;
-- previous + today = comparison without inventing initial;
-- different-patient evidence fails closed;
-- omission never emits resolution;
-- `Addendum Needed` prior encounter remains eligible exactly as selector contract says.
+No maps => `not_available`; today only => `partial`; previous + today compares without inventing initial; cross-patient fails; omission emits no resolution; `Addendum Needed` remains eligible through the existing selector.
 
 - [ ] **Step 3: Implement composition**
 
-Derive initial from earliest valid patient BodyMap evidence; derive previous through the prior-finalized encounter selector plus the latest BodyMap for that encounter; derive today from current encounter. Never persist role labels.
+1. load patient BodyMap versions via `listBodyMapVersionsForPatient`;
+2. load eligible patient encounters required by `selectPreviousFinalizedEncounter`;
+3. `initial` = earliest valid persisted patient BodyMap version;
+4. `previous` = latest BodyMap belonging to selector-chosen prior encounter;
+5. `today` = latest BodyMap for current encounter;
+6. compare only available ordered pairs using `compareBodyMapVersions`;
+7. never persist comparison roles.
 
-- [ ] **Step 4: Verify**
+- [ ] **Step 4: Verify and commit**
 
 ```bash
 npm test -- tests/current-visit-body-map-composition.test.ts tests/body-map-repository-contract.test.ts
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
 git add src/lib/clinical/current-visit-body-map.ts tests/current-visit-body-map-composition.test.ts
 git commit -m "feat(clinical): compose longitudinal BodyMap evidence"
 ```
 
-### Task 5: Extend `CurrentVisitModel` with real Clinical Change and handoff
+### Task 5: Extend `CurrentVisitModel` with persisted change/handoff
 
 **Files:**
 - Modify: `src/lib/clinical/current-visit-model.ts`
 - Modify: `tests/current-visit-model.test.ts`
-- Modify: existing current-visit medication/vitals handoff tests.
+- Modify: `tests/current-visit-medication-handoff.test.ts`
 
 **Interfaces:**
-- Extend `CurrentVisitContext`:
 
 ```ts
-bodyMapChange?: CurrentVisitBodyMapChange | null;
-staffHandoff?: EncounterStaffHandoffDto | null;
+export interface CurrentVisitContext {
+  vital?: PatientVital | null;
+  medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
+  bodyMapChange?: CurrentVisitBodyMapChange | null;
+  staffHandoff?: EncounterStaffHandoffDto | null;
+  closeEvaluation?: Partial<CurrentVisitCloseEvaluation>;
+}
 ```
 
-- `change` becomes a discriminated union:
+Change state becomes:
 
 ```ts
-{ status: "not_available"; message: string }
-| { status: "partial" | "available"; summary: CurrentVisitBodyMapChange; message: string }
+CurrentVisitUnavailableState
+| { status: "partial" | "available"; message: string; bodyMap: CurrentVisitBodyMapChange };
 ```
 
-- [ ] **Step 1: Write failing model tests**
+- [ ] **Step 1: Write RED tests**
 
-Prove the model uses persisted change/handoff when supplied and preserves truthful unavailable/partial state when absent.
+Persisted BodyMap change replaces the current hard-coded unavailable state. Persisted handoff combines with vitals/medication reconciliation without calling incomplete domains complete.
 
-- [ ] **Step 2: Implement minimum composition**
+- [ ] **Step 2: Implement pure composition**
 
-Vitals and medication reconciliation remain part of handoff. Persisted encounter handoff adds actual reason/symptom/screening/questions. Do not infer from patient summary.
+No repository imports in `current-visit-model.ts`.
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Verify and commit**
 
 ```bash
 npm test -- tests/current-visit-model.test.ts tests/current-visit-medication-handoff.test.ts
-```
-
-- [ ] **Step 4: Commit**
-
-```bash
 git commit -am "feat(clinical): connect Current Visit to persisted change and handoff"
 ```
 
-### Task 6: Load all Golden Current Visit evidence server-side
+### Task 6: Load Golden Current Visit evidence server-side
 
 **Files:**
 - Modify: `src/app/(platform)/encounters/[encounterId]/page.tsx`
-- Test: `tests/current-visit-server-evidence.test.ts`
+- Create: `tests/current-visit-server-evidence.test.ts`
 
-**Interfaces:**
-- Extend current `Promise.all` to load:
-  - encounter handoff;
-  - BodyMap change composition;
-  - existing patient, vital, medication reconciliation, labs/imaging evidence.
+- [ ] **Step 1: Write RED contract**
 
-- [ ] **Step 1: Write failing server-evidence contract test**
+Assert the page loads `loadCurrentVisitBodyMapChange(...)` and latest Staff Handoff after the encounter is already tenant-authorized.
 
-Assert the page calls `loadCurrentVisitBodyMapChange` and encounter-handoff repository under the already-authorized encounter context.
+- [ ] **Step 2: Extend the existing `Promise.all`**
 
-- [ ] **Step 2: Implement server loading**
+Load patient, vital, medication reconciliation, labs/imaging evidence, latest handoff, and BodyMap change. Pass deliberate DTOs to `EncounterEditor`.
 
-Do not send full BodyMap repository rows if the UI only needs a deliberate stage/change DTO.
-
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Verify and commit**
 
 ```bash
 npm test -- tests/current-visit-server-evidence.test.ts
 npm run type-check
+git add src/app/'(platform)'/encounters/'[encounterId]'/page.tsx tests/current-visit-server-evidence.test.ts
+git commit -m "feat(clinical): load Golden Current Visit evidence"
 ```
 
-- [ ] **Step 4: Commit**
-
-### Task 7: Build Black Label `INITIAL → PREVIOUS → TODAY` Current Visit UX
+### Task 7: Build Black Label `INITIAL → PREVIOUS → TODAY` UX and handoff authoring
 
 **Files:**
 - Modify: `src/components/clinic/encounter-editor.tsx`
 - Create: `src/components/clinic/current-visit-change.tsx`
 - Create: `src/components/clinic/current-visit-body-map.tsx`
+- Create: `src/components/clinic/current-visit-staff-handoff.tsx`
 - Modify: `src/app/(platform)/encounters/[encounterId]/current-visit-black-label.module.css`
-- Modify/Test: `tests/current-visit-experience.test.ts`
-- Modify/Test: `tests/current-visit-black-label-stage.test.ts`
+- Modify: `tests/current-visit-experience.test.ts`
+- Modify: `tests/current-visit-black-label-stage.test.ts`
+- Create: `tests/current-visit-staff-handoff-experience.test.ts`
 
-**Interfaces:**
-- Consumes browser-safe Current Visit change/handoff DTOs only.
+- [ ] **Step 1: Lock sequence/copy with RED tests**
 
-- [ ] **Step 1: Lock copy/sequence tests**
+Required sequence remains Patient snapshot, What changed, Staff handoff, Today, Clinical, Assessment & plan, Orders & results, Documentation & coding, Close visit.
 
-Required visible sequence remains:
+- [ ] **Step 2: Render compact change narrative**
 
-```text
-Patient snapshot
-What changed
-Staff handoff
-Today
-Clinical
-Assessment & plan
-Orders & results
-Documentation & coding
-Close visit
-```
-
-Change presentation must include `Initial`, `Previous`, `Today` only when corresponding evidence exists.
-
-- [ ] **Step 2: Implement dedicated change component**
-
-Show concise change first, evidence detail on demand. For example:
+Example from governed evidence:
 
 ```text
 Left shoulder pain: 8 → 6 → 6
 Dizziness: new today
 ```
 
-Do not convert missing findings into “resolved.”
+Missing findings never display “resolved.” Evidence detail is progressively disclosed.
 
-- [ ] **Step 3: Implement BodyMap stage UI**
+- [ ] **Step 3: Render accessible BodyMap stages**
 
-Use an accessible selectable stage/timeline, not a decorative image-only experience. Each finding must remain readable as text for keyboard/screen-reader users.
+Each stage has a text list of findings in addition to any visual body diagram. Keyboard and screen-reader operation cannot depend on clicking body regions.
 
-- [ ] **Step 4: Upgrade Staff Handoff UI**
+- [ ] **Step 4: Render Staff Handoff and bounded authoring**
 
-Show actual encounter handoff, vitals, medication reconciliation, source/provenance, and unresolved provider questions. Display a specific profession only when it arrives from verified context.
+Provider/clinical_staff see the governed authoring action. All other roles get read-only or no authoring based on current encounter read access. Show “Provider” or “Clinical staff” from role context only; do not display MA/LPN/RN unless verified profession evidence later supplies it.
 
-- [ ] **Step 5: Verify responsive/accessibility states**
-
-390/768/1024/1440/1920, 200% zoom, keyboard, reduced motion, empty/partial/full Golden Case.
+- [ ] **Step 5: Verify 390/768/1024/1440/1920, 200% zoom, keyboard, reduced motion, empty/partial/full Golden Case**
 
 - [ ] **Step 6: Commit**
 
@@ -355,34 +375,52 @@ git add src/components/clinic src/app/'(platform)'/encounters tests
 git commit -m "feat(clinical): ship longitudinal Golden Current Visit"
 ```
 
-### Task 8: DB-backed No-Fault/MSK Golden Case
+### Task 8: Add DB-backed Golden Case to the existing MVP journey runner
 
 **Files:**
-- Create: `tests/journeys/current-visit-golden-case.test.ts` or follow the repository’s existing DB journey location/naming.
-- Reuse current fixtures/helpers rather than adding production demo data.
+- Create: `scripts/mvp/current-visit-golden-case-journey.mts`
+- Modify: `scripts/mvp/run-all.mjs`
 
-**Interfaces:**
-- Produces a synthetic-only integration journey proving the actual DB/repository chain.
+- [ ] **Step 1: Implement the synthetic journey against the disposable verification DB**
 
-- [ ] **Step 1: Seed synthetic patient + three eligible encounters + BodyMap versions + handoff**
+Create two organizations to prove isolation, one synthetic patient, three eligible encounters, handoff evidence, and the three BodyMap versions above.
 
-Do this only in disposable test DB fixtures.
+- [ ] **Step 2: Assert deterministic change/provenance**
 
-- [ ] **Step 2: Assert exact Golden Case deltas and provenance**
+Verify exactly the three expected deltas and their evidence refs.
 
-- [ ] **Step 3: Assert signed-history immutability/amendment behavior**
+- [ ] **Step 3: Assert signed-history immutability**
 
-- [ ] **Step 4: Assert no cross-tenant/cross-patient visibility**
+Ordinary new handoff/BodyMap mutation against finalized historical evidence must follow their amendment/supersession contracts.
 
-- [ ] **Step 5: Add this journey to the existing clinical/MVP verification command if repository conventions support it**
+- [ ] **Step 4: Assert cross-tenant/cross-patient negatives**
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Run the journey directly before registering it**
+
+```bash
+npx tsx scripts/mvp/current-visit-golden-case-journey.mts
+```
+
+Expected: exit 0 against the disposable verification database.
+
+- [ ] **Step 6: Add it to `scripts/mvp/run-all.mjs`, then run**
+
+```bash
+npm run test:mvp
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add scripts/mvp/current-visit-golden-case-journey.mts scripts/mvp/run-all.mjs
+git commit -m "test(clinical): prove Golden Current Visit journey"
+```
 
 ### Task 9: Final verification and PR
 
-- [ ] **Step 1: Reconcile latest main and any clinical/identity PRs**
+- [ ] **Step 1: Reconcile latest main and clinical/identity branches**
 
-- [ ] **Step 2: Run**
+- [ ] **Step 2: Run fresh evidence**
 
 ```bash
 npx prisma generate
@@ -392,10 +430,11 @@ npm run lint
 npm test -- --run
 npm run security:check
 npm run build
+npm run test:mvp
 ```
 
-Also execute fresh/disposable migration chain and the DB Golden Case.
+Also execute the entire migration chain on a verified disposable DB.
 
 - [ ] **Step 3: PR non-claims**
 
-Explicitly state what remains outside this tranche: ambient scribe provider connection, full clinical-component system beyond BodyMap/handoff, live lab/radiology transport, terminology licensing/certified EHR claims, autonomous coding, production PHI approval if not separately verified.
+State that this tranche does not establish ambient-scribe provider connection, full typed clinical components beyond handoff/BodyMap, live lab/radiology transport, terminology licensing/certified-EHR status, autonomous coding, or production PHI approval unless separately proven.
