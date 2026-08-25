@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AlertOctagon, ArrowRight, Check, ShieldAlert } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EscalationActions } from "@/components/clinic/care-coordination-actions";

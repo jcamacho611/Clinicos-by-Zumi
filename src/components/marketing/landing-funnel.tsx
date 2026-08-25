@@ -413,6 +413,11 @@ export function LandingFunnel({
                   </Link>
                 )}
               </div>
+              {/* The offer already promises this and the page was not saying it. Someone
+                  deciding whether to pay for the analysis is deciding partly on whether
+                  the fee comes back, so the term belongs next to the price rather than
+                  further down the funnel. */}
+              <p className="mt-3 text-[12px] leading-5 text-[var(--text-secondary)]">{analysisCredit}</p>
             </div>
           ) : null}
         </div>
