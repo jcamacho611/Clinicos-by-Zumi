@@ -119,19 +119,31 @@ describe("adversarial buyer and accessibility baseline", () => {
   });
 
   it("builds the application before applying deployment migrations", () => {
-    /* Render no longer applies migrations automatically — it builds, then verifies
-       migration status and refuses to deploy on drift. That is strictly safer than the
-       build-then-migrate ordering this originally locked, so assert the current contract:
-       the build still runs first, and the database step that follows it is a check. */
+    /* Render builds first, then inspects migration status, and may advance the database
+       only through explicitly approved additive migrations. The original rule this locked
+       — never let an unbuilt or unapproved candidate change a production database — is
+       unchanged; the mechanism that enforces it is now the approval gate. */
     const build = renderBuild.indexOf("Building Klinikos for production before database verification");
-    const verify = renderBuild.indexOf("Verifying migration status without mutating the database");
+    const verify = renderBuild.indexOf("Verifying production migration status");
     expect(build).toBeGreaterThan(0);
     expect(verify).toBeGreaterThan(build);
-    // The deploy path stays behind the explicit disposable-verification flag.
+    // Ordering is asserted inside the Render branch so the import of the policy helper
+    // at the top of the file cannot satisfy it.
+    const renderBranch = renderBuild.slice(
+      renderBuild.indexOf("Render build detected"),
+      renderBuild.indexOf("KLINIKOS_ALLOW_MIGRATION_DEPLOY"),
+    );
+    const validate = renderBranch.indexOf("validatePendingMigrations");
+    const deploy = renderBranch.indexOf('"migrate", "deploy"');
+    // Nothing may reach migrate deploy without passing the approval gate first.
+    expect(validate).toBeGreaterThan(-1);
+    expect(deploy).toBeGreaterThan(validate);
+    // The unapproved deploy path stays behind the explicit disposable-verification flag.
     expect(renderBuild.indexOf("KLINIKOS_ALLOW_MIGRATION_DEPLOY")).toBeGreaterThan(verify);
     // The rule lives in a wrapped comment, so match the prose with comment markers and
     // line breaks flattened rather than requiring it to sit on one physical line.
     const prose = renderBuild.replace(/^\s*\/\/ ?/gm, "").replace(/\s+/g, " ");
-    expect(prose).toContain("must still remain backward-compatible with the previous app");
+    expect(prose).toContain("the old and new application versions can overlap");
+    expect(prose).toContain("only explicitly approved additive migrations may advance automatically");
   });
 });
