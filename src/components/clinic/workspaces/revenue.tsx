@@ -1,7 +1,7 @@
 import {
   ArrowRight, BadgeCheck, Banknote, Calculator,
-  ChartNoAxesCombined, CheckCircle2, ClipboardList,
-  FileWarning, HeartHandshake, Megaphone, Plus, ReceiptText,
+  ClipboardList,
+  FileWarning, Plus, ReceiptText,
   RefreshCw, SearchCheck, ShieldCheck, TrendingUp, TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

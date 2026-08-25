@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Download, FileSignature, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 
 interface AgreementSection {
@@ -69,7 +69,7 @@ export function LegalAcceptanceClient({
   const organizationReady = capacity === "individual" || (title.trim().length >= 2 && authorityConfirmed);
   const canSign = Boolean(reviewToken) && reachedEnd && allChecked && signatureMatches && country.trim().length >= 2 && organizationReady && !submitting;
 
-  async function markReviewed() {
+  const markReviewed = useCallback(async () => {
     if (reviewRequested.current || reviewToken) return;
     reviewRequested.current = true;
     setReviewError(null);
@@ -89,7 +89,7 @@ export function LegalAcceptanceClient({
       reviewRequested.current = false;
       setReviewError(reviewFailure instanceof Error ? reviewFailure.message : "Review confirmation failed.");
     }
-  }
+  }, [presentedToken, reviewToken]);
 
   function evaluateScroll() {
     const node = scrollBox.current;
@@ -98,11 +98,14 @@ export function LegalAcceptanceClient({
     if (atEnd) void markReviewed();
   }
 
+  // An agreement short enough to need no scrolling has still been seen, so it counts as
+  // reviewed on mount. Re-running is harmless: markReviewed returns immediately once a
+  // token exists or a request is already in flight.
   useEffect(() => {
     const node = scrollBox.current;
     if (!node) return;
     if (node.scrollHeight <= node.clientHeight + 12) void markReviewed();
-  }, []);
+  }, [markReviewed]);
 
   async function submit() {
     if (!canSign || !reviewToken) return;
@@ -213,7 +216,7 @@ export function LegalAcceptanceClient({
           </div>
         </section>
 
-        <section aria-disabled={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
+        <section inert={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
           <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><ShieldCheck className="size-4" /></span><div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Acknowledgments</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Affirm each required statement.</h2></div></div>
           <div className="mt-6 space-y-3">
             {acknowledgments.map(({ key, label }) => (
@@ -225,7 +228,7 @@ export function LegalAcceptanceClient({
           </div>
         </section>
 
-        <section aria-disabled={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
+        <section inert={!reviewToken} className={`mt-6 rounded-[30px] border p-5 sm:p-7 ${reviewToken ? "border-[#e6817b]/14 bg-[#0b0507]" : "pointer-events-none border-[#e6817b]/7 bg-[#080405] opacity-45"}`}>
           <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full border border-[#e6817b]/14 bg-[#e6817b]/[.05] text-[#e6817b]"><FileSignature className="size-4" /></span><div><p className="text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6817b]">Electronic signature</p><h2 className="mt-1 text-xl font-light tracking-[-.035em] text-[#fff8f6]">Sign intentionally.</h2></div></div>
           <p className="mt-4 max-w-3xl text-xs leading-6 text-[#8f7773]">By selecting Agree & Sign, you intend the typed signature you provide to authenticate your acceptance of this Agreement and to have the legal effect available to electronic signatures under applicable law. This ceremony is not represented as notarization or a qualified electronic signature.</p>
 

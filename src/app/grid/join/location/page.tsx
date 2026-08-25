@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Building2, Check, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, MapPin, ShieldCheck } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import { CapacityIntakeForm } from "@/components/grid/capacity-intake-form";
 
