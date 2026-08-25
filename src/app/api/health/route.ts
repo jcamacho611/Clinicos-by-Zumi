@@ -20,8 +20,17 @@ function buildStamp(): { commit?: string; branch?: string } {
 
 function nonSecretReleaseIdentity() {
   const stamp = buildStamp();
-  const commit = process.env.RENDER_GIT_COMMIT?.trim() || process.env.GIT_COMMIT_SHA?.trim() || stamp.commit?.trim() || null;
-  const branch = process.env.RENDER_GIT_BRANCH?.trim() || stamp.branch?.trim() || null;
+  const commit =
+    process.env.RENDER_GIT_COMMIT?.trim() ||
+    process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
+    process.env.GIT_COMMIT_SHA?.trim() ||
+    stamp.commit?.trim() ||
+    null;
+  const branch =
+    process.env.RENDER_GIT_BRANCH?.trim() ||
+    process.env.VERCEL_GIT_COMMIT_REF?.trim() ||
+    stamp.branch?.trim() ||
+    null;
   return { commit, shortCommit: commit ? commit.slice(0, 12) : null, branch };
 }
 
