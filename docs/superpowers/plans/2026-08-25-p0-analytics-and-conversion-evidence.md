@@ -2,23 +2,23 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Measure the approved P0 funnel and product value loop with first-party, allowlisted, PHI-safe evidence so Klinikos can improve acquisition, activation, product value, pricing, and investor/customer proof without turning analytics into a shadow patient record.
+**Goal:** Measure the approved P0 acquisition and product-value loop with first-party, allowlisted, PHI-safe evidence so Klinikos can improve conversion and product value without creating a shadow patient record.
 
-**Architecture:** Reuse existing authoritative business/payment/audit events wherever they already exist. Add a small first-party `ProductInteractionEvent` store only for interaction/value events that cannot be reliably derived from existing authorities. Event names and metadata are allowlisted; no generic free-form analytics payloads. Commercial reporting joins or aggregates sources at read time instead of duplicating payment truth.
+**Architecture:** Reuse authoritative sales, payment, encounter, Grid, and audit evidence where it already exists. Add one small append-only `ProductInteractionEvent` store only for user-interaction/value events that cannot be derived from those authorities. Event names and context keys are strict allowlists. Reporting joins authoritative payment/sales truth at read time instead of duplicating it into analytics.
 
-**Tech Stack:** Prisma/PostgreSQL, Next.js route handlers/server actions, TypeScript, React instrumentation, Vitest, existing DemoReservationEvent/payment/audit truth.
+**Tech Stack:** Prisma/PostgreSQL, Next.js route handlers, TypeScript, React, Vitest, existing `DemoReservationEvent`, Financial OS/payment evidence, and clinic session authority.
 
 **Spec:** `docs/superpowers/specs/2026-08-25-klinikos-p0-value-loop-design.md`
 
 ## Global Constraints
 
 - Analytics is not authorization, billing, clinical truth, completion authority, or payment evidence.
-- Never send/store patient name, MRN, DOB, diagnosis, clinical note text, claim number, result content, or arbitrary page URL containing sensitive identifiers.
-- Do not duplicate authoritative payment status into analytics as if analytics were evidence.
-- Public analytics accepts only enumerated event names and bounded enumerated/coarse metadata.
-- Authenticated product events may record organization/user opaque IDs, but no patient ID in P0 analytics.
-- Do not install a third-party analytics SDK into authenticated clinical surfaces in this plan.
-- Respect current consent/privacy policy and do not create fingerprinting behavior.
+- Never persist patient name, MRN, DOB, diagnosis, clinical note text, claim number, result content, patient ID, encounter ID, claim ID, arbitrary pathname/query string, IP address, referrer, or user-agent in P0 product analytics.
+- Authenticated events may carry opaque organization/user IDs from the server session because those identify the product account, not patient clinical state.
+- Public callers may never supply organization/user IDs.
+- Do not install a third-party analytics SDK on authenticated clinical surfaces.
+- Do not fingerprint users.
+- Product analytics failure must never block clinical, sales, payment, or Grid workflows.
 
 ---
 
@@ -46,39 +46,57 @@ export const P0_PRODUCT_EVENTS = [
 
 export type P0ProductEventName = typeof P0_PRODUCT_EVENTS[number];
 
-export type P0EventContext = {
-  source: "public" | "living_home" | "current_visit" | "billing" | "grid";
+export const P0_EVENT_SOURCES = ["public", "living_home", "current_visit", "billing", "grid"] as const;
+
+export interface P0EventContext {
+  source: typeof P0_EVENT_SOURCES[number];
   role?: "clinic_owner" | "administrator" | "provider" | "front_desk" | "biller" | "case_manager" | "clinical_staff";
   operatingMapSetting?: "independent_owner" | "practice_manager" | "provider" | "clinical_staff" | "multi_site" | "student";
   operatingMapGapCount?: number;
   actionDomain?: "appointment" | "path" | "encounter" | "revenue" | "grid";
-};
+}
 ```
 
-- [ ] **Step 1: Write failing allowlist tests**
-
-Prove arbitrary event names, `patientId`, `mrn`, `diagnosis`, `note`, `url`, `claimNumber`, and arbitrary metadata keys are rejected.
-
-Example:
+- [ ] **Step 1: Write the failing strict-schema test**
 
 ```ts
-expect(() => parseP0ProductEvent({
-  name: "current_visit_opened",
-  context: { source: "current_visit", patientId: "p-1" },
-})).toThrow();
+import { describe, expect, it } from "vitest";
+import { parseP0ProductEvent } from "@/lib/analytics/p0-events";
+
+describe("P0 event privacy contract", () => {
+  it("accepts only the allowlisted event/context shape", () => {
+    expect(parseP0ProductEvent({
+      name: "operating_map_completed",
+      context: { source: "public", operatingMapSetting: "independent_owner", operatingMapGapCount: 3 },
+    }).name).toBe("operating_map_completed");
+  });
+
+  for (const forbidden of ["patientId", "encounterId", "claimId", "mrn", "diagnosis", "note", "url", "claimNumber"]) {
+    it(`rejects ${forbidden}`, () => {
+      expect(() => parseP0ProductEvent({
+        name: "current_visit_opened",
+        context: { source: "current_visit", [forbidden]: "sensitive" },
+      })).toThrow();
+    });
+  }
+});
 ```
 
-- [ ] **Step 2: Verify RED**
+- [ ] **Step 2: Run and verify RED**
 
 ```bash
 npm test -- tests/p0-event-taxonomy.test.ts
 ```
 
-- [ ] **Step 3: Implement strict runtime parser**
+- [ ] **Step 3: Implement with strict Zod schemas**
 
-Use strict schemas. Numeric counts must be bounded and coarse; no free-form text.
+`operatingMapGapCount` must be an integer `0..9`. Reject unknown keys with `.strict()`.
 
-- [ ] **Step 4: Verify GREEN**
+- [ ] **Step 4: Run and verify GREEN**
+
+```bash
+npm test -- tests/p0-event-taxonomy.test.ts
+```
 
 - [ ] **Step 5: Commit**
 
@@ -87,108 +105,136 @@ git add src/lib/analytics/p0-events.ts tests/p0-event-taxonomy.test.ts
 git commit -m "feat(analytics): define PHI-safe P0 event taxonomy"
 ```
 
-### Task 2: Add first-party interaction-event persistence
+### Task 2: Add append-only first-party interaction-event persistence
 
 **Files:**
 - Create: `prisma/models/product-interaction-event.prisma`
-- Create: `prisma/migrations/<timestamp>_product_interaction_events_v1/migration.sql`
+- Create: `prisma/migrations/20260825052000_product_interaction_events_v1/migration.sql`
 - Create: `src/lib/repositories/product-interaction-event-repository.ts`
 - Create: `tests/product-interaction-event-repository.test.ts`
 
 **Interfaces:**
 
-Recommended schema fields:
+Use this persistence shape:
 
-```text
-id
-occurredAt
-name
-source
-organizationId nullable
-userId nullable
-anonymousSessionId nullable
-role nullable
-context JSON (validated bounded enum/count object only)
+```prisma
+model ProductInteractionEvent {
+  id                 String   @id @default(cuid())
+  name               String
+  source             String
+  organizationId     String?
+  userId             String?
+  anonymousSessionId String?
+  role               String?
+  context            Json
+  occurredAt         DateTime @default(now())
+
+  @@index([name, occurredAt])
+  @@index([organizationId, occurredAt])
+  @@index([anonymousSessionId, occurredAt])
+  @@map("product_interaction_events")
+}
 ```
-
-Do not store pathname, referrer, user agent, IP, patient ID, arbitrary payload, or raw text unless a later privacy review explicitly approves a separately justified field.
 
 - [ ] **Step 1: Write failing repository tests**
 
-Prove strict parser runs before persistence; anonymous event cannot invent organization/user IDs; authenticated event IDs come from server session, not client payload; context is bounded.
+Mock `db.productInteractionEvent.create` and prove:
 
-- [ ] **Step 2: Implement schema + migration**
+```ts
+await recordAuthenticatedProductEvent(session, parsedEvent);
+expect(create).toHaveBeenCalledWith(expect.objectContaining({
+  data: expect.objectContaining({
+    organizationId: session.organizationId,
+    userId: session.userId,
+  }),
+}));
+```
 
-Index by `(name, occurredAt)`, `(organizationId, occurredAt)`, and `anonymousSessionId` only if required for public funnel sequencing. Keep retention policy documented.
+Also prove public persistence cannot accept organization/user IDs from the request object.
+
+- [ ] **Step 2: Implement exact migration**
+
+Create the table/indexes above. Do not add IP, user-agent, referrer, patient, encounter, or claim columns.
 
 - [ ] **Step 3: Implement server-only append repository**
 
 ```ts
-export async function recordAuthenticatedProductEvent(session: ClinicSession, event: ParsedP0ProductEvent): Promise<void>;
-export async function recordAnonymousProductEvent(sessionId: string, event: ParsedP0ProductEvent): Promise<void>;
+export async function recordAuthenticatedProductEvent(
+  session: ClinicSession,
+  event: ParsedP0ProductEvent,
+): Promise<void>;
+
+export async function recordAnonymousProductEvent(
+  anonymousSessionId: string,
+  event: ParsedP0ProductEvent,
+): Promise<void>;
 ```
 
-No update/delete API in ordinary product code; retention deletion may exist in a dedicated administrative/privacy path later.
+No ordinary update/delete repository methods.
 
-- [ ] **Step 4: Disposable migration proof**
+- [ ] **Step 4: Prove migration on an approved disposable PostgreSQL/Neon branch**
 
-- [ ] **Step 5: Verify + commit**
+Run the full fresh migration chain, then verify expected table/indexes exist and production is unchanged.
+
+- [ ] **Step 5: Verify and commit**
 
 ```bash
+npx prisma generate
 npx prisma validate
 npm test -- tests/product-interaction-event-repository.test.ts tests/p0-event-taxonomy.test.ts
 git add prisma src/lib/repositories/product-interaction-event-repository.ts tests
 git commit -m "feat(analytics): persist first-party product interaction events"
 ```
 
-### Task 3: Add bounded event ingestion routes
+### Task 3: Add bounded public and authenticated ingestion routes
 
 **Files:**
 - Create: `src/app/api/analytics/public-event/route.ts`
 - Create: `src/app/api/analytics/product-event/route.ts`
 - Create: `tests/p0-event-routes.test.ts`
-- Reuse existing public rate-limit/request-metadata utilities, but do not persist IP/user-agent as product analytics.
+- Reuse: `src/lib/auth/rate-limit.ts`
+- Reuse: `src/lib/auth/session.ts`
 
 **Interfaces:**
-- Public route: anonymous-session cookie + strictly public event subset (`operating_map_*`).
-- Authenticated route: current clinic session + strictly authenticated event subset.
 
-- [ ] **Step 1: Write failing abuse/privacy tests**
+Public route permits only:
 
-Prove:
+```text
+operating_map_started
+operating_map_completed
+operating_map_commercial_cta_clicked
+```
 
-- public endpoint rejects authenticated-only events;
-- authenticated endpoint rejects public fake organization/user identifiers;
-- unknown metadata is rejected;
-- body size is bounded;
-- public endpoint rate limits repeated abuse;
-- responses use no-store.
+Authenticated route permits all non-public P0 event names and derives identity from `requireClinicSession()`.
 
-- [ ] **Step 2: Implement anonymous session**
+- [ ] **Step 1: Write failing route tests**
 
-Use a random opaque first-party ID with bounded expiry, not fingerprinting. Cookie should be appropriate for a first-party analytics session and contain no identity information.
+Prove public route rejects `current_visit_opened`; product route rejects unauthenticated caller; both reject unknown context keys; both use `Cache-Control: no-store`; public route applies the current public rate limiter.
+
+- [ ] **Step 2: Add first-party anonymous session cookie**
+
+Use a random opaque UUID, `HttpOnly` is **not** required because the browser must send the event and the server can issue/read the cookie automatically; use `Secure` in production, `SameSite=Lax`, path `/`, and a 24-hour max age. Do not derive the value from device/browser characteristics.
 
 - [ ] **Step 3: Implement routes**
 
-Do not accept event time from client as authority beyond optional bounded client timestamp; server `occurredAt` is canonical persistence time.
+Server receipt time is `occurredAt`. Do not trust a client-supplied timestamp as canonical.
 
 - [ ] **Step 4: Verify and commit**
 
-### Task 4: Instrument the Operating Map acquisition funnel
+```bash
+npm test -- tests/p0-event-routes.test.ts tests/p0-event-taxonomy.test.ts
+```
+
+### Task 4: Instrument Operating Map acquisition
 
 **Files:**
 - Modify: `src/components/marketing/operating-map.tsx`
-- Test: `tests/operating-map-analytics.test.ts`
+- Create: `src/lib/analytics/client-product-events.ts`
+- Create: `tests/operating-map-analytics.test.ts`
 
-**Interfaces:**
-- Emits once-per-session/interaction events:
-  - started;
-  - completed;
-  - commercial CTA clicked.
+- [ ] **Step 1: Write the failing payload test**
 
-- [ ] **Step 1: Write failing instrumentation contract**
-
-Assert event payload contains only:
+Expected completed payload:
 
 ```ts
 {
@@ -201,53 +247,52 @@ Assert event payload contains only:
 }
 ```
 
-Do not send selected gap labels as arbitrary text; if later useful, add enumerated keys deliberately after privacy/analysis review.
+- [ ] **Step 2: Implement a non-blocking helper**
 
-- [ ] **Step 2: Implement non-blocking first-party event send**
+`recordPublicProductEvent(...)` posts to `/api/analytics/public-event`; caught failures are ignored after optional development-only console logging. Never block map rendering or CTA navigation.
 
-Analytics failure must not block the Operating Map result or commercial CTA.
+- [ ] **Step 3: Emit start, completion, CTA-click exactly once per corresponding interaction**
 
-- [ ] **Step 3: Verify and commit**
+Do not send selected gap labels or free text.
+
+- [ ] **Step 4: Verify and commit**
+
+```bash
+npm test -- tests/operating-map-analytics.test.ts
+```
 
 ### Task 5: Instrument authenticated P0 value events
 
 **Files:**
-- Modify minimal event call sites in Living Home, Current Visit, Billing, Grid clinic-signal handoff.
-- Create: `src/lib/analytics/client-product-events.ts` if a small browser helper is useful.
-- Test: `tests/p0-product-event-instrumentation.test.ts`.
+- Modify: `src/components/clinic/living-home.tsx`
+- Modify: `src/components/clinic/encounter-editor.tsx`
+- Modify: `src/components/clinic/billing-workspace-real.tsx`
+- Modify: the existing Clinic OS → Grid draft-opening component identified by `detectClinicGridSignals` / its current action surface.
+- Modify: `src/app/api/encounters/[encounterId]/transition/route.ts`
+- Create: `tests/p0-product-event-instrumentation.test.ts`
 
-**Interfaces:**
-- Emit only the allowlisted coarse event/context.
+- [ ] **Step 1: Instrument view/open events with coarse context only**
 
-- [ ] **Step 1: Instrument `living_home_opened` and `needs_action_item_opened`**
+`living_home_opened`, `needs_action_item_opened`, `current_visit_opened`, `revenue_review_opened`, and `grid_draft_opened_from_clinic_signal` may carry `source`, `role`, and `actionDomain`, nothing patient/claim-specific.
 
-No patient/action source ID in analytics. `actionDomain` only.
+- [ ] **Step 2: Instrument the real Current Visit milestone server-side**
 
-- [ ] **Step 2: Instrument `current_visit_opened`**
+After a successful `ready_for_review` transition, append `current_visit_ready_for_review`. Do not record it from the button click.
 
-Do not send encounterId/patientId. The source-domain audit still carries clinical provenance; analytics only knows a Current Visit was opened.
+- [ ] **Step 3: Verify no sensitive identifiers enter the event helper**
 
-- [ ] **Step 3: Instrument governed lifecycle milestone**
+```bash
+npm test -- tests/p0-product-event-instrumentation.test.ts tests/p0-event-taxonomy.test.ts
+```
 
-Prefer recording `current_visit_ready_for_review` server-side when the real transition succeeds, rather than a button click.
+- [ ] **Step 4: Commit**
 
-- [ ] **Step 4: Instrument `revenue_review_opened`**
-
-No claimId, patientId, amount, payer, denial reason.
-
-- [ ] **Step 5: Instrument `grid_draft_opened_from_clinic_signal`**
-
-Only when the existing Clinic OS → Grid draft route is actually opened.
-
-- [ ] **Step 6: Verify and commit**
-
-### Task 6: Build a first-party P0 funnel/evidence reader
+### Task 6: Build the first-party P0 funnel reader
 
 **Files:**
 - Create: `src/lib/repositories/p0-funnel-repository.ts`
 - Create: `src/lib/analytics/p0-funnel.ts`
 - Create: `tests/p0-funnel-repository.test.ts`
-- Do not expose this publicly by default.
 
 **Interfaces:**
 
@@ -265,66 +310,80 @@ export interface P0FunnelSummary {
 }
 ```
 
-Where possible:
-
-- interaction counts come from ProductInteractionEvent;
-- reservations come from DemoReservation / DemoReservationEvent authoritative data;
-- verified payments come from payment evidence/Financial OS authority, not analytics;
-- do not copy authoritative payment state into ProductInteractionEvent simply to make querying easier.
-
 - [ ] **Step 1: Write failing aggregation tests**
 
-Seed/mocks with analytics click count different from verified payment count and prove payment summary uses authoritative payment source.
+Use mocks where `commercialCtaClicks = 5`, reservations = 2, verified payment evidence = 1. Assert the final summary uses those distinct sources and does not infer paid from clicks/reservations.
 
-- [ ] **Step 2: Implement bounded date-window reader**
+- [ ] **Step 2: Implement explicit bounded window query**
 
-Require an explicit time window, default at UI layer rather than unbounded DB scans.
+Require `{ start: Date; end: Date }`, reject ranges over 366 days, and query:
+
+- interaction counts from `ProductInteractionEvent`;
+- reservations from existing `DemoReservation`/`DemoReservationEvent` truth;
+- verified payments from the existing Financial OS/payment-evidence repository used by commercial activation.
+
+Do not write payment results back into analytics.
 
 - [ ] **Step 3: Verify and commit**
 
-### Task 7: Create internal commercial evidence surface only if an existing admin/sales surface is authoritative
-
-**Files:**
-- Prefer extending an existing authenticated sales/admin workspace rather than creating a new dashboard route.
-- Test exact chosen route/component.
-
-- [ ] **Step 1: Inspect current Sales/Admin workspace at implementation time**
-
-If a real internal sales workspace exists and is authorization-gated, add a compact P0 funnel section there. If no suitable surface exists, keep the repository/reporting API internal in this tranche rather than building a new admin product solely for metrics.
-
-- [ ] **Step 2: Show ratios only when denominator is nonzero**
-
-Examples:
-
-```text
-Operating Map completion: 7 / 12
-Commercial CTA: 3 / 7
-Verified paid: 1 / 3 reservations
+```bash
+npm test -- tests/p0-funnel-repository.test.ts
 ```
 
-Never label click → reservation or reservation → paid as “conversion” without the exact numerator/denominator/time window visible.
-
-- [ ] **Step 3: Commit if a surface was legitimately extended**
-
-### Task 8: Retention/privacy documentation
+### Task 7: Add P0 evidence to the existing authenticated Sales workspace
 
 **Files:**
-- Modify relevant privacy/security/analytics documentation.
-- Add `docs/analytics/P0_EVENT_TAXONOMY.md` if no authoritative analytics doc exists.
+- Modify: `src/app/(platform)/admin/sales/page.tsx`
+- Modify: the existing Sales workspace component rendered by that route.
+- Create: `tests/admin-sales-p0-funnel.test.ts`
 
-- [ ] **Step 1: Record event allowlist, prohibited fields, retention owner, and deletion policy**
+- [ ] **Step 1: Write failing authorization/presentation test**
 
-- [ ] **Step 2: Record source-of-truth rule**
+Preserve existing sales workspace authorization. Require date-window label plus raw numerator/denominator around any ratio.
 
-Analytics can report interactions. It cannot override PaymentEvidence, encounter status, Grid fulfillment, EDU completion, or other domain truth.
+- [ ] **Step 2: Load 30-day P0 summary server-side**
 
-- [ ] **Step 3: Commit**
+Use `end = new Date()` and `start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000)`.
+
+- [ ] **Step 3: Render compact evidence, not vanity cards**
+
+Example:
+
+```text
+Operating Map completed: 7 / 12 starts
+Commercial next step: 3 / 7 completions
+Verified paid: 1 / 3 reservations
+Window: last 30 days
+```
+
+Only show ratios when denominator > 0.
+
+- [ ] **Step 4: Verify and commit**
+
+### Task 8: Document event and retention law
+
+**Files:**
+- Create: `docs/analytics/P0_EVENT_TAXONOMY.md`
+- Modify: `docs/SECURITY_ARCHITECTURE.md` to link the analytics boundary and prohibited PHI fields.
+- Add/modify the relevant documentation-register test if `docs/SECURITY_ARCHITECTURE.md` is register-governed.
+
+- [ ] **Step 1: Record the exact event allowlist and prohibited fields**
+
+- [ ] **Step 2: Set P0 interaction-event retention to 13 months**
+
+This is an internal product-analytics retention target, subject to later counsel/customer-contract constraints. Explain that domain/audit/payment retention is governed separately and is not shortened by this analytics policy.
+
+- [ ] **Step 3: Record source-of-truth law**
+
+Analytics may report interactions. It cannot override PaymentEvidence, encounter status, Grid fulfillment, EDU completion, or any source-domain record.
+
+- [ ] **Step 4: Commit**
 
 ### Task 9: Final verification and PR
 
-- [ ] **Step 1: Reconcile all P0 branches**
+- [ ] **Step 1: Reconcile all earlier P0 branches before modifying their event call sites**
 
-- [ ] **Step 2: Run**
+- [ ] **Step 2: Run fresh evidence**
 
 ```bash
 npx prisma generate
@@ -336,12 +395,12 @@ npm run security:check
 npm run build
 ```
 
-Also run disposable migration proof.
+Also run the full migration chain on a verified disposable database.
 
-- [ ] **Step 3: Privacy-negative browser/network review**
+- [ ] **Step 3: Run browser/network privacy negatives**
 
-Inspect requests from Operating Map, Living Home, Current Visit, Billing, and Grid signal handoff. Confirm no sensitive IDs/text appear in analytics payloads.
+Inspect requests from `/operating-map`, Living Home, Current Visit, Billing, and Clinic OS → Grid. Confirm analytics requests contain none of the prohibited sensitive fields.
 
 - [ ] **Step 4: PR non-claims**
 
-State that analytics measures interactions and selected value events; it does not prove customer outcomes, revenue recovery, retention, CAC, LTV, or market traction until enough real cohort evidence exists.
+State that P0 analytics measures interactions and selected value events only. It does not prove customer outcomes, revenue recovery, retention, CAC, LTV, or market traction until real cohort evidence exists.
