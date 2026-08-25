@@ -26,9 +26,26 @@ const PRODUCT_METADATA_KEY = "klinikos_product_key";
 const CHECKOUT_TTL_MS = 23 * 60 * 60 * 1000;
 const ACTIVATION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
+/**
+ * A refusal Klinikos authored, as opposed to something that went wrong.
+ *
+ * Every message constructed here is written for the person reading it and names a
+ * governed condition — a plan that is not purchasable, an amount that does not match the
+ * server-owned price, a test-mode event on the live rail. None of them interpolate an
+ * upstream Stripe error or internal state, which is what makes them safe to return.
+ *
+ * `publicMessage` exists so that safety is a contract rather than a convention. Routes
+ * return this field, never `.message`, so anyone tempted to build a message out of an
+ * upstream failure has to decide deliberately that the result is fit for a browser.
+ */
 export class StripeClinicSubscriptionError extends Error {
   constructor(message: string, readonly status = 400) {
     super(message);
+  }
+
+  /** The message, declared fit for browser delivery. */
+  get publicMessage(): string {
+    return this.message;
   }
 }
 
