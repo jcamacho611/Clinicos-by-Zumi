@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       }
       return json({ received: true, supported: true, recurring: true, ...recurring });
     } catch (error) {
-      if (error instanceof StripeClinicSubscriptionError) return json({ error: error.message }, error.status >= 500 ? error.status : 409);
+      if (error instanceof StripeClinicSubscriptionError) return json({ error: error.publicMessage }, error.status >= 500 ? error.status : 409);
       return json({ error: "Stripe subscription evidence could not be processed." }, 500);
     }
   }
