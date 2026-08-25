@@ -1,28 +1,29 @@
 -- Immutable BodyMap persistence foundation.
 -- Comparison roles such as initial/previous/today are derived at read time and are
 -- intentionally absent from persistent clinical state.
+--
+-- This migration is idempotent because production schema reconciliation may create
+-- these objects before Prisma records the migration. Re-running must converge safely.
 
-CREATE TYPE "BodyMapLaterality" AS ENUM (
-  'left',
-  'right',
-  'bilateral',
-  'midline',
-  'not_applicable'
-);
+DO $$
+BEGIN
+  CREATE TYPE "BodyMapLaterality" AS ENUM ('left','right','bilateral','midline','not_applicable');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "BodyMapFindingState" AS ENUM (
-  'active',
-  'resolved'
-);
+DO $$
+BEGIN
+  CREATE TYPE "BodyMapFindingState" AS ENUM ('active','resolved');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "BodyMapCaptureSource" AS ENUM (
-  'clinical_capture',
-  'staff_intake',
-  'provider_review',
-  'structured_import'
-);
+DO $$
+BEGIN
+  CREATE TYPE "BodyMapCaptureSource" AS ENUM ('clinical_capture','staff_intake','provider_review','structured_import');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "body_map_versions" (
+CREATE TABLE IF NOT EXISTS "body_map_versions" (
   "id" TEXT NOT NULL,
   "organizationId" TEXT NOT NULL,
   "patientId" TEXT NOT NULL,
@@ -32,11 +33,10 @@ CREATE TABLE "body_map_versions" (
   "source" "BodyMapCaptureSource" NOT NULL DEFAULT 'clinical_capture',
   "amendsVersionId" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
   CONSTRAINT "body_map_versions_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "body_map_findings" (
+CREATE TABLE IF NOT EXISTS "body_map_findings" (
   "id" TEXT NOT NULL,
   "bodyMapVersionId" TEXT NOT NULL,
   "findingKey" TEXT NOT NULL,
@@ -50,35 +50,46 @@ CREATE TABLE "body_map_findings" (
   "annotations" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   "sourceObservation" JSONB,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
   CONSTRAINT "body_map_findings_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "body_map_findings_severity_check"
-    CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10)),
-  CONSTRAINT "body_map_findings_resolved_severity_check"
-    CHECK ("clinicalState" <> 'resolved' OR "severity" IS NULL OR "severity" = 0)
+  CONSTRAINT "body_map_findings_severity_check" CHECK ("severity" IS NULL OR ("severity" >= 0 AND "severity" <= 10)),
+  CONSTRAINT "body_map_findings_resolved_severity_check" CHECK ("clinicalState" <> 'resolved' OR "severity" IS NULL OR "severity" = 0)
 );
 
-CREATE INDEX "body_map_versions_organizationId_patientId_capturedAt_idx"
+CREATE INDEX IF NOT EXISTS "body_map_versions_organizationId_patientId_capturedAt_idx"
   ON "body_map_versions"("organizationId", "patientId", "capturedAt");
-
-CREATE INDEX "body_map_versions_organizationId_encounterId_capturedAt_idx"
+CREATE INDEX IF NOT EXISTS "body_map_versions_organizationId_encounterId_capturedAt_idx"
   ON "body_map_versions"("organizationId", "encounterId", "capturedAt");
-
-CREATE INDEX "body_map_versions_organizationId_amendsVersionId_idx"
+CREATE INDEX IF NOT EXISTS "body_map_versions_organizationId_amendsVersionId_idx"
   ON "body_map_versions"("organizationId", "amendsVersionId");
-
-CREATE UNIQUE INDEX "body_map_findings_bodyMapVersionId_findingKey_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "body_map_findings_bodyMapVersionId_findingKey_key"
   ON "body_map_findings"("bodyMapVersionId", "findingKey");
-
-CREATE INDEX "body_map_findings_bodyMapVersionId_bodyRegion_laterality_idx"
+CREATE INDEX IF NOT EXISTS "body_map_findings_bodyMapVersionId_bodyRegion_laterality_idx"
   ON "body_map_findings"("bodyMapVersionId", "bodyRegion", "laterality");
 
-ALTER TABLE "body_map_versions"
-  ADD CONSTRAINT "body_map_versions_amendsVersionId_fkey"
-  FOREIGN KEY ("amendsVersionId") REFERENCES "body_map_versions"("id")
-  ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'body_map_versions_amendsVersionId_fkey'
+      AND conrelid = '"body_map_versions"'::regclass
+  ) THEN
+    ALTER TABLE "body_map_versions"
+      ADD CONSTRAINT "body_map_versions_amendsVersionId_fkey"
+      FOREIGN KEY ("amendsVersionId") REFERENCES "body_map_versions"("id")
+      ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+END $$;
 
-ALTER TABLE "body_map_findings"
-  ADD CONSTRAINT "body_map_findings_bodyMapVersionId_fkey"
-  FOREIGN KEY ("bodyMapVersionId") REFERENCES "body_map_versions"("id")
-  ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'body_map_findings_bodyMapVersionId_fkey'
+      AND conrelid = '"body_map_findings"'::regclass
+  ) THEN
+    ALTER TABLE "body_map_findings"
+      ADD CONSTRAINT "body_map_findings_bodyMapVersionId_fkey"
+      FOREIGN KEY ("bodyMapVersionId") REFERENCES "body_map_versions"("id")
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
