@@ -6,10 +6,10 @@ import {
   eduCommercialRule,
   eduPlans,
   gridCommercialRule,
-  klinikosCommercialContact,
   serviceCommercialRule,
   serviceEngagements,
 } from "@/lib/commercial/klinikos-commercial";
+import { klinikosCommercialContact } from "@/lib/commercial/klinikos-commercial-contact";
 import { GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
 
 export const metadata: Metadata = {

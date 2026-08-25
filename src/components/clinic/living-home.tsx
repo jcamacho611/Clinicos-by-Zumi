@@ -20,11 +20,13 @@ import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity, RailDestination } from "@/lib/home/operating-rail";
-import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
-import { resolveSurfaceLookup } from "@/features/zumi/deterministic-answer";
-import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
+import {
+  findPathPresentation,
+  type PathPresentation,
+  type SurfaceAnswerView,
+} from "@/lib/home/path-presentation";
+import type { PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
-import { getKlinikosPath } from "@/lib/paths/catalog";
 import type { Appointment } from "@/lib/types";
 
 /** What the server observed about the model provider. Copied, never inferred. */
@@ -136,6 +138,7 @@ export function LivingHome({
   appointments,
   recentSignals,
   initialPaths,
+  initialPathPresentations,
   initialGuidance,
   intelligence,
   rail,
@@ -152,6 +155,7 @@ export function LivingHome({
   appointments: Appointment[];
   recentSignals: LivingPathSignal[];
   initialPaths: PersistedPathSnapshot[];
+  initialPathPresentations: PathPresentation[];
   initialGuidance: PathGuidanceView[];
   intelligence: IntelligenceRailStatus;
   rail: RailDestination[];
@@ -164,12 +168,13 @@ export function LivingHome({
 }) {
   const [draft, setDraft] = useState("");
   const [paths, setPaths] = useState(initialPaths);
+  const [pathPresentations, setPathPresentations] = useState(initialPathPresentations);
   const [guidance, setGuidance] = useState(initialGuidance);
   const [phase, setPhase] = useState<Phase>("listening");
   const [working, setWorking] = useState(false);
   const [failed, setFailed] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
-  const [surfaceAnswer, setSurfaceAnswer] = useState<{ answer: string; label: string; href: string } | null>(null);
+  const [surfaceAnswer, setSurfaceAnswer] = useState<SurfaceAnswerView | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeInstanceId, setActiveInstanceId] = useState<string | null>(null);
   const [attentionCount, setAttentionCount] = useState(0);
@@ -184,10 +189,7 @@ export function LivingHome({
     () => guidance.find((item) => item.instanceId === activeInstanceId) ?? null,
     [guidance, activeInstanceId],
   );
-  const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
-  const activeRuntime = activeSnapshot
-    ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
-    : null;
+  const activePresentation = findPathPresentation(pathPresentations, activeInstanceId);
 
   const activeDestination = destinationForHref(activeGuidance?.href ?? null, rail);
   const phaseIndex = PHASES.indexOf(phase);
@@ -196,16 +198,16 @@ export function LivingHome({
   // Every row is read off the Path the server actually created. Nothing is padded to
   // fill the panel: a Path with no blockers shows no blocker rows.
   const workspaceRows = useMemo<WorkspaceRow[]>(() => {
-    if (!activeSnapshot || !activeDefinition) return [];
+    if (!activeSnapshot || !activePresentation) return [];
     const rows: WorkspaceRow[] = [
-      { key: "outcome", label: "Outcome", value: activeDefinition.title, state: "Organized", tone: "neutral" },
+      { key: "outcome", label: "Outcome", value: activePresentation.title, state: "Organized", tone: "neutral" },
       { key: "goal", label: "What you asked", value: activeSnapshot.goal, state: "Recorded", tone: "neutral" },
     ];
-    if (activeRuntime) {
+    if (activePresentation) {
       rows.push({
         key: "progress",
         label: "Progress",
-        value: `${Math.round(activeRuntime.progress * 100)}% complete`,
+        value: `${activePresentation.progressPercent}% complete`,
         state: activeGuidance ? guidanceStateLabel(activeGuidance.state) : "In progress",
         tone: activeGuidance?.state === "blocked" ? "blocked" : activeGuidance?.state === "completed" ? "settled" : "open",
       });
@@ -220,7 +222,7 @@ export function LivingHome({
       });
     }
     return rows;
-  }, [activeSnapshot, activeDefinition, activeRuntime, activeGuidance]);
+  }, [activeSnapshot, activePresentation, activeGuidance]);
 
   const reset = useCallback(() => {
     setWorking(false);
@@ -250,52 +252,68 @@ export function LivingHome({
     setDraft("");
     workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-    // Understanding: deterministic intent resolution. No model is involved here, which
-    // is exactly why the composer keeps working on a deployment with no provider.
+    // Understanding: Klinikos resolves what was asked. Still deterministic and still
+    // model-free, which is why the composer keeps working on a deployment with no
+    // provider — but the resolution happens on the server. The intent taxonomy, the
+    // Path catalog and the check for which surfaces this person may open are all
+    // orchestration, and none of them belong in a browser that the user controls.
     setPhase("understanding");
-    const resolved = resolveIntentDeterministically(text);
-    const pathId = resolved.candidatePathIds[0] ?? null;
-    if (!pathId) {
-      setPhase("ready");
-      // Not every sentence is a journey. "Who hasn't completed intake tomorrow?" is a
-      // question about a list, and the honest answer is the surface that holds it — the
-      // same answer the Zumi conversation gives, from the same shared lookup. Demanding
-      // "the outcome rather than the topic" turned a clear question into an
-      // interrogation, which is the conversational bureaucracy this composer exists to
-      // avoid.
-      const surface = resolveSurfaceLookup(text, role);
-      if (surface) {
-        setClarification(null);
-        setSurfaceAnswer(surface);
-        say("Klinikos", surface.answer);
-        return;
-      }
-      setClarification(resolved.clarificationQuestions[0] ?? "Klinikos needs one more detail before it can help with that.");
-      say("Klinikos", "Tell me what you are trying to get done and I will take you to the right place.");
-      return;
-    }
-
     setPhase("connecting");
     try {
       const response = await fetch("/api/paths", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pathId, goal: text }),
+        body: JSON.stringify({ text }),
       });
       setPhase("preparing");
-      const payload = await response.json() as { data?: PersistedPathSnapshot; guidance?: PathGuidanceView | null; error?: string };
-      if (!response.ok || !payload.data) throw new Error(payload.error || "Klinikos could not start that yet.");
+      const payload = await response.json() as {
+        outcome?: "path" | "surface" | "clarification";
+        data?: PersistedPathSnapshot;
+        guidance?: PathGuidanceView | null;
+        presentation?: PathPresentation | null;
+        surface?: SurfaceAnswerView;
+        question?: string;
+        clarification?: string | null;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "Klinikos could not start that yet.");
+
+      // Not every sentence is a journey. "Who hasn't completed intake tomorrow?" is a
+      // question about a list, and the honest answer is the surface that holds it.
+      if (payload.outcome === "surface" && payload.surface) {
+        setPhase("ready");
+        setClarification(null);
+        setSurfaceAnswer(payload.surface);
+        say("Klinikos", payload.surface.answer);
+        return;
+      }
+
+      if (payload.outcome === "clarification") {
+        setPhase("ready");
+        setClarification(payload.question ?? "Klinikos needs one more detail before it can help with that.");
+        say("Klinikos", "Tell me what you are trying to get done and I will take you to the right place.");
+        return;
+      }
+
+      if (!payload.data) throw new Error(payload.error || "Klinikos could not start that yet.");
 
       const snapshot = payload.data;
       setPaths((current) => [snapshot, ...current.filter((path) => path.instanceId !== snapshot.instanceId)]);
+      if (payload.presentation) {
+        const presentation = payload.presentation;
+        setPathPresentations((current) => [
+          presentation,
+          ...current.filter((entry) => entry.instanceId !== presentation.instanceId),
+        ]);
+      }
       if (payload.guidance) {
         setGuidance((current) => [payload.guidance!, ...current.filter((item) => item.instanceId !== payload.guidance!.instanceId)]);
       }
       setActiveInstanceId(snapshot.instanceId);
       setPhase("ready");
       say("Klinikos", payload.guidance?.reason ?? "This is organized. The next safe step is below.");
-      if (resolved.requiresClarification && resolved.clarificationQuestions[0]) {
-        setClarification(resolved.clarificationQuestions[0]);
+      if (payload.clarification) {
+        setClarification(payload.clarification);
       }
     } catch (error) {
       setFailed(true);
@@ -471,7 +489,7 @@ export function LivingHome({
                     {organizationName} · {roleLabel(role)}
                   </span>
                   <h2 className="text-lg font-semibold tracking-[var(--tracking-tight)]" id="workspace-title">
-                    {phase === "ready" ? activeDefinition?.title ?? "One more detail" : "Working…"}
+                    {phase === "ready" ? activePresentation?.title ?? "One more detail" : "Working…"}
                   </h2>
                 </div>
                 <button
@@ -581,6 +599,7 @@ export function LivingHome({
                 onCount={setAttentionCount}
                 opportunity={opportunity}
                 paths={paths}
+                pathPresentations={pathPresentations}
                 recentSignals={recentSignals}
                 role={role}
               />

@@ -1,9 +1,5 @@
 export const KLINIKOS_GODADDY_PAYLINK = "https://f7b959c2-9748-4f7e-9247-7bea69624c5f.paylinks.godaddy.com/";
 
-export const klinikosCommercialContact = {
-  email: process.env.KLINIKOS_SALES_EMAIL ?? process.env.KLINIKOS_CONTACT_EMAIL ?? "",
-};
-
 export const clinicCommercialOffers = {
   privateWorkflowReview: {
     key: "private_workflow_demo",
