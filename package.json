@@ -7,6 +7,7 @@
     "build": "node scripts/capture-release.mjs && prisma generate && next build",
     "postinstall": "node scripts/postinstall.mjs",
     "render:build": "node scripts/render-build.mjs",
+    "release:status": "node scripts/release/check-production-currency.mjs",
     "start": "node scripts/start.mjs",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
