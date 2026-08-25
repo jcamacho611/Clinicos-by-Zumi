@@ -9,6 +9,12 @@ function read(relativePath: string) {
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
 }
 
+function withoutTypeOnlyImports(source: string) {
+  return source
+    .replace(/import\s+type\b[\s\S]*?\bfrom\s*["'][^"']+["']\s*;?/g, "")
+    .replace(/export\s+type\b[\s\S]*?\bfrom\s*["'][^"']+["']\s*;?/g, "");
+}
+
 describe("Living Home server authority boundary", () => {
   it("keeps the browser-safe view model free of orchestration/runtime authority", () => {
     const source = read("src/lib/home/living-home-view-model.ts");
@@ -29,6 +35,8 @@ describe("Living Home server authority boundary", () => {
     expect(source).toContain("projectLivingHomePaths");
     expect(source).toContain("resolvePathRuntime");
     expect(source).toContain("getKlinikosPath");
+    expect(source).not.toContain("alternatives:");
+    expect(source).not.toContain("capabilityKey:");
   });
 
   it("adds an authenticated command endpoint that owns intent and Path selection", () => {
@@ -45,6 +53,11 @@ describe("Living Home server authority boundary", () => {
     expect(source).not.toContain("organizationId:");
     expect(source).not.toContain("userId:");
     expect(source).not.toContain("pathId: z.");
+
+    const permissionCall = source?.indexOf('enforceApiPermission(session, "tasks", "create"') ?? -1;
+    const persistenceCall = source?.indexOf("createPathInstance(session, { pathId, goal: text })") ?? -1;
+    expect(permissionCall).toBeGreaterThan(-1);
+    expect(persistenceCall).toBeGreaterThan(permissionCall);
   });
 
   it("projects initial Paths on the dashboard before serialization", () => {
@@ -55,7 +68,7 @@ describe("Living Home server authority boundary", () => {
     expect(source).not.toContain("initialGuidance={pathGuidance}");
   });
 
-  it("keeps proprietary orchestration out of Living Home Client Components", () => {
+  it("keeps proprietary runtime orchestration out of Living Home Client Components", () => {
     for (const file of [
       "src/components/clinic/living-home.tsx",
       "src/components/clinic/living-home-operations.tsx",
@@ -63,10 +76,11 @@ describe("Living Home server authority boundary", () => {
       const source = read(file);
       expect(source, file).not.toBeNull();
       expect(source, file).toContain('"use client"');
-      expect(source, file).not.toMatch(/from ["']@\/lib\/orchestration\//);
-      expect(source, file).not.toContain("resolveIntentDeterministically");
-      expect(source, file).not.toContain("resolvePathRuntime");
-      expect(source, file).not.toContain("getKlinikosPath");
+      const runtimeSource = withoutTypeOnlyImports(source ?? "");
+      expect(runtimeSource, file).not.toMatch(/from ["']@\/lib\/orchestration\//);
+      expect(runtimeSource, file).not.toContain("resolveIntentDeterministically");
+      expect(runtimeSource, file).not.toContain("resolvePathRuntime");
+      expect(runtimeSource, file).not.toContain("getKlinikosPath");
     }
   });
 
