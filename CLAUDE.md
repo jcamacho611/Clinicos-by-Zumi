@@ -54,19 +54,20 @@ Before material work, read current repository/runtime truth and then read these 
 22. `src/lib/company-operating-canon.ts`
 23. `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md`
 24. `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md`
-25. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
-26. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
-27. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
-28. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
-29. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
-30. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
-31. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
-32. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
-33. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
-34. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
-35. `src/lib/public-capability-registry.ts`
-36. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
-37. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
+25. `governance/KLINIKOS_CAPITAL_AND_BANKABILITY_PROGRAM.md`
+26. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
+27. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
+28. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
+29. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
+30. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
+31. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
+32. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
+33. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
+34. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
+35. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
+36. `src/lib/public-capability-registry.ts`
+37. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
+38. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
 
 Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Company governance determines **how the company must operate while building and selling it**. Source-locked requirements determine **what user needs may not silently disappear**.
 
@@ -128,6 +129,8 @@ Product work and company work are one value system. Every material initiative mu
 Use `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md` to preserve company truth with evidence, source, date, owner, status and next action rather than relying on chat memory.
 
 Use `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md` for material roadmap, capital, partnership, enterprise, pricing, market-entry and irreversible architecture decisions.
+
+Use `governance/KLINIKOS_CAPITAL_AND_BANKABILITY_PROGRAM.md` to research, rank, prepare and sequence customer, non-dilutive, accelerator/equity, debt and strategic-capital opportunities without creating shadow capital truth or wasting credit inquiries.
 
 The company value loop is:
 
