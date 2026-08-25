@@ -30,6 +30,29 @@ const rolePrimaryNavigation: Record<ClinicRole, readonly PrimaryNavigationItem[]
     { href: "/encounters", label: "Care", icon: "ClipboardPlus" },
     { href: "/labs", label: "Results", icon: "FlaskConical" },
   ],
+  // The three licensure-distinct clinical roles share the same destinations: the
+  // difference between them is authority, not navigation. Splitting the menus would
+  // imply a capability difference the permission model does not actually make.
+  medical_assistant: [
+    { href: "/dashboard", label: "Home", icon: "LayoutDashboard" },
+    { href: "/front-desk", label: "Today", icon: "CalendarDays" },
+    { href: "/patients", label: "Patients", icon: "Users" },
+    { href: "/tasks", label: "Tasks", icon: "ListChecks" },
+  ],
+  licensed_practical_nurse: [
+    { href: "/dashboard", label: "Home", icon: "LayoutDashboard" },
+    { href: "/front-desk", label: "Today", icon: "CalendarDays" },
+    { href: "/patients", label: "Patients", icon: "Users" },
+    { href: "/tasks", label: "Tasks", icon: "ListChecks" },
+    { href: "/referrals", label: "Care", icon: "Waypoints" },
+  ],
+  registered_nurse: [
+    { href: "/dashboard", label: "Home", icon: "LayoutDashboard" },
+    { href: "/front-desk", label: "Today", icon: "CalendarDays" },
+    { href: "/patients", label: "Patients", icon: "Users" },
+    { href: "/tasks", label: "Tasks", icon: "ListChecks" },
+    { href: "/referrals", label: "Care", icon: "Waypoints" },
+  ],
   clinical_staff: [
     { href: "/dashboard", label: "Home", icon: "LayoutDashboard" },
     { href: "/front-desk", label: "Today", icon: "CalendarDays" },

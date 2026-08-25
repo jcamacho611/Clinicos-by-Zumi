@@ -15,6 +15,7 @@ import { Badge, DsSurface, ZumiOrb, type ZumiState } from "@/components/ds";
 import { LivingHomeOperations } from "@/components/clinic/living-home-operations";
 import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import { VoiceInputButton } from "@/components/clinic/voice-input";
+import { roleLabel } from "@/lib/auth/rbac";
 import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
@@ -74,14 +75,6 @@ type TranscriptEntry = {
   speaker: "You" | "Klinikos";
   text: string;
 };
-
-function roleLabel(role: ClinicRole) {
-  if (role === "clinic_owner") return "Clinic owner";
-  if (role === "front_desk") return "Front desk";
-  if (role === "case_manager") return "Case manager";
-  if (role === "clinical_staff") return "Clinical staff";
-  return role.replaceAll("_", " ");
-}
 
 function guidanceStateLabel(state: PathGuidanceView["state"]) {
   if (state === "blocked") return "Blocked";
