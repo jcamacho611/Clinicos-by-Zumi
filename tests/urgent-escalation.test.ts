@@ -4,9 +4,15 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const findFirst = vi.fn();
 const create = vi.fn();
+const findUsers = vi.fn();
+const notifyMany = vi.fn();
 
 vi.mock("@/lib/db", () => ({
-  db: { escalation: { findFirst: (...args: unknown[]) => findFirst(...args), create: (...args: unknown[]) => create(...args) } },
+  db: {
+    escalation: { findFirst: (...args: unknown[]) => findFirst(...args), create: (...args: unknown[]) => create(...args) },
+    user: { findMany: (...args: unknown[]) => findUsers(...args) },
+    notification: { createMany: (...args: unknown[]) => notifyMany(...args) },
+  },
 }));
 
 const { describeUrgentHandoff, recordUrgentSignalEscalation, URGENT_SIGNAL_SOURCE_TYPE } =
@@ -28,6 +34,10 @@ const session = {
 beforeEach(() => {
   findFirst.mockReset();
   create.mockReset();
+  findUsers.mockReset();
+  notifyMany.mockReset();
+  findUsers.mockResolvedValue([{ id: "owner-1" }, { id: "provider-1" }]);
+  notifyMany.mockResolvedValue({ count: 2 });
 });
 
 describe("urgent signal escalation", () => {
@@ -91,6 +101,69 @@ describe("urgent signal escalation", () => {
     await expect(recordUrgentSignalEscalation(session, "life_threatening")).resolves.toEqual({
       recorded: false,
       reason: "unavailable",
+    });
+  });
+});
+
+describe("reaching someone who is not looking at the queue", () => {
+  it("notifies active owners and providers about a life-threatening signal", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+
+    await recordUrgentSignalEscalation(session, "life_threatening");
+
+    expect(findUsers.mock.calls[0][0].where.roleKey.in).toEqual(["clinic_owner", "provider"]);
+    expect(findUsers.mock.calls[0][0].where.status).toBe("active");
+    expect(notifyMany).toHaveBeenCalledTimes(1);
+    expect(notifyMany.mock.calls[0][0].data).toHaveLength(2);
+  });
+
+  it("carries no name, no patient, and nothing that was typed", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+
+    await recordUrgentSignalEscalation(session, "life_threatening");
+    const notification = notifyMany.mock.calls[0][0].data[0];
+
+    expect(notification.body).not.toContain("Nadja");
+    expect(notification.body).toContain("nobody has been contacted");
+    expect(notification.title).not.toMatch(/\b(?:alerted|notified|on the way)\b/i);
+  });
+
+  /**
+   * A deliberate exception, not an oversight. The person typing is a member of staff,
+   * and broadcasting that a named colleague may be suicidal has employment and stigma
+   * consequences nobody consented to. The escalation still exists and still surfaces.
+   */
+  it("does not broadcast a self-harm signal to every owner and provider", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+
+    const outcome = await recordUrgentSignalEscalation(session, "self_harm");
+
+    expect(outcome).toMatchObject({ recorded: true });
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(notifyMany).not.toHaveBeenCalled();
+  });
+
+  it("does not re-notify when joining an escalation already open", async () => {
+    findFirst.mockResolvedValue({ id: "esc-existing" });
+
+    await recordUrgentSignalEscalation(session, "life_threatening");
+
+    expect(notifyMany).not.toHaveBeenCalled();
+  });
+
+  it("still reports the escalation as recorded when notification fails", async () => {
+    // The escalation already exists by then. Reporting it as unrecorded would be worse.
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+    notifyMany.mockRejectedValue(new Error("notification table unavailable"));
+
+    await expect(recordUrgentSignalEscalation(session, "life_threatening")).resolves.toEqual({
+      recorded: true,
+      escalationId: "esc-1",
+      alreadyOpen: false,
     });
   });
 });
