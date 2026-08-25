@@ -1,10 +1,33 @@
 # Production Migration Reconciliation — 2026-08-25
 
-Status: **PREPARED — AWAITING HUMAN AUTHORIZATION AND EXECUTION**
+Status: **SUPERSEDED AS THE PRIMARY PATH — RETAINED AS THE FALLBACK AND AS THE RECORD OF
+PRODUCTION STATE**
 
 This runbook is written for a human operator with production database credentials. No
 agent may execute it, and no agent may set `KLINIKOS_ALLOW_MIGRATION_DEPLOY` to force
 the deploy past the gate.
+
+## Update — what changed after this was written
+
+Render no longer requires a human to apply these four migrations by hand. A governed
+approval path now exists: `scripts/render-build.mjs` builds first, reads migration
+status, and applies a pending migration automatically **only** when that migration
+carries an approved, checksum-matched `production-release.json` and contains no
+destructive SQL. Everything else still fails closed.
+
+That path did not restore deploys on its own. Only one of the four pending migrations
+carried an approval manifest, and the gate validates *every* pending migration before it
+applies any, so it refused each build — production stayed on `43511f78`. All four
+migrations are now approved and replay-safe, and
+`tests/production-migration-policy.test.mjs` asserts approval coverage against the real
+repository so a future pending migration cannot silently reintroduce the freeze.
+
+**The normal path is now: merge to `main` → Render builds → approved additive migrations
+apply → deploy.** Sections 3–7 below remain the correct procedure when a migration is
+*not* eligible for automatic approval — anything destructive, anything altering an
+existing table, or any state where §3's decision gate stops you. Section 2's pending set
+and risk analysis remain the record of production state as observed on 2026-08-25, and
+`prisma/migrations/production-baseline.json` records the last migration observed applied.
 
 ---
 
