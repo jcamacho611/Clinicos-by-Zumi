@@ -10,6 +10,8 @@ import {
 } from "@/lib/clinical/close-visit-resolution";
 import type { PatientVital } from "@/lib/clinical/vital-types";
 import { handoffAttributionFor, type ClinicalRecorder, type HandoffAttribution } from "@/lib/clinical/staff-handoff-attribution";
+import { buildCurrentVisitChange, summariseClinicalChange, type CurrentVisitChangeState } from "@/lib/clinical/current-visit-change";
+import type { BodyMapVersion } from "@/lib/clinical/body-map-types";
 import { vitalHasMeasurement } from "@/lib/clinical/vital-types";
 import type { Encounter, Patient } from "@/lib/types";
 
@@ -92,7 +94,12 @@ export interface CurrentVisitCloseState {
 export interface CurrentVisitModel {
   sectionOrder: CurrentVisitSectionKey[];
   patientSnapshot: CurrentVisitPatientSnapshot;
-  change: CurrentVisitUnavailableState;
+  /**
+   * Longitudinal change. Previously a hardcoded "not captured" placeholder that ignored
+   * the chart entirely; now derived from persisted body map versions when they exist.
+   */
+  change: CurrentVisitChangeState;
+  changeSummary: string;
   staffHandoff: CurrentVisitStaffHandoffState;
   closeVisit: CurrentVisitCloseState;
 }
@@ -109,6 +116,8 @@ export interface CurrentVisitContext {
   vital?: PatientVital | null;
   /** Null until the vitals record persists who took the measurement. */
   vitalRecorder?: ClinicalRecorder | null;
+  /** The two body map versions being compared, when the chart holds them. */
+  bodyMap?: { previous: BodyMapVersion | null; current: BodyMapVersion | null } | null;
   medicationReconciliation?: CurrentVisitMedicationReconciliation | null;
   closeEvaluation?: Partial<CurrentVisitCloseEvaluation>;
 }
@@ -202,6 +211,11 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
     ...closeEvaluation,
   });
 
+  const change = buildCurrentVisitChange({
+    previous: context.bodyMap?.previous ?? null,
+    current: context.bodyMap?.current ?? null,
+  });
+
   return {
     sectionOrder: [...CURRENT_VISIT_SECTION_ORDER],
     patientSnapshot: {
@@ -222,10 +236,8 @@ export function buildCurrentVisitModel(patient: Patient, encounter: Encounter, c
       provider: patient.provider,
       location: patient.location,
     },
-    change: {
-      status: "not_available",
-      message: "Structured longitudinal change has not been captured for this encounter yet. Review the chart for prior clinical context.",
-    },
+    change,
+    changeSummary: summariseClinicalChange(change),
     staffHandoff: buildStaffHandoff(context.vital, context.medicationReconciliation, context.vitalRecorder),
     closeVisit: {
       missingRequiredSections,
