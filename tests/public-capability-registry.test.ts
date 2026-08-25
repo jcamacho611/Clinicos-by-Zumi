@@ -47,12 +47,6 @@ describe("public capability discovery registry", () => {
   it("covers the major ecosystem acquisition families", () => {
     const ids = new Set(publicCapabilityRegistry.map((item) => item.id));
 
-    expect(ids).toEqual(
-      expect.objectContaining({
-        has: expect.any(Function),
-      }),
-    );
-
     for (const id of [
       "ehr-emr",
       "telemedicine",
