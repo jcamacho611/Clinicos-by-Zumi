@@ -46,8 +46,29 @@ Before material work, read current repository/runtime truth and then read these 
 22. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
 23. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
 24. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
+25. `governance/KLINIKOS_FINAL_FORM_MASTER_BUILD_HANDOFF.md`
+26. `governance/KLINIKOS_FINAL_ECOSYSTEM_ARCHITECTURE.md`
+
+Then, for the domain you are changing, read the relevant file(s) under `governance/systems/` and every cross-domain contract under `governance/interfaces/` that the change touches.
 
 Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Source-locked requirements determine **what user needs may not silently disappear**.
+
+## Final ecosystem blueprint law
+
+The final-form handoff and system blueprints are target architecture, not implementation-status claims.
+
+For every major implementation tranche:
+
+1. identify the owning system blueprint
+2. identify every interface registry touched
+3. map current repository code to the target architecture
+4. preserve working authority
+5. explicitly list gaps
+6. implement one vertical slice
+7. update source-locked requirement status
+8. update feature/integration truth only when verified
+
+Do not build from the blueprint by creating parallel services when current code already owns the responsibility under another name.
 
 ## Three truth classes
 
@@ -110,6 +131,8 @@ Use autonomy levels:
 - L4 explicitly authorized low-risk deterministic autopilot
 - L5 prohibited autonomy for diagnosis, clinical signature, prescription authority, professional licensure, patient consent, high-risk clinical judgment, unauthorized payments or other authority that must remain human/deterministic/external.
 
+Every Zumi tool must map to a real owning-domain command and the rules in `governance/interfaces/ZUMI_TOOL_AND_AUTONOMY_REGISTRY.md`.
+
 ## Vendor replacement law
 
 For every external vendor/system classify:
@@ -117,6 +140,14 @@ For every external vendor/system classify:
 `CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE`, or `NEVER REPLACE` where recreating an authoritative/regulatory rail is irrational.
 
 Own the customer workflow first. Make external providers swappable adapters. Internalize high-value layers when customer value, margin, retention, reliability and regulatory feasibility justify it.
+
+Integration runtime truth follows `governance/interfaces/INTEGRATION_LIFECYCLE_REGISTRY.md` and current `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+
+## Pricing / entitlement law
+
+Public pages do not own price or feature entitlement.
+
+Use the current commercial canon together with `governance/interfaces/OFFER_AND_ENTITLEMENT_REGISTRY.md` and Financial OS. Proposed prices/bundles never become active merely because a design document mentions them.
 
 ## Hyperscale strategy law
 
@@ -167,9 +198,11 @@ Agents must proactively identify and schedule them at the correct dependency poi
 1. Fetch current `main` and record exact SHA.
 2. Inspect relevant open PRs and recent commits.
 3. Reconcile current implementation with source-locked requirements.
-4. Identify the single vertical slice being advanced.
-5. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
-6. For architectural work, present design and obtain approval before implementation.
+4. Read the owning `governance/systems/` blueprint.
+5. Read the relevant `governance/interfaces/` contracts.
+6. Identify the single vertical slice being advanced.
+7. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
+8. For architectural work, present design and obtain approval before implementation.
 
 ## During implementation
 
@@ -192,13 +225,16 @@ A route, component, mock, adapter or browser redirect alone is not completion.
 Report:
 
 - exact main/head SHA used
+- system blueprint advanced
+- interface contracts touched
+- source-locked requirements advanced
 - what changed
 - what was verified
 - what remains blocked
-- source-locked requirements advanced
+- feature/integration truth changes, if any
 - new opportunities discovered
 - risks introduced/reduced
 - commercial/customer value
-- next dependency-ordered action
+- exactly one next dependency-ordered action
 
 Do not end with generic “more research.”
