@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260823200000_body_map_persistence_v1",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "b52e3eedf43e246114fc3b0e15d2bd9213c60a9b810148a922ba12b04f58c334",
+  "approvalReference": "Production migration approval and P0 release recovery, 2026-08-25"
+}
