@@ -276,7 +276,7 @@ export function EncounterEditor({ canSign, clinicalEvidence, encounter, medicati
     <div className="grid gap-5 lg:grid-cols-2">
       <Card className="p-5">
         <p className="text-sm font-extrabold text-slate-950">What changed</p>
-        <p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.change.message}</p>
+        <p className="mt-2 text-[12px] leading-5 text-slate-500">{visit.changeSummary}</p>
         <Link className="mt-3 inline-flex text-[11px] font-extrabold text-teal-700 hover:text-teal-900" href={`/patients/${patient.id}`}>Review longitudinal chart →</Link>
       </Card>
       <Card className="p-5">

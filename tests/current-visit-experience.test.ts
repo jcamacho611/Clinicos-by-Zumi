@@ -26,8 +26,11 @@ describe("Current Visit encounter experience", () => {
     expect(editor).toContain('AI may prepare a draft, never a final clinical note.');
   });
 
-  it("does not pretend the future change graph or staff intake snapshot is already implemented", () => {
-    expect(editor).toContain('visit.change.message');
+  it("states change and staff intake from derived truth rather than fabricating either", () => {
+    // The change graph is no longer a hardcoded placeholder: it is derived from
+    // persisted body map versions, and reports a baseline, a comparison, or nothing
+    // recorded. What must not change is that neither section invents a conclusion.
+    expect(editor).toContain('visit.changeSummary');
     expect(editor).toContain('visit.staffHandoff.message');
     expect(editor).not.toContain('AI detected improvement');
     expect(editor).not.toContain('Staff handoff complete');
