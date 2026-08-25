@@ -2,27 +2,26 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the current free continuity check into a shareable no-PHI Operating Map that demonstrates Klinikos value, qualifies buyer pain, and routes a visitor into the existing real sales/payment path without creating a second CRM or inventing financial analysis.
+**Goal:** Turn the existing free continuity check into a canonical no-PHI Operating Map that demonstrates Klinikos value, qualifies buyer pain, and routes a visitor into the existing real sales/payment path without creating a second CRM or inventing financial analysis.
 
-**Architecture:** Extract the current browser-only gap-selection logic from `landing-funnel.tsx` into a reusable `OperatingMap` domain + component. Add a canonical public `/operating-map` route for SEO/sharing, then let `/klinikos` and homepage CTAs route to it. The map remains deterministic and visitor-input-only; its commercial CTA reuses `POST /api/sales/reservations` and the existing server-owned checkout architecture.
+**Architecture:** Extract the current `GAPS`, `SETTINGS`, and `GAP_ROUTES` from `src/components/marketing/landing-funnel.tsx` into one browser-safe commercial domain module. Build one reusable Operating Map component, publish it at `/operating-map`, use it inside `/klinikos`, and change the homepage clinic-acquisition CTA from `/operational-audit` to `/operating-map`. The commercial CTA reuses `POST /api/sales/reservations`; price/payment authority stays server-side.
 
-**Tech Stack:** Next.js public routes, React, TypeScript, existing Black Label tokens/components, Vitest, current sales reservation and commercial offer modules.
+**Tech Stack:** Next.js public routes, React, TypeScript, existing Black Label tokens/components, Vitest, `src/app/sitemap.ts`, current sales reservation and commercial offer modules.
 
 **Spec:** `docs/superpowers/specs/2026-08-25-klinikos-p0-value-loop-design.md`
 
 ## Global Constraints
 
-- No PHI, patient names, MRNs, diagnoses, claim numbers, production credentials, or clinical free text in Operating Map input.
-- No claim that the tool analyzed a clinic’s systems; it knows only what the visitor selected.
-- No personalized dollar-loss estimate in P0 unless a later calculator has explicit user-provided inputs and clearly labeled math.
+- No PHI, patient names, MRNs, diagnoses, claim numbers, production credentials, clinical free text, or arbitrary user prose in Operating Map input.
+- The map knows only enumerated visitor selections; it must never claim it inspected the visitor’s software, records, revenue, patients, or workflow history.
+- No dollar-loss estimate in P0.
 - Reuse server-owned commercial products/prices and `POST /api/sales/reservations`.
-- Do not create a second lead database, payment authority, or price source.
-- Maintain Marble/Obsidian Black Label design and mobile/accessibility standards.
-- Canonical public copy remains sourced from approved messaging/config where shared messaging already exists.
+- Do not create a second lead database, payment authority, price source, or marketing theme.
+- Free Operating Map and paid Operating Analysis remain visibly different products.
 
 ---
 
-### Task 1: Extract the Operating Map domain from the current continuity check
+### Task 1: Extract the canonical Operating Map domain
 
 **Files:**
 - Create: `src/lib/commercial/operating-map.ts`
@@ -32,6 +31,16 @@
 **Interfaces:**
 
 ```ts
+export const OPERATING_MAP_SETTINGS = [
+  "independent_practice_owner",
+  "practice_manager_administrator",
+  "provider",
+  "clinical_staff",
+  "multi_site_operator",
+  "student_newly_licensed",
+] as const;
+export type OperatingMapSettingKey = typeof OPERATING_MAP_SETTINGS[number];
+
 export const OPERATING_MAP_GAPS = [
   "recall_follow_up",
   "referral_closure",
@@ -43,52 +52,72 @@ export const OPERATING_MAP_GAPS = [
   "coverage_staffing",
   "idle_capacity",
 ] as const;
-
 export type OperatingMapGapKey = typeof OPERATING_MAP_GAPS[number];
 
 export interface OperatingMapFinding {
   key: OperatingMapGapKey;
   label: string;
   engine: "Clinic OS" | "Care" | "Billing" | "Grid";
+  workflow: readonly string[];
   observation: string;
   firstLook: string;
   externalBoundary: string | null;
 }
 
-export function buildOperatingMap(gaps: OperatingMapGapKey[]): OperatingMapFinding[];
+export interface OperatingMapResult {
+  setting: OperatingMapSettingKey;
+  findings: OperatingMapFinding[];
+}
+
+export function parseOperatingMapSelection(value: unknown): {
+  setting: OperatingMapSettingKey;
+  gaps: OperatingMapGapKey[];
+};
+
+export function buildOperatingMap(input: {
+  setting: OperatingMapSettingKey;
+  gaps: OperatingMapGapKey[];
+}): OperatingMapResult;
 ```
 
-- [ ] **Step 1: Write failing deterministic mapping tests**
-
-Example:
+- [ ] **Step 1: Write RED mapping/parser tests**
 
 ```ts
-expect(buildOperatingMap(["referral_closure"])).toEqual([
+expect(buildOperatingMap({
+  setting: "independent_practice_owner",
+  gaps: ["referral_closure"],
+}).findings).toEqual([
   expect.objectContaining({
     label: "Referral closure",
     engine: "Clinic OS",
+    workflow: ["Sent", "Acknowledged", "Scheduled", "Consulted", "Closed"],
     firstLook: expect.stringContaining("acknowledgment"),
   }),
 ]);
+
+expect(() => parseOperatingMapSelection({
+  setting: "independent_practice_owner",
+  gaps: ["referral_closure"],
+  patientName: "not allowed",
+})).toThrow();
 ```
 
-Prove duplicate keys de-duplicate, unknown runtime input is rejected by parser, and zero selections return an empty map rather than a fake diagnosis.
+Also prove duplicate gap keys de-duplicate and zero gaps produce an empty finding list, not a diagnosis.
 
-- [ ] **Step 2: Verify RED**
+- [ ] **Step 2: Run RED**
 
 ```bash
 npm test -- tests/operating-map-model.test.ts
 ```
 
-- [ ] **Step 3: Move existing `GAPS` / `GAP_ROUTES` meaning into the domain module**
+- [ ] **Step 3: Implement strict keyed settings/gaps and migrate current labels/routes into this module**
 
-Preserve the current truth boundary: it is a deterministic restatement of visitor selections.
+Keep current meaning for the nine existing gaps. Add workflow arrays as presentation structure only.
 
-- [ ] **Step 4: Verify GREEN**
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Run GREEN and commit**
 
 ```bash
+npm test -- tests/operating-map-model.test.ts
 git add src/lib/commercial/operating-map.ts tests/operating-map-model.test.ts
 git commit -m "feat(growth): define deterministic Klinikos Operating Map"
 ```
@@ -97,19 +126,18 @@ git commit -m "feat(growth): define deterministic Klinikos Operating Map"
 
 **Files:**
 - Create: `src/components/marketing/operating-map.tsx`
-- Create: `src/components/marketing/operating-map.module.css` if scoped CSS is needed.
+- Create: `src/components/marketing/operating-map.module.css`
 - Create: `tests/operating-map-experience.test.ts`
 
 **Interfaces:**
-- Consumes selected setting + `OperatingMapGapKey[]`.
-- Produces selection → map → findings → commercial CTA.
+- `OperatingMap` owns the three-step client interaction but delegates all interpretation to `buildOperatingMap(...)`.
 
-- [ ] **Step 1: Write failing experience contract test**
+- [ ] **Step 1: Write RED experience contract**
 
-Required copy hierarchy:
+Require:
 
 ```text
-Map where work is getting lost
+Map where work gets stuck
 No patient data needed
 What you told us
 What Klinikos would inspect first
@@ -117,225 +145,189 @@ What stays external
 Review this with Klinikos
 ```
 
-Prohibited copy:
+Prohibit:
 
 ```text
-We found $X
+We found $
 Guaranteed savings
 Your clinic is losing
 HIPAA certified
 ```
 
-- [ ] **Step 2: Implement three-stage experience**
+- [ ] **Step 2: Implement exactly three stages**
 
-Stage 1: organization setting / optional scale band.
+1. `About your operation`: one keyed setting.
+2. `Where does work get stuck?`: one or more keyed gaps.
+3. `Your Operating Map`: workflow rows + first-look explanation + boundary + commercial CTA.
 
-Stage 2: operational pain selection.
+Use one dominant CTA per stage. Each workflow is readable as text; the visual connector is enhancement, not sole meaning.
 
-Stage 3: Operating Map result.
+- [ ] **Step 3: Implement truthful error state**
 
-Use a visual workflow/ledger, not a generic card grid. Each finding needs an accessible text equivalent.
+If commercial handoff later fails, preserve selected setting/gaps and map result in component state. Do not reset the visitor.
 
-- [ ] **Step 3: Add progressive plain-language output**
+- [ ] **Step 4: Verify keyboard/mobile/200% zoom/reduced motion and commit**
 
-Example output:
-
-```text
-REFERRAL
-Sent → acknowledged → scheduled → consulted → closed
-
-You selected: Referral loops do not always close.
-Klinikos would look first at referrals with no recorded acknowledgment or next owner.
+```bash
+npm test -- tests/operating-map-experience.test.ts
+git add src/components/marketing/operating-map.tsx src/components/marketing/operating-map.module.css tests/operating-map-experience.test.ts
+git commit -m "feat(growth): build Black Label Operating Map experience"
 ```
 
-Do not claim stages are actually broken at the visitor’s clinic.
-
-- [ ] **Step 4: Verify keyboard/mobile/200% zoom/reduced motion**
-
-- [ ] **Step 5: Commit**
-
-### Task 3: Add canonical `/operating-map` public route and SEO
+### Task 3: Publish canonical `/operating-map` and SEO entry
 
 **Files:**
 - Create: `src/app/operating-map/page.tsx`
-- Test: `tests/operating-map-seo.test.ts`
-- Modify sitemap/route metadata files according to existing repository conventions.
+- Modify: `src/app/sitemap.ts`
+- Modify: `tests/klinikos-product-control-and-seo.test.ts`
+- Create: `tests/operating-map-seo.test.ts`
 
 **Interfaces:**
-- Public route, no auth required.
+- Public, indexable route with local canonical `/operating-map`.
 
-- [ ] **Step 1: Write SEO route contract**
+- [ ] **Step 1: Write RED SEO tests**
 
-Metadata must include a human-readable title/description, canonical `/operating-map`, and indexability unless current SEO policy says otherwise.
+Require:
 
-Suggested title:
-
-```text
-Klinikos Operating Map | Find where clinic work gets stuck
+```ts
+expect(page).toContain('alternates: { canonical: "/operating-map" }');
+expect(page).toContain('title: "Klinikos Operating Map | Find where clinic work gets stuck"');
+expect(sitemap).toContain('path: "/operating-map"');
 ```
 
-Suggested description:
+Description:
 
 ```text
 Map common clinic workflow breaks across intake, referrals, follow-up, revenue and capacity without sharing patient data.
 ```
 
-Do not add unproven structured-data claims such as ratings/customers/results.
+- [ ] **Step 2: Implement route**
 
-- [ ] **Step 2: Implement route using the reusable component**
+Render the reusable `OperatingMap` plus existing public trust/footer language. Do not add fabricated ratings/reviews/customers to structured data.
 
-Use existing Public Trust footer / brand shell components where appropriate; do not create a second marketing visual system.
+- [ ] **Step 3: Add `/operating-map` to the existing sitemap array and SEO-law test**
 
-- [ ] **Step 3: Update sitemap/internal links**
-
-- [ ] **Step 4: Verify**
+- [ ] **Step 4: Verify and commit**
 
 ```bash
-npm test -- tests/operating-map-seo.test.ts tests/operating-map-experience.test.ts
+npm test -- tests/operating-map-seo.test.ts tests/operating-map-experience.test.ts tests/klinikos-product-control-and-seo.test.ts
 npm run build
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/app/operating-map src/components/marketing tests
+git add src/app/operating-map/page.tsx src/app/sitemap.ts tests
 git commit -m "feat(growth): publish the Klinikos Operating Map"
 ```
 
-### Task 4: Replace duplicated continuity-check logic on `/klinikos`
+### Task 4: Replace duplicated continuity-check authority on `/klinikos`
 
 **Files:**
 - Modify: `src/components/marketing/landing-funnel.tsx`
-- Modify: `src/app/klinikos/page.tsx` only if props/copy need adjusting.
-- Test: existing marketing/commercial truth tests plus new Operating Map tests.
+- Create: `tests/landing-funnel-operating-map-source.test.ts`
 
-**Interfaces:**
-- `/klinikos` may embed a compact Operating Map or link into canonical `/operating-map` while preserving pricing/persona sections.
+- [ ] **Step 1: Write RED source-of-truth test**
 
-- [ ] **Step 1: Remove local `GAPS` / `GAP_ROUTES` authority**
+Assert `landing-funnel.tsx` imports the canonical Operating Map settings/gaps/component and no longer declares local `GAPS`, `SETTINGS`, or `GAP_ROUTES` constants.
 
-There must be one mapping source in `operating-map.ts`.
+- [ ] **Step 2: Replace the local free continuity-check logic with the reusable `OperatingMap` component**
 
-- [ ] **Step 2: Preserve existing commercial pricing source**
+Keep persona and pricing sections unchanged. `src/app/klinikos/page.tsx` continues sourcing price strings from `@/lib/commercial/klinikos-commercial` and `grid-economics`.
 
-Do not move prices into the Operating Map component. Current `klinikos-commercial` remains commercial source of truth.
-
-- [ ] **Step 3: Verify free-vs-paid language**
-
-The free Operating Map must never look like the paid Operating Analysis deliverable. Keep a clear boundary:
+- [ ] **Step 3: Add explicit free/paid boundary copy**
 
 ```text
-Operating Map: public self-guided continuity map based on your selections.
-Paid Operating Analysis: human-reviewed commercial service with deeper workflow review.
+Operating Map: a free self-guided map based only on your selections.
+Operating Analysis: a paid human-reviewed engagement that goes deeper into your actual workflow.
 ```
 
 - [ ] **Step 4: Verify and commit**
 
-### Task 5: Make Operating Map the primary acquisition CTA where evidence supports it
+```bash
+npm test -- tests/landing-funnel-operating-map-source.test.ts tests/operating-map-experience.test.ts
+git add src/components/marketing/landing-funnel.tsx tests/landing-funnel-operating-map-source.test.ts
+git commit -m "refactor(growth): use one Operating Map across public funnel"
+```
+
+### Task 5: Make Operating Map the homepage clinic-acquisition CTA
 
 **Files:**
-- Modify: `src/lib/brand/canonical-messaging.ts` only through deliberate canonical copy decision.
-- Modify: `src/components/marketing/public-living-gateway.tsx` or current homepage CTA surface.
-- Modify: public product/marketing surfaces that currently use generic “start” CTA.
-- Test: homepage/public messaging tests.
+- Modify: `src/components/marketing/public-living-gateway.tsx`
+- Modify: `src/lib/orchestration/public-living-intent.ts`
+- Modify: relevant public Zumi routing tests already guarding operational-audit/start intent.
+- Create: `tests/homepage-operating-map-cta.test.ts`
 
-**Interfaces:**
-- Primary CTA target becomes `/operating-map` for clinic-owner acquisition paths; Grid/EDU/persona-specific paths retain their own appropriate CTAs.
+- [ ] **Step 1: Write RED homepage CTA test**
 
-- [ ] **Step 1: Write CTA mapping test before copy changes**
-
-Prove clinic operations intent reaches Operating Map while Grid/EDU access intent still reaches its correct domain.
-
-- [ ] **Step 2: Use one approved CTA phrase**
-
-Recommended test candidate:
+Current homepage CTA is `See what Klinikos would replace` → `/operational-audit`. Replace it with exactly:
 
 ```text
 Map my clinic
 ```
 
-or
+→ `/operating-map`.
 
-```text
-See where work gets stuck
+Secondary `See how it works` → `/how-it-works` remains unchanged.
+
+- [ ] **Step 2: Add `/operating-map` to `publicActionPaths`**
+
+- [ ] **Step 3: Route explicit clinic-workflow/operating-map public Zumi intent to `/operating-map` without changing Grid, EDU, patient, sign-in, or paid-audit routes**
+
+The existing `/operational-audit` route remains valid for paid/commercial intent; do not redirect or delete it.
+
+- [ ] **Step 4: Verify and commit**
+
+```bash
+npm test -- tests/homepage-operating-map-cta.test.ts tests/public-living-home.test.ts
 ```
 
-Do not globally change the company tagline in the same PR. CTA testing and category messaging are separate decisions.
+Use the current exact public-routing regression test filename if it has changed on latest main; do not invent a second routing test suite.
 
-- [ ] **Step 3: Verify public Zumi deterministic routing still sends relevant questions correctly**
-
-- [ ] **Step 4: Commit**
-
-### Task 6: Route qualified Operating Map completion into existing sales reservation flow
+### Task 6: Carry safe map context into the existing sales reservation
 
 **Files:**
+- Modify: `src/lib/repositories/sales-demo-repository.ts`
+- Modify: `src/app/api/sales/reservations/route.ts`
 - Modify: `src/components/marketing/operating-map.tsx`
-- Modify: `src/lib/repositories/sales-demo-repository.ts` only if its existing input schema needs a bounded optional `operatingMapContext` field.
-- Modify: `src/app/api/sales/reservations/route.ts` only through existing repository/service contracts.
-- Test: sales reservation tests + `tests/operating-map-sales-handoff.test.ts`.
+- Create: `tests/operating-map-sales-handoff.test.ts`
 
 **Interfaces:**
-- Commercial handoff may include non-PHI context:
+
+Add this optional strict context to the existing public reservation input:
 
 ```ts
-{
-  source: "operating_map",
-  settingKey: "independent_practice_owner",
-  gapKeys: ["referral_closure", "charge_claim_readiness"]
+export interface OperatingMapCommercialContext {
+  source: "operating_map";
+  settingKey: OperatingMapSettingKey;
+  gapKeys: OperatingMapGapKey[];
 }
 ```
 
-- [ ] **Step 1: Write privacy/input test**
+- [ ] **Step 1: Write RED parser/privacy tests**
 
-Server accepts only enumerated setting/gap keys. It rejects arbitrary free-text clinical data in this field.
+Valid context is accepted. Unknown setting/gap, arbitrary free text, patient fields, or more than nine gaps is rejected.
 
-- [ ] **Step 2: Preserve reservation/payment behavior**
+- [ ] **Step 2: Persist context only as bounded reservation metadata/event metadata**
 
-Existing sales reservation remains the saved lead. Existing checkout service remains price/payment authority. Operating Map context is qualification metadata only.
+The DemoReservation remains the lead authority. Do not create a second OperatingMap lead table.
 
-- [ ] **Step 3: Implement CTA**
+- [ ] **Step 3: Connect `Review this with Klinikos` to the existing reservation flow**
 
-After map completion:
+Preload only the setting/gap keys. The visitor still supplies the existing contact/organization fields required by sales intake.
 
-```text
-Review this with Klinikos
+- [ ] **Step 4: Preserve payment truth**
+
+Operating Map completion/reservation creation never equals paid, entitled, provisioned, or guaranteed analysis. Existing checkout logic is unchanged.
+
+- [ ] **Step 5: Verify and commit**
+
+```bash
+npm test -- tests/operating-map-sales-handoff.test.ts
 ```
 
-opens the current sales/reservation flow preloaded only with safe map selections, never patient/clinical data.
+### Task 7: Final public-experience verification
 
-- [ ] **Step 4: Verify payment truth**
-
-Map completion does not create payment, entitlement, organization activation, or guaranteed analysis.
-
-- [ ] **Step 5: Commit**
-
-### Task 7: Acquisition proof states
-
-**Files:**
-- Modify: Operating Map component.
-- Test: `tests/operating-map-experience.test.ts`.
-
-- [ ] **Step 1: Add truthful empty/partial/completed states**
-
-Empty: ask for one selection.
-
-Partial: show selected operating areas, not diagnosis.
-
-Completed: show map + what Klinikos would inspect + CTA.
-
-Error: preserve the completed map in browser state and state that commercial handoff failed; never make the visitor redo the map if avoidable.
-
-- [ ] **Step 2: Add share/print only if output contains no sensitive entered free text**
-
-P0 should prefer a stable client-side summary/print view rather than server-persisting anonymous diagnostic responses unnecessarily.
-
-- [ ] **Step 3: Verify and commit**
-
-### Task 8: Final verification and PR
+**Files:** no new planned runtime files.
 
 - [ ] **Step 1: Reconcile latest public-site work**
 
-- [ ] **Step 2: Run**
+- [ ] **Step 2: Run fresh evidence**
 
 ```bash
 npm run type-check
@@ -347,8 +339,8 @@ npm run build
 
 - [ ] **Step 3: Browser QA**
 
-Check public `/`, `/klinikos`, `/operating-map` at 390/768/1024/1440/1920, Marble/Obsidian where applicable, keyboard, 200% zoom, reduced motion.
+Check `/`, `/klinikos`, `/operating-map`, `/operational-audit` at 390/768/1024/1440/1920 and 200% zoom. Verify keyboard, focus, reduced motion, empty/partial/completed map, and commercial-handoff failure state.
 
-- [ ] **Step 4: PR commercial non-claims**
+- [ ] **Step 4: PR non-claims**
 
-State clearly that the Operating Map is a no-PHI self-guided map based on visitor input, not a financial audit, system integration, or guaranteed ROI result.
+State that the Operating Map is a no-PHI self-guided map based on enumerated visitor input, not a financial audit, integration, clinic-record analysis, or guaranteed ROI result.
