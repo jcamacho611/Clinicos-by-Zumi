@@ -10,6 +10,11 @@ import type { CareCoordinationWorkspace } from "@/lib/repositories/care-coordina
 export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordinationWorkspace }) {
   const open = workspace.escalations.filter((escalation) => escalation.status !== "resolved");
   const urgent = open.filter((escalation) => escalation.riskLevel === "URGENT").length;
+  const overdue = open.filter((escalation) => escalation.waiting.state === "overdue").length;
+  // Silence is the thing worth seeing first. Anything nobody has picked up in time
+  // sorts above work that is still inside its window.
+  const ordered = [...workspace.escalations].sort((left, right) =>
+    Number(right.waiting.state === "overdue") - Number(left.waiting.state === "overdue"));
 
   return <div className="space-y-6">
     <div className="rounded-[26px] bg-rose-950 p-7 text-white">
@@ -29,6 +34,7 @@ export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordin
     <div className="grid gap-4 sm:grid-cols-4">
       <StatCard accent="rose" detail="Require human action" icon={<AlertOctagon className="size-4" />} label="Open" value={String(open.length)} />
       <StatCard accent="rose" detail="Highest held risk level" icon={<ShieldAlert className="size-4" />} label="Urgent" value={String(urgent)} />
+      <StatCard accent="rose" detail="Open past the acknowledgement window" icon={<AlertOctagon className="size-4" />} label="Nobody picked up" value={String(overdue)} />
       <StatCard accent="amber" detail="Tenant-visible escalation records" icon={<ShieldAlert className="size-4" />} label="Total" value={String(workspace.escalations.length)} />
       <StatCard accent="teal" detail="Resolved with a human note" icon={<Check className="size-4" />} label="Resolved" value={String(workspace.escalations.length - open.length)} />
     </div>
@@ -36,11 +42,11 @@ export function EscalationsWorkspaceReal({ workspace }: { workspace: CareCoordin
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><strong>Callback boundary:</strong> phone/SMS/voice actions remain external-connection work. Until that rail is approved, staff can resolve the escalation, create internal tasks/messages, or use their existing clinic phone system outside Klinikos.</div>
 
     <div className="space-y-4">
-      {workspace.escalations.map((item, index) => <Card className={`klinikos-deep-target scroll-mt-24 p-5 ${index === 0 ? "border-rose-300 shadow-[0_18px_45px_rgba(190,24,93,.12)]" : ""}`} id={`escalation-${item.id}`} key={item.id}>
+      {ordered.map((item, index) => <Card className={`klinikos-deep-target scroll-mt-24 p-5 ${index === 0 ? "border-rose-300 shadow-[0_18px_45px_rgba(190,24,93,.12)]" : ""}`} id={`escalation-${item.id}`} key={item.id}>
         <div className="grid gap-5 lg:grid-cols-[1.2fr_.7fr_.8fr] lg:items-start">
           <div className="flex items-start gap-4">
             <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${item.riskLevel === "URGENT" ? "bg-rose-100 text-rose-700" : "bg-amber-50 text-amber-700"}`}><ShieldAlert className="size-5" /></span>
-            <div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-extrabold text-slate-950">{item.category.replaceAll("_", " ")}</p><StatusBadge status={item.riskLevel.replaceAll("_", " ")} /></div><p className="mt-1 text-[12px] text-slate-400">{item.patientName} · {item.sourceType} · {new Date(item.createdAt).toLocaleString()}</p><p className="mt-2 text-[12px] leading-5 text-slate-600">Source: {item.sourceId} · Assigned team: {item.assignedTeam}</p></div>
+            <div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-extrabold text-slate-950">{item.category.replaceAll("_", " ")}</p><StatusBadge status={item.riskLevel.replaceAll("_", " ")} /></div><p className="mt-1 text-[12px] text-slate-400">{item.patientName} · {item.sourceType} · {new Date(item.createdAt).toLocaleString()}</p><p className="mt-2 text-[12px] leading-5 text-slate-600">Source: {item.sourceId} · Assigned team: {item.assignedTeam}</p><p className={`mt-2 text-[12px] font-bold leading-5 ${item.waiting.state === "overdue" ? "text-rose-700" : "text-slate-500"}`}>{item.waiting.sentence}</p></div>
           </div>
           <div><p className="text-[11px] font-bold text-slate-400">STATUS</p><p className="mt-1 text-xs font-bold text-slate-700">{item.status}</p><p className="mt-2 text-[12px] leading-5 text-slate-500">{item.resolution ?? "No human resolution note yet."}</p></div>
           <EscalationActions escalationId={item.id} status={item.status} />
