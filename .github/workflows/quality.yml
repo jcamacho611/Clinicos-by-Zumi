@@ -11,6 +11,12 @@
 # file can fix it. It is resolved in Settings → Billing and plans → either raise the
 # Actions spending limit or wait for the monthly reset.
 #
+# Measured rather than inferred, on run 32886481649 (2026-08-25): the billing API reports
+# `total_ms: 0` with `duration_ms: 0` for both jobs, while the run itself records
+# `run_duration_ms: 4000`. GitHub therefore clocked four seconds of wall time and zero
+# billable compute — the jobs consumed no runner at all. A workflow defect would still
+# burn minutes.
+#
 # Until it is fixed, release proof comes from two commands that do run:
 #   npm run verify:release      full gate — migrations on an empty database, tests,
 #                               journeys, production build, startup, health
