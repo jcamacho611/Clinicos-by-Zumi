@@ -70,7 +70,38 @@ Current status:
 
 `AWAITING ROUTING / RESPONSE — GERARD MAY NOT BE LISTED AS COMMITTED PERSONNEL OR REFERENCE`
 
-## 3. Other pending outreach
+## 3. Daniel Sniezek — bounded technical/AI instruction inquiry
+
+Truth class: `EXECUTED OUTREACH / RESPONSE PENDING`
+
+Public evidence from Daniel's own professional site and current/recent IEEE materials supports a long history of technical training/consulting plus public 2025 `Practical Use of Generative AI` presenting.
+
+Klinikos used the contact route exposed by Daniel's own current professional website rather than an address from a third-party people-search directory.
+
+On 2026-08-25 Klinikos sent a narrow inquiry asking whether he would be open to discussing a bounded paid instructor / technical-training role, subject to scope, availability, compensation and buyer approval.
+
+The message deliberately did **not** disclose:
+
+- the SCWDB buyer;
+- RFP details;
+- bid pricing/economics;
+- proprietary Klinikos architecture;
+- Zumi internals;
+- customer information;
+- source code;
+- private financial/corporate data.
+
+The message expressly states that:
+
+- a reply indicating interest does not create a commitment;
+- Klinikos will not list Daniel, use his client history, or represent affiliation unless he later reviews and explicitly approves the exact role and wording;
+- only a short non-confidential scope would be shared next if mutual fit exists.
+
+Current status:
+
+`AWAITING RESPONSE — DANIEL MAY NOT BE LISTED AS COMMITTED PERSONNEL OR REFERENCE`
+
+## 4. Other pending outreach
 
 The earlier 2026-08-23 permission requests remain pending for:
 
@@ -80,7 +111,7 @@ The earlier 2026-08-23 permission requests remain pending for:
 
 Latest pre-log mailbox harvest found no affirmative reply from those recipients.
 
-## 4. Decision rule when a reply arrives
+## 5. Decision rule when a reply arrives
 
 An affirmative reply is not enough by itself to finalize the proposal.
 
@@ -98,7 +129,7 @@ Before changing a person's status to `COMMITTED / PROPOSED PERSONNEL`, capture:
 10. IP/confidentiality boundary;
 11. SCWDB subcontractor/teaming approval path where applicable.
 
-## 5. Truth law
+## 6. Truth law
 
 `EMAIL SENT ≠ PERSON AGREED`
 
