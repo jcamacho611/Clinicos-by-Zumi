@@ -37,8 +37,50 @@ export const URGENT_SIGNAL_SOURCE_TYPE = "urgent_signal";
 const DEDUPE_WINDOW_MS = 15 * 60 * 1000;
 
 export type UrgentEscalationOutcome =
-  | { readonly recorded: true; readonly escalationId: string; readonly alreadyOpen: boolean }
+  | {
+      readonly recorded: true;
+      readonly escalationId: string;
+      readonly alreadyOpen: boolean;
+      /**
+       * Whether anyone at this clinic can actually see the escalation.
+       *
+       * Self-harm signals are restricted to owners, administrators and providers. A
+       * clinic with none of those active has an escalation nobody will ever open, and
+       * telling the person a review exists would be true and useless. False here means
+       * the handoff sentence stops promising a review and says to tell someone directly.
+       */
+      readonly visibleToSomeone: boolean;
+    }
   | { readonly recorded: false; readonly reason: "unavailable" };
+
+/** Who may see a self-harm escalation. Mirrors the repository filter on the queue. */
+const SELF_HARM_VISIBLE_ROLES = ["clinic_owner", "administrator", "provider"];
+
+/**
+ * Is there anybody who will see this?
+ *
+ * Asked because restricting who may see a self-harm signal created the possibility of
+ * an escalation with no audience. A record nobody can open is not a handoff, and the
+ * person deserves to be told that rather than reassured.
+ *
+ * Failure is reported as "someone can see it" rather than the reverse: this only decides
+ * how confidently Klinikos describes the handoff, and a database hiccup should not turn
+ * that into an alarming claim about the clinic's setup.
+ */
+async function hasEligibleViewer(session: ClinicSession, category: UrgentSignalCategory) {
+  try {
+    const eligible = await db.user.count({
+      where: {
+        organizationId: session.organizationId,
+        status: "active",
+        ...(category === "self_harm" ? { roleKey: { in: SELF_HARM_VISIBLE_ROLES } } : {}),
+      },
+    });
+    return eligible > 0;
+  } catch {
+    return true;
+  }
+}
 
 export async function recordUrgentSignalEscalation(
   session: ClinicSession,
@@ -57,7 +99,14 @@ export async function recordUrgentSignalEscalation(
       orderBy: { createdAt: "desc" },
     });
 
-    if (existing) return { recorded: true, escalationId: existing.id, alreadyOpen: true };
+    if (existing) {
+      return {
+        recorded: true,
+        escalationId: existing.id,
+        alreadyOpen: true,
+        visibleToSomeone: await hasEligibleViewer(session, category),
+      };
+    }
 
     const escalation = await db.escalation.create({
       data: {
@@ -79,7 +128,12 @@ export async function recordUrgentSignalEscalation(
 
     await notifyUrgentSignal(session, category);
 
-    return { recorded: true, escalationId: escalation.id, alreadyOpen: false };
+    return {
+      recorded: true,
+      escalationId: escalation.id,
+      alreadyOpen: false,
+      visibleToSomeone: await hasEligibleViewer(session, category),
+    };
   } catch {
     // Deliberately swallowed. The caller still returns the emergency message; the only
     // thing lost is the clinic-side record, and saying so truthfully is the caller's job.
@@ -144,6 +198,11 @@ async function notifyUrgentSignal(session: ClinicSession, category: UrgentSignal
 export function describeUrgentHandoff(outcome: UrgentEscalationOutcome): string {
   if (!outcome.recorded) {
     return "Klinikos could not open a review for your team just now, so tell someone directly.";
+  }
+  if (!outcome.visibleToSomeone) {
+    // A record with no audience is not a handoff. Saying a review exists would be true
+    // and useless.
+    return "A review was opened, but nobody at this clinic is set up to see it. Tell someone directly.";
   }
   if (outcome.alreadyOpen) {
     return "A review is already open for your team from a moment ago. Nobody has been contacted yet.";

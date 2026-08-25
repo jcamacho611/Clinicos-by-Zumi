@@ -5,12 +5,13 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const findFirst = vi.fn();
 const create = vi.fn();
 const findUsers = vi.fn();
+const countUsers = vi.fn();
 const notifyMany = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
     escalation: { findFirst: (...args: unknown[]) => findFirst(...args), create: (...args: unknown[]) => create(...args) },
-    user: { findMany: (...args: unknown[]) => findUsers(...args) },
+    user: { findMany: (...args: unknown[]) => findUsers(...args), count: (...args: unknown[]) => countUsers(...args) },
     notification: { createMany: (...args: unknown[]) => notifyMany(...args) },
   },
 }));
@@ -36,7 +37,9 @@ beforeEach(() => {
   create.mockReset();
   findUsers.mockReset();
   notifyMany.mockReset();
+  countUsers.mockReset();
   findUsers.mockResolvedValue([{ id: "owner-1" }, { id: "provider-1" }]);
+  countUsers.mockResolvedValue(2);
   notifyMany.mockResolvedValue({ count: 2 });
 });
 
@@ -47,7 +50,7 @@ describe("urgent signal escalation", () => {
 
     const outcome = await recordUrgentSignalEscalation(session, "life_threatening");
 
-    expect(outcome).toEqual({ recorded: true, escalationId: "esc-1", alreadyOpen: false });
+    expect(outcome).toEqual({ recorded: true, escalationId: "esc-1", alreadyOpen: false, visibleToSomeone: true });
 
     const written = create.mock.calls[0][0].data;
     expect(written.organizationId).toBe("org-1");
@@ -87,7 +90,7 @@ describe("urgent signal escalation", () => {
 
     const outcome = await recordUrgentSignalEscalation(session, "life_threatening");
 
-    expect(outcome).toEqual({ recorded: true, escalationId: "esc-existing", alreadyOpen: true });
+    expect(outcome).toEqual({ recorded: true, escalationId: "esc-existing", alreadyOpen: true, visibleToSomeone: true });
     expect(create).not.toHaveBeenCalled();
   });
 
@@ -164,6 +167,61 @@ describe("reaching someone who is not looking at the queue", () => {
       recorded: true,
       escalationId: "esc-1",
       alreadyOpen: false,
+      visibleToSomeone: true,
+    });
+  });
+});
+
+describe("an escalation nobody can see", () => {
+  /**
+   * Created by restricting who may see a self-harm signal. A record with no audience is
+   * not a handoff, and telling the person a review exists would be true and useless.
+   */
+  it("checks only the restricted roles for a self-harm signal", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+
+    await recordUrgentSignalEscalation(session, "self_harm");
+
+    expect(countUsers.mock.calls[0][0].where.roleKey.in).toEqual([
+      "clinic_owner",
+      "administrator",
+      "provider",
+    ]);
+  });
+
+  it("does not restrict the check for a life-threatening signal, which the whole queue can see", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+
+    await recordUrgentSignalEscalation(session, "life_threatening");
+
+    expect(countUsers.mock.calls[0][0].where.roleKey).toBeUndefined();
+    expect(countUsers.mock.calls[0][0].where.status).toBe("active");
+  });
+
+  it("stops promising a review when nobody at the clinic can open it", async () => {
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+    countUsers.mockResolvedValue(0);
+
+    const outcome = await recordUrgentSignalEscalation(session, "self_harm");
+
+    expect(outcome).toMatchObject({ recorded: true, visibleToSomeone: false });
+    const sentence = describeUrgentHandoff(outcome);
+    expect(sentence).toContain("nobody at this clinic is set up to see it");
+    expect(sentence).toContain("Tell someone directly");
+  });
+
+  it("assumes someone can see it when the check itself fails", async () => {
+    // This only decides how confidently Klinikos describes the handoff. A database
+    // hiccup should not become an alarming claim about the clinic's setup.
+    findFirst.mockResolvedValue(null);
+    create.mockResolvedValue({ id: "esc-1" });
+    countUsers.mockRejectedValue(new Error("unavailable"));
+
+    await expect(recordUrgentSignalEscalation(session, "self_harm")).resolves.toMatchObject({
+      visibleToSomeone: true,
     });
   });
 });
@@ -171,8 +229,9 @@ describe("reaching someone who is not looking at the queue", () => {
 describe("what Klinikos says it did", () => {
   it("never claims a person was contacted", () => {
     for (const outcome of [
-      { recorded: true, escalationId: "e", alreadyOpen: false },
-      { recorded: true, escalationId: "e", alreadyOpen: true },
+      { recorded: true, escalationId: "e", alreadyOpen: false, visibleToSomeone: true },
+      { recorded: true, escalationId: "e", alreadyOpen: true, visibleToSomeone: true },
+      { recorded: true, escalationId: "e", alreadyOpen: false, visibleToSomeone: false },
       { recorded: false, reason: "unavailable" },
     ] as const) {
       const sentence = describeUrgentHandoff(outcome);
@@ -188,7 +247,7 @@ describe("what Klinikos says it did", () => {
   });
 
   it("distinguishes a queue item from a human response", () => {
-    const sentence = describeUrgentHandoff({ recorded: true, escalationId: "e", alreadyOpen: false });
+    const sentence = describeUrgentHandoff({ recorded: true, escalationId: "e", alreadyOpen: false, visibleToSomeone: true });
     expect(sentence).toContain("queue item, not a person who has been contacted");
   });
 });
