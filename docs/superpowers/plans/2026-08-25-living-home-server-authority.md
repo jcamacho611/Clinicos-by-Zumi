@@ -1,415 +1,250 @@
 # Klinikos Living Home Server Authority Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+Status: IMPLEMENTED IN PR #325, EXECUTABLE VERIFICATION PENDING
+Date: 2026-08-25
 
-**Goal:** Move authenticated Living Home intent resolution, Path selection, Path runtime and guidance projection to the server while preserving the existing Marble/Obsidian client experience.
+> **For agentic workers:** this plan is the execution record for the Living Home browser-confidentiality tranche. Current runtime truth and newer `main` remain higher authority than this document.
 
-**Architecture:** Keep the rich interactive Living Home shell client-side, but replace raw Path/orchestration data with a browser-safe view model. A dedicated authenticated `POST /api/living-home/command` endpoint owns intent resolution, surface routing, Path creation, guidance and projection. Initial dashboard Paths are also projected server-side before serialization.
+**Goal:** Move authenticated Living Home intent resolution, Path selection, Path runtime, and guidance projection to the server while preserving the existing Marble/Obsidian client experience.
 
-**Tech Stack:** Next.js 15 App Router, TypeScript 5.9, Zod, Vitest, existing clinic auth/RBAC, existing Path persistence/orchestration, existing browser-confidentiality gate.
+**Architecture:** Keep the rich interactive Living Home shell client-side, but replace raw Path/orchestration data with a browser-safe view model. A dedicated authenticated `POST /api/living-home/command` endpoint owns intent resolution, surface routing, Path creation, guidance, and projection. Initial dashboard Paths are projected server-side before serialization.
+
+**Tech Stack:** Next.js 15 App Router, TypeScript, Zod, Vitest, existing clinic auth/RBAC, existing Path persistence/orchestration, existing browser-confidentiality gate.
 
 **Spec:** `docs/superpowers/specs/2026-08-25-living-home-server-authority-design.md`
 
-## Global Constraints
+## Global constraints
 
 - No Prisma/schema/migration changes.
 - No identity/account/access/legal/EDU/Grid/clinical authority changes.
 - Existing `/api/paths` behavior remains intact.
 - Browser receives no runtime imports from `@/lib/orchestration`.
+- Type-only imports are allowed because they are erased from the browser bundle.
 - Tenant/role context comes only from authenticated server session.
-- Unknown or ambiguous intent fails to clarification rather than inventing a Path.
-- Surface lookup may return a destination without creating a Path.
+- Unknown or ambiguous intent returns clarification rather than inventing a Path.
+- Surface lookup may return a role-authorized destination without creating a Path.
+- `tasks:create` is required only before consequential Path persistence, not before read-only surface navigation.
 - Marble/Obsidian interaction and visual structure remain unchanged.
-- Re-check latest `main` and open PR ownership before each code tranche and before merge.
+- Re-check latest `main` and open PR ownership before every write and immediately before merge.
 
 ---
 
-### Task 1: Add the browser-safe Living Home view model and server projector
+## Task 1: Browser-safe Living Home view model and server projector
 
-**Files:**
-- Create: `src/lib/home/living-home-view-model.ts`
-- Create: `src/lib/home/living-home-presentation.ts`
-- Test: `tests/living-home-server-authority.test.ts`
+**Files**
 
-**Interfaces:**
-- Produces `LivingHomePathView`, `LivingHomeCommandView`, `LivingHomeSurfaceView`.
-- Produces `projectLivingHomePath(snapshot, guidance)` and `projectLivingHomePaths(snapshots, guidanceList)`.
-- Consumes existing `PersistedPathSnapshot`, `PathGuidance`, `resolvePathRuntime`, `getKlinikosPath` only inside the server projector.
+- `src/lib/home/living-home-view-model.ts`
+- `src/lib/home/living-home-presentation.ts`
+- `tests/living-home-server-authority.test.ts`
 
-- [ ] **Step 1: Write failing view-model/source-boundary tests**
+**Implementation state:** implemented, not yet executable-verified in the repository runner.
 
-Create assertions that the view-model file contains no `server-only`, database, repository or orchestration runtime import, and that the server projector is marked `server-only`.
+### Browser-safe contract
 
-Use the contract:
+`living-home-view-model.ts` contains presentation types only:
 
-```ts
-export type LivingHomePathState =
-  | "needs_you"
-  | "waiting"
-  | "needs_review"
-  | "blocked"
-  | "ready"
-  | "done"
-  | "active";
+- `LivingHomePathState`
+- `LivingHomeBlockerView`
+- `LivingHomePathView`
+- `LivingHomeSurfaceView`
+- `LivingHomeCommandView`
 
-export type LivingHomeBlockerView = {
-  code: string;
-  title: string;
-  explanation: string;
-  owner: "user" | "clinic" | "reviewer" | "connector" | "system";
-  canResolveNow: boolean;
-};
+It must not import database, repository, or orchestration runtime code.
 
-export type LivingHomePathView = {
-  instanceId: string;
-  pathId: string;
-  title: string;
-  goal: string;
-  progressPercent: number;
-  state: LivingHomePathState;
-  stateLabel: string;
-  reason: string;
-  blockers: LivingHomeBlockerView[];
-  nextActionLabel: string | null;
-  nextActionHref: string | null;
-};
+### Server projection
 
-export type LivingHomeSurfaceView = {
-  label: string;
-  href: string;
-};
+`living-home-presentation.ts` is marked `server-only` and may consume:
 
-export type LivingHomeCommandView =
-  | { kind: "path"; message: string; path: LivingHomePathView }
-  | { kind: "surface"; message: string; surface: LivingHomeSurfaceView }
-  | { kind: "clarification"; message: string; clarification: string }
-  | { kind: "blocked"; message: string }
-  | { kind: "unavailable"; message: string };
-```
+- `PersistedPathSnapshot`
+- `PathGuidance`
+- `resolvePathRuntime`
+- `getKlinikosPath`
 
-- [ ] **Step 2: Run focused test and confirm RED**
+It projects only minimum-necessary browser state:
 
-Run:
+- instance/path identity needed for links and UI continuity;
+- title and user goal;
+- bounded progress percentage;
+- user-facing state and reason;
+- safe blocker title/explanation/owner/resolvability;
+- next-action label/href.
 
-```bash
-npm test -- tests/living-home-server-authority.test.ts
-```
+It must not serialize:
 
-Expected: fail because the view-model/projector files do not yet exist.
+- Path node machinery;
+- capability keys;
+- blocker alternatives;
+- policy predicates;
+- candidate rules or scores;
+- session internals;
+- repository/audit internals.
 
-- [ ] **Step 3: Implement `living-home-view-model.ts`**
+---
 
-Create only the types above. Do not import orchestration or repositories.
+## Task 2: Authenticated Living Home command endpoint
 
-- [ ] **Step 4: Implement `living-home-presentation.ts`**
+**File**
 
-Start with:
+- `src/app/api/living-home/command/route.ts`
+
+**Implementation state:** implemented, not yet executable-verified in the repository runner.
+
+### Input
+
+Strict Zod body:
 
 ```ts
-import "server-only";
-
-import type { PathGuidance } from "@/lib/orchestration/path-guidance-engine";
-import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
-import { getKlinikosPath } from "@/lib/paths/catalog";
-import type { LivingHomePathState, LivingHomePathView } from "@/lib/home/living-home-view-model";
-```
-
-Implement deterministic state mapping:
-
-```ts
-function mapState(guidance: PathGuidance | null, completed: boolean): LivingHomePathState {
-  if (completed) return "done";
-  if (!guidance) return "active";
-  if (guidance.state === "blocked") return "blocked";
-  if (guidance.state === "review_required") return "needs_review";
-  if (guidance.state === "waiting") return "waiting";
-  if (guidance.state === "available" || guidance.state === "recommended") return "ready";
-  if (guidance.state === "completed") return "done";
-  return "active";
+{
+  text: string // trimmed, 2..1000 chars
 }
 ```
 
-`projectLivingHomePath` must:
+The browser does not supply:
 
-- resolve the current runtime server-side;
-- use the canonical Path definition title;
-- clamp `progressPercent` to `0..100`;
-- copy only safe blocker fields;
-- use guidance reason/title/href for the next action;
-- never serialize capability keys, alternatives, Path nodes, scoring, predicates or session internals.
+- organization ID;
+- user ID;
+- role;
+- tenant;
+- Path ID as the routing decision.
 
-`projectLivingHomePaths` must match guidance by `instanceId` and preserve snapshot ordering.
+### Server flow
 
-- [ ] **Step 5: Run focused test and confirm GREEN**
+1. Resolve authenticated clinic session.
+2. Parse the user-entered text.
+3. Resolve intent server-side.
+4. If there is no Path candidate, attempt the existing role-filtered `resolveSurfaceLookup`.
+5. If a safe surface exists, return a `surface` view without mutation.
+6. If no surface or deterministic Path is safe, return `clarification` without mutation.
+7. If intent is ambiguous, return clarification before Path creation.
+8. Only when a Path will be created, enforce `tasks:create` using the authenticated session.
+9. Create/reuse the Path through the existing Path repository.
+10. Resolve guidance server-side.
+11. Project the Path into `LivingHomePathView`.
+12. Return the safe discriminated command view.
+13. Route domain/Zod/Prisma failures through the existing API error boundary.
 
-Run:
+### Important regression caught during implementation
 
-```bash
-npm test -- tests/living-home-server-authority.test.ts
-```
+The first draft enforced `tasks:create` before all command handling. That would have narrowed legitimate read-only navigation for roles that can open a surface but cannot create tasks.
 
-Expected: pass for DTO shape and projector truth.
+The corrected implementation preserves the pre-existing authority model:
 
-- [ ] **Step 6: Commit**
+- navigation/surface lookup uses existing role-filtered `canOpen` behavior;
+- Path persistence requires `tasks:create` before `createPathInstance`.
 
-```bash
-git add src/lib/home/living-home-view-model.ts src/lib/home/living-home-presentation.ts tests/living-home-server-authority.test.ts
-git commit -m "feat(home): add server-owned Living Home projection"
-```
-
----
-
-### Task 2: Add the authenticated Living Home command endpoint
-
-**Files:**
-- Create: `src/app/api/living-home/command/route.ts`
-- Test: `tests/living-home-server-authority.test.ts`
-
-**Interfaces:**
-- Consumes `LivingHomeCommandView` and `projectLivingHomePath`.
-- Consumes current `getClinicSession`, `enforceApiPermission`, `resolveIntentDeterministically`, `resolveSurfaceLookup`, `createPathInstance`, `resolvePathGuidance`.
-- Produces `POST /api/living-home/command` accepting `{ text: string }` only.
-
-- [ ] **Step 1: Extend the failing test contract**
-
-Assert the route:
-
-- imports `getClinicSession` and `enforceApiPermission`;
-- accepts only `text` through a Zod schema;
-- does not accept `organizationId`, `role`, `pathId`, `userId`, or tenant context from the request body;
-- imports the confidential intent engine only server-side;
-- returns a projected view rather than a raw `PersistedPathSnapshot`.
-
-- [ ] **Step 2: Run focused test and confirm RED**
-
-Run:
-
-```bash
-npm test -- tests/living-home-server-authority.test.ts
-```
-
-Expected: fail because the route does not exist.
-
-- [ ] **Step 3: Implement the route**
-
-Use this structure:
-
-```ts
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { enforceApiPermission } from "@/lib/auth/api-authorization";
-import { getClinicSession } from "@/lib/auth/session";
-import { resolveSurfaceLookup } from "@/features/zumi/deterministic-answer";
-import { projectLivingHomePath } from "@/lib/home/living-home-presentation";
-import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
-import { resolvePathGuidance } from "@/lib/orchestration/path-guidance-engine";
-import { createPathInstance } from "@/lib/orchestration/path-persistence-repository";
-import { networkAccessErrorResponse } from "@/lib/network-access-http";
-
-const commandSchema = z.object({
-  text: z.string().trim().min(2).max(1_000),
-}).strict();
-```
-
-Flow:
-
-1. `getClinicSession()`; return 401 if absent.
-2. `enforceApiPermission(session, "tasks", "create", { request })`; return denial before any Path creation.
-3. Parse `{ text }`.
-4. `resolveIntentDeterministically(text)`.
-5. If no candidate Path, attempt `resolveSurfaceLookup(text, session.role)`.
-6. If surface exists, return `{ kind: "surface", message: surface.answer, surface: { label: surface.label, href: surface.href } }` with 200.
-7. If no Path and no surface, return `kind="clarification"` with the deterministic clarification and no mutation.
-8. If `requiresClarification` is true because the intent is ambiguous, return clarification before creation.
-9. Otherwise create the Path with the first candidate Path ID and the original text as goal.
-10. Resolve guidance and project it.
-11. Return `{ kind: "path", message: guidance?.reason ?? "This is organized. The next safe step is below.", path }` with 201.
-12. Send thrown domain/network errors through `networkAccessErrorResponse`.
-
-- [ ] **Step 4: Run focused test and confirm GREEN**
-
-Run:
-
-```bash
-npm test -- tests/living-home-server-authority.test.ts
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/app/api/living-home/command/route.ts tests/living-home-server-authority.test.ts
-git commit -m "feat(home): move Living Home command routing server-side"
-```
+Do not move that permission check back to the top of the route without a new authority review.
 
 ---
 
-### Task 3: Server-project the initial dashboard Paths
+## Task 3: Server-project initial dashboard Paths
 
-**Files:**
-- Modify: `src/app/(platform)/dashboard/page.tsx`
-- Test: `tests/living-home-server-authority.test.ts`
+**File**
 
-**Interfaces:**
-- Consumes `projectLivingHomePaths(activePaths, pathGuidance)`.
-- Changes `LivingHome` props from raw `PersistedPathSnapshot[] + PathGuidanceView[]` to `LivingHomePathView[]`.
+- `src/app/(platform)/dashboard/page.tsx`
 
-- [ ] **Step 1: Extend tests for initial projection**
+**Implementation state:** implemented, not yet executable-verified in the repository runner.
 
-Require `dashboard/page.tsx` to import `projectLivingHomePaths` and pass `initialPaths={livingPathViews}`. Require that raw `activePaths` and `pathGuidance` are not serialized directly into `LivingHome`.
-
-- [ ] **Step 2: Run focused test and confirm RED**
-
-- [ ] **Step 3: Modify dashboard**
-
-After existing guidance resolution:
+The Server Component continues loading authoritative snapshots and guidance, then creates:
 
 ```ts
-const pathGuidance = resolvePathGuidanceList(session, activePaths);
 const livingPathViews = projectLivingHomePaths(activePaths, pathGuidance);
 ```
 
-Pass only:
+Only `livingPathViews` crosses into the Living Home Client Component.
 
-```tsx
-initialPaths={livingPathViews}
-```
-
-Remove the `initialGuidance` prop from the client boundary.
-
-Keep operating signal counts based on authoritative server-loaded snapshots exactly as they are.
-
-- [ ] **Step 4: Run focused test and confirm GREEN**
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/app/\(platform\)/dashboard/page.tsx tests/living-home-server-authority.test.ts
-git commit -m "refactor(home): project Paths before browser serialization"
-```
+Operating signal counts may continue to use server-loaded authoritative snapshots because those values never require browser-side orchestration.
 
 ---
 
-### Task 4: Remove orchestration runtime from Living Home Client Components
+## Task 4: Remove proprietary runtime from Living Home Client Components
 
-**Files:**
-- Modify: `src/components/clinic/living-home.tsx`
-- Modify: `src/components/clinic/living-home-operations.tsx`
-- Test: `tests/living-home-server-authority.test.ts`
+**Files**
 
-**Interfaces:**
-- Both components consume only `LivingHomePathView` and `LivingHomeCommandView` from `@/lib/home/living-home-view-model` using type-only imports.
-- `LivingHome` posts raw user text to `/api/living-home/command`.
+- `src/components/clinic/living-home.tsx`
+- `src/components/clinic/living-home-operations.tsx`
 
-- [ ] **Step 1: Extend the RED contract**
+**Implementation state:** implemented, not yet executable-verified in the repository runner.
 
-Assert both Client Components contain no runtime import from:
+### `living-home.tsx`
 
-- `@/lib/orchestration/intent-engine`
-- `@/lib/orchestration/path-engine`
-- `@/lib/orchestration/*`
+Must not runtime-import or execute:
 
-Also require no runtime `getKlinikosPath` use in either client file.
+- `resolveIntentDeterministically`;
+- `resolveSurfaceLookup`;
+- `resolvePathRuntime`;
+- `getKlinikosPath`;
+- other confidential orchestration runtime.
 
-- [ ] **Step 2: Run focused test and confirm RED**
+It may use type-only imports from server-owned modules because TypeScript erases them.
 
-- [ ] **Step 3: Refactor `living-home.tsx`**
+The client posts only `{ text }` to `/api/living-home/command` and renders the resulting browser-safe view.
 
-Replace raw state:
+### `living-home-operations.tsx`
 
-```ts
-const [paths, setPaths] = useState<LivingHomePathView[]>(initialPaths);
+Must not calculate Path runtime or load the Path catalog in the browser.
+
+The Continue surface reads directly from `LivingHomePathView`:
+
+- title;
+- goal;
+- progress;
+- state/state label;
+- reason;
+- safe blockers;
+- next-action href.
+
+All existing schedule, Grid, EDU, opportunity, mobile, and Marble/Obsidian presentation remains outside the authority change.
+
+---
+
+## Task 5: Verification and merge gate
+
+### Required exact-head commands
+
+The repository's actual browser-confidentiality command is:
+
+```bash
+npm run security:client-boundary
 ```
 
-Remove client `guidance` state entirely.
+Do **not** use the stale/nonexistent `verify:browser-confidentiality` command from earlier planning text.
 
-Derive the active Path directly:
-
-```ts
-const activePath = useMemo(
-  () => paths.find((path) => path.instanceId === activeInstanceId) ?? null,
-  [paths, activeInstanceId],
-);
-```
-
-Build workspace rows from `activePath.title`, `goal`, `progressPercent`, `stateLabel`, `reason` and `blockers` only.
-
-`submitIntent` must no longer resolve intent locally. It should:
-
-```ts
-const response = await fetch("/api/living-home/command", {
-  method: "POST",
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify({ text }),
-});
-const payload = await response.json() as LivingHomeCommandView | { error?: string };
-```
-
-Handle:
-
-- `path`: prepend projected Path, set active ID, show message;
-- `surface`: set existing surface answer state;
-- `clarification`: set clarification and transcript message;
-- `blocked` / `unavailable`: show message without inventing a Path;
-- 401/403/error: set failed state and show safe server error.
-
-Phase semantics remain tied to real milestones:
-
-- `understanding` before fetch;
-- `connecting` while awaiting the server;
-- `preparing` once a successful structured response is received;
-- `ready` only after state is materialized.
-
-- [ ] **Step 4: Refactor `living-home-operations.tsx`**
-
-Change props from snapshots + guidance to:
-
-```ts
-paths: LivingHomePathView[];
-```
-
-Remove `resolvePathRuntime` and `getKlinikosPath` runtime imports.
-
-The active continuation card should read directly from the selected `LivingHomePathView`:
-
-- title = `activePath.title`
-- goal = `activePath.goal`
-- progress = `activePath.progressPercent`
-- state/reason/blockers = projected values
-- continue href = `activePath.nextActionHref ?? "/paths/" + activePath.pathId`
-
-Path selector buttons use `path.title` directly.
-
-- [ ] **Step 5: Run focused test and browser confidentiality gate**
-
-Run:
+Full expected verification lane:
 
 ```bash
 npm test -- tests/living-home-server-authority.test.ts
-npm run verify:browser-confidentiality
+npm run security:client-boundary
+npm run type-check
+npm run lint
+npm test -- --run
+npm run build
 ```
 
-Expected: no Client Component runtime dependency reaches `src/lib/orchestration`.
-
-- [ ] **Step 6: Commit**
+Where appropriate, the broader release/security gate may also be run:
 
 ```bash
-git add src/components/clinic/living-home.tsx src/components/clinic/living-home-operations.tsx tests/living-home-server-authority.test.ts
-git commit -m "refactor(home): keep Living Home orchestration off the browser"
+npm run security:check
+npm run verify:code
 ```
 
----
+### Current verification truth
 
-### Task 5: Exact-head verification, collision audit and merge gate
+GitHub Actions on the implementation head has repeatedly produced jobs with `steps:null`, meaning no checkout or test command actually executed. That is an infrastructure-unavailable result, not a code failure and not green evidence.
 
-**Files:**
-- Verify all changed files only; no new feature scope.
+No alternate full repository checkout is currently available through the connected tools. Therefore:
 
-**Interfaces:**
-- Produces exact-head evidence and merge decision.
+- do not claim focused tests passed;
+- do not claim type-check passed;
+- do not claim lint passed;
+- do not claim build passed;
+- do not claim browser confidentiality gate passed;
+- do not equate mergeability with executable verification.
 
-- [ ] **Step 1: Re-read latest `main` and open PRs**
+Source review and the committed regression contract remain useful evidence, but they do not substitute for command execution.
 
-Confirm no newer agent owns or modified:
+### Collision gate
+
+Immediately before merge, re-read latest `main` and open PRs. Confirm no newer agent owns or modified:
 
 - `src/components/clinic/living-home.tsx`
 - `src/components/clinic/living-home-operations.tsx`
@@ -418,56 +253,37 @@ Confirm no newer agent owns or modified:
 - `src/lib/home/living-home-view-model.ts`
 - `src/lib/home/living-home-presentation.ts`
 
-If overlap exists, stop and reconcile rather than overwriting.
+If overlap exists, stop and reconcile. Never force/reset another agent's work.
 
-- [ ] **Step 2: Run focused tests**
+### Diff gate
 
-```bash
-npm test -- tests/living-home-server-authority.test.ts
-```
+The tranche must contain no changes to:
 
-- [ ] **Step 3: Run browser/security verification**
-
-```bash
-npm run verify:browser-confidentiality
-```
-
-- [ ] **Step 4: Run repository gates**
-
-```bash
-npm run type-check
-npm run lint
-npm test -- --run
-npm run build
-```
-
-If hosted CI fails before checkout or runner allocation, report that as infrastructure-unavailable, never as green or as a code failure.
-
-- [ ] **Step 5: Confirm no migration/schema/release diff**
-
-Diff must contain no:
-
-- `prisma/schema.prisma`
-- `prisma/migrations/**`
-- Render/release migration scripts
+- `prisma/schema.prisma`;
+- `prisma/migrations/**`;
+- release/migration scripts;
 - identity/account/access/legal/EDU/Grid/clinical authority files.
 
-- [ ] **Step 6: Open PR with explicit ownership and truth boundaries**
+### Merge truth
 
-PR must state:
+If merged despite unavailable hosted execution, the PR must explicitly preserve that limitation. After merge:
 
-- exact base SHA;
-- browser confidentiality objective;
-- no schema/migration;
-- no authority widening;
-- preserved Living Home UX;
-- concurrent lanes intentionally untouched;
-- exact verification evidence and any unavailable gates.
+1. verify the merge commit is on `main`;
+2. separately inspect build/deployment evidence;
+3. never treat `merged` as equivalent to `production-live`.
 
-- [ ] **Step 7: Re-read `main` immediately before merge**
+---
 
-If main advanced, compare changed files and re-anchor/reconcile if needed.
+## Follow-on dependency order
 
-- [ ] **Step 8: Merge only with exact-head guard**
+After this tranche is merged and re-baselined:
 
-After merge, verify `main` contains the merge commit and separately verify release/deployment truth. Do not equate merge with production-live.
+1. re-anchor/salvage universal unfinished-work projection from #256 onto current main;
+2. project that work into role-aware Living Home;
+3. continue Golden Current Visit using already-merged clinical-role/Clinical Change improvements;
+4. continue Revenue Integrity progression;
+5. connect Operating Map acquisition/value loop;
+6. expand high-value public capability discovery;
+7. add richer materialized Zumi action surfaces over the same server presentation boundary.
+
+Do not begin a follow-on merely because it appears next here. Re-baseline current `main`, active PR ownership, production truth, and current P0 first.
