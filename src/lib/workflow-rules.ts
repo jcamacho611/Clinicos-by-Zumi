@@ -1,7 +1,12 @@
 import type { WorkflowDecision } from "@/lib/types";
+import { LIFE_THREATENING_MESSAGE, detectUrgentSignal } from "@/lib/safety/urgent-signal";
 
-export const EMERGENCY_MESSAGE =
-  "If this is a medical emergency, please call 911 or go to the nearest emergency room.";
+/**
+ * Re-exported rather than redefined. Two copies of the emergency wording drift, and the
+ * copy people read is then a coin flip. Existing importers keep working and get the
+ * shared text.
+ */
+export const EMERGENCY_MESSAGE = LIFE_THREATENING_MESSAGE;
 
 export const MEDICAL_SAFETY_MESSAGE =
   "I can help with scheduling and office information, but I cannot provide medical advice, diagnose symptoms, interpret results, or make treatment decisions. I can route your message to the office.";
@@ -11,7 +16,11 @@ const includesAny = (value: string, patterns: string[]) => patterns.some((patter
 export function classifyWorkflow(input: string): WorkflowDecision {
   const normalized = input.trim().toLowerCase();
 
-  if (includesAny(normalized, ["chest pain", "can't breathe", "cannot breathe", "suicidal", "stroke", "severe bleeding", "unconscious"])) {
+  // Delegated rather than kept as a second list. This one matched bare substrings, so it
+  // read "stroke" inside "stroke of luck", and it covered none of "not breathing",
+  // "overdose", "heart attack" or "seizure".
+  const urgent = detectUrgentSignal(input);
+  if (urgent.urgent) {
     return {
       category: "Emergency Symptom",
       riskLevel: "Urgent",
@@ -19,7 +28,7 @@ export function classifyWorkflow(input: string): WorkflowDecision {
       assignedTeam: "Provider",
       action: "Create urgent escalation and notify on-call staff",
       blockedFromAutoSend: true,
-      emergencyMessage: EMERGENCY_MESSAGE,
+      emergencyMessage: urgent.message,
       safetyMessage: MEDICAL_SAFETY_MESSAGE,
     };
   }
