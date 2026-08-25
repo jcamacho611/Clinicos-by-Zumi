@@ -11,7 +11,7 @@ export async function GET() {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   if (!can(session.role, "tasks", "read")) return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  try { const data = await listCareCoordinationWorkspace(session.organizationId, session.userId); return NextResponse.json({ data: { tasks: data.tasks, notifications: data.notifications } }, { headers: { "Cache-Control": "private, no-store" } }); }
+  try { const data = await listCareCoordinationWorkspace(session.organizationId, session.userId, session.role); return NextResponse.json({ data: { tasks: data.tasks, notifications: data.notifications } }, { headers: { "Cache-Control": "private, no-store" } }); }
   catch (error) { return networkAccessErrorResponse(error); }
 }
 

@@ -27,13 +27,13 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
   const session = await requireClinicSession();
   if (!canAccessWorkspace(session.role, workspace)) return notFound();
   if (workspace === "tasks") {
-    return <TasksWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+    return <TasksWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId, session.role)} />;
   }
   if (workspace === "messages") {
     return <MessagesWorkspaceReal />;
   }
   if (workspace === "escalations") {
-    return <EscalationsWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId)} />;
+    return <EscalationsWorkspaceReal workspace={await listCareCoordinationWorkspace(session.organizationId, session.userId, session.role)} />;
   }
   if (workspace === "insurance") {
     return <InsuranceWorkspaceReal workspace={await listInsuranceWorkspace(session)} />;
