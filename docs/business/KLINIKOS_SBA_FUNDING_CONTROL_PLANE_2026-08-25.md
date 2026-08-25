@@ -12,12 +12,12 @@ Governing authorities:
 
 ## 1. Purpose
 
-This document is the current evidence-backed operating register for Klinikos debt, non-dilutive capital, customer capital, and financing readiness.
+This document is the current evidence-backed operating register for Klinikos debt, non-dilutive capital, customer capital, accelerator/strategic opportunities, and financing readiness.
 
 It exists to prevent three failures:
 
 1. repeating outreach already completed;
-2. converting proposals, applications, pipeline, or guaranties into fictional funding/revenue;
+2. converting proposals, applications, pipeline, program-fit responses, or guaranties into fictional funding/revenue;
 3. allowing lender-facing identity, financial, ownership, product, and use-of-funds statements to contradict one another.
 
 This register implements the Capital Opportunity Register and Lender Readiness Register required by `KLINIKOS_COMPANY_CONTROL_REGISTERS.md`.
@@ -46,6 +46,7 @@ Use the company truth classes exactly:
 - `EXECUTED` — actually sent, filed, paid, signed, submitted, activated, or completed.
 
 Never call an outreach email an application approval.
+Never call a program-fit response selection.
 Never call an application submission funding.
 Never call an SBA guaranty repayment capacity.
 Never call a proposal or illustrative scenario revenue.
@@ -71,7 +72,7 @@ Current operating order:
 2. customer commitments and properly documented prepayments where appropriate;
 3. qualified debt / credit-enhanced financing where repayment capacity is supportable;
 4. non-dilutive capital, procurement, grants, prizes, workforce programs, R&D programs, and tax incentives where actually eligible;
-5. strategic capital;
+5. strategic capital / accelerators where access and economics justify the commitment;
 6. venture equity when evidence supports accelerated scale.
 
 Debt is appropriate only where repayment capacity, receivables, assets, or predictable cash flow can support the obligation.
@@ -174,6 +175,24 @@ Executed outreach / portal work exists.
 Application state: do not confuse Lender Match or portal identity verification with lender approval.
 Next action: complete portal requirements and process lender matches when returned.
 
+### 7.6 Response harvest — 2026-08-25
+
+Truth class: `CURRENT_FACT` based on connected Outlook search as of approximately 2026-08-25 03:51 ET.
+
+Observed state:
+
+- Pursuit: outbound Klinikos messages found; no substantive lender response found in the current search window.
+- Accompany Capital: outbound Klinikos messages found; no substantive lender response found in the current search window.
+- TruFund: outbound Klinikos message found; no substantive lender response found in the current search window.
+- BOC / Brooklyn financing support: outbound Klinikos messages found; no substantive lender response found in the current search window.
+- ETRDC: substantive lender response exists and remains the active confirmed lender dialogue.
+
+Interpretation:
+
+- absence of a response in the current mailbox search is not a lender decline;
+- do not duplicate the original outreach yet;
+- follow up only after a reasonable response window or when a stronger package / requested document materially advances the conversation.
+
 ## 8. Texas SBA 504 expansion lane
 
 ### 8.1 Intended project
@@ -264,7 +283,7 @@ Klinikos replied explaining:
 Status: `AWAITING ETRDC RESPONSE`
 Next action: do not send another generic follow-up until a reasonable response window or new substantive evidence exists.
 
-## 9. Institutional / non-dilutive / customer-capital pipeline
+## 9. Institutional / non-dilutive / strategic-capital pipeline
 
 ### 9.1 Kentucky AI Workforce Readiness Network
 
@@ -294,6 +313,129 @@ Do NOT use as booked revenue, accounts receivable, or guaranteed cash.
 Klinikos has prepared other proposal / institutional-business materials, including municipal digital-transformation work.
 
 Treat each separately as `PIPELINE` unless a signed agreement and authoritative payment/receivable evidence exists.
+
+### 9.3 Building Better Futures for Health 2027 / Medical Alley
+
+Capital/opportunity type: prize services / commercialization support / strategic exposure.
+
+#### Executed IDE response
+
+Truth class: `EXECUTED — PROGRAM FIT RESPONSE`.
+
+Outlook evidence dated 2026-08-24:
+
+- IDE Group Marketing Manager Matt Allison told Klinikos it is welcome to enter the 2027 BBFH Challenge;
+- he clarified that Australian commercialization commitment is associated with eligibility for the MTAA MedTech Compass subscription rather than the main prize / People's Choice award for the U.S. entrant context discussed;
+- he directed U.S. entrants toward the Medical Alley Innovation Showcase pathway in Minnesota;
+- he invited further questions.
+
+This is not selection, finalist status, funding, prize, endorsement, or partnership.
+
+#### Direct BBFH current published state
+
+Primary source: `https://ide.group/bbfh-challenge/`
+Application form: `https://ide.group/2027-bbfh-application-form/`
+
+Current facts verified 2026-08-25:
+
+- direct application deadline: 2026-08-31 under published terms;
+- winner: AUD $30,000 of IDE services;
+- People's Choice: AUD $10,000 of IDE services;
+- prize is services, not cash;
+- published judging criteria emphasize impact, novelty, and growth potential;
+- current application includes Vision, Desirability, Feasibility, Viability, Team, Prize Utilization, attendance, Australian-market interest, and supporting-document sections.
+
+Material terms / risks:
+
+- prize services require the winner to enter IDE's standard product-development agreement;
+- published terms warn applicants about disclosure/IP consequences;
+- published terms grant IDE a broad non-exclusive license over entry content for IDE business/marketing purposes;
+- travel/tax/insurance costs are not included;
+- finalist/publicity provisions apply.
+
+Therefore the application must exclude trade-secret algorithms, source code, confidential customer information, PHI, unnecessary security internals, and unpublished patentable implementation detail.
+
+Status: `WORKING APPLICATION PACKAGE READY / NOT SUBMITTED`.
+Evidence location:
+- `docs/business/funding/BBFH_MEDICAL_ALLEY_APPLICATION_WORKING_PACKAGE_2026-08-25.md`
+
+Final submission/legal acceptance remains an authorized human/company action.
+
+#### Medical Alley Innovation Showcase
+
+Primary source: `https://www.medicalalley.org/events/medical-alley-innovation-showcase/`
+
+Current facts verified 2026-08-25:
+
+- presenter deadline: 2026-09-14;
+- event: 2026-11-05, Eagan/Minneapolis, Minnesota;
+- five early-stage companies selected to present;
+- one winner invited to present at BBFH in Australia;
+- healthcare investors, industry leaders, and strategic partners are expected.
+
+Status: `ACTIVE WARM OPPORTUNITY / NOT SUBMITTED`.
+Next action: inspect current presenter form/terms, finalize focused company story, and submit only after authorized review of any external terms.
+
+### 9.4 Techstars healthcare accelerator lanes
+
+Current working packages now exist on `main` for:
+
+- Techstars AI Health Baltimore;
+- Northwestern Medicine & Techstars Healthcare Accelerator.
+
+Evidence location:
+
+- `docs/business/funding/TECHSTARS_AI_HEALTH_BALTIMORE_APPLICATION_WORKING_PACKAGE_2026-08-25.md`
+- `docs/business/funding/TECHSTARS_NORTHWESTERN_HEALTHCARE_APPLICATION_DELTA_2026-08-25.md`
+
+Current status: `WORKING APPLICATION PACKAGES / NOT SUBMITTED`.
+
+Current verified program window in those packages:
+
+- applications opened 2026-08-24;
+- current final deadline 2026-11-18;
+- 2027 accelerator cycle;
+- current Techstars standard investment is a dilutive investment, not a grant.
+
+Positioning law:
+
+- Baltimore: governed outpatient workflow / healthcare economics / provider-payer commercialization.
+- Northwestern: Current Visit + Clinical Change + Staff Handoff + governed Zumi / physician-nursing efficiency.
+
+Do not present application work as accelerator traction or funding.
+
+### 9.5 NSF SBIR/STTR Project Pitch
+
+Capital type: `NON-DILUTIVE R&D`.
+
+Working package:
+- `docs/business/funding/NSF_SBIR_PROJECT_PITCH_WORKING_PACKAGE_2026-08-25.md`
+
+Current status: `WORKING PROJECT PITCH / NOT SUBMITTED / NOT INVITED / NOT FUNDED`.
+
+Current technical thesis:
+
+> Evidence-constrained workflow intelligence that separates probabilistic interpretation from deterministic authority and requires provenance-supported state transitions in high-stakes healthcare operations.
+
+Current verified NSF process facts captured in the working package:
+
+- Project Pitch is the required fit gate before a Phase I proposal;
+- only one Project Pitch may be under review at a time;
+- current Project Pitch limits and annual/project submission constraints apply;
+- current Phase I full-proposal deadline is 2026-11-04 under NSF 26-510;
+- current Phase I ceiling is up to $305,000;
+- full proposal requires the applicable federal registrations;
+- PI employment requirements must be satisfied at award.
+
+Technical scope is intentionally synthetic/non-PHI first and must remain genuine R&D rather than ordinary Klinikos feature completion.
+
+Next action: reconcile final company/PI facts and official portal wording, then authorized company submission may proceed if the Project Pitch remains strategically sound.
+
+### 9.6 NY Ventures and other strategic/non-dilutive lanes
+
+Continue to evaluate current New York innovation, matched-equity, grant, procurement, R&D, prize, and strategic-capital opportunities through the company Capital Opportunity Register.
+
+Do not represent a private match, investor commitment, grant eligibility, or award unless current evidence supports it.
 
 ## 10. Corporate evidence state
 
@@ -447,32 +589,43 @@ Use these where relevant and truthful:
 - machine-readable company operating canon;
 - company control registers;
 - executive review gauntlet;
+- company execution control plane;
 - explicit current/proposed/executed truth classes.
 
 ### Commercialization
 - approved paid-entry offer architecture;
 - `$500` Clinic Operating Analysis actively being offered to prospects;
 - institutional proposal pipeline;
+- active prize/accelerator/R&D application packages;
 - multiple revenue modes that do not require the lender to underwrite the national network thesis.
 
 ### Capital discipline
-- separate lender, investor, and non-dilutive cases;
+- separate lender, investor, accelerator, and non-dilutive cases;
 - stage capital against evidence;
 - do not activate variable cost before corresponding economic value exists;
 - avoid unnecessary debt stacking and credit applications;
-- maintain explicit use-of-proceeds controls.
+- maintain explicit use-of-proceeds controls;
+- preserve IP/trade secrets when competition or accelerator terms permit broad use of submitted content.
 
 ## 15. Product / production disclosure discipline
 
-Current GitHub `main` contains the company operating system and capital/governance architecture, but repository main is currently unprotected and required status checks are disabled.
+Current GitHub `main` contains substantial company/product architecture and the governed production migration/release policy.
 
-The repository also contains a production migration reconciliation runbook because production deployment has been blocked behind an explicit migration verification gate.
+Current release truth as of the 2026-08-25 capital refresh:
+
+- PR #321 merged a governed path for explicitly approved additive production migrations;
+- the production-freshness acceptance issue #318 has been **reopened** because runtime acceptance is not proven;
+- repeated verification after the release fix still observed `https://www.klinikos.io/` returning **503 Service Unavailable**;
+- therefore there is no current evidence in this register that the newest `main` is healthy in production;
+- `main` remains reported by GitHub as unprotected with required status checks disabled;
+- GitHub Actions runner allocation has repeatedly returned no executable steps / no runner, so hosted CI must not be described as green merely because a workflow object exists.
 
 Therefore:
-- never imply that every current `main` capability is already live in production;
+- never imply every current `main` capability is already live in production;
 - use repository evidence for implemented code/governance;
 - use verified production/runtime evidence separately for what is actually deployed;
-- disclose material production-readiness gaps accurately when relevant.
+- disclose material production-readiness gaps accurately when relevant;
+- lender/accelerator supporting materials should use a controlled demo or screenshots if the public production URL is not healthy at submission time.
 
 ## 16. Current priority queue
 
@@ -482,25 +635,33 @@ Therefore:
 2. Build/verify Klinikos-specific corporate-record package required for financing; do not substitute parent-company documents.
 3. Build opening/current financial statements and startup projections.
 4. Verify whether any `$500` Operating Analysis has produced live payment evidence.
+5. Recover and verify production: exact deployed SHA, `/api/health`, root/login smoke, and current-main freshness; keep issue #318 open until evidence exists.
+
+### P1 — Time-sensitive capital / strategic applications
+
+6. Finalize direct BBFH application and combined non-confidential supporting PDF before the Aug. 31 deadline; founder/authorized officer must approve the competition terms and final submission.
+7. Prepare Medical Alley presenter application before Sep. 14 after inspecting the current linked form/terms.
+8. Finalize NSF Project Pitch company/PI facts and submit through the official NSF process only after authorized review; do not start a competing Project Pitch while one is under review.
+9. Continue Techstars Baltimore/Northwestern application refinement while customer/product evidence improves; do not submit stale traction/revenue/company facts.
 
 ### P1 — Active lender progression
 
-5. Await ETRDC response to the startup-specific checklist question.
-6. Harvest responses from Pursuit, Accompany Capital, TruFund, BOC, SBA Lender Match, and the remaining Texas CDCs.
-7. Build lender-specific submission packages only after each lender's actual requirements are known.
+10. Await ETRDC response to the startup-specific checklist question.
+11. Harvest responses from Pursuit, Accompany Capital, TruFund, BOC, SBA Lender Match, and the remaining Texas CDCs.
+12. Build lender-specific submission packages only after each lender's actual requirements are known.
 
 ### P1 — Underwriting package
 
-8. Produce sources-and-uses schedules by loan type.
-9. Produce base/conservative/stress debt-service models.
-10. Maintain private owner/guarantor documents in a controlled data room.
-11. Reconcile legal entity, ownership, address, EIN, management, revenue, cash, debt, forecast, customer status, and affiliated entities before every application.
+13. Produce sources-and-uses schedules by loan type.
+14. Produce base/conservative/stress debt-service models.
+15. Maintain private owner/guarantor documents in a controlled data room.
+16. Reconcile legal entity, ownership, address, EIN, management, revenue, cash, debt, forecast, customer status, and affiliated entities before every application.
 
 ### P2 — Evidence conversion
 
-12. Convert paid analyses, implementations, signed contracts, institutional awards, and recurring subscriptions into properly documented financial evidence as they become real.
-13. Use customer-value evidence to strengthen both underwriting and investor readiness.
-14. Keep the Capital Opportunity and Lender Readiness registers current rather than recreating the funding search from scratch.
+17. Convert paid analyses, implementations, signed contracts, institutional awards, and recurring subscriptions into properly documented financial evidence as they become real.
+18. Use customer-value evidence to strengthen both underwriting and investor readiness.
+19. Keep the Capital Opportunity and Lender Readiness registers current rather than recreating the funding search from scratch.
 
 ## 17. Review cadence
 
@@ -508,11 +669,17 @@ While cash constrained:
 - Capital Opportunity Register: daily.
 - Customer / Prospect cash conversion: daily.
 - SBA portal deadlines: daily until closed.
+- time-sensitive prize/accelerator/R&D deadlines: daily while inside 30 days.
 
 While pursuing debt:
 - Lender Readiness Register: weekly minimum, and immediately upon lender response.
 - Financial statements / forecast: update whenever material facts change.
 - Corporate governance evidence: review before every financing submission.
+
+While pursuing accelerators/prizes/R&D:
+- application facts: refresh before every submission;
+- IP/confidentiality/publicity terms: review before any external acceptance;
+- external application state: update immediately after actual submission/selection/decision.
 
 ## 18. Final operating rule
 
@@ -520,6 +687,10 @@ The objective is not to submit the maximum number of applications.
 
 The objective is:
 
-`CURRENT TRUTH → CORRECT PROGRAM → COMPLETE PACKAGE → CONSISTENT UNDERWRITING STORY → FAST RESPONSE → CLOSE CAPITAL → MEASURE USE OF FUNDS → SERVICE DEBT FROM OPERATING CASH FLOW`
+`CURRENT TRUTH → CORRECT PROGRAM → COMPLETE PACKAGE → CONSISTENT STORY → AUTHORIZED SUBMISSION → FAST RESPONSE → CLOSE CAPITAL / SUPPORT → MEASURE USE → CREATE CUSTOMER VALUE`
 
-Every new lender response, funding application, payment, contract, grant/procurement event, financial statement, ownership action, or material production change must update this register or the governing company registers.
+For debt specifically:
+
+`CURRENT TRUTH → CORRECT LENDER → COMPLETE PACKAGE → CONSISTENT UNDERWRITING STORY → AUTHORIZED APPLICATION → CLOSE CAPITAL → MEASURE USE OF FUNDS → SERVICE DEBT FROM OPERATING CASH FLOW`
+
+Every new lender response, funding application, payment, contract, program-fit response, accelerator/grant/prize event, financial statement, ownership action, or material production change must update this register or the governing company registers.
