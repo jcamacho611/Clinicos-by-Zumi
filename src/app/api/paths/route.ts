@@ -10,6 +10,10 @@ import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engin
 import { resolveSurfaceLookup } from "@/features/zumi/deterministic-answer";
 import { detectUrgentSignal } from "@/lib/safety/urgent-signal";
 import {
+  describeUrgentHandoff,
+  recordUrgentSignalEscalation,
+} from "@/lib/safety/urgent-escalation-repository";
+import {
   createPathInstance,
   listActivePathSnapshots,
 } from "@/lib/orchestration/path-persistence-repository";
@@ -98,9 +102,16 @@ async function respondToTypedIntent(session: ClinicSession, text: string) {
   // Klinikos does not triage here — it stops, and it shows approved language.
   const urgent = detectUrgentSignal(text);
   if (urgent.urgent) {
+    // Opening the escalation is best-effort. If it fails the emergency message is still
+    // returned, and the handoff sentence says plainly that no review was opened.
+    const escalation = await recordUrgentSignalEscalation(session, urgent.category);
     return NextResponse.json({
       outcome: "urgent",
-      urgent: { category: urgent.category, message: urgent.message },
+      urgent: {
+        category: urgent.category,
+        message: urgent.message,
+        handoff: describeUrgentHandoff(escalation),
+      },
     });
   }
 

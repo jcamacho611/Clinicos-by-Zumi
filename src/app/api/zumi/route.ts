@@ -19,6 +19,10 @@ import {
 import { resolveZumiWorkspaceIntelligence } from "@/features/zumi/workspace-intelligence";
 import { answerDeterministically } from "@/features/zumi/deterministic-answer";
 import { detectUrgentSignal } from "@/lib/safety/urgent-signal";
+import {
+  describeUrgentHandoff,
+  recordUrgentSignalEscalation,
+} from "@/lib/safety/urgent-escalation-repository";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
@@ -160,10 +164,11 @@ export async function POST(request: Request) {
   // of quota.
   const urgent = detectUrgentSignal(parsed.data.question);
   if (urgent.urgent) {
+    const escalation = await recordUrgentSignalEscalation(session, urgent.category);
     return NextResponse.json(
       {
         data: {
-          answer: urgent.message,
+          answer: `${urgent.message} ${describeUrgentHandoff(escalation)}`,
           conversationToken: null,
           sources: [],
           trustedOrchestration: null,

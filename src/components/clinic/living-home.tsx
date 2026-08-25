@@ -175,7 +175,7 @@ export function LivingHome({
   const [failed, setFailed] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
   const [surfaceAnswer, setSurfaceAnswer] = useState<SurfaceAnswerView | null>(null);
-  const [urgent, setUrgent] = useState<{ category: string; message: string } | null>(null);
+  const [urgent, setUrgent] = useState<{ category: string; message: string; handoff?: string } | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeInstanceId, setActiveInstanceId] = useState<string | null>(null);
   const [attentionCount, setAttentionCount] = useState(0);
@@ -271,7 +271,7 @@ export function LivingHome({
       setPhase("preparing");
       const payload = await response.json() as {
         outcome?: "path" | "surface" | "clarification" | "urgent";
-        urgent?: { category: string; message: string };
+        urgent?: { category: string; message: string; handoff?: string };
         data?: PersistedPathSnapshot;
         guidance?: PathGuidanceView | null;
         presentation?: PathPresentation | null;
@@ -548,6 +548,9 @@ export function LivingHome({
                       <p className="mt-3 text-xs leading-5 text-[var(--text-secondary)]">
                         Klinikos did not continue what you asked for, and it cannot judge how serious this is.
                       </p>
+                      {urgent.handoff ? (
+                        <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{urgent.handoff}</p>
+                      ) : null}
                     </div>
                   ) : null}
 
