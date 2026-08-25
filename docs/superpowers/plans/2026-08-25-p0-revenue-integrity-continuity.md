@@ -2,28 +2,27 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Extend Klinikos revenue integrity backward from existing claim-level truth into a safe pre-claim review surface that can detect one high-confidence break between documented/coded work and the billing path, then surface that break in Billing and Living Home without inventing revenue.
+**Goal:** Extend Klinikos revenue integrity backward from existing claim-level truth into a safe pre-claim review surface that detects a high-confidence break between reviewed coding and the claim path, then surfaces that break in Billing and Living Home without inventing revenue.
 
-**Architecture:** Preserve `revenue-integrity-path.ts` as the canonical claim progression and `revenue-integrity-repository.ts` as the tenant-scoped single-claim reader. Add a separate server-only pre-claim scanner over signed/finalized encounters, reviewed coding/superbill evidence, and claim linkage. Its output is a read-only `RevenueReviewItem`, not a new claim or charge. Feed that projection into Billing and, through the P0 `NeedsActionItem` adapter, into owner/biller Living Home.
+**Architecture:** Preserve `src/lib/revenue/revenue-integrity-path.ts` as canonical claim progression and `src/lib/repositories/revenue-integrity-repository.ts` as the tenant-scoped single-claim reader. Add one server-only pre-claim scanner over finalized encounters, reviewed superbills, and claim linkage. Its output is a read-only `RevenueReviewItem`, never a charge or claim. Feed the projection into Billing and the P0 `NeedsActionItem` adapter.
 
-**Tech Stack:** TypeScript, Prisma/PostgreSQL existing schema, Next.js server components, Vitest, existing Billing workspace and NeedsAction projection.
+**Tech Stack:** TypeScript, existing Prisma/PostgreSQL schema, Next.js server components, Vitest, Billing workspace, `NeedsActionItem`, and existing MVP runner.
 
 **Spec:** `docs/superpowers/specs/2026-08-25-klinikos-p0-value-loop-design.md`
 
 ## Global Constraints
 
-- Depends on the Universal Work Projection plan for Living Home integration.
-- Do not infer an amount from CPT/HCPCS or procedure codes unless an authoritative fee schedule/configuration is explicitly connected.
-- A missing claim is not automatically “lost revenue.”
-- A reviewed superbill/complete coding record may support “billing path may need review,” not “money lost.”
-- Existing claim/payer states remain exactly as conservative as `revenue-integrity-path.ts` defines them.
-- No production claim submission is added here.
-- No autonomous coding or claim creation.
-- Role without billing read receives no financial projection.
+- Depends on `2026-08-25-p0-universal-work-projection-and-living-home.md` for Living Home integration.
+- Do not infer a dollar amount from CPT/HCPCS/procedure codes without an authoritative fee schedule/configuration.
+- Missing claim does not equal lost revenue.
+- Reviewed coding without a linked claim supports only “Billing path may need review.”
+- Existing claim/payer states remain exactly as conservative as `revenue-integrity-path.ts`.
+- No autonomous coding, claim creation, claim submission, or payer-status inference.
+- A role without `can(role, "billing", "read")` gets no financial projection.
 
 ---
 
-### Task 1: Define `RevenueReviewItem` and safe issue vocabulary
+### Task 1: Define the browser-safe revenue-review vocabulary
 
 **Files:**
 - Create: `src/lib/revenue/revenue-review.ts`
@@ -33,7 +32,6 @@
 
 ```ts
 export type RevenueReviewReason =
-  | "signed_encounter_without_billing_path"
   | "reviewed_coding_without_claim"
   | "claim_missing_required_coding"
   | "open_denial";
@@ -56,48 +54,48 @@ export interface RevenueReviewItem {
 }
 ```
 
-- [ ] **Step 1: Write failing contract tests**
-
-Prove:
-
-- `amountCents` may be null and must remain null when no authoritative amount exists;
-- externally confirmed state cannot be constructed without external evidence input in the pure builder;
-- title/explanation use review language, not recovered/lost language.
-
-Example expected wording:
+- [ ] **Step 1: Write RED contract tests**
 
 ```ts
-expect(item.title).toBe("Billing path may need review");
-expect(item.explanation).toContain("No claim is linked");
-expect(item.explanation).not.toMatch(/recovered|lost revenue|guaranteed/i);
+expect(buildReviewedCodingWithoutClaimReview({
+  organizationId: "org-1",
+  patientId: "p-1",
+  encounterId: "e-1",
+  superbillId: "sb-1",
+})).toMatchObject({
+  reason: "reviewed_coding_without_claim",
+  title: "Billing path may need review",
+  amountCents: null,
+  evidenceLevel: "verified_internal",
+});
 ```
 
-- [ ] **Step 2: Verify RED**
+Also require every generated title/explanation to reject `/recovered|lost revenue|guaranteed/i`.
+
+- [ ] **Step 2: Run RED**
 
 ```bash
 npm test -- tests/revenue-review-contract.test.ts
 ```
 
-- [ ] **Step 3: Implement types + pure builders**
+- [ ] **Step 3: Implement pure builders**
 
-Keep this module browser-safe if Billing/Living Home will consume the DTO.
+`reviewed_coding_without_claim` uses no amount. `open_denial` may carry the stored `Denial.amountCents`. `externally_confirmed` is only accepted when the caller supplies an already verified external evidence reference.
 
-- [ ] **Step 4: Verify GREEN**
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Run GREEN and commit**
 
 ```bash
+npm test -- tests/revenue-review-contract.test.ts
 git add src/lib/revenue/revenue-review.ts tests/revenue-review-contract.test.ts
 git commit -m "feat(revenue): define truthful revenue review items"
 ```
 
-### Task 2: Add tenant-scoped pre-claim scanner
+### Task 2: Add the tenant-scoped pre-claim scanner
 
 **Files:**
 - Create: `src/lib/repositories/revenue-review-repository.ts`
 - Create: `tests/revenue-review-repository.test.ts`
-- Read/reuse: `src/lib/repositories/billing-truth-repository.ts`
-- Read/reuse: current Encounter/Superbill/ClaimDraft Prisma relations in `prisma/schema.prisma`.
+- Reuse: `prisma/schema.prisma` Encounter, Superbill, ClaimDraft, Denial models.
 
 **Interfaces:**
 
@@ -107,28 +105,28 @@ export async function listRevenueReviewItems(
 ): Promise<RevenueReviewItem[]>;
 ```
 
-- [ ] **Step 1: Write failing authorization and query-scope tests**
-
-Mock `db` using the same pattern as `tests/revenue-integrity-repository.test.ts`.
-
-Prove:
+- [ ] **Step 1: Write RED authorization/query tests**
 
 ```ts
-await expect(listRevenueReviewItems({ organizationId: "org-1", role: "clinical_staff" as ClinicRole }))
-  .rejects.toMatchObject({ status: 403 });
+await expect(listRevenueReviewItems({
+  organizationId: "org-1",
+  role: "clinical_staff" as ClinicRole,
+})).rejects.toMatchObject({ status: 403 });
 ```
 
-and all DB reads carry `organizationId` inside the query.
+Every query must contain `organizationId` inside the database predicate.
 
-- [ ] **Step 2: Lock the first high-confidence exception**
+- [ ] **Step 2: Lock the first pre-claim exception**
 
-The scanner should create `reviewed_coding_without_claim` only when repository evidence proves all of:
+Create `reviewed_coding_without_claim` only when all are true:
 
-1. encounter belongs to organization;
-2. encounter is finalized/signed enough for billing review;
-3. a superbill/coding artifact exists and is reviewed or otherwise in the repository-defined human-reviewed state;
-4. at least one procedure and diagnosis are present;
-5. no `ClaimDraft` is linked to that encounter/superbill.
+1. encounter is in the current organization;
+2. encounter has a signed/finalized artifact sufficient for billing review;
+3. linked superbill exists;
+4. `superbill.reviewedAt !== null`;
+5. `procedures` is a non-empty array;
+6. `diagnoses` is a non-empty array;
+7. no ClaimDraft in the same organization references that encounter or superbill.
 
 Expected output:
 
@@ -142,125 +140,78 @@ expect(items[0]).toMatchObject({
 
 - [ ] **Step 3: Add negative tests**
 
-No item when:
+No pre-claim item for Draft/unsigned encounter, unreviewed superbill, missing procedure/diagnosis evidence, existing claim, or cross-tenant data.
 
-- encounter is Draft;
-- coding is incomplete;
-- claim already exists;
-- cross-tenant rows exist;
-- no evidence supports a billing expectation.
+- [ ] **Step 4: Implement bounded explicit-select reads**
 
-- [ ] **Step 4: Implement explicit-select repository**
-
-Do not use broad `include: true`. Return only the fields required to build the DTO. Prefer bounded result counts and deterministic ordering.
+Use `take: 200` and deterministic newest-first encounter/superbill ordering. Do not return raw ORM rows to callers.
 
 - [ ] **Step 5: Verify and commit**
 
 ```bash
 npm test -- tests/revenue-review-repository.test.ts tests/revenue-review-contract.test.ts
 git add src/lib/repositories/revenue-review-repository.ts tests/revenue-review-repository.test.ts
-git commit -m "feat(revenue): detect reviewed coding without a billing path"
+git commit -m "feat(revenue): detect reviewed coding without a claim path"
 ```
 
-### Task 3: Add existing-claim issues to the same review model without duplicating claim truth
+### Task 3: Project existing claim issues through the same review DTO
 
 **Files:**
 - Modify: `src/lib/repositories/revenue-review-repository.ts`
 - Modify: `tests/revenue-review-repository.test.ts`
-- Reuse: `buildRevenueIntegrityPath(...)` / `readRevenueIntegrityPath(...)` logic where appropriate.
+- Reuse: `src/lib/revenue/revenue-integrity-path.ts`
 
-**Interfaces:**
-- Produces review items for:
-  - claim missing coding;
-  - open denial;
-  - optionally signed encounter without any billing artifact only if product/business rules can prove such a billing path is expected.
+- [ ] **Step 1: Write RED tests for existing claims**
 
-- [ ] **Step 1: Write tests for claim missing coding + open denial**
-
-Use existing claim facts, not new interpretation.
+A claim whose canonical revenue path first unresolved stage is `coded` creates `claim_missing_required_coding`. An open Denial creates `open_denial` with stored `amountCents` and appeal deadline evidence.
 
 ```ts
 expect(items.some((item) => item.reason === "claim_missing_required_coding")).toBe(true);
 expect(items.some((item) => item.reason === "open_denial")).toBe(true);
 ```
 
-For a denial, amount may use the existing `denial.amountCents` because it is stored evidence; label it as amount under review/denied, not recovered money.
+- [ ] **Step 2: Implement by translating existing claim truth**
 
-- [ ] **Step 2: Implement using existing claim path vocabulary**
+Do not introduce a second revenue state machine. Reuse `buildRevenueIntegrityPath(...)` or an extracted shared claim-snapshot helper.
 
-Do not create a competing revenue state machine. Where possible, translate `RevenueIntegrityPath.firstUnresolved` / existing denial state into review items.
-
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Verify and commit**
 
 ```bash
 npm test -- tests/revenue-integrity-path.test.ts tests/revenue-integrity-repository.test.ts tests/revenue-review-repository.test.ts
-```
-
-- [ ] **Step 4: Commit**
-
-```bash
 git commit -am "feat(revenue): unify claim exceptions into revenue review"
 ```
 
-### Task 4: Add revenue review to Billing Black Label workspace
+### Task 4: Add Revenue Review to the Billing Black Label workspace
 
 **Files:**
 - Modify: `src/app/(platform)/billing/page.tsx`
 - Modify: `src/components/clinic/billing-workspace-real.tsx`
 - Modify: `tests/billing-black-label-revenue-integrity.test.ts`
 
-**Interfaces:**
-- Billing page additionally loads `listRevenueReviewItems(session)`.
-- `BillingWorkspaceReal` receives `revenueReview: RevenueReviewItem[]`.
+- [ ] **Step 1: Write RED copy/presentation assertions**
 
-- [ ] **Step 1: Write failing Billing contract**
+Required user language: `Needs review`, `Billing path may need review`, `Open denial`, `Amount under review`. Prohibit `Lost revenue`, `Recovered revenue`, `Guaranteed recovery`.
 
-Required public-facing copy:
+- [ ] **Step 2: Load `listRevenueReviewItems(session)` beside existing billing/payments/Grid truth**
 
-```text
-Needs review
-Charge/claim path not found
-Open denial
-Amount under review
-```
+- [ ] **Step 3: Render a primary review queue**
 
-Prohibited copy:
+Show title, explanation, amount only when authoritative, and governed link to encounter/claim. Do not expose internal evidence refs as user copy.
 
-```text
-Lost revenue
-Recovered revenue
-Guaranteed recovery
-```
-
-- [ ] **Step 2: Load review items server-side**
-
-Extend existing Promise.all without changing Grid/payments truth.
-
-- [ ] **Step 3: Render the review queue as a primary actionable section**
-
-For each item show:
-
-- plain-language title;
-- explanation;
-- amount only if stored authoritative amount exists;
-- evidence level language where useful;
-- link to governed encounter/claim/billing surface.
-
-- [ ] **Step 4: Verify Black Label responsive/accessibility behavior**
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Verify and commit**
 
 ```bash
+npm test -- tests/billing-black-label-revenue-integrity.test.ts tests/revenue-review-repository.test.ts
 git add src/app/'(platform)'/billing/page.tsx src/components/clinic/billing-workspace-real.tsx tests/billing-black-label-revenue-integrity.test.ts
 git commit -m "feat(billing): surface evidence-backed revenue review"
 ```
 
-### Task 5: Feed revenue review into the universal unfinished-work projection
+### Task 5: Feed Revenue Review into Living Home unfinished work
 
 **Files:**
 - Modify: `src/lib/home/needs-action-projection.ts`
 - Modify: `src/app/(platform)/dashboard/page.tsx`
-- Create/Modify: `tests/needs-action-revenue-projection.test.ts`
+- Create: `tests/needs-action-revenue-projection.test.ts`
 
 **Interfaces:**
 
@@ -272,27 +223,23 @@ export function projectRevenueNeedsAction(input: {
 }): NeedsActionItem[];
 ```
 
-- [ ] **Step 1: Write failing role/privacy tests**
+- [ ] **Step 1: Write RED role tests**
 
-Owner/biller/admin with billing read may receive items. Clinical staff/provider without billing read must not receive financial projections merely because they can see an encounter.
+Use `can(role, "billing", "read")` as the gate. No billing-read permission means no DB query and no revenue NeedsAction items.
 
-- [ ] **Step 2: Map review vocabulary**
-
-Examples:
+- [ ] **Step 2: Map review items**
 
 ```ts
 {
   domain: "revenue",
   state: "needs_review",
-  title: "Billing path may need review",
+  title: item.title,
   reason: item.explanation,
   evidenceRef: `revenue-review:${item.id}`,
 }
 ```
 
-- [ ] **Step 3: Wire dashboard loading only for permitted roles**
-
-Prefer avoiding the DB query entirely when billing read is unavailable.
+- [ ] **Step 3: Wire dashboard loading and grouping**
 
 - [ ] **Step 4: Verify and commit**
 
@@ -301,69 +248,84 @@ npm test -- tests/needs-action-revenue-projection.test.ts tests/living-home-need
 git commit -am "feat(home): surface revenue review as unfinished work"
 ```
 
-### Task 6: Connect Current Visit charge-readiness evaluation to actual evidence
+### Task 6: Connect Current Visit `chargeReadiness` to the review evidence
 
 **Files:**
-- Modify: `src/app/(platform)/encounters/[encounterId]/page.tsx` or a server composition helper.
-- Modify: `src/lib/clinical/current-visit-model.ts` tests if needed.
-- Test: `tests/current-visit-charge-readiness.test.ts`
-- Reuse: `close-visit-resolution.ts` `chargeReadiness` governed evaluation slot.
+- Create: `src/lib/revenue/current-visit-charge-readiness.ts`
+- Create: `tests/current-visit-charge-readiness.test.ts`
+- Modify: `src/app/(platform)/encounters/[encounterId]/page.tsx`
+- Reuse: `src/lib/clinical/close-visit-resolution.ts`
 
 **Interfaces:**
-- Produce a `GovernedDomainEvaluation<ChargeResolutionState>` from actual repository evidence:
 
 ```ts
-{ state: "ready" | "needs_attention" | "not_applicable", source: "revenue-review", evidenceRef: "..." }
+export function buildCurrentVisitChargeReadiness(input: {
+  encounterId: string;
+  reviewItems: RevenueReviewItem[] | null;
+}): GovernedDomainEvaluation<ChargeResolutionState>;
 ```
 
-or preserve `not_evaluated` when evidence is insufficient.
+- [ ] **Step 1: Write RED tests**
 
-- [ ] **Step 1: Write failing tests**
+`reviewItems === null` returns `not_evaluated`; a matching review exception returns `needs_attention` with `source: "revenue-review"`; evaluated empty list returns `ready` only when the repository scan actually covered that encounter.
 
-A Current Visit with no evaluated billing evidence remains `not_evaluated`; do not invent a pass. A finalized encounter with a verified review exception becomes `needs_attention` and the Close Visit panel explains that billing review remains.
+- [ ] **Step 2: Implement pure adapter**
 
-- [ ] **Step 2: Implement server evaluation adapter**
+- [ ] **Step 3: Load billing evidence server-side only for a session allowed to see it**
 
-Keep the evaluation out of the client.
+If provider-facing Current Visit should not expose billing evidence for the current role, preserve `not_evaluated`; do not widen billing permission to make Close Visit look complete.
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 4: Verify and commit**
 
 ```bash
 npm test -- tests/current-visit-charge-readiness.test.ts tests/current-visit-model.test.ts
+git add src/lib/revenue/current-visit-charge-readiness.ts src/app/'(platform)'/encounters/'[encounterId]'/page.tsx tests/current-visit-charge-readiness.test.ts
+git commit -m "feat(revenue): connect charge readiness to governed evidence"
 ```
 
-- [ ] **Step 4: Commit**
-
-### Task 7: DB-backed revenue continuity journey
+### Task 7: Add a DB-backed revenue continuity journey
 
 **Files:**
-- Add a DB journey following repository conventions.
+- Create: `scripts/mvp/revenue-continuity-journey.mts`
+- Modify: `scripts/mvp/run-all.mjs`
 
 - [ ] **Step 1: Seed synthetic signed encounter + reviewed superbill + no claim**
 
-Expected: one review item, `amountCents = null`.
+Expect exactly one `reviewed_coding_without_claim` item with `amountCents = null`.
 
-- [ ] **Step 2: Create/link a claim draft**
+- [ ] **Step 2: Create/link ClaimDraft**
 
-Expected: pre-claim review item disappears; claim-level revenue path becomes the authority.
+Expect that pre-claim item to disappear and claim-level path to become authority.
 
-- [ ] **Step 3: Add an open denial**
+- [ ] **Step 3: Add open Denial with stored amount/deadline**
 
-Expected: denial review item appears using stored denial amount/date evidence.
+Expect one `open_denial` review item carrying only the stored amount/deadline.
 
 - [ ] **Step 4: Resolve denial**
 
-Expected: open-denial item disappears.
+Expect open-denial item to disappear.
 
-- [ ] **Step 5: Cross-tenant negative assertion**
+- [ ] **Step 5: Assert cross-tenant isolation**
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Run journey directly**
+
+```bash
+npx tsx scripts/mvp/revenue-continuity-journey.mts
+```
+
+- [ ] **Step 7: Register in `scripts/mvp/run-all.mjs`, run `npm run test:mvp`, then commit**
+
+```bash
+npm run test:mvp
+git add scripts/mvp/revenue-continuity-journey.mts scripts/mvp/run-all.mjs
+git commit -m "test(revenue): prove revenue continuity journey"
+```
 
 ### Task 8: Final verification and PR
 
-- [ ] **Step 1: Reconcile latest main / current-visit / NeedsAction branches**
+- [ ] **Step 1: Reconcile latest main plus the Current Visit and NeedsAction branches**
 
-- [ ] **Step 2: Run**
+- [ ] **Step 2: Run fresh evidence**
 
 ```bash
 npx prisma validate
@@ -372,14 +334,9 @@ npm run lint
 npm test -- --run
 npm run security:check
 npm run build
+npm run test:mvp
 ```
 
 - [ ] **Step 3: PR non-claims**
 
-Explicitly state:
-
-- no recovered-revenue claim;
-- no fee schedule/expected dollar value unless separately configured;
-- no live clearinghouse/payer confirmation beyond connector truth;
-- no autonomous claim creation/submission;
-- no reconciliation settlement claim unless real evidence exists.
+State: no recovered-revenue claim; no expected dollar value without authoritative fee configuration; no live clearinghouse/payer confirmation beyond connector truth; no autonomous claim creation/submission; no settlement/reconciliation claim without evidence.
