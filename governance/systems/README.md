@@ -7,12 +7,13 @@ Implementation agents must read the blueprint for every domain touched by a chan
 | System | Blueprint | Primary phase |
 |---|---|---|
 | Platform Kernel + Living Home | `PLATFORM_KERNEL_AND_LIVING_HOME.md` | P0 |
+| Universal Entry & Opportunity Network | `UNIVERSAL_ENTRY_AND_OPPORTUNITY_NETWORK.md` | P0/P1/P3 |
 | Care OS | `CARE_OS.md` | P0/P1 |
 | Patient OS | `PATIENT_OS.md` | P1/P2 |
 | Revenue Integrity OS | `REVENUE_OS.md` | P0/P1/P2 |
 | Financial OS | `FINANCIAL_OS.md` | P0/P2 |
 | Zumi Runtime | `ZUMI_RUNTIME.md` | P0/P1/P2 |
-| Grid Exchange | `GRID_EXCHANGE.md` | P2/P3 |
+| Grid Exchange | `GRID_EXCHANGE.md` | P0/P2/P3 |
 | Network OS | `NETWORK_OS.md` | P3 |
 | EDU + Workforce | `EDU_WORKFORCE_OS.md` | P2/P3 |
 | Identity/Credential/Trust | `IDENTITY_CREDENTIAL_TRUST_OS.md` | P1/P3 |
@@ -30,6 +31,10 @@ Implementation agents must read the blueprint for every domain touched by a chan
 | Platform Ops/SRE/DevSecOps | `PLATFORM_OPERATIONS_SRE_DEVSECOPS.md` | P0 onward |
 | Research/Outcomes/Benchmarking | `RESEARCH_OUTCOMES_AND_BENCHMARKING.md` | P3/P5 |
 | Developer/Partner Ecosystem | `DEVELOPER_PARTNER_ECOSYSTEM.md` | P5 |
+
+## Cross-cutting growth law
+
+Also read `../KLINIKOS_CAPABILITY_COMPOUNDING_ENGINE.md` for every substantial product capability. No major feature is allowed to remain a dead-end when it can safely create acquisition, activation, expansion, Grid/Network, customer-value, evidence or partner value.
 
 ## Reading rule
 
