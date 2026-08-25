@@ -14,13 +14,17 @@ The governing operating question is:
 
 > **What needs to happen next?**
 
+The governing company question is:
+
+> **What needs to happen next to increase durable enterprise value?**
+
 The governing public-discovery law is:
 
 > **Broadly discoverable outside. Deeply orchestrated inside.**
 
 The governing business objective is:
 
-> Build a product that creates measurable customer value, becomes recurring infrastructure, progressively consolidates fragmented vendor workflows, compounds through Grid, Network, EDU, identity, evidence and Zumi, and can be operated with enterprise-grade security, reliability and discipline.
+> Build a product and company that create measurable customer value, become recurring infrastructure, progressively consolidate fragmented vendor workflows, compound through Grid, Network, EDU, identity, evidence and Zumi, and operate with enterprise-grade security, reliability, financial discipline, implementation excellence and commercial truth.
 
 ## Required reading order
 
@@ -46,29 +50,33 @@ Before material work, read current repository/runtime truth and then read these 
 18. `governance/KLINIKOS_FINAL_FORM_CONTROL_PLANE.md`
 19. `governance/KLINIKOS_SOURCE_LOCKED_REQUIREMENTS.md`
 20. `governance/KLINIKOS_FINAL_FORM_BUSINESS_PLAN.md`
-21. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
-22. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
-23. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
-24. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
-25. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
-26. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
-27. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
-28. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
-29. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
-30. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
-31. `src/lib/public-capability-registry.ts`
-32. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
-33. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
+21. `governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md`
+22. `src/lib/company-operating-canon.ts`
+23. `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md`
+24. `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md`
+25. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
+26. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
+27. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
+28. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
+29. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
+30. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
+31. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
+32. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
+33. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
+34. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
+35. `src/lib/public-capability-registry.ts`
+36. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
+37. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
 
-Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Source-locked requirements determine **what user needs may not silently disappear**.
+Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Company governance determines **how the company must operate while building and selling it**. Source-locked requirements determine **what user needs may not silently disappear**.
 
 ## Three truth classes
 
 Always distinguish:
 
-- **CURRENT FACT**: verified/observed repository, runtime, provider, contract or signed corporate evidence.
-- **PROPOSED**: strategy, pricing, architecture, business model or opportunity not yet formally enacted.
-- **EXECUTED**: actually implemented, signed, activated, paid, connected or legally effective.
+- **CURRENT FACT**: verified/observed repository, runtime, provider, contract, payment, financial, corporate or signed evidence.
+- **PROPOSED**: strategy, pricing, architecture, business model, forecast, ownership, partnership, capital plan or opportunity not yet formally enacted.
+- **EXECUTED**: actually implemented, signed, activated, paid, connected, filed or legally effective.
 
 Never turn a recommendation into corporate/product reality by wording alone.
 
@@ -97,6 +105,35 @@ The UI should answer:
 4. What happens next?
 
 Professional detail may appear secondarily for expert users.
+
+## Company operating law
+
+Product work and company work are one value system. Every material initiative must be evaluated, where relevant, across:
+
+- customer problem and value
+- commercial path and approved offer
+- implementation/onboarding burden
+- first-value and retention implications
+- revenue and gross-margin implications
+- capital efficiency and runway
+- security/privacy/reliability
+- legal/regulatory gates
+- enterprise/procurement implications
+- Grid/Network/EDU compounding
+- data/evidence produced
+- partnership/build-buy alternative
+
+`src/lib/company-operating-canon.ts` is the machine-readable company operating contract. It does **not** prove that a metric, customer, contract, funding source, control or outcome exists; it defines what the company must measure and review.
+
+Use `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md` to preserve company truth with evidence, source, date, owner, status and next action rather than relying on chat memory.
+
+Use `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md` for material roadmap, capital, partnership, enterprise, pricing, market-entry and irreversible architecture decisions.
+
+The company value loop is:
+
+`DISCOVER → SELL → CONTRACT → COLLECT → IMPLEMENT → ACTIVATE → FIRST VALUE → REPEATED VALUE → RETAIN → EXPAND → GRID / NETWORK → COMPOUND`
+
+Do not optimize code volume while any earlier value-loop stage is broken.
 
 ## Public capability exposure law
 
@@ -194,6 +231,7 @@ Continuously ask:
 - What vendor can become an adapter or be eliminated?
 - What capability creates customer revenue and Klinikos revenue simultaneously?
 - What two existing Klinikos engines create a third business when connected?
+- Should the next capability be built, bought, partnered, licensed, invested in, or ignored?
 
 Record new opportunities in the Unicorn Opportunity Register. Do not silently place them into P0.
 
@@ -221,9 +259,10 @@ Agents must proactively identify and schedule them at the correct dependency poi
 2. Inspect relevant open PRs and recent commits.
 3. Reconcile current implementation with source-locked requirements.
 4. For public/product-discovery work, reconcile against `public-capability-registry.ts` and the SEO/category taxonomy.
-5. Identify the single vertical slice being advanced.
-6. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
-7. For architectural work, present design and obtain approval before implementation.
+5. Reconcile the work against `company-operating-canon.ts` and the company value loop.
+6. Identify the single vertical slice being advanced.
+7. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
+8. For architectural work, present design and obtain approval before implementation unless the governing design/spec has already been explicitly approved.
 
 ## During implementation
 
@@ -243,6 +282,8 @@ A route, component, mock, adapter or browser redirect alone is not completion.
 
 For major public capabilities, also require a canonical capability record, substantive public page or documented no-index/private-only decision, internal links, Zumi vocabulary, entitlement class, analytics and truthful integration state.
 
+For material company capabilities, also require a clear owner, evidence source, metric or success condition, review cadence, and next action where applicable.
+
 ## End-of-session output
 
 Report:
@@ -253,6 +294,7 @@ Report:
 - what remains blocked
 - source-locked requirements advanced
 - public-capability gaps closed/discovered
+- company value-loop stage advanced
 - new opportunities discovered
 - risks introduced/reduced
 - commercial/customer value
