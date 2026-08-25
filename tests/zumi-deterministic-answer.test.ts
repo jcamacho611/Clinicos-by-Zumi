@@ -117,13 +117,28 @@ describe("the route degrades instead of going dark", () => {
 
 describe("Living Home and the Zumi conversation answer the same way", () => {
   const livingHome = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/living-home.tsx"), "utf8");
+  const pathsRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/paths/route.ts"), "utf8");
 
   it("shares one surface lookup instead of keeping a second, worse copy", () => {
     // These were independent. Living Home's version met an unmatched sentence with
     // "I need the outcome rather than the topic", so the most prominent input in the
     // product gave a worse answer than the API did for the same question.
-    expect(livingHome).toContain("resolveSurfaceLookup");
+    //
+    // Living Home used to call the shared lookup itself, in the browser. It now asks the
+    // server, which calls the same function — so the two answers are not merely similar,
+    // they come from one execution path. Assert that convergence where it now lives.
+    expect(pathsRoute).toContain("resolveSurfaceLookup");
+    expect(livingHome).toContain('outcome === "surface"');
     expect(livingHome).not.toContain("I can route this, but I need the outcome rather than the topic");
+  });
+
+  it("keeps the surface lookup and its access check out of the browser", () => {
+    // The lookup decides which surfaces a role may be sent to, so running it client-side
+    // made the browser the authority on its own access. It also shipped the full lookup
+    // table. Neither belongs in a bundle the user controls.
+    expect(livingHome).not.toContain('from "@/features/zumi/deterministic-answer"');
+    expect(livingHome).not.toContain('from "@/lib/orchestration/intent-engine"');
+    expect(pathsRoute).toContain("session.role");
   });
 
   it("offers the surface as a control rather than naming it in prose", () => {

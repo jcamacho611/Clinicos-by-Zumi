@@ -4,7 +4,24 @@ import path from "node:path";
 const ROOT = process.cwd();
 const failures = [];
 
-const ALLOWED_PUBLIC_ENV = new Set(["NEXT_PUBLIC_APP_URL"]);
+/**
+ * Values that are public on purpose.
+ *
+ * Each entry is a reviewed decision, not a way to quiet the gate. A value belongs here
+ * only when the browser cannot do its job without it AND something other than secrecy
+ * protects it.
+ *
+ * - NEXT_PUBLIC_APP_URL: the site's own address.
+ * - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: a Google Maps *JavaScript* key, which by design
+ *   cannot work unless the browser can read it. It is protected by HTTP-referrer
+ *   restriction to approved klinikos.io origins rather than by being hidden, handles no
+ *   PHI, and is a different key from the non-public one the server APIs use — all
+ *   recorded on the `google-maps-js` connector in src/lib/connectors/catalog.ts.
+ */
+const ALLOWED_PUBLIC_ENV = new Set([
+  "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+]);
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const CLIENT_FORBIDDEN_IMPORTS = [
   /^@\/lib\/db$/,

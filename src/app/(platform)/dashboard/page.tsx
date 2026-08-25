@@ -8,6 +8,7 @@ import { getClinicLaunchBriefing } from "@/lib/commercial/clinic-launch-briefing
 import { canActOnClinicGridSignal, detectClinicGridSignals } from "@/lib/ecosystem/clinic-grid-bridge";
 import { resolveEduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import { getHomeOperatingRail } from "@/lib/home/operating-rail";
+import { presentPaths } from "@/lib/home/path-presentation-resolver";
 import { resolvePathGuidanceList } from "@/lib/orchestration/path-guidance-engine";
 import { listActivePathSnapshots } from "@/lib/orchestration/path-persistence-repository";
 import { listRecentPathSignals } from "@/lib/orchestration/path-signal-repository";
@@ -83,6 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           canOpenPatientRecord={can(session.role, "patients", "read")}
           firstName={firstName}
           initialGuidance={pathGuidance}
+          initialPathPresentations={presentPaths(activePaths)}
           initialPaths={activePaths}
           intelligence={{ available: gatewayStatus.available, detail: gatewayStatus.detail }}
           onboardingComplete={verifiedFirstLogin}

@@ -9,9 +9,9 @@ import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity } from "@/lib/home/operating-rail";
-import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
+import { findPathPresentation, type PathPresentation } from "@/lib/home/path-presentation";
+import type { PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
-import { getKlinikosPath } from "@/lib/paths/catalog";
 import type { Appointment } from "@/lib/types";
 
 type AttentionItem = {
@@ -282,6 +282,7 @@ export function LivingHomeOperations({
   onCount,
   opportunity,
   paths,
+  pathPresentations,
   recentSignals,
   role,
 }: {
@@ -294,6 +295,7 @@ export function LivingHomeOperations({
   onCount?: (attentionCount: number) => void;
   opportunity: HomeOpportunity | null;
   paths: PersistedPathSnapshot[];
+  pathPresentations: PathPresentation[];
   recentSignals: LivingPathSignal[];
   role: ClinicRole;
 }) {
@@ -350,10 +352,7 @@ export function LivingHomeOperations({
     () => guidance.find((item) => item.instanceId === activeSnapshot?.instanceId) ?? null,
     [guidance, activeSnapshot?.instanceId],
   );
-  const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
-  const activeRuntime = activeSnapshot
-    ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
-    : null;
+  const activePresentation = findPathPresentation(pathPresentations, activeSnapshot?.instanceId);
 
   const nowPosition = ribbon && nowMs !== null && nowMs >= ribbon.min && nowMs <= ribbon.max
     ? ((nowMs - ribbon.min) / Math.max(ribbon.max - ribbon.min, 1)) * 100
@@ -498,20 +497,20 @@ export function LivingHomeOperations({
           <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Continue</p>
           <h2 className="mt-2 text-2xl font-light tracking-[var(--tracking-tight)]" id="continue-title">Pick up where the work stopped.</h2>
 
-          {activeDefinition && activeRuntime && activeSnapshot ? (
+          {activePresentation && activeSnapshot ? (
             <div className="mt-7 rounded-[18px] border border-[var(--line-dark)] px-6 py-7">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge tone={activeGuidance ? guidanceTone(activeGuidance.state) : "observing"}>
                   {activeGuidance ? guidanceLabel(activeGuidance.state) : "In progress"}
                 </Badge>
                 <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
-                  {Math.round(activeRuntime.progress * 100)}% complete
+                  {activePresentation.progressPercent}% complete
                 </span>
               </div>
-              <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activeDefinition.title}</h3>
+              <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activePresentation.title}</h3>
               <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{activeSnapshot.goal}</p>
               <div className="mt-6 h-1 overflow-hidden rounded-full bg-[var(--line-dark)]">
-                <div className="h-full rounded-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, Math.round(activeRuntime.progress * 100))}%` }} />
+                <div className="h-full rounded-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, activePresentation.progressPercent)}%` }} />
               </div>
 
               {activeGuidance ? (
@@ -526,7 +525,7 @@ export function LivingHomeOperations({
 
               <Link
                 className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
-                href={activeGuidance?.href ?? `/paths/${activeDefinition.id}`}
+                href={activeGuidance?.href ?? `/paths/${activePresentation.definitionId}`}
               >
                 Continue <ArrowRight className="size-3.5" />
               </Link>
@@ -534,8 +533,8 @@ export function LivingHomeOperations({
               {paths.length > 1 ? (
                 <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 border-t border-[var(--line-dark)] pt-5">
                   {paths.slice(0, 4).map((path) => {
-                    const definition = getKlinikosPath(path.pathId);
-                    if (!definition) return null;
+                    const presentation = findPathPresentation(pathPresentations, path.instanceId);
+                    if (!presentation) return null;
                     return (
                       <button
                         className={`min-h-11 text-xs font-semibold transition-opacity hover:opacity-85 ${path.instanceId === activeSnapshot.instanceId ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"}`}
@@ -543,7 +542,7 @@ export function LivingHomeOperations({
                         onClick={() => setSelectedInstanceId(path.instanceId)}
                         type="button"
                       >
-                        {definition.title}
+                        {presentation.title}
                       </button>
                     );
                   })}
