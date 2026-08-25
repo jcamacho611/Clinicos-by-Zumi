@@ -27,7 +27,6 @@ describe("registry interface routes", () => {
    */
   const KNOWN_UNBUILT_ROUTES: ReadonlyArray<{ section: number; route: string }> = [
     { section: 59, route: "/urgent-bridge" },
-    { section: 62, route: "/design-system" },
   ];
 
   it("resolves every declared interface route, except the ones recorded as unbuilt", () => {
