@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260823023000_universal_identity_foundation",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "8d5d3f76289fa8e62635f698716afa6418e28619d918e4dae553931aa5960e2e",
+  "approvalReference": "Production migration approval and P0 release recovery, 2026-08-25",
+  "rationale": "Creates people, organization_memberships and location_assignments, adds foreign keys between those three new tables only, and backfills from users with ON CONFLICT DO NOTHING. No pre-existing table is altered, no column is dropped or retyped, and no row is deleted. Written IF NOT EXISTS with guarded constraint adds so it converges if production schema reconciliation created these objects before Prisma recorded the migration."
+}

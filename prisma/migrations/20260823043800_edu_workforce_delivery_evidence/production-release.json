@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260823043800_edu_workforce_delivery_evidence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "9355f248cdea46f77ea104a6250fab807e24e7d203ddd009c58cb25a1021e5f4",
+  "approvalReference": "Production migration approval and P0 release recovery, 2026-08-25",
+  "rationale": "Adds EDU workforce delivery evidence tables and their indexes. Every CREATE is written IF NOT EXISTS, which is required here because the 2026-08-23 reconciliation recorded these tables as already present in production while absent from _prisma_migrations. No pre-existing table is altered and no data is removed."
+}

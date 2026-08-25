@@ -3,8 +3,11 @@
 -- Additive only: current authentication and tenant authorization continue to use
 -- the existing users.organizationId / users.roleKey path until a later migration
 -- explicitly adopts memberships as active session context.
+--
+-- This migration is idempotent because production schema reconciliation may create
+-- these objects before Prisma records the migration. Re-running must converge safely.
 
-CREATE TABLE "people" (
+CREATE TABLE IF NOT EXISTS "people" (
     "id" TEXT NOT NULL,
     "displayName" TEXT,
     "legalName" TEXT,
@@ -18,7 +21,7 @@ CREATE TABLE "people" (
     CONSTRAINT "people_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "organization_memberships" (
+CREATE TABLE IF NOT EXISTS "organization_memberships" (
     "id" TEXT NOT NULL,
     "personId" TEXT NOT NULL,
     "organizationId" TEXT NOT NULL,
@@ -36,7 +39,7 @@ CREATE TABLE "organization_memberships" (
     CONSTRAINT "organization_memberships_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "location_assignments" (
+CREATE TABLE IF NOT EXISTS "location_assignments" (
     "id" TEXT NOT NULL,
     "membershipId" TEXT NOT NULL,
     "locationId" TEXT NOT NULL,
@@ -53,34 +56,52 @@ CREATE TABLE "location_assignments" (
     CONSTRAINT "location_assignments_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "people_primaryEmail_idx" ON "people"("primaryEmail");
-CREATE INDEX "people_status_idx" ON "people"("status");
+CREATE INDEX IF NOT EXISTS "people_primaryEmail_idx" ON "people"("primaryEmail");
+CREATE INDEX IF NOT EXISTS "people_status_idx" ON "people"("status");
 
-CREATE INDEX "organization_memberships_personId_status_idx"
+CREATE INDEX IF NOT EXISTS "organization_memberships_personId_status_idx"
     ON "organization_memberships"("personId", "status");
-CREATE INDEX "organization_memberships_organizationId_status_idx"
+CREATE INDEX IF NOT EXISTS "organization_memberships_organizationId_status_idx"
     ON "organization_memberships"("organizationId", "status");
-CREATE INDEX "organization_memberships_legacyUserId_idx"
+CREATE INDEX IF NOT EXISTS "organization_memberships_legacyUserId_idx"
     ON "organization_memberships"("legacyUserId");
-CREATE INDEX "organization_memberships_effectiveFrom_effectiveTo_idx"
+CREATE INDEX IF NOT EXISTS "organization_memberships_effectiveFrom_effectiveTo_idx"
     ON "organization_memberships"("effectiveFrom", "effectiveTo");
 
-CREATE UNIQUE INDEX "location_assignments_membershipId_locationId_effectiveFrom_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "location_assignments_membershipId_locationId_effectiveFrom_key"
     ON "location_assignments"("membershipId", "locationId", "effectiveFrom");
-CREATE INDEX "location_assignments_locationId_status_idx"
+CREATE INDEX IF NOT EXISTS "location_assignments_locationId_status_idx"
     ON "location_assignments"("locationId", "status");
-CREATE INDEX "location_assignments_effectiveFrom_effectiveTo_idx"
+CREATE INDEX IF NOT EXISTS "location_assignments_effectiveFrom_effectiveTo_idx"
     ON "location_assignments"("effectiveFrom", "effectiveTo");
 
-ALTER TABLE "organization_memberships"
-    ADD CONSTRAINT "organization_memberships_personId_fkey"
-    FOREIGN KEY ("personId") REFERENCES "people"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'organization_memberships_personId_fkey'
+      AND conrelid = '"organization_memberships"'::regclass
+  ) THEN
+    ALTER TABLE "organization_memberships"
+      ADD CONSTRAINT "organization_memberships_personId_fkey"
+      FOREIGN KEY ("personId") REFERENCES "people"("id")
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
-ALTER TABLE "location_assignments"
-    ADD CONSTRAINT "location_assignments_membershipId_fkey"
-    FOREIGN KEY ("membershipId") REFERENCES "organization_memberships"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'location_assignments_membershipId_fkey'
+      AND conrelid = '"location_assignments"'::regclass
+  ) THEN
+    ALTER TABLE "location_assignments"
+      ADD CONSTRAINT "location_assignments_membershipId_fkey"
+      FOREIGN KEY ("membershipId") REFERENCES "organization_memberships"("id")
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
 -- Backfill one durable Person anchor for every existing organization User.
 -- User.name is a display name in the legacy model and is not treated as verified legal identity.
