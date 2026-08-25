@@ -14,7 +14,7 @@ export default async function FrontDeskPage() {
   if (!canAccessWorkspace(session.role, "front-desk")) return notFound();
   const [appointments, coordination] = await Promise.all([
     listAppointmentsForOrganization(session.organizationId),
-    listCareCoordinationWorkspace(session.organizationId, session.userId),
+    listCareCoordinationWorkspace(session.organizationId, session.userId, session.role),
   ]);
   return <div className={styles.stage}><FrontDeskWorkspaceReal appointments={appointments} coordination={coordination} currentUserId={session.userId} /></div>;
 }

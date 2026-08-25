@@ -10,7 +10,12 @@ describe("Front Desk Black Label operative workspace", () => {
   it("preserves workspace authorization and real schedule/coordination sources", () => {
     expect(page).toContain('canAccessWorkspace(session.role, "front-desk")');
     expect(page).toContain("listAppointmentsForOrganization(session.organizationId)");
-    expect(page).toContain("listCareCoordinationWorkspace(session.organizationId, session.userId)");
+    // The role is part of the call because escalation visibility depends on it: a
+    // self-harm signal from a colleague is not front-desk information. Omitting it
+    // fails closed, but passing it is what the page is supposed to do.
+    expect(page).toContain(
+      "listCareCoordinationWorkspace(session.organizationId, session.userId, session.role)",
+    );
   });
 
   it("does not pretend the unbounded appointment query is today-scoped", () => {

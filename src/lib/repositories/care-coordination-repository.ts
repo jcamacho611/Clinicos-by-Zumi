@@ -26,13 +26,43 @@ async function requireHandoff(tx: Transaction, organizationId: string, handoffId
   return handoff;
 }
 
-export async function listCareCoordinationWorkspace(organizationId: string, userId?: string) {
+/**
+ * Roles that may see that a colleague reported a self-harm signal.
+ *
+ * `escalations:read` is granted widely — billers, quality analysts and viewers all have
+ * it. That is right for an overdue referral and wrong for a colleague's mental-health
+ * crisis, which arrived in the same queue when urgent signals began being recorded.
+ * Follow-up belongs to the people who can actually act on staff welfare.
+ */
+const SELF_HARM_VISIBLE_TO: ReadonlySet<string> = new Set([
+  "clinic_owner",
+  "administrator",
+  "provider",
+]);
+
+function hidesSelfHarmFrom(role: string | undefined) {
+  // No role means no basis for the disclosure. Fail closed.
+  return !role || !SELF_HARM_VISIBLE_TO.has(role);
+}
+
+export async function listCareCoordinationWorkspace(organizationId: string, userId?: string, role?: string) {
   const [patients, providers, handoffs, tasks, escalations, notifications] = await Promise.all([
     db.patient.findMany({ where: { organizationId, status: "active" }, select: { id: true, firstName: true, lastName: true, mrn: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }] }),
     db.provider.findMany({ where: { organizationId, status: "active" }, select: { id: true, userId: true, name: true, credential: true, specialty: true }, orderBy: { name: "asc" } }),
     db.careHandoff.findMany({ where: { organizationId }, orderBy: { updatedAt: "desc" }, take: 100 }),
     db.task.findMany({ where: { organizationId }, orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }], take: 100 }),
-    db.escalation.findMany({ where: { organizationId }, orderBy: [{ status: "asc" }, { riskLevel: "desc" }, { createdAt: "desc" }], take: 100 }),
+    db.escalation.findMany({
+      where: {
+        organizationId,
+        // Filtered in the query rather than after it, so the rows never reach a caller
+        // that might forget to drop them.
+        ...(hidesSelfHarmFrom(role)
+          ? { NOT: { AND: [{ sourceType: "urgent_signal" }, { category: "self_harm" }] } }
+          : {}),
+      },
+      orderBy: [{ status: "asc" }, { riskLevel: "desc" }, { createdAt: "desc" }],
+      take: 100,
+    }),
     userId ? db.notification.findMany({ where: { organizationId, userId }, orderBy: { createdAt: "desc" }, take: 50 }) : Promise.resolve([]),
   ]);
   const patientsById = new Map(patients.map((patient) => [patient.id, patient]));
