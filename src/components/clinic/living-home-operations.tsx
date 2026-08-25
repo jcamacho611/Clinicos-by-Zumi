@@ -4,14 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarClock, CheckCircle2, CircleAlert, X } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ds";
-import type { PathGuidanceView } from "@/components/clinic/path-next-action";
 import type { ClinicRole } from "@/lib/auth/rbac";
 import type { ClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import type { EduGridReadiness } from "@/lib/ecosystem/edu-grid-bridge";
 import type { HomeOpportunity } from "@/lib/home/operating-rail";
-import { resolvePathRuntime, type PersistedPathSnapshot } from "@/lib/orchestration/path-engine";
+import type { LivingHomePathView } from "@/lib/home/living-home-view-model";
 import type { LivingPathSignal } from "@/lib/orchestration/path-signal-repository";
-import { getKlinikosPath } from "@/lib/paths/catalog";
 import type { Appointment } from "@/lib/types";
 
 type AttentionItem = {
@@ -94,21 +92,13 @@ function relativeTime(iso: string, nowMs: number | null) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-function guidanceTone(state: PathGuidanceView["state"]): BadgeTone {
-  if (state === "blocked") return "signal";
-  if (state === "review_required") return "analyzing";
+function pathTone(state: LivingHomePathView["state"]): BadgeTone {
+  if (state === "blocked" || state === "needs_you") return "signal";
+  if (state === "needs_review") return "analyzing";
   if (state === "waiting") return "observing";
-  if (state === "completed") return "resolved";
-  return "mapping";
-}
-
-function guidanceLabel(state: PathGuidanceView["state"]) {
-  if (state === "blocked") return "Needs attention";
-  if (state === "review_required") return "Ready for review";
-  if (state === "waiting") return "Waiting";
-  if (state === "completed") return "Completed";
-  if (state === "available") return "Ready";
-  return "Recommended";
+  if (state === "done") return "resolved";
+  if (state === "ready") return "mapping";
+  return "observing";
 }
 
 function buildRibbon(appointments: Appointment[], role: ClinicRole): RibbonModel | null {
@@ -278,7 +268,6 @@ export function LivingHomeOperations({
   canOpenPatientRecord,
   eduReadiness,
   gridSignals,
-  guidance,
   onCount,
   opportunity,
   paths,
@@ -290,10 +279,9 @@ export function LivingHomeOperations({
   canOpenPatientRecord: boolean;
   eduReadiness: EduGridReadiness | null;
   gridSignals: ClinicGridSignal[];
-  guidance: PathGuidanceView[];
   onCount?: (attentionCount: number) => void;
   opportunity: HomeOpportunity | null;
-  paths: PersistedPathSnapshot[];
+  paths: LivingHomePathView[];
   recentSignals: LivingPathSignal[];
   role: ClinicRole;
 }) {
@@ -334,26 +322,15 @@ export function LivingHomeOperations({
     onCount?.(attentionItems.length);
   }, [attentionItems.length, onCount]);
 
-  // Selecting a visit from the exception list or the next block scrolls the ribbon's
-  // inline workspace into view, so the surface visibly transforms instead of quietly
-  // changing something the reader cannot see from where they clicked.
   useEffect(() => {
     if (!focusedAppointmentId) return;
     focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [focusedAppointmentId]);
 
-  const activeSnapshot = useMemo(
+  const activePath = useMemo(
     () => paths.find((path) => path.instanceId === selectedInstanceId) ?? paths[0] ?? null,
     [paths, selectedInstanceId],
   );
-  const activeGuidance = useMemo(
-    () => guidance.find((item) => item.instanceId === activeSnapshot?.instanceId) ?? null,
-    [guidance, activeSnapshot?.instanceId],
-  );
-  const activeDefinition = activeSnapshot ? getKlinikosPath(activeSnapshot.pathId) : null;
-  const activeRuntime = activeSnapshot
-    ? resolvePathRuntime({ pathId: activeSnapshot.pathId, snapshot: activeSnapshot })
-    : null;
 
   const nowPosition = ribbon && nowMs !== null && nowMs >= ribbon.min && nowMs <= ribbon.max
     ? ((nowMs - ribbon.min) / Math.max(ribbon.max - ribbon.min, 1)) * 100
@@ -498,55 +475,47 @@ export function LivingHomeOperations({
           <p className="text-[var(--text-secondary)] text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]">Continue</p>
           <h2 className="mt-2 text-2xl font-light tracking-[var(--tracking-tight)]" id="continue-title">Pick up where the work stopped.</h2>
 
-          {activeDefinition && activeRuntime && activeSnapshot ? (
+          {activePath ? (
             <div className="mt-7 rounded-[18px] border border-[var(--line-dark)] px-6 py-7">
               <div className="flex flex-wrap items-center gap-3">
-                <Badge tone={activeGuidance ? guidanceTone(activeGuidance.state) : "observing"}>
-                  {activeGuidance ? guidanceLabel(activeGuidance.state) : "In progress"}
-                </Badge>
+                <Badge tone={pathTone(activePath.state)}>{activePath.stateLabel}</Badge>
                 <span className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)] text-[var(--text-secondary)]">
-                  {Math.round(activeRuntime.progress * 100)}% complete
+                  {activePath.progressPercent}% complete
                 </span>
               </div>
-              <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activeDefinition.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{activeSnapshot.goal}</p>
+              <h3 className="mt-5 text-xl font-semibold tracking-[var(--tracking-tight)]">{activePath.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{activePath.goal}</p>
               <div className="mt-6 h-1 overflow-hidden rounded-full bg-[var(--line-dark)]">
-                <div className="h-full rounded-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, Math.round(activeRuntime.progress * 100))}%` }} />
+                <div className="h-full rounded-full bg-[var(--accent-intelligence)]" style={{ width: `${Math.max(4, activePath.progressPercent)}%` }} />
               </div>
 
-              {activeGuidance ? (
-                <div className="mt-6 border-l border-[var(--line-dark)] pl-5">
-                  <p className="text-sm font-semibold">{activeGuidance.title}</p>
-                  <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">{activeGuidance.reason}</p>
-                  {activeGuidance.blockers.slice(0, 2).map((blocker) => (
-                    <p className="mt-3 text-xs leading-6 text-[var(--status-analyzing)]" key={blocker.code}>{blocker.title}: {blocker.explanation}</p>
-                  ))}
-                </div>
-              ) : null}
+              <div className="mt-6 border-l border-[var(--line-dark)] pl-5">
+                <p className="text-sm font-semibold">{activePath.nextActionLabel ?? "Continue"}</p>
+                <p className="mt-2 text-xs leading-6 text-[var(--text-secondary)]">{activePath.reason}</p>
+                {activePath.blockers.slice(0, 2).map((blocker) => (
+                  <p className="mt-3 text-xs leading-6 text-[var(--status-analyzing)]" key={blocker.code}>{blocker.title}: {blocker.explanation}</p>
+                ))}
+              </div>
 
               <Link
                 className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--accent-intelligence)] px-5 py-3 text-xs font-semibold text-[var(--accent-intelligence)] transition-opacity hover:opacity-85"
-                href={activeGuidance?.href ?? `/paths/${activeDefinition.id}`}
+                href={activePath.nextActionHref ?? `/paths/${activePath.pathId}`}
               >
                 Continue <ArrowRight className="size-3.5" />
               </Link>
 
               {paths.length > 1 ? (
                 <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 border-t border-[var(--line-dark)] pt-5">
-                  {paths.slice(0, 4).map((path) => {
-                    const definition = getKlinikosPath(path.pathId);
-                    if (!definition) return null;
-                    return (
-                      <button
-                        className={`min-h-11 text-xs font-semibold transition-opacity hover:opacity-85 ${path.instanceId === activeSnapshot.instanceId ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"}`}
-                        key={path.instanceId}
-                        onClick={() => setSelectedInstanceId(path.instanceId)}
-                        type="button"
-                      >
-                        {definition.title}
-                      </button>
-                    );
-                  })}
+                  {paths.slice(0, 4).map((path) => (
+                    <button
+                      className={`min-h-11 text-xs font-semibold transition-opacity hover:opacity-85 ${path.instanceId === activePath.instanceId ? "text-[var(--accent-intelligence)]" : "text-[var(--text-secondary)]"}`}
+                      key={path.instanceId}
+                      onClick={() => setSelectedInstanceId(path.instanceId)}
+                      type="button"
+                    >
+                      {path.title}
+                    </button>
+                  ))}
                 </div>
               ) : null}
             </div>
@@ -638,7 +607,6 @@ export function LivingHomeOperations({
             ))}
           </div>
 
-          {/* The limiting half of this bridge travels with the encouraging half. */}
           <p className="mt-5 max-w-3xl text-xs leading-6 text-[var(--status-analyzing)]">{eduReadiness.boundary}</p>
         </section>
       ) : null}
