@@ -8,6 +8,7 @@ import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { resolvePathGuidance } from "@/lib/orchestration/path-guidance-engine";
 import { resolveIntentDeterministically } from "@/lib/orchestration/intent-engine";
 import { resolveSurfaceLookup } from "@/features/zumi/deterministic-answer";
+import { detectUrgentSignal } from "@/lib/safety/urgent-signal";
 import {
   createPathInstance,
   listActivePathSnapshots,
@@ -81,14 +82,28 @@ export async function POST(request: Request) {
 }
 
 /**
- * Three honest outcomes, decided here rather than in the browser.
+ * Four honest outcomes, decided here rather than in the browser.
  *
- * Not every sentence is a journey. "Who hasn't completed intake tomorrow?" is a question
- * about a list, and the right answer is the surface holding it — checked against what
- * this session may actually open, which is a decision the client cannot be trusted to
- * make about itself.
+ * Urgent comes first and short-circuits everything: a sentence describing an emergency
+ * must not become a scheduling Path, and nothing routine may run on the strength of it.
+ *
+ * Of the rest, not every sentence is a journey. "Who hasn't completed intake tomorrow?"
+ * is a question about a list, and the right answer is the surface holding it — checked
+ * against what this session may actually open, which is a decision the client cannot be
+ * trusted to make about itself.
  */
 async function respondToTypedIntent(session: ClinicSession, text: string) {
+  // Before anything else. Someone describing an emergency must not be routed into a
+  // scheduling Path, and no routine automation may run on the strength of that sentence.
+  // Klinikos does not triage here — it stops, and it shows approved language.
+  const urgent = detectUrgentSignal(text);
+  if (urgent.urgent) {
+    return NextResponse.json({
+      outcome: "urgent",
+      urgent: { category: urgent.category, message: urgent.message },
+    });
+  }
+
   const resolved = resolveIntentDeterministically(text);
   const pathId = resolved.candidatePathIds[0] ?? null;
 

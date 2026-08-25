@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { LIFE_THREATENING_MESSAGE, detectUrgentSignal } from "@/lib/safety/urgent-signal";
 import { z } from "zod";
 import { requestMetadata } from "@/lib/auth/request-metadata";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
@@ -116,7 +117,13 @@ export async function POST(request: Request) {
   const limit = checkZumiProcessRateLimit(rateKey);
   if (!limit.allowed) {
     return NextResponse.json(
-      { error: "Too many messages. Please try again shortly." },
+      {
+        error: "Too many messages. Please try again shortly.",
+        // A refusal must never be the last thing someone in an emergency reads. The body
+        // has not been parsed at this point, so this is unconditional rather than
+        // detected — short, always true, and cheap.
+        emergency: LIFE_THREATENING_MESSAGE,
+      },
       { status: 429, headers: { ...NO_STORE_HEADERS, "Retry-After": String(limit.retryAfterSeconds) } },
     );
   }
@@ -129,6 +136,30 @@ export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(body.value);
   if (!parsed.success) {
     return NextResponse.json({ error: "That message could not be processed." }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+
+  // Before quota, before any model. A public visitor describing an emergency gets
+  // emergency language, not a routed marketing answer — and this path costs nothing, so
+  // it cannot be refused for lack of paid inference. Klinikos does not triage: it stops.
+  const urgent = detectUrgentSignal(parsed.data.question);
+  if (urgent.urgent) {
+    return NextResponse.json(
+      {
+        data: {
+          resolution: {
+            kind: "conversation",
+            title: "This may be an emergency",
+            body: urgent.message,
+            assumption: null,
+            destination: null,
+            confidence: 1,
+          },
+          suggestions: [],
+          degraded: false,
+        },
+      },
+      { headers: NO_STORE_HEADERS },
+    );
   }
 
   // If the durable quota authority is absent, unavailable, or did not attest this

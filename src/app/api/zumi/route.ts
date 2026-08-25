@@ -18,6 +18,7 @@ import {
 } from "@/features/zumi/client-projection";
 import { resolveZumiWorkspaceIntelligence } from "@/features/zumi/workspace-intelligence";
 import { answerDeterministically } from "@/features/zumi/deterministic-answer";
+import { detectUrgentSignal } from "@/lib/safety/urgent-signal";
 import { PRIVATE_NO_STORE_HEADERS } from "@/lib/security/headers";
 import { deriveSessionRiskSignals } from "@/lib/security/session-risk";
 import { recordSecurityEvent } from "@/lib/security/events";
@@ -152,6 +153,28 @@ export async function POST(request: Request) {
 
   const parsed = requestSchema.safeParse(body.value);
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400, headers: NO_STORE });
+
+  // Before conversation state, entitlement, or any model call. Emergency language is
+  // shown and the turn stops; Klinikos does not triage, and no routine work runs on the
+  // strength of that sentence. Costing nothing also means it cannot be refused for lack
+  // of quota.
+  const urgent = detectUrgentSignal(parsed.data.question);
+  if (urgent.urgent) {
+    return NextResponse.json(
+      {
+        data: {
+          answer: urgent.message,
+          conversationToken: null,
+          sources: [],
+          trustedOrchestration: null,
+          workspace: null,
+          rateLimitRemaining: limit.remaining,
+          urgent: true,
+        },
+      },
+      { headers: NO_STORE },
+    );
+  }
 
   const previous = parsed.data.conversationToken
     ? openZumiConversation(parsed.data.conversationToken, { organizationId: session.organizationId, userId: session.userId })

@@ -175,6 +175,7 @@ export function LivingHome({
   const [failed, setFailed] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
   const [surfaceAnswer, setSurfaceAnswer] = useState<SurfaceAnswerView | null>(null);
+  const [urgent, setUrgent] = useState<{ category: string; message: string } | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeInstanceId, setActiveInstanceId] = useState<string | null>(null);
   const [attentionCount, setAttentionCount] = useState(0);
@@ -230,6 +231,7 @@ export function LivingHome({
     setPhase("listening");
     setClarification(null);
     setSurfaceAnswer(null);
+    setUrgent(null);
     setTranscript([]);
     setActiveInstanceId(null);
   }, []);
@@ -247,6 +249,7 @@ export function LivingHome({
     setFailed(false);
     setClarification(null);
     setSurfaceAnswer(null);
+    setUrgent(null);
     setTranscript([{ id: "you-0", speaker: "You", text }]);
     setActiveInstanceId(null);
     setDraft("");
@@ -267,7 +270,8 @@ export function LivingHome({
       });
       setPhase("preparing");
       const payload = await response.json() as {
-        outcome?: "path" | "surface" | "clarification";
+        outcome?: "path" | "surface" | "clarification" | "urgent";
+        urgent?: { category: string; message: string };
         data?: PersistedPathSnapshot;
         guidance?: PathGuidanceView | null;
         presentation?: PathPresentation | null;
@@ -277,6 +281,17 @@ export function LivingHome({
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error || "Klinikos could not start that yet.");
+
+      // Klinikos stopped rather than routed. Shown before anything else and never
+      // alongside a Path, because an emergency instruction competing with a scheduling
+      // card is an emergency instruction someone can miss.
+      if (payload.outcome === "urgent" && payload.urgent) {
+        setPhase("ready");
+        setClarification(null);
+        setUrgent(payload.urgent);
+        say("Klinikos", payload.urgent.message);
+        return;
+      }
 
       // Not every sentence is a journey. "Who hasn't completed intake tomorrow?" is a
       // question about a list, and the honest answer is the surface that holds it.
@@ -516,6 +531,25 @@ export function LivingHome({
                       </div>
                     ))}
                   </div>
+
+                  {urgent ? (
+                    <div
+                      className="mt-6 rounded-[14px] border-2 px-5 py-4"
+                      role="alert"
+                      style={{ borderColor: "var(--status-signal)" }}
+                    >
+                      <p
+                        className="text-[var(--text-micro)] font-extrabold uppercase tracking-[var(--tracking-wide)]"
+                        style={{ color: "var(--status-signal)" }}
+                      >
+                        Stop — this may be an emergency
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-primary)]">{urgent.message}</p>
+                      <p className="mt-3 text-xs leading-5 text-[var(--text-secondary)]">
+                        Klinikos did not continue what you asked for, and it cannot judge how serious this is.
+                      </p>
+                    </div>
+                  ) : null}
 
                   {surfaceAnswer ? (
                     <div className="mt-6 rounded-[14px] border border-[var(--line-dark)] px-5 py-4">
