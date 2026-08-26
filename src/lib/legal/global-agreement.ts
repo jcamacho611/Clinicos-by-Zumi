@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import type { LegalPublicConfig } from "@/lib/legal/legal-config";
+import { AI_SERVICE_PROCESSING_AGREEMENT_KEY } from "@/lib/legal/ai-service-processing-policy";
 
 export const GLOBAL_TERMS_KEY = "klinikos-global-terms-confidentiality-esign";
-export const GLOBAL_TERMS_VERSION = "2026.08.18.1";
-export const GLOBAL_TERMS_EFFECTIVE_DATE = "2026-08-18";
+export const GLOBAL_TERMS_VERSION = "2026.08.26.1";
+export const GLOBAL_TERMS_EFFECTIVE_DATE = "2026-08-26";
 
 export interface AgreementSection {
   heading: string;
@@ -25,6 +26,7 @@ export type AgreementAcknowledgmentKey =
   | "confidentiality"
   | "electronic_signature"
   | "ai_authority"
+  | "ai_service_processing"
   | "professional_truth"
   | "grid_truth";
 
@@ -49,6 +51,10 @@ const baseAcknowledgments: AgreementAcknowledgment[] = [
   {
     key: "ai_authority",
     label: "I understand that Klinikos Intelligence may assist with information, navigation, preparation, and workflow, but it does not override professional judgment or authoritative permission, credential, eligibility, payment, safety, or security controls.",
+  },
+  {
+    key: "ai_service_processing",
+    label: "I understand that when I use a Zumi-powered feature, Klinikos may process the minimum information reasonably necessary for that requested service through approved AI providers or other approved subprocessors under the applicable policies and agreements. This is not unrestricted permission to use all of my data for general-purpose model training or unrelated commercial targeting, and protected health information may be processed by AI only in approved healthcare workflows with the required safeguards.",
   },
 ];
 
@@ -141,18 +147,21 @@ export function buildGlobalAgreement(config: LegalPublicConfig): AgreementPresen
         ],
       },
       {
-        heading: "9. User Content, Feedback, and Data",
+        heading: "9. User Content, Feedback, Data, and AI Service Processing",
         paragraphs: [
           "You retain appropriate rights in content you lawfully provide. You grant Klinikos the limited rights reasonably necessary to host, store, process, transmit, display, secure, back up, and otherwise handle that content to provide, protect, support, and administer the contracted services and comply with law.",
           "You represent that you have authority to provide content and instructions you submit. Voluntary general product feedback may be used to improve Klinikos, but confidential customer information, protected health information, and your pre-existing intellectual property do not become unrestricted feedback merely because they were communicated to us.",
-          "Klinikos does not obtain an unrestricted right to train AI models on all customer content. Treatment of customer content, confidential information, protected health information, de-identified data, aggregated data, feedback, and synthetic data must follow the applicable privacy, data-processing, healthcare, and product policies.",
+          `When you use a Zumi-powered feature governed by ${AI_SERVICE_PROCESSING_AGREEMENT_KEY}, Klinikos may process the minimum information reasonably necessary for the requested feature through approved AI model providers and other approved subprocessors for the disclosed or reasonably expected service purpose. That permission is purpose-limited and does not create an unrestricted right to reuse all user, customer, organization, clinical, or confidential data for general-purpose model training, unrelated advertising, or unrelated commercial purposes.`,
+          "Klinikos does not obtain an unrestricted right to train AI models on all customer content. Treatment of customer content, confidential information, protected health information, de-identified data, aggregated data, feedback, synthetic data, AI inputs, and AI outputs must follow the applicable privacy, data-processing, healthcare, product, and screen-level data-governance policies.",
         ],
       },
       {
         heading: "10. Klinikos Intelligence / Zumi",
         paragraphs: [
           "Klinikos Intelligence, including Zumi, may assist with navigation, summarization, preparation, research, workflow support, and other permitted tasks. AI-generated material can be incomplete, inaccurate, outdated, or inappropriate for a particular situation and must be reviewed when consequences matter.",
+          "Zumi's accessible context is intended to be bounded by the active user experience, authorized organization and resource context, applicable screen-level data policy, and minimum-necessary rules. The existence of information elsewhere in Klinikos does not by itself make that information available to Zumi in the current interaction.",
           "AI output does not independently establish medical, legal, financial, credentialing, security, payment, employment, or regulatory truth. Deterministic Klinikos controls and authorized humans remain authoritative for permissions, tenant access, credential and professional eligibility, payment and settlement state, clinical sign-off, safety holds, and other governed decisions.",
+          "Operational personalization is distinct from generic commercial targeting. Clinical information and protected health information used for an authorized care or healthcare-operations purpose are not, by that fact alone, authorized as advertising, generic upsell, or unrelated commercial-targeting data.",
           "You may not use prompt injection, malicious inputs, extraction techniques, or other methods to obtain credentials, hidden system instructions, private policies, protected data, or unauthorized access. Klinikos may use technical and policy controls to resist abuse.",
         ],
       },
@@ -169,6 +178,7 @@ export function buildGlobalAgreement(config: LegalPublicConfig): AgreementPresen
         paragraphs: [
           "Ordinary acceptance of these Terms does not create HIPAA compliance and is not a substitute for a Business Associate Agreement when one is legally required. If Klinikos acts as a business associate for a covered entity or another business associate, the applicable written BAA and related service agreements govern protected health information as specified in those documents.",
           "You must not place protected health information or other specially regulated data into a feature, environment, AI rail, communications channel, beta service, or integration that has not been approved for that data. The presence of a technical capability does not establish contractual, regulatory, vendor, or production approval.",
+          "Protected health information may be sent to an AI model provider or other AI subprocessor only through a Klinikos workflow specifically approved for that data class and purpose, with minimum-necessary controls and the contracts, vendor terms, BAA, authorization, consent, or other safeguards required for the actual relationship and jurisdiction. Public Zumi is not an approved PHI entry point.",
           "Other health, privacy, breach-notification, consumer-health, biometric, genetic, minor, reproductive-health, substance-use, mental-health, insurance, or sensitive-data laws may apply depending on the data, user, service, and jurisdiction. Mandatory rights and obligations are not waived by this Agreement.",
         ],
       },
@@ -213,7 +223,8 @@ export function buildGlobalAgreement(config: LegalPublicConfig): AgreementPresen
       {
         heading: "18. Privacy and Separate Consents",
         paragraphs: [
-          "The Klinikos Privacy Policy describes relevant data practices. Contract acceptance is distinct from optional marketing consent, cookie/tracking consent, treatment consent, research consent, HIPAA authorization, and other permissions that law or product design requires to be separately obtained.",
+          "The Klinikos Privacy Policy describes relevant data practices. Contract acceptance is distinct from optional marketing consent, cookie/tracking consent, treatment consent, research consent, HIPAA authorization, recording or transcription consent, and other permissions that law or product design requires to be separately obtained.",
+          "Ordinary acceptance of Klinikos service terms or AI service-processing terms does not constitute consent to unrestricted general-purpose AI model training. If Klinikos ever offers an optional program that uses data for a materially different AI training or research purpose, that program must use a separate, specific, lawful opt-in and disclose the applicable data categories, purpose, retention, provider, and withdrawal or preference mechanics as required.",
           "Where applicable, individuals may have rights relating to access, correction, deletion, restriction, objection, portability, withdrawal of consent, appeals, or marketing and data-sharing preferences. Those rights depend on law and are not eliminated by this Agreement.",
         ],
       },
