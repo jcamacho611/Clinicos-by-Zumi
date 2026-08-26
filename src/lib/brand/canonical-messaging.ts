@@ -92,9 +92,21 @@ export const KLINIKOS_HUMAN_AUTHORITY =
 /** The question the composer asks, kept as the label it always was — no longer the headline. */
 export const ZUMI_COMPOSER_PROMPT = "What needs to happen?";
 
-/** Search and social. Written for a person scanning a result, not for a keyword crawler. */
+/**
+ * Search and social. Written for a person scanning a result, not for a keyword crawler.
+ *
+ * The title is the canonical category statement and is deliberately not paraphrased.
+ * Three different lines were live at once — this file said "the operating system for
+ * running a clinic", the governing canon said "the clinic operations ecosystem, powered
+ * by Zumi", and the architecture docs said "operating ecosystem for healthcare". The
+ * canon wins, and it is marked do-not-rewrite there, so it is quoted exactly here.
+ *
+ * The supporting copy below is unchanged: it exists because an external evaluator could
+ * not tell what the product does, and it fixed that. The title says the category; the
+ * description still has to do the explaining.
+ */
 export const KLINIKOS_META = {
-  title: "Klinikos | The operating system for running a clinic",
+  title: "Klinikos. The clinic operations ecosystem, powered by Zumi.",
   description:
     "Klinikos brings clinic operations into one governed system — scheduling, follow-up, team workflows, "
     + "documents and revenue work — with Zumi intelligence surfacing what needs attention. "
