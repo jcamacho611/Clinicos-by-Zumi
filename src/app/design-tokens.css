@@ -162,6 +162,25 @@ html:root[data-klinikos-atmosphere="golden"] {
   --mode-header:var(--k-work-header);
 }
 
+/*
+ * THIS BLOCK WINS. Read it before trusting the primitive block at the top of the file.
+ *
+ * Same selector, same specificity, later in the file — so every value here overrides the
+ * one declared at the top. The names are historical and no longer describe what they
+ * render:
+ *
+ *   --aegean-500  is  #b9575b   wine, not blue
+ *   --cyan-500    is  #e6817b   ember, not cyan
+ *   --gold-500    is  #efaaa1   soft ember, not gold
+ *
+ * That mismatch is a live trap. Reading only the top block gives the confident and wrong
+ * conclusion that Klinikos still renders the blue/cyan/gold ramp — it does not, and has
+ * not for some time. It cost one wrong analysis already.
+ *
+ * Truthful --bl-* aliases are declared alongside each legacy name below. New work reads
+ * the alias. The legacy names stay because components still reference them, and renaming
+ * them is a separate change with its own blast radius.
+ */
 [data-klinikos-ds] {
   --obsidian:#050303;
   --obsidian-2:#0c0607;
@@ -204,6 +223,34 @@ html:root[data-klinikos-atmosphere="golden"] {
   --glow-gold:0 0 30px color-mix(in srgb,var(--k-premium) 26%,transparent);
   --shadow-card:var(--k-shadow);
   --shadow-card-light:0 12px 30px rgba(63,32,36,.10);
+
+  /*
+   * Truthful names for the values above. Same colours, described by what they are.
+   * Prefer these in new work; the legacy names are kept only for existing consumers.
+   */
+  --bl-obsidian-2: var(--obsidian-2);
+  --bl-graphite: var(--graphite);
+  --bl-graphite-2: var(--graphite-2);
+  --bl-stone: var(--stone);
+  --bl-stone-2: var(--stone-2);
+  --bl-silver: var(--silver);
+
+  --bl-wine-900: var(--aegean-900);
+  --bl-wine-700: var(--aegean-700);
+  --bl-wine: var(--aegean-500);
+
+  --bl-ember-pale: var(--cyan-400);
+  --bl-ember-mid: var(--cyan-500);
+  --bl-ember-wash: var(--gold-300);
+  --bl-ember-light: var(--gold-500);
+  --bl-ember-dim: var(--gold-700);
+
+  /* Zumi state colours, by state rather than by hue. */
+  --bl-state-observing: var(--status-observing);
+  --bl-state-mapping: var(--status-mapping);
+  --bl-state-analyzing: var(--status-analyzing);
+  --bl-state-signal: var(--status-signal);
+  --bl-state-resolved: var(--status-resolved);
 }
 
 @keyframes zumi-spin {
