@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AI_SERVICE_PROCESSING_POLICY } from "@/lib/legal/ai-service-processing-policy";
+import { requiredAcknowledgmentsForRole } from "@/lib/legal/global-agreement";
 
 describe("Klinikos AI service processing policy", () => {
   it("requires purpose limitation and minimum necessary processing", () => {
@@ -34,5 +35,13 @@ describe("Klinikos AI service processing policy", () => {
       captureProcessingPurpose: true,
       captureDataClass: true,
     }));
+  });
+
+  it("requires an affirmative service-processing acknowledgment for authenticated access", () => {
+    const acknowledgments = requiredAcknowledgmentsForRole("patient");
+    expect(acknowledgments.map(({ key }) => key)).toContain("ai_service_processing");
+    const ai = acknowledgments.find(({ key }) => key === "ai_service_processing");
+    expect(ai?.label.toLowerCase()).toContain("approved ai");
+    expect(ai?.label.toLowerCase()).toContain("not unrestricted permission");
   });
 });
