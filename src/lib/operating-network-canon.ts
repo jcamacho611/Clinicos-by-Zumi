@@ -1,5 +1,6 @@
 export const KLINIKOS_OPERATING_NETWORK_CANON = {
   brand: "Klinikos. The clinic operations ecosystem, powered by Zumi.",
+  parentDefinition: "governed-healthcare-operating-network",
   experienceLaw: "complexity-belongs-in-klinikos-not-in-the-users-hands",
   laws: [
     "free-participation-is-distribution-infrastructure",
@@ -10,6 +11,24 @@ export const KLINIKOS_OPERATING_NETWORK_CANON = {
     "no-known-failure-disappears-silently",
     "customer-dependence-comes-from-value-not-lock-in",
     "interface-is-the-signature",
+    "market-category-terms-are-capability-labels-not-parent-definitions",
+  ],
+  marketCapabilityLabels: [
+    "ehr-emr",
+    "practice-management",
+    "scheduling",
+    "telemedicine",
+    "billing-revenue-cycle",
+    "patient-portal",
+    "crm",
+    "staffing-marketplace",
+    "professional-network",
+    "education-workforce",
+    "ai-copilot",
+    "analytics",
+    "provider-directory",
+    "payments",
+    "resource-marketplace",
   ],
   userOrder: [
     "discover",
