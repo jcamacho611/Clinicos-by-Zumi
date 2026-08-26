@@ -9,6 +9,8 @@ describe("Klinikos operating-network canon", () => {
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("founder-omission-does-not-equal-engineering-omission");
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("no-known-failure-disappears-silently");
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("market-category-terms-are-capability-labels-not-parent-definitions");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("one-identity-many-governed-experiences");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("signup-promotes-relevant-experience-not-the-whole-platform");
   });
 
   it("keeps familiar market categories subordinate to the operating network", () => {
@@ -42,6 +44,19 @@ describe("Klinikos operating-network canon", () => {
     expect(KLINIKOS_OPERATING_NETWORK_CANON.userOrder.indexOf("enter-grid-or-relevant-network")).toBeLessThan(
       KLINIKOS_OPERATING_NETWORK_CANON.userOrder.indexOf("paid-implementation-subscription-or-contract"),
     );
+  });
+
+  it("routes one identity into a bounded promoted experience instead of exposing every system", () => {
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.experienceRouting.identityModel).toBe("one-person-one-persistent-identity-many-contextual-relationships");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.experienceRouting.defaultOperationalAccess).toBe("locked-unless-authorized");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.experienceRouting.signupPurpose).toBe("resolve-and-promote-the-most-relevant-starting-experience");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.experienceRouting.promotionIsAuthority).toBe(false);
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.experienceRouting.rules).toEqual(expect.arrayContaining([
+      "show-only-what-is-relevant-now",
+      "hide-irrelevant-systems-from-primary-experience",
+      "deny-operational-access-without-authority",
+      "expand-experience-when-new-relationships-needs-or-entitlements-justify-it",
+    ]));
   });
 
   it("keeps consequential truth states separate", () => {
