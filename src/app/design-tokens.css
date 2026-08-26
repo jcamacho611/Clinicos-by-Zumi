@@ -218,3 +218,46 @@ html:root[data-klinikos-atmosphere="golden"] {
     transition-duration: 0.001ms !important;
   }
 }
+
+/*
+ * Black Label palette — the current visual direction.
+ *
+ * The primitive block above is the earlier design-system export. Its aegean/cyan/gold
+ * ramp is the blue-healthcare-SaaS look the current direction moves away from, and it
+ * still drives --status-* (and therefore Badge tones and ZumiOrb states).
+ *
+ * Meanwhile the shipped stylesheets hardcode the newer palette as raw hex, because no
+ * token ever carried it: 61 occurrences across all eight sheets the root layout loads
+ * (cinematic-global.css alone has #e6817b 9 times and #f8efed 13 times). Changing the
+ * direction today means editing hex by hand in eight files, and a token change
+ * propagates nowhere.
+ *
+ * These tokens close that gap. The values are the exact hexes already rendering in
+ * production, so declaring them changes nothing on screen — it gives the direction a
+ * source to resolve through. New work reads from here; the hardcoded hex is migrated
+ * to it as each sheet is touched.
+ */
+[data-klinikos-ds] {
+  /* Grounds — obsidian through near-black, warmed toward cherry rather than blue. */
+  --bl-near-black: #050303;
+  --bl-obsidian: #090405;
+  --bl-obsidian-cherry: #16080b;
+  --bl-black-cherry: #19090b;
+
+  /* Warm neutrals — the light end of the same product. */
+  --bl-warm-ivory: #f8efed;
+  --bl-bone: #f8f0ee;
+  --bl-rose-gray: #a98f8b;
+  --bl-rose-gray-dim: #806965;
+
+  /* Accents — restrained copper/coral. One accent, three weights. */
+  --bl-ember: #e6817b;
+  --bl-ember-soft: #efaaa1;
+  --bl-ember-deep: #d25352;
+  --bl-oxblood: #8f3b3d;
+
+  /* Hairlines and washes, expressed against the accent rather than a neutral gray. */
+  --bl-line: rgba(226, 139, 133, 0.14);
+  --bl-line-strong: rgba(230, 129, 123, 0.36);
+  --bl-wash: rgba(230, 129, 123, 0.06);
+}
