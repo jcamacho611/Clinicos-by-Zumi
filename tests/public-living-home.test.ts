@@ -176,8 +176,17 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(brand).toContain('const MARK_SRC = "/klinikos-orbital-k-production.png"');
     expect(brand).toContain('const WORDMARK_SRC = "/klinikos-wordmark-production.png"');
     expect(homeStyles).toContain("url('/klinikos-rose-hero-production.png')");
-    expect(homeStyles).toContain("url('/klinikos-rose-wide-production.png')");
     expect(homeStyles).not.toContain("transparent.webp");
+
+    // The wide rose used to be asserted here because a `.reference-strip-art` rule in the
+    // home stylesheet referenced it. That rule became unreachable when the old home
+    // markup was retired — the same retirement this file already guards at
+    // `reference-state-rail` / `reference-action-rail` above — so the reference was
+    // removed with the rest of the dead CSS. The asset is still shipped and still used;
+    // it is now reached through the rose component, so the guard moves with it rather
+    // than being dropped. Its SHA is still pinned above.
+    expect(read("src/components/brand/rose-atmosphere.tsx"))
+      .toContain('"/klinikos-rose-wide-production.png"');
   });
 
   it("keeps the global appearance control off the focused root experience", () => {

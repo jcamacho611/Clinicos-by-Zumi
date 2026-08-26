@@ -67,16 +67,6 @@
   margin-left: 0 !important;
 }
 
-.rose-home .reference-center {
-  align-self: start;
-  min-width: 0;
-  padding-top: 72px;
-}
-
-.rose-home .reference-hero h1 {
-  font-weight: 200;
-}
-
 .rose-home #living-composer {
   position: relative;
 }
@@ -94,191 +84,7 @@
   min-width: 0;
 }
 
-/* The visible wordmark orb is layered over the real state-bearing ZumiOrb. */
-.rose-home .reference-zumi {
-  top: calc(100% - 35px);
-  z-index: 5;
-  gap: 16px !important;
-}
-
-.rose-home .reference-zumi-orb {
-  position: relative;
-  display: grid;
-  width: 92px;
-  height: 92px;
-  place-items: center;
-}
-
-.rose-home .reference-zumi-state-layer {
-  position: absolute;
-  inset: -2px;
-  opacity: .38;
-}
-
-.rose-home .reference-zumi-core {
-  position: absolute;
-  inset: 1px;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid rgba(239,124,119,.9);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 42% 34%,rgba(93,24,31,.52),transparent 42%),
-    linear-gradient(150deg,rgba(34,9,13,.98),rgba(10,4,6,.98));
-  color: #fff5f2;
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -.04em;
-  text-transform: lowercase;
-  box-shadow:
-    0 0 0 1px rgba(255,194,189,.08),
-    0 0 24px rgba(235,91,90,.45),
-    0 0 54px rgba(178,40,47,.32),
-    inset 0 0 22px rgba(160,41,47,.2);
-}
-
-.rose-home .reference-zumi-signal {
-  position: absolute;
-  top: 8px;
-  right: 5px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #ef7f79;
-  box-shadow: 0 0 16px rgba(239,127,121,.88);
-}
-
-.rose-home .reference-bottom-grid {
-  width: 100%;
-  max-width: 1244px;
-  margin: 112px auto 0;
-}
-
-.rose-home .reference-card {
-  height: 132px;
-}
-
-.rose-home .reference-lower-strip {
-  position: relative;
-  z-index: 1;
-}
-
-.rose-home .speedster-panel {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 21% 50%,rgba(222,94,88,.14),transparent 23%),
-    linear-gradient(110deg,var(--bl-obsidian) 0%,var(--bl-obsidian-cherry) 47%,#080405 100%) !important;
-}
-
-.rose-home .reference-strip-art {
-  background:
-    linear-gradient(90deg,rgba(3,2,2,.08),rgba(3,2,2,.28) 72%,rgba(3,2,2,.82)),
-    url('/klinikos-rose-wide-production.png') center 47% / 125% auto no-repeat;
-  filter: saturate(.78) brightness(.58) contrast(1.08);
-}
-
-.rose-home .speedster-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(90deg,rgba(4,2,3,.04),rgba(4,2,3,.14) 45%,rgba(4,2,3,.36));
-}
-
-.rose-home .speedster-panel::after {
-  content: "";
-  position: absolute;
-  left: 4%;
-  right: 48%;
-  bottom: 19%;
-  z-index: 1;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(90deg,transparent,rgba(230,129,123,.32),transparent) !important;
-}
-
-.rose-home .reference-strip-content {
-  position: relative;
-  z-index: 2;
-}
-
 @media (min-width: 1024px) {
-  .rose-home .reference-home {
-    min-height: 1020px !important;
-  }
-
-  .rose-home .reference-state-rail,
-  .rose-home .reference-center,
-  .rose-home .reference-action-rail {
-    grid-row: 1;
-  }
-
-  .rose-home .reference-state-rail {
-    grid-column: 1;
-    padding-top: 134px;
-  }
-
-  .rose-home .reference-state-rail ol {
-    position: relative;
-    height: 374px;
-    margin-left: 19px;
-  }
-
-  .rose-home .reference-state-rail li {
-    position: absolute;
-    left: 23px;
-    margin: 0 !important;
-  }
-
-  .rose-home .reference-state-rail li > span:first-child {
-    left: -27px !important;
-  }
-
-  .rose-home .reference-state-rail li:nth-child(1) { top: 0; }
-  .rose-home .reference-state-rail li:nth-child(2) { top: 117px; }
-  .rose-home .reference-state-rail li:nth-child(3) { top: 204px; }
-  .rose-home .reference-state-rail li:nth-child(4) { top: 287px; }
-  .rose-home .reference-state-rail li:nth-child(5) { top: 368px; }
-
-  .rose-home .reference-state-rail li:first-child::before {
-    content: "";
-    position: absolute;
-    top: -3px;
-    left: -15px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #f4a09a;
-    box-shadow: 0 0 13px #ef8d87;
-  }
-
-  .rose-home .reference-center {
-    grid-column: 2;
-    min-height: 0 !important;
-    justify-content: flex-start !important;
-    padding-top: 90px !important;
-  }
-
-  .rose-home .reference-hero > p:first-child {
-    font-size: 11px;
-    letter-spacing: .5em;
-  }
-
-  .rose-home .reference-hero h1 {
-    max-width: 760px !important;
-    margin-top: 38px !important;
-    font-size: 104px !important;
-    line-height: .84 !important;
-    letter-spacing: -.067em !important;
-  }
-
-  .rose-home .reference-hero h1 + p {
-    margin-top: 26px !important;
-    font-size: 15px;
-    line-height: 24px;
-  }
 
   .rose-home #living-composer {
     width: 100%;
@@ -288,52 +94,18 @@
 
   .rose-home #living-composer > div {
     min-height: 112px !important;
-  }
-
-  .rose-home .reference-action-rail {
-    grid-column: 3;
-    padding-top: 109px;
-  }
-
-  .rose-home .reference-action-rail nav {
-    display: grid;
-    gap: 28px;
-  }
-
-  .rose-home .reference-action-rail a {
-    gap: 5px;
-  }
-
-  .rose-home .reference-bottom-grid {
-    grid-row: 2;
-    margin-top: 35px;
-  }
-}
+  }}
 
 @media (min-width: 1441px) {
   .rose-home .rose-atmosphere {
     background-size: min(66.7vw, 1280px) auto !important;
-  }
-}
+  }}
 
 @media (max-width: 1023px) {
   .rose-home .rose-atmosphere {
     background-position: center 58px !important;
     background-size: min(142vw,1085px) auto !important;
-  }
-
-  .rose-home .reference-center {
-    padding-top: 68px;
-  }
-
-  .rose-home .reference-hero h1 {
-    font-size: clamp(4.2rem,12vw,6.5rem);
-  }
-
-  .rose-home .reference-bottom-grid {
-    margin-top: 128px;
-  }
-}
+  }}
 
 @media (max-width: 767px) {
   .rose-home .reference-header {
@@ -367,27 +139,6 @@
     filter: saturate(.76) contrast(1.04) brightness(.72);
   }
 
-  .rose-home .reference-center {
-    padding-top: 52px;
-  }
-
-  .rose-home .reference-hero > p:first-child {
-    font-size:11px;
-    letter-spacing: .36em;
-  }
-
-  .rose-home .reference-hero h1 {
-    margin-top: 26px !important;
-    font-size: clamp(3.35rem,16vw,4.6rem) !important;
-    line-height: .9 !important;
-  }
-
-  .rose-home .reference-hero h1 + p {
-    margin-top: 22px !important;
-    font-size: 13px;
-    line-height: 21px;
-  }
-
   .rose-home #living-composer {
     margin-top: 34px !important;
   }
@@ -403,53 +154,4 @@
 
   .rose-home .reference-composer-shell textarea {
     font-size: 13px;
-  }
-
-  .rose-home .reference-zumi {
-    top: calc(100% - 30px);
-  }
-
-  .rose-home .reference-zumi-orb {
-    width: 82px;
-    height: 82px;
-  }
-
-  .rose-home .reference-zumi-state-layer {
-    inset: -7px;
-    transform: scale(.9);
-  }
-
-  .rose-home .reference-bottom-grid {
-    margin-top: 118px;
-  }
-
-  .rose-home .reference-card {
-    height: auto;
-    min-height: 128px;
-  }
-
-  .rose-home .reference-lower-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .rose-home .reference-strip-art {
-    min-height: 112px;
-  }
-
-  .rose-home .reference-strip-content {
-    grid-template-columns: 1fr;
-    border-top: 1px solid rgba(208,131,125,.1);
-    border-left: 0;
-    padding: 24px;
-  }
-
-  .rose-home .reference-strip-content > span:last-child {
-    justify-self: start;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rose-home .reference-zumi-state-layer {
-    opacity: .26;
-  }
-}
+  }}
