@@ -21,7 +21,7 @@
 }
 
 #living-composer .reference-composer-shell > button[type="submit"]:focus-visible {
-  outline: 2px solid #efaaa1;
+  outline: 2px solid var(--bl-ember-soft);
   outline-offset: 3px;
 }
 

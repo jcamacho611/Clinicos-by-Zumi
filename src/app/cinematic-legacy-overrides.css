@@ -27,7 +27,7 @@
 .klinikos-cinematic-root [class*="text-[#173c34]"],
 .klinikos-cinematic-root [class*="text-[#15352f]"],
 .klinikos-cinematic-root [class*="text-[#493f20]"] {
-  color:#f8efed!important;
+  color:var(--bl-warm-ivory)!important;
 }
 
 .klinikos-cinematic-root [class*="text-[#5f756e]"],
@@ -46,7 +46,7 @@
 .klinikos-cinematic-root [class*="text-[#286f61]"],
 .klinikos-cinematic-root [class*="text-[#2b7868]"],
 .klinikos-cinematic-root [class*="text-[#3b7c6e]"] {
-  color:#e6817b!important;
+  color:var(--bl-ember)!important;
 }
 
 .klinikos-cinematic-root [class*="text-[#9a6d12]"],
@@ -55,7 +55,7 @@
 .klinikos-cinematic-root [class*="text-[#8d7a38]"],
 .klinikos-cinematic-root [class*="text-[#e7d182]"],
 .klinikos-cinematic-root [class*="text-[#e4c978]"] {
-  color:#efaaa1!important;
+  color:var(--bl-ember-soft)!important;
 }
 
 .klinikos-cinematic-root [class*="border-[#d8ddd4]"],
@@ -71,15 +71,15 @@
 .rose-auth-form :where(input,textarea,select) {
   border-color:rgba(226,139,133,.16)!important;
   background:#100708!important;
-  color:#f8efed!important;
+  color:var(--bl-warm-ivory)!important;
 }
 
-.rose-auth-form :where(input,textarea)::placeholder { color:#806965!important; }
+.rose-auth-form :where(input,textarea)::placeholder { color:var(--bl-rose-gray-dim)!important; }
 
 .rose-auth-form :where(button[type="submit"]) {
   border-color:rgba(239,170,161,.16)!important;
-  background:#e6817b!important;
-  color:#19090b!important;
+  background:var(--bl-ember)!important;
+  color:var(--bl-black-cherry)!important;
 }
 
-.rose-auth-form :where(button[type="submit"]):hover { background:#efaaa1!important; }
+.rose-auth-form :where(button[type="submit"]):hover { background:var(--bl-ember-soft)!important; }

@@ -1,6 +1,6 @@
 /* Final compatibility pass for command/copilot surfaces that predate the reference lock. */
 
-.klinikos-cinematic-root [class*="bg-[#05090f]"] { background-color:#050303!important; }
+.klinikos-cinematic-root [class*="bg-[#05090f]"] { background-color:var(--bl-near-black)!important; }
 .klinikos-cinematic-root [class*="bg-[#070d15]"] { background-color:#0c0607!important; }
 .klinikos-cinematic-root [class*="bg-[#101720]"] { background-color:#160b0d!important; }
 .klinikos-cinematic-root [class*="bg-[#06101a]"] { background-color:#070304!important; }
@@ -11,7 +11,7 @@
 .klinikos-cinematic-root [class*="text-cyan-"] ,
 .klinikos-cinematic-root [class*="text-teal-"] ,
 .klinikos-cinematic-root [class*="text-sky-"] ,
-.klinikos-cinematic-root [class*="text-blue-"] { color:#e6817b!important; }
+.klinikos-cinematic-root [class*="text-blue-"] { color:var(--bl-ember)!important; }
 
 .klinikos-cinematic-root [class*="border-cyan-"] ,
 .klinikos-cinematic-root [class*="border-teal-"] ,

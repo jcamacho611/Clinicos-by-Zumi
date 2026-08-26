@@ -69,7 +69,7 @@
  * see motion and is removed entirely for anyone who has asked not to. */
 .klinikos-deep-target:target,
 .klinikos-deep-target[data-klinikos-arrived] {
-  outline: 2px solid var(--accent-intelligence, #e6817b);
+  outline: 2px solid var(--accent-intelligence, var(--bl-ember));
   outline-offset: 3px;
   position: relative;
 }
@@ -82,7 +82,7 @@
   inset-inline-start: -3px;
   width: 3px;
   border-radius: 3px;
-  background: var(--accent-intelligence, #e6817b);
+  background: var(--accent-intelligence, var(--bl-ember));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -92,8 +92,8 @@
   }
 
   @keyframes klinikos-deep-target-settle {
-    from { outline-color: var(--accent-intelligence, #e6817b); }
-    60% { outline-color: var(--accent-intelligence, #e6817b); }
-    to { outline-color: color-mix(in oklab, var(--accent-intelligence, #e6817b) 55%, transparent); }
+    from { outline-color: var(--accent-intelligence, var(--bl-ember)); }
+    60% { outline-color: var(--accent-intelligence, var(--bl-ember)); }
+    to { outline-color: color-mix(in oklab, var(--accent-intelligence, var(--bl-ember)) 55%, transparent); }
   }
 }

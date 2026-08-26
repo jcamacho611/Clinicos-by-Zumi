@@ -332,7 +332,7 @@ html:root[data-klinikos-atmosphere="night"] .unicorn-living-shell {
   background:
     radial-gradient(circle at 50% 28%, rgba(119, 28, 35, .24), transparent 34%),
     radial-gradient(circle at 84% 10%, rgba(230, 129, 123, .07), transparent 24%),
-    linear-gradient(180deg, #050303 0%, #090506 55%, #070404 100%);
+    linear-gradient(180deg, var(--bl-near-black) 0%, #090506 55%, #070404 100%);
   box-shadow:
     0 42px 130px rgba(0, 0, 0, .48),
     inset 0 1px 0 rgba(255, 221, 217, .025);

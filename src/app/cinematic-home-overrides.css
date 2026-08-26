@@ -168,7 +168,7 @@
   overflow: hidden;
   background:
     radial-gradient(circle at 21% 50%,rgba(222,94,88,.14),transparent 23%),
-    linear-gradient(110deg,#090405 0%,#16080b 47%,#080405 100%) !important;
+    linear-gradient(110deg,var(--bl-obsidian) 0%,var(--bl-obsidian-cherry) 47%,#080405 100%) !important;
 }
 
 .rose-home .reference-strip-art {

@@ -58,13 +58,13 @@ button,a{-webkit-tap-highlight-color:transparent}
 .zumi-orb{position:relative;width:260px;aspect-ratio:1;border:1px solid rgba(67,217,255,.22);border-radius:50%;display:grid;place-items:center}.zumi-orb:before,.zumi-orb:after{content:"";position:absolute;border-radius:50%}.zumi-orb:before{inset:14%;border:1px solid rgba(67,217,255,.35);box-shadow:0 0 80px rgba(67,217,255,.12)}.zumi-orb:after{inset:32%;background:radial-gradient(circle at 35% 30%,#bdf4ff 0,#43d9ff 18%,#1677a8 52%,#0b2030 75%);box-shadow:0 0 50px rgba(67,217,255,.35)}.zumi-node{position:absolute;width:7px;height:7px;background:#43d9ff;box-shadow:0 0 18px #43d9ff}.zumi-node:nth-child(1){top:8%;left:48%}.zumi-node:nth-child(2){right:10%;top:48%}.zumi-node:nth-child(3){bottom:12%;left:26%}.zumi-node:nth-child(4){left:9%;top:35%}@keyframes zumi-breathe{0%,100%{transform:scale(.985);opacity:.82}50%{transform:scale(1.015);opacity:1}}.zumi-orb{animation:zumi-breathe 6s cubic-bezier(.16,1,.3,1) infinite}
 
 /* Cinematic rose Living Home: this surface deliberately opts out of the time-of-day blue/Aegean palette. */
-.rose-home{--surface-primary:#050303;--text-primary:#f8f0ee;--text-secondary:#bda5a1;--line-dark:rgba(217,131,127,.16);--accent-intelligence:#e6817b;--obsidian:#18090b;background:#050303;color:#f8f0ee}
+.rose-home{--surface-primary:var(--bl-near-black);--text-primary:var(--bl-bone);--text-secondary:#bda5a1;--line-dark:rgba(217,131,127,.16);--accent-intelligence:var(--bl-ember);--obsidian:#18090b;background:var(--bl-near-black);color:var(--bl-bone)}
 .rose-home .zumi-orb{border-color:rgba(235,132,126,.28);animation-duration:7s}
 .rose-home .zumi-orb:before{border-color:rgba(235,132,126,.28);box-shadow:0 0 70px rgba(221,99,95,.14)}
 .rose-home .zumi-orb:after{background:radial-gradient(circle at 34% 30%,#ffd7d3 0,#ef9089 19%,#a5464a 50%,#2b0d11 76%);box-shadow:0 0 48px rgba(224,105,99,.35)}
 .rose-home .zumi-node{background:#ef9089;box-shadow:0 0 18px #ef9089}
 .rose-atmosphere{background:
-  radial-gradient(circle at 50% 42%,rgba(126,25,31,.05) 0%,rgba(0,0,0,.18) 40%,rgba(0,0,0,.78) 74%,#050303 100%),
+  radial-gradient(circle at 50% 42%,rgba(126,25,31,.05) 0%,rgba(0,0,0,.18) 40%,rgba(0,0,0,.78) 74%,var(--bl-near-black) 100%),
   radial-gradient(ellipse at 50% 42%,rgba(230,122,116,.17),rgba(84,18,23,.18) 28%,rgba(0,0,0,0) 63%),
   url('/klinikos-rose-bg.svg') center 38%/min(72vw,1080px) auto no-repeat;
   filter:saturate(.95) contrast(1.08)
