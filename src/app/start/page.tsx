@@ -10,7 +10,7 @@ import {
 } from "@/components/command/zumi-command-shell";
 
 export const metadata = {
-  title: "Start — Klinikos",
+  title: "Start",
   description:
     "Choose how you want to use Klinikos: operate a clinic, join the Grid, learn through Klinikos EDU, or begin a clinic operating analysis.",
 };

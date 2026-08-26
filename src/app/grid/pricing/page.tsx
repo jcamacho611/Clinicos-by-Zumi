@@ -8,7 +8,7 @@ import {
 } from "@/lib/commercial/grid-economics";
 
 export const metadata = {
-  title: "Grid pricing — Klinikos",
+  title: "Grid pricing",
   description:
     "Listing, searching and declining on Grid are free. Any transaction fee is resource-class specific and becomes active only through reviewed server-owned policy.",
 };

@@ -19,7 +19,7 @@ const availabilityMeta: Record<KlinikosPathAvailability, { label: string; classN
 };
 
 export const metadata = {
-  title: "Routes | Klinikos",
+  title: "Routes",
   description: "Klinikos routes current state to desired state across learning, readiness, opportunity, operations, and growth.",
 };
 

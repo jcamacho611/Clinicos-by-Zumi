@@ -10,7 +10,7 @@ import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
  * guided by Klinikos Intelligence.
  */
 export const metadata = {
-  title: "Clinic Operating Analysis — Klinikos",
+  title: "Clinic Operating Analysis",
   description:
     "Klinikos maps where your clinic loses control — follow-ups, paperwork, referrals, results, billing readiness, staff ownership and revenue signals — then prepares a human-reviewed operating recommendation.",
 };

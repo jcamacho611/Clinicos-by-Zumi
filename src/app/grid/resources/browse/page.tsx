@@ -7,7 +7,7 @@ import { listPublicGridResources } from "@/lib/grid/resource-repository";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Grid Resources — Klinikos",
+  title: "Grid Resources",
   description: "Browse reviewed public healthcare space, equipment, services, organization capacity, education, and permitted supplies on Klinikos Grid.",
 };
 

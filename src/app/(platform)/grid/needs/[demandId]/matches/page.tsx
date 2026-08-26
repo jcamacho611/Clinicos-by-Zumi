@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { discoverGridCandidatesForSavedNeed } from "@/lib/grid/opportunity-discovery-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Candidates — Klinikos",
+  title: "Grid Candidates",
   description: "Review deterministic Klinikos Grid candidates for a saved need and move an eligible candidate into the governed offer flow.",
 };
 

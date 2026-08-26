@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getUniversalResourceDealRoom } from "@/lib/grid/universal-resource-deal-repository";
 
 export const metadata: Metadata = {
-  title: "Resource Deals — Klinikos Grid",
+  title: "Grid Resource Deals",
   description: "Negotiate and reserve approved universal Klinikos Grid resources through a policy-aware deal room.",
 };
 

@@ -10,7 +10,7 @@ import {
 } from "@/components/command/zumi-command-shell";
 
 export const metadata = {
-  title: "Founding Clinic Qualification — Klinikos",
+  title: "Founding Clinic Qualification",
   description:
     "The founding pathway evaluates operational fit before implementation. Klinikos maps the real workflow first, then scope and production gates are reviewed before launch.",
 };

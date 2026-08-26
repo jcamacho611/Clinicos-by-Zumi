@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getGridPlatformFinanceBoard } from "@/lib/grid/platform-finance-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Finance Authority — Klinikos",
+  title: "Grid Finance Authority",
   description: "Restricted Klinikos Grid fee policy, financial obligation, and settlement control plane.",
 };
 

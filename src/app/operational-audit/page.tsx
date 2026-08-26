@@ -6,7 +6,7 @@ import { clinicCommercialOffers, clinicPlans } from "@/lib/commercial/klinikos-c
 import { KLINIKOS_ECONOMIC_THESIS } from "@/lib/brand/canonical-messaging";
 
 export const metadata: Metadata = {
-  title: "What would Klinikos replace? — Klinikos",
+  title: "What would Klinikos replace?",
   description:
     "Enter what your clinic pays for software today and see what Klinikos would replace, what stays "
     + "connected, and what the difference costs. Software only, no invented savings.",

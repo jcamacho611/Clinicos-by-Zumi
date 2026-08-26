@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getGridResourceReviewQueue } from "@/lib/grid/resource-admin-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Resource Authority — Klinikos",
+  title: "Grid Resource Authority",
   description: "Restricted Klinikos review authority for universal Grid resources and capacity.",
 };
 

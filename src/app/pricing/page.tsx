@@ -5,7 +5,7 @@ import { Badge, Card, DsSurface } from "@/components/ds";
 import { clinicCommercialOffers, clinicPlans, commercialAddOns } from "@/lib/commercial/klinikos-commercial";
 
 export const metadata = {
-  title: "Pricing — Klinikos",
+  title: "Pricing",
   description: "Klinikos clinic operating system pricing, implementation, and expansion options.",
 };
 

@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, CircleDashed, LockKeyhole, Scale, ShieldCheck
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 
 export const metadata: Metadata = {
-  title: "Trust & Readiness — Klinikos",
+  title: "Trust & Readiness",
   description: "A public, non-certification summary of what Klinikos has built, what still needs external verification, and what is intentionally blocked until production requirements are met.",
 };
 

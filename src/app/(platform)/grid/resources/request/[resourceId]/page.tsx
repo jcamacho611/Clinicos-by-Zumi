@@ -7,7 +7,7 @@ import { getApprovedPublicGridResource } from "@/lib/grid/public-resource-detail
 import { getGridTransactionBoard } from "@/lib/grid/transaction-board-repository";
 
 export const metadata: Metadata = {
-  title: "Request Grid Resource — Klinikos",
+  title: "Request Grid Resource",
   description: "Connect an approved Klinikos Grid resource to an existing saved need and prepare an auditable offer.",
 };
 

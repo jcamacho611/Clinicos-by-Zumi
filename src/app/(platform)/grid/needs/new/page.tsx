@@ -7,7 +7,7 @@ import { draftForClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import { draftForEduGridSignal } from "@/lib/ecosystem/edu-grid-bridge";
 
 export const metadata: Metadata = {
-  title: "Post a Grid Need — Klinikos",
+  title: "Post a Grid Need",
   description: "Create a structured Klinikos Grid demand and search reviewed, eligible supply.",
 };
 

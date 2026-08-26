@@ -13,7 +13,7 @@ import {
 import { requireClinicSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "Design system — Klinikos",
+  title: "Design system",
   // Internal reference. It documents the shared interface vocabulary, which is of no
   // use to a search engine and of some use to anyone probing the product's surface.
   robots: { index: false, follow: false },

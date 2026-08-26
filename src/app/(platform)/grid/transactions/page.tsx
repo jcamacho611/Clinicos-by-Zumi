@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTransactionBoard } from "@/lib/grid/transaction-board-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Transactions — Klinikos",
+  title: "Grid Transactions",
   description: "Manage Klinikos Grid needs, offers, reservations, fulfillment, financial obligations, disputes, and safety escalation from one governed workflow.",
 };
 

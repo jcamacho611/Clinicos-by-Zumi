@@ -4,7 +4,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { roleLabel } from "@/lib/auth/rbac";
 
 export const metadata: Metadata = {
-  title: "Settings | Klinikos",
+  title: "Settings",
   description: "Manage Klinikos account context, appearance, security, and sign out.",
 };
 

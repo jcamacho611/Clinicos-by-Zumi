@@ -19,7 +19,7 @@ import { listOwnGridResources } from "@/lib/grid/resource-repository";
 import { getGridTransactionBoard } from "@/lib/grid/transaction-board-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Opportunities — Klinikos",
+  title: "Grid Opportunities",
   description: "One place to see Klinikos Grid needs, resources, offers, bookings, and earnings.",
 };
 

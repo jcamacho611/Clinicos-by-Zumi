@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTrustReviewQueue } from "@/lib/grid/trust-review-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Trust Review — Klinikos",
+  title: "Grid Trust Review",
   description: "Klinikos platform review queue for Grid marketplace disputes and safety incidents.",
 };
 

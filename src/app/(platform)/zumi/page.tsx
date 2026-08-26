@@ -4,7 +4,7 @@ import { can } from "@/lib/auth/rbac";
 import { requireClinicSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "Zumi | Klinikos",
+  title: "Zumi",
   description: "Expanded Zumi conversation for guided Klinikos work.",
 };
 

@@ -14,7 +14,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTrustWorkspace } from "@/lib/grid/trust-workspace-repository";
 
 export const metadata: Metadata = {
-  title: "Grid Trust & Readiness — Klinikos",
+  title: "Grid Trust & Readiness",
   description: "Review publication readiness, objective transaction history, disputes, and safety concerns through governed Grid workflows.",
 };
 

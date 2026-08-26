@@ -5,7 +5,7 @@ import { BrandMark } from "@/components/clinic/brand-mark";
 import { publicCompanyStory } from "@/lib/brand/public-company-story";
 
 export const metadata: Metadata = {
-  title: "Our Mission | Klinikos",
+  title: "Our Mission",
   description: "Why Klinikos exists, the operating principles behind the system, and the product and diligence standards guiding the build.",
   openGraph: {
     title: "Our Mission | Klinikos",

@@ -6,7 +6,7 @@ import { requireClinicSession } from "@/lib/auth/session";
 import { listOwnGridResources } from "@/lib/grid/resource-repository";
 
 export const metadata: Metadata = {
-  title: "My Grid Resources — Klinikos",
+  title: "My Grid Resources",
   description: "Create, review, pause, and manage universal Klinikos Grid resources and capacity.",
 };
 

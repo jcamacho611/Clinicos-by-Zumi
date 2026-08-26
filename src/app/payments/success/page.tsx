@@ -3,7 +3,7 @@ import { readActivationView } from "@/lib/commercial/analysis-activation";
 import { PaymentReturnExperience } from "@/components/commercial/payment-return-experience";
 
 export const metadata: Metadata = {
-  title: "Payment return | Klinikos",
+  title: "Payment return",
   description: "Klinikos is waiting for verified server-side payment evidence.",
   robots: { index: false, follow: false },
 };
