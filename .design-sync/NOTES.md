@@ -62,11 +62,11 @@ Measured against the operating constitution:
    identical, so no visual change. `data-klinikos-ds` sits on `<html>`, so every var()
    resolves everywhere.
 
-3. **`ZumiOrb` defaults to `size = 240`** and is documented as "the signature
-   intelligence structure". §3 says Zumi must not be a floating orb the user opens; the
-   interaction is "Ask Klinikos". The app already moved — `tests/public-living-home.test.ts`
-   asserts the home composer uses `ZumiSendGlyph` and *not* `<ZumiOrb state="observing" />`.
-   The design system did not follow.
+3. ~~**`ZumiOrb` defaults to `size = 240`.**~~ **OVERSTATED — corrected 2026-08-26.**
+   The default is misleading but not rendered: every call site passes an explicit small
+   size (104 in Living Home, 72 in /design-system, 34/32/30 across the public surfaces).
+   Nothing renders at 240. Worth changing the default so the design system stops
+   advertising a size the product never uses, but it is not a live §3 violation.
 
 4. **The rose is the dominant identity.** §20 says it may remain historical reference but
    must not dominate. It is a full-bleed hero background in `cinematic-home-overrides.css`
@@ -106,6 +106,19 @@ Measured against the operating constitution:
 
 - `DesignSync` works from this session (`list_projects`, `get_project`, `list_files` all
   returned). No auth barrier.
-- Headless browser cannot reach klinikos.io through the session egress proxy
-  (`ERR_CONNECTION_RESET`), so live visual verification is unavailable here. Audits are
-  HTML/CSS-level via curl. Preview grading will need a working browser path.
+- **Visual verification IS possible — use a local server, not the live site.** The
+  headless browser cannot reach klinikos.io through the session egress proxy
+  (`ERR_CONNECTION_RESET`, and the proxy logs no failure for it, so the reset is below
+  the proxy). But `no_proxy` covers localhost, so:
+
+      npm run dev                      # .env is present; the public pages need no extra env
+      # then drive Chromium at http://127.0.0.1:3000 with
+      # --proxy-server=direct:// --proxy-bypass-list=* --no-sandbox
+
+  This is strictly better than screenshotting production anyway: it renders the working
+  branch. Chromium is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, driven via
+  `playwright-core` (resolve it from the repo root — it is CommonJS, so `require`, not a
+  named ESM import).
+- Note the proxy port changes between container restarts. Read `$HTTPS_PROXY`; never
+  hardcode it.
+- Preview grading for a real design sync is therefore unblocked.
