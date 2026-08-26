@@ -114,39 +114,46 @@ Luxury does not mean more glow, more cards, more gradients, more borders, or mor
 
 Use:
 
-- obsidian/true-black foundation where appropriate;
-- deep black-cherry surfaces;
-- warm ivory typography;
-- restrained burgundy/dusty rose/coral accents;
-- approved orbital mark and wordmark;
+- warm ivory / bone / pearl with graphite / near-black for light-mode foundations;
+- obsidian / true-black with deep black-cherry / oxblood for dark-mode foundations;
+- restrained copper / dusty rose / coral / ember accents;
+- approved orbital mark and wordmark where useful;
 - strong negative space;
-- few purposeful radii and elevation levels.
+- few purposeful radii and elevation levels;
+- typography and hierarchy as primary visual structure.
 
 Do not recreate generic hospital-blue or generic enterprise SaaS UI.
 
-## Rose environmental contract
+## Brand atmosphere contract
 
-The approved rose is a brand atmosphere, not wallpaper.
+Brand atmosphere is subordinate to product clarity.
 
-Assets already exist under `public/` and must remain reusable rather than copied into page-specific assets.
+**The interface itself is the signature.**
+
+No decorative motif is permanent and no page requires a flower, rose, orb, network illustration, stock image, or other decorative object merely to look like Klinikos.
+
+Existing rose assets remain reusable historical/optional brand material, not a product requirement. Use them only when they improve hierarchy or atmosphere without competing with the user's work.
+
+Prefer **order emerging from complexity** through spacing, typography, hierarchy, restrained state-driven motion, and progressive disclosure rather than visible architecture diagrams or decorative network clutter.
 
 ### Public / Living premium surfaces
 
-- Keep scroll-linked background depth/parallax where technically safe.
-- Target subtle movement, approximately one-quarter to one-third foreground scroll rate.
-- Allow restrained scale/depth change.
-- Avoid section-to-section visual jumps that make the rose look like repeated images.
-- Preserve readability and layout stability.
+- Let the product interaction, useful answer, and next action carry the page before atmosphere.
+- Motion must be tied to real state, navigation, focus, or comprehension rather than continuous spectacle.
+- Decorative depth may be used sparingly when it does not reduce readability, performance, or layout stability.
+- Do not replace the retired mandatory rose with another mandatory decorative gimmick.
 
 ### Operational surfaces
 
-- Use quieter cropped geometry/atmospheric references rather than a giant flower behind every table/workspace.
+- The work owns the screen.
+- Use quiet geometry, hierarchy, spacing, and contextual state before imagery.
+- Clinical, billing, Grid, EDU, and administrative workspaces must remain readable under sustained daily use.
 
 ### Accessibility
 
-- Rose is decorative.
-- Do not add meaningless screen-reader narration.
-- `prefers-reduced-motion` disables parallax/scroll-linked motion while preserving static atmosphere.
+- Decorative assets are decorative and receive no meaningless screen-reader narration.
+- `prefers-reduced-motion` disables non-essential motion while preserving state and meaning.
+- Decoration must never be the sole carrier of status, action, hierarchy, or eligibility.
 
 ## Grid design contract
 
@@ -366,7 +373,8 @@ Do not merge frontend work that reintroduces any of the following without an exp
 - price before eligibility;
 - badge counts parsed from prose;
 - fake unread/activity/AI/payment/provider states;
-- visual role switchers that bypass authenticated role/context truth.
+- visual role switchers that bypass authenticated role/context truth;
+- mandatory decorative motifs that compete with the user's work.
 
 ## Implementation handoff required per major surface
 
