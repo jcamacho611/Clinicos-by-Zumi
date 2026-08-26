@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
-import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
 import {
   KLINIKOS_ECONOMIC_THESIS,
   KLINIKOS_HUMAN_AUTHORITY,
@@ -35,13 +36,12 @@ type PublicZumiApiResponse = {
 };
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
-const protectedHref = (href: string) => href === "/login" ? "/login" : `/login?next=${encodeURIComponent(href)}`;
 const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/start", "/access"]);
 
-function destinationActionHref(href: string) {
-  if (href === "/portal") return "/portal/login";
-  if (publicActionPaths.has(href)) return href;
-  return protectedHref(href);
+function destinationActionHref(destination: PublicLivingDestination) {
+  if (destination.href === "/portal") return "/portal/login";
+  if (publicActionPaths.has(destination.href)) return destination.href;
+  return protectedPublicContinuationHref(destination.href, destination.key);
 }
 
 function isPublicLivingResolution(value: unknown): value is PublicLivingResolution {
@@ -356,7 +356,7 @@ export function PublicLivingGateway() {
                         {resolution.destination && (
                           <Link
                             className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-xs font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                            href={destinationActionHref(resolution.destination.href)}
+                            href={destinationActionHref(resolution.destination)}
                           >
                             {resolution.destination.action}
                             <ArrowRight className="size-3.5" aria-hidden="true" />
