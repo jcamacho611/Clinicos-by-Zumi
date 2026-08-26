@@ -8,6 +8,28 @@ describe("Klinikos operating-network canon", () => {
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("land-without-displacement");
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("founder-omission-does-not-equal-engineering-omission");
     expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("no-known-failure-disappears-silently");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.laws).toContain("market-category-terms-are-capability-labels-not-parent-definitions");
+  });
+
+  it("keeps familiar market categories subordinate to the operating network", () => {
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.parentDefinition).toBe("governed-healthcare-operating-network");
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.marketCapabilityLabels).toEqual(expect.arrayContaining([
+      "ehr-emr",
+      "practice-management",
+      "scheduling",
+      "telemedicine",
+      "billing-revenue-cycle",
+      "patient-portal",
+      "crm",
+      "staffing-marketplace",
+      "professional-network",
+      "education-workforce",
+      "ai-copilot",
+      "analytics",
+      "payments",
+      "resource-marketplace",
+    ]));
+    expect(KLINIKOS_OPERATING_NETWORK_CANON.marketCapabilityLabels).not.toContain(KLINIKOS_OPERATING_NETWORK_CANON.parentDefinition);
   });
 
   it("keeps the growth journey value-first and identity-later", () => {
