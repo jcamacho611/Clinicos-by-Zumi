@@ -24,7 +24,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-slate-950 text-white shadow-[0_12px_26px_rgba(15,23,42,.18)] hover:bg-slate-800",
-        primary: "bg-sky-600 text-white shadow-[0_12px_28px_rgba(2,132,199,.24)] hover:bg-sky-500",
+        primary:
+          "bg-[var(--bl-ember)] text-[var(--bl-black-cherry)] shadow-[0_12px_28px_color-mix(in_oklch,var(--bl-ember)_28%,transparent)] hover:bg-[var(--bl-ember-soft)]",
         secondary: "border border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50",
         ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
         danger: "bg-rose-600 text-white hover:bg-rose-500",
