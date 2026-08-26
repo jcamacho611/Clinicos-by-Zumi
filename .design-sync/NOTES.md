@@ -45,17 +45,22 @@ explicit re-adoption of the above with the deletions understood.
 
 Measured against the operating constitution:
 
-1. **Wrong palette at the token layer.** `design-tokens.css` primitives are
-   aegean/cyan/gold — the "generic blue healthcare SaaS" look §20 rules out. Worse, the
-   Zumi status colors resolve to it: `--status-observing: var(--aegean-500)`,
-   `--status-mapping: var(--cyan-500)`, `--status-analyzing: var(--gold-500)`. Those
-   drive `Badge` tones and `ZumiOrb` states — the two most visible components.
+1. ~~**Wrong palette at the token layer.**~~ **CORRECTED — this was wrong.**
+   `design-tokens.css` declares `[data-klinikos-ds]` twice, and the *second* block wins
+   on source order. It already overrides the primitives with Black Label values:
+   `--aegean-500` is `#b9575b` (wine), `--cyan-500` is `#e6817b` (ember), `--gold-500` is
+   `#efaaa1`. The Zumi status colours were never rendering blue/cyan/gold.
 
-2. **The direction was never tokenized.** The newer palette ships as raw hex: 61
-   occurrences across all eight stylesheets the root layout loads. A token change
-   propagates nowhere. (Partly addressed: `--bl-*` tokens added 2026-08-26 carrying the
-   exact shipped hexes, so the direction now has a source. Migration of the 61 hardcoded
-   values is not done.)
+   The real defect is that the token *names* do not describe what they render, which is
+   what produced this wrong reading in the first place — and almost certainly why the
+   newer palette was hardcoded around the file as hex instead of resolving through it.
+   Fixed 2026-08-26: the winning block is marked, and `--bl-*` aliases now name each
+   value for what it is.
+
+2. ~~**The direction was never tokenized.**~~ **DONE 2026-08-26.** All 63 hardcoded hex
+   literals across the eight stylesheets now resolve through `--bl-*` tokens. Values
+   identical, so no visual change. `data-klinikos-ds` sits on `<html>`, so every var()
+   resolves everywhere.
 
 3. **`ZumiOrb` defaults to `size = 240`** and is documented as "the signature
    intelligence structure". §3 says Zumi must not be a floating orb the user opens; the
@@ -66,7 +71,23 @@ Measured against the operating constitution:
 4. **The rose is the dominant identity.** §20 says it may remain historical reference but
    must not dominate. It is a full-bleed hero background in `cinematic-home-overrides.css`
    and `unicorn-experience.css`, plus `components/brand/rose-atmosphere.tsx` across
-   surfaces. (That component's own comments already argue for restraint.)
+   surfaces. (That component's own comments already argue for restraint.) Partly reduced
+   2026-08-26: the dead `.reference-strip-art` wide-rose strip went with the unreachable
+   CSS. The hero rose remains.
+
+6. **THE BIG ONE — `src/components/ui` is generic Tailwind, and it is what the app
+   renders.** Imported by 90 files vs 16 for `ds`. `Button` uses `bg-sky-600`,
+   `bg-slate-950`, `bg-rose-600`; `Badge` offers `slate | sky | teal | amber | rose |
+   violet`. That is the "generic blue healthcare SaaS design" §20 explicitly rules out,
+   and it covers most of the product — while `ds`, the on-brand set, covers very little.
+
+   So the convergence is not "merge two similar libraries". It is: the design system is
+   correct and barely used; the primitives in real use are off-brand.
+
+   Repointing them changes pixels in 90 files. It should not ship without a human looking
+   at the result — a wrong pairing here produces unreadable buttons that no test catches.
+   Only the focus ring moved (2026-08-26): declared once for every button, visible only on
+   keyboard focus, now on the theme-aware `--k-accent`.
 
 5. **Three live positioning lines.** Site: "The operating system for running a clinic".
    Constitution §1: "Klinikos. The clinic operations ecosystem, powered by Zumi" — marked
