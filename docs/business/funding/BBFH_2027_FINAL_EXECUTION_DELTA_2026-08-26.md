@@ -102,7 +102,11 @@ Required:
 - Sydney Final attendance on 2027-03-03 — Yes/No
 - Australian market/collaboration interest — Yes/No
 
-A further-information field follows the Australian-market question and should use the existing evidence-bounded Australian-market answer if the authorized representative answers Yes.
+A further-information field follows the Australian-market question. The evidence-backed Australia pathway and ready-to-paste follow-up answer now live in:
+
+`docs/business/funding/BBFH_AUSTRALIA_COMMERCIALISATION_PATHWAY_2026-08-26.md`
+
+Use that answer only if the authorized representative genuinely adopts that pathway. Do not convert a planning document into an attestation by wording.
 
 ### Submission / supporting document
 
@@ -146,11 +150,21 @@ Use the answer bank in:
 
 Do not rewrite essays from scratch unless the live form changed.
 
+## Australia-intent decision support now resolved
+
+The earlier gate said only that Australia intent had to be genuine. That left the founder deciding against an undefined concept. The repo now contains a concrete minimum viable pathway:
+
+**BBFH/IDE Australian product-development work → Australian workflow/market validation → controlled configuration/pilot only if evidence supports it → Australian entity/location decision only if justified.**
+
+Official Austrade and Investment NSW evidence supports Australia/NSW as a credible digital-health and medtech commercialisation environment. This does not create current Australian operations or eligibility for Australian grants.
+
+If the authorized representative genuinely intends to pursue at least the product-development + market-validation stages if selected and commercially reasonable, the live form's Australia follow-up can use the prepared answer in the pathway file. If not, do not manufacture the intent.
+
 ## Remaining non-delegable decisions
 
 Only an authorized company representative should complete these items:
 
-1. **Australia intent** — confirm a genuine intent to conduct some part of R&D, manufacture, or commercialisation in Australia if that statement is true. Do not manufacture an Australian presence, customer, regulatory status, clinical trial, or manufacturing plan.
+1. **Australia intent** — adopt or reject the concrete pathway in `BBFH_AUSTRALIA_COMMERCIALISATION_PATHWAY_2026-08-26.md` and answer the form truthfully.
 2. **Sydney attendance** — answer the November 12, 2026 semi-final and March 3, 2027 final attendance questions from actual travel capability/commitment.
 3. **Terms/IP/publicity** — review the live competition terms, including: broad non-exclusive entry-content license; originality/IP warranty and indemnity; personal-information/marketing permissions; winner publicity; entrant-paid participation/travel; and the requirement that prize services are subject to IDE's standard product-development agreement.
 4. **Final legal acceptance / Submit** — by applying the entrant agrees to the published terms, so final application submission remains an authorized-company legal action.
@@ -160,12 +174,13 @@ Only an authorized company representative should complete these items:
 1. Open the official application form and accept the cookie setting required for all embedded form fields to load.
 2. Populate all routine company fields from the canonical facts above.
 3. Leave Number of Employees blank unless the authorized representative chooses to provide a verified current number.
-4. Paste the already-prepared Vision, Desirability, Feasibility, Viability, Team, Australian-market, and Prize Utilization answers from the working package.
+4. Paste the already-prepared Vision, Desirability, Feasibility, Viability, Team, and Prize Utilization answers from the working package.
 5. Complete the optional technical-support and profit fields because strong evidence-bounded answers already exist.
 6. For supporting documents select Yes and attach the single non-confidential combined packet if the file remains under the current 20 MB limit.
-7. Complete only the three substantive founder decisions above: Sydney attendance, Australia intent, and terms review.
-8. Submit only after authorized legal acceptance.
-9. Record submission evidence only after the portal actually confirms receipt.
+7. Use the Australia pathway answer only after genuine adoption by the authorized representative.
+8. Complete the Sydney attendance decisions and legal terms review.
+9. Submit only after authorized legal acceptance.
+10. Record submission evidence only after the portal actually confirms receipt.
 
 ## Truth boundary
 
