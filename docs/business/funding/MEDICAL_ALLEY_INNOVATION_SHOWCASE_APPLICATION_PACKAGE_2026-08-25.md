@@ -3,6 +3,7 @@
 Status: `APPLICATION-READY WORKING PACKAGE — NOT SUBMITTED / NOT SELECTED / NOT AWARDED`
 
 Prepared: 2026-08-25
+Last advanced: 2026-08-25
 
 ## 1. Why this application matters
 
@@ -13,6 +14,16 @@ Klinikos should treat this as a warm, existing application path rather than a ne
 Public source:
 
 - https://www.medicalalley.org/events/medical-alley-innovation-showcase/
+
+Resolved direct presenter application endpoint:
+
+- https://saijg.share-na2.hsforms.com/2FvO07Ox2T2aKvcHFCmgOoQ
+
+Resolution evidence:
+
+- Medical Alley's public page links `Presenter Application Form` through a Microsoft Safe Links wrapper.
+- On 2026-08-25 the wrapper was resolved far enough to expose the underlying HubSpot target above.
+- This removes the prior uncertainty about the actual presenter-form destination. It does **not** by itself prove submission or reveal all live form fields/terms.
 
 Public application deadline:
 
@@ -78,9 +89,9 @@ Before final submission, reverify that the public site or controlled demo being 
 
 ## Founded
 
-**2026**
+**August 20, 2026**
 
-Use exact executed incorporation/formation date only if the portal requires a full date.
+Use this exact New York filing date when the portal requires a full formation/founding date. Do not substitute the date a concept or repo first existed unless the form explicitly asks for a different milestone.
 
 ## Headquarters / domicile
 
@@ -364,7 +375,8 @@ Complete automatically where tools allow:
 - [x] ecosystem-fit answer drafted;
 - [x] presentation outline drafted;
 - [x] non-confidential disclosure boundary documented;
-- [ ] inspect exact live form fields and character limits when portal access permits;
+- [x] resolve the actual presenter-form destination from Medical Alley's Safe Links wrapper;
+- [ ] inspect exact live HubSpot form fields and character limits when a browser surface that can render the external form is available;
 - [ ] map every answer to exact form labels;
 - [ ] verify employee/headcount truth if requested;
 - [ ] verify exact team-role taxonomy if requested;
