@@ -19,7 +19,7 @@ const cases = [
   ["Our students need clinical sites", "school-placement-network", "edu", "/edu"],
   ["I want to be a preceptor", "educator-preceptor-opportunity", "edu", "/edu"],
   ["I need better opportunities", "grid-higher-value-opportunity", "grid", "/grid"],
-  ["I need a clinic appointment", "patient-find-care", "patient", "/portal"],
+  ["I need an appointment", "patient-find-care", "patient", "/portal"],
   ["I want to start another clinic", "launch-another-organization", "clinic", "/dashboard"],
 ] as const;
 
