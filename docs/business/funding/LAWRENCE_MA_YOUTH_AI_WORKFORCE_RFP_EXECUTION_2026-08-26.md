@@ -145,14 +145,27 @@ The Kentucky pricing schedule is not automatically transferable because this pro
 
 ## Qualification and legal gates
 
-### Critical foreign-corporation gate
+### Critical foreign-corporation gate — verified Massachusetts rule
 
 The RFP states that a non-Massachusetts corporation is required to register with the Massachusetts Secretary of the Commonwealth to obtain authorization to do business in Massachusetts.
 
-Klinikos, Inc. is a New York corporation. Therefore:
-- do not certify Massachusetts authority until registration is actually complete;
-- determine exact foreign-corporation registration timing, filing fee, registered-agent requirement, certificate requirements, and whether registration must exist at proposal submission or contract execution;
-- treat any fee/signature/legal attestation as founder-authority work.
+Klinikos, Inc. is a New York corporation.
+
+Fresh Massachusetts Secretary of the Commonwealth guidance states:
+- a foreign corporation must file a certificate of registration within 10 days after it starts to transact business in Massachusetts;
+- the registration must be accompanied by a certificate of legal existence or good standing from the jurisdiction of organization;
+- current foreign-corporation registration fee is **$400**, or **$375 if filed by fax**;
+- a Massachusetts foreign-corporation annual report is currently $125, or $100 if filed electronically on time.
+
+Authorities:
+- https://www.sec.state.ma.us/divisions/corporations/filing-by-subject/corporations/corporations-domestic-foreign.htm
+- https://www.sec.state.ma.us/divisions/corporations/general-information/corporations-filing-fees.htm
+
+Important procurement discrepancy:
+- general Massachusetts corporate law/guidance ties the filing deadline to commencing business;
+- the RFP wording may be interpreted to require authority earlier.
+
+Therefore do **not** spend the $400 or certify Massachusetts authority merely to guess at the buyer's intent. Obtain MMVWB clarification on whether foreign qualification must exist at proposal submission, award, contract execution, or service start. If the buyer confirms proposal-stage qualification is mandatory, treat the filing fee and authorized corporate filing/signature as a founder approval gate.
 
 ### Required price-proposal certifications / attachments called out by the RFP
 
@@ -171,8 +184,8 @@ Prepare but do not execute legal attestations without authorized review:
 
 ### Evidence gaps to resolve before signature
 
-- exact Massachusetts foreign-corporation compliance path;
-- current Certificate of Good Standing/Status for Klinikos;
+- buyer clarification on Massachusetts foreign-corporation timing;
+- current New York Certificate of Good Standing/Status for Klinikos suitable to support a later Massachusetts filing;
 - authorized corporate signatory documentation;
 - audit-assurance answer grounded in actual company accounting/audit state;
 - employer/work-based-learning commitments;
@@ -184,7 +197,7 @@ Prepare but do not execute legal attestations without authorized review:
 
 Unless answered by an addendum or conference, ask before 2026-09-22:
 
-1. Must a non-Massachusetts corporation complete Massachusetts foreign registration before proposal submission, or may it be completed before contract execution/start?
+1. The RFP states that a non-Massachusetts corporation must register to do business in Massachusetts, while Massachusetts Secretary guidance generally requires foreign registration within 10 days after the corporation begins transacting business. Must foreign registration be complete at proposal submission, at award, at contract execution, or before service delivery begins?
 2. What participant volume should bidders use for pricing and performance-goal assumptions?
 3. Are participant incentive payments and $15/hour in-person stipends fully reimbursable pass-through costs, and should they be excluded when evaluating administrative/program cost efficiency?
 4. What is the expected minimum/maximum duration and instructional-hour range per participant?
