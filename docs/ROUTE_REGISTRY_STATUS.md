@@ -1,112 +1,129 @@
 # Route Registry Status — Screen Experience Contract Inventory
 
-**Generated:** 2026-08-27  
-**Basis SHA:** `9c81d6740c634e3b5a0622cf1701d44e8728253f` (main after PRs #356 and #357 merged)  
-**Canon reference:** `src/lib/screen-experience-contracts.ts` (merged via PR #357)  
+**Updated:** 2026-08-27  
+**Basis main SHA:** `b08c81f41b2101a4b63f94ecf1a5b61d1f1c7fd4`  
+**Active implementation branch:** `feat/final-form-onboarding-release-20260827`  
+**Canon reference:** `src/lib/screen-experience-contracts.ts`  
 **Release gate:** `docs/SCREEN_EXPERIENCE_RELEASE_GATE.md`
 
 ## Rule
 
-Every active route is a **production release blocker** without a complete Screen Experience Contract.
+Every active route is a **production release blocker** without a complete Screen Experience Contract and matching implementation evidence.
 
 A Screen Experience Contract declares:
-- What is visible by default / must remain hidden / can be discovered / can be promoted
-- Eligibility, entitlement, authority
-- Exact data projection (minimum necessary)
-- Available actions
-- Zumi: what it may read, infer, recommend, draft, execute, and what it is FORBIDDEN from doing
-- PHI rules, audit requirements, provenance
-- Marketing/commercial-use boundaries
-- Denied/blocked/loading/empty/error behavior
-- Mobile behavior, accessibility requirements
+- what is visible by default / must remain hidden / can be discovered / can be promoted;
+- eligibility, entitlement and authority;
+- exact data projection and minimum-necessary rules;
+- available actions;
+- what Zumi may read, infer, recommend, draft and execute, and what it is forbidden from doing;
+- PHI rules, audit requirements and provenance;
+- marketing/commercial-use boundaries;
+- denied/blocked/loading/empty/error behavior;
+- mobile behavior and accessibility requirements.
 
 ---
 
 ## Contract Status
 
-### Priority 1 — Highest-Traffic Routes (production release blockers, address first)
+### Priority 1 — Acquisition, onboarding and highest-risk operating routes
 
-| Route | File | Auth Level | Contract Status |
+| Route | File | Access | Contract Status |
 |---|---|---|---|
 | `/` | `src/app/page.tsx` | PUBLIC | CONTRACT_PENDING |
+| `/auth` | `src/app/auth/page.tsx` | PUBLIC (Universal Entry Router) | CONTRACT_PENDING |
+| `/start` | `src/app/start/page.tsx` | PUBLIC compatibility redirect → `/auth` | CONTRACT_PENDING |
+| `/sales` | `src/app/sales/page.tsx` | PUBLIC clinic operating analysis/intake | CONTRACT_PENDING |
+| `/payments/success` | `src/app/payments/success/page.tsx` | PUBLIC opaque-reference commercial continuation | CONTRACT_PENDING |
+| `/activate` | `src/app/activate/page.tsx` | PUBLIC signed-token activation | CONTRACT_PENDING |
 | `/grid/workspace` | `src/app/grid/workspace/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 | `/clinic` | `src/app/clinic/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 | `/visit` | `src/app/visit/page.tsx` | AUTHENTICATED + CLINICAL_CONTEXT | CONTRACT_PENDING |
-| `/auth` | `src/app/auth/page.tsx` | PUBLIC (Universal Entry Router) | CONTRACT_PENDING |
 
 **Notes on Priority 1 routes:**
 
-- **`/` (Living Home):** Reference-locked to Obsidian palette. Public Zumi. PHI forbidden. Entry surface to all routes. Highest-priority contract because every person who arrives here is governed by it.
-- **`/grid/workspace`:** Authenticated Grid home. Terminal step for `find-extra-work` and `fill-staffing-need` routes. History: `/grid/transactions` returned a 500 in production-mode browser QA — the workspace must be verified before release.
+- **`/` (Living Home):** Public Zumi and public discovery. PHI forbidden. Proprietary routing stays server-side. Browser receives only a public-safe presentation DTO.
+- **`/auth`:** Universal Entry Router. Public, non-authoritative continuation. It may understand safe intent and suggest a next route. It does not create professional, organization, payment or clinical authority.
+- **`/start`:** Legacy-compatible alias only. It must not reintroduce a product/persona menu parallel to `/auth`.
+- **`/sales`:** Public clinic acquisition and operating-analysis path. It may save non-PHI prospect/commercial intake. It does not create production clinic access.
+- **`/payments/success`:** Browser arrival is not payment evidence. It may display only the server-projected state for an opaque signed reference.
+- **`/activate`:** Requires a signed Klinikos activation token. Plan, organization, owner email and paid state remain server-owned. Password is never autosaved. Production PHI remains separately gated.
+- **`/grid/workspace`:** Authenticated Grid home. Private Grid/organization data must remain tenant- and role-scoped.
 - **`/clinic`:** Clinic operator workspace. RBAC governs data projection. Clinical authority must not leak to non-clinical surfaces.
-- **`/visit`:** Current Visit — the clinical convergence sequence. PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY → CLINICAL → ASSESSMENT & PLAN → ORDERS & RESULTS → DOCUMENTATION & CODING → CLOSE VISIT. Highest PHI risk. Zumi mode transitions must be declared per step.
-- **`/auth`:** Universal Entry Router. ARRIVAL INTENT → VALUE → SIGN UP WHEN USEFUL → WHO ARE YOU / WHAT ARE YOU TRYING TO DO? → CLAIM RELATIONSHIP → VERIFY ONLY WHAT'S NECESSARY → SELECT ACTIVE EXPERIENCE. Identity foundation for all downstream surfaces.
+- **`/visit`:** Current Visit. Highest PHI risk. Minimum-necessary projection, purpose, context, and Zumi authority boundaries are release gates.
 
 ---
 
-### Priority 2 — Supporting Routes (address after Priority 1)
+### Priority 2 — Supporting routes
 
-| Route | File | Auth Level | Contract Status |
+| Route | File | Access | Contract Status |
 |---|---|---|---|
 | `/grid` | `src/app/grid/page.tsx` | PUBLIC | CONTRACT_PENDING |
 | `/grid/transactions` | `src/app/grid/transactions/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 | `/edu` | `src/app/edu/page.tsx` | PUBLIC / AUTHENTICATED | CONTRACT_PENDING |
 | `/clinic/system-health` | `src/app/clinic/system-health/page.tsx` | AUTHENTICATED (OPERATOR) | CONTRACT_PENDING |
-| `/auth/verify` | `src/app/auth/verify/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 
 **Notes on Priority 2 routes:**
 
-- **`/grid`:** Public marketplace entry — renders signed-out chrome with Sign in button. `/grid` is NOT the authenticated Grid home (`/grid/workspace`). Route guards must enforce this distinction: no step may point at `/grid` for a signed-in person.
-- **`/grid/transactions`:** Terminal step for two routes. History: had a 500 in production-mode browser QA from a raw SQL table-name defect. Liquidity metrics surface added by PR #252 (pending rebase).
-- **`/edu`:** Education and workforce entry. Dual-mode: public discovery and authenticated learner surface. EDU→Grid bridge: competency determinations are not licences — the contract must declare that the disclaimer travels on the readiness object itself.
-- **`/clinic/system-health`:** Operator-facing. Integration lifecycle projection (PR #251 pending rebase). The `CONNECTED ≠ PRODUCTION_VERIFIED` invariant must be declared in the contract body.
-- **`/auth/verify`:** Verification step for credential/relationship claims. Must declare exactly what verification asserts and what authority it does not confer.
+- **`/grid`:** Public marketplace/network entry. It is not the authenticated Grid workspace.
+- **`/grid/transactions`:** Transaction state is governed server-side and may not expose another organization's private data.
+- **`/edu`:** Dual-mode public discovery and authenticated learning. Competency evidence is not licensure or employment authority.
+- **`/clinic/system-health`:** Operator-facing integration lifecycle. `CONNECTED ≠ PRODUCTION_VERIFIED` remains invariant.
+
+`/auth/verify` was previously listed here even though no matching route exists on current `main`. It is removed from the active route inventory until implementation truth exists. Verification requirements remain part of the canonical identity/authority architecture, not a fictional route claim.
 
 ---
 
-### Priority 3 — Supplementary Surfaces
+### Priority 3 — Supplementary surfaces
 
-| Route | File | Auth Level | Contract Status |
+| Route | File | Access | Contract Status |
 |---|---|---|---|
 | `/grid/needs/new` | `src/app/grid/needs/new/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 | `/grid/trust` | `src/app/grid/trust/page.tsx` | AUTHENTICATED | CONTRACT_PENDING |
 
 **Notes:**
 
-- **`/grid/needs/new`:** Clinic-Grid bridge destination. Prefilled from live signal re-derivation on open (not from the link itself). The contract must declare that unrecognized signal names are ignored and that a gap that closed since the link was generated yields an empty form, not a stale prefill.
-- **`/grid/trust`:** Governed trust signals workspace. PR #249 pending rebase. `UniversalTrustSignal` is a projection contract, not persistence — the surface contract must state that no signal here claims or executes a refund, restriction, or legal conclusion.
+- **`/grid/needs/new`:** Prefill must be re-derived from current live-safe state when opened, not trusted from stale client input.
+- **`/grid/trust`:** Trust signals are governed projections, not automatic legal, refund, restriction or credential conclusions.
 
 ---
 
-### Internal API Routes (route.ts, not page.tsx — require API contract, not Screen Experience Contract)
+### Internal API routes
 
-| Route | File | Auth Level | Notes |
-|---|---|---|---|
-| `/api/health` | `src/app/api/health/route.ts` | PUBLIC | Live. Returns `{ status, service, mode, databaseConfigured, liveIntegrations, release, timestamp }`. Render health check configured. CI gate. |
-| `/api/paths` | `src/app/api/paths/route.ts` | AUTHENTICATED | POST to start a route. Intent engine resolution. |
-| `/api/grid/transactions` | `src/app/api/grid/transactions/route.ts` | AUTHENTICATED | Grid transaction board data. PR #252 adds `GridLiquiditySummary`. |
+API routes require endpoint contracts (authorization, input/output schema, disclosure, rate limits, audit), not Screen Experience Contracts.
 
-API routes need endpoint contracts (authorization model, input/output schema, audit), not Screen Experience Contracts. They are listed here for completeness.
-
----
-
-## What Needs to Happen Next
-
-1. **Author Screen Experience Contracts for Priority 1 routes** using the schema in `src/lib/screen-experience-contracts.ts`. Each contract is a TypeScript object co-located with its page or in a dedicated `src/lib/contracts/` directory.
-2. **Rebase and merge PRs #249, #250, #251, #252** — each adds implementation that routes depend on. Their contracts should be authored after their merge.
-3. **Unblock CI** — Settings → Billing and plans → GitHub Actions → raise spending limit. Once CI runs, add a check that rejects any new page.tsx without a corresponding contract entry.
-4. **Register each contract in `src/lib/screen-experience-contracts.ts`** after authoring.
-5. **Run browser/mobile QA against every Priority 1 route** before marking any as `CONTRACT_COMPLETE`.
+| Route | Access | Notes |
+|---|---|---|
+| `/api/health` | PUBLIC | Public health projection only. No secret/configuration topology. |
+| `/api/zumi/public` | PUBLIC | Same-origin/allowed-origin, rate/quota governed, no-store, public-safe presentation DTO only. |
+| `/api/sales/reservations` | PUBLIC POST / AUTHENTICATED GET | Public POST is rate-limited and creates commercial prospect/reservation truth only. |
+| `/api/onboarding/organizations` | NON-PRODUCTION SYNTHETIC ONLY | Disabled in production. Must never become a public paid-access bypass. |
+| `/api/onboarding/activate` | SIGNED ACTIVATION CONTEXT | PATCH saves non-secret draft; POST completes server-authorized activation. |
+| `/api/paths` | AUTHENTICATED | Server-side route execution. |
+| `/api/grid/transactions` | AUTHENTICATED | Governed Grid transaction projection. |
 
 ---
 
-## Completion Tracking
+## Release work still required
 
-Update `CONTRACT_STATUS` from `CONTRACT_PENDING` to `CONTRACT_COMPLETE` for a route when:
-- The contract TypeScript object is authored and registered
-- PHI rules, Zumi modes, and authority boundaries are declared
-- Mobile and accessibility requirements are stated
-- A reviewer confirms the contract matches actual page behavior
-- No open defect against this route blocks its contract
+1. Finish and verify the `/auth` Universal Entry Router and `/start` compatibility convergence.
+2. Verify the public clinic acquisition → server-owned checkout/review → opaque payment continuation → signed activation chain end-to-end.
+3. Preserve the production block on direct synthetic workspace creation.
+4. Complete route-specific privacy/browser-boundary tests for onboarding and activation.
+5. Complete Black Label visual convergence for acquisition/onboarding surfaces. Glass/transparency is limited to bounded conversational/atmospheric surfaces; forms remain solid and high contrast.
+6. Run browser/mobile/accessibility QA on Priority 1 acquisition routes.
+7. Run focused tests, type-check, lint, security gates, full tests and production build.
+8. Reconcile current `main` and overlapping PRs immediately before integration.
 
-**Current summary:** 12 routes inventoried. 0 contracts complete. All are `CONTRACT_PENDING` as of 2026-08-27.
+---
+
+## Completion tracking
+
+A route becomes `CONTRACT_COMPLETE` only when:
+- the applicable contract exists and accurately covers the route;
+- implementation matches the contract;
+- PHI/privacy, Zumi authority and minimum-necessary rules are verified;
+- mobile and accessibility behavior are verified;
+- no open defect blocks the route;
+- required test/security/build evidence exists.
+
+**Current summary:** 15 active user-visible routes inventoried in this release-oriented registry. `0` are being reclassified as `CONTRACT_COMPLETE` by documentation alone.
