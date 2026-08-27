@@ -14,28 +14,41 @@ Machine-readable authority classification:
 
 `docs/KLINIKOS_AUTHORITY_MAP.yaml`
 
+Execution ownership/handoffs:
+
+`docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md`
+
 ## Why this changed
 
 The repository previously had multiple documents describing themselves as master, authoritative, supreme, or top-of-chain. That allowed a historically valid but narrower document to be retrieved as though it were the current Klinikos.
 
 The current model is intentionally simpler:
 
-- **What Klinikos is:** `KLINIKOS_MASTER_CANON.md`.
+- **What Klinikos is / should become:** `KLINIKOS_MASTER_CANON.md`.
 - **What exists today:** verified current implementation evidence.
+- **Who owns active work:** the current multi-agent control and branch/project-state evidence.
 - **Why a decision exists:** subordinate evidence/provenance.
 - **What we used to believe:** Git history and superseded documents.
 
-## Important corrections absorbed into the Master Canon
+## Important current corrections absorbed into the Master Canon
 
-- Protected interactive entry begins with the combined protected-access Terms + Confidentiality/IP/Restricted-Use airlock.
-- Living Home and Zumi follow entry, before account creation becomes necessary.
-- Signup is triggered by persistence/value/authority need, not a permanent persona choice.
-- Original safe intent is preserved through authentication.
-- `CLAIM != VERIFIED FACT != AUTHORITY`.
-- Prototype/UI statements are architectural claims that must map to real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure.
-- EDU → competency evidence → Grid → organization/opportunity → work → new evidence → upskilling is a first-class compounding system.
+- Public discovery may exist outside protected product access where appropriate.
+- Once a person chooses to enter the protected application, the sequence is: `ENTER KLINIKOS → protected Terms/Confidentiality/IP airlock → sign in/create one identity → bind acceptance → restore safe entry context → authenticated Zumi → intent/context → claims/relationships as needed → path-aware verification → Active Experience Envelope → Experience Engine → purpose-built experience projection`.
+- The former Living Home/Zumi-before-account protected sequence is superseded.
+- There is no permanent persona picker and no separate patient/RN/student/provider/owner account architecture.
+- Purpose-built experience families are continuously selected/recomposed by one server-side Experience Engine.
+- Every production surface is governed by Screen Contract requirements and must let the user begin the relevant objective in the first viewport.
+- `IDENTITY != CLAIM != VERIFIED FACT != RELATIONSHIP != ELIGIBILITY != ENTITLEMENT != AUTHORITY`.
+- Prototype/UI statements are architectural claims that must map to real identity, relationship, authority, workflow, evidence, financial, clinical, network, memory, and data infrastructure.
+- Grid is a spatial universal healthcare exchange, not a card-wall job board.
+- EDU is an interactive academy/workforce environment, not a brochure LMS.
+- The Sunday physician/engineer Current Visit sequence is a first-class clinical acceptance path.
+- EDU → competency evidence → human review → Grid → organization/opportunity → work → new evidence → upskilling is a first-class compounding system.
 - Klinikos owns end-to-end billing/RCM workflow and financial truth while integrating regulated payer/clearinghouse rails.
-- OpenAI is the primary Zumi intelligence platform direction while Klinikos remains authority and the provider abstraction remains intact.
+- OpenAI/ChatGPT intelligence is the primary Zumi intelligence direction while Klinikos domains remain authority and provider abstraction remains intact.
 - Legal defense is defense-in-depth, including technically evidenced affirmative assent and strong confidentiality/IP/restricted-use architecture, with counsel review for enforceability-sensitive provisions.
+- Claude, Codex, Symphony, ChatGPT/orchestration, and Zumi are coordinated execution/intelligence lanes around one Klinikos, not independent product authorities.
 
-Use Git history if the former detailed text is needed for provenance. Do not treat it as current product authority.
+Use Git history if the former detailed text is needed for provenance.
+
+Do not treat this compatibility pointer or its historical body as current product authority.

@@ -4,23 +4,41 @@ Former title: `KLINIKOS OPERATING SYSTEM - MASTER SOURCE OF TRUTH`
 Former version: `2026-08-11.1`
 Current status: `SUPERSEDED`
 
-This document no longer represents the current Klinikos product, architecture, user journey, feature state, commercial strategy, AI strategy, or execution plan.
+This document no longer represents the current Klinikos product, architecture, user journey, feature state, commercial strategy, AI strategy, design direction, or execution plan.
 
 Current authority:
 
-- Product / architecture / business / experience: `docs/KLINIKOS_MASTER_CANON.md`
+- Product / architecture / business / experience / design: `docs/KLINIKOS_MASTER_CANON.md`
 - Machine-readable classification: `docs/KLINIKOS_AUTHORITY_MAP.yaml`
-- What exists today: current code/schema/migrations/tests/exact-head verification/runtime evidence.
+- Multi-agent execution: `docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md`
+- What exists today: current code/schema/migrations/tests/exact-head verification/runtime/deployment/external evidence.
 
 ## Explicitly superseded onboarding sequence
 
-The former signup-first sequence that began with an identity screen and then asked the user to connect an AI provider is **not current Klinikos UX law**.
+The former signup-first sequence that asked users to select/connect an AI provider is not current Klinikos law.
 
-The current protected interactive order begins:
+The later interim protected sequence where Living Home/Zumi preceded account identity is also superseded.
 
-`PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK → ENTER KLINIKOS → LIVING HOME → ZUMI → INTENT → SAFE VALUE PREVIEW → ACCOUNT VALUE TRIGGER → UNIVERSAL IDENTITY → PRESERVE INTENT → CLAIMS → PATH-AWARE VERIFICATION → AUTHORITY → ACTIVE EXPERIENCE ENVELOPE`.
+Current protected application order:
 
-OpenAI is now the primary production intelligence platform direction for Zumi under `KLINIKOS-OPENAI-001`; users are not required to begin the product by selecting or connecting an AI provider.
+`PUBLIC DISCOVERY / SEARCH / REFERRAL / INVITATION`
+→ `ENTER KLINIKOS`
+→ `PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK`
+→ `SIGN IN OR CREATE ONE KLINIKOS IDENTITY`
+→ `BIND AGREEMENT ACCEPTANCE TO IDENTITY / SESSION`
+→ `RESTORE SAFE ENTRY CONTEXT`
+→ `AUTHENTICATED ZUMI`
+→ `INTENT / CONTEXT DISCOVERY`
+→ `CLAIMS / RELATIONSHIPS AS NEEDED`
+→ `PATH-AWARE VERIFICATION`
+→ `ACTIVE EXPERIENCE ENVELOPE`
+→ `EXPERIENCE ENGINE`
+→ `PURPOSE-BUILT EXPERIENCE PROJECTION`
+→ `REAL ACTION / OUTCOME / EVIDENCE / RETURN`.
+
+No permanent persona picker and no separate role accounts.
+
+OpenAI/ChatGPT intelligence is the primary Zumi intelligence direction under the current Master Canon. Users are not required to begin by selecting or connecting an AI provider.
 
 ## Historical use only
 
