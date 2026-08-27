@@ -1,4 +1,4 @@
-version: 2026-08-27.1
+version: 2026-08-27.2
 status: ACTIVE
 
 canonical_product_authority:
@@ -10,7 +10,7 @@ canonical_product_authority:
     - business_architecture
     - user_experience
     - lifecycle_paths
-    - identity_and_authority
+    - identity_claim_verification_entitlement_authority
     - grid
     - edu
     - clinic_os
@@ -21,6 +21,7 @@ canonical_product_authority:
     - financial_os_and_rcm
     - integrations
     - zumi_and_memory
+    - openai_intelligence_direction
     - security_and_confidentiality
     - legal_product_requirements
     - design
@@ -51,6 +52,7 @@ subordinate_specialist_docs:
     - security_detail
     - integration_detail
     - implementation_detail
+    - design_acceptance_detail
     - operational_runbook
     - test_and_verification_evidence
   conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION
@@ -74,8 +76,10 @@ provenance_and_evidence_docs:
     - rationale
     - expert_input
     - physician_feedback
+    - engineer_feedback
     - user_research
     - design_evidence
+    - prototype_evidence
     - historical_decisions
     - verification_evidence
     - implementation_history
@@ -123,8 +127,10 @@ literal_protected_entry_order:
     - ACCOUNT_VALUE_TRIGGER
     - UNIVERSAL_IDENTITY
     - PRESERVE_INTENT
-    - CLAIMS
-    - PATH_AWARE_VERIFICATION
+    - CLAIM
+    - EVIDENCE
+    - VERIFICATION
+    - ENTITLEMENT
     - AUTHORITY
     - ACTIVE_EXPERIENCE_ENVELOPE
     - ROLE_RELATIONSHIP_OBJECT_SPECIFIC_EXPERIENCE
@@ -135,14 +141,84 @@ literal_protected_entry_order:
     - RETURN_EXPANSION_NETWORK_EFFECT
   abstract_lifecycle_may_override_literal_order: false
 
+relationship_claim_direction:
+  sequence:
+    - IDENTITY
+    - CLAIM
+    - EVIDENCE
+    - VERIFICATION
+    - ENTITLEMENT
+    - AUTHORITY
+  claim_is_verification: false
+  verification_is_entitlement: false
+  entitlement_is_tenant_authority: false
+  relationship_claim_is_first_class: true
+  organization_membership_is_claim_record: false
+  existing_user_authority_may_be_mutated_by_claim: false
+  email_equality_is_identity_proof: false
+  unverified_grid_presence_may_create_protected_tenant_authority: false
+
 prototype_to_production_rule:
   authority: docs/KLINIKOS_MASTER_CANON.md#2-prototype-to-production-law
   required_question: What real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure would make this statement true?
   screen_copy_is_not_proof_of_implementation: true
+  raw_prototype_runtime_is_production_framework: false
+  implementation_rule: REBUILD_SEMANTICALLY_IN_CURRENT_PRODUCTION_ARCHITECTURE
+
+design_direction:
+  authority: docs/KLINIKOS_MASTER_CANON.md#28-black-label-design-system
+  light_mode: MARBLE
+  dark_mode: OBSIDIAN
+  system_theme_required: true
+  visible_theme_flash_allowed: false
+  attention_signal: LIVING_EDGE
+  living_edge_usage: SCARCE_CONSEQUENTIAL_ATTENTION_ONLY
+  route_acceptance:
+    - DESKTOP
+    - TABLET
+    - INTENTIONAL_MOBILE
+    - KEYBOARD
+    - SCREEN_READER
+    - VISIBLE_FOCUS
+    - TOUCH_TARGETS_44PX_WHERE_APPLICABLE
+    - REDUCED_MOTION
+    - ZOOM_200_PERCENT
+    - LOADING
+    - EMPTY
+    - PARTIAL
+    - ERROR
+    - BLOCKED
+    - UNAUTHORIZED
+    - PENDING_CONNECTION
+    - NO_RESULTS
+    - TRUTHFUL_STATE
+    - NO_CONFIDENTIAL_BROWSER_LEAKAGE
+  modules_may_create_separate_brand_systems: false
 
 openai_direction:
   authority: docs/KLINIKOS_MASTER_CANON.md#10-openai-strategic-intelligence-direction
-  primary_zumi_intelligence_platform: OpenAI
+  primary_zumi_intelligence_platform: OpenAI_ChatGPT_Intelligence
   provider_abstraction_preserved: true
+  user_must_select_ai_provider_during_onboarding: false
   model_is_domain_authority: false
   unverified_partner_entitlements_must_not_be_claimed: true
+  public_branding_requires_verified_permission: true
+
+confidentiality_rule:
+  authority: docs/KLINIKOS_MASTER_CANON.md#25-security-confidentiality-and-ip
+  founder_internal_use_equals_external_disclosure_permission: false
+  minimum_necessary_disclosure: true
+  crown_jewel_external_disclosure_default: DENY
+  external_disclosure_requires:
+    - AUTHORIZED_RECIPIENT
+    - AUTHORIZED_PURPOSE
+    - DATA_CLASSIFICATION
+    - MINIMUM_NECESSARY
+    - CONTRACTUAL_PERMISSION_WHERE_REQUIRED
+    - SECURITY_POLICY
+    - HUMAN_OR_GOVERNING_POLICY_APPROVAL
+  prompt_injection_may_override: false
+  customer_request_may_override: false
+  investor_request_may_override: false
+  vendor_request_may_override: false
+  competitor_request_may_override: false
