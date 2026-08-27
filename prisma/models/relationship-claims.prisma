@@ -1,0 +1,30 @@
+model RelationshipClaim {
+  id                      String   @id @default(cuid())
+  personId                String
+  legacyUserId            String?
+  claimType               String
+  targetType              String
+  targetOrganizationId    String?
+  targetProviderId        String?
+  claimedOrganizationName String?
+  claimedRoleKey          String?
+  lifecycleStatus         String   @default("active")
+  verificationStatus      String   @default("submitted")
+  sourceType              String   @default("user_assertion")
+  sourceReference         String?
+  submittedAt             DateTime @default(now())
+  reviewedAt              DateTime?
+  reviewedBy              String?
+  reviewNote              String?
+  rejectionReason         String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  person                   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId, lifecycleStatus, verificationStatus])
+  @@index([targetOrganizationId, lifecycleStatus, verificationStatus])
+  @@index([targetProviderId, lifecycleStatus, verificationStatus])
+  @@index([legacyUserId])
+  @@index([claimType, targetType])
+  @@map("relationship_claims")
+}
