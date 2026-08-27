@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 const defensePath = join(process.cwd(), "src/lib/legal/legal-defense.ts");
 const agreementPath = join(process.cwd(), "src/lib/legal/global-agreement.ts");
 const registryPath = join(process.cwd(), "src/lib/legal/document-registry.ts");
-const suitePath = join(process.cwd(), "docs/legal/LEGAL_DOCUMENT_SUITE.md");
-const canonPath = join(process.cwd(), "governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md");
+const acceptRoutePath = join(process.cwd(), "src/app/api/legal/accept/route.ts");
+const suitePath = join(process.cwd(), "docs/legal/KLINIKOS_FULL_LEGAL_DEFENSE_STACK.md");
+const canonPath = join(process.cwd(), "governance/KLINIKOS_LEGAL_DEFENSE_CANON.md");
+const confidentialDraftPath = join(process.cwd(), "docs/legal/KLINIKOS_CONFIDENTIAL_ACCESS_AND_IP_AGREEMENT_DRAFT.md");
 
 function source(path: string) {
   return readFileSync(path, "utf8");
@@ -82,11 +84,33 @@ describe("Klinikos legal defense stack", () => {
     expect(registry).toContain('version: "2026-08-27.1"');
   });
 
+  it("keeps acceptance bound to server-derived current version and SHA-256", () => {
+    const route = source(acceptRoutePath);
+    expect(route).toContain("const agreement = buildGlobalAgreement(assertLegalExecutionConfigured())");
+    expect(route).toContain("const sha256 = agreementSha256(agreement)");
+    expect(route).toContain("documentVersion: agreement.documentVersion");
+    expect(route).toContain("documentSha256: sha256");
+    expect(route).toContain("verifyLegalReviewToken");
+    expect(route).toContain("ensureAgreementVersionRegistered");
+    expect(route).toContain("validateRequiredAcknowledgments");
+  });
+
   it("makes the defense mapping governing legal architecture", () => {
     const suite = source(suitePath);
     const canon = source(canonPath);
     const rule = "Every prohibited act must map to a defined contractual consequence, evidence path, survival rule, and remedy.";
     expect(suite).toContain(rule);
     expect(canon).toContain(rule);
+  });
+
+  it("stores a full confidential-access agreement draft with explicit breach and remedy language", () => {
+    const draft = source(confidentialDraftPath);
+    expect(draft).toContain("Severe Protected-Asset Breach");
+    expect(draft).toContain("No indirect-action loophole");
+    expect(draft).toContain("Anti-circumvention of protected introductions");
+    expect(draft).toContain("Evidence preservation");
+    expect(draft).toContain("Remedies");
+    expect(draft).toContain("Defend Trade Secrets Act notice");
+    expect(draft).toContain("NOT PRODUCTION-APPROVED");
   });
 });
