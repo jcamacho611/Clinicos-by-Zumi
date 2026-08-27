@@ -30,9 +30,9 @@ export type ScreenSourceBinding = {
 export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
   {
     id: "identity-access",
-    sourcePattern: /^src\/app\/(?:login|access|activate)(?:\/.*)?\/page\.tsx$/,
+    sourcePattern: /^src\/app\/(?:login|access|activate|auth|signup|member)(?:\/.*)?\/page\.tsx$/,
     contractId: "auth-signup",
-    rationale: "Authentication, access and activation surfaces establish identity/session state, not professional authority.",
+    rationale: "Authentication, free identity, context routing, access and activation surfaces establish identity/session state, not professional, organization or clinical authority.",
   },
   {
     id: "patient-portal-login",
@@ -192,7 +192,7 @@ export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
   },
   {
     id: "public-general",
-    sourcePattern: /^src\/app\/(?!(?:\(clinic\)|\(platform\)|api|edu|grid|portal|legal|luxe|login|access|activate)(?:\/|$))(?:[^/]+\/)*page\.tsx$/,
+    sourcePattern: /^src\/app\/(?!(?:\(clinic\)|\(platform\)|api|edu|grid|portal|legal|luxe|login|access|activate|auth|signup|member)(?:\/|$))(?:[^/]+\/)*page\.tsx$/,
     contractId: "public-discovery",
     rationale: "All remaining non-route-group product, commercial and informational pages are public-safe discovery surfaces by default.",
   },
