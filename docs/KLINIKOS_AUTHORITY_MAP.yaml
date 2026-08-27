@@ -1,0 +1,148 @@
+version: 2026-08-27.1
+status: ACTIVE
+
+canonical_product_authority:
+  file: docs/KLINIKOS_MASTER_CANON.md
+  status: ACTIVE
+  scope:
+    - product_definition
+    - architecture
+    - business_architecture
+    - user_experience
+    - lifecycle_paths
+    - identity_and_authority
+    - grid
+    - edu
+    - clinic_os
+    - clinical_convergence
+    - intake_and_consent
+    - scheduling_and_capacity
+    - orders_and_results
+    - financial_os_and_rcm
+    - integrations
+    - zumi_and_memory
+    - security_and_confidentiality
+    - legal_product_requirements
+    - design
+    - commercialization
+    - execution_order
+  may_be_overridden_by_specialist_docs: false
+  may_be_overridden_by_historical_docs: false
+
+implementation_authority:
+  question: what_exists_today
+  sources:
+    - current_code
+    - current_database_schema
+    - current_migrations
+    - current_tests
+    - exact_head_verification
+    - verified_deployment_evidence
+    - verified_runtime_evidence
+    - verified_external_connection_evidence
+  rule: implementation_evidence_does_not_redefine_product_target
+
+subordinate_specialist_docs:
+  authority: SUBORDINATE_ELABORATION
+  may_override_master: false
+  permitted_uses:
+    - protocol_detail
+    - domain_detail
+    - security_detail
+    - integration_detail
+    - implementation_detail
+    - operational_runbook
+    - test_and_verification_evidence
+  conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION
+
+implementation_status_docs:
+  authority: EVIDENCE_SNAPSHOT
+  may_override_current_code: false
+  refresh_required_before_current_claims: true
+  examples:
+    - docs/FEATURE_STATUS.md
+    - docs/EXTERNAL_DEPENDENCY_MATRIX.md
+    - docs/PRODUCTION_ENVIRONMENT_TRUTH.md
+    - docs/ROUTE_REGISTRY.md
+    - docs/ROUTE_REGISTRY_STATUS.md
+    - docs/MVP_JOURNEYS.md
+
+provenance_and_evidence_docs:
+  authority: PROVENANCE_ONLY
+  may_override_master: false
+  use_for:
+    - rationale
+    - expert_input
+    - physician_feedback
+    - user_research
+    - design_evidence
+    - historical_decisions
+    - verification_evidence
+    - implementation_history
+
+historical_docs:
+  authority: NONE
+  may_override_master: false
+  use_for:
+    - provenance
+    - rationale
+    - historical_research
+  required_interpretation: SUPERSEDED_UNLESS_EXPLICITLY_ABSORBED_BY_MASTER
+
+conflict_rule:
+  action:
+    - DETERMINE_WHETHER_CONFLICT_IS_IMPLEMENTATION_STATUS_OR_PRODUCT_DIRECTION
+    - USE_CURRENT_VERIFIED_IMPLEMENTATION_FOR_WHAT_EXISTS
+    - USE_MASTER_CANON_FOR_INSTITUTED_PRODUCT_DIRECTION
+    - RECORD_CONFLICT_EXPLICITLY
+    - DO_NOT_MERGE_CONFLICTS_SILENTLY
+
+new_discovery_protocol:
+  steps:
+    - CLASSIFY
+    - VERIFY
+    - COMPARE_TO_CURRENT_MASTER_CANON
+    - ACCEPT_REJECT_OR_MODIFY
+    - UPDATE_MASTER_CANON_IF_ACCEPTED
+    - UPDATE_IMPLEMENTATION_CONSEQUENCES
+    - RETAIN_OLD_VERSION_AS_PROVENANCE
+  forbidden_result:
+    - NEW_PARALLEL_SUPREME_CANON
+    - NEW_PARALLEL_MASTER_CANON
+    - NEW_PARALLEL_SOURCE_OF_TRUTH
+
+literal_protected_entry_order:
+  authority: docs/KLINIKOS_MASTER_CANON.md#4-canonical-literal-user-experience
+  sequence:
+    - PROTECTED_ACCESS_TERMS_CONFIDENTIALITY_IP_AIRLOCK
+    - ENTER_KLINIKOS
+    - LIVING_HOME_WHAT_NEEDS_TO_HAPPEN
+    - ZUMI_CONVERSATION
+    - INTENT
+    - SAFE_VALUE_PREVIEW
+    - ACCOUNT_VALUE_TRIGGER
+    - UNIVERSAL_IDENTITY
+    - PRESERVE_INTENT
+    - CLAIMS
+    - PATH_AWARE_VERIFICATION
+    - AUTHORITY
+    - ACTIVE_EXPERIENCE_ENVELOPE
+    - ROLE_RELATIONSHIP_OBJECT_SPECIFIC_EXPERIENCE
+    - CAPABILITY_ACTIVATION_AS_NEEDED
+    - REAL_ACTION
+    - FULFILLMENT_OUTCOME_EVIDENCE
+    - MEMORY_NEXT_ACTION
+    - RETURN_EXPANSION_NETWORK_EFFECT
+  abstract_lifecycle_may_override_literal_order: false
+
+prototype_to_production_rule:
+  authority: docs/KLINIKOS_MASTER_CANON.md#2-prototype-to-production-law
+  required_question: What real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure would make this statement true?
+  screen_copy_is_not_proof_of_implementation: true
+
+openai_direction:
+  authority: docs/KLINIKOS_MASTER_CANON.md#10-openai-strategic-intelligence-direction
+  primary_zumi_intelligence_platform: OpenAI
+  provider_abstraction_preserved: true
+  model_is_domain_authority: false
+  unverified_partner_entitlements_must_not_be_claimed: true
