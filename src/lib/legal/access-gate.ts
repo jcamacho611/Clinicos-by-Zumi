@@ -4,9 +4,13 @@ import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import {
+  PUBLIC_ACCESS_TERMS_KEY,
+  PUBLIC_ACCESS_TERMS_VERSION,
+} from "@/lib/legal/public-access-contract";
 
-export const ACCESS_TERMS_KEY = "access-confidentiality-ip";
-export const ACCESS_TERMS_VERSION = "2026-08-10.1";
+export const ACCESS_TERMS_KEY = PUBLIC_ACCESS_TERMS_KEY;
+export const ACCESS_TERMS_VERSION = PUBLIC_ACCESS_TERMS_VERSION;
 
 export const accessAcceptanceSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
