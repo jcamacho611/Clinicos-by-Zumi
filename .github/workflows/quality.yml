@@ -119,18 +119,11 @@ jobs:
           cat /tmp/klinikos-start.log
           exit 1
 
-  # The deployment contract, run exactly as the production host runs it.
-  #
-  # `verify` builds with the repository's own scripts and a developer-shaped install, so
-  # it cannot see defects that only appear under the host's conditions. Two already
-  # reached production that way: NODE_ENV=production prunes devDependencies, which
-  # removed tailwindcss and @tailwindcss/postcss and broke the PostCSS plugin
-  # resolution; and the canonical command passes --ignore-scripts, which skips every
-  # dependency install script as well as this repository's own postinstall.
-  #
-  # This job therefore hardcodes the canonical Render commands rather than reusing the
-  # npm scripts around them. If the deployment contract in render.yaml changes, change it
-  # here too — the duplication is the point, because this is the thing being verified.
+  # The deployment contract, run with the same install/build/start commands as the
+  # production host. GitHub Actions is not Render, so its database is deliberately an
+  # ephemeral local service. The build may use the repository's disposable-verification
+  # migration branch only after the step below proves the exact local target. Production
+  # keeps using Render's separate governed `RENDER=true` status/approval path.
   deploy-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -163,10 +156,27 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
-      # Render's Build Command, verbatim.
+      # Render's install command, verbatim.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
+      - name: Verify disposable deployment database target
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected='postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public'
+          [[ "$DATABASE_URL" == "postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public" ]] || {
+            echo "Refusing disposable migration verification: DATABASE_URL is not the canonical local CI database."
+            exit 1
+          }
+          [[ "$DIRECT_DATABASE_URL" == "$expected" ]] || {
+            echo "Refusing disposable migration verification: DIRECT_DATABASE_URL does not match the canonical local CI database."
+            exit 1
+          }
+      # Render's build command is the same. Only this CI step receives the disposable
+      # marker, after the target proof above; the production Render branch is unchanged.
       - name: Build exactly as the production host builds
+        env:
+          KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
         run: npm run render:build
       - name: Post-build confidentiality gates
         run: npm run security:check
