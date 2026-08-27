@@ -1,83 +1,112 @@
-# SCWDB Kentucky AI Workforce Readiness Network — Final Pre-Deadline Question Control
+# SCWDB Kentucky AI Workforce Readiness Network — Final Clarification Control
 
-Status: **ACTIVE PROCUREMENT CONTROL — NOT A BUYER RESPONSE.**
+Status: **BUYER RESPONSES RECEIVED AND RECONCILED — 2026-08-27.**
 
-Prepared: 2026-08-26
 Question deadline: 2026-08-28, 4:00 PM Central / 5:00 PM Eastern
-Official submission address: `contact@southcentralworkforce.com`
+Proposal deadline: 2026-09-18, 4:00 PM Central
+Official buyer contact: `contact@southcentralworkforce.com`
 
-## Purpose
+## Authoritative transmission and response evidence
 
-SCWDB's currently published Questions & Answers resolves 42 questions and already addresses full-scope bidding, participant-volume uncertainty, live-remote/in-person delivery, proprietary platform use, pre-existing IP, completion evidence, out-of-state prime eligibility, subcontractors/teaming, all five pathways, class-size assumptions, performance outcomes, qualifications, budget/volume, healthcare-pathway scope, representative materials, recently formed prime qualification, Appendix C attribution, common foundation + pathway modules, staffing flexibility, pricing components, cancellations/minimum enrollment, travel, and completion billing.
+Klinikos transmitted the four final clarification questions from the authorized Outlook mailbox on 2026-08-27.
 
-Do **not** resend resolved questions merely to create activity.
+Jon Sowards of South Central Workforce Development Board replied on 2026-08-27 and supplied the running official Questions & Responses PDF dated 2026-08-27. He stated that Klinikos's responses begin on page 29, paragraphs/questions 65–68. The attached buyer document is the current authority for the points below.
 
-The remaining high-value clarification questions below concern proposal compliance and working-capital risk that the published Q&A does not currently resolve with enough specificity.
+Do not resend these questions.
 
-## Final clarification questions
+## 65. Financial / Administrative Capacity Evidence — RESOLVED
 
-### 43. Proposal-stage evidence of financial / administrative capacity
+SCWDB states that the RFP **does not require a specific financial-capacity attachment** such as audited financial statements, a bank reference, or operating budget as a mandatory proposal-submission item.
 
-SCWDB's responses confirm that a recently formed prime may rely on properly attributed key-personnel, affiliate, predecessor, or substantive teaming experience for the experience requirement, while the current prime must independently demonstrate present organizational, administrative, financial, management, and contract-management capacity.
+The proposal must instead address financial and administrative capacity inside the **Organizational Experience and Capacity** section by describing:
 
-**Question:** What specific evidence does SCWDB expect respondents to include with the proposal to demonstrate present financial and administrative capacity? For example, does SCWDB expect financial statements, bank or credit references, working-capital evidence, a cash-flow/financial-capacity narrative, organizational controls, or other documentation at proposal submission, or will detailed financial-capacity diligence occur only during evaluation/contracting?
+- financial and administrative systems;
+- staffing;
+- federal-grant experience;
+- relevant audit or litigation findings; and
+- capacity to begin and administer the proposed services.
 
-Why this matters: Klinikos must not infer that a planning workbook, projected revenue, available credit, or future financing constitutes current capacity evidence.
+SCWDB specifically requires systems sufficient for federally funded contracting, documentation, invoicing, monitoring, and audit.
 
-### 44. Insurance requirements and timing
+Additional capacity documentation is optional unless another RFP provision specifically requires it. SCWDB may request more information during evaluation or contracting.
 
-The currently published Q&A does not identify proposal-stage insurance-document requirements or final coverage limits.
+### Execution consequence
 
-**Question:** Are respondents required to submit certificates of insurance or evidence of specific coverage limits with the proposal, or will insurance types/limits and certificates be established or required only after selection and before contract execution/notice to proceed? If proposal-stage coverage is required, please identify the required types and minimum limits.
+Do **not** manufacture or overstate current cash, revenue, bank capacity, financing, or audited history. Build a truthful Organizational Experience and Capacity narrative around actual systems, controls, staffing, documentation, invoicing, monitoring, audit readiness, and present administrative capability. Optional supporting evidence may be included only when verified and useful.
 
-Why this matters: the proposal should not claim coverage that is not currently evidenced, and Klinikos should know whether insurance is a pre-submission eligibility item or a post-selection contracting item.
+## 66. Insurance — RESOLVED FOR PROPOSAL STAGE
 
-### 45. Invoice cadence, reimbursement lag, and implementation billing
+SCWDB directs respondents to Question 50. The selected contractor must maintain insurance acceptable to SCWDB, but the RFP **does not establish specific coverage limits or require certificates of insurance as part of proposal submission**.
 
-Question 36 confirms that one-time implementation/customization, participant-completion, cohort/session, in-person, approved travel, technology/licensing, credentials, and optional services may be separately priced, while final payment terms will be determined during contract negotiation.
+### Execution consequence
 
-**Question:** For proposal planning, does SCWDB anticipate a standard invoice cadence or payment term (for example monthly invoicing and Net 30), and may approved one-time implementation/customization costs be invoiced against implementation milestones before participant completions begin? If no standard is yet established, may respondents state reasonable payment-timing assumptions for pricing and working-capital planning?
+Insurance certificates are **not a proposal-submission blocker**. Do not claim coverage or limits that are not evidenced. Maintain insurance as a post-selection / contracting readiness item until SCWDB provides final requirements.
 
-Why this matters: payment timing directly affects the prime's ability to carry instructor, subcontractor, travel, platform, and implementation costs under a multi-year, referral-driven contract with no guaranteed minimum volume.
+## 67. Invoicing and Payment Timing — PARTIALLY RESOLVED
 
-### 46. Federal/entity registrations required at proposal submission
+SCWDB directs respondents to Question 36.
 
-The procurement is tied to federal Reskill DWG funding, but the published Q&A does not clearly resolve which federal/entity registrations must already be active at proposal submission versus before award/contract execution.
+Question 36 confirms that respondents may separately price:
 
-**Question:** Must a respondent have an active SAM.gov registration/UEI, any Kentucky vendor registration, or other federal/state vendor registration at the time the proposal is submitted, or may those registrations be completed after selection but before contract execution or notice to proceed? Please identify any registration that is an eligibility condition at proposal submission.
+- one-time curriculum development, customization, implementation, or launch;
+- per-completed-participant delivery;
+- alternative cohort or session pricing;
+- in-person delivery;
+- approved travel;
+- technology, software, licensing, or digital credential costs; and
+- other optional services clearly separated from the base proposal.
 
-Why this matters: registration status should be treated as a hard submission gate only when the solicitation/buyer requires it at that stage.
+SCWDB prefers clear, scalable pricing tied to verified deliverables and participant completion. Respondents must distinguish one-time, fixed, unit, participant-based, and separately authorized costs.
 
-## Submission rule
+However, **final payment terms and contract structure will be determined during contract negotiation** and must comply with applicable federal funding requirements.
 
-These questions are non-binding clarification requests and do not require a signature, fee, equity commitment, credit pull, or factual certification.
+### Execution consequence
 
-Send them before **2026-08-28 4:00 PM Central / 5:00 PM Eastern** to `contact@southcentralworkforce.com` with subject:
+The existing Appendix B structure remains responsive. Do not assume Net 30, monthly payment, milestone prepayment, or implementation billing timing as a buyer commitment. State reasonable working assumptions where needed, label them as assumptions, and preserve working-capital sensitivity until contracting terms are known.
 
-`Kentucky AI Workforce Readiness Network RFP — Final Clarification Questions (Klinikos, Inc.)`
+## 68. Registrations — RESOLVED FOR PROPOSAL STAGE
 
-Do not add sales language, unsupported qualifications, customer claims, revenue claims, or future financing representations.
+SCWDB directs respondents to Question 50.
 
-## Transmission status — authoritative
+Question 50 states:
 
-**NOT SENT as of 2026-08-27 05:40 Eastern.**
+- no separate Kentucky physical-presence requirement is identified for proposal submission;
+- respondents must complete required assurances and certifications and be legally authorized to conduct business and provide the proposed services at submission;
+- applicable debarment, conflict-of-interest, litigation/audit, and other required disclosures must be completed truthfully;
+- final insurance and risk-allocation requirements may be set during contract negotiation;
+- subcontractors must be disclosed and approved in writing; and
+- any required federal, state, or SCWDB approvals must be satisfied before notice to proceed.
 
-Fresh buyer-page and official Q&A verification on 2026-08-27 shows the published Q&A still ends at Question 42; none of Questions 43–46 has been answered publicly yet. The official buyer page still requires written questions by 2026-08-28 4:00 PM Central and identifies `contact@southcentralworkforce.com` as the submission address.
+SCWDB asks respondents to disclose current legal/organizational status and identify registrations, authorizations, or other requirements that would need completion before contract execution or service commencement.
 
-A second direct send attempt was made from the connected Gmail action during the 2026-08-27 grants/incentives execution pass. The Gmail tool again became disabled at the send boundary and returned no successful send result. Therefore no transmission may be inferred from either attempt.
+### Execution consequence
 
-The four-question packet itself is complete. The remaining action is transmission only through an authorized mailbox before the deadline. Do not rewrite or research these questions again unless SCWDB publishes an answer first.
+Do **not** treat SAM/UEI, Kentucky vendor registration, or a Kentucky office as automatic proposal-stage blockers unless another explicit RFP provision requires them. The proposal must truthfully disclose current registration/legal status and any remaining pre-contract or pre-notice-to-proceed requirements.
 
-## September 4 reconciliation gate
+## Proposal controls now unlocked
 
-When SCWDB posts responses/addenda, reconcile every final answer into:
+The final clarification response removes three previously material proposal-stage uncertainties:
 
-- `RFP_COMPLIANCE_MATRIX.md`
-- `APPENDIX_B_WORKING_PRICE_SCHEDULE_2026-08-25.md` and related pricing controls
-- qualification/personnel evidence registers
-- prime-capacity evidence package
-- insurance/compliance checklist
-- implementation cash-flow assumptions
-- final proposal and exhibits
+1. No mandatory standalone financial-capacity attachment is required.
+2. No insurance certificate/specific coverage limit is required with the proposal.
+3. No separate Kentucky physical-presence requirement is identified at proposal submission.
+
+The remaining commercial uncertainty is payment timing, which SCWDB reserves for contract negotiation.
+
+## Required reconciliation targets
+
+Apply these buyer answers to:
+
+- `RFP_COMPLIANCE_MATRIX.md`;
+- `APPENDIX_B_WORKING_PRICE_SCHEDULE_2026-08-25.md` and related pricing controls;
+- qualification/personnel evidence registers;
+- prime-capacity narrative/evidence package;
+- insurance/compliance checklist;
+- implementation cash-flow assumptions; and
+- final proposal and exhibits.
 
 Do not sign or submit the final proposal until the September 4 addenda and any later official clarification are reconciled.
+
+## Confidentiality / disclosure control
+
+These buyer clarifications do not authorize disclosure of confidential Klinikos architecture, source code, proprietary Zumi/Grid logic, internal prompts, security internals, pricing-margin logic, PHI/PII, customer/prospect information, or other non-public IP. Use minimum-necessary disclosure in the proposal and preserve the external-application disclosure register.
