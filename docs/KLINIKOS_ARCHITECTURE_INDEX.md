@@ -1,7 +1,7 @@
 # KLINIKOS Architecture & Source-of-Truth Index
 
 Status: `AUTHORITATIVE INDEX`  
-Date: 2026-08-22
+Date: 2026-08-26
 
 This file tells humans and agents where to look. It is navigation, not a competing implementation ledger.
 
@@ -11,19 +11,21 @@ When sources conflict, use this order:
 
 1. **Current repository implementation, schema, migrations, tests, exact-head CI and verified runtime evidence** for what exists now.
 2. `docs/SOURCE_OF_TRUTH.md` for current operating law.
-3. `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` for newest accepted cross-domain translation of clinical, operational, billing, interface/integration, security, commercial, implementation and user-research knowledge into shared architecture. This does not change implementation/external status by itself.
-4. `docs/KLINIKOS_ECOSYSTEM_CANON.md` for ecosystem/wiring/lifecycle direction not superseded by a newer explicit cross-domain correction.
-5. `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` for repository-wide client/server confidentiality, proprietary-logic, browser-disclosure, and frontend secrecy law.
-6. `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for the uploaded design package and pixel-reference authority.
-7. `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md` for newest frontend/reference/wiring acceptance law.
-8. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md` for current commercial/pricing architecture.
-9. `docs/FEATURE_STATUS.md` for capability status.
-10. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
-11. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
-12. `docs/GRID_CANON.md`, `docs/ZUMI_CANON.md`, `docs/EDU_CANON.md`, `docs/CLINIC_OS_CANON.md`, `docs/PORTAL_AND_ROLE_CANON.md`, and `docs/FINANCIAL_OS_CANON.md` for specialist domain law.
-13. Current specialist specifications, including `docs/KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` when present on the active candidate branch.
-14. Constitution/Master Canon for deeper invariants not superseded above.
-15. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
+3. `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md` for the founder-approved final-form operating-network parent architecture, constrained by current implementation truth and specialist safety/security law.
+4. `governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md` for the executed decision authorizing dependency-ordered implementation of that architecture. Authorization does not manufacture implementation status.
+5. `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` for newest accepted cross-domain translation of clinical, operational, billing, interface/integration, security, commercial, implementation and user-research knowledge into shared architecture. This does not change implementation/external status by itself.
+6. `docs/KLINIKOS_ECOSYSTEM_CANON.md` for ecosystem/wiring/lifecycle direction not superseded by a newer explicit cross-domain correction.
+7. `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` for repository-wide client/server confidentiality, proprietary-logic, browser-disclosure, and frontend secrecy law.
+8. `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for historical uploaded design-package/pixel-reference evidence where it does not conflict with newer approved product-clarity law.
+9. `docs/FRONTEND_EXPERIENCE_CANON.md` and `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md` for current frontend/reference/wiring acceptance law.
+10. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md` for current commercial/pricing architecture.
+11. `docs/FEATURE_STATUS.md` for capability status.
+12. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external connection/gate truth.
+13. `docs/MVP_JOURNEYS.md` for end-to-end proof contracts.
+14. `docs/GRID_CANON.md`, `docs/ZUMI_CANON.md`, `docs/EDU_CANON.md`, `docs/CLINIC_OS_CANON.md`, `docs/PORTAL_AND_ROLE_CANON.md`, and `docs/FINANCIAL_OS_CANON.md` for specialist domain law.
+15. Current specialist specifications, including `docs/KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` when present on the active candidate branch.
+16. Constitution/Master Canon for deeper invariants not superseded above.
+17. Legacy briefs, stale pricing estimates, old PR bodies and old brand hierarchy as history only.
 
 A more detailed old document does not outrank a newer authoritative correction. A new architecture document also never outranks implementation/runtime evidence for what is actually built.
 
@@ -31,22 +33,31 @@ A more detailed old document does not outrank a newer authoritative correction. 
 
 1. Fetch latest `main`, open PRs, relevant branches and CI.
 2. Read `SOURCE_OF_TRUTH.md`.
-3. Read `KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` for any material cross-domain architecture, Clinic OS, profession/authority, scheduling/capacity, patient/financial case, clinical composition/change, orders/results, integration, revenue, credentialing, Grid, EDU, Provider, Patient, Network, reference-environment or Zumi work.
-4. Read `KLINIKOS_ECOSYSTEM_CANON.md`.
-5. For any frontend, API, Zumi, Grid, Quality/Assurance, pricing, analytics, admin, integration, or client-visible work, read `FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing.
-6. For frontend design work read `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` and `KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
-7. For pricing/commercial work read `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
-8. Read `FEATURE_STATUS.md` and relevant code/tests before claiming something is built.
-9. Read `EXTERNAL_DEPENDENCY_MATRIX.md` before claiming an external rail is connected.
-10. Read the relevant specialist spec and journey evidence.
-11. For recovery work, read `BRANCH_LEDGER.md` and `RECOVERY_AND_COMPLETION_ROADMAP.md`.
-12. Resolve conflicts explicitly rather than silently choosing old material.
+3. Read `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md` and its implementation authorization for final-form operating-network work.
+4. Read `KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` for any material cross-domain architecture, Clinic OS, profession/authority, scheduling/capacity, patient/financial case, clinical composition/change, orders/results, integration, revenue, credentialing, Grid, EDU, Provider, Patient, Network, reference-environment or Zumi work.
+5. Read `KLINIKOS_ECOSYSTEM_CANON.md`.
+6. For any frontend, API, Zumi, Grid, Quality/Assurance, pricing, analytics, admin, integration, or client-visible work, read `FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing.
+7. For frontend design work read `FRONTEND_EXPERIENCE_CANON.md`, `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`, and `KLINIKOS_DESIGN_AND_WIRING_CANON.md`, applying the newest approved visual law when they conflict.
+8. For pricing/commercial work read `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
+9. Read `FEATURE_STATUS.md` and relevant code/tests before claiming something is built.
+10. Read `EXTERNAL_DEPENDENCY_MATRIX.md` before claiming an external rail is connected.
+11. Read the relevant specialist spec and journey evidence.
+12. For recovery work, read `BRANCH_LEDGER.md` and `RECOVERY_AND_COMPLETION_ROADMAP.md`.
+13. Resolve conflicts explicitly rather than silently choosing old material.
 
 ## Current canonical thesis
 
 Klinikos is the operating and opportunity infrastructure for the healthcare lifecycle. It connects education, careers, clinic operations, patient demand, workforce, facilities, resources, business ownership, networks, transactions, financial truth and intelligence through one persistent identity and governed ecosystem.
 
 It is not merely an EHR/EMR, CRM, clinic-management product, staffing marketplace, AI assistant, patient portal, education product, billing product or med-spa tool.
+
+The approved operating-network laws add:
+
+- **Free participation is distribution infrastructure.**
+- **Land without displacement. Expand by usefulness. Replace by earned trust.**
+- **Founder omission does not equal engineering omission.**
+- **No known failure may disappear silently.**
+- **Customer dependence comes from value, not artificial lock-in.**
 
 ## Knowledge-to-architecture thesis
 
@@ -113,18 +124,28 @@ Living Home is the operating front door. It asks:
 
 Klinikos resolves intent into governed routes and dynamic workspaces rather than forcing users to understand the module architecture.
 
+The value-first order is:
+
+`DISCOVER → RECEIVE VALUE → EXPRESS INTENT → CREATE IDENTITY WHEN PERSISTENCE MATTERS → VERIFY ONLY WHAT THE NEXT ACTION REQUIRES → GRID / RELEVANT NETWORK VALUE → WORK / LEARNING / RELATIONSHIP → EVIDENCE → RETURN → ORGANIZATION VALUE → PAID OPERATIONS → EXPANSION`
+
+This is an architectural lifecycle, not a requirement for twenty visible onboarding screens.
+
 ## Design authority
 
-Converted surfaces follow the approved cinematic Living Home reference and the black/black-cherry/burgundy/dusty-rose/warm-ivory system.
+Product clarity outranks decorative atmosphere.
 
-Approved transparent asset paths, where present:
+The interface itself is the signature. No decorative motif is permanent. Existing rose assets may remain reusable historical/optional brand material, but a flower/rose is no longer a required product identity or a prerequisite for a surface to be considered Klinikos.
+
+Current visual direction favors warm ivory/bone/pearl and graphite/near-black foundations in light mode, obsidian/black-cherry/oxblood in dark mode, restrained copper/dusty-rose/ember accents, exceptional typography, strong negative space, progressive disclosure, and state-driven motion only where it improves comprehension.
+
+Approved transparent/historical asset paths, where present, may still be reused deliberately:
 
 - `public/klinikos-orbital-k-transparent.png`
 - `public/klinikos-wordmark-transparent.png`
 - `public/klinikos-rose-wide-transparent.png`
 - `public/klinikos-rose-centered-transparent.png`
 
-See `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for the uploaded package authority and `KLINIKOS_DESIGN_AND_WIRING_CANON.md` for functional acceptance, not just visual styling.
+See `FRONTEND_EXPERIENCE_CANON.md` for the active surface law and `KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md` for historical uploaded-package evidence. A historical asset contract never overrides a newer explicit product-clarity decision.
 
 ## Frontend confidentiality authority
 
@@ -143,7 +164,7 @@ Server-confidential by default includes:
 - privileged security/infrastructure details;
 - unnecessary PHI/PII or private operational state.
 
-Browser boundaries use explicit minimum-necessary DTO/view-model projections. Raw ORM/domain records are not browser contracts. Server Component values passed to Client Components are browser disclosures and must be reviewed.
+Browser boundaries use explicit minimum-necessary DTO/view-model projections. Raw ORM/domain records are not browser contracts by default. Server Component values passed to Client Components are browser disclosures and must be reviewed.
 
 ## Grid scope
 
@@ -183,13 +204,15 @@ Primary revenue routes are:
 - multi-location/network/enterprise;
 - customer-funded variable usage/add-ons.
 
+Basic individual network participation should remain free or low-friction where economically and legally appropriate because it supplies demand, supply, density, liquidity, relationships and distribution. Organization monetization should primarily charge for leverage: control, workflow, automation, volume, analytics, institutional delivery, implementation, premium distribution, enterprise administration and lawful transaction economics.
+
 Historical cost estimates are planning notes unless revalidated against real vendor usage. See `KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`.
 
 Private pricing formulas, margins, commissions, unpublished discount logic, and internal commercial strategy are not automatically browser-visible because a pricing page exists.
 
 ## Status truth
 
-Use `FEATURE_STATUS.md` vocabulary:
+Use `FEATURE_STATUS.md` vocabulary until the machine-readable product-truth registry is introduced and reconciled:
 
 - BUILT
 - PARTIALLY BUILT
@@ -320,11 +343,12 @@ Use the Knowledge-to-Architecture Ledger before implementing broad expert feedba
 ## Updating truth
 
 - Major ecosystem/product decisions → `SOURCE_OF_TRUTH` + Knowledge-to-Architecture Ledger + ecosystem canon when its broad model changes.
+- Approved operating-network parent architecture and implementation authorization → operating-network spec + authorization record + this index.
 - Expert/design-partner/clinical/operational/billing/interface lessons with cross-domain implications → `KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`, then reconcile affected specialist canons.
 - Frontend confidentiality/trade-secret/server-boundary decisions → `FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON` + `SOURCE_OF_TRUTH` when a repository-wide invariant changes.
 - Frontend/reference/wiring decisions → design/wiring canon.
 - Pricing/monetization decisions → pricing canon.
-- Implementation changes → `FEATURE_STATUS`.
+- Implementation changes → `FEATURE_STATUS` and the machine-readable product-truth registry when present.
 - External connection changes → `EXTERNAL_DEPENDENCY_MATRIX`.
 - End-to-end evidence → `MVP_JOURNEYS`.
 - Branch/recovery classification → `BRANCH_LEDGER`.

@@ -108,10 +108,6 @@ const publicRules: readonly PublicRule[] = [
     patterns: [
       /\breferrals?\b/i,
       /\b(?:follow[- ]?up|open loops?|missing results?|lost patients?)\b/i,
-      // Two separate signals on purpose. Rules are ranked by how many patterns match and
-      // ties break toward whichever rule is declared first, which is staffing. "My staff
-      // keeps forgetting callbacks" is a continuity problem that happens to mention
-      // staff, and one weak token should not outrank two strong ones.
       /\b(?:call[- ]?backs?|calling back|call(?:ing)? them back)\b/i,
       /\b(?:forget(?:ting|s)?|forgot|slip(?:ping|s)? through|falling through|never (?:called|contacted|followed))\b/i,
       /\b(?:results?|handoffs?)\s+(?:are\s+)?(?:missing|stuck|late|lost)\b/i,
@@ -180,8 +176,22 @@ const publicRules: readonly PublicRule[] = [
 const pathDestinationKeys: Record<string, PublicLivingDestination["key"]> = {
   "find-extra-work": "grid",
   "become-grid-ready": "edu",
+  "student-clinical-placement": "edu",
+  "clinician-independent-practice": "clinic",
+  "provider-to-clinic-owner": "clinic",
   "fill-staffing-need": "staffing",
+  "clinic-monetize-capacity": "grid",
+  "clinic-operational-optimization": "clinic",
+  "clinic-add-service": "clinic",
+  "clinic-improve-revenue": "revenue",
+  "clinic-expand-locations": "clinic",
   "fix-referral-leakage": "referrals",
+  "organization-education-partner": "edu",
+  "school-placement-network": "edu",
+  "educator-preceptor-opportunity": "edu",
+  "grid-higher-value-opportunity": "grid",
+  "patient-find-care": "patient",
+  "launch-another-organization": "clinic",
 };
 
 const destinationLabels: Record<PublicLivingDestination["key"], string> = {
@@ -205,9 +215,6 @@ const exactThanks = /^(?:thanks|thank you|appreciate it|got it|perfect|cool)[!.?
 const exactHowAreYou = /^(?:how are you|how'?s it going|you good)[!.? ]*$/i;
 const identityQuestion = /^(?:who are you|what are you|what is zumi|who is zumi)[?.! ]*$/i;
 const capabilityQuestion = /^(?:what can (?:you|i) do(?: here)?|what should i do(?: here)?|how can you help|what can klinikos do|what does klinikos do)[?.! ]*$/i;
-// "on" is optional because the reported failure was literally "whats going" — a real
-// person trailing off mid-phrase. The anchored form without it never matched, so the
-// page-context answer could not fire on the exact input it was written for.
 const pageContextQuestion = /^(?:what'?s? going(?: on)?(?: here)?|what is going(?: on)?(?: here)?|what is this(?: page)?|where am i|what am i looking at)[?.! ]*$/i;
 
 function conversationResolution(title: string, body: string): PublicLivingResolution {
@@ -267,11 +274,6 @@ export function resolvePublicLivingIntent(
 ): PublicLivingResolution {
   const prompt = rawPrompt.trim();
 
-  // Before anything else, and never sticky. A request for real clinical or personal
-  // data has exactly one honest answer on a page with no access to it. This used to
-  // fall through to the prior-destination branch, so "show me Mrs. Smith's patient
-  // record" returned "Got it." and routed to EDU because the previous turn had been
-  // about training.
   if (looksLikePrivateDataRequest(prompt)) {
     const refusal = privateDataAnswer();
     return {
@@ -287,13 +289,6 @@ export function resolvePublicLivingIntent(
   const casual = casualResponse(prompt);
   if (casual) return casual;
 
-  // Questions about the product itself. These were unmatched by every routing rule,
-  // because no rule described the product, so "what is this" and "what can I do" both
-  // reached the generic fallback.
-  // A product answer normally wins: these are real questions about Klinikos, and one of
-  // them — whether the AI makes clinical decisions — must never be answered with a route.
-  // The exception is a bare role acknowledgement, which is deferred until the routing
-  // rules have had their turn, so a problem stated alongside the role still gets found.
   const product = answerProductQuestion(prompt);
   const productYieldsToRouting = product !== null && productAnswerOnlyStatesRole(prompt);
   if (product && !productYieldsToRouting) {
@@ -342,12 +337,6 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  // A destination-less product answer — "I run a med spa", "I'm a nurse" — is the right
-  // reply to a bare role statement, but it must not outrank a routable problem stated in
-  // the same breath. "I run a med spa and my staff keeps forgetting callbacks" names a
-  // continuity problem; answering "tell me where time is wasted" ignores what the person
-  // just said and offers nowhere to go. So the role answer is the fallback here, taken
-  // only once the routing rules have found nothing.
   if (product) {
     return {
       kind: "conversation",
@@ -359,10 +348,6 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  // `signin` is only ever reached by refusing a private-data request, and `explore` is
-  // a generic product route. Neither is an intent the visitor was pursuing, so neither
-  // should capture the next unmatched message — otherwise typing nonsense straight
-  // after a refusal answers "Got it." and points at sign-in.
   const stickyPrior = priorResolution?.destination
     && priorResolution.destination.key !== "signin"
     && priorResolution.destination.key !== "explore"
@@ -382,14 +367,6 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  // Main added a single follow-on prompt keyed to the literal title "Tell me a little
-  // more.". That title no longer exists — it was the repeated sentence this replaces —
-  // so the check could never fire. The escalation below generalises it: each successive
-  // miss asks for something more specific than the last and offers a route by the third.
-  // Derive escalation from the conversation itself rather than trusting the caller to
-  // count. `unresolvedTurns` lets the UI carry an exact streak, but a caller that passes
-  // nothing must still not repeat itself, and the prior turn already says whether it was
-  // a fallback: fallbacks are the only resolutions that end at this confidence.
   const priorWasFallback = priorResolution !== null
     && priorResolution.confidence <= 0.25
     && priorResolution.destination === null;

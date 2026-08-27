@@ -111,4 +111,25 @@ describe("canonical Klinikos truth", () => {
     expect(migration).toContain("'Grid Provider Applicant'");
     expect(migration).not.toContain('SET "id"');
   });
+
+  it("locks the approved operating-network parent architecture and retires mandatory decorative motifs", () => {
+    const operatingNetworkSpec = "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md";
+    const authorizationPath = "governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md";
+    const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+    const frontend = read("docs/FRONTEND_EXPERIENCE_CANON.md");
+    const claude = read("CLAUDE.md");
+    const design = read(operatingNetworkSpec);
+    const authorization = read(authorizationPath);
+
+    expect(design).toContain("KLINIKOS OPERATING NETWORK KERNEL DESIGN");
+    expect(authorization).toContain("EXECUTED GOVERNANCE DECISION");
+    expect(authorization).toContain(operatingNetworkSpec);
+    expect(index).toContain(operatingNetworkSpec);
+    expect(index).toContain(authorizationPath);
+    expect(claude).toContain(operatingNetworkSpec);
+    expect(claude).toContain(authorizationPath);
+    expect(frontend).toContain("The interface itself is the signature.");
+    expect(frontend).not.toContain("## Rose environmental contract");
+    expect(frontend).toContain("No decorative motif is permanent");
+  });
 });
