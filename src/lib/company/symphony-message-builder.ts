@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { OutboundMessage } from "@/lib/communications/outbound";
 import type { SymphonyMessageFamily, SymphonyOpportunity } from "@/lib/company/symphony-opportunity-types";
 
