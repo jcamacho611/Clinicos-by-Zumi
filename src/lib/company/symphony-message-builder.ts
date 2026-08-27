@@ -87,6 +87,14 @@ function required(value: string, label: string) {
   return normalized;
 }
 
+function safeHeaderValue(value: string, label: string) {
+  const normalized = required(value, label);
+  if (/[\u0000-\u001F\u007F]/.test(normalized)) {
+    throw new Error(`Symphony email rejects control characters in ${label}.`);
+  }
+  return normalized;
+}
+
 function validateVerifiedFacts(profile: SymphonyCompanyProfile) {
   for (const fact of profile.verifiedFacts as Array<{ text: string; truthClass: string }>) {
     if (fact.truthClass !== "CURRENT_FACT" && fact.truthClass !== "EXECUTED") {
@@ -103,18 +111,22 @@ function formatRecipient(opportunity: SymphonyOpportunity) {
 
 export function buildSymphonyEmail(input: SymphonyEmailBuildInput): OutboundMessage {
   const { opportunity, profile } = input;
-  const to = required(opportunity.recipientEmail, "a recipient email");
+  const to = safeHeaderValue(opportunity.recipientEmail, "the recipient email");
   const ask = required(opportunity.ask, "one specific ask");
   const companyName = required(profile.companyName, "a company name");
   const summary = required(profile.summary, "a verified-safe company summary");
   const website = required(profile.website, "a company website");
   const senderName = required(profile.senderName, "a sender name");
   const senderTitle = required(profile.senderTitle, "a sender title");
+  safeHeaderValue(opportunity.organizationName, "the organization name used in the subject");
 
-  if (!to.includes("@")) throw new Error("Symphony email requires a valid professional email address.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    throw new Error("Symphony email requires a valid professional recipient email address.");
+  }
   validateVerifiedFacts(profile);
 
   const copy = familyCopy[opportunity.messageFamily];
+  const subject = safeHeaderValue(copy.subject(input), "the email subject");
   const factBlock = profile.verifiedFacts.length
     ? `\n\nCurrent verified context:\n${profile.verifiedFacts.map((fact) => `- ${fact.text}`).join("\n")}`
     : "";
@@ -148,7 +160,7 @@ export function buildSymphonyEmail(input: SymphonyEmailBuildInput): OutboundMess
   return {
     channel: "email",
     to,
-    subject: copy.subject(input),
+    subject,
     body,
   };
 }
