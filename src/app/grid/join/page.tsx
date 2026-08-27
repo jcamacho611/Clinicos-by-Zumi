@@ -1,8 +1,22 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, GraduationCap, HeartHandshake, MapPinned, PackageSearch, ShieldCheck, Sparkles, Stethoscope, Wrench } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BriefcaseBusiness,
+  Building2,
+  GraduationCap,
+  HeartHandshake,
+  MapPinned,
+  PackageSearch,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  Wrench,
+} from "lucide-react";
 import { BrandMark } from "@/components/clinic/brand-mark";
 import { ContractorEnrollmentForm } from "@/components/clinic/grid/contractor-enrollment-form";
 import { Badge } from "@/components/ui/badge";
+import { getAuthenticationSession } from "@/lib/auth/session";
 
 export const metadata = {
   title: "Join Klinikos Grid",
@@ -20,7 +34,11 @@ const enrollmentPaths = [
   { icon: HeartHandshake, title: "Referral partner", body: "Governed consultation, specialty, diagnostic, and partner capacity.", href: "/grid/join/seller?type=referral" },
 ] as const;
 
-export default function GridContractorJoinPage() {
+export default async function GridContractorJoinPage() {
+  const session = await getAuthenticationSession();
+  const account = session && !session.demo ? { email: session.email, name: session.name } : null;
+  const returnTo = "/grid/join#professional";
+
   return (
     <main className="min-h-screen bg-[#f5f7f5]">
       <header className="mx-auto flex h-20 max-w-7xl items-center px-5 sm:px-8">
@@ -49,9 +67,19 @@ export default function GridContractorJoinPage() {
           <h2 className="mt-3 text-3xl font-black tracking-[-.05em] text-slate-950">For people whose work depends on professional eligibility.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">Clinical and regulated professional work stays on the existing credential-aware enrollment path. The account is not proof that the person is eligible for every opportunity.</p>
           <ul className="mt-6 space-y-3 text-sm leading-6 text-slate-600">{["Identity and professional profile", "License, certification, and malpractice evidence where applicable", "Mobile, clinic-chair, and partner-location preferences", "Recurring availability and travel radius", "Human verification before regulated activation", "Opportunity, booking, and payout state after eligibility"].map((item) => <li className="flex gap-3" key={item}><span className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-500" />{item}</li>)}</ul>
+          {account ? (
+            <div className="mt-6 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-[11px] leading-6 text-teal-950">
+              <strong>Signed in as {account.email}.</strong> This application will reuse that identity only. Your current organization, role, password, and session authority stay unchanged.
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-[11px] leading-6 text-slate-700">
+              <strong>Already have a Klinikos account?</strong> Sign in before submitting so Grid can attach the application to the proven identity instead of creating a duplicate account.
+              <Link className="mt-3 flex items-center gap-2 font-extrabold text-teal-700" href={`/login?returnTo=${encodeURIComponent(returnTo)}`}>Sign in and return here <ArrowRight className="size-3.5" /></Link>
+            </div>
+          )}
           <p className="mt-6 rounded-2xl bg-amber-50 p-4 text-[11px] leading-6 text-amber-900"><ShieldCheck className="mb-2 size-4"/>Do not enter patient information. Professional enrollment and resource publication are different things, and neither one bypasses opportunity-specific eligibility.</p>
         </aside>
-        <ContractorEnrollmentForm />
+        <ContractorEnrollmentForm account={account} />
       </section>
     </main>
   );
