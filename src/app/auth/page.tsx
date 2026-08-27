@@ -18,6 +18,7 @@ export default async function UniversalEntryPage({
 }) {
   const { intent } = await searchParams;
   const initialIntentKey = intent && safeIntentKeys.has(intent) ? intent : null;
+  const signupEnabled = process.env.KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED === "true";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#050303] text-[#f8efed]">
@@ -32,25 +33,11 @@ export default async function UniversalEntryPage({
 
       <header className="relative z-20 border-b border-[#d9918a]/15">
         <div className="mx-auto flex min-h-20 max-w-7xl items-center gap-4 px-5 sm:px-8">
-          <KlinikosWordmark
-            href="/"
-            inverse
-            markClassName="h-8 w-8"
-            textClassName="h-[18px] w-[160px]"
-          />
+          <KlinikosWordmark href="/" inverse markClassName="h-8 w-8" textClassName="h-[18px] w-[160px]" />
           <nav className="ml-auto flex items-center gap-2" aria-label="Account options">
-            <Link
-              className="inline-flex min-h-11 items-center rounded-full border border-[#d9918a]/25 px-4 text-xs font-semibold text-[#ead9d5] transition hover:border-[#efaaa1]/55 hover:bg-[#8f3e45]/10"
-              href="/portal/login"
-            >
-              Patient access
-            </Link>
-            <Link
-              className="inline-flex min-h-11 items-center rounded-full bg-[#e6817b] px-4 text-xs font-extrabold text-[#1a090a] transition hover:bg-[#efaaa1]"
-              href="/login"
-            >
-              Sign in
-            </Link>
+            <Link className="hidden min-h-11 items-center rounded-full border border-[#d9918a]/25 px-4 text-xs font-semibold text-[#ead9d5] transition hover:border-[#efaaa1]/55 hover:bg-[#8f3e45]/10 sm:inline-flex" href="/portal/login">Patient access</Link>
+            {signupEnabled ? <Link className="inline-flex min-h-11 items-center rounded-full border border-[#d9918a]/25 px-4 text-xs font-semibold text-[#ead9d5] transition hover:border-[#efaaa1]/55 hover:bg-[#8f3e45]/10" href="/signup">Create account</Link> : null}
+            <Link className="inline-flex min-h-11 items-center rounded-full bg-[#e6817b] px-4 text-xs font-extrabold text-[#1a090a] transition hover:bg-[#efaaa1]" href="/login">Sign in</Link>
           </nav>
         </div>
       </header>
@@ -58,12 +45,8 @@ export default async function UniversalEntryPage({
       <section className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl gap-12 px-5 py-12 sm:px-8 lg:grid-cols-[.78fr_1.22fr] lg:items-center lg:py-16">
         <div className="max-w-xl">
           <p className="text-[11px] font-semibold uppercase tracking-[.28em] text-[#e88f88]">One Klinikos</p>
-          <h1 className="mt-5 text-balance text-[clamp(2.75rem,6vw,5.8rem)] font-extralight leading-[.94] tracking-[-.055em] text-[#fff8f6]">
-            Start with the outcome, not the product menu.
-          </h1>
-          <p className="mt-7 max-w-lg text-sm leading-7 text-[#d7c0bc] sm:text-base">
-            Tell Klinikos what needs to happen. Zumi will help route you toward the next useful experience, while identity, payment, credentials, organization authority, and clinical access remain separate server-controlled gates.
-          </p>
+          <h1 className="mt-5 text-balance text-[clamp(2.75rem,6vw,5.8rem)] font-extralight leading-[.94] tracking-[-.055em] text-[#fff8f6]">Start with the outcome, not the product menu.</h1>
+          <p className="mt-7 max-w-lg text-sm leading-7 text-[#d7c0bc] sm:text-base">Tell Klinikos what needs to happen. Zumi will help route you toward the next useful experience, while identity, payment, credentials, organization authority, and clinical access remain separate server-controlled gates.</p>
 
           <div className="mt-9 space-y-4 border-t border-[#d9918a]/15 pt-7 text-[12px] leading-6 text-[#bca39f]">
             <p className="flex gap-3"><ShieldCheck className="mt-1 size-4 shrink-0 text-[#e88f88]" aria-hidden="true" /> Public onboarding is for non-sensitive intent and setup context. Do not enter patient names, diagnoses, records, or PHI.</p>
