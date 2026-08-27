@@ -21,12 +21,12 @@ const kinds = [
 ] as const;
 
 type Kind = (typeof kinds)[number][0];
+type InitialDraftSource = "workspace_context" | "public_listing";
 
 function toIso(value: string) {
   return value ? new Date(value).toISOString() : null;
 }
 
-/** ISO instant → the `YYYY-MM-DDTHH:mm` shape a datetime-local input accepts. */
 function toLocalInput(iso: string | null | undefined) {
   if (!iso) return "";
   const parsed = new Date(iso);
@@ -49,17 +49,13 @@ function split(value: string) {
   return value.split(/\n|,/).map((item) => item.trim()).filter(Boolean);
 }
 
-/**
- * @param initialDraft A demand assembled server-side from this clinic's own records —
- * an unassigned shift, a referral with nowhere to go. It seeds the form so nobody
- * retypes what Klinikos already knows. It is a starting point, not a submission:
- * every field stays editable, and the need is only created when a person submits.
- */
 export function GridNeedComposer({
   initialDraft = null,
+  initialDraftSource = "workspace_context",
   initialKind = "service",
 }: {
   initialDraft?: SavedGridDemand | null;
+  initialDraftSource?: InitialDraftSource;
   initialKind?: Kind;
 }) {
   const router = useRouter();
@@ -70,9 +66,6 @@ export function GridNeedComposer({
   const [category, setCategory] = useState(initialDraft?.category ?? "");
   const [serviceName, setServiceName] = useState(initialDraft?.serviceName ?? "");
   const [city, setCity] = useState(initialDraft?.city ?? "");
-  // "NY" is only a convenience default for a blank form. A seeded draft carries the
-  // clinic's real location, and a draft with no state must stay blank rather than
-  // inherit a state this organization may not practise in.
   const [state, setState] = useState(initialDraft ? initialDraft.state ?? "" : "NY");
   const [latitude, setLatitude] = useState<number | null>(initialDraft?.latitude ?? null);
   const [longitude, setLongitude] = useState<number | null>(initialDraft?.longitude ?? null);
@@ -191,13 +184,17 @@ export function GridNeedComposer({
     </div>;
   }
 
+  const initialDraftMessage = initialDraftSource === "public_listing"
+    ? <><strong className="font-extrabold text-cyan-100">Started from the listing you reviewed.</strong> Grid rebuilt these editable fields from the listing&apos;s current public marketplace data after sign-in. Nothing is posted or reserved until you explicitly save the need.</>
+    : <><strong className="font-extrabold text-cyan-100">Started from Klinikos context.</strong> Klinikos filled these editable fields from a governed workspace signal. Change anything before you save; nothing is posted to Grid until you do.</>;
+
   return <div className="rounded-[1.8rem] border border-white/10 bg-[#070b13] p-5 sm:p-7">
     <div className="flex flex-wrap gap-2">{kinds.map(([value, label]) => <button className={`rounded-full border px-3 py-2 text-[12px] font-extrabold ${kind === value ? "border-cyan-300/30 bg-cyan-300/10 text-cyan-100" : "border-white/10 text-white/45 hover:text-white"}`} key={value} onClick={() => changeKind(value)} type="button">{label}</button>)}</div>
     <p className="mt-7 text-[12px] font-black uppercase tracking-[.2em] text-cyan-200">I need · {kindLabel}</p>
     <h2 className="mt-2 text-3xl font-black tracking-[-.05em] text-white">Describe the outcome. Grid structures the search.</h2>
     <p className="mt-3 max-w-3xl text-xs leading-6 text-white/45">Do not put patient names, diagnoses, records, or other PHI in a general Grid need. This object is for marketplace/resource requirements only.</p>
 
-    {initialDraft ? <div className="mt-5 rounded-[1.35rem] border border-cyan-300/20 bg-cyan-300/[.05] px-4 py-3 text-[12px] leading-5 text-cyan-100/80"><strong className="font-extrabold text-cyan-100">Started from your clinic records.</strong> Klinikos filled these fields from the gap it found on your own schedule — no patient information is included. Change anything before you save; nothing is posted to Grid until you do.</div> : null}
+    {initialDraft ? <div className="mt-5 rounded-[1.35rem] border border-cyan-300/20 bg-cyan-300/[.05] px-4 py-3 text-[12px] leading-5 text-cyan-100/80">{initialDraftMessage}</div> : null}
 
     <div className="mt-6 grid gap-3 md:grid-cols-2">
       <label className="text-[12px] font-bold uppercase tracking-[.12em] text-white/45 md:col-span-2">Need title<Input className="mt-2" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Example: RN coverage Friday 9–5" /></label>
