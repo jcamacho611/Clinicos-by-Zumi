@@ -31,7 +31,7 @@ const rules = [
   {
     pathId: "student-clinical-placement",
     actor: "learner" as const,
-    phrases: ["clinical placement", "need a preceptor", "find a preceptor", "clinical hours", "get placed", "student placement", "a preceptor"],
+    phrases: ["clinical placement", "need a preceptor", "find a preceptor", "clinical hours", "get placed", "student placement"],
     outcome: "Move from learner readiness into governed clinical placement capacity without implying guaranteed placement.",
   },
   {
