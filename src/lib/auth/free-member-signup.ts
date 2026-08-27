@@ -22,8 +22,8 @@ export const freeMemberSignupSchema = z.object({
   name: z.string().trim().min(2, "Enter your name.").max(140),
   email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
   password: strongPasswordSchema,
-  acceptedTerms: z.literal(true, { errorMap: () => ({ message: "Website Terms must be accepted." }) }),
-  acceptedPrivacy: z.literal(true, { errorMap: () => ({ message: "Privacy Policy acknowledgment is required." }) }),
+  acceptedTerms: z.literal(true, { error: "Website Terms must be accepted." }),
+  acceptedPrivacy: z.literal(true, { error: "Privacy Policy acknowledgment is required." }),
 });
 
 export type FreeMemberSignupInput = z.infer<typeof freeMemberSignupSchema>;
