@@ -160,7 +160,8 @@ export const gridContractorEnrollmentSchema = z.object({
     .regex(/[A-Z]/, "Password must include an uppercase letter.")
     .regex(/[0-9]/, "Password must include a number.")
     .regex(/[^A-Za-z0-9]/, "Password must include a symbol.")
-    .optional(),
+    .optional()
+    .default(""),
   providerType: z.string().trim().min(2).max(120),
   credential: z.string().trim().min(2).max(40),
   specialty: z.string().trim().min(2).max(120),
