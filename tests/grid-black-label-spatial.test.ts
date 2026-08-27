@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const page = fs.readFileSync(path.join(process.cwd(), "src/app/grid/browse/page.tsx"), "utf8");
+const page = fs.readFileSync(path.join(process.cwd(), "src/app/grid/page.tsx"), "utf8");
+const browse = fs.readFileSync(path.join(process.cwd(), "src/app/grid/browse/page.tsx"), "utf8");
 const map = fs.readFileSync(path.join(process.cwd(), "src/components/grid/grid-live-map.tsx"), "utf8");
 const mapRenderer = fs.readFileSync(path.join(process.cwd(), "src/components/grid/google-grid-map.tsx"), "utf8");
 const marketplace = fs.readFileSync(path.join(process.cwd(), "src/components/grid/marketplace-browser.tsx"), "utf8");
@@ -10,13 +11,15 @@ const resources = fs.readFileSync(path.join(process.cwd(), "src/components/grid/
 const system = fs.readFileSync(path.join(process.cwd(), "src/lib/design/marketplace-system.ts"), "utf8");
 
 describe("Grid Black Label spatial discovery", () => {
-  it("keeps the real map and existing governed data sources", () => {
+  it("keeps the canonical Grid route on the real map and governed data sources", () => {
     expect(page).toContain("<GridLiveMap");
     expect(page).toContain("listMarketplaceListings()");
     expect(page).toContain("listMarketplaceLocations()");
     expect(page).toContain("listPublicGridResources()");
-    expect(page).toContain("LISTING_NOT_VERIFICATION_NOTICE");
-    expect(page).toContain("MARKETPLACE_SYNTHETIC_NOTICE");
+    expect(page).toContain("Only reviewed public inventory is shown");
+    expect(page).toContain("verification, credential, eligibility, consent, and authority gates");
+    expect(browse).toContain("redirect(");
+    expect(browse).not.toContain("<GridLiveMap");
   });
 
   it("keeps results-first mobile and map-ledger synchronization", () => {
