@@ -3,7 +3,7 @@
 Status: **ACTIVE PROCUREMENT CONTROL — NOT A BUYER RESPONSE.**
 
 Prepared: 2026-08-26
-Question deadline: 2026-08-28, 4:00 PM Central
+Question deadline: 2026-08-28, 4:00 PM Central / 5:00 PM Eastern
 Official submission address: `contact@southcentralworkforce.com`
 
 ## Purpose
@@ -52,15 +52,19 @@ Why this matters: registration status should be treated as a hard submission gat
 
 These questions are non-binding clarification requests and do not require a signature, fee, equity commitment, credit pull, or factual certification.
 
-Send them before **2026-08-28 4:00 PM Central** to `contact@southcentralworkforce.com` with a clear subject such as:
+Send them before **2026-08-28 4:00 PM Central / 5:00 PM Eastern** to `contact@southcentralworkforce.com` with subject:
 
 `Kentucky AI Workforce Readiness Network RFP — Final Clarification Questions (Klinikos, Inc.)`
 
 Do not add sales language, unsupported qualifications, customer claims, revenue claims, or future financing representations.
 
-## Current execution limitation
+## Transmission status — authoritative
 
-The connected Gmail mailbox was unavailable during this execution pass, so the questions were not externally transmitted from this environment. This file therefore reduces the remaining action to transmission only; no research or redrafting is required.
+**NOT SENT as of 2026-08-26 22:38 Eastern.**
+
+A direct send was attempted from the connected Gmail action during the grants/incentives execution pass. The connector became disabled at the send boundary and returned no successful send result. Therefore no transmission may be inferred from the attempt.
+
+The four-question packet itself is complete. The remaining action is transmission only through an authorized mailbox before the deadline. Do not rewrite or research these questions again unless SCWDB publishes an answer first.
 
 ## September 4 reconciliation gate
 
