@@ -13,18 +13,19 @@ export type CanonicalContextDocument = {
 };
 
 const DOCUMENTS: readonly CanonicalContextDocument[] = [
+  { path: "docs/KLINIKOS_MASTER_CANON.md", visibility: "founder", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education", "engineering", "security", "integrations", "compliance", "sales"], priority: 120 },
+  { path: "docs/KLINIKOS_AUTHORITY_MAP.yaml", visibility: "founder", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education", "engineering", "security", "integrations", "compliance"], priority: 115 },
   { path: "docs/ZUMI_CUSTOMER_PRODUCT_CONTEXT.md", visibility: "customer_safe", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education"], priority: 100 },
-  { path: "docs/ZUMI_AMBIENT_INTELLIGENCE.md", visibility: "founder", domains: ["canon", "engineering", "security", "integrations", "grid", "clinic_operations", "commercial"], priority: 100 },
-  { path: "docs/CLINICOS_MASTER_CANON.md", visibility: "founder", domains: ["canon", "grid", "clinic_operations", "clinical_workflows", "education", "integrations"], priority: 95 },
-  { path: "docs/KLINIKOS_CONSTITUTION.md", visibility: "founder", domains: ["canon", "engineering", "security", "compliance"], priority: 95 },
-  { path: "docs/FEATURE_STATUS.md", visibility: "founder", domains: ["product_status", "engineering", "integrations"], priority: 90 },
-  { path: "docs/BUILD_STATUS_2026_FOUNDING_CLINIC_PLAN.md", visibility: "founder", domains: ["product_status", "engineering", "clinic_operations", "commercial"], priority: 85 },
-  { path: "docs/KLINIKOS_ARCHITECTURE_INDEX.md", visibility: "founder", domains: ["engineering", "integrations", "security", "grid", "clinic_operations"], priority: 90 },
-  { path: "docs/GRID_TRANSACTION_FLOW.md", visibility: "founder", domains: ["grid", "commercial", "engineering"], priority: 90 },
-  { path: "docs/KLINIKOS_EDU_PRODUCT_SPEC.md", visibility: "founder", domains: ["education", "grid", "engineering"], priority: 80 },
-  { path: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md", visibility: "founder", domains: ["commercial", "sales", "integrations"], priority: 85 },
-  { path: "docs/EXTERNAL_DEPENDENCY_MATRIX.md", visibility: "founder", domains: ["integrations", "engineering", "commercial", "security"], priority: 85 },
-  { path: "docs/CLINICAL_SAFETY.md", visibility: "founder", domains: ["clinical_workflows", "security", "compliance"], priority: 95 },
+  { path: "docs/ZUMI_AMBIENT_INTELLIGENCE.md", visibility: "founder", domains: ["canon", "engineering", "security", "integrations", "grid", "clinic_operations", "commercial"], priority: 90 },
+  { path: "docs/KLINIKOS_CONSTITUTION.md", visibility: "founder", domains: ["engineering", "security", "compliance"], priority: 80 },
+  { path: "docs/KLINIKOS_ARCHITECTURE_INDEX.md", visibility: "founder", domains: ["engineering", "integrations", "security", "grid", "clinic_operations"], priority: 75 },
+  { path: "docs/FEATURE_STATUS.md", visibility: "founder", domains: ["product_status", "engineering", "integrations"], priority: 70 },
+  { path: "docs/EXTERNAL_DEPENDENCY_MATRIX.md", visibility: "founder", domains: ["integrations", "engineering", "commercial", "security"], priority: 70 },
+  { path: "docs/CLINICAL_SAFETY.md", visibility: "founder", domains: ["clinical_workflows", "security", "compliance"], priority: 70 },
+  { path: "docs/GRID_TRANSACTION_FLOW.md", visibility: "founder", domains: ["grid", "commercial", "engineering"], priority: 65 },
+  { path: "docs/KLINIKOS_EDU_PRODUCT_SPEC.md", visibility: "founder", domains: ["education", "grid", "engineering"], priority: 65 },
+  { path: "docs/CUSTOMER_FUNDED_ACCESS_MODEL.md", visibility: "founder", domains: ["commercial", "sales", "integrations"], priority: 60 },
+  { path: "docs/BUILD_STATUS_2026_FOUNDING_CLINIC_PLAN.md", visibility: "founder", domains: ["product_status", "engineering", "clinic_operations", "commercial"], priority: 40 },
 ] as const;
 
 const STOP_WORDS = new Set([
