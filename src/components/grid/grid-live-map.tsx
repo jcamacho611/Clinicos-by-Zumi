@@ -87,26 +87,16 @@ export function GridLiveMap({ locations, providers, resources }: { locations: Ma
     requestAnimationFrame(() => document.getElementById(`grid-map-result-${id}`)?.scrollIntoView({ block: "nearest" }));
   }, []);
 
-  const muted = "text-[var(--k-muted)]";
-  const accent = "text-[var(--k-accent)]";
-
   return (
-    <section className="grid-marble-surface border-y border-[var(--k-line)] bg-[var(--k-work-bg)]">
-      <div className="mx-auto max-w-[1500px] px-5 py-12 sm:px-8 lg:py-16">
-        <div className="mb-8 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="max-w-4xl">
-            <p className={`text-xs font-extrabold uppercase tracking-[.18em] ${accent}`}>Spatial Grid</p>
-            <h2 className="mt-3 max-w-4xl text-3xl font-semibold tracking-[-.05em] text-[var(--k-text)] sm:text-5xl">One geographic field for real published healthcare capacity.</h2>
-            <p className={`mt-4 max-w-3xl text-[13px] leading-7 ${muted}`}>Choose location access when you want real distance. Grid pins only reviewed resources with supplied coordinates, keeps city/state-only inventory unpinned, and never fills an empty map with invented places.</p>
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold lg:justify-end">
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><MapPin className={`size-3.5 ${accent}`} /> {rankedMapped.length} mapped{radiusActive ? ` in ${radiusMiles} mi` : ""}</span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><Building2 className={`size-3.5 ${accent}`} /> {locations.length} spaces</span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><Users className={`size-3.5 ${accent}`} /> {providers.length} professionals</span>
-          </div>
+    <section aria-label="Grid spatial marketplace" className="grid-marble-surface border-y border-[var(--k-line)] bg-[var(--k-work-bg)]">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-7 sm:py-5">
+        <div className="mb-3 flex min-h-11 flex-wrap items-center gap-x-5 gap-y-2 border-b border-[var(--k-line)] pb-3 text-xs font-bold text-[var(--k-muted)]">
+          <span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5 text-[var(--k-accent)]" /> {rankedMapped.length} mapped{radiusActive ? ` in ${radiusMiles} mi` : ""}</span>
+          <span className="inline-flex items-center gap-1.5"><Building2 className="size-3.5 text-[var(--k-accent)]" /> {locations.length} spaces</span>
+          <span className="inline-flex items-center gap-1.5"><Users className="size-3.5 text-[var(--k-accent)]" /> {providers.length} professionals</span>
+          <span className="ml-auto hidden font-semibold text-[var(--k-muted)] lg:inline">Reviewed public inventory only</span>
         </div>
 
-        {/* Mobile begins with results; the map is an explicit user choice. */}
         <div className="mb-3 grid grid-cols-2 border border-[var(--k-line)] bg-[var(--k-public-surface)] lg:hidden">
           <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-extrabold ${mobileView === "map" ? "bg-[var(--k-text)] text-[var(--k-work-bg)]" : "text-[var(--k-muted)]"}`} onClick={() => setMobileView("map")} type="button" aria-pressed={mobileView === "map"}><Map className="size-4" /> Map</button>
           <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-extrabold ${mobileView === "list" ? "bg-[var(--k-text)] text-[var(--k-work-bg)]" : "text-[var(--k-muted)]"}`} onClick={() => setMobileView("list")} type="button" aria-pressed={mobileView === "list"}><List className="size-4" /> Results</button>
