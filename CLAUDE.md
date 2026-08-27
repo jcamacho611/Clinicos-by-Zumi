@@ -1,399 +1,277 @@
-# KLINIKOS Claude Operating Contract
+# KLINIKOS CLAUDE OPERATING CONTRACT
 
-This file is the bootstrap for Claude Code and other implementation agents working in this repository.
+Version: `2026-08-27.1`
+
+This is the bootstrap contract for Claude Code and other implementation agents working in `jcamacho611/Clinicos-by-Zumi`.
 
 ## Start here
 
-Klinikos is being built as a **governed healthcare operating network**, not merely an EHR, practice-management app, marketplace, LMS, billing tool, AI assistant, or marketing website.
+Klinikos is a governed healthcare operating ecosystem connecting care, clinic operations, workforce, education, capacity, transactions, financial truth, relationships, memory, and intelligence through one persistent identity.
 
-Canonical brand statement:
+Core product laws:
 
-> **Klinikos. The clinic operations ecosystem, powered by Zumi.**
+> **There is one Klinikos.**
 
-The governing human-experience law is:
+> **Simple above. Powerful below.**
 
 > **The complexity belongs to Klinikos, not to the person using Klinikos.**
 
-The governing operating question is:
-
-> **What needs to happen next?**
-
-The governing company question is:
-
-> **What needs to happen next to increase durable enterprise value?**
-
-The governing public-discovery law is:
-
-> **Broadly discoverable outside. Deeply orchestrated inside.**
-
-The governing distribution law is:
-
-> **Free participation is distribution infrastructure.**
-
-The governing displacement law is:
-
-> **Land without displacement. Expand by usefulness. Replace by earned trust.**
-
-The governing engineering law is:
-
-> **Founder omission does not equal engineering omission. No known failure may disappear silently.**
-
-The governing business objective is:
-
-> Build a product and company that create measurable customer value, become recurring infrastructure, progressively consolidate fragmented vendor workflows, compound through Grid, Network, EDU, identity, evidence and Zumi, and operate with enterprise-grade security, reliability, financial discipline, implementation excellence and commercial truth.
+> **What needs to happen?**
 
 ## Required reading order
 
-Before material work, read current repository/runtime truth and then read these files in order:
+Before material work:
 
-1. `docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md`
-2. `docs/KLINIKOS_ARCHITECTURE_INDEX.md`
-3. `docs/SOURCE_OF_TRUTH.md`
-4. `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md`
-5. `governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md`
-6. `src/lib/feature-registry-canon.ts`
-7. `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md`
-8. `docs/CLINIC_OS_CANON.md`
-9. `docs/GRID_CANON.md`
-10. `docs/EDU_CANON.md`
-11. `docs/ZUMI_CANON.md`
-12. `docs/FINANCIAL_OS_CANON.md`
-13. `docs/KLINIKOS_COMMERCIAL_CANON.md`
-14. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`
-15. `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`
-16. `docs/FRONTEND_EXPERIENCE_CANON.md`
-17. `docs/SECURITY_ARCHITECTURE.md`
-18. `docs/CLINICAL_SAFETY.md`
-19. `docs/KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md`
-20. `docs/business/KLINIKOS_VENTURE_SCALE_OPERATING_PACKAGE_2026-08-24.md`
-21. `governance/KLINIKOS_FINAL_FORM_CONTROL_PLANE.md`
-22. `governance/KLINIKOS_SOURCE_LOCKED_REQUIREMENTS.md`
-23. `governance/KLINIKOS_FINAL_FORM_BUSINESS_PLAN.md`
-24. `governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md`
-25. `src/lib/company-operating-canon.ts`
-26. `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md`
-27. `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md`
-28. `governance/KLINIKOS_COMPANY_EXECUTION_CONTROL_PLANE.md`
-29. `governance/KLINIKOS_COMPANY_STAGE_GATES.md`
-30. `src/lib/company-execution-control-plane.ts`
-31. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
-32. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
-33. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
-34. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
-35. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
-36. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
-37. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
-38. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
-39. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
-40. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
-41. `src/lib/public-capability-registry.ts`
-42. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
-43. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
+1. verify current repository/runtime truth, current `main`, relevant open PRs, exact-head verification, and deployment/external evidence where material;
+2. read `docs/KLINIKOS_MASTER_CANON.md`;
+3. read `docs/KLINIKOS_AUTHORITY_MAP.yaml`;
+4. read only the specialist documents required for the task;
+5. reverify status before present-tense claims.
 
-Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Company governance determines **how the company must operate while building and selling it**. Source-locked requirements determine **what user needs may not silently disappear**.
+Do not begin with an old master specification, old ecosystem canon, old Source of Truth hierarchy, historical PR body, or old prototype as though it defines current Klinikos.
 
-## Operating-network implementation law
+## One-canon doctrine
 
-The approved parent architecture is `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md`.
+`docs/KLINIKOS_MASTER_CANON.md` is the sole active product/architecture/business/experience authority.
 
-Implementation must preserve existing authorities and converge them. Do not create a second Grid, Zumi, identity system, Clinic OS, Financial OS, entitlement system, Path authority, or product-truth authority merely because a new experience is easier to prototype separately.
+Current code/schema/migrations/tests/exact-head verification/runtime evidence determine what exists today.
 
-The universal value/growth order is:
+Specialist documents are subordinate elaboration.
 
-`DISCOVER → RECEIVE VALUE → EXPRESS INTENT → CREATE IDENTITY WHEN PERSISTENCE MATTERS → BUILD CLAIMS → VERIFY ONLY WHAT THE NEXT ACTION REQUIRES → ENTER GRID / RELEVANT NETWORK EXPERIENCE → RECEIVE WORK / LEARNING / CONNECTION VALUE → BUILD EVIDENCE + RELATIONSHIPS → RETURN → INVITE / REFER → ORGANIZATION ENTERS OR DEEPENS → OPERATING MAP → FIRST WORKFLOW → PAID IMPLEMENTATION / SUBSCRIPTION / CONTRACT → CARE + MONEY + OPERATIONS EXPAND → MORE ACTIVITY → MORE GRID SUPPLY / DEMAND → MORE NETWORK VALUE → MORE DISCOVERY`
+History is provenance only.
 
-This is architecture, not a requirement for twenty visible screens. The frontend remains calm and progressively disclosed.
+Do not create another `SUPREME`, `FINAL`, `MASTER`, `SOURCE_OF_TRUTH`, or equivalent parallel current architecture. Accepted product discoveries merge forward into the Master Canon and must identify implementation consequences.
 
-Basic individual participation should generally remain free or low-friction where economically and legally appropriate because it creates supply, demand, identity, density, liquidity, relationships, referrals and distribution. Organizations pay for leverage: control, automation, volume, workflow, analytics, institutional delivery, implementation, premium distribution, enterprise administration and lawful transaction economics.
+## Literal protected-entry order
 
-A clinic must be able to receive meaningful Klinikos value while an incumbent EHR remains in place. Own workflow and user experience first; replace infrastructure only after Klinikos has earned the operational, safety, migration, reliability and economic case.
+Do not substitute an abstract growth/value lifecycle for the literal protected screen/event sequence.
 
-## Three truth classes
+Current order:
+
+`PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK`
+→ `ENTER KLINIKOS`
+→ `LIVING HOME - WHAT NEEDS TO HAPPEN?`
+→ `ZUMI CONVERSATION`
+→ `INTENT - I AM / I NEED / I HAVE / I WANT TO DO`
+→ `SAFE VALUE PREVIEW`
+→ `ACCOUNT VALUE TRIGGER`
+→ `ONE UNIVERSAL KLINIKOS IDENTITY`
+→ `PRESERVE SAFE ORIGINAL INTENT`
+→ `CLAIMS`
+→ `PATH-AWARE VERIFICATION`
+→ `AUTHORITY`
+→ `ACTIVE EXPERIENCE ENVELOPE`
+→ `ROLE / RELATIONSHIP / OBJECT-SPECIFIC EXPERIENCE`
+→ `REAL ACTION`
+→ `FULFILLMENT / EVIDENCE`
+→ `MEMORY / NEXT ACTION`
+→ `RETURN / EXPANSION`.
+
+The old signup-first identity screen followed by user-selected AI-provider connection is superseded.
+
+## Prototype-to-production rule
+
+Every material prototype sentence is a compressed architecture claim.
+
+Ask:
+
+> **What real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure would make this statement true?**
+
+Do not implement screens that imply student-to-worker progression, Grid eligibility, offers, reservations, obligations, settlement, experience, reputation, clinic growth, or compounding records without building or mapping the real governed substrate beneath them.
+
+## Universal identity and authority
+
+Permanent law:
+
+`CLAIM != VERIFIED FACT != AUTHORITY`.
+
+One person may hold multiple simultaneous/evolving relationships: patient, student, professional, employee, contractor, Grid participant, provider, educator, preceptor, owner, employer, or organization representative.
+
+Authority may depend on identity assurance, organization, location, relationship, role, profession, license, credential, privilege, assignment, purpose, consent, patient/case/resource scope, supervision/delegation, effective dates, and policy.
+
+Context switching must recompute permissions, data scope, tools, Zumi context, and audit.
+
+## Active Experience Envelope
+
+Authenticated experience is server-composed from the minimum necessary current context. It is not a client-owned persona flag.
+
+Keep separate:
+
+`EXISTS != DISCOVERABLE != PROMOTED != ELIGIBLE != ENTITLED != AUTHORIZED != VISIBLE != ACTIONABLE NOW`.
+
+## Zumi and OpenAI
+
+Zumi is Klinikos Intelligence and orchestration, never authority.
+
+OpenAI is the primary production intelligence platform direction for Zumi under `KLINIKOS-OPENAI-001`. Preserve provider abstraction and existing governed adapters.
+
+Do not create a parallel Zumi service or second OpenAI client merely because a prototype is easier to build separately.
+
+Do not claim unverified Partner Network tier, specialization, co-sell status, referral benefit, credits, BAA, enterprise pricing, FDE support, or other entitlement without direct evidence.
+
+Canonical execution:
+
+`USER INTENT → PRIVACY / SECURITY GATE → ACTIVE EXPERIENCE ENVELOPE → AUTHORIZED CONTEXT → DETERMINISTIC POLICY → ZUMI / OPENAI WHEN REASONING ADDS VALUE → TOOL/ACTION PROPOSAL → AUTHORIZATION / HUMAN CONFIRMATION WHEN REQUIRED → DETERMINISTIC BACKEND ACTION → VERIFIED RESULT → AUDIT / PROVENANCE → INTERFACE`.
+
+The model never receives unrestricted database authority.
+
+## Grid
+
+Grid is universal healthcare resource/capacity/opportunity/transaction infrastructure, not a nurse marketplace.
+
+Universal expression:
+
+- `I NEED` = demand;
+- `I HAVE` = resource/supply/capacity.
+
+Hard eligibility precedes ranking. AI can interpret/explain, not override policy.
+
+Canonical flow:
+
+`NEED / HAVE → RESOURCE / DEMAND → REQUIREMENTS → ELIGIBILITY → MATCH → OFFER → AGREEMENT → RESERVATION / ASSIGNMENT → FINANCIAL OBLIGATION → FULFILLMENT → EVIDENCE → REPUTATION / OUTCOME`.
+
+## EDU and workforce
+
+Klinikos EDU is education, simulation, competency evidence, institutional delivery, career-readiness, and workforce infrastructure.
+
+Compounding path:
+
+`EDU → LEARNING → APPLIED PRACTICE → COMPETENCY EVIDENCE → HUMAN REVIEW → GRID DISCOVERY / ELIGIBILITY → ORGANIZATION / OPPORTUNITY → WORK → EXPERIENCE EVIDENCE → REPUTATION → UPSKILLING → MORE OPPORTUNITY`.
+
+Training completion never automatically becomes licensure or professional authority.
+
+## Clinical convergence
+
+Current Visit is the provider-facing convergence surface.
+
+`PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY → CLINICAL → ASSESSMENT / PLAN → ORDERS / RESULTS → DOCUMENTATION / CODING → REVIEW / SIGN / LOCK → FOLLOW-UP`.
+
+AI may summarize deterministic clinical change but may not invent findings, diagnoses, laterality, orders, medical necessity, signature, claim submission, or close-visit authority.
+
+Telehealth is an encounter modality, not a second chart.
+
+## Intake and consent
+
+Intake/Consent is first-party Klinikos scope.
+
+Klinikos owns workflow, form/questionnaire engine, conditional logic, completion/readiness, patient completion, document/ID upload, e-sign capture, consent versions, provenance, reminders, review queues, triggers, audit, and configurable organization/location/specialty/service/case behavior.
+
+Consent is permission + version + purpose, not merely a signed PDF.
+
+## Billing / Financial OS / RCM
+
+Klinikos owns clinical-to-financial workflow truth while integrating external regulated rails.
+
+Canonical revenue path:
+
+`CARE → DOCUMENTATION → EVIDENCE → CODING → CHARGE → BILLING READINESS → CLAIM PREPARATION → EXTERNAL RAIL → ACCEPTANCE / REJECTION → ADJUDICATION → REMITTANCE → PAYMENT → RECONCILIATION → REVENUE INTEGRITY`.
+
+Keep financial concepts distinct.
+
+`REDIRECT != PAYMENT`.
+
+Internal obligation does not prove external settlement.
+
+External rails may include 270/271, 837, 276/277, 835, payer/clearinghouse, lab/radiology, pharmacy/eRx, payments, and credential sources. Adapter readiness never equals production verification.
+
+## Security and confidentiality
+
+Permanent boundary:
+
+`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY DTO → BROWSER`.
+
+Keep server-confidential by default:
+
+- credentials/secrets;
+- hidden Zumi prompts/orchestration;
+- Grid ranking/matching/anti-gaming internals;
+- trust/risk/fraud heuristics;
+- private pricing/margin logic;
+- unreleased strategy/roadmap;
+- privileged security detail;
+- unnecessary PHI/PII;
+- private tenant state.
+
+Frontend authorization is UX only. Server-side authority is mandatory.
+
+## Protected access and legal-defense product requirement
+
+First protected interaction uses the combined protected-access Terms + Confidentiality/IP/Trade-Secret/Restricted-Use package with affirmative, versioned server-side execution evidence.
+
+Draft:
+
+`docs/legal/KLINIKOS_PROTECTED_ACCESS_TERMS_CONFIDENTIALITY_AND_IP_DRAFT.md`.
+
+Legal drafts remain counsel-gated. Strong language, clickwrap, or repository inclusion does not guarantee enforceability.
+
+Do not activate arbitrary punitive liquidated damages. Counsel must approve enforceability-sensitive liability, indemnity, fee-shifting, anti-circumvention, forum, arbitration, consumer/business, worker/contractor, and healthcare terms.
+
+## Confidential outbound
+
+Never automatically send confidential decks, proprietary architecture, source, sensitive roadmaps, non-public financial details, labs/clinical documents, PHI, patient lists, credentials/secrets, or protected attachments without required classification, intended-recipient validation, minimum-necessary review, and governing human/policy approval.
+
+Keep execution states honest:
+
+`PREPARED != PROVIDER ACCEPTED != DELIVERED != RESPONSE != APPLICATION SUBMITTED != AWARD / CONTRACT != CASH RECEIVED`.
+
+## Product wiring
+
+A page, route, button, or AI answer is not proof of a completed feature.
+
+Required consequential chain:
+
+`VISIBLE SURFACE → USER ACTION → IDENTITY / CONTEXT → CLAIM / REQUIREMENT RESOLUTION → AUTHORIZATION / ELIGIBILITY → ENGINE(S) → AUTHORITATIVE DATA / WORKFLOW → PERSISTENCE / EVENT → EXTERNAL ADAPTER IF REQUIRED → RECONCILIATION → TRUTHFUL RESULT → AUDIT / FINANCIAL CONSEQUENCE → NEXT ACTION`.
+
+Never fake payment, message delivery, verification, claim acceptance, payout, external result, Grid inventory, distance, availability, or completion.
+
+## Truth classes
 
 Always distinguish:
 
-- **CURRENT FACT**: verified/observed repository, runtime, provider, contract, payment, financial, corporate or signed evidence.
-- **PROPOSED**: strategy, pricing, architecture, business model, forecast, ownership, partnership, capital plan or opportunity not yet formally enacted.
-- **EXECUTED**: actually implemented, signed, activated, paid, connected, filed or legally effective.
+- `CURRENT FACT`: verified/observed current evidence;
+- `PROPOSED`: strategy/architecture/pricing/relationship not yet enacted;
+- `EXECUTED`: actually implemented, signed, activated, connected, paid, filed, deployed, or legally effective.
 
-Never turn a recommendation into corporate/product reality by wording alone.
+Never turn a recommendation or plan into reality by wording alone.
 
-## Source-locked requirement law
+## Status freshness
 
-Direct founder instructions, professional/doctor feedback, customer/prospect requests and the canonical feature registry are product requirement evidence.
+`FEATURE_STATUS.md`, `EXTERNAL_DEPENDENCY_MATRIX.md`, `PRODUCTION_ENVIRONMENT_TRUTH.md`, route registries, and verification documents are evidence snapshots. Reverify before current claims.
 
-You may improve, combine, generalize, hide, automate, rename or replace the implementation, but you may not silently delete the original user need. If superseding a direct requirement, record where its intent now lives and how acceptance is proven.
+Use statuses such as VERIFIED LIVE, BUILT, PARTIALLY BUILT, MANUAL FALLBACK, ADAPTER READY, PENDING CONNECTION, BLOCKED, NOT BUILT, or NOT BUILT BY DESIGN.
 
-## Plain-English frontend law
+## Company value and commercialization
 
-Every user-facing surface translates complexity before professional terminology.
+Early clinic path:
 
-Prefer:
+`TARGET CLINIC → EXECUTIVE CONVERSATION → EXPENSIVE WORKFLOW → PAID ASSESSMENT / PROOF → MEASURED IMPROVEMENT → FOUNDING DEPLOYMENT → RECURRING PLATFORM → CASE STUDY / REFERRAL → EXPANSION`.
 
-- `Insurance approval is still needed.` over `AUTHORIZATION_REQUIREMENT_MISSING`.
-- `This referral still needs follow-up.` over internal obligation names.
-- `Payment is still being verified.` over reconciliation jargon.
-- `This visit may need billing review.` over internal revenue-exception terms.
+Land without forced displacement. Own useful workflow and experience first. Replace infrastructure only after Klinikos earns the operational, safety, migration, reliability, and economic case.
 
-The UI should answer:
+Company value loop:
 
-1. What is happening?
-2. Why does it matter?
-3. What can I do?
-4. What happens next?
+`DISCOVER → SELL → CONTRACT → COLLECT → IMPLEMENT → ACTIVATE → FIRST VALUE → REPEATED VALUE → RETAIN → EXPAND → GRID / NETWORK → COMPOUND`.
 
-Professional detail may appear secondarily for expert users.
+Company stages:
 
-The interface itself is the product signature. Decorative motifs are optional and subordinate to the work. Do not make a flower, rose, orb, network graphic, animation, stock image, or other atmosphere a requirement for a page to be considered Klinikos.
+`TRUTH FOUNDATION → CASH PROOF → REPEATABLE VALUE → NETWORK PROOF → ENTERPRISE PROOF → PLATFORM SCALE`.
 
-## Company operating law
+TAM is not traction. Pipeline is not revenue. Proposal value is not cash. Listings are not Grid liquidity. Signups are not network effects. Sandbox adapters are not production integrations. Enterprise branding is not enterprise readiness.
 
-Product work and company work are one value system. Every material initiative must be evaluated, where relevant, across:
+## Default implementation completion
 
-- customer problem and value
-- commercial path and approved offer
-- implementation/onboarding burden
-- first-value and retention implications
-- revenue and gross-margin implications
-- capital efficiency and runway
-- security/privacy/reliability
-- legal/regulatory gates
-- enterprise/procurement implications
-- Grid/Network/EDU compounding
-- data/evidence produced
-- partnership/build-buy alternative
-
-`src/lib/company-operating-canon.ts` is the machine-readable company operating contract. It does **not** prove that a metric, customer, contract, funding source, control or outcome exists; it defines what the company must measure and review.
-
-Use `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md` to preserve company truth with evidence, source, date, owner, status and next action rather than relying on chat memory.
-
-Use `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md` for material roadmap, capital, partnership, enterprise, pricing, market-entry and irreversible architecture decisions.
-
-The company value loop is:
-
-`DISCOVER → SELL → CONTRACT → COLLECT → IMPLEMENT → ACTIVATE → FIRST VALUE → REPEATED VALUE → RETAIN → EXPAND → GRID / NETWORK → COMPOUND`
-
-Do not optimize code volume while any earlier value-loop stage is broken.
-
-## Company execution control-plane law
-
-`src/lib/company-execution-control-plane.ts` is the machine-readable authority for company registers, stage gates, revenue engines, decision classes, Zumi company authority levels, and the executive-brief contract.
-
-Every material company action must:
-
-1. identify the current company/domain stage;
-2. identify the highest-leverage bottleneck;
-3. choose one primary next action;
-4. preserve the decision/evidence in the correct company register;
-5. execute only within the actor's legal/product authority;
-6. verify the result from current evidence;
-7. update the register, metric, stage evidence, and next action.
+When asked to build, continue, fix, implement, or finish, preserve current architecture and work toward merge-ready evidence when access permits.
 
 Use:
 
-`READ CURRENT TRUTH → IDENTIFY BOTTLENECK → CHOOSE ONE PRIMARY NEXT ACTION → EXECUTE → VERIFY → UPDATE REGISTERS → MEASURE → CONTINUE`
+`FETCH → COMPARE → INSPECT → PRESERVE → RE-ANCHOR → TEST → REVIEW → MERGE`.
 
-A new idea does not become P0 merely because it increases final-form scope.
+Do not mass-merge stale branches or overwrite concurrent work.
 
-## Company stage-gate law
+Before merge, run applicable schema, migration, type, lint, test, security, journey, build/start, browser/mobile/accessibility, and exact-head review gates. Never replace an external blocker with fake success.
 
-Final-form ambition and current company maturity must remain separate.
+## Specialist docs
 
-The company stages are:
+After reading the Master Canon, use existing clinical, Grid, EDU, Zumi, Financial OS, security, design, pricing, production, external-dependency, company-control, and verification docs as subordinate implementation detail.
 
-`TRUTH FOUNDATION → CASH PROOF → REPEATABLE VALUE → NETWORK PROOF → ENTERPRISE PROOF → PLATFORM SCALE`
-
-Stage advancement requires evidence defined in `governance/KLINIKOS_COMPANY_STAGE_GATES.md` and `src/lib/company-execution-control-plane.ts`.
-
-`SCENARIO_ONLY` metrics may inform strategy but may never satisfy a stage gate or be represented as current operating performance.
-
-Do not use:
-
-- total addressable market as traction;
-- pipeline as revenue;
-- proposal value as cash;
-- listings as Grid liquidity;
-- signups as network effects;
-- sandbox adapters as production integration;
-- enterprise branding as enterprise readiness;
-- financing valuation as product-market proof.
-
-Product/domain maturity may differ from company-level maturity. Preserve both when relevant.
-
-## Public capability exposure law
-
-Do not bury a major healthcare capability merely because it lives inside a broader backend domain.
-
-Every major market-recognized capability must be evaluated across:
-
-- public discovery / SEO
-- authenticated product discovery
-- Zumi vocabulary/tools
-- backend authority
-- data/state/events
-- external integrations
-- security/privacy/legal gates
-- monetization/entitlement
-- analytics/value evidence
-- customer/network expansion
-
-`src/lib/public-capability-registry.ts` is the machine-readable discovery contract.
-
-A registry record does **not** mean the route is implemented. Reconcile it against current `src/app` routes and preserve truthful maturity.
-
-Telemedicine is the canonical cross-cutting example: it must connect public discovery, scheduling, patient access, consent, insurance/authorization, video, Current Visit, documentation, coding, claims/payment, follow-up and analytics rather than being treated as an isolated video button.
-
-## Current Visit law
-
-Current Visit already exists. Do not create a second encounter editor or second clinical authority.
-
-Preserve and perfect the existing convergence sequence:
-
-`PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY → CLINICAL → ASSESSMENT & PLAN → ORDERS & RESULTS → DOCUMENTATION & CODING → CLOSE VISIT`
-
-The clinician should experience a medical visit, not the software architecture underneath it.
-
-## Zumi law
-
-Zumi is the intelligence/orchestration layer, not a parallel source of truth.
-
-Architecture:
-
-`UNDERSTAND → EVIDENCE/RESEARCH → GOVERNED VALIDATION → AUTHORIZED EXECUTION → EVIDENCE → EXPLANATION`
-
-Delegated-autonomy rule:
-
-> If the user has the legal, organizational and product authority to perform an action, Klinikos supports the action, policy permits delegation, and the user granted Zumi permission, Zumi should be able to perform it for the user.
-
-Use autonomy levels:
-
-- L0 observe
-- L1 recommend
-- L2 prepare
-- L3 execute after authorized approval
-- L4 standing delegation for pre-authorized low-risk deterministic workflows
-- L5 non-delegable authority such as diagnosis, clinical signature, prescription authority, professional licensure/credential truth, patient consent, high-risk clinical judgment, unauthorized payments or authority the user does not possess.
-
-For company operations, `src/lib/company-execution-control-plane.ts` additionally defines the company-side examples and boundaries for L0-L5.
-
-For consequential or changing information Zumi should retrieve current authoritative sources, rank evidence, identify conflict/staleness, preserve provenance, communicate uncertainty and connect research to governed action.
-
-## Vendor replacement law
-
-For every external vendor/system classify:
-
-`CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE`, or `NEVER REPLACE` where recreating an authoritative/regulatory rail is irrational.
-
-Own the customer workflow first. Make external providers swappable adapters. Internalize high-value layers when customer value, margin, retention, reliability and regulatory feasibility justify it.
-
-## Ecosystem expansion law
-
-Do not limit Klinikos to currently named modules or sectors.
-
-For newly discovered healthcare activities ask whether they can be represented through existing universal primitives, authority, obligation/work, evidence, Grid, Network, Financial OS, Zumi and Integration Hub.
-
-Prefer extension through configuration, policy packs, adapters, resource types, workflows and specialty packs before creating isolated products.
-
-## Hyperscale strategy law
-
-Do not cap Klinikos at SaaS revenue. Design for the possibility that Klinikos becomes infrastructure through which large amounts of healthcare work, claims, payments, capacity, workforce activity and other legitimate economic flows move.
-
-Always distinguish platform revenue from economic/transaction volume. Use the hyperscale strategy to test architecture and opportunity, not to fabricate forecasts.
-
-## Unicorn discovery law
-
-Do not limit opportunity discovery to founder-mentioned ideas.
-
-Continuously ask:
-
-- What workflow still leaves Klinikos?
-- What still uses phone, fax, email, paper, spreadsheet or memory?
-- What major capability exists inside the product but cannot be discovered publicly?
-- What unused resource can become supply?
-- What need can become Grid demand?
-- What shortage can EDU address?
-- What relationship can become Network?
-- What operating event should create a revenue expectation?
-- What can Zumi make invisible?
-- What vendor can become an adapter or be eliminated?
-- What capability creates customer revenue and Klinikos revenue simultaneously?
-- What two existing Klinikos engines create a third business when connected?
-- Should the next capability be built, bought, partnered, licensed, invested in, acquired, deferred, or ignored?
-
-Record new opportunities in the Unicorn Opportunity Register. Do not silently place them into P0.
-
-## Stay-on-course law
-
-Preserve the complete final-form map, but keep **one active dependency-ordered company value loop**.
-
-Current default active loop:
-
-`VISITOR → RECEIVES VALUE → EXPRESSES INTENT → PERSISTS IDENTITY WHEN USEFUL → GRID / RELEVANT NETWORK VALUE → QUALIFIES → PAYS/CONTRACTS WHEN ORGANIZATION LEVERAGE IS NEEDED → ACTIVATES → FIRST VALUE → REPEATED VALUE → EXPANDS → GRID/NETWORK VALUE`
-
-A new idea interrupts current P0 only if it is required for safety, required customer value, revenue activation, a blocker, or a reusable prerequisite.
-
-Otherwise record it, score it and continue the active tranche.
-
-## Professional software-studio law
-
-The founder should not need to know to ask for security engineering, SRE, backups, disaster recovery, load testing, accessibility, release governance, migration safety, observability, incident response, threat modeling, support operations, vendor risk, procurement documentation, rate limiting, idempotency, rollback or other professional requirements.
-
-Agents must proactively identify and schedule them at the correct dependency point.
-
-## Failure visibility law
-
-The happy path is not the architecture. Material failures must become visible state, retry/reconciliation work, an owned obligation, an alert, a manual fallback, a blocked state, an audit record, or an incident as appropriate.
-
-Assume duplicate requests, stale sessions, concurrent writes, late external success, webhook replay/reordering, provider outages, credential expiry, revoked relationships, withdrawn consent, duplicate results, communication failure, disputes/refunds, malicious uploads, cross-tenant attacks, prompt injection, model outages, failed migrations, bad deploys and restore scenarios will occur.
-
-## Before implementing
-
-1. Fetch current `main` and record exact SHA.
-2. Inspect relevant open PRs and recent commits.
-3. Read the approved operating-network design and current implementation authorization when the work touches final-form convergence.
-4. Reconcile current implementation with source-locked requirements.
-5. For public/product-discovery work, reconcile against `public-capability-registry.ts` and the SEO/category taxonomy.
-6. Reconcile the work against `company-operating-canon.ts`, `company-execution-control-plane.ts`, the current company stage, and the company value loop.
-7. Identify the single vertical slice being advanced.
-8. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
-9. For architectural work, present design and obtain approval before implementation unless the governing design/spec has already been explicitly approved.
-
-## During implementation
-
-Use:
-
-`PRESERVE → UNDERSTAND → ADAPT → HARDEN → GENERALIZE → EXTEND`
-
-Prefer TDD for features/bug fixes. Do not create parallel authorities.
-
-## Definition of done
-
-A capability is not done until the supported path works:
-
-`DISCOVERY → USER UNDERSTANDS → IDENTITY/CONTEXT → AUTHORIZATION/ELIGIBILITY → DOMAIN AUTHORITY → REAL DATA/EXTERNAL EVIDENCE → PERSISTENCE/EVENT → TRUTHFUL RESULT → AUDIT/RECONCILIATION → NEXT ACTION → VALUE EVIDENCE`
-
-A route, component, mock, adapter or browser redirect alone is not completion.
-
-For major public capabilities, also require a canonical capability record, substantive public page or documented no-index/private-only decision, internal links, Zumi vocabulary, entitlement class, analytics and truthful integration state.
-
-For material company capabilities, also require a clear owner, correct register, evidence source, metric or success condition, current company stage, review cadence, and next action where applicable.
-
-## End-of-session output
-
-Report:
-
-- exact main/head SHA used
-- what changed
-- what was verified
-- what remains blocked
-- source-locked requirements advanced
-- public-capability gaps closed/discovered
-- company value-loop stage advanced
-- current company stage and evidence gained/lost
-- company registers updated
-- new opportunities discovered
-- risks introduced/reduced
-- commercial/customer value
-- next dependency-ordered action
-
-Do not end with generic “more research.”
+If specialist product direction conflicts with the Master Canon, the Master Canon wins. If a status snapshot conflicts with current verified implementation, current verified implementation wins.
