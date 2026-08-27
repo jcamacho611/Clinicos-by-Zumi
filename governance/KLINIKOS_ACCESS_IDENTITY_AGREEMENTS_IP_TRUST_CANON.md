@@ -1,7 +1,17 @@
 # KLINIKOS Access, Identity, Agreements, IP & Trust Canon
 
 Status: GOVERNING ACCESS / CONTRACT / TRUST ARCHITECTURE
-Date: 2026-08-25
+Date: 2026-08-27
+
+## 0. Legal defense inheritance
+
+This canon operates together with `governance/KLINIKOS_LEGAL_DEFENSE_CANON.md`.
+
+For confidentiality, protected access, intellectual-property misuse, anti-circumvention, severe-breach classification, remedies, evidence preservation, liquidated-damages policy, and enforcement architecture, the Legal Defense Canon controls any conflicting older language in this document.
+
+> **Every prohibited act must map to a defined contractual consequence, evidence path, survival rule, and remedy.**
+
+No document becomes attorney-approved or production-approved merely because it is committed to the repository.
 
 ## 1. Objective
 
