@@ -120,7 +120,7 @@ export function PublicAccessGate({ onAccepted }: { onAccepted: (version: string)
             <Link className="min-h-11 content-center hover:text-[#efaaa1]" href="/legal/access-terms">Access terms</Link>
             <Link className="min-h-11 content-center hover:text-[#efaaa1]" href="/legal/privacy">Privacy notice</Link>
           </div>
-          <p className="mt-2 text-[10px] leading-5 text-[#876f6b]">This entry agreement records consent and governs permitted use. It is not a substitute for authenticated role-specific agreements, authorization controls, or server-side confidentiality protections.</p>
+          <p className="mt-2 text-[11px] leading-5 text-[#876f6b]">This entry agreement records consent and governs permitted use. It is not a substitute for authenticated role-specific agreements, authorization controls, or server-side confidentiality protections.</p>
         </div>
       </section>
     </div>
