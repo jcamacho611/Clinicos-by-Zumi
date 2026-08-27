@@ -20,7 +20,7 @@ describe("member signup legal readiness", () => {
     expect(source).toContain("documentSha256");
     expect(source).toContain("documentSnapshot");
     expect(source).toContain('signatureMethod');
-    expect(source).toContain('"authorityGranted": false');
+    expect(source).toContain("authorityGranted: false");
     expect(source).not.toMatch(/organizationMembership|roleKey|providerProfile|clinicalAuthority/);
   });
 });
