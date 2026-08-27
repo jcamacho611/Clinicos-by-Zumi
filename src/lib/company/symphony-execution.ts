@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { OutboundMessage, OutboundResult } from "@/lib/communications/outbound";
 import type {
   SymphonyContactHistory,
