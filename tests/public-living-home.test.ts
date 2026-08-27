@@ -146,16 +146,21 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
   });
 
-  it("keeps public and patient destinations out of clinic-staff authentication while preserving safe structured protected intent", () => {
-    expect(source).toContain('if (destination.href === "/portal") return "/portal/login"');
-    expect(source).toContain('"/grid", "/edu"');
-    expect(source).toContain("publicActionPaths.has(destination.href)");
-    expect(source).toContain("protectedPublicContinuationHref(destination.href, destination.key)");
-    expect(source).toContain("destinationActionHref(resolution.destination)");
-    expect(source).not.toContain("/login?next=");
+  it("keeps public and patient destinations out of clinic-staff authentication while preserving safe structured intent", () => {
+    expect(source).toContain('import { publicLivingDestinationHref } from "@/lib/distribution/public-continuation"');
+    expect(source).toContain("publicLivingDestinationHref(resolution.destination)");
+    expect(source).not.toContain("publicActionPaths");
+    expect(source).not.toContain("destinationActionHref");
+
+    expect(continuation).toContain('if (parsed.pathname === "/portal") return "/portal/login"');
+    expect(continuation).toContain('"/grid"');
+    expect(continuation).toContain('"/edu"');
+    expect(continuation).toContain("PUBLIC_ACTION_PATHS.has(parsed.pathname)");
+    expect(continuation).toContain("publicContinuationHref(destination.href, destination.key)");
     expect(continuation).toContain('destination.searchParams.set("from", "public-zumi")');
     expect(continuation).toContain('destination.searchParams.set("intent", intentKey)');
     expect(continuation).not.toContain("rawPrompt");
+    expect(source).not.toContain("/login?next=");
   });
 
   it("provides equivalent mobile navigation rather than hiding the only primary nav", () => {
