@@ -1,0 +1,104 @@
+// Canonical person-level authentication substrate.
+//
+// Account is intentionally organization-agnostic. Organization authority remains an
+// effective-dated relationship and is narrowed through a verified clinic context.
+// Legacy User/AuthCredential/AuthSession stay in place during the migration window.
+
+model Account {
+  id                      String                          @id @default(cuid())
+  personId                String                          @unique
+  primaryEmail            String                          @unique
+  displayName             String
+  status                  String                          @default("active")
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  person                  Person                          @relation(fields: [personId], references: [id], onDelete: Restrict)
+  credential              AccountCredential?
+  sessions                AccountSession[]
+  legacyLinks             LegacyUserAccountLink[]
+  events                  AccountEvent[]
+  entryAcceptanceBindings AccountEntryAcceptanceBinding[]
+
+  @@index([status])
+  @@map("accounts")
+}
+
+model AccountCredential {
+  id                String   @id @default(cuid())
+  accountId         String   @unique
+  passwordHash      String
+  passwordChangedAt DateTime @default(now())
+  mustReset         Boolean  @default(false)
+  failedAttempts    Int      @default(0)
+  lockedUntil       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  account           Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_credentials")
+}
+
+model AccountSession {
+  id          String    @id
+  accountId   String
+  expiresAt   DateTime
+  lastSeenAt  DateTime  @default(now())
+  revokedAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  deviceLabel String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, revokedAt, expiresAt])
+  @@map("account_sessions")
+}
+
+model LegacyUserAccountLink {
+  id           String   @id @default(cuid())
+  accountId    String
+  legacyUserId String   @unique
+  sourceType   String   @default("legacy_user")
+  createdAt    DateTime @default(now())
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("legacy_user_account_links")
+}
+
+// Neutral person-level evidence. This is not tenant audit or organization authority.
+model AccountEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  eventType       String
+  sourceType      String
+  sourceReference String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("account_events")
+}
+
+// Immutable legal-evidence binding. It does not grant organization, clinical, Grid,
+// EDU, payment, credential, or patient authority.
+model AccountEntryAcceptanceBinding {
+  id              String   @id @default(cuid())
+  acceptanceId    String   @unique
+  accountId       String
+  personId        String
+  documentKey     String
+  documentVersion String
+  documentSha256  String
+  boundAt         DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  person          Person   @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, documentKey, documentVersion])
+  @@index([personId])
+  @@map("account_entry_acceptance_bindings")
+}
