@@ -86,9 +86,9 @@ export default async function GridGatewayPage({
                 className="mb-3 border-l-2 border-[#e6817b] bg-[#100708]/62 px-5 py-4"
                 aria-label="Continue from Zumi"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#e6817b]">Continue from Zumi</p>
-                <p className="mt-2 text-sm font-medium text-[#fff8f6]">{entryContext.title}</p>
-                <p className="mt-1 text-[12px] leading-5 text-[#a8908b]">{entryContext.body}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#e6817b]">Continue from Zumi</p>
+                <p className="mt-2 text-sm font-medium text-[#fff8f6]">{entryContext?.title}</p>
+                <p className="mt-1 text-[12px] leading-5 text-[#a8908b]">{entryContext?.body}</p>
               </aside>
             )}
 
