@@ -1,9 +1,30 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
-Version: `2026-08-22.1`
+Version: `2026-08-27.1`
 Status: `AUTHORITATIVE`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+
+## 0. 2026-08-27 supreme convergence authority
+
+For product/business/AI direction approved on 2026-08-27, the following documents are now the highest-order architecture and execution authorities **below current implementation/runtime truth and this Source of Truth**:
+
+1. `governance/KLINIKOS_SUPREME_PRODUCT_BUSINESS_AND_AI_CONSTITUTION.md` — parent product, business, AI, commercial and execution constitution.
+2. `docs/architecture/KLINIKOS_OPENAI_ZUMI_ARCHITECTURE.md` — OpenAI-powered Zumi architecture, authority boundary, AI cost/evaluation/data rules and provider-abstraction law.
+3. `docs/engineering/KLINIKOS_FULL_STACK_ARCHITECTURE_CANON.md` — full-stack application/data/domain/reliability architecture.
+4. `docs/design/KLINIKOS_JOURNEY_STAGE_DESIGN_ACCEPTANCE_CANON.md` — binding frontend/UX acceptance law from public entry through Zumi, account, identity, Grid, Living Home, Current Visit, organization/Klinikos 10, EDU, professional Grid and patient experience.
+5. `docs/partners/OPENAI_PARTNER_NETWORK_TRUTH_AND_EXECUTION.md` — verified OpenAI Partner Network company truth and progression ledger.
+6. `docs/partners/KLINIKOS_OPENAI_COSELL_AND_DELIVERY_PLAYBOOK.md` — partner/co-sell/delivery operating playbook constrained by actual Partner Portal entitlements.
+
+These documents **orchestrate and evolve** the 2026-08-26 universal-experience and operating-network work. They do not manufacture implementation status, external connectivity, compliance status, customer status, or OpenAI program entitlements.
+
+When an older strategy/design prompt conflicts with the above, preserve the older document as history and use the newer explicit correction. In particular, the current visual authority is **Marble / Obsidian / Living Edge with warm ivory, graphite, oxblood, rose, wine and ember**, not older navy/teal/purple concept palettes.
+
+The current commercial journey is:
+
+`PROBLEM ENTRY → ZUMI → VALUE PREVIEW → ACCOUNT VALUE TRIGGER → UNIVERSAL IDENTITY → CLAIM → VERIFY WHEN REQUIRED → GRID / FIRST RESULT → RELATIONSHIP → ORGANIZATION VALUE → KLINIKOS 10 → CLINIC OS / EHR / CURRENT VISIT / TELEMEDICINE / REVENUE → RETENTION → NETWORK EXPANSION`
+
+Klinikos 10 is not a competing acquisition strategy. It is the first premium organizational conversion after the universal value-first Zumi/identity/Grid journey has already created and understood enough value.
 
 ## 1. Current product definition
 
@@ -112,7 +133,7 @@ Dynamic workspaces may host/adapt Patients, Clinic OS operations, Grid, Care, Bi
 
 The approved cinematic Klinikos reference is the authoritative design destination for the converted experience. It is not a mood board.
 
-The uploaded design package authority is recorded in `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`. The detailed experience law is in `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`.
+The uploaded design package authority is recorded in `docs/KLINIKOS_DESIGN_PACKAGE_AUTHORITY_2026-08-16.md`. The detailed experience law is in `docs/KLINIKOS_DESIGN_AND_WIRING_CANON.md`. The newer journey-stage acceptance requirements are authoritative in `docs/design/KLINIKOS_JOURNEY_STAGE_DESIGN_ACCEPTANCE_CANON.md` where they explicitly refine older design prose.
 
 ### Visual system
 
@@ -340,6 +361,7 @@ Every material expert/product insight that could change multiple engines should 
 
 The newest Klinikos vision is not complete merely because the homepage looks right or each module works alone. It is complete only when representative cross-engine journeys work truthfully, including:
 
+- Public Zumi resolved intent → public Grid/EDU value surface with safe structured continuation metadata and no raw-prompt URL leakage;
 - Clinic need → Grid route → eligible next action;
 - EDU requirement → placement/capacity route;
 - Clinic/Billing/Insights → supported revenue recovery;
