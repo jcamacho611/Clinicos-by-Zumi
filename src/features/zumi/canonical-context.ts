@@ -17,7 +17,6 @@ const DOCUMENTS: readonly CanonicalContextDocument[] = [
   { path: "docs/KLINIKOS_AUTHORITY_MAP.yaml", visibility: "founder", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education", "engineering", "security", "integrations", "compliance"], priority: 115 },
   { path: "docs/ZUMI_CUSTOMER_PRODUCT_CONTEXT.md", visibility: "customer_safe", domains: ["canon", "product_status", "grid", "clinic_operations", "clinical_workflows", "commercial", "education"], priority: 100 },
   { path: "docs/ZUMI_AMBIENT_INTELLIGENCE.md", visibility: "founder", domains: ["canon", "engineering", "security", "integrations", "grid", "clinic_operations", "commercial"], priority: 90 },
-  { path: "docs/KLINIKOS_CONSTITUTION.md", visibility: "founder", domains: ["engineering", "security", "compliance"], priority: 80 },
   { path: "docs/KLINIKOS_ARCHITECTURE_INDEX.md", visibility: "founder", domains: ["engineering", "integrations", "security", "grid", "clinic_operations"], priority: 75 },
   { path: "docs/FEATURE_STATUS.md", visibility: "founder", domains: ["product_status", "engineering", "integrations"], priority: 70 },
   { path: "docs/EXTERNAL_DEPENDENCY_MATRIX.md", visibility: "founder", domains: ["integrations", "engineering", "commercial", "security"], priority: 70 },
