@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import { publicLivingDestinationHref } from "@/lib/distribution/public-continuation";
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const PUBLIC_PATHS = new Set([
@@ -28,15 +29,6 @@ const PUBLIC_PATHS = new Set([
 type PublicZumiSuggestion = { id: string; label: string; prompt: string };
 type Turn = { id: number; prompt: string; resolution: PublicLivingResolution; suggestions: PublicZumiSuggestion[] };
 type ApiResponse = { data?: { resolution?: unknown; suggestions?: unknown } };
-
-const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/access"]);
-
-function destinationHref(href: string) {
-  if (href === "/login") return "/login";
-  if (href === "/portal") return "/portal/login";
-  if (publicActionPaths.has(href)) return href;
-  return `/login?next=${encodeURIComponent(href)}`;
-}
 
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   kind: "conversation",
@@ -216,7 +208,7 @@ export function PublicZumiSiteControl() {
                     <p className="mt-1 text-sm font-semibold leading-5">{turn.resolution.title}</p>
                     <p className="mt-2 whitespace-pre-line text-xs leading-5 text-[#d8c1bd]">{turn.resolution.body}</p>
                     {turn.resolution.destination && (
-                      <Link className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full bg-[#e6817b] px-4 text-xs font-semibold text-[#1a090a]" href={destinationHref(turn.resolution.destination.href)}>
+                      <Link className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full bg-[#e6817b] px-4 text-xs font-semibold text-[#1a090a]" href={publicLivingDestinationHref(turn.resolution.destination)}>
                         {turn.resolution.destination.action}<ArrowRight className="size-3.5" aria-hidden="true" />
                       </Link>
                     )}
