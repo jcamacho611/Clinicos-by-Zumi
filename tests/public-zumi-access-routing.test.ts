@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { publicLivingDestinationHref } from "@/lib/distribution/public-continuation";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
 
 function read(relative: string) {
@@ -38,12 +39,15 @@ describe("public Zumi access and typo routing", () => {
   });
 
   it("keeps the real access-verification route public on both public Zumi surfaces", () => {
+    const accessDestination = resolvePublicLivingIntent("sign up").destination;
+    expect(accessDestination).not.toBeNull();
+    if (!accessDestination) throw new Error("Expected sign-up intent to resolve to access");
+
+    expect(publicLivingDestinationHref(accessDestination)).toBe("/access?from=public-zumi");
+
     const livingHome = read("src/components/marketing/public-living-gateway.tsx");
     const siteControl = read("src/components/marketing/public-zumi-site-control.tsx");
-
-    expect(livingHome).toContain('"/access"');
-    expect(siteControl).toContain('"/access"');
-    expect(livingHome).toContain("publicActionPaths.has(href)");
-    expect(siteControl).toContain("publicActionPaths.has(href)");
+    expect(livingHome).toContain("publicLivingDestinationHref");
+    expect(siteControl).toContain("publicLivingDestinationHref");
   });
 });
