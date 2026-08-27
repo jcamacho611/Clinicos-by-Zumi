@@ -4,18 +4,9 @@ import { describe, expect, it } from "vitest";
 import { GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
 
 /**
- * The public Grid pages are light surfaces living inside a dark-themed application, and
- * that is the whole source of their accessibility history.
- *
- * The legacy conversion layer darkens legacy backgrounds and lightens the dark text
- * written for them. A light page that does not declare itself gets half of that
- * treatment: /grid/pricing rendered its headings at 1.08:1 because `bg-[#f7f8fa]` is in
- * the darken list and beat the marble rule, so the surface went dark while the text
- * stayed dark. The fix is not a colour, it is the declaration — `grid-marble-surface`
- * says "this page is light" and the layer leaves it alone.
- *
- * Measured after the fix: all five public Grid routes at 1440px, 768px and 390px report
- * zero low-contrast text nodes, zero horizontal overflow and zero console errors.
+ * Public Grid must remain visually coherent with the active Marble / Obsidian design
+ * system and must preserve safe structured context when Public Zumi sends somebody
+ * into Grid. Raw conversation text is never recovered from URL state.
  */
 
 const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -49,6 +40,34 @@ describe("public Grid surfaces", () => {
       }
     },
   );
+
+  it("keeps the public Grid exchange field inside Obsidian/Living Edge instead of legacy generic SaaS blue", () => {
+    const source = read("src/components/grid/grid-exchange-field.tsx");
+    expect(source).toContain("#12090b");
+    expect(source).toContain("#e6817b");
+    expect(source).not.toContain("#174ea6");
+    expect(source).not.toContain("bg-white");
+    expect(source).toContain("min-h-11");
+    expect(source).toContain("min-h-12");
+  });
+
+  it("resumes safe Public Zumi context in Grid instead of forcing a generic restart", () => {
+    const page = read("src/app/grid/page.tsx");
+    const entry = read("src/lib/grid/public-entry.ts");
+
+    expect(page).toContain("gridPublicEntryContext");
+    expect(page).toContain("searchParams: Promise<");
+    expect(page).toContain("const entryContext = gridPublicEntryContext(from, intent)");
+    expect(page).toContain("entryContext?.title");
+    expect(page).toContain("entryContext?.body");
+    expect(page).toContain('initialIntent={entryContext?.intent ?? "all"}');
+    expect(page).toContain('initialQuery={entryContext?.initialQuery ?? ""}');
+
+    expect(entry).toContain('sourceValue !== "public-zumi"');
+    expect(entry).toContain('intent: "provider"');
+    expect(entry).toContain('initialQuery: "I need a healthcare professional"');
+    expect(entry).not.toContain("rawPrompt");
+  });
 
   it("renders every Grid tier from the canonical object rather than a hand-picked list", () => {
     // Grid Pro+ existed in the commercial source and never reached the page, because the
