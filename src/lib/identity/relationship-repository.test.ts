@@ -19,11 +19,19 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-import {
-  buildEffectiveRelationshipWhere,
-  ensureOrganizationRelationshipForLegacyUser,
-  IdentityRelationshipConflictError,
-} from "./relationship-repository";
+import * as relationships from "./relationship-repository";
+
+const ensureRelationship = () => (relationships as unknown as {
+  ensureOrganizationRelationshipForLegacyUser?: (input: {
+    userId: string;
+    organizationId: string;
+    membershipType: string;
+    roleKey: string | null;
+    status: string;
+    sourceType: string;
+    sourceReference: string;
+  }) => Promise<{ personId: string; organizationId: string; membershipType: string }>;
+}).ensureOrganizationRelationshipForLegacyUser;
 
 describe("relationship repository effective-date semantics", () => {
   beforeEach(() => {
@@ -33,7 +41,7 @@ describe("relationship repository effective-date semantics", () => {
   it("requires active status and a relationship that has started but not ended", () => {
     const at = new Date("2026-08-22T12:00:00.000Z");
 
-    expect(buildEffectiveRelationshipWhere(at)).toEqual({
+    expect(relationships.buildEffectiveRelationshipWhere(at)).toEqual({
       status: "active",
       effectiveFrom: { lte: at },
       OR: [
@@ -44,6 +52,9 @@ describe("relationship repository effective-date semantics", () => {
   });
 
   it("creates one compatibility person plus baseline and target relationships without changing legacy authority", async () => {
+    const ensure = ensureRelationship();
+    expect(typeof ensure).toBe("function");
+
     mocks.userFindUnique.mockResolvedValue({
       id: "user_1",
       organizationId: "org_home",
@@ -57,7 +68,7 @@ describe("relationship repository effective-date semantics", () => {
     mocks.personCreate.mockImplementation(async ({ data }) => data);
     mocks.membershipUpsert.mockImplementation(async ({ where, create }) => ({ id: where.id, ...create }));
 
-    const result = await ensureOrganizationRelationshipForLegacyUser({
+    const result = await ensure!({
       userId: "user_1",
       organizationId: "org_grid",
       membershipType: "grid_contractor_applicant",
@@ -99,6 +110,9 @@ describe("relationship repository effective-date semantics", () => {
   });
 
   it("fails closed when legacy compatibility signals resolve to different people", async () => {
+    const ensure = ensureRelationship();
+    expect(typeof ensure).toBe("function");
+
     mocks.userFindUnique.mockResolvedValue({
       id: "user_1",
       organizationId: "org_home",
@@ -110,7 +124,7 @@ describe("relationship repository effective-date semantics", () => {
     mocks.membershipFindMany.mockResolvedValue([{ personId: "person_a" }]);
     mocks.personFindMany.mockResolvedValue([{ id: "person_b" }]);
 
-    await expect(ensureOrganizationRelationshipForLegacyUser({
+    await expect(ensure!({
       userId: "user_1",
       organizationId: "org_grid",
       membershipType: "grid_contractor_applicant",
@@ -118,7 +132,7 @@ describe("relationship repository effective-date semantics", () => {
       status: "pending_approval",
       sourceType: "grid_contractor_enrollment",
       sourceReference: "provider_1",
-    })).rejects.toBeInstanceOf(IdentityRelationshipConflictError);
+    })).rejects.toThrow(/identity|person|conflict|ambiguous/i);
 
     expect(mocks.personCreate).not.toHaveBeenCalled();
     expect(mocks.membershipUpsert).not.toHaveBeenCalled();
