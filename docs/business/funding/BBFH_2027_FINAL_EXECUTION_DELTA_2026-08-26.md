@@ -2,7 +2,7 @@
 
 Status: DECISION READY — NOT SUBMITTED / NOT SELECTED / NOT AWARDED
 
-Verified: 2026-08-26
+Verified: 2026-08-27
 
 ## Purpose
 
@@ -25,6 +25,22 @@ This file overrides stale BBFH execution assumptions in older working packages. 
 Primary public authority: https://ide.group/bbfh-challenge/
 Application form / live terms authority: https://ide.group/2027-bbfh-application-form/
 Authoritative internal eligibility reconciliation: `docs/business/funding/BBFH_2027_ELIGIBILITY_OVERRIDE_2026-08-26.md`
+
+## 2026-08-27 live-terms reconciliation request — SENT
+
+The written program-manager clarification above conflicts with the current live Terms & Conditions language, which appears to require an international corporate entrant to intend some Australian research, development, manufacture, or commercialisation.
+
+A direct reply was sent to Matt Allison on **2026-08-27** asking IDE to reconcile those two authorities and confirm whether Klinikos may enter the BBFH main prize / People's Choice without making an Australian development or commercialisation commitment when it is not seeking the MedTech Compass benefit.
+
+Until IDE replies, apply a **fail-closed legal-attestation rule**:
+- do not manufacture Australian intent;
+- do not abandon the application merely because the public terms are ambiguous;
+- keep every routine field and attachment ready;
+- final submission remains gated on the authorized representative's truthful attendance answers and legal acceptance of the form terms;
+- if IDE confirms the program-manager interpretation in writing, update the eligibility rule before submission;
+- if IDE confirms the live-term interpretation instead, submit only if an authorized representative genuinely adopts the prepared Australian pathway.
+
+The clarification email was non-binding and created no fee, equity, certification, or legal commitment.
 
 ## Live form requirements — verified 2026-08-26
 
@@ -104,7 +120,9 @@ Required:
 - Sydney Final attendance on 2027-03-03 — Yes/No
 - Australian market/collaboration interest — Yes/No
 
-The Australian-market question remains a truthful factual/strategic response, but it is **not a direct-main-prize eligibility blocker** under IDE's written clarification. If no authorized Australian pathway has been adopted, answer **No** rather than manufacturing intent. If the pathway is genuinely adopted, answer Yes and use the prepared evidence-bounded explanation in:
+The Australian-market question remains a truthful factual/strategic response. Because the live terms and the direct written clarification currently conflict, do not treat either interpretation as resolved until IDE answers the 2026-08-27 reconciliation request or an authorized representative independently adopts genuine Australian intent.
+
+If a genuine Australian pathway is adopted, use the prepared evidence-bounded explanation in:
 
 `docs/business/funding/BBFH_AUSTRALIA_COMMERCIALISATION_PATHWAY_2026-08-26.md`
 
@@ -156,7 +174,7 @@ Do not rewrite essays from scratch unless the live form changed.
 
 The repo contains a concrete optional Australian product-development / market-validation pathway. It can support a truthful Yes answer to the Australian-market question and potential MedTech Compass eligibility **only if an authorized representative genuinely adopts it**.
 
-The pathway is no longer required merely to enter or compete for the main BBFH / People's Choice prizes based on IDE's written clarification.
+The pathway is not evidence of current Australian intent by itself.
 
 ## Remaining non-delegable decisions
 
@@ -166,7 +184,7 @@ Only an authorized company representative should complete these items:
 2. **Terms/IP/publicity** — review the live competition terms, including: broad non-exclusive entry-content license; originality/IP warranty and indemnity; personal-information/marketing permissions; winner publicity; entrant-paid participation/travel; and the requirement that prize services are subject to IDE's standard product-development agreement.
 3. **Final legal acceptance / Submit** — by applying the entrant agrees to the published terms, so final application submission remains an authorized-company legal action.
 
-Australian-market interest may be answered No if no genuine pathway has been adopted; do not treat that answer as a reason to abandon the main-prize application.
+Australian-market interest must be answered truthfully under the final clarified eligibility interpretation; do not invent intent merely to enter.
 
 ## Exact completion sequence
 
@@ -176,7 +194,7 @@ Australian-market interest may be answered No if no genuine pathway has been ado
 4. Paste the already-prepared Vision, Desirability, Feasibility, Viability, Team, and Prize Utilization answers from the working package.
 5. Complete the optional technical-support and profit fields because strong evidence-bounded answers already exist.
 6. For supporting documents select Yes and attach the single non-confidential combined packet if the file remains under the current 20 MB limit.
-7. Answer Australian market/collaboration interest truthfully; use No if there is no adopted pathway, or the prepared pathway explanation if genuine intent exists.
+7. Reconcile the Australian market/collaboration answer against IDE's reply to the 2026-08-27 clarification request or a genuinely adopted Australian pathway.
 8. Complete the Sydney attendance decisions and legal terms review.
 9. Submit only after authorized legal acceptance.
 10. Record submission evidence only after the portal actually confirms receipt.
