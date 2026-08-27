@@ -78,9 +78,9 @@ export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
   },
   {
     id: "edu-other-public",
-    sourcePattern: /^src\/app\/edu\/(?!\(lab\)(?:\/|$))(?:.*\/)?page\.tsx$/,
+    sourcePattern: /^src\/app\/edu\/(?!\(lab\)(?:\/|$)).+\/page\.tsx$/,
     contractId: "public-discovery",
-    rationale: "Non-lab EDU routes are treated as public-safe discovery unless deliberately moved behind a governed experience.",
+    rationale: "Non-lab EDU subroutes are treated as public-safe discovery unless deliberately moved behind a governed experience.",
   },
   {
     id: "grid-enrollment",
