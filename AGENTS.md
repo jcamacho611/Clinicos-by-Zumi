@@ -10,13 +10,30 @@ Start every material run with:
 2. `git remote get-url origin`;
 3. fetch current `main`, open PRs, and relevant branches without rewriting history;
 4. read `docs/SOURCE_OF_TRUTH.md` and `docs/KLINIKOS_ARCHITECTURE_INDEX.md`;
-5. for **any frontend, API, Zumi, Grid, Quality/Assurance, pricing, security, analytics, admin, integration, or client-visible work**, read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing;
-6. for any work involving production, vendors, secrets, payments, AI, maps, communications, healthcare rails, or deployment, read `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` and `docs/EXTERNAL_DEPENDENCY_MATRIX.md` before making claims or edits;
-7. for **any Zumi shell/control, public UX, product-comprehension, navigation, SEO, metadata, sitemap, robots, indexing, or growth-surface work**, read `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` before editing;
-8. for **any Zumi conversation, routing, role/goal understanding, public intelligence, fallback/degraded behavior, quick-reply, provider, memory/context, or assistant-response work**, read `docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` before editing;
-9. for **any encounter, Current Visit, clinical-template, intake/staff-handoff, longitudinal-change, body-map, clinical-AI, clinical coding, order/result convergence, or close-visit work**, read `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md` before editing.
+5. read `governance/KLINIKOS_SUPREME_PRODUCT_BUSINESS_AND_AI_CONSTITUTION.md` for any material product, business, AI, Grid, clinical, EDU, Network, commercial, partner, or execution change;
+6. for **any frontend, API, Zumi, Grid, Quality/Assurance, pricing, security, analytics, admin, integration, or client-visible work**, read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before editing;
+7. for **any frontend/UX, public-entry, account, identity, Grid, Living Home, Current Visit, organization/Klinikos 10, EDU, professional, patient, responsive, accessibility, Marble/Obsidian, Living Edge, or design-system work**, read `docs/design/KLINIKOS_JOURNEY_STAGE_DESIGN_ACCEPTANCE_CANON.md` before editing;
+8. for any work involving production, vendors, secrets, payments, AI, maps, communications, healthcare rails, or deployment, read `docs/PRODUCTION_ENVIRONMENT_TRUTH.md` and `docs/EXTERNAL_DEPENDENCY_MATRIX.md` before making claims or edits;
+9. for **any Zumi shell/control, public UX, product-comprehension, navigation, SEO, metadata, sitemap, robots, indexing, or growth-surface work**, read `docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` before editing;
+10. for **any Zumi conversation, routing, role/goal understanding, public intelligence, fallback/degraded behavior, quick-reply, provider, memory/context, assistant-response, OpenAI provider, model-routing, tool, evaluation, AI-cost, PHI-egress, or AI-data work**, read `docs/ZUMI_CONVERSATION_INTELLIGENCE_CANON.md` and `docs/architecture/KLINIKOS_OPENAI_ZUMI_ARCHITECTURE.md` before editing;
+11. for **any encounter, Current Visit, clinical-template, intake/staff-handoff, longitudinal-change, body-map, clinical-AI, clinical coding, order/result convergence, or close-visit work**, read `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md` before editing;
+12. for **any OpenAI Partner Network, PartnerU, certification, specialization, deal-registration, co-sell, joint-customer, partner-marketing, or partner-benefit work**, read `docs/partners/OPENAI_PARTNER_NETWORK_TRUTH_AND_EXECUTION.md` and `docs/partners/KLINIKOS_OPENAI_COSELL_AND_DELIVERY_PLAYBOOK.md` before making claims or actions.
 
 For Grid, Zumi, EDU, Clinic OS, clinical convergence, portal/role, finance, design, pricing, Assurance/Quality Guardian/Expert Grid, or security-boundary work, read the corresponding specialist canon before editing. For recovery work, read `docs/BRANCH_LEDGER.md` and preserve all listed local/remote history.
+
+## 2026-08-27 supreme convergence law
+
+Current implementation/schema/migrations/tests/verified runtime remain authority for **what exists now**. `docs/SOURCE_OF_TRUTH.md` remains repository law. Within approved forward architecture, `governance/KLINIKOS_SUPREME_PRODUCT_BUSINESS_AND_AI_CONSTITUTION.md` is the parent product/business/AI constitution and orchestrates the newer OpenAI/Zumi, full-stack, design, Klinikos 10, Grid, clinical, EDU, Network and partner direction.
+
+Permanent convergence rules:
+
+- do not revive an older navy/teal/purple concept palette over the current Marble / Obsidian / Living Edge design authority;
+- do not replace the value-first `Zumi → identity → Grid → relationship → organization → Klinikos 10` journey with a conventional `landing page → role form → empty dashboard` flow;
+- Klinikos 10 is the premium organization-conversion path after network/context value, not a parallel product;
+- Current Visit remains the first provider-facing clinical acceptance standard and telemedicine remains an encounter modality inside the same clinical lifecycle;
+- OpenAI may be the primary Zumi intelligence platform while Klinikos policy, identity, authorization, domain services, clinical state and financial truth remain deterministic authority;
+- OpenAI Partner Network acceptance does not imply a specific tier, co-sell approval, specialization, credit, lead, public listing, or other entitlement unless current partner evidence proves it;
+- do not send PHI to OpenAI merely because a provider adapter or partner relationship exists; the exact BAA, eligible product/configuration, retention/security, minimum-necessary and approval gates remain independent.
 
 ## Environment truth law
 
