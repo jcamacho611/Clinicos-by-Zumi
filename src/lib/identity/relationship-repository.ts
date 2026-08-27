@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 
@@ -36,6 +37,36 @@ export type PersonContext = {
    */
   legacyMembershipOrganizationId: string;
   activeMemberships: OrganizationMembershipView[];
+};
+
+export class IdentityRelationshipConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IdentityRelationshipConflictError";
+  }
+}
+
+type RelationshipWriteClient = Pick<
+  Prisma.TransactionClient,
+  "user" | "person" | "organizationMembership"
+>;
+
+type EnsureOrganizationRelationshipInput = {
+  userId: string;
+  organizationId: string;
+  membershipType: string;
+  roleKey: string | null;
+  status: string;
+  sourceType: string;
+  sourceReference: string;
+};
+
+export type EnsuredOrganizationRelationship = {
+  personId: string;
+  relationshipId: string;
+  organizationId: string;
+  membershipType: string;
+  status: string;
 };
 
 export function buildEffectiveRelationshipWhere(at: Date) {
@@ -95,6 +126,182 @@ function toAssignmentView(row: AssignmentRow): LocationAssignmentView {
     status: row.status,
     effectiveFrom: row.effectiveFrom.toISOString(),
     effectiveTo: row.effectiveTo?.toISOString() ?? null,
+  };
+}
+
+function relationshipIdFor(input: Pick<EnsureOrganizationRelationshipInput, "userId" | "organizationId" | "membershipType">) {
+  const digest = createHash("sha256")
+    .update(`${input.userId}\u0000${input.organizationId}\u0000${input.membershipType}`)
+    .digest("hex")
+    .slice(0, 24);
+  return `orgrel_${digest}`;
+}
+
+function assertMembershipCompatibility(
+  relationship: {
+    personId: string;
+    organizationId: string;
+    legacyUserId: string | null;
+    membershipType: string;
+    roleKey: string | null;
+    status: string;
+    sourceType: string;
+    sourceReference: string | null;
+  },
+  expected: {
+    personId: string;
+    organizationId: string;
+    legacyUserId: string;
+    membershipType: string;
+    roleKey: string | null;
+    status: string;
+    sourceType: string;
+    sourceReference: string;
+  },
+) {
+  if (
+    relationship.personId !== expected.personId ||
+    relationship.organizationId !== expected.organizationId ||
+    relationship.legacyUserId !== expected.legacyUserId ||
+    relationship.membershipType !== expected.membershipType ||
+    relationship.roleKey !== expected.roleKey ||
+    relationship.status !== expected.status ||
+    relationship.sourceType !== expected.sourceType ||
+    relationship.sourceReference !== expected.sourceReference
+  ) {
+    throw new IdentityRelationshipConflictError(
+      "Universal identity relationship conflicts with the existing legacy-user mapping.",
+    );
+  }
+}
+
+/**
+ * Attach relationship context to the universal identity layer without changing the
+ * legacy User record or any authenticated session authority. Callers that are already
+ * inside a transaction should pass that transaction client so identity provenance and
+ * the domain write succeed or fail together.
+ */
+export async function ensureOrganizationRelationshipForLegacyUser(
+  input: EnsureOrganizationRelationshipInput,
+  client: RelationshipWriteClient = db,
+): Promise<EnsuredOrganizationRelationship> {
+  const legacyUser = await client.user.findUnique({
+    where: { id: input.userId },
+    select: {
+      id: true,
+      organizationId: true,
+      email: true,
+      name: true,
+      roleKey: true,
+      status: true,
+    },
+  });
+  if (!legacyUser) {
+    throw new IdentityRelationshipConflictError("Legacy user is unavailable for identity relationship attachment.");
+  }
+
+  const deterministicPersonId = `person_${legacyUser.id}`;
+  const [legacyMemberships, personCandidates] = await Promise.all([
+    client.organizationMembership.findMany({
+      where: { legacyUserId: legacyUser.id },
+      select: { personId: true },
+    }),
+    client.person.findMany({
+      where: {
+        OR: [
+          { id: deterministicPersonId },
+          { sourceType: "legacy_user", sourceReference: legacyUser.id },
+        ],
+      },
+      select: { id: true, sourceType: true, sourceReference: true },
+    }),
+  ]);
+
+  for (const person of personCandidates) {
+    if (
+      person.id === deterministicPersonId &&
+      (person.sourceType !== "legacy_user" || person.sourceReference !== legacyUser.id)
+    ) {
+      throw new IdentityRelationshipConflictError(
+        "Deterministic universal person id is already bound to incompatible identity provenance.",
+      );
+    }
+  }
+
+  const candidateIds = new Set<string>();
+  legacyMemberships.forEach(({ personId }) => candidateIds.add(personId));
+  personCandidates.forEach(({ id }) => candidateIds.add(id));
+
+  if (candidateIds.size > 1) {
+    throw new IdentityRelationshipConflictError(
+      "Legacy user resolves to more than one universal person. Human identity review is required.",
+    );
+  }
+
+  let personId = [...candidateIds][0] ?? deterministicPersonId;
+  if (candidateIds.size === 0) {
+    const created = await client.person.create({
+      data: {
+        id: deterministicPersonId,
+        displayName: legacyUser.name,
+        legalName: null,
+        primaryEmail: legacyUser.email,
+        status: legacyUser.status,
+        sourceType: "legacy_user",
+        sourceReference: legacyUser.id,
+      },
+      select: { id: true },
+    });
+    personId = created.id;
+  }
+
+  const baselineExpected = {
+    personId,
+    organizationId: legacyUser.organizationId,
+    legacyUserId: legacyUser.id,
+    membershipType: "organization_user",
+    roleKey: legacyUser.roleKey,
+    status: legacyUser.status,
+    sourceType: "legacy_user",
+    sourceReference: legacyUser.id,
+  };
+  const baseline = await client.organizationMembership.upsert({
+    where: { id: `orgmem_${legacyUser.id}` },
+    update: {},
+    create: {
+      id: `orgmem_${legacyUser.id}`,
+      ...baselineExpected,
+    },
+  });
+  assertMembershipCompatibility(baseline, baselineExpected);
+
+  const relationshipId = relationshipIdFor(input);
+  const targetExpected = {
+    personId,
+    organizationId: input.organizationId,
+    legacyUserId: legacyUser.id,
+    membershipType: input.membershipType,
+    roleKey: input.roleKey,
+    status: input.status,
+    sourceType: input.sourceType,
+    sourceReference: input.sourceReference,
+  };
+  const relationship = await client.organizationMembership.upsert({
+    where: { id: relationshipId },
+    update: {},
+    create: {
+      id: relationshipId,
+      ...targetExpected,
+    },
+  });
+  assertMembershipCompatibility(relationship, targetExpected);
+
+  return {
+    personId,
+    relationshipId,
+    organizationId: relationship.organizationId,
+    membershipType: relationship.membershipType,
+    status: relationship.status,
   };
 }
 
