@@ -121,7 +121,7 @@ Required conceptual fields:
 - `targetProviderId` when applicable
 - `claimedOrganizationName` for a new/unresolved organization presence
 - `claimedRoleKey` or relationship role label when relevant
-- `status`
+- `lifecycleStatus`
 - `verificationStatus`
 - `sourceType`
 - `sourceReference`
@@ -155,19 +155,25 @@ Initial target types:
 
 A target type is not a permission level.
 
-### 5.4 Claim status
+### 5.4 Lifecycle and verification state
 
-Recommended lifecycle:
+Do not encode “verified” in two competing state fields.
+
+`lifecycleStatus` describes whether this claim record is currently live:
+
+- `active`
+- `withdrawn`
+- `superseded`
+
+`verificationStatus` describes the bounded verification workflow:
 
 - `submitted`
 - `evidence_required`
 - `in_review`
 - `verified`
 - `rejected`
-- `withdrawn`
-- `superseded`
 
-Verification status may use the repository’s existing vocabulary where possible, but implementation must preserve the distinction between claim lifecycle and evidence/verification outcome.
+A withdrawn or superseded claim cannot advance verification. A rejected claim stays rejected unless a new/superseding claim is deliberately created under policy. `reviewedAt`, `reviewedBy`, and review/rejection detail record the verification action rather than creating a second claim lifecycle.
 
 ## 6. Organization claim flows
 
@@ -203,8 +209,8 @@ Rules:
 3. A resource may still require human review before publication/bookability.
 4. A presence must not automatically become a fully privileged Clinic OS tenant.
 5. If compatibility requires a backing `Organization` row because existing Grid resources are organization-scoped, that row is a network-presence compatibility container, not evidence of verified organizational authority.
-6. Any compatibility organization must carry an explicit clinic/type/status marker that prevents it from being mistaken for an onboarded operational clinic.
-7. The claimant’s current authenticated tenant must not switch merely because the presence was created.
+6. Any compatibility organization must carry an explicit Grid-presence classification. If a newly created identity needs that row as its legacy session anchor, the user remains a restricted Grid/contractor role. The presence row may be technically active for resource/session compatibility, but neither its existence nor active status means verified organization authority or Clinic OS onboarding.
+7. Existing authenticated users must not have their current tenant/session switched merely because they create a presence. For a brand-new identity, a compatibility presence may be the baseline organization required by the legacy auth schema, but protected owner/admin/clinical/financial capabilities remain denied until separately provisioned.
 8. Conversion from free presence to protected organization tenant is a separate governed action with explicit authority provisioning.
 
 ### 6.3 Existing user versus new user
@@ -221,7 +227,9 @@ New user:
 
 - may create one identity when persistence requires it;
 - strong password required at repository boundary;
-- universal `Person` and baseline relationship created transactionally;
+- may use an explicitly classified Grid presence as the legacy baseline session anchor only when current schema requires an organization row;
+- remains on a restricted Grid/contractor role, never implicit owner/admin authority;
+- universal `Person`, baseline relationship, and claim are created transactionally;
 - claim still begins unverified unless independently verified evidence exists.
 
 ## 7. Professional claim flow
@@ -257,6 +265,8 @@ Examples of acceptable evidence references may include:
 - provider credential evidence document IDs;
 - bounded manual-review source references.
 
+A domain/email challenge is evidence, not automatically proof of ownership or authority unless a future explicit policy declares it sufficient for a specific bounded verification question.
+
 Secrets, full credential numbers where unnecessary, raw uploaded document contents, passwords, tokens, and private evidence payloads must never be copied into audit metadata or continuation URLs.
 
 Evidence acceptance does not itself determine tenant authority.
@@ -273,6 +283,8 @@ Every claim must answer four questions independently:
 For organization claims, the first implementation should favor explicit human review over speculative automated ownership inference.
 
 For professional claims, use the existing credentialing transitions and primary-source verification fields.
+
+A claimant may never verify their own claim merely because they are the claimant. Organization-claim review must use an explicitly allowlisted reviewer policy resolved from current RBAC/system scope or a separately established authorized organization representative. The target organization relationship being claimed cannot itself bootstrap reviewer authority.
 
 Reviewer actions must be audited with actor, timestamp, claim ID, bounded outcome, and evidence reference. Audit logs must not contain evidence contents or secrets.
 
@@ -425,13 +437,13 @@ Minimum regression contracts:
 5. Existing organization claim creates pending claim/review state but no protected tenant authority.
 6. A claimant cannot read protected data from the target organization merely because the claim exists.
 7. Duplicate equivalent claim is deterministic/idempotent; conflicting claim state is surfaced for review.
-8. Verification transition is separately authorized and audited.
+8. Verification transition is separately authorized and audited, and claimant self-verification is rejected.
 
 ### New organization presence
 
 9. A new presence is explicitly unverified and cannot masquerade as a verified operational clinic.
 10. Existing authenticated user can create a presence without switching current tenant/session authority.
-11. New user still requires a strong password when a new identity must be created.
+11. New user still requires a strong password when a new identity must be created and receives only restricted Grid/contractor authority on any compatibility session anchor.
 12. Initial Grid resource/Need/Have state remains draft or human-reviewed according to existing policy.
 
 ### Professional claim
@@ -455,6 +467,8 @@ Do not rewrite historical users, providers, organizations, or memberships wholes
 Existing external Grid participant accounts remain valid compatibility records. New claim-aware paths should progressively stop creating privileged legacy tenants merely because a person asserted a relationship.
 
 If the current `GridResourceRecord.organizationId` requirement forces an `Organization` row for an unverified presence, create/reuse a clearly marked network-presence compatibility organization. Do not treat that row’s existence or `status=active` as verified organizational authority. If the current schema cannot express that safely, add the minimum explicit presence classification/status necessary rather than relying on convention alone.
+
+A newly created identity may use that compatibility organization as its legacy auth anchor only with the restricted Grid/contractor role. Existing authenticated identities keep their existing legacy organization/session anchor.
 
 No backfill may infer ownership or verification from existing email/name equality.
 
