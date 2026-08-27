@@ -22,17 +22,12 @@ describe("public Grid surfaces", () => {
   });
 
   it("declares the shared marketplace page shell a light surface", () => {
-    // /grid/browse and the listing detail page both render through this token.
     expect(read("src/lib/design/marketplace-system.ts")).toContain("grid-marble-surface");
   });
 
   it.each([...LIGHT_SURFACES, "src/lib/design/marketplace-system.ts"])(
     "does not pair %s with a background utility the dark layer will fight over",
     (file) => {
-      // `bg-[#f7f8fa]` and `bg-[#f7f3ef]` are both in the conversion layer's darken
-      // list. Setting one on the same element that carries `grid-marble-surface` is a
-      // specificity fight the light surface loses, and the page turns dark under text
-      // that stayed dark.
       const source = read(file);
       const marbleLines = source.split("\n").filter((line) => line.includes("grid-marble-surface"));
       for (const line of marbleLines) {
@@ -57,21 +52,22 @@ describe("public Grid surfaces", () => {
 
     expect(page).toContain("gridPublicEntryContext");
     expect(page).toContain("searchParams: Promise<");
-    expect(page).toContain("const entryContext = gridPublicEntryContext(from, intent)");
+    expect(page).toContain("const requestedIntent = first(params.intent)");
+    expect(page).toContain("gridPublicEntryContext(from, requestedIntent)");
+    expect(page).toContain("requestedIntent ?? entryContext?.intent");
+    expect(page).toContain("entryContext?.initialQuery");
     expect(page).toContain("entryContext?.title");
-    expect(page).toContain("entryContext?.body");
-    expect(page).toContain('initialIntent={entryContext?.intent ?? "all"}');
-    expect(page).toContain('initialQuery={entryContext?.initialQuery ?? ""}');
+    expect(page).toContain("initialIntent={activeIntent}");
+    expect(page).toContain("initialQuery={safeQuery}");
 
     expect(entry).toContain('sourceValue !== "public-zumi"');
     expect(entry).toContain('intent: "provider"');
     expect(entry).toContain('initialQuery: "I need a healthcare professional"');
     expect(entry).not.toContain("rawPrompt");
+    expect(page).not.toContain("rawPrompt");
   });
 
   it("renders every Grid tier from the canonical object rather than a hand-picked list", () => {
-    // Grid Pro+ existed in the commercial source and never reached the page, because the
-    // page listed tiers by name. Mapping the object means a new tier cannot be forgotten.
     const source = read("src/app/grid/pricing/page.tsx");
     expect(source).toContain("Object.values(GRID_MEMBERSHIP)");
     expect(Object.keys(GRID_MEMBERSHIP).length).toBeGreaterThanOrEqual(5);
