@@ -253,6 +253,8 @@ register cannot silently fall behind.
 | `KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md` | Product and website map |
 | `KLINIKOS_ORCHESTRATION_ENGINES.md` | Orchestration engines |
 | `KLINIKOS_ASSURANCE_AND_EXPERT_GRID_CANON.md` | Assurance and expert Grid (candidate) |
+| `KLINIKOS_EXPERIENCE_ENVELOPE_AND_ZUMI_DATA_GOVERNANCE.md` | Active Experience Envelope, screen truth, Zumi modes, and AI data-governance law |
+| `SCREEN_EXPERIENCE_RELEASE_GATE.md` | Mechanical release gate for exactly one Screen Experience Contract per user-facing page |
 | `DESIGN_SYSTEM.md` | Design system |
 | `FRONTEND_EXPERIENCE_CANON.md` | Frontend experience law |
 | `KLINIKOS_DESIGN_AND_WIRING_CANON.md` | Frontend acceptance law |
@@ -303,6 +305,7 @@ wins and the index is a defect to be corrected.
 | `COMPETITIVE_INTELLIGENCE_2026-08-20.md` | 2026-08-20 |
 | `KLINIKOS_ICP_PRICING_EVIDENCE_2026-08-20.md` | 2026-08-20 |
 | `PUBLIC_ZUMI_IMPLEMENTATION_VERIFICATION.md` | dated verification run |
+| `ROUTE_REGISTRY_STATUS.md` | generated route-contract status snapshot from 2026-08-27 basis SHA |
 | `KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md` (§ status sections only) | 2026-08-20 |
 
 ### Reference
