@@ -73,7 +73,7 @@ describe("Klinikos legal defense stack", () => {
     expect(agreement).toContain('GLOBAL_TERMS_EFFECTIVE_DATE = "2026-08-27"');
     expect(agreement).toContain('"breach_consequences"');
     expect(agreement).toContain("Severe Protected-Asset Breach");
-    expect(agreement).toContain("no double recovery");
+    expect(agreement).toContain("NO_DOUBLE_RECOVERY_RULE");
     expect(agreement).toContain("Anti-Circumvention");
   });
 
