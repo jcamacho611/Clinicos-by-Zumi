@@ -5,6 +5,8 @@ import { GridNeedComposer } from "@/components/grid/grid-need-composer";
 import { requireClinicSession } from "@/lib/auth/session";
 import { draftForClinicGridSignal } from "@/lib/ecosystem/clinic-grid-bridge";
 import { draftForEduGridSignal } from "@/lib/ecosystem/edu-grid-bridge";
+import type { SavedGridDemand } from "@/lib/grid/transaction-flow";
+import { getMarketplaceListing } from "@/lib/repositories/grid-marketplace-repository";
 
 export const metadata: Metadata = {
   title: "Post a Grid Need — Klinikos",
@@ -19,24 +21,61 @@ const clinicSignals = new Set(["coverage_gap", "referral_leak"] as const);
 const eduSignals = new Set(["placement_ready"] as const);
 type ClinicSignal = "coverage_gap" | "referral_leak";
 type EduSignal = "placement_ready";
+type PublicListing = NonNullable<Awaited<ReturnType<typeof getMarketplaceListing>>>;
 
-export default async function GridNewNeedPage({ searchParams }: { searchParams: Promise<{ kind?: string; from?: string }> }) {
+function draftForPublicListing(listing: PublicListing): SavedGridDemand {
+  const oneState = listing.states.length === 1 && /^[A-Z]{2}$/.test(listing.states[0] ?? "")
+    ? listing.states[0]
+    : null;
+  const oneSetting = listing.settings.length === 1 ? listing.settings[0] : null;
+  const description = `Request ${listing.serviceName}. ${listing.description}`.slice(0, 2_000);
+
+  return {
+    kind: "provider",
+    title: `Request ${listing.serviceName}`.slice(0, 160),
+    description,
+    category: listing.category,
+    serviceName: listing.serviceName,
+    requestedStartAt: null,
+    requestedEndAt: null,
+    locationType: oneSetting,
+    city: null,
+    state: oneState,
+    latitude: null,
+    longitude: null,
+    radiusMiles: listing.provider.travelRadiusMiles > 0 ? listing.provider.travelRadiusMiles : null,
+    maxPriceCents: listing.priceHighCents ?? listing.priceLowCents ?? null,
+    quantity: 1,
+    requiresClinicalEligibility: true,
+    requirements: [],
+    status: "open",
+    visibility: "matched_only",
+  };
+}
+
+export default async function GridNewNeedPage({ searchParams }: { searchParams: Promise<{ kind?: string; from?: string; listingId?: string }> }) {
   const session = await requireClinicSession();
-  const { kind, from } = await searchParams;
+  const { kind, from, listingId } = await searchParams;
   const initialKind = kind && validKinds.has(kind) ? kind as Kind : "service";
 
-  // `from` names a Clinic OS signal, not the demand itself. The draft is rebuilt here
-  // from live records, so a link cannot carry a forged or stale need into the form.
-  // If the gap closed since Home rendered, this returns null and the form opens empty
-  // rather than prefilled for work nobody needs any more.
+  // `from` names a governed internal signal, not the demand itself. Rebuild it from
+  // live records so a URL cannot carry forged or stale work into the form.
   const clinicSignal = from && clinicSignals.has(from as ClinicSignal) ? from as ClinicSignal : null;
   const eduSignal = from && eduSignals.has(from as EduSignal) ? from as EduSignal : null;
   const bridged = clinicSignal ?? eduSignal;
-  const initialDraft = clinicSignal
+  const bridgedDraft = clinicSignal
     ? await draftForClinicGridSignal(session, clinicSignal)
     : eduSignal
       ? await draftForEduGridSignal(session, eduSignal)
       : null;
+
+  // A public listing id is only a locator. The server re-reads the current published
+  // listing after authentication, so no serialized marketplace object or authorization
+  // state is trusted from the URL.
+  const listing = !bridged && listingId ? await getMarketplaceListing(listingId) : null;
+  const listingDraft = listing ? draftForPublicListing(listing) : null;
+  const initialDraft = bridgedDraft ?? listingDraft;
+  const initialDraftSource = listingDraft ? "public_listing" as const : "workspace_context" as const;
 
   return <main className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
     <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b13] px-5 py-8 sm:px-8">
@@ -48,7 +87,8 @@ export default async function GridNewNeedPage({ searchParams }: { searchParams: 
     </section>
 
     <div className="mt-5 rounded-[1.35rem] border border-amber-200/10 bg-amber-200/[.045] px-4 py-3 text-[12px] leading-5 text-amber-100/70"><ShieldCheck className="mr-2 inline size-4" /><strong className="font-extrabold text-amber-100">Marketplace boundary:</strong> describe resource requirements only. Do not place patient names, diagnoses, records, or other PHI into a general Grid need.</div>
-    {bridged && !initialDraft ? <div className="mt-5 rounded-[1.35rem] border border-white/10 bg-white/[.04] px-4 py-3 text-[12px] leading-5 text-white/60">{eduSignal ? "That competency is no longer recorded as demonstrated, so this form starts empty. You can still create the need by hand." : "That gap is no longer open on your schedule, so this form starts empty. You can still create the need by hand."}</div> : null}
-    <div className="mt-6"><GridNeedComposer initialDraft={initialDraft} initialKind={initialKind} /></div>
+    {bridged && !bridgedDraft ? <div className="mt-5 rounded-[1.35rem] border border-white/10 bg-white/[.04] px-4 py-3 text-[12px] leading-5 text-white/60">{eduSignal ? "That competency is no longer recorded as demonstrated, so this form starts empty. You can still create the need by hand." : "That gap is no longer open on your schedule, so this form starts empty. You can still create the need by hand."}</div> : null}
+    {!bridged && listingId && !listing ? <div className="mt-5 rounded-[1.35rem] border border-white/10 bg-white/[.04] px-4 py-3 text-[12px] leading-5 text-white/60">That public listing is no longer available. This form starts as a normal provider need so you can search current Grid supply instead of relying on stale listing data.</div> : null}
+    <div className="mt-6"><GridNeedComposer initialDraft={initialDraft} initialDraftSource={initialDraftSource} initialKind={initialKind} /></div>
   </main>;
 }
