@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
-import { EcosystemHierarchy } from "@/components/marketing/ecosystem-hierarchy";
-import { ProductEvidenceSection } from "@/components/marketing/product-evidence-section";
-import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
+import { PublicPlatformShell } from "@/components/public/public-platform-shell";
 
 export const metadata: Metadata = {
   title: KLINIKOS_META.title,
@@ -41,10 +39,9 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
-      <PublicLivingGateway />
-      <ProductEvidenceSection />
-      <EcosystemHierarchy />
-      <PublicTrustFooter />
+      <PublicPlatformShell>
+        <PublicLivingGateway />
+      </PublicPlatformShell>
     </>
   );
 }
