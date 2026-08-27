@@ -1,277 +1,380 @@
 # KLINIKOS CLAUDE OPERATING CONTRACT
 
-Version: `2026-08-27.1`
+Version: `2026-08-27.2`
 
-This is the bootstrap contract for Claude Code and other implementation agents working in `jcamacho611/Clinicos-by-Zumi`.
+This is the execution bootstrap for Claude Code working in `jcamacho611/Clinicos-by-Zumi`.
 
-## Start here
+Claude works on one Klinikos. Claude does not own a separate design canon or a separate product architecture.
 
-Klinikos is a governed healthcare operating ecosystem connecting care, clinic operations, workforce, education, capacity, transactions, financial truth, relationships, memory, and intelligence through one persistent identity.
+## 1. Required reading and live-state check
 
-Core product laws:
+Before material work:
 
-> **There is one Klinikos.**
+1. inspect current `main`, current branch, recent commits, relevant open PRs, and exact-head verification;
+2. read `docs/KLINIKOS_MASTER_CANON.md`;
+3. read `docs/KLINIKOS_AUTHORITY_MAP.yaml`;
+4. read `docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md`;
+5. read `AGENTS.md`;
+6. inspect only the specialist documents required for the assigned domain;
+7. inspect active overlapping work before editing;
+8. verify runtime/external state before making present-tense claims.
+
+Do not begin from an old prompt, old Source of Truth, historical PR, prototype, or stale branch as if it defines current Klinikos.
+
+## 2. Claude's default lane
+
+Claude is the default lead for:
+
+- Black Label experience realization;
+- visual and interaction architecture;
+- first-viewport product usefulness;
+- route composition;
+- Marble / Obsidian / System themes;
+- spatial interfaces;
+- Living Home experience;
+- Grid map/list/inspector composition when assigned;
+- EDU learner/instructor/institution experiences when assigned;
+- Clinic/clinical interaction surfaces when assigned;
+- patient hospitality surfaces;
+- billing presentation and exception UX when assigned;
+- accessibility, keyboard, focus, touch, mobile/tablet, reduced motion, and 200% zoom;
+- browser verification;
+- measured frontend defect diagnosis;
+- surgical refactors that improve the active product without replacing authoritative backend domains.
+
+Claude may implement server support needed by an assigned experience, but it must reuse current domain authority. Do not create parallel backend truth for frontend convenience.
+
+## 3. Protected app order
+
+The current literal protected application order is:
+
+`PUBLIC DISCOVERY / SEARCH / REFERRAL / INVITATION`
+→ `ENTER KLINIKOS`
+→ `PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK`
+→ `SIGN IN OR CREATE ONE KLINIKOS IDENTITY`
+→ `BIND AGREEMENT ACCEPTANCE TO IDENTITY / SESSION`
+→ `RESTORE SAFE ENTRY CONTEXT`
+→ `AUTHENTICATED ZUMI`
+→ `INTENT / CONTEXT DISCOVERY`
+→ `CLAIMS / RELATIONSHIPS AS NEEDED`
+→ `PATH-AWARE VERIFICATION`
+→ `ACTIVE EXPERIENCE ENVELOPE`
+→ `EXPERIENCE ENGINE`
+→ `PURPOSE-BUILT EXPERIENCE PROJECTION`
+→ `REAL ACTION`
+→ `FULFILLMENT / OUTCOME / EVIDENCE`
+→ `MEMORY / NEXT ACTION`
+→ `RETURN / CONTEXT SWITCH / EXPANSION`.
+
+Do not restore a Zumi-before-auth protected app, value-preview-before-account protected flow, permanent role picker, or disconnected persona account model.
+
+Public discovery can remain public where intentionally approved. Full personalized protected operation begins after the gate and identity step.
+
+## 4. B + C hybrid experience architecture
+
+Klinikos combines:
+
+- purpose-built experience families; and
+- one server-resolved Experience Engine.
+
+A patient should feel the application was designed for patients.
+
+An MA should feel it was designed for MA work.
+
+An RN should feel it was designed for nursing work.
+
+A provider should feel Current Visit was designed for clinical practice.
+
+An owner should feel Clinic OS was designed for operating a clinic.
+
+A learner should feel EDU was designed for learning and progression.
+
+A Grid participant should feel Grid was designed as a live spatial healthcare exchange.
+
+But these are all projections from one identity, one relationship graph, one authority fabric, and one Klinikos substrate.
+
+Experience families are not separate products, accounts, or permanent persona assignments.
+
+## 5. Screen Contract acceptance
+
+For every user-facing route/workspace Claude touches, explicitly determine:
+
+- active audience/context;
+- purpose;
+- dominant object;
+- dominant action;
+- visible data;
+- prohibited/hidden data;
+- authority/eligibility conditions;
+- Zumi behavior and limits;
+- contemplative vs operative density;
+- navigation behavior;
+- entitlement/commercial state;
+- desktop/tablet/mobile composition;
+- loading/empty/partial/error/blocked/unauthorized/pending/no-result states;
+- audit/evidence consequences;
+- accessibility behavior.
+
+The first viewport must let the user begin accomplishing the reason they entered the surface.
+
+A page that primarily explains the subsystem before letting the user use it is wrong unless its explicit purpose is documentation or public explanation.
+
+## 6. Black Label design language
+
+Core laws:
 
 > **Simple above. Powerful below.**
 
 > **The complexity belongs to Klinikos, not to the person using Klinikos.**
 
-> **What needs to happen?**
+### Obsidian
 
-## Required reading order
+Near-black, black-cherry, oxblood-shadow depth, warm ivory, restrained ember/wine. Cinematic, precise, expensive, quiet.
 
-Before material work:
+### Marble
 
-1. verify current repository/runtime truth, current `main`, relevant open PRs, exact-head verification, and deployment/external evidence where material;
-2. read `docs/KLINIKOS_MASTER_CANON.md`;
-3. read `docs/KLINIKOS_AUTHORITY_MAP.yaml`;
-4. read only the specialist documents required for the task;
-5. reverify status before present-tense claims.
+Warm ivory, bone, limestone, graphite, restrained oxblood/dusty rose. Editorial, medical, architectural, calm.
 
-Do not begin with an old master specification, old ecosystem canon, old Source of Truth hierarchy, historical PR body, or old prototype as though it defines current Klinikos.
+### System
 
-## One-canon doctrine
+Follow OS preference without a visible flash.
 
-`docs/KLINIKOS_MASTER_CANON.md` is the sole active product/architecture/business/experience authority.
+### Living Edge
 
-Current code/schema/migrations/tests/exact-head verification/runtime evidence determine what exists today.
+Use rose/ember attention sparingly for genuinely consequential unresolved work. Never make every surface glow.
 
-Specialist documents are subordinate elaboration.
+### Domain personality
 
-History is provenance only.
+- Living Home: cinematic and conversational.
+- Grid: spatial, map-led, alive, networked.
+- EDU: editorial, immersive, academy/workforce.
+- Current Visit: surgical, quiet, clinically focused.
+- Billing: structured, numeric, financially precise.
+- Patient: hospitality, warm, reassuring.
+- Enterprise/network: institutional command.
 
-Do not create another `SUPREME`, `FINAL`, `MASTER`, `SOURCE_OF_TRUTH`, or equivalent parallel current architecture. Accepted product discoveries merge forward into the Master Canon and must identify implementation consequences.
+No generic hospital blue as brand identity. No generic AI purple. No card-wall disease. No text behind imagery. No decorative motion that competes with work.
 
-## Literal protected-entry order
+## 7. Spatial design law
 
-Do not substitute an abstract growth/value lifecycle for the literal protected screen/event sequence.
+Spatial does not mean 3D theater.
 
-Current order:
+It means the user builds stable mental geography around:
 
-`PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK`
-→ `ENTER KLINIKOS`
-→ `LIVING HOME - WHAT NEEDS TO HAPPEN?`
-→ `ZUMI CONVERSATION`
-→ `INTENT - I AM / I NEED / I HAVE / I WANT TO DO`
-→ `SAFE VALUE PREVIEW`
-→ `ACCOUNT VALUE TRIGGER`
-→ `ONE UNIVERSAL KLINIKOS IDENTITY`
-→ `PRESERVE SAFE ORIGINAL INTENT`
-→ `CLAIMS`
-→ `PATH-AWARE VERIFICATION`
-→ `AUTHORITY`
-→ `ACTIVE EXPERIENCE ENVELOPE`
-→ `ROLE / RELATIONSHIP / OBJECT-SPECIFIC EXPERIENCE`
-→ `REAL ACTION`
-→ `FULFILLMENT / EVIDENCE`
-→ `MEMORY / NEXT ACTION`
-→ `RETURN / EXPANSION`.
+- context;
+- active object;
+- relationships;
+- state;
+- action;
+- time;
+- location;
+- attention.
 
-The old signup-first identity screen followed by user-selected AI-provider connection is superseded.
+Use persistent work zones when they help: stage, map, results, inspector, timeline, handoff, exception rail, composer, action bar.
 
-## Prototype-to-production rule
+Do not force every workflow into separate pages when a spatial reconfiguration preserves context better.
 
-Every material prototype sentence is a compressed architecture claim.
+## 8. Grid flagship experience
 
-Ask:
+Grid is the flagship spatial exchange.
 
-> **What real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure would make this statement true?**
+Do not render it as a category-card brochure or job board.
 
-Do not implement screens that imply student-to-worker progression, Grid eligibility, offers, reservations, obligations, settlement, experience, reputation, clinic growth, or compounding records without building or mapping the real governed substrate beneath them.
+Entry should resolve the person's demand/supply intent around:
 
-## Universal identity and authority
+- `I NEED`
+- `I HAVE`
 
-Permanent law:
+Then recompose around real data:
 
-`CLAIM != VERIFIED FACT != AUTHORITY`.
+- map;
+- synchronized list;
+- inspector;
+- search / filters;
+- Zumi/composer;
+- saved intent;
+- eligibility state;
+- offer/request state;
+- transaction state where relevant.
 
-One person may hold multiple simultaneous/evolving relationships: patient, student, professional, employee, contractor, Grid participant, provider, educator, preceptor, owner, employer, or organization representative.
+No fake supply, fake pins, fake ratings, fake distance, fake availability, or fake liquidity.
 
-Authority may depend on identity assurance, organization, location, relationship, role, profession, license, credential, privilege, assignment, purpose, consent, patient/case/resource scope, supervision/delegation, effective dates, and policy.
+Empty Grid states must be useful and truthful: keep need active, expand radius, alter time/requirements, or ask Zumi.
 
-Context switching must recompute permissions, data scope, tools, Zumi context, and audit.
+## 9. EDU experience
 
-## Active Experience Envelope
+EDU is not a long marketing page or generic LMS.
 
-Authenticated experience is server-composed from the minimum necessary current context. It is not a client-owned persona flag.
+Entry should resolve:
 
-Keep separate:
+> **What are you here to become, teach, or operate?**
 
-`EXISTS != DISCOVERABLE != PROMOTED != ELIGIBLE != ENTITLED != AUTHORIZED != VISIBLE != ACTIONABLE NOW`.
+Learner projection:
 
-## Zumi and OpenAI
+`PATH → CURRENT WORK → SIMULATION → EVIDENCE → FEEDBACK → COMPETENCY → NEXT REQUIREMENT → GRID READINESS / OPPORTUNITY`.
 
-Zumi is Klinikos Intelligence and orchestration, never authority.
+Instructor/preceptor projection:
 
-OpenAI is the primary production intelligence platform direction for Zumi under `KLINIKOS-OPENAI-001`. Preserve provider abstraction and existing governed adapters.
+`SESSION / PLACEMENT → ROSTER → ACTIVITY → EXCEPTIONS → SUBMISSIONS → RUBRIC → FEEDBACK → COMPLETION DECISION`.
 
-Do not create a parallel Zumi service or second OpenAI client merely because a prototype is easier to build separately.
+Institution projection:
 
-Do not claim unverified Partner Network tier, specialization, co-sell status, referral benefit, credits, BAA, enterprise pricing, FDE support, or other entitlement without direct evidence.
+`PROGRAMS → COHORTS → INSTRUCTORS → ATTENDANCE → EVIDENCE → OUTCOMES → REPORTING → WORKFORCE CONNECTION`.
 
-Canonical execution:
+Virtual Clinic Lab should visually and behaviorally mirror the same healthcare workflow logic used by real Klinikos, with synthetic data and appropriate simulated role limits.
 
-`USER INTENT → PRIVACY / SECURITY GATE → ACTIVE EXPERIENCE ENVELOPE → AUTHORIZED CONTEXT → DETERMINISTIC POLICY → ZUMI / OPENAI WHEN REASONING ADDS VALUE → TOOL/ACTION PROPOSAL → AUTHORIZATION / HUMAN CONFIRMATION WHEN REQUIRED → DETERMINISTIC BACKEND ACTION → VERIFIED RESULT → AUDIT / PROVENANCE → INTERFACE`.
+## 10. Clinic owner / Clinic OS experience
 
-The model never receives unrestricted database authority.
+Do not open Clinics with a pricing brochure.
 
-## Grid
+The owner/operator experience begins by identifying operational pressure and then progressively builds a real Operating Map.
 
-Grid is universal healthcare resource/capacity/opportunity/transaction infrastructure, not a nurse marketplace.
+Examples of relevant pressure:
 
-Universal expression:
+- scheduling;
+- patient intake;
+- staffing;
+- documentation;
+- EHR friction;
+- follow-up;
+- referrals;
+- billing/revenue leakage;
+- multi-location coordination;
+- unused capacity.
 
-- `I NEED` = demand;
-- `I HAVE` = resource/supply/capacity.
+Zumi can help structure the problem. Real domain data and policy must underlie any operational claim.
 
-Hard eligibility precedes ranking. AI can interpret/explain, not override policy.
+Paid conversion should follow experienced value and a real entitlement boundary, not random upgrade banners.
 
-Canonical flow:
-
-`NEED / HAVE → RESOURCE / DEMAND → REQUIREMENTS → ELIGIBILITY → MATCH → OFFER → AGREEMENT → RESERVATION / ASSIGNMENT → FINANCIAL OBLIGATION → FULFILLMENT → EVIDENCE → REPUTATION / OUTCOME`.
-
-## EDU and workforce
-
-Klinikos EDU is education, simulation, competency evidence, institutional delivery, career-readiness, and workforce infrastructure.
-
-Compounding path:
-
-`EDU → LEARNING → APPLIED PRACTICE → COMPETENCY EVIDENCE → HUMAN REVIEW → GRID DISCOVERY / ELIGIBILITY → ORGANIZATION / OPPORTUNITY → WORK → EXPERIENCE EVIDENCE → REPUTATION → UPSKILLING → MORE OPPORTUNITY`.
-
-Training completion never automatically becomes licensure or professional authority.
-
-## Clinical convergence
+## 11. Clinical experience and Sunday acceptance
 
 Current Visit is the provider-facing convergence surface.
 
-`PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY → CLINICAL → ASSESSMENT / PLAN → ORDERS / RESULTS → DOCUMENTATION / CODING → REVIEW / SIGN / LOCK → FOLLOW-UP`.
+Preserve:
 
-AI may summarize deterministic clinical change but may not invent findings, diagnoses, laterality, orders, medical necessity, signature, claim submission, or close-visit authority.
+`SCHEDULE → INTAKE → STAFF HANDOFF → CURRENT VISIT → PATIENT SNAPSHOT → WHAT CHANGED (INITIAL / PREVIOUS / TODAY) → TODAY → CLINICAL EXAM / BODY MAP → ASSESSMENT & PLAN → ORDERS & RESULTS → TELEMEDICINE AS SAME ENCOUNTER → AI DOCUMENTATION DRAFT → CPT / ICD / MODIFIER SUPPORT → BILLING READY → REVIEW / SIGN / LOCK → CLOSE → FOLLOW-UP`.
 
-Telehealth is an encounter modality, not a second chart.
+Do not re-create a tab forest.
 
-## Intake and consent
+MA, LPN, RN, provider, front desk, biller/coder, owner, and patient experiences differ because their work differs. Authority still comes from backend policy, not UI labels.
 
-Intake/Consent is first-party Klinikos scope.
+Clinical work should remain possible if Zumi is unavailable.
 
-Klinikos owns workflow, form/questionnaire engine, conditional logic, completion/readiness, patient completion, document/ID upload, e-sign capture, consent versions, provenance, reminders, review queues, triggers, audit, and configurable organization/location/specialty/service/case behavior.
+## 12. Patient experience
 
-Consent is permission + version + purpose, not merely a signed PDF.
+Patient surfaces should feel like high-end healthcare hospitality, not Clinic OS with buttons removed.
 
-## Billing / Financial OS / RCM
+Primary orientation:
 
-Klinikos owns clinical-to-financial workflow truth while integrating external regulated rails.
+> **What's next?**
 
-Canonical revenue path:
+Use only patient-relevant objects such as appointments, forms, intake, consent, payments, messages, released results, referrals, instructions, and follow-up.
 
-`CARE → DOCUMENTATION → EVIDENCE → CODING → CHARGE → BILLING READINESS → CLAIM PREPARATION → EXTERNAL RAIL → ACCEPTANCE / REJECTION → ADJUDICATION → REMITTANCE → PAYMENT → RECONCILIATION → REVENUE INTEGRITY`.
+Never expose internal clinic operational complexity or unsupported clinical interpretations.
 
-Keep financial concepts distinct.
+## 13. Billing experience
 
-`REDIRECT != PAYMENT`.
+Billing should orient around:
 
-Internal obligation does not prove external settlement.
+> **Where is revenue stuck?**
 
-External rails may include 270/271, 837, 276/277, 835, payer/clearinghouse, lab/radiology, pharmacy/eRx, payments, and credential sources. Adapter readiness never equals production verification.
+Use the actual revenue lifecycle to shape the interface rather than KPI-card theater.
 
-## Security and confidentiality
+Allow users to understand the exception and move to the governing object/workflow without losing context.
 
-Permanent boundary:
+## 14. Zumi UX
 
-`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY DTO → BROWSER`.
+Zumi is a semantic navigation and work-assistance layer, not a floating gimmick.
 
-Keep server-confidential by default:
+Zumi should remain available appropriately, understand the active object/context, and let users speak in ordinary language.
 
-- credentials/secrets;
-- hidden Zumi prompts/orchestration;
-- Grid ranking/matching/anti-gaming internals;
-- trust/risk/fraud heuristics;
-- private pricing/margin logic;
-- unreleased strategy/roadmap;
-- privileged security detail;
+Support misspellings, shorthand, abbreviations, incomplete thoughts, and voice transcription mistakes.
+
+Do not put proprietary reasoning or hidden policy into browser-visible state.
+
+Do not let AI phrasing imply authority the backend has not granted.
+
+## 15. Prototype use
+
+A prototype is a compressed design/architecture requirement.
+
+Do not copy prototype HTML/runtime, inline state framework, or old route tree wholesale.
+
+Ask what real system underneath would make the visible claim true. Reuse existing authority, domain stores, events, evidence, payments, and relationships.
+
+## 16. Browser confidentiality
+
+Assume everything delivered to the browser is inspectable.
+
+Do not move server-confidential:
+
+- Zumi hidden prompts/orchestration;
+- Grid ranking/matching/anti-gaming logic;
+- trust/risk/fraud;
+- private pricing/margins;
+- unreleased roadmap;
+- secrets;
 - unnecessary PHI/PII;
-- private tenant state.
+- raw domain records;
+- security internals
 
-Frontend authorization is UX only. Server-side authority is mandatory.
+into client code or presentation props.
 
-## Protected access and legal-defense product requirement
+Frontend authorization is UX. Server authorization is authority.
 
-First protected interaction uses the combined protected-access Terms + Confidentiality/IP/Trade-Secret/Restricted-Use package with affirmative, versioned server-side execution evidence.
+## 17. Accessibility and QA
 
-Draft:
+For user-facing work, verify as applicable:
 
-`docs/legal/KLINIKOS_PROTECTED_ACCESS_TERMS_CONFIDENTIALITY_AND_IP_DRAFT.md`.
+- desktop;
+- tablet;
+- intentional mobile;
+- Marble;
+- Obsidian;
+- System;
+- no theme flash;
+- keyboard completion;
+- visible focus;
+- screen-reader semantics;
+- 44px target where appropriate;
+- reduced motion;
+- 200% zoom;
+- contrast;
+- loading/empty/partial/error/blocked/unauthorized/pending/no-result states;
+- no overlap, clipping, text-behind-image, or horizontal overflow;
+- no dead primary controls;
+- real data and authorization state.
 
-Legal drafts remain counsel-gated. Strong language, clickwrap, or repository inclusion does not guarantee enforceability.
+Browser screenshots should prove the candidate branch, not a different production build.
 
-Do not activate arbitrary punitive liquidated damages. Counsel must approve enforceability-sensitive liability, indemnity, fee-shifting, anti-circumvention, forum, arbitration, consumer/business, worker/contractor, and healthcare terms.
+## 18. Concurrency and handoff
 
-## Confidential outbound
+Before changing shared frontend or route files, inspect active PR ownership.
 
-Never automatically send confidential decks, proprietary architecture, source, sensitive roadmaps, non-public financial details, labs/clinical documents, PHI, patient lists, credentials/secrets, or protected attachments without required classification, intended-recipient validation, minimum-necessary review, and governing human/policy approval.
+Do not overwrite Codex domain work, another Claude branch, or active schema/authority changes.
 
-Keep execution states honest:
+When Claude finishes a material tranche, hand off using the mandatory format in `docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md`.
 
-`PREPARED != PROVIDER ACCEPTED != DELIVERED != RESPONSE != APPLICATION SUBMITTED != AWARD / CONTRACT != CASH RECEIVED`.
+Include exact base/head SHAs, PR, files, what is actually built, what remains, tests, browser/mobile/accessibility evidence, authority boundaries, overlap, and the next dependency-safe action.
 
-## Product wiring
-
-A page, route, button, or AI answer is not proof of a completed feature.
-
-Required consequential chain:
-
-`VISIBLE SURFACE → USER ACTION → IDENTITY / CONTEXT → CLAIM / REQUIREMENT RESOLUTION → AUTHORIZATION / ELIGIBILITY → ENGINE(S) → AUTHORITATIVE DATA / WORKFLOW → PERSISTENCE / EVENT → EXTERNAL ADAPTER IF REQUIRED → RECONCILIATION → TRUTHFUL RESULT → AUDIT / FINANCIAL CONSEQUENCE → NEXT ACTION`.
-
-Never fake payment, message delivery, verification, claim acceptance, payout, external result, Grid inventory, distance, availability, or completion.
-
-## Truth classes
-
-Always distinguish:
-
-- `CURRENT FACT`: verified/observed current evidence;
-- `PROPOSED`: strategy/architecture/pricing/relationship not yet enacted;
-- `EXECUTED`: actually implemented, signed, activated, connected, paid, filed, deployed, or legally effective.
-
-Never turn a recommendation or plan into reality by wording alone.
-
-## Status freshness
-
-`FEATURE_STATUS.md`, `EXTERNAL_DEPENDENCY_MATRIX.md`, `PRODUCTION_ENVIRONMENT_TRUTH.md`, route registries, and verification documents are evidence snapshots. Reverify before current claims.
-
-Use statuses such as VERIFIED LIVE, BUILT, PARTIALLY BUILT, MANUAL FALLBACK, ADAPTER READY, PENDING CONNECTION, BLOCKED, NOT BUILT, or NOT BUILT BY DESIGN.
-
-## Company value and commercialization
-
-Early clinic path:
-
-`TARGET CLINIC → EXECUTIVE CONVERSATION → EXPENSIVE WORKFLOW → PAID ASSESSMENT / PROOF → MEASURED IMPROVEMENT → FOUNDING DEPLOYMENT → RECURRING PLATFORM → CASE STUDY / REFERRAL → EXPANSION`.
-
-Land without forced displacement. Own useful workflow and experience first. Replace infrastructure only after Klinikos earns the operational, safety, migration, reliability, and economic case.
-
-Company value loop:
-
-`DISCOVER → SELL → CONTRACT → COLLECT → IMPLEMENT → ACTIVATE → FIRST VALUE → REPEATED VALUE → RETAIN → EXPAND → GRID / NETWORK → COMPOUND`.
-
-Company stages:
-
-`TRUTH FOUNDATION → CASH PROOF → REPEATABLE VALUE → NETWORK PROOF → ENTERPRISE PROOF → PLATFORM SCALE`.
-
-TAM is not traction. Pipeline is not revenue. Proposal value is not cash. Listings are not Grid liquidity. Signups are not network effects. Sandbox adapters are not production integrations. Enterprise branding is not enterprise readiness.
-
-## Default implementation completion
-
-When asked to build, continue, fix, implement, or finish, preserve current architecture and work toward merge-ready evidence when access permits.
+## 19. Merge standard
 
 Use:
 
 `FETCH → COMPARE → INSPECT → PRESERVE → RE-ANCHOR → TEST → REVIEW → MERGE`.
 
-Do not mass-merge stale branches or overwrite concurrent work.
+Do not call a visual route complete without relevant browser evidence.
 
-Before merge, run applicable schema, migration, type, lint, test, security, journey, build/start, browser/mobile/accessibility, and exact-head review gates. Never replace an external blocker with fake success.
+Do not call code deployed because it merged.
 
-## Specialist docs
+Do not call a vendor integrated because an adapter exists.
 
-After reading the Master Canon, use existing clinical, Grid, EDU, Zumi, Financial OS, security, design, pricing, production, external-dependency, company-control, and verification docs as subordinate implementation detail.
+Do not weaken tests merely to make a branch green.
 
-If specialist product direction conflicts with the Master Canon, the Master Canon wins. If a status snapshot conflicts with current verified implementation, current verified implementation wins.
+## 20. Closing instruction
+
+Claude's job is to make Klinikos feel extraordinarily designed without making the architecture less truthful.
+
+The interface should make healthcare complexity feel obvious, calm, spatial, and purposeful.
+
+Claude builds the experience of one Klinikos. The Master Canon and deterministic domains remain the authority.
