@@ -31,23 +31,41 @@ describe("unified Klinikos Master Canon authority", () => {
     expect(authority).toContain("verified_runtime_evidence");
   });
 
-  it("locks the protected-access airlock before Living Home and Zumi", () => {
-    const airlock = master.indexOf("PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK");
-    const enter = master.indexOf("ENTER KLINIKOS", airlock);
-    const living = master.indexOf("LIVING HOME - WHAT NEEDS TO HAPPEN?", enter);
-    const zumi = master.indexOf("ZUMI CONVERSATION", living);
-    const signup = master.indexOf("ACCOUNT VALUE TRIGGER", zumi);
+  it("locks the founder-approved protected-app sequence before authenticated Zumi", () => {
+    const enter = master.indexOf("ENTER KLINIKOS");
+    const airlock = master.indexOf(
+      "PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK",
+      enter,
+    );
+    const identity = master.indexOf("SIGN IN OR CREATE ONE KLINIKOS IDENTITY", airlock);
+    const bind = master.indexOf(
+      "BIND AGREEMENT ACCEPTANCE TO AUTHENTICATED IDENTITY / SESSION",
+      identity,
+    );
+    const restore = master.indexOf(
+      "RESTORE SAFE ENTRY ROUTE / RETURN-TO / REFERRAL / INVITATION CONTEXT",
+      bind,
+    );
+    const zumi = master.indexOf("AUTHENTICATED ZUMI INTRODUCTION", restore);
+    const envelope = master.indexOf("ACTIVE EXPERIENCE ENVELOPE", zumi);
+    const engine = master.indexOf("EXPERIENCE ENGINE", envelope);
 
-    expect(airlock).toBeGreaterThanOrEqual(0);
-    expect(enter).toBeGreaterThan(airlock);
-    expect(living).toBeGreaterThan(enter);
-    expect(zumi).toBeGreaterThan(living);
-    expect(signup).toBeGreaterThan(zumi);
+    expect(enter).toBeGreaterThanOrEqual(0);
+    expect(airlock).toBeGreaterThan(enter);
+    expect(identity).toBeGreaterThan(airlock);
+    expect(bind).toBeGreaterThan(identity);
+    expect(restore).toBeGreaterThan(bind);
+    expect(zumi).toBeGreaterThan(restore);
+    expect(envelope).toBeGreaterThan(zumi);
+    expect(engine).toBeGreaterThan(envelope);
+    expect(master).toContain("Do not require a permanent persona choice.");
   });
 
   it("requires prototype statements to resolve into real business architecture", () => {
     expect(master).toContain("KLINIKOS-PROTOTYPE-001");
-    expect(master).toContain("What real identity, relationship, authority, workflow, evidence, financial, network, and data infrastructure would make this statement true?");
+    expect(master).toContain(
+      "What real identity, relationship, authority, workflow, evidence, financial, network, clinical, memory, and data infrastructure would make this statement true?",
+    );
     expect(master).toContain("EDU");
     expect(master).toContain("COMPETENCY EVIDENCE");
     expect(master).toContain("WORK");
