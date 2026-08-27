@@ -1,8 +1,8 @@
 # KLINIKOS — CANCERX 2027 APPLICATION EXECUTION
 
-Status: APPLICATION PREPARED TO PORTAL / ACCOUNT-AUTHENTICATION GATE / NOT SUBMITTED / NOT SELECTED
+Status: FIT CONFIRMED BY PROGRAM / FIT CALL SCHEDULED / PORTAL ACCOUNT-AUTHENTICATION GATE / NOT SUBMITTED / NOT SELECTED
 
-Date: 2026-08-26
+Date: 2026-08-27
 
 ## Purpose
 
@@ -24,6 +24,25 @@ Verified 2026-08-26:
 - Evaluation includes theme alignment, product-market fit, founding-team expertise, impact, innovation, scalability, and growth potential.
 - Theme 3 is **Increasing Access to Smarter Care Operations** and explicitly calls for smarter operational systems, data-backbone infrastructure, and decision-support aids that reduce provider burden.
 
+## Direct program confirmation — 2026-08-24 through 2026-08-27
+
+CancerX responded directly that Klinikos **sounds like a strong fit for the CancerX Accelerator**. The program also stated that non-oncology validation does not automatically disqualify the company if Klinikos can demonstrate a live use case with proven traction that translates credibly to oncology.
+
+CancerX Associate Director **Fatou Jallow, MPH** then offered a fit conversation. Klinikos replied selecting **Monday, August 31, 2026 at 12:00 PM ET**. As of the 2026-08-27 execution sweep, the reply has been sent and the calendar/meeting invite is still pending.
+
+This is meaningful program-fit evidence, but it is not selection, champion sponsorship, or proof that any specific validation metric is satisfied.
+
+### Fit-call objective
+
+Use the call to resolve the remaining evidence interpretation before portal submission:
+1. what CancerX means by a `live use case with proven traction` for a general-healthcare platform entering oncology;
+2. whether the current 2027 `tested with at least 50 patients` language is a hard threshold, a preferred profile, or satisfied by specific non-oncology validation evidence;
+3. which single Theme 3 oncology operations wedge CancerX sees as most credible for Klinikos;
+4. what evidence CancerX wants in the application when oncology-specific deployment has not yet occurred;
+5. how early champion interest is normally established and whether applicants should identify prospective champion categories before acceptance.
+
+Do not turn the call into a broad company pitch. Use it to remove application ambiguity and sharpen one bounded use case.
+
 ## Important 2027 eligibility ambiguity
 
 Two current official CancerX surfaces are not perfectly aligned:
@@ -31,9 +50,9 @@ Two current official CancerX surfaces are not perfectly aligned:
 1. The 2027 launch announcement says CancerX seeks a proven product ready for growth, **tested with at least 50 patients**, aligned to the focus areas, with a plan to expand into cancer care.
 2. The current 2027 Accelerator FAQ says an eligible startup must have a validated solution ready for scaling with **at least one launched or completed proof of concept/pilot already in the market**.
 
-Direct CancerX correspondence already received by Klinikos states that non-oncology validation does not automatically disqualify the company if a live use case with proven traction translates credibly to oncology.
+Direct CancerX correspondence now further states that non-oncology validation may qualify if there is a live use case with proven traction that translates to oncology.
 
-Therefore the application must fail closed on the `50 patients` field or any equivalent validation attestation until CancerX confirms what evidence counts for 2027. Do not manufacture patient counts from records, contacts, users, signups, demo data, or workflow activity.
+Therefore the application must still fail closed on the `50 patients` field or any equivalent validation attestation until CancerX confirms what evidence counts for 2027. Do not manufacture patient counts from records, contacts, users, signups, demo data, or workflow activity.
 
 ## Official portal execution state
 
@@ -108,7 +127,7 @@ If the portal asks whether the product has been tested with 50 patients, complet
 
 1. read the field exactly;
 2. use only current evidence that satisfies the exact wording;
-3. if the answer would require interpreting non-oncology operational exposure as `50 patients`, stop at that field pending CancerX's written clarification;
+3. if the answer would require interpreting non-oncology operational exposure as `50 patients`, stop at that field pending CancerX's written clarification or the 2026-08-31 fit call;
 4. never infer a patient count from database rows, contacts, clinic census, records viewed, or synthetic data.
 
 ## Champion strategy
@@ -123,16 +142,18 @@ No champion may be named as interested until direct evidence exists.
 
 ## Exact next execution sequence
 
-1. Authorized user creates/signs into the CancerX Constellation account using the official CancerX application link.
-2. Complete any email verification/MFA required by Constellation.
-3. Once authenticated, capture the exact 2027 application field list before writing new copy.
-4. Populate routine company and narrative fields from this file and the canonical application profile.
-5. Use Theme 3 / Smarter Care Operations.
-6. Leave unsupported optional metrics blank where permitted rather than inventing values.
-7. At any `50 patients` / pilot / traction attestation, apply the validation rule above.
-8. Submit if the final portal action is free, non-binding, and contains no unverified certification, equity term, signature, legal attestation, or other founder-only commitment.
-9. If final submission includes a binding legal acceptance, stop only at that final checkbox/button and record the exact terms requiring authorization.
-10. Record submission evidence only after CancerX confirms receipt.
+1. Preserve the scheduled **2026-08-31 12:00 PM ET** CancerX fit conversation and capture the invite when received.
+2. Use the call questions above to resolve the validation threshold and narrow the oncology wedge.
+3. Authorized user creates/signs into the CancerX Constellation account using the official CancerX application link.
+4. Complete any email verification/MFA required by Constellation.
+5. Once authenticated, capture the exact 2027 application field list before writing new copy.
+6. Populate routine company and narrative fields from this file and the canonical application profile.
+7. Use Theme 3 / Smarter Care Operations.
+8. Leave unsupported optional metrics blank where permitted rather than inventing values.
+9. At any `50 patients` / pilot / traction attestation, apply the validation rule above.
+10. Submit if the final portal action is free, non-binding, and contains no unverified certification, equity term, signature, legal attestation, or other founder-only commitment.
+11. If final submission includes a binding legal acceptance, stop only at that final checkbox/button and record the exact terms requiring authorization.
+12. Record submission evidence only after CancerX confirms receipt.
 
 ## User-only minimum task if portal authentication remains required
 
@@ -146,9 +167,9 @@ After authentication, the application should return to the execution engine for 
 
 ## Truth boundaries
 
-Positive program-fit email ≠ eligibility confirmation.
-Application prepared ≠ application submitted.
-50 records ≠ 50 qualifying patients.
-General healthcare use ≠ oncology validation.
-Champion exposure ≠ champion sponsorship.
-No-equity accelerator ≠ cash award.
+Positive program-fit email != eligibility confirmation.
+Application prepared != application submitted.
+50 records != 50 qualifying patients.
+General healthcare use != oncology validation.
+Champion exposure != champion sponsorship.
+No-equity accelerator != cash award.
