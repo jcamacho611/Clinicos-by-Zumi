@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260827203000_relationship_claims",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "459a72a21f0874c44e30fb3dd30feaf04066c0f35067efeb386c482db047ef1f",
+  "approvalReference": "Founder-approved master-canon Slice 3 implementation, 2026-08-27",
+  "rationale": "Creates the new relationship_claims table, indexes, and one foreign key to the existing people table. No pre-existing table or column is dropped, renamed, retyped, or mutated, no existing row is updated or deleted, and no claim target is granted database-level authority through an organization, provider, user, credential, or session foreign key. The migration is additive-only and preserves the existing tenant/session authority model."
+}
