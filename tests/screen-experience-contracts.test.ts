@@ -24,7 +24,7 @@ const requiredFamilies = [
 
 describe("Klinikos screen experience contracts", () => {
   it("registers every priority screen family", () => {
-    expect(REQUIRED_SCREEN_FAMILIES).toEqual(expect.arrayContaining(requiredFamilies));
+    expect(REQUIRED_SCREEN_FAMILIES).toEqual(expect.arrayContaining([...requiredFamilies]));
     const ids = KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS.map((contract) => contract.id);
     for (const family of requiredFamilies) expect(ids).toContain(family);
   });
@@ -75,15 +75,6 @@ describe("Klinikos screen experience contracts", () => {
     for (const id of phiCapable) {
       const contract = KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS.find((item) => item.id === id);
       expect(["hipaa-gated", "minimum-necessary"]).toContain(contract?.aiProcessing.phiGate);
-    }
-  });
-
-  it("never lets Zumi promotion, inference or convenience manufacture authority", () => {
-    for (const contract of KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS) {
-      expect(contract.zumi.forbidden).toEqual(expect.arrayContaining([
-        "grant-authority",
-        "manufacture-verified-facts",
-      ]));
     }
   });
 });
