@@ -217,7 +217,8 @@ register cannot silently fall behind.
 
 | Document | Owns |
 | --- | --- |
-| `CLINICOS_MASTER_CANON.md` | Product and architecture source of truth |
+| `CLINICOS_MASTER_CANON.md` | Historical master canon retained for provenance; superseded where the current merged canon differs |
+| `KLINIKOS_MASTER_CANON.md` | Current merged product, experience, business, AI, spatial and lifecycle master canon |
 | `KLINIKOS_CONSTITUTION.md` | Constitutional laws, operationalizing the Master Canon |
 | `KLINIKOS_ARCHITECTURE_INDEX.md` | Precedence and navigation |
 | `SOURCE_OF_TRUTH.md` | Current operating law |
