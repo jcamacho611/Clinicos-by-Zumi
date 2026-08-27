@@ -7,13 +7,7 @@ import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 import { publicLivingDestinationHref } from "@/lib/distribution/public-continuation";
-import {
-  KLINIKOS_ECONOMIC_THESIS,
-  KLINIKOS_HUMAN_AUTHORITY,
-  KLINIKOS_ONE_LINE,
-  KLINIKOS_SUPPORTING,
-  ZUMI_COMPOSER_PROMPT,
-} from "@/lib/brand/canonical-messaging";
+import { ZUMI_COMPOSER_PROMPT } from "@/lib/brand/canonical-messaging";
 
 type PublicZumiSuggestion = {
   id: string;
@@ -98,6 +92,13 @@ const navItems = [
   { label: "Trust", href: "/trust" },
 ] as const;
 
+const quickActions = [
+  { label: "Run a clinic", href: "/founding-clinic" },
+  { label: "Open Grid", href: "/grid" },
+  { label: "Learn", href: "/edu" },
+  { label: "Get care", href: "/portal/login" },
+] as const;
+
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   kind: "conversation",
   title: "I can't reach Klinikos right now",
@@ -159,8 +160,6 @@ export function PublicLivingGateway() {
     activeRequest.current?.abort();
     activeRequest.current = controller;
 
-    // No local resolution: the routing engine is server-side, so an unreachable server
-    // means honest degraded guidance rather than an invented answer.
     let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
 
@@ -182,17 +181,11 @@ export function PublicLivingGateway() {
 
       if (response.ok) {
         const payload = await response.json() as PublicZumiApiResponse;
-        if (isPublicLivingResolution(payload.data?.resolution)) {
-          resolution = payload.data.resolution;
-        }
-        if (isPublicZumiSuggestions(payload.data?.suggestions)) {
-          suggestions = payload.data.suggestions;
-        }
+        if (isPublicLivingResolution(payload.data?.resolution)) resolution = payload.data.resolution;
+        if (isPublicZumiSuggestions(payload.data?.suggestions)) suggestions = payload.data.suggestions;
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      // Network/provider failure does not erase the person's turn. The local resolver is
-      // an emergency path only and is required to remain solution-first as well.
     } finally {
       if (activeRequest.current === controller) activeRequest.current = null;
     }
@@ -216,24 +209,24 @@ export function PublicLivingGateway() {
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
-      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
-        <div className="rose-vignette pointer-events-none fixed inset-0 -z-10" />
-        <div className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
+      <section className="rose-home relative isolate min-h-[100svh] overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
+        <div className="rose-vignette pointer-events-none absolute inset-0 z-0" />
+        <div className={`rose-atmosphere pointer-events-none absolute inset-0 z-0 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-15" : "scale-100 opacity-80"}`} />
 
-        <header className="reference-header relative z-30 flex min-h-[96px] items-center px-5 sm:px-9 lg:px-[38px]">
+        <header className="reference-header relative z-30 flex min-h-[88px] items-center px-5 sm:px-9 lg:px-[38px]">
           <KlinikosWordmark
-            className="living-home-brand gap-[18px]"
-            frameClassName="size-[66px]"
+            className="living-home-brand gap-[14px]"
+            frameClassName="size-[52px]"
             href="/"
             framed
             inverse
             markClassName="h-full w-full"
-            textClassName="h-[38px] w-[272px]"
+            textClassName="h-[28px] w-[200px]"
           />
 
           <nav className="mx-auto hidden items-center gap-8 text-[11px] font-semibold text-[#d8c7c4] lg:flex" aria-label="Primary">
             {navItems.map((item) => (
-              <Link className="transition-colors hover:text-[#f29a93]" href={item.href} key={item.label}>{item.label}</Link>
+              <Link className="min-h-11 content-center transition-colors hover:text-[#f29a93]" href={item.href} key={item.label}>{item.label}</Link>
             ))}
           </nav>
 
@@ -243,10 +236,10 @@ export function PublicLivingGateway() {
             </summary>
             <nav className="absolute right-0 top-14 z-50 grid w-56 gap-1 rounded-2xl border border-[#d9837f]/22 bg-[#12090b]/[.98] p-2 shadow-2xl" aria-label="Mobile navigation">
               {navItems.map((item) => (
-                <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
+                <Link className="min-h-11 rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
               ))}
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
+              <Link className="min-h-11 rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
+              <Link className="min-h-11 rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
             </nav>
           </details>
 
@@ -256,49 +249,22 @@ export function PublicLivingGateway() {
         </header>
 
         {!conversationStarted ? (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9">
+          <main className="relative z-10 mx-auto flex min-h-[calc(100svh-88px)] max-w-4xl items-center justify-center px-5 pb-20 sm:px-9">
             <section className="flex w-full flex-col items-center text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#e88f88]">Klinikos</p>
-              <h1 id="public-living-title" className="mt-5 max-w-[900px] text-balance text-[clamp(2.4rem,5.4vw,4.6rem)] font-extralight leading-[1.02] tracking-[-0.045em] text-[#f5edeb]">
-                {KLINIKOS_ONE_LINE}
-              </h1>
-              <p className="mt-6 max-w-[680px] text-sm leading-7 text-[#e2cecb] sm:text-base">
-                {KLINIKOS_SUPPORTING}
-              </p>
-              <p className="mt-4 max-w-[640px] text-[13px] leading-6 text-[#d3bcb8]">
-                {KLINIKOS_ECONOMIC_THESIS}
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                  className="inline-flex items-center gap-2 rounded-full bg-[#e6817b] px-6 py-3 text-sm font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                  href="/operational-audit"
-                >
-                  See what Klinikos would replace <ArrowRight aria-hidden="true" className="size-4" />
-                </Link>
-                <Link
-                  className="inline-flex items-center gap-2 rounded-full border border-[#d9918a]/35 px-6 py-3 text-sm font-semibold text-[#f5edeb] transition hover:border-[#efaaa1]/60 hover:bg-[#e6817b]/10"
-                  href="/how-it-works"
-                >
-                  See how it works
-                </Link>
+              <div className="mb-5 grid size-14 place-items-center rounded-full border border-[#e6817b]/32 bg-[#12090b]/80 shadow-[0_0_45px_rgba(230,129,123,.18)]" aria-hidden="true">
+                <ZumiOrb state="observing" size={44} />
               </div>
-
-              <p className="mt-5 max-w-[620px] text-[12px] leading-5 text-[#c6aeaa]">
-                {KLINIKOS_HUMAN_AUTHORITY}
+              <p className="text-[11px] font-semibold uppercase tracking-[.24em] text-[#e88f88]">Zumi</p>
+              <h1 className="mt-4 text-balance text-[clamp(2.5rem,6vw,5.4rem)] font-extralight leading-[.96] tracking-[-.055em] text-[#fff8f6]" id="public-living-title">
+                What needs to happen?
+              </h1>
+              <p className="mt-5 max-w-[560px] text-sm leading-7 text-[#d6c0bc]">
+                Tell Zumi the outcome you need. Klinikos will route the work, preserve the useful context, and ask for identity or authority only when the next step actually requires it.
               </p>
 
-              <p className="mt-14 text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</p>
-              <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
-                {ZUMI_COMPOSER_PROMPT}
-              </p>
-              <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-[#c3aaa6]">
-                Describe something your clinic is dealing with and Zumi will help you find the next useful step.
-              </p>
-
-              <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>
+              <form id="living-composer" className="mt-8 w-full max-w-[780px]" onSubmit={submit} aria-label={ZUMI_COMPOSER_PROMPT}>
                 <label className="sr-only" htmlFor="public-klinikos-intent">Message Zumi</label>
-                <div className="reference-composer-shell grid min-h-[88px] grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3 rounded-[28px] border border-[#d9918a]/35 bg-[#1b0d10]/68 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
+                <div className="reference-composer-shell grid min-h-[92px] grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3 rounded-[28px] border border-[#d9918a]/35 bg-[#1b0d10]/72 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
                   <textarea
                     aria-describedby="public-conversation-disclosure"
                     className="max-h-36 min-h-14 min-w-0 w-full resize-none bg-transparent py-4 text-left text-[15px] font-medium text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
@@ -318,17 +284,17 @@ export function PublicLivingGateway() {
                 </p>
               </form>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
-                <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
-                <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/grid">Open Grid</Link>
-                <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/edu">Explore EDU</Link>
-              </div>
+              <nav className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Start with a Klinikos path">
+                {quickActions.map((action) => (
+                  <Link className="inline-flex min-h-11 items-center rounded-full border border-[#d9918a]/22 bg-[#12090b]/55 px-4 text-[12px] font-semibold text-[#d9c4c0] backdrop-blur-md transition hover:border-[#efaaa1]/55 hover:text-[#fff8f6]" href={action.href} key={action.label}>
+                    {action.label}
+                  </Link>
+                ))}
+              </nav>
             </section>
           </main>
         ) : (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
+          <main className="relative z-10 mx-auto flex min-h-[calc(100svh-88px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
             <section className="flex-1 space-y-8 py-4" aria-label="Public Zumi guidance">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
@@ -361,7 +327,7 @@ export function PublicLivingGateway() {
                             {turn.suggestions.map((suggestion) => (
                               <button
                                 aria-label={`Reply: ${suggestion.label}`}
-                                className="min-h-10 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                                className="min-h-11 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
                                 disabled={isSubmitting}
                                 key={suggestion.id}
                                 onClick={() => void sendPrompt(suggestion.prompt)}
