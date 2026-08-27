@@ -1,3 +1,17 @@
+const PUBLIC_ACTION_PATHS = new Set([
+  "/grid",
+  "/edu",
+  "/pricing",
+  "/trust",
+  "/ecosystem",
+  "/how-it-works",
+  "/founding-clinic",
+  "/sales",
+  "/operational-audit",
+  "/start",
+  "/access",
+]);
+
 const PUBLIC_CONTINUATION_INTENT_KEYS = new Set([
   "clinic",
   "grid",
@@ -31,6 +45,42 @@ function safeInternalDestination(value: string) {
   }
 }
 
+function decoratePublicDestination(destination: URL, intentKey: string) {
+  destination.searchParams.set("from", "public-zumi");
+  if (PUBLIC_CONTINUATION_INTENT_KEYS.has(intentKey)) {
+    destination.searchParams.set("intent", intentKey);
+  }
+  return `${destination.pathname}${destination.search}${destination.hash}`;
+}
+
+/**
+ * Carry only low-sensitivity structured continuation metadata into an already-public
+ * value surface. This preserves the intent Zumi resolved without serializing the raw
+ * public conversation into URLs, analytics, referrers, screenshots, or logs.
+ */
+export function publicContinuationHref(href: string, intentKey: string) {
+  const destination = safeInternalDestination(href);
+  if (!destination) return "/";
+  return decoratePublicDestination(destination, intentKey);
+}
+
+/**
+ * Resolve the CTA produced by Public Zumi while preserving the value-first journey.
+ *
+ * Public surfaces stay public and receive only bounded structured continuation state.
+ * Patient access uses the separate patient login. Protected clinic work continues
+ * through the canonical staff sign-in return gate.
+ */
+export function publicLivingDestinationHref(destination: { href: string; key: string }) {
+  const parsed = safeInternalDestination(destination.href);
+  if (!parsed) return "/login";
+  if (parsed.pathname === "/portal") return "/portal/login";
+  if (PUBLIC_ACTION_PATHS.has(parsed.pathname)) {
+    return publicContinuationHref(destination.href, destination.key);
+  }
+  return protectedPublicContinuationHref(destination.href, destination.key);
+}
+
 /**
  * Carry only low-sensitivity structured continuation metadata across sign-in.
  *
@@ -43,11 +93,6 @@ export function protectedPublicContinuationHref(href: string, intentKey: string)
   const destination = safeInternalDestination(href);
   if (!destination) return "/login";
 
-  destination.searchParams.set("from", "public-zumi");
-  if (PUBLIC_CONTINUATION_INTENT_KEYS.has(intentKey)) {
-    destination.searchParams.set("intent", intentKey);
-  }
-
-  const returnTo = `${destination.pathname}${destination.search}${destination.hash}`;
+  const returnTo = decoratePublicDestination(destination, intentKey);
   return `/login?returnTo=${encodeURIComponent(returnTo)}`;
 }
