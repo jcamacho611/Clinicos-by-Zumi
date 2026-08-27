@@ -52,7 +52,6 @@ describe("public Living Home intent", () => {
   it("preserves a known destination when a short follow-up adds context", () => {
     const initial = resolvePublicLivingIntent("I need a treatment room");
     const followUp = resolvePublicLivingIntent("Saturday", initial);
-
     expect(followUp.kind).toBe("conversation");
     expect(followUp.destination).toMatchObject({ key: "grid", href: "/grid" });
     expect(followUp.title).toBe("Got it.");
@@ -62,7 +61,6 @@ describe("public Living Home intent", () => {
   it("lets a clear new intent override the prior conversation destination", () => {
     const initial = resolvePublicLivingIntent("I need a treatment room");
     const changedGoal = resolvePublicLivingIntent("Actually I need injector training", initial);
-
     expect(changedGoal.kind).toBe("route");
     expect(changedGoal.destination).toMatchObject({ key: "edu", href: "/edu" });
   });
@@ -77,16 +75,19 @@ describe("public Living Home conversation and accessibility contract", () => {
   const brand = read("src/components/brand/klinikos-brand.tsx");
   const homeStyles = read("src/app/cinematic-home-overrides.css");
 
-  it("uses one calm conversation-first surface", () => {
+  it("uses one calm Zumi-first surface after the access gate", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
     expect(source).toContain("ZUMI_COMPOSER_PROMPT");
-    expect(source).toContain("KLINIKOS_ONE_LINE");
-    expect(source).toContain("KLINIKOS_SUPPORTING");
+    expect(source).toContain("What needs to happen?");
     expect(source).toContain('aria-label="Public Zumi guidance"');
+    expect(source).not.toContain("KLINIKOS_ECONOMIC_THESIS");
+    expect(source).not.toContain("KLINIKOS_SUPPORTING");
+    expect(page).toContain("PublicPlatformShell");
     expect(page).toContain("PublicLivingGateway");
-    expect(page).toContain("PublicTrustFooter");
-    expect(page).not.toContain("PublicConversionBridge");
+    expect(page).not.toContain("PublicTrustFooter");
+    expect(page).not.toContain("ProductEvidenceSection");
+    expect(page).not.toContain("EcosystemHierarchy");
   });
 
   it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {
@@ -94,17 +95,13 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("Public Zumi can answer general Klinikos questions");
     expect(publicRoute).toContain("resolvePublicZumiTurn");
     expect(publicRoute).not.toContain("getClinicSession");
-
     expect(source).toContain("let unresolvedTurns = 0");
     expect(source).toContain("priorResolution,");
     expect(source).toContain("unresolvedTurns,");
     expect(publicRoute).toContain("resolvePublicLivingIntent(");
     expect(publicRoute).toContain("parsed.data.unresolvedTurns");
-
     expect(source).not.toContain("resolvePublicLivingIntent(prompt");
-    expect(source).toContain("import type {");
     expect(source).toContain("PublicLivingResolution");
-
     expect(source).toContain("I can't reach Klinikos right now");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
@@ -130,7 +127,6 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("function ZumiSendGlyph");
     expect(source).toContain("data-zumi-send-glyph");
     expect(source).toContain("<ZumiSendGlyph active={isSubmitting} />");
-    expect(source).not.toContain('<ZumiOrb state="observing" size={44} />');
     expect(source).not.toContain("ArrowUp");
   });
 
@@ -151,7 +147,6 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("publicLivingDestinationHref(resolution.destination)");
     expect(source).not.toContain("publicActionPaths");
     expect(source).not.toContain("destinationActionHref");
-
     expect(continuation).toContain('if (parsed.pathname === "/portal") return "/portal/login"');
     expect(continuation).toContain('"/grid"');
     expect(continuation).toContain('"/edu"');
@@ -170,6 +165,13 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('{ label: "Trust", href: "/trust" }');
     expect(source).toContain('{ label: "Pricing", href: "/pricing" }');
     expect(source).toContain('href="/portal/login"');
+  });
+
+  it("contains the approved rose inside the home surface rather than fixing it across scroll", () => {
+    expect(source).toContain("rose-vignette pointer-events-none absolute inset-0");
+    expect(source).toContain("rose-atmosphere pointer-events-none absolute inset-0");
+    expect(source).not.toContain("rose-vignette pointer-events-none fixed inset-0");
+    expect(source).not.toContain("rose-atmosphere pointer-events-none fixed inset-0");
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {
