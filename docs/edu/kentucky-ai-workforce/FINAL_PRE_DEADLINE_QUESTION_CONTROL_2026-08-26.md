@@ -8,7 +8,7 @@ Official submission address: `contact@southcentralworkforce.com`
 
 ## Purpose
 
-SCWDB's currently published Questions & Answers now resolves 42 questions and already addresses full-scope bidding, participant-volume uncertainty, live-remote/in-person delivery, proprietary platform use, pre-existing IP, completion evidence, out-of-state prime eligibility, subcontractors/teaming, all five pathways, class-size assumptions, performance outcomes, qualifications, budget/volume, healthcare-pathway scope, representative materials, recently formed prime qualification, Appendix C attribution, common foundation + pathway modules, staffing flexibility, pricing components, cancellations/minimum enrollment, travel, and completion billing.
+SCWDB's currently published Questions & Answers resolves 42 questions and already addresses full-scope bidding, participant-volume uncertainty, live-remote/in-person delivery, proprietary platform use, pre-existing IP, completion evidence, out-of-state prime eligibility, subcontractors/teaming, all five pathways, class-size assumptions, performance outcomes, qualifications, budget/volume, healthcare-pathway scope, representative materials, recently formed prime qualification, Appendix C attribution, common foundation + pathway modules, staffing flexibility, pricing components, cancellations/minimum enrollment, travel, and completion billing.
 
 Do **not** resend resolved questions merely to create activity.
 
@@ -60,9 +60,11 @@ Do not add sales language, unsupported qualifications, customer claims, revenue 
 
 ## Transmission status — authoritative
 
-**NOT SENT as of 2026-08-26 22:38 Eastern.**
+**NOT SENT as of 2026-08-27 05:40 Eastern.**
 
-A direct send was attempted from the connected Gmail action during the grants/incentives execution pass. The connector became disabled at the send boundary and returned no successful send result. Therefore no transmission may be inferred from the attempt.
+Fresh buyer-page and official Q&A verification on 2026-08-27 shows the published Q&A still ends at Question 42; none of Questions 43–46 has been answered publicly yet. The official buyer page still requires written questions by 2026-08-28 4:00 PM Central and identifies `contact@southcentralworkforce.com` as the submission address.
+
+A second direct send attempt was made from the connected Gmail action during the 2026-08-27 grants/incentives execution pass. The Gmail tool again became disabled at the send boundary and returned no successful send result. Therefore no transmission may be inferred from either attempt.
 
 The four-question packet itself is complete. The remaining action is transmission only through an authorized mailbox before the deadline. Do not rewrite or research these questions again unless SCWDB publishes an answer first.
 
