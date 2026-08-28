@@ -6,6 +6,16 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
+function ruleBody(css: string, selector: string) {
+  const marker = `${selector} {`;
+  const start = css.indexOf(marker);
+  expect(start, `missing CSS rule: ${selector}`).toBeGreaterThanOrEqual(0);
+  const bodyStart = css.indexOf("{", start) + 1;
+  const bodyEnd = css.indexOf("}", bodyStart);
+  expect(bodyEnd, `unterminated CSS rule: ${selector}`).toBeGreaterThan(bodyStart);
+  return css.slice(bodyStart, bodyEnd);
+}
+
 const gateway = read("src/components/marketing/public-living-gateway.tsx");
 const cinematicCss = read("src/app/cinematic-home-overrides.css");
 const productEvidence = read("src/components/marketing/product-evidence-section.tsx");
@@ -14,8 +24,11 @@ const footer = read("src/components/marketing/public-trust-footer.tsx");
 
 describe("public hero rose containment", () => {
   it("bounds the public hero to one viewport-owned stacking context", () => {
-    expect(cinematicCss).toMatch(/\.rose-home\s*\{[\s\S]*?position:\s*relative;[\s\S]*?height:\s*100vh;[\s\S]*?overflow:\s*hidden;[\s\S]*?\}/);
-    expect(cinematicCss).not.toMatch(/\.rose-home\s*\{[\s\S]*?min-height:\s*100vh;[\s\S]*?\}/);
+    const hero = ruleBody(cinematicCss, ".rose-home");
+    expect(hero).toContain("position: relative;");
+    expect(hero).toContain("height: 100vh;");
+    expect(hero).toContain("overflow: hidden;");
+    expect(hero).not.toContain("min-height: 100vh;");
   });
 
   it("keeps the rose and vignette inside the hero instead of fixing them to the viewport", () => {
@@ -26,8 +39,12 @@ describe("public hero rose containment", () => {
   });
 
   it("puts hero content above the atmospheric layer with one explicit content plane", () => {
-    expect(cinematicCss).toMatch(/\.rose-home > header,\s*\.rose-home > main\s*\{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;[\s\S]*?\}/);
-    expect(cinematicCss).toMatch(/\.rose-home \.rose-vignette,\s*\.rose-home \.rose-atmosphere\s*\{[\s\S]*?z-index:\s*0\s*!important;[\s\S]*?\}/);
+    const atmosphere = ruleBody(cinematicCss, ".rose-home .rose-vignette,\n.rose-home .rose-atmosphere");
+    const content = ruleBody(cinematicCss, ".rose-home > header,\n.rose-home > main");
+    expect(atmosphere).toContain("z-index: 0 !important;");
+    expect(content).toContain("position: relative;");
+    expect(content).toContain("z-index: 1;");
+    expect(content).not.toContain("z-index: 10;");
   });
 
   it("gives every homepage surface below the hero its own opaque obsidian ground", () => {
