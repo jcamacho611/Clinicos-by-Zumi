@@ -6,9 +6,9 @@ import {
 } from "@/lib/distribution/public-continuation";
 
 describe("public intent continuation", () => {
-  it("carries only bounded structured intent through canonical returnTo", () => {
+  it("carries only bounded structured intent through the Agreement Airlock returnTo", () => {
     expect(protectedPublicContinuationHref("/dashboard", "clinic")).toBe(
-      "/login?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi%26intent%3Dclinic",
+      "/access?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi%26intent%3Dclinic",
     );
   });
 
@@ -18,15 +18,15 @@ describe("public intent continuation", () => {
   });
 
   it("rejects external destinations", () => {
-    expect(protectedPublicContinuationHref("https://evil.example", "grid")).toBe("/login");
-    expect(protectedPublicContinuationHref("//evil.example", "grid")).toBe("/login");
+    expect(protectedPublicContinuationHref("https://evil.example", "grid")).toBe("/access");
+    expect(protectedPublicContinuationHref("//evil.example", "grid")).toBe("/access");
     expect(publicContinuationHref("https://evil.example", "grid")).toBe("/");
     expect(publicContinuationHref("//evil.example", "grid")).toBe("/");
   });
 
   it("drops unsafe free-text intent instead of serializing it", () => {
     expect(protectedPublicContinuationHref("/dashboard", "patient record for Jane Doe")).toBe(
-      "/login?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi",
+      "/access?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi",
     );
     expect(publicContinuationHref("/grid", "patient record for Jane Doe")).toBe(
       "/grid?from=public-zumi",
@@ -60,7 +60,7 @@ describe("public intent continuation", () => {
       "/portal/login",
     );
     expect(publicLivingDestinationHref({ href: "/dashboard", key: "clinic" })).toBe(
-      "/login?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi%26intent%3Dclinic",
+      "/access?returnTo=%2Fdashboard%3Ffrom%3Dpublic-zumi%26intent%3Dclinic",
     );
   });
 });
