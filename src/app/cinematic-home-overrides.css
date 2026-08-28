@@ -10,8 +10,9 @@
 .rose-home {
   position: relative;
   isolation: isolate;
-  min-height: 100vh;
-  background: #030202;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #030202;
 }
 
 .rose-home .rose-vignette,
@@ -22,7 +23,7 @@
 .rose-home > header,
 .rose-home > main {
   position: relative;
-  z-index: 10;
+  z-index: 1;
 }
 
 /* Exact clean production rose from the approved design package. */
