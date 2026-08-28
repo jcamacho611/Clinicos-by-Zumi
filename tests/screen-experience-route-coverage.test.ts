@@ -19,7 +19,7 @@ function walkPages(directory: string): string[] {
 }
 
 describe("screen experience route coverage", () => {
-  it("binds every real app page to exactly one screen experience contract", () => {
+  it("binds every real app page to exactly one effective screen experience contract", () => {
     const pages = walkPages(APP_ROOT);
     expect(pages.length).toBeGreaterThan(0);
 
@@ -28,11 +28,9 @@ describe("screen experience route coverage", () => {
 
     for (const page of pages) {
       const matches = resolveSourceExperienceContracts(page);
-      if (matches.length === 0) uncovered.push(page);
-      if (matches.length > 1) ambiguous.push({
-        page,
-        contracts: matches.map((contract) => contract.id),
-      });
+      const contractIds = [...new Set(matches.map((contract) => contract.id))];
+      if (contractIds.length === 0) uncovered.push(page);
+      if (contractIds.length > 1) ambiguous.push({ page, contracts: contractIds });
     }
 
     expect(uncovered, `Screens without a contract:\n${uncovered.join("\n")}`).toEqual([]);
