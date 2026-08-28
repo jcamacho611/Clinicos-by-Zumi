@@ -1,0 +1,70 @@
+name: PR Baseline Diagnostics
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_diag?schema=public
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_diag?schema=public
+      NEXT_PUBLIC_APP_URL: https://klinikos.io
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: klinikos_diag
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npm run db:generate
+      - name: Capture type-check
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          npm run type-check 2>&1 | tee type-check.log
+          echo ${PIPESTATUS[0]} > type-check.status
+          exit 0
+      - name: Capture tests
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          npm test 2>&1 | tee vitest.log
+          echo ${PIPESTATUS[0]} > vitest.status
+          exit 0
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-diagnostics-${{ github.sha }}
+          path: |
+            type-check.log
+            type-check.status
+            vitest.log
+            vitest.status
+          retention-days: 1
+      - name: Preserve failure
+        shell: bash
+        run: |
+          test "$(cat type-check.status)" -eq 0
+          test "$(cat vitest.status)" -eq 0
