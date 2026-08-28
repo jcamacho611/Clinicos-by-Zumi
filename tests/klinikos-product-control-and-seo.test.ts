@@ -9,7 +9,7 @@ function read(relative: string) {
 describe("persistent Zumi product-control law", () => {
   const shell = read("src/components/clinic/app-shell.tsx");
   const presence = read("src/components/clinic/zumi-presence.tsx");
-  const agents = read("AGENTS.md");
+  const master = read("docs/KLINIKOS_MASTER_CANON.md");
   const canon = read("docs/KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md");
   const zumiCanon = read("docs/ZUMI_CANON.md");
 
@@ -33,9 +33,10 @@ describe("persistent Zumi product-control law", () => {
     expect(presence).toContain('aria-label="Send message to Zumi"');
   });
 
-  it("locks the assistant hierarchy into agent and specialist law", () => {
-    expect(agents).toContain("KLINIKOS_PRODUCT_CONTROL_AND_COMPREHENSION_CANON.md");
-    expect(agents).toContain("persistent personal operating assistant");
+  it("locks the assistant hierarchy into master and specialist law", () => {
+    expect(master).toContain("KLINIKOS-ZUMI-001");
+    expect(master).toContain("Zumi is Klinikos Intelligence and the semantic navigation/control layer");
+    expect(master).toContain("Living Home is the authenticated adaptive command surface");
     expect(canon).toContain("persistent personal operating assistant inside Klinikos");
     expect(canon).toContain("every authenticated application page exposes the same Zumi control");
     expect(canon).toContain("If information must remain confidential, it stays server-side");
@@ -44,6 +45,7 @@ describe("persistent Zumi product-control law", () => {
   });
 
   it("keeps app control separate from deterministic authority", () => {
+    expect(master).toContain("Zumi is not product authority, clinical authority, payment authority, credential authority, or legal authority");
     expect(canon).toContain('"Controls the app" means Zumi can understand intent');
     expect(canon).toContain("It does **not** mean Zumi may override deterministic authority");
     expect(zumiCanon).toContain("may never override authentication");
