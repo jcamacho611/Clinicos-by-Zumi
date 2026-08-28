@@ -216,11 +216,11 @@ export function PublicLivingGateway() {
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
-      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
-        <div className="rose-vignette pointer-events-none fixed inset-0 -z-10" />
-        <div className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
+      <section className="rose-home relative h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
+        <div className="rose-vignette pointer-events-none absolute inset-0 z-0" />
+        <div className={`rose-atmosphere pointer-events-none absolute inset-0 z-0 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
 
-        <header className="reference-header relative z-30 flex min-h-[96px] items-center px-5 sm:px-9 lg:px-[38px]">
+        <header className="reference-header relative z-[1] flex min-h-[96px] items-center px-5 sm:px-9 lg:px-[38px]">
           <KlinikosWordmark
             className="living-home-brand gap-[18px]"
             frameClassName="size-[66px]"
@@ -256,7 +256,7 @@ export function PublicLivingGateway() {
         </header>
 
         {!conversationStarted ? (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9">
+          <main className="relative z-[1] mx-auto flex h-[calc(100vh-96px)] max-w-5xl items-center justify-center overflow-y-auto px-5 pb-16 sm:px-9">
             <section className="flex w-full flex-col items-center text-center">
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#e88f88]">Klinikos</p>
               <h1 id="public-living-title" className="mt-5 max-w-[900px] text-balance text-[clamp(2.4rem,5.4vw,4.6rem)] font-extralight leading-[1.02] tracking-[-0.045em] text-[#f5edeb]">
@@ -328,7 +328,7 @@ export function PublicLivingGateway() {
             </section>
           </main>
         ) : (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
+          <main className="relative z-[1] mx-auto flex h-[calc(100vh-96px)] max-w-4xl flex-col overflow-y-auto px-5 pb-8 pt-6 sm:px-9">
             <section className="flex-1 space-y-8 py-4" aria-label="Public Zumi guidance">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
