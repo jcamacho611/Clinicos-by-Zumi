@@ -8,7 +8,7 @@ const legacySchema = read("prisma/schema.prisma");
 const identitySchema = read("prisma/models/universal-identity.prisma");
 const migration = read("prisma/migrations/20260823023000_universal_identity_foundation/migration.sql");
 const repository = read("src/lib/identity/relationship-repository.ts");
-const sourceOfTruth = read("docs/SOURCE_OF_TRUTH.md");
+const master = read("docs/KLINIKOS_MASTER_CANON.md");
 
 describe("universal identity compatibility boundary", () => {
   it("keeps the current user organization and role fields authoritative for existing sessions", () => {
@@ -32,7 +32,9 @@ describe("universal identity compatibility boundary", () => {
     expect(repository).toContain("current session tenant authority");
     expect(repository).not.toContain("setSession");
     expect(repository).not.toContain("switchOrganization");
-    expect(sourceOfTruth).toContain("The UI adapts to active role, organization, task and permissions without requiring separate identities or disconnected products.");
+    expect(master).toContain("KLINIKOS-EXPERIENCE-001");
+    expect(master).toContain("These are projections, not permanent account types.");
+    expect(master).toContain("Context switching is a security event");
   });
 
   it("anchors legacy membership context to the still-authoritative legacy user organization", () => {
