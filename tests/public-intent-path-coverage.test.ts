@@ -6,6 +6,7 @@ const cases = [
   ["I want extra work Friday", "find-extra-work", "grid", "/grid"],
   ["I want to become an injector", "become-grid-ready", "edu", "/edu"],
   ["I need a clinical placement", "student-clinical-placement", "edu", "/edu"],
+  ["I need a preceptor", "student-clinical-placement", "edu", "/edu"],
   ["I want to work independently", "clinician-independent-practice", "clinic", "/dashboard"],
   ["I want to own a clinic", "provider-to-clinic-owner", "clinic", "/dashboard"],
   ["I need a nurse this weekend", "fill-staffing-need", "staffing", "/grid"],
