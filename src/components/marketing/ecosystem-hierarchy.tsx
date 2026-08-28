@@ -28,7 +28,7 @@ export function EcosystemHierarchy() {
     <section
       aria-labelledby="klinikos-ecosystem-heading"
       className="border-t px-5 py-20 sm:px-9"
-      style={{ borderColor: "rgba(226,139,133,.14)", background: "#070304" }}
+      style={{ borderColor: "rgba(226,139,133,.14)", backgroundColor: "#070304" }}
     >
       <div className="mx-auto max-w-5xl">
         <p className="text-[11px] font-semibold uppercase tracking-[.28em]" style={{ color: "#e88f88" }}>
