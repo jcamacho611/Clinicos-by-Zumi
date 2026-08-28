@@ -43,7 +43,7 @@ describe("public Zumi access and typo routing", () => {
 
     expect(livingHome).toContain('"/access"');
     expect(siteControl).toContain('"/access"');
-    expect(livingHome).toContain("publicActionPaths.has(href)");
+    expect(livingHome).toContain("publicActionPaths.has(destination.href)");
     expect(siteControl).toContain("publicActionPaths.has(href)");
   });
 });
