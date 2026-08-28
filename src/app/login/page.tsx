@@ -6,6 +6,7 @@ import { LoginForm } from "@/components/clinic/login-form";
 import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } from "@/lib/auth/config";
 import { getAuthenticationSession } from "@/lib/auth/session";
 import { safeReturnTo } from "@/lib/auth/return-to";
+import { requireAgreementAirlockPass } from "@/lib/legal/agreement-airlock";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
   const { returnTo: rawReturnTo, next: legacyNext } = await searchParams;
@@ -14,6 +15,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const returnTo = safeReturnTo(rawReturnTo ?? legacyNext);
   const session = await getAuthenticationSession();
   if (session) redirect(returnTo ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
+
+  await requireAgreementAirlockPass(returnTo ?? "/home");
 
   const demoCredentials = isDemoAuthEnabled()
     ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD }
@@ -27,16 +30,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <KlinikosWordmark href="/" framed inverse markClassName="h-12 w-12" textClassName="h-[22px] w-[196px]" className="mb-12 gap-3" />
           <p className="text-[12px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#f8efed]">Welcome back.</h1>
-          <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos workspace. Every session remains bound to one authorized organization and role.</p>
+          <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in after the Agreement Airlock to bind protected access to your authenticated Klinikos identity.</p>
           <div className="rose-auth-form mt-8">
-            <LoginForm demoCredentials={demoCredentials} returnTo={returnTo} />
+            <LoginForm demoCredentials={demoCredentials} returnTo={returnTo ?? "/home"} />
           </div>
-          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Considering Klinikos? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/start">Start the Clinic Operating Analysis</Link></p>
+          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Need to review the entry agreement again? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/access">Return to the Agreement Airlock</Link></p>
           <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">Looking for your records? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/portal/login">Open the patient portal</Link></p>
           <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]">
             <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.
           </div>
-          <p className="mt-8 flex items-center gap-2 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
+          <p className="mt-8 flex items-center gap-2 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Agreement acceptance and authentication do not create clinical, professional, organization, Grid, financial, payment, or patient-data authority.</p>
         </div>
       </section>
       <section className="relative hidden overflow-hidden border-l border-[#e28b85]/10 bg-[#080405] p-12 text-[#f8efed] lg:flex lg:flex-col lg:justify-end">
@@ -45,8 +48,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="absolute left-[27%] top-[21%] size-[270px] rounded-full border border-[#e6817b]/18" />
         <div className="relative max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.24em] text-[#e6817b]">Klinikos Intelligence</p>
-          <h2 className="mt-5 text-5xl font-light leading-[1.02] tracking-[-.055em]">One place to see what matters and move it forward.</h2>
-          <p className="mt-6 max-w-lg text-sm leading-7 text-[#bca5a1]">Klinikos keeps each organization inside its authorized workspace while bringing operations, care, network activity, learning, and revenue follow-through into one coherent environment.</p>
+          <h2 className="mt-5 text-5xl font-light leading-[1.02] tracking-[-.055em]">One identity. The right experience for what needs to happen now.</h2>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-[#bca5a1]">After authentication, Klinikos restores safe entry context and lets Zumi continue from the objective that brought you here. Authority remains governed underneath.</p>
         </div>
       </section>
     </main>
