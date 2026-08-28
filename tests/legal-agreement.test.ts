@@ -40,13 +40,27 @@ describe("Klinikos global agreement", () => {
     expect(text).toContain("does not impose an arbitrary punitive 'fine'");
   });
 
-  it("requires extra professional and Grid acknowledgments without weakening base assent", () => {
+  it("requires AI-processing, professional, and Grid acknowledgments without weakening base assent", () => {
     const owner = requiredAcknowledgmentsForRole("clinic_owner");
     const provider = requiredAcknowledgmentsForRole("provider");
     const contractor = requiredAcknowledgmentsForRole("contractor");
-    expect(owner.map(({ key }) => key)).toEqual(["terms", "confidentiality", "electronic_signature", "ai_authority"]);
+    expect(owner.map(({ key }) => key)).toEqual([
+      "terms",
+      "confidentiality",
+      "electronic_signature",
+      "ai_authority",
+      "ai_service_processing",
+    ]);
     expect(provider.map(({ key }) => key)).toContain("professional_truth");
-    expect(contractor.map(({ key }) => key)).toEqual(expect.arrayContaining(["terms", "confidentiality", "electronic_signature", "ai_authority", "professional_truth", "grid_truth"]));
+    expect(contractor.map(({ key }) => key)).toEqual(expect.arrayContaining([
+      "terms",
+      "confidentiality",
+      "electronic_signature",
+      "ai_authority",
+      "ai_service_processing",
+      "professional_truth",
+      "grid_truth",
+    ]));
   });
 
   it("never treats partial acknowledgments as complete assent", () => {
