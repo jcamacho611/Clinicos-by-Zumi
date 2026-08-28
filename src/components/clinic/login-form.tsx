@@ -30,6 +30,10 @@ export function LoginForm({ demoCredentials, returnTo }: LoginFormProps) {
       const result = await response.json() as { error?: string; redirectTo?: string };
 
       if (!response.ok) {
+        if (result.redirectTo?.startsWith("/access")) {
+          window.location.assign(result.redirectTo);
+          return;
+        }
         setError(result.error ?? "Unable to sign in.");
         return;
       }
