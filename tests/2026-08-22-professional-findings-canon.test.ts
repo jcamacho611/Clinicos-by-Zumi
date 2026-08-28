@@ -12,7 +12,7 @@ describe("2026-08-22 professional findings remain canonical", () => {
   it("keeps one governed healthcare substrate and one evolving identity lifecycle", () => {
     expect(master).toContain("KLINIKOS-IDENTITY-001");
     expect(master).toContain("One person has one durable Klinikos identity");
-    expect(master).toContain("one ecosystem, many purpose-built experiences");
+    expect(master).toContain("One ecosystem, many purpose-built experiences");
     expect(master).toContain("COMPETENCY EVIDENCE");
     expect(master).toContain("GRID DISCOVERY / ELIGIBILITY");
     expect(master).toContain("FULFILLMENT / EXPERIENCE EVIDENCE");
