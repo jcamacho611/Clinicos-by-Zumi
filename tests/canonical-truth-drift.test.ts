@@ -125,7 +125,7 @@ describe("canonical Klinikos truth", () => {
     expect(design).toContain("KLINIKOS OPERATING NETWORK KERNEL DESIGN");
     expect(authorization).toContain("EXECUTED GOVERNANCE DECISION");
     expect(authorization).toContain(operatingNetworkSpec);
-    expect(index).toContain("Historical documents explain provenance only");
+    expect(index).toContain("are evidence/provenance only unless their valid content has been merged forward");
     expect(index).toContain("Black Label Marble / Obsidian / System design");
     expect(frontend).toContain("The interface itself is the signature.");
     expect(frontend).not.toContain("## Rose environmental contract");
