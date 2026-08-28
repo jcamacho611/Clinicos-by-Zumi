@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 const prismaConfig = read("prisma.config.ts");
 const legacySchema = read("prisma/schema.prisma");
 const identitySchema = read("prisma/models/universal-identity.prisma");
-const sourceOfTruth = read("docs/SOURCE_OF_TRUTH.md");
+const master = read("docs/KLINIKOS_MASTER_CANON.md");
 
 describe("universal identity foundation", () => {
   it("loads Prisma from the schema folder and points migrate at the existing migration chain", () => {
@@ -41,8 +41,9 @@ describe("universal identity foundation", () => {
   });
 
   it("inherits the current one-identity/contextual-authority law instead of replacing architecture precedence", () => {
-    expect(sourceOfTruth).toContain("Implementation truth remains current code/schema/migrations/tests/CI.");
-    expect(sourceOfTruth).toContain("One identity may hold multiple roles and evolve through the ecosystem.");
-    expect(sourceOfTruth).toContain("A generic `provider` label is never sufficient to grant regulated capability.");
+    expect(master).toContain("Current verified implementation determines what exists today");
+    expect(master).toContain("One person has one durable Klinikos identity with many governed relationships and contexts");
+    expect(master).toContain("Role label alone is insufficient");
+    expect(master).toContain("IDENTITY != CLAIM != VERIFIED FACT != RELATIONSHIP != ELIGIBILITY != ENTITLEMENT != AUTHORITY");
   });
 });
