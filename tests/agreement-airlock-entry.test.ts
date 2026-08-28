@@ -15,6 +15,7 @@ const loginRoute = read("src/app/api/auth/login/route.ts");
 const identityPage = read("src/app/identity/create/page.tsx");
 const identityRoute = read("src/app/api/identity/create/route.ts");
 const publicGateway = read("src/components/marketing/public-living-gateway.tsx");
+const publicContinuation = read("src/lib/distribution/public-continuation.ts");
 const personalHome = read("src/app/home/page.tsx");
 
 describe("Agreement Airlock entry order", () => {
@@ -74,9 +75,11 @@ describe("Agreement Airlock entry order", () => {
     expect(response).toBeGreaterThan(bind);
   });
 
-  it("routes public protected-entry calls through the Airlock instead of directly to clinic login", () => {
+  it("routes every public protected-entry call through the Airlock instead of directly to clinic login", () => {
     expect(publicGateway).toContain('href="/access"');
     expect(publicGateway).not.toContain('href="/login"');
+    expect(publicContinuation).toContain('return `/access?returnTo=${encodeURIComponent(returnTo)}`');
+    expect(publicContinuation).not.toContain('return `/login?returnTo=${encodeURIComponent(returnTo)}`');
   });
 });
 
