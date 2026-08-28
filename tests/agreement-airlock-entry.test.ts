@@ -77,7 +77,7 @@ describe("Agreement Airlock entry order", () => {
   });
 
   it("recovers through the Airlock if its short-lived pass expires between login page render and submit", () => {
-    expect(loginRoute).toContain("redirectTo: airlockHref(returnTo)");
+    expect(loginRoute).toContain('redirectTo: `/access?returnTo=${encodeURIComponent(requestedReturnTo)}`');
     expect(loginForm).toContain('result.redirectTo?.startsWith("/access")');
     expect(loginForm).toContain("window.location.assign(result.redirectTo)");
   });
