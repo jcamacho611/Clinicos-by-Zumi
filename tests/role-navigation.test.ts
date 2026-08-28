@@ -46,9 +46,6 @@ describe("role-derived navigation", () => {
   });
 
   it("is dramatically smaller than the workspace catalog it replaced as permanent furniture", () => {
-    // The point of the change, stated as a number. The catalog still exists and stays
-    // reachable through Explore Klinikos — it just stopped being the first thing a
-    // person has to read.
     const catalogSize = navigation.reduce((total, group) => total + group.items.length, 0);
     expect(catalogSize).toBeGreaterThan(30);
     for (const role of clinicRoles) {
@@ -68,10 +65,6 @@ describe("role-derived navigation", () => {
   });
 
   it("filters by authorization rather than trusting the curated lists", () => {
-    // Guards against the vacuous version of the test above. Take the union of every
-    // destination the product defines and check the predicate actually discriminates,
-    // then check the rail honours it. If nothing were ever unauthorized, the filter
-    // would be doing no work and this file would mean nothing.
     const everyHref = [...new Set(clinicRoles.flatMap((role) => primaryNavigationForRole(role).map((item) => item.href)))];
     const unauthorized = clinicRoles.flatMap((role) =>
       everyHref.filter((href) => href !== "/edu" && !canAccessWorkspace(role, workspaceOf(href))).map((href) => ({ role, href })),
@@ -119,9 +112,6 @@ describe("role-derived navigation", () => {
   });
 
   it("starts every role that can reach Home at Home, and lands the rest somewhere real", () => {
-    // `contractor` holds no clinic-data permission, so /dashboard genuinely 404s for
-    // them and sign-in already routes them to Grid instead. Asserting a universal Home
-    // would demand a rail entry that does not work.
     for (const role of clinicRoles) {
       const first = primaryNavigationForRole(role)[0];
       expect(first, `${role} has no landing destination`).toBeDefined();
@@ -133,19 +123,14 @@ describe("role-derived navigation", () => {
     }
   });
 
-  it("lands a contractor where sign-in actually sends them", () => {
-    // The rail and the post-login redirect are two places answering "where does this
-    // person start". Their drifting apart is invisible until somebody signs in.
+  it("uses universal Living Home as the post-auth continuity surface instead of a role-specific redirect", () => {
     const loginRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/auth/login/route.ts"), "utf8");
-    const contractorLanding = loginRoute.match(/role === "contractor" \? "([^"]+)"/)?.[1];
-    expect(contractorLanding).toBeTruthy();
-    expect(primaryNavigationForRole("contractor")[0]?.href).toBe(contractorLanding);
+    expect(loginRoute).toContain('safeReturnTo(parsed.data.returnTo) ?? "/home"');
+    expect(loginRoute).not.toContain('role === "contractor" ? "/grid/opportunities"');
+    expect(routeExists("/home")).toBe(true);
   });
 
   it("never sends a signed-in person to the public marketplace entry", () => {
-    // `/grid` sits outside the (platform) group and renders signed-out chrome with a
-    // "Sign in" button. A signed-in owner following their own rail used to land there
-    // and be invited to sign in again.
     const publicEntries = new Set(["/grid", "/grid/browse", "/grid/pricing", "/grid/join"]);
     for (const role of clinicRoles) {
       for (const item of primaryNavigationForRole(role)) {
@@ -162,7 +147,6 @@ describe("role-derived navigation", () => {
   });
 
   it("does not list a permanent destination again inside Explore Klinikos", () => {
-    // Seeing "Money" in two places teaches a person that the two are different things.
     for (const role of clinicRoles) {
       const primary = new Set(primaryNavigationForRole(role).map((item) => item.href));
       for (const group of exploreNavigationForRole(role, primary)) {
@@ -185,12 +169,10 @@ describe("role-derived navigation", () => {
   });
 
   it("asks a question that fits the surface a person is standing on", () => {
-    // One conversation, but the invitation should match the work in front of them.
     expect(klinikosPromptForWorkspace("dashboard")).toBe("What needs to happen?");
     expect(klinikosPromptForWorkspace("grid")).toBe("What do you need or have?");
     expect(klinikosPromptForWorkspace("billing")).toMatch(/money/i);
     expect(klinikosPromptForWorkspace("edu")).toMatch(/work on next/i);
-    // An unknown surface still gets a question, never an empty placeholder.
     expect(klinikosPromptForWorkspace("not-a-real-workspace").length).toBeGreaterThan(10);
   });
 });
