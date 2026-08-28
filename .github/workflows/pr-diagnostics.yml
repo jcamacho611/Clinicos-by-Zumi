@@ -1,0 +1,100 @@
+name: PR Diagnostics
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: diagnostics-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_diag?schema=public
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_diag?schema=public
+      NEXT_PUBLIC_APP_URL: https://klinikos.io
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: klinikos_diag
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev --ignore-scripts
+
+      - name: Generate and validate database client
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run db:generate
+          npm run db:validate
+          npx prisma migrate deploy
+
+      - name: Capture Vitest output
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          npm test 2>&1 | tee vitest.log
+          status=${PIPESTATUS[0]}
+          echo "$status" > vitest.status
+          exit 0
+
+      - name: Capture production build output
+        shell: bash
+        env:
+          NODE_ENV: production
+        run: |
+          set +e
+          set -o pipefail
+          npm run render:build 2>&1 | tee render-build.log
+          status=${PIPESTATUS[0]}
+          echo "$status" > render-build.status
+          exit 0
+
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-diagnostics-${{ github.sha }}
+          path: |
+            vitest.log
+            vitest.status
+            render-build.log
+            render-build.status
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Preserve diagnostic failure state
+        shell: bash
+        run: |
+          test_status=$(cat vitest.status)
+          build_status=$(cat render-build.status)
+          echo "Vitest exit code: $test_status"
+          echo "Render build exit code: $build_status"
+          if [ "$test_status" -ne 0 ] || [ "$build_status" -ne 0 ]; then
+            exit 1
+          fi
