@@ -11,6 +11,7 @@ const accessPage = read("src/app/access/page.tsx");
 const airlockPolicy = read("src/lib/legal/agreement-airlock.ts");
 const airlockRoute = read("src/app/api/access/airlock/route.ts");
 const loginPage = read("src/app/login/page.tsx");
+const loginForm = read("src/components/clinic/login-form.tsx");
 const loginRoute = read("src/app/api/auth/login/route.ts");
 const identityPage = read("src/app/identity/create/page.tsx");
 const identityRoute = read("src/app/api/identity/create/route.ts");
@@ -73,6 +74,12 @@ describe("Agreement Airlock entry order", () => {
     const response = loginRoute.indexOf("NextResponse.json", bind);
     expect(bind).toBeGreaterThan(-1);
     expect(response).toBeGreaterThan(bind);
+  });
+
+  it("recovers through the Airlock if its short-lived pass expires between login page render and submit", () => {
+    expect(loginRoute).toContain("redirectTo: airlockHref(returnTo)");
+    expect(loginForm).toContain('result.redirectTo?.startsWith("/access")');
+    expect(loginForm).toContain("window.location.assign(result.redirectTo)");
   });
 
   it("routes every public protected-entry call through the Airlock instead of directly to clinic login", () => {
