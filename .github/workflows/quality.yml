@@ -1,28 +1,7 @@
-# CI has not executed on this repository since at least 2026-08-18.
-#
-# Every run — this workflow and the separate runner diagnostic alike — fails in about
-# two seconds with `runner_id: 0`, an empty runner name, and no `steps` array at all.
-# That is the signature of a job that was never assigned a runner, not of a job that ran
-# and failed: the workflow is valid, its YAML parses, and its steps are well formed.
-#
-# The cause is account-level. This repository is private, and private repositories
-# consume billable Actions minutes; when the included allowance is spent or the spending
-# limit is $0, GitHub accepts the run and then never provisions a runner. Nothing in this
-# file can fix it. It is resolved in Settings → Billing and plans → either raise the
-# Actions spending limit or wait for the monthly reset.
-#
-# Measured rather than inferred, on run 32886481649 (2026-08-25): the billing API reports
-# `total_ms: 0` with `duration_ms: 0` for both jobs, while the run itself records
-# `run_duration_ms: 4000`. GitHub therefore clocked four seconds of wall time and zero
-# billable compute — the jobs consumed no runner at all. A workflow defect would still
-# burn minutes.
-#
-# Until it is fixed, release proof comes from two commands that do run:
-#   npm run verify:release      full gate — migrations on an empty database, tests,
-#                               journeys, production build, startup, health
-#   npm run verify:production   read-only check of what is actually deployed
-#
-# Do not weaken the gates below to make this display green.
+# Canonical exact-head quality and production-deploy contract.
+# Keep the release gates strict. A green run must prove fresh migrations, code quality,
+# user journeys, production build/startup, and the same governed Render migration path
+# used by the production host.
 
 name: Quality
 
@@ -45,10 +24,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
       DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
-    # A real Postgres so migrations can be applied to an empty database on every run.
-    # Without this the deploy path was never exercised: nine migrations referenced Prisma
-    # model names instead of their mapped table names and could not apply anywhere, and
-    # CI stayed green throughout because it never ran them.
     services:
       postgres:
         image: postgres:16
@@ -79,8 +54,6 @@ jobs:
         run: npm run db:generate
       - name: Validate Prisma schema
         run: npm run db:validate
-      # The gate that makes a broken deploy path impossible to miss. A migration that
-      # cannot apply to an empty database fails here rather than in production.
       - name: Apply migrations to a fresh database
         run: npx prisma migrate deploy
       - name: Type check
@@ -119,23 +92,15 @@ jobs:
           cat /tmp/klinikos-start.log
           exit 1
 
-  # The deployment contract, run exactly as the production host runs it.
-  #
-  # `verify` builds with the repository's own scripts and a developer-shaped install, so
-  # it cannot see defects that only appear under the host's conditions. Two already
-  # reached production that way: NODE_ENV=production prunes devDependencies, which
-  # removed tailwindcss and @tailwindcss/postcss and broke the PostCSS plugin
-  # resolution; and the canonical command passes --ignore-scripts, which skips every
-  # dependency install script as well as this repository's own postinstall.
-  #
-  # This job therefore hardcodes the canonical Render commands rather than reusing the
-  # npm scripts around them. If the deployment contract in render.yaml changes, change it
-  # here too — the duplication is the point, because this is the thing being verified.
+  # The deployment contract is intentionally evaluated under the same Render signal
+  # consumed by scripts/render-build.mjs. This verifies the governed additive-migration
+  # path instead of accidentally exercising the fail-closed non-Render path.
   deploy-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       NODE_ENV: production
+      RENDER: "true"
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       NEXT_PUBLIC_APP_URL: https://klinikos.io
@@ -163,14 +128,12 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
-      # Render's Build Command, verbatim.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
         run: npm run render:build
       - name: Post-build confidentiality gates
         run: npm run security:check
-      # Render's Start Command, verbatim. A build that cannot start is not a deploy.
       - name: Start exactly as the production host starts
         shell: bash
         run: |
