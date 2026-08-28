@@ -59,16 +59,17 @@ describe("canonical Klinikos truth", () => {
   });
 
   it("keeps payment redirect truth separate from entitlement", () => {
-    const source = read("docs/SOURCE_OF_TRUTH.md");
+    const master = read("docs/KLINIKOS_MASTER_CANON.md");
     const status = read("docs/FEATURE_STATUS.md");
 
-    expect(source).toContain("Browser redirect/return state does **not** establish payment.");
-    expect(source).toContain("Payment evidence is recorded separately from entitlement.");
+    expect(master).toContain("KLINIKOS-BILLING-001");
+    expect(master).toContain("PaymentEvidence");
+    expect(master).toContain("ENTITLEMENT != AUTHORITY");
     expect(status).toContain("Redirect state is never payment evidence.");
   });
 
-  it("keeps every ecosystem engine bound to an indexed specialist canon", () => {
-    const source = read("docs/SOURCE_OF_TRUTH.md");
+  it("keeps ecosystem engines subordinate to the unified canon while preserving specialist detail", () => {
+    const master = read("docs/KLINIKOS_MASTER_CANON.md");
     const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
     const specialistCanons = [
       "GRID_CANON.md",
@@ -79,10 +80,11 @@ describe("canonical Klinikos truth", () => {
       "FINANCIAL_OS_CANON.md",
     ];
 
+    expect(master).toContain("sole active product, architecture, business, experience, and product-design authority");
+    expect(index).toContain("Specialist canons/specs/runbooks remain useful");
+    expect(index).toContain("They are subordinate to the Master Canon");
     for (const filename of specialistCanons) {
       expect(fs.existsSync(path.join(process.cwd(), "docs", filename))).toBe(true);
-      expect(source).toContain(`docs/${filename}`);
-      expect(index).toContain(`docs/${filename}`);
     }
   });
 
@@ -91,11 +93,11 @@ describe("canonical Klinikos truth", () => {
     const ledger = read("docs/BRANCH_LEDGER.md");
 
     expect(agentLaw).toContain("jcamacho611/Clinicos-by-Zumi");
-    expect(agentLaw).toContain("Never use, inspect, edit, merge, or copy LWA/IWA work");
-    expect(agentLaw).toContain("Use neutral role language");
-    expect(ledger).toContain("`main` is the only source of implementation truth");
-    expect(ledger).toContain("There is intentionally no preservation/recovery status");
-    expect(ledger).toContain("A historical branch must never be merged wholesale");
+    expect(agentLaw).toContain("Never use another product or repository as a Klinikos workspace.");
+    expect(agentLaw).toContain("There is one current Klinikos.");
+    expect(ledger).toContain("`main` is the sole implementation baseline after changes merge.");
+    expect(ledger).toContain("Open branches/PRs are work candidates, not alternate current products.");
+    expect(ledger).toContain("Never mass-merge a stale branch.");
   });
 
   it("keeps Grid contractor fixtures anchored to roles instead of personal identities", () => {
@@ -112,22 +114,19 @@ describe("canonical Klinikos truth", () => {
     expect(migration).not.toContain('SET "id"');
   });
 
-  it("locks the approved operating-network parent architecture and retires mandatory decorative motifs", () => {
+  it("keeps the approved operating-network architecture as provenance while the Master Canon governs current design", () => {
     const operatingNetworkSpec = "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md";
     const authorizationPath = "governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md";
     const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
     const frontend = read("docs/FRONTEND_EXPERIENCE_CANON.md");
-    const claude = read("CLAUDE.md");
     const design = read(operatingNetworkSpec);
     const authorization = read(authorizationPath);
 
     expect(design).toContain("KLINIKOS OPERATING NETWORK KERNEL DESIGN");
     expect(authorization).toContain("EXECUTED GOVERNANCE DECISION");
     expect(authorization).toContain(operatingNetworkSpec);
-    expect(index).toContain(operatingNetworkSpec);
-    expect(index).toContain(authorizationPath);
-    expect(claude).toContain(operatingNetworkSpec);
-    expect(claude).toContain(authorizationPath);
+    expect(index).toContain("Historical documents explain provenance only");
+    expect(index).toContain("Black Label Marble / Obsidian / System design");
     expect(frontend).toContain("The interface itself is the signature.");
     expect(frontend).not.toContain("## Rose environmental contract");
     expect(frontend).toContain("No decorative motif is permanent");
