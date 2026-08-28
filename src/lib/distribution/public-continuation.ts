@@ -68,12 +68,12 @@ export function publicContinuationHref(href: string, intentKey: string) {
  * Resolve the CTA produced by Public Zumi while preserving the value-first journey.
  *
  * Public surfaces stay public and receive only bounded structured continuation state.
- * Patient access uses the separate patient login. Protected clinic work continues
- * through the canonical staff sign-in return gate.
+ * Patient access uses the separate patient login. Protected Klinikos work must cross
+ * the Agreement Airlock before authentication and protected context resolution.
  */
 export function publicLivingDestinationHref(destination: { href: string; key: string }) {
   const parsed = safeInternalDestination(destination.href);
-  if (!parsed) return "/login";
+  if (!parsed) return "/access";
   if (parsed.pathname === "/portal") return "/portal/login";
   if (PUBLIC_ACTION_PATHS.has(parsed.pathname)) {
     return publicContinuationHref(destination.href, destination.key);
@@ -82,17 +82,17 @@ export function publicLivingDestinationHref(destination: { href: string; key: st
 }
 
 /**
- * Carry only low-sensitivity structured continuation metadata across sign-in.
+ * Carry only low-sensitivity structured continuation metadata across protected entry.
  *
  * The raw Public Zumi prompt never belongs in the URL. It may contain healthcare,
  * employment, financial, or other private context that browsers, proxies, analytics,
  * logs, referrers, and screenshots can retain. The destination itself remains subject
- * to the existing same-origin login return gate and all server-side authorization.
+ * to the Agreement Airlock, authentication, and all server-side authorization.
  */
 export function protectedPublicContinuationHref(href: string, intentKey: string) {
   const destination = safeInternalDestination(href);
-  if (!destination) return "/login";
+  if (!destination) return "/access";
 
   const returnTo = decoratePublicDestination(destination, intentKey);
-  return `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  return `/access?returnTo=${encodeURIComponent(returnTo)}`;
 }
