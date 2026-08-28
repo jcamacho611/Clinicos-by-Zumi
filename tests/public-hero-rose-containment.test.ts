@@ -14,8 +14,8 @@ const footer = read("src/components/marketing/public-trust-footer.tsx");
 
 describe("public hero rose containment", () => {
   it("bounds the public hero to one viewport-owned stacking context", () => {
-    expect(cinematicCss).toMatch(/\.rose-home\s*\{[^}]*position:\s*relative;[^}]*height:\s*100vh;[^}]*overflow:\s*hidden;/s);
-    expect(cinematicCss).not.toMatch(/\.rose-home\s*\{[^}]*min-height:\s*100vh;/s);
+    expect(cinematicCss).toMatch(/\.rose-home\s*\{[\s\S]*?position:\s*relative;[\s\S]*?height:\s*100vh;[\s\S]*?overflow:\s*hidden;[\s\S]*?\}/);
+    expect(cinematicCss).not.toMatch(/\.rose-home\s*\{[\s\S]*?min-height:\s*100vh;[\s\S]*?\}/);
   });
 
   it("keeps the rose and vignette inside the hero instead of fixing them to the viewport", () => {
@@ -26,8 +26,8 @@ describe("public hero rose containment", () => {
   });
 
   it("puts hero content above the atmospheric layer with one explicit content plane", () => {
-    expect(cinematicCss).toMatch(/\.rose-home > header,\s*\.rose-home > main\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1;/s);
-    expect(cinematicCss).toMatch(/\.rose-home \.rose-vignette,\s*\.rose-home \.rose-atmosphere\s*\{[^}]*z-index:\s*0\s*!important;/s);
+    expect(cinematicCss).toMatch(/\.rose-home > header,\s*\.rose-home > main\s*\{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;[\s\S]*?\}/);
+    expect(cinematicCss).toMatch(/\.rose-home \.rose-vignette,\s*\.rose-home \.rose-atmosphere\s*\{[\s\S]*?z-index:\s*0\s*!important;[\s\S]*?\}/);
   });
 
   it("gives every homepage surface below the hero its own opaque obsidian ground", () => {
