@@ -83,7 +83,8 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("ZUMI_COMPOSER_PROMPT");
     expect(source).toContain("KLINIKOS_ONE_LINE");
     expect(source).toContain("KLINIKOS_SUPPORTING");
-    expect(source).toContain('aria-label="Public Zumi guidance"');
+    expect(source).toContain('"Public Zumi guidance"');
+    expect(source).toContain('"Zumi continuity"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
     expect(page).not.toContain("PublicConversionBridge");
