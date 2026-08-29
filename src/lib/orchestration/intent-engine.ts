@@ -103,7 +103,7 @@ const rules = [
   {
     pathId: "educator-preceptor-opportunity",
     actor: "professional" as const,
-    phrases: ["be a preceptor", "teach students", "teaching opportunities", "preceptor opportunity"],
+    phrases: ["be a preceptor", "precept students", "precepting students", "serve as a preceptor", "teach students", "teaching opportunities", "preceptor opportunity"],
     outcome: "Map teaching readiness and availability into eligible education opportunities.",
   },
   {
