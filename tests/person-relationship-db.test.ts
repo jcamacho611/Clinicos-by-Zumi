@@ -10,6 +10,7 @@ const personId = `person_${suffix}`;
 const membershipId = `membership_${suffix}`;
 const relationshipId = `relationship_${suffix}`;
 const providerRecordId = `provider_${suffix}`;
+const effectiveFrom = new Date("2026-08-29T11:00:00.000Z");
 
 beforeAll(async () => {
   await db.organization.create({
@@ -43,6 +44,7 @@ beforeAll(async () => {
           legacyUserId: userId,
           membershipType: "organization_user",
           roleKey: "provider",
+          effectiveFrom,
         },
       },
     },
@@ -61,6 +63,7 @@ beforeAll(async () => {
       sourceType: "explicit_link",
       sourceReference: providerRecordId,
       evidenceReference: `credential_evidence_${suffix}`,
+      effectiveFrom,
     },
   });
 });
