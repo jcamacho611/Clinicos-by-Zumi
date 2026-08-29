@@ -112,22 +112,25 @@ describe("canonical Klinikos truth", () => {
     expect(migration).not.toContain('SET "id"');
   });
 
-  it("locks the approved operating-network parent architecture and retires mandatory decorative motifs", () => {
-    const operatingNetworkSpec = "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md";
-    const authorizationPath = "governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md";
-    const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+  it("locks the sole Master Canon hierarchy while preserving older designs as provenance", () => {
+    const masterCanonPath = "docs/KLINIKOS_MASTER_CANON.md";
+    const engineeringBlueprintPath = "docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md";
+    const authorityMapPath = "docs/KLINIKOS_AUTHORITY_MAP.yaml";
+    const historicalOperatingNetworkSpec = "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md";
     const frontend = read("docs/FRONTEND_EXPERIENCE_CANON.md");
     const claude = read("CLAUDE.md");
-    const design = read(operatingNetworkSpec);
-    const authorization = read(authorizationPath);
+    const masterCanon = read(masterCanonPath);
+    const authorityMap = read(authorityMapPath);
 
-    expect(design).toContain("KLINIKOS OPERATING NETWORK KERNEL DESIGN");
-    expect(authorization).toContain("EXECUTED GOVERNANCE DECISION");
-    expect(authorization).toContain(operatingNetworkSpec);
-    expect(index).toContain(operatingNetworkSpec);
-    expect(index).toContain(authorizationPath);
-    expect(claude).toContain(operatingNetworkSpec);
-    expect(claude).toContain(authorizationPath);
+    expect(fs.existsSync(path.join(process.cwd(), historicalOperatingNetworkSpec))).toBe(true);
+    expect(masterCanon).toContain("KLINIKOS MASTER CANON");
+    expect(authorityMap).toContain("SOLE_ACTIVE_PRODUCT_ARCHITECTURE_BUSINESS_EXPERIENCE_AUTHORITY");
+    expect(authorityMap).toContain(`file: ${masterCanonPath}`);
+    expect(authorityMap).toContain(`file: ${engineeringBlueprintPath}`);
+    expect(claude).toContain(masterCanonPath);
+    expect(claude).toContain(engineeringBlueprintPath);
+    expect(claude).toContain(authorityMapPath);
+    expect(claude).not.toContain(historicalOperatingNetworkSpec);
     expect(frontend).toContain("The interface itself is the signature.");
     expect(frontend).not.toContain("## Rose environmental contract");
     expect(frontend).toContain("No decorative motif is permanent");
