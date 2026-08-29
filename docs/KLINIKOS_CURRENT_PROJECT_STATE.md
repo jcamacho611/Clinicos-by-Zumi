@@ -18,22 +18,35 @@ Current reconciliation branch:
 
 `docs/luxe-master-canon-reconciliation-20260829`
 
-Verified branch head before this snapshot file is added:
+Verified branch head immediately before this snapshot update:
 
-`8540d410a1365042c79e1abb3aff335bcb38c120`
+`b127088247bf9c959549a686435593b12468e197`
 
-Branch relationship to `main` immediately before this snapshot:
+Branch relationship to `main` immediately before this snapshot update:
 
-- 15 commits ahead;
+- 19 commits ahead;
 - 0 commits behind;
-- merge base equals current `main`;
-- no open PR existed for this branch at that moment.
+- merge base equals current `main`.
 
-No GitHub Actions workflow run existed for this branch at the moment checked. Therefore this branch must **not** be described as CI-green until a workflow is triggered and passes on the exact candidate head.
+Open pull request:
+
+- PR `#367` — `docs/architecture: unify Klinikos canon and engineering blueprint`;
+- head is the reconciliation branch;
+- base is `main`;
+- PR remains open and must not merge until exact-head verification and review pass.
+
+GitHub Actions Quality run for `b127088247bf9c959549a686435593b12468e197`:
+
+- run `33241707468`;
+- status at this snapshot: `in_progress`;
+- `verify` job: in progress, dependencies installing at last check;
+- `deploy-contract` job: in progress, production-style install at last check.
+
+Therefore this branch is **not** described as CI-green by this snapshot.
 
 ## 2. Current authority/convergence work on this branch
 
-The branch now contains:
+The branch contains:
 
 - `docs/KLINIKOS_MASTER_CANON.md` — sole active company/product authority candidate for merge;
 - `docs/KLINIKOS_AUTHORITY_MAP.yaml` — explicit authority hierarchy;
@@ -42,30 +55,47 @@ The branch now contains:
 - `docs/governance/KLINIKOS_DOCUMENT_AUTHORITY_INVENTORY.md`;
 - `docs/governance/KLINIKOS_PROVENANCE_RECONCILIATION_LEDGER.md`;
 - `docs/governance/KLINIKOS_CANON_MIGRATION_MATRIX.md`;
+- `docs/governance/KLINIKOS_REV3_ARCHITECTURE_TO_CODE_DELTA.md` — subordinate evidence/implementation delta that must be absorbed into the existing engineering blueprint rather than becoming another authority;
 - `docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md`;
 - updated `AGENTS.md` and `CLAUDE.md`;
-- new `CODEX.md` and `SYMPHONY.md`.
+- `CODEX.md` and `SYMPHONY.md`;
+- authority and Screen Contract regression tests added or adjusted on the branch.
 
 The branch also contains the previously approved Luxe-to-Master reconciliation designs/plans. These remain subordinate to the Master Canon and implementation contract.
 
 ## 3. Instituted architecture being converged
 
+The top-level architecture remains the five-plane system:
+
+1. Healthcare Universe Plane;
+2. Economic & Resource Plane;
+3. Lifecycle Plane;
+4. Operating Infrastructure Plane;
+5. Compounding Business Plane.
+
+The canonical ecosystem graph is connective machinery across those planes, not a sixth plane.
+
 The current branch institutes the following direction for product/company convergence:
 
-- one Klinikos identity with many relationships and experiences;
+- one Klinikos Person identity target with many relationships, contexts and experience projections;
+- current implementation is still partial with domain-oriented User/Patient/Provider structures, so Person convergence must be migration-safe rather than a destructive rewrite;
 - `CLAIM != VERIFIED FACT != AUTHORITY`;
 - `EXISTS != DISCOVERABLE != PROMOTED != ELIGIBLE != ENTITLED != AUTHORIZED != VISIBLE DATA != ACTIONABLE NOW`;
 - Promotion, Entitlement, and Authority remain separate controls;
 - protected application entry preserves the Agreement Airlock and one-identity authentication path;
 - Zumi is governed intelligence, not authority;
 - Active Experience Envelope / Experience Engine determine purpose-built experience projection;
-- Screen Experience Contracts are required for production surfaces;
+- Screen Experience Contracts are required for production surfaces and materially exist on the branch; remaining work is coverage/runtime enforcement and exact-head verification;
 - Grid remains universal healthcare supply/demand/capacity infrastructure, not staffing-only;
+- existing Grid demand/resource/composition/eligibility/transaction machinery must be reused before new marketplace infrastructure is created;
 - EDU extends through competency evidence, placement, Grid/work, new evidence, and continuing learning;
 - Current Visit remains the clinical convergence surface;
 - telemedicine is an encounter mode, not a separate clinical product;
 - Financial OS distinguishes charge/claim/acceptance/adjudication/remittance/payment/reconciliation truth;
-- external payer, clearinghouse, lab, imaging, pharmacy, licensing, and similar rails remain CONNECT/PARTNER boundaries unless verified implementation says otherwise;
+- external payer, clearinghouse, lab, imaging, pharmacy, licensing, malpractice, video/media and similar authoritative rails remain CONNECT/PARTNER boundaries unless verified implementation says otherwise;
+- regulated clinical inventory is distinct from ordinary permitted Grid Commerce;
+- patients may use care/discovery/matching primitives without becoming public Grid profiles;
+- hard eligibility precedes ranking/reputation;
 - Marble and Obsidian remain first-class visual systems;
 - `Simple above. Technical below.` and first-viewport usefulness govern UX;
 - no core platform should regress into brochure-first or card-wall architecture.
@@ -78,26 +108,61 @@ The file:
 
 is classified as `IMPLEMENTATION_CONTRACT`, not a second Canon.
 
-It currently encodes:
+Its next required update is rev3 absorption from:
 
-- the five-plane system;
-- actor/organization/resource classes;
-- Grid primitives;
-- student/professional/injector/patient/clinic/med-spa/expert/cross-organizational lifecycles;
-- 12 shared backend domains;
-- the compounding business flywheel;
-- structured route-registry examples;
-- the eight-lens Executive Council evaluation frame;
-- the six-stage reconciliation program;
-- NOW / BUILD-EXPAND / LATER / PARTNER / CONNECT / NEVER BUILD scope classification.
+`docs/governance/KLINIKOS_REV3_ARCHITECTURE_TO_CODE_DELTA.md`.
 
-Its `CURRENT STATE vs. TARGET STATE` section is a dated snapshot inside the implementation contract. Current code/schema/tests/runtime always win for claims about what is actually live now.
+Rev3 must preserve the five-plane architecture while correcting implementation truth, including:
 
-## 5. Multi-agent ownership at this snapshot
+- strategy state and implementation state as separate dimensions;
+- one Person as target architecture, not a false current-live claim;
+- existing Screen Contract implementation acknowledged;
+- existing Grid kernels acknowledged and reused;
+- Grid production/demo gates represented truthfully;
+- regulated inventory separated from ordinary commerce;
+- patient demand/privacy boundary;
+- EDU/placement/resume/profile gaps represented precisely;
+- RN/injector path built on existing eligibility machinery;
+- med-spa modeled as a cross-plane proof case rather than a separate marketplace;
+- Quality Guardian → Expert Grid expansion path;
+- external clinical/payment/credentialing rails kept evidence-gated;
+- current RCM substrate acknowledged without claiming a verified full external payer cycle;
+- OpenAI/PHI/partner claims kept evidence-gated;
+- commercial pricing language reconciled with executable current registries;
+- defensibility framed as accumulated value, evidence, relationships and network liquidity rather than artificial lock-in.
+
+Current code/schema/tests/runtime always win for claims about what is actually live now.
+
+## 5. Current architecture-to-code reuse direction
+
+Highest-value reuse/extension findings at this snapshot:
+
+- `src/lib/grid/eligibility.ts` — contextual activity-specific eligibility; reuse/extend;
+- `src/lib/grid/composition-engine.ts` — shared composition for clinical service, staffing shift, clinical placement and room rental; reuse/extend;
+- `src/lib/grid/transaction-flow.ts` — distinct demand/offer/reservation/fulfillment state; reuse;
+- `src/lib/grid/resource-rules.ts` and Grid resource repository — universal resource/policy machinery; extend/harden;
+- `src/lib/ecosystem/clinic-grid-bridge.ts` — Clinic OS operational signals into reviewable Grid drafts; reuse/extend;
+- `src/lib/ecosystem/edu-grid-bridge.ts` — human-reviewed EDU evidence into supervised-placement demand while preserving `EDU != LICENSE`; reuse/extend;
+- `src/lib/paths/catalog.ts` — existing lifecycle route catalog; extend rather than create a second route engine;
+- `src/lib/screen-experience-contracts.ts` and route binding registry — existing experience contracts; reuse/verify/enforce;
+- `src/features/zumi/adapters/openai-responses.ts` + AI processing policy — existing OpenAI rail/provider abstraction and policy controls; reuse/verify/govern;
+- `src/lib/company-operating-canon.ts` — existing machine company-operating contract; extend rather than create a second Company OS.
+
+High-value proven missing/partial connective work:
+
+- canonical Person / membership / relationship substrate;
+- persisted resume/CareerArtifact and profile projections if final schema audit confirms the gap;
+- complete placement relationship lifecycle over existing EDU + Grid composition;
+- expert supply/scoped engagement over Grid;
+- standardized canonical ecosystem graph capable of generating all five-plane/domain views;
+- richer route metadata tying nodes/edges/status/economics/authority to that graph;
+- cross-organizational integration continuity and verified external-rail states.
+
+## 6. Multi-agent ownership at this snapshot
 
 ### ChatGPT / Orchestrator
 
-Owns Canon convergence, project-state accuracy, branch/PR sequencing, conflict resolution, and handoff integrity.
+Owns Canon convergence, project-state accuracy, branch/PR sequencing, conflict resolution, handoff integrity, architecture-to-code reconciliation and ensuring the five-plane system remains one coherent product/company architecture.
 
 ### Claude
 
@@ -105,7 +170,7 @@ Owns frontend/experience realization, Black Label design, spatial interaction, r
 
 ### Codex
 
-Owns backend/domain authority, Experience Engine, identity/claim/verification/eligibility/entitlement/authority wiring, schema/APIs/events, security/integrations/tests/release verification.
+Owns backend/domain authority, Experience Engine, identity/claim/verification/eligibility/entitlement/authority wiring, schema/APIs/events, ecosystem graph implementation, security/integrations/tests/release verification.
 
 ### Symphony
 
@@ -115,31 +180,39 @@ Owns funding, procurement, RFPs, outreach, commercial execution, proposal assemb
 
 Is the in-product intelligence layer only. Zumi is not a development agent or deterministic authority.
 
-## 6. Immediate next engineering/convergence work
+## 7. Immediate next engineering/convergence work
 
-The reconciliation program remains unfinished. Highest-priority next work after this authority tranche is verified and merged:
+The reconciliation program remains unfinished. Current highest-priority order is:
 
-1. complete Stage A Canon reconciliation and retire/reclassify duplicate governing documents safely;
-2. encode complete route/profile registries from the master engineering blueprint;
-3. add regression laws preventing authority collapse, fake verification, EDU-issued licensure, public patient supply, Grid staffing-only regression, and unsafe context switching;
-4. compare the actual schema/domain objects against the blueprint and add only proven missing structures;
-5. author/enforce Screen Experience Contracts for priority production routes;
-6. converge the real public/application experiences to first-viewport usefulness, including Living Home, Grid, Clinic entry, EDU, Patient, Current Visit, billing, and enterprise contexts;
-7. verify current external rails and legal/privacy gates before enabling PHI-adjacent AI or claiming external integrations are live.
+1. absorb the rev3 delta into the existing master engineering blueprint in place — no sibling v3 blueprint;
+2. complete outstanding Master Canon reconciliation/duplicate-authority migration proof;
+3. TDD the canonical ecosystem graph contract and its required five-plane/generated lenses before schema mutation;
+4. extend the route registry to reference graph nodes/edges/status/authority/economic boundaries;
+5. design and TDD the migration-safe Person / membership / relationship substrate linking existing User/Patient/Provider records rather than replacing them destructively;
+6. converge resume/career profile + EDU placement lifecycle over existing EDU/Grid machinery;
+7. extend professional/injector/preceptor and Expert Grid paths over existing Grid eligibility/composition/resource kernels;
+8. wire Current Visit → integrations → Financial OS cross-organizational continuity without rebuilding external authoritative rails;
+9. extend the Company OS machine contract with initiative validation, market/ICP, attribution, customer health, partner state, capital priority, scale/unicorn tests and Value Graph;
+10. generate the five-plane visual and domain views from the canonical graph;
+11. retire duplicate governing documents only after content-loss and inbound-reference verification;
+12. do not merge PR #367 until the exact candidate head passes verification and architecture review.
 
-## 7. Verification status
+## 8. Verification status
 
-At the time this snapshot is authored:
+At this snapshot:
 
-- branch relationship to `main`: verified current and 0 behind before this file commit;
-- document existence/authority hierarchy: verified on branch;
-- exact-head TypeScript/lint/Vitest/build: **NOT YET VERIFIED FOR THIS BRANCH HEAD**;
+- branch relationship to `main`: **verified 19 ahead / 0 behind** immediately before this snapshot update;
+- merge base: **verified equal to current `main`** immediately before this snapshot update;
+- PR #367: **verified open**;
+- rev3 architecture-to-code delta: **verified committed and readable on branch** at `b127088247bf9c959549a686435593b12468e197` immediately before this snapshot update;
+- exact-head GitHub Actions Quality run for `b127088247bf9c959549a686435593b12468e197`: **IN PROGRESS** at snapshot time;
+- exact-head TypeScript/lint/Vitest/PostgreSQL journeys/build/startup: **NOT YET CLAIMED PASSING**;
 - production deployment: **NOT CLAIMED**;
 - external healthcare/payment/credentialing rails: **NO NEW LIVE CLAIM MADE BY THIS SNAPSHOT**.
 
-The next merge-readiness step is to open a PR from this branch, trigger the repository's normal verification workflow, and repair any failures on the exact candidate head before merge.
+The next merge-readiness action is to inspect the Quality run result on the newest exact head and repair failures before any merge decision.
 
-## 8. Snapshot maintenance law
+## 9. Snapshot maintenance law
 
 Every consequential handoff or merge must update this file when any of the following changes materially:
 
