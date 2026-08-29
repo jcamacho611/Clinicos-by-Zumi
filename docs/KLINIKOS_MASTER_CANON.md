@@ -1,1718 +1,1568 @@
 # KLINIKOS MASTER CANON
 
-Version: `2026-08-27.2`
-Status: `ACTIVE - SOLE PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
-Repository convergence baseline: `main@0c562d02bba5ca4e9500ef53cfb49c50126ed6bc`
+Version: `2026-08-29.3`
+Status: `ACTIVE — SOLE COMPANY / PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
+Canonical implementation contract: `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md`
+Machine-readable routing: `docs/KLINIKOS_AUTHORITY_MAP.yaml`
 
-> **There is one Klinikos.**
+> **ONE KLINIKOS. ONE MASTER CANON. ONE GOVERNING COMPANY + PRODUCT TRUTH.**
 >
-> **We did not abandon our earlier work. We graduated through it.**
+> **Simple above. Powerful below. The complexity belongs to Klinikos, not to the person using Klinikos.**
+>
+> **Current verified implementation answers what exists today. This Canon answers what Klinikos must become.**
 
-This file is the single current governing specification for what Klinikos is, how it behaves as one healthcare operating ecosystem, how users enter it, how identity and authority work, how Zumi guides people, how every experience is composed, how the platform is designed, how economic paths work, how clinical work converges, how Grid and EDU compound the network, how money and evidence flow, how proprietary technology is protected, and how implementation must converge.
+This document governs the complete Klinikos company and product system: product definition, architecture, user experience, healthcare operating model, Grid, EDU, clinical workflows, financial workflows, AI, security, legal product requirements, integrations, data, commercialization, distribution, sales, retention, operations, capital, financial discipline, defensibility, scaling, and enterprise-value strategy.
 
-Earlier prompts, specialist canons, architecture snapshots, physician/engineer discussions, Grid iterations, EDU iterations, legal drafts, design packages, PR descriptions, status snapshots, and historical plans are evidence and provenance. They are not parallel current products.
+No product, architecture, business, “final”, “master”, “governing”, “source-of-truth”, blueprint, specialist canon, agent instruction, project memory, prototype, pitch, plan, or historical document may override this file.
 
 ---
 
-# 0. AUTHORITY, TRUTH, AND MERGE-FORWARD LAW
+# 0. AUTHORITY, TRUTH, ANTI-COMPRESSION, AND MERGE-FORWARD LAW
 
-## 0.1 One product authority
+## 0.1 Sole authority
 
-`docs/KLINIKOS_MASTER_CANON.md` is the sole active product, architecture, business, experience, and product-design authority.
+`docs/KLINIKOS_MASTER_CANON.md` is the sole active authority for instituted Klinikos company/product direction.
 
-Specialist documents may elaborate this canon. They may not redefine Klinikos independently or override this canon.
+The Engineering Blueprint is an `IMPLEMENTATION_CONTRACT` generated from this Canon. It may translate this Canon into engineering domains, data contracts, routes, state machines, tests, and delivery order. It may not create product or company law that is absent here.
 
-Historical documents explain provenance only. They do not govern current product truth.
+Specialist references may elaborate. Evidence registers may prove or disprove current state. Historical documents may explain provenance. None may redefine Klinikos.
 
-## 0.2 What exists today
+## 0.2 Truth hierarchy
 
-Current implementation truth is determined by current evidence:
+For **what exists today**, current verified evidence wins:
 
-- code,
-- schema,
-- migrations,
-- tests,
-- exact-head verification,
-- deployment evidence,
-- verified runtime behavior,
-- verified external integration state.
+`CURRENT CODE → SCHEMA / MIGRATIONS → TESTS → EXACT-HEAD CI → VERIFIED DEPLOYMENT → VERIFIED RUNTIME → VERIFIED EXTERNAL CONNECTION EVIDENCE`.
 
-A canon decision does not manufacture implementation. A merged PR does not prove production deployment. A configured credential does not prove a complete integration. A stale status file does not defeat verified current code.
+For **what Klinikos is intended to become**, this Master Canon wins.
 
-## 0.3 Precedence
+Therefore:
 
-When sources conflict:
+`MASTER CANON → intended truth`
+`CURRENT IMPLEMENTATION → current reality`
+`GAP → what remains`
+`BUSINESS VALUE → what next`
+`IMPLEMENT → VERIFY → UPDATE CANON-COMPLIANT EVIDENCE`.
 
-1. Current verified implementation determines what exists today.
-2. This Master Canon determines instituted product architecture, product law, business architecture, experience direction, and intended behavior.
-3. Specialist documents elaborate this Master Canon.
-4. Evidence/provenance explains why decisions exist.
-5. Historical/superseded documents have no current authority.
+A merged PR does not prove deployment. A configured credential does not prove integration. A partner relationship does not prove a feature entitlement. A sales conversation does not prove pipeline. An invoice does not prove cash. A prototype does not prove implementation.
 
-Conflicts must be resolved explicitly. Never silently blend contradictory snapshots.
+## 0.3 Truth classes
 
-## 0.4 Merge-forward protocol
+Every material business or product claim must be classified as one of:
+
+`ACTUAL / CONTRACTED / PIPELINE / ASSUMPTION / SCENARIO / TARGET`.
+
+Never convert a target, scenario, application, lead, prototype, partner possibility, or historical claim into actual traction.
+
+## 0.4 Strategy state and implementation state are separate axes
+
+Every sector, capability, integration, resource class, and expansion area may carry a strategic disposition:
+
+`NOW / NEXT / LATER / PARTNER / CONNECT / INTERNALIZE / NEVER_BUILD`.
+
+Its implementation/evidence state is separately classified:
+
+`LIVE_VERIFIED / BUILT_NEEDS_VERIFICATION / PARTIAL / DESIGNED / PLANNED / EXTERNAL_CONNECTION_REQUIRED / LEGAL_REVIEW_REQUIRED / NOT_BUILT / HISTORICAL_ONLY`.
+
+Never use strategy priority as evidence that something is built. Never use incomplete implementation as permission to erase the intended architecture.
+
+## 0.5 ANTI-COMPRESSION AND LIFECYCLE-PRESERVATION LAW
+
+**Founder omission does not equal product omission.** A real professional, operational, clinical, security, financial, legal, workflow, data, reliability, or business requirement does not disappear because the founder did not know the technical term needed to ask for it.
+
+**Canon compression must never erase accepted architecture.** Summaries may shorten language for communication, but they may not delete accepted actors, relationships, routes, state distinctions, safety gates, economic paths, evidence requirements, or company functions.
+
+Every accepted requirement must terminate in at least one concrete consequence:
+
+`CODE / SCHEMA / API / UI / ROUTE / STATE MACHINE / TEST / POLICY / OWNER / DEPENDENCY / EVIDENCE / KPI / COMMERCIAL ACTION`.
+
+No orphan strategy.
+
+## 0.6 Merge-forward law
 
 Every material discovery follows:
 
-`NEW INFORMATION`
-→ `CLASSIFY`
-→ `VERIFY`
-→ `COMPARE TO CURRENT CANON`
-→ `ACCEPT / REJECT / MODIFY`
-→ `UPDATE THIS MASTER CANON`
-→ `UPDATE IMPLEMENTATION CONSEQUENCES`
-→ `OLD VERSION BECOMES PROVENANCE`.
+`DISCOVER → CLASSIFY → VERIFY → COMPARE TO MASTER CANON → ACCEPT / REJECT / MODIFY → UPDATE MASTER CANON IF ACCEPTED → UPDATE ENGINEERING BLUEPRINT IF BUILD SHAPE CHANGES → UPDATE IMPLEMENTATION CONSEQUENCES → VERIFY → RETAIN PRIOR VERSION AS PROVENANCE`.
 
-Do not create another competing `SUPREME`, `FINAL`, `MASTER`, `SOURCE OF TRUTH`, or equivalent active product authority for an accepted product change.
+Conflict law:
 
-## 0.5 Stable decisions
+**Do not create another authority. Reconcile everything upward into Master Canon.**
 
-- `KLINIKOS-UX-001`: the protected access Terms/Confidentiality/IP airlock is the first protected interactive event.
-- `KLINIKOS-IDENTITY-001`: after protected-entry acceptance, sign in/create identity is the first protected application step.
-- `KLINIKOS-EXPERIENCE-001`: Klinikos combines recognizable role/context experience families with a continuously recomputed server-side Experience Engine. Experience families are projections, not permanent personas, products, accounts, or authority grants.
-- `KLINIKOS-SCREEN-001`: every production surface is governed by an explicit Screen Contract.
-- `KLINIKOS-PROTOTYPE-001`: prototype/UI language is an architectural claim that must be made true underneath.
-- `KLINIKOS-AUTHORITY-001`: identity, claims, conversational context, payment, and subscription are not authority.
-- `KLINIKOS-GRID-001`: Grid is universal healthcare need/resource/capacity/opportunity infrastructure.
-- `KLINIKOS-CLINICAL-001`: Current Visit is the provider-facing clinical convergence surface.
-- `KLINIKOS-INTAKE-001`: Intake and Consent are first-party Klinikos infrastructure.
-- `KLINIKOS-BILLING-001`: Klinikos owns end-to-end clinical-to-financial workflow truth while integrating regulated external rails.
-- `KLINIKOS-ZUMI-001`: Zumi interprets, guides, and orchestrates; deterministic Klinikos domains remain authority.
-- `KLINIKOS-OPENAI-001`: OpenAI is the primary production intelligence platform for Zumi under the verified partnership direction, while provider abstraction and deterministic Klinikos authority remain intact.
-- `KLINIKOS-SECURITY-001`: browser is experience, server is authority/proprietary execution, DTO is the disclosure boundary.
-- `KLINIKOS-DOCS-001`: accepted product knowledge merges forward into this canon.
+## 0.7 Historical preservation
+
+Predecessor master/final/governing documents may be retired only after unique accepted decisions are migrated and verified. Historical snapshots remain available for provenance but carry no active authority.
 
 ---
 
-# 1. WHAT KLINIKOS IS
+# 1. COMPANY AND PRODUCT DEFINITION
 
-Klinikos is the governed operating, clinical, professional, educational, financial, capacity, transaction, network, memory, and intelligence infrastructure for the healthcare lifecycle.
+Klinikos is the **governed operating, clinical, professional, educational, financial, capacity, transaction, network, memory, evidence, and intelligence infrastructure for the healthcare lifecycle.**
 
-It connects people, patients, professionals, students, educators, clinic staff, owners, organizations, locations, schools, employers, services, facilities, resources, care, referrals, education, work, credentials, authority, appointments, intake, consent, encounters, orders/results, documentation, coding, claims, money, outcomes, memory, and future opportunity through one ecosystem.
+Simplified category:
 
-Klinikos is not reducible to an EHR, EMR, CRM, billing application, patient portal, staffing marketplace, job board, provider directory, LMS, telemedicine application, med-spa CRM, AI assistant, workflow-automation product, or payment product. Those may exist as capabilities inside Klinikos.
+> **THE OPERATING NETWORK FOR HEALTHCARE.**
 
-## 1.1 Governing experience law
+Klinikos is not merely an EHR, EMR, practice-management system, billing product, CRM, staffing marketplace, job board, LMS, patient portal, telemedicine app, med-spa CRM, AI assistant, analytics tool, or payments product. Those are capabilities that may exist inside one governed healthcare operating network.
 
-> **Simple above. Powerful below.**
->
-> **The complexity belongs to Klinikos, not to the person using Klinikos.**
+The core market problem is that healthcare has enormous technology, but people, organizations, systems, money, care, evidence, education, and capacity still fail to act as one coordinated network. Unfinished work falls between systems. Klinikos connects that work and makes the next safe action obvious.
 
-The backend may be extraordinarily sophisticated. The user-facing system must remain calm, premium, obvious, fast, role-aware, context-aware, purpose-aware, accessible, and truthful.
+Permanent user question:
 
-## 1.2 One ecosystem, many purpose-built experiences
+> **What needs to happen next?**
 
-The product must feel purpose-built for the user's current work without fracturing into disconnected applications.
+Permanent category story:
 
-A patient should feel that Klinikos was designed for patients.
-
-A front-desk employee should feel that Klinikos was designed for front-desk work.
-
-An MA, LPN, RN, NP, PA, physician, biller, coder, owner, learner, instructor, institution, Grid participant, and network executive should each receive an experience that looks and behaves appropriately for their work.
-
-Those experiences are not separate products or permanent persona assignments. They are governed projections of one Klinikos substrate.
+> Healthcare does not need another disconnected dashboard. It needs an operating network that knows what is unfinished, who can act, what evidence is required, what is blocked, how the work should move, and what happened afterward.
 
 ---
 
-# 2. PROTOTYPE-TO-PRODUCTION LAW
+# 2. THE FIVE-PLANE ECOSYSTEM ARCHITECTURE
 
-## KLINIKOS-PROTOTYPE-001
+The final architecture is not a set of modules. It is one connected graph expressed through five planes. **Every plane connects to every relevant other plane.**
 
-A prototype statement is a compressed architectural claim, not merely visual copy.
+# PLANE A — HEALTHCARE UNIVERSE
 
-Every prototype, design screen, landing funnel, Figma artifact, Claude Design artifact, screenshot, prompt, or concept must be interrogated with:
+Everyone and every institution, rail, asset, authority, and participant Klinikos can govern, connect, or orchestrate.
 
-> **What real identity, relationship, authority, workflow, evidence, financial, network, clinical, memory, and data infrastructure would make this statement true?**
+# PLANE B — ECONOMIC & RESOURCE UNIVERSE
 
-If a prototype says:
+Everything that can be needed, supplied, scheduled, allocated, sold, rented, purchased, referred, taught, worked, financed, fulfilled, evidenced, settled, or reconciled.
 
-- a student becomes staff,
-- competency follows the person,
-- Grid knows eligibility,
-- a clinic makes an offer,
-- a reservation creates an obligation,
-- a payment settles something,
-- a worker gains experience,
-- a clinic expands through the network,
-- Zumi remembers what happened,
-- Klinikos compounds an operating record,
+# PLANE C — LIFECYCLE / JOURNEY UNIVERSE
 
-engineering must build or map the real governed infrastructure underneath the statement.
+Composable, intersecting user and institutional routes. There is no single happy path and no permanent persona silo.
 
-Do not copy screens while leaving the underlying claim fake.
+# PLANE D — KLINIKOS OPERATING INFRASTRUCTURE
 
-## 2.1 Workforce compounding architecture
+The shared identity, trust, clinical, Grid, EDU, financial, network, intelligence, evidence, integration, security, data, configuration, event, and experience engines that make the first three planes real.
 
-`EDU`
-→ `LEARNING`
-→ `APPLIED PRACTICE / SIMULATION`
-→ `COMPETENCY EVIDENCE`
-→ `HUMAN / INSTITUTIONAL REVIEW`
-→ `CREDENTIAL / VERIFIED READINESS WHERE APPLICABLE`
-→ `GRID DISCOVERY / ELIGIBILITY`
-→ `ORGANIZATION / OPPORTUNITY`
-→ `WORK`
-→ `FULFILLMENT / EXPERIENCE EVIDENCE`
-→ `REPUTATION / PROFESSIONAL RECORD`
-→ `UPSKILLING / CONTINUING EDU`
-→ `MORE OPPORTUNITY`.
+# PLANE E — COMPANY COMPOUNDING SYSTEM
 
-Training evidence may inform readiness. It does not automatically create licensure or regulated authority.
+How user value becomes acquisition, conversion, revenue, implementation, activation, retention, expansion, network effects, data/evidence advantages, defensibility, capital efficiency, and enterprise value.
 
-## 2.2 Clinic/network compounding architecture
+Representative cross-plane loop:
 
-`CLINIC OPERATIONS`
-→ `DETECTED NEED / AVAILABLE CAPACITY`
-→ `GRID`
-→ `RELATIONSHIP / AGREEMENT`
-→ `FULFILLMENT`
-→ `FINANCIAL / OPERATIONAL EVIDENCE`
-→ `NETWORK RELATIONSHIP`
-→ `MORE CAPACITY / SUPPLY / DEMAND`
-→ `MORE USEFUL KLINIKOS`
-→ `MORE RETENTION / REVENUE / EXPANSION`.
+`CLINIC SIGNAL → GRID NEED → ELIGIBLE MATCH → AGREEMENT → WORK → FINANCIAL OBLIGATION → PAYMENT / PAYOUT → EVIDENCE → REPUTATION → INSIGHT → RETENTION / EXPANSION → MORE NETWORK SUPPLY`.
+
+Another:
+
+`EDU DEMAND → TRAINING → COMPETENCY EVIDENCE → HUMAN REVIEW → GRID READINESS → OPPORTUNITY → WORK → EXPERIENCE → REPUTATION → PRECEPTOR / EMPLOYER / OWNER → MORE EDU SUPPLY`.
+
+Another:
+
+`CARE → DOCUMENTATION → BILLING READINESS → CLAIM → EXTERNAL RAIL → ADJUDICATION → PAYMENT → RECONCILIATION → REVENUE EXCEPTION → ZUMI → HUMAN / EXPERT REMEDIATION → EVIDENCE → PREVENTION`.
 
 ---
 
-# 3. SHARED KLINIKOS SUBSTRATE
+# 3. HEALTHCARE UNIVERSE TAXONOMY
 
-Klinikos converges onto reusable governed primitives rather than rebuilding truth independently inside each experience family.
+The universe is intentionally broader than current implementation. Every class receives both a strategy state and an implementation/evidence state.
 
-## 3.1 Identity and authority
+## 3.1 People
 
-- Person
-- Account
-- Organization
-- Location
-- Relationship
-- OrganizationMembership
-- LocationAssignment
-- Role
-- Profession
-- Capability
-- Claim
-- VerificationEvidence
-- Credential
-- License
-- Privilege
-- Assignment
-- Delegation
-- Supervision
-- PurposeOfUse
-- Consent
-- AuthorityDecision
+At minimum:
 
-## 3.2 Care
+- visitor / prospective user;
+- patient / consumer / customer;
+- caregiver / proxy / guardian;
+- learner / student / graduate;
+- licensed professional;
+- non-licensed healthcare worker;
+- physician / DO / MD;
+- NP / PA;
+- RN / LPN;
+- MA / CNA where applicable;
+- therapist / allied health;
+- behavioral-health professional;
+- technician;
+- biller / coder;
+- front desk / scheduler;
+- practice manager / administrator;
+- compliance / quality professional;
+- recruiter;
+- contractor / per-diem / locum;
+- educator / instructor / preceptor / mentor;
+- consultant / expert;
+- owner / operator / employer;
+- investor / capital partner;
+- vendor representative;
+- payer / clearinghouse representative;
+- school / workforce representative;
+- government / regulator representative;
+- implementation / support professional;
+- strategic partner representative.
 
-- Patient
-- Coverage
-- FinancialCase
-- Encounter
-- CurrentVisit
-- ClinicalEvidence
-- Observation
-- Vitals
-- BodyMap
-- Diagnosis
-- Procedure
-- Medication
-- Order
-- Result
-- Referral
-- CarePlan
-- Document
-- Communication
-- FollowUp
+## 3.2 Care organizations
 
-## 3.3 Grid/work/capacity
+At minimum:
 
-- Resource
-- Demand
-- Availability
-- Requirement
-- Eligibility
-- Match
-- Opportunity
-- Offer
-- Agreement
-- Reservation
-- Assignment
-- Fulfillment
-- Incident
-- Dispute
-- ReputationEvidence
+- independent and specialty practices;
+- solo practices;
+- multi-provider / multi-location groups;
+- med spas / aesthetic practices;
+- behavioral health;
+- PT / OT / speech;
+- pain management;
+- orthopedics;
+- neurology;
+- psychiatry;
+- primary care;
+- urgent / ambulatory care;
+- ASCs;
+- home health;
+- post-acute / rehab;
+- SNF / LTC connections;
+- hospice / palliative contexts where appropriate;
+- hospitals and health systems;
+- MSOs;
+- provider networks;
+- occupational / employer health;
+- No-Fault / Workers’ Compensation practices and case participants.
 
-## 3.4 EDU
+## 3.3 Healthcare rails and adjacent institutions
 
-- Program
-- Cohort
-- Module
-- Session
-- Enrollment
-- AttendanceEvidence
-- Scenario
-- Assessment
-- Rubric
-- Submission
-- CompetencyEvidence
-- CompletionDecision
-- EducationCredential
+- laboratories;
+- imaging centers;
+- pharmacies and eRx networks;
+- DME;
+- medical device providers;
+- remote monitoring platforms/devices;
+- transportation/logistics;
+- interpretation;
+- community/social services;
+- commercial payers;
+- Medicare / Medicaid / public programs where applicable;
+- TPAs;
+- clearinghouses;
+- employers;
+- No-Fault / Workers’ Compensation actors;
+- attorneys where a governed case legitimately requires participation;
+- banks / payment processors / financing partners;
+- RCM / collections partners where lawful.
 
-## 3.5 Financial/execution
+## 3.4 Education and workforce
 
-- Price
-- Quote
-- Charge
-- Invoice
-- PaymentIntent
-- PaymentEvidence
-- FinancialObligation
-- Claim
-- Remittance
-- Payable
-- Payout
-- Settlement
-- Refund
-- Reconciliation
-- RevenueIntegrityException
-- Entitlement
-- Task
-- Obligation
-- Event
-- AuditEvent
-- Evidence
-- Outcome
+- schools;
+- universities;
+- training organizations;
+- workforce boards;
+- career centers;
+- programs / cohorts;
+- instructors / preceptors;
+- clinical placement sites;
+- employers;
+- licensing / credentialing bodies;
+- continuing-education providers;
+- certification organizations.
 
-## 3.6 Intelligence/governance
+## 3.5 Supply, commerce, facilities, and property
 
-- Configuration
-- Memory
-- Knowledge
-- Decision
-- Provenance
-- ExternalExchange
-- ReconciliationWorkItem
+- manufacturers;
+- distributors;
+- suppliers;
+- equipment owners;
+- room / chair / facility owners;
+- landlords / property partners;
+- permitted product sellers;
+- service vendors;
+- implementation vendors;
+- procurement partners.
 
-## 3.7 No duplicate authority
+## 3.6 Quality, research, governance, and public institutions
 
-Do not create a second identity system for Grid, a second ledger for Billing, a second scheduler for telemedicine, a second task system for referrals, a second credential truth store for EDU, a second organization model for Marketplace, a second Zumi, a second Current Visit, a second patient chart, or a memory layer that quietly replaces authoritative records.
+- quality experts;
+- auditors;
+- compliance professionals;
+- researchers;
+- research sponsors / CROs later where appropriate;
+- standards bodies;
+- regulators;
+- government buyers/programs;
+- professional associations;
+- accreditation organizations.
 
-Where legacy systems overlap, preserve, understand, adapt, harden, generalize, and extend. Do not big-bang rewrite working systems.
+## 3.7 Technology and strategic partners
 
----
+- OpenAI;
+- cloud/infrastructure providers;
+- communications providers;
+- payment providers;
+- identity / credential verification vendors;
+- clearinghouses;
+- interoperability vendors;
+- lab / imaging / pharmacy networks;
+- enterprise identity providers;
+- channel/distribution partners;
+- strategic integrations.
 
-# 4. CANONICAL LITERAL USER EXPERIENCE
-
-## KLINIKOS-UX-001 - Protected access comes first
-
-Public discovery may occur before protected product entry. Once a person chooses to **Enter Klinikos**, the literal protected application sequence is fixed.
-
-Abstract economic funnels such as `DISCOVER → VALUE → INTENT → IDENTITY` do not override the actual protected screen/event order.
-
-## 4.1 Exact protected-app order
-
-`PUBLIC DISCOVERY / SEARCH / REFERRAL / INVITATION / DIRECT ENTRY`
-↓
-`ENTER KLINIKOS`
-↓
-`PROTECTED ACCESS TERMS + CONFIDENTIALITY / IP / RESTRICTED-USE AIRLOCK`
-↓
-`SIGN IN OR CREATE ONE KLINIKOS IDENTITY`
-↓
-`BIND AGREEMENT ACCEPTANCE TO AUTHENTICATED IDENTITY / SESSION`
-↓
-`RESTORE SAFE ENTRY ROUTE / RETURN-TO / REFERRAL / INVITATION CONTEXT`
-↓
-`AUTHENTICATED ZUMI INTRODUCTION`
-↓
-`INTENT / CONTEXT DISCOVERY - I AM / I NEED / I HAVE / I WANT TO DO`
-↓
-`CLAIMS / RELATIONSHIPS DISCOVERED AS NEEDED`
-↓
-`PATH-AWARE VERIFICATION ONLY WHEN REQUIRED`
-↓
-`ACTIVE EXPERIENCE ENVELOPE`
-↓
-`EXPERIENCE ENGINE`
-↓
-`ROLE / RELATIONSHIP / PURPOSE / OBJECT-SPECIFIC EXPERIENCE PROJECTION`
-↓
-`GRID / EDU / CARE / CLINIC OS / FINANCIAL / NETWORK CAPABILITIES AS NEEDED`
-↓
-`REAL ACTION`
-↓
-`FULFILLMENT / OUTCOME / EVIDENCE`
-↓
-`MEMORY + NEXT ACTION`
-↓
-`RETURN / CONTEXT SWITCH / EXPANSION / NETWORK EFFECT`.
-
-## 4.2 Public discovery versus protected application
-
-Public SEO, institutional information, public-safe resource discovery, pricing where approved, trust/legal pages, and other deliberate public surfaces may remain accessible without creating an authenticated Klinikos session.
-
-Public discovery can communicate value. It does not become the full protected operating environment.
-
-The full personalized Zumi operating experience begins after protected access acceptance and sign in/create-account.
-
-The public site must never expose confidential prompts, proprietary Grid logic, protected tenant state, PHI, restricted identities, sensitive business strategy, or crown-jewel implementation details.
-
-## 4.3 Protected access airlock
-
-The first protected interaction must be affirmative and versioned.
-
-The execution package should combine baseline access terms with confidentiality, IP, trade-secret, restricted-use, and misuse consequences rather than reducing protection to a footer link.
-
-The package should include, as appropriate and after licensed-counsel review:
-
-- Terms of Use,
-- privacy acknowledgment,
-- confidentiality obligations,
-- protected-access restrictions,
-- intellectual-property ownership/reservation,
-- trade-secret protection,
-- no unauthorized copying/export/recording,
-- anti-scraping/crawling/harvesting,
-- anti-reverse-engineering/reconstruction,
-- no hidden-prompt/orchestration/ranking extraction,
-- no unauthorized AI ingestion/training/fine-tuning/benchmarking for replication,
-- no credential sharing or security-gate bypass,
-- no competitive use of protected information,
-- bounded anti-circumvention for protected non-public introductions where lawful,
-- no indirect facilitation loophole,
-- return/deletion/destruction obligations where applicable,
-- evidence-preservation obligations,
-- suspension/revocation rights,
-- breach consequences and remedies,
-- liability allocation and indemnity where counsel-approved,
-- dispute/governing-law provisions in the applicable execution version,
-- electronic execution evidence.
-
-Technical evidence should preserve document key, version, effective date, content hash, signer identity, signer capacity, organization context, authority representation, required acknowledgments, signature method, signed timestamp, request/session correlation evidence, protected destination, and superseded-version relationship.
-
-The server owns the current agreement/version/hash and acceptance state.
-
-Electronic execution should be designed consistently with applicable E-SIGN requirements and exceptions. Covered employee/contractor/consultant confidentiality agreements must account for the DTSA notice requirement in 18 U.S.C. §1833(b). Final enforceability, liquidated damages, liability caps, indemnity, fee shifting, restrictive covenants, anti-circumvention scope, forum, arbitration, and consumer/business treatment remain licensed-counsel decisions.
-
-## 4.4 Sign in/create identity is initial application identity resolution
-
-After required protected-access acceptance, the user signs in or creates one Klinikos identity.
-
-Do not ask the user to create a separate Patient, Provider, RN, Student, Grid, EDU, Clinic Owner, or Biller account.
-
-Do not require a permanent persona choice.
-
-A single person may hold many simultaneous relationships and may switch governed contexts later.
-
-Accelerated identity methods may be supported where appropriate, but identity provider selection does not create profession, organization, credential, patient, payment, or clinical authority.
-
-## 4.5 Preserve entry intent through authentication
-
-Authentication must not erase why the person came.
-
-Preserve the minimum safe state needed to resume:
-
-- source route,
-- return-to destination,
-- referral/invitation identifier,
-- public object identifiers,
-- structured public-safe intent if captured,
-- user-authorized location,
-- intended action.
-
-Do not serialize raw PHI, secrets, confidential prompts, or proprietary internal state into URLs or browser-owned continuation data.
-
-## 4.6 Authenticated Zumi begins guided orientation
-
-After authentication, Zumi becomes the user's primary semantic guide through Klinikos.
-
-Representative statements:
-
-- "I need a physical therapist."
-- "I own a clinic and our billing is a mess."
-- "I'm an RN looking for work."
-- "I want to start my own practice."
-- "We need coverage Tuesday."
-- "I'm here for my appointment."
-- "I need clinical placement hours."
-- "I have procedure space Fridays."
-- "Show me what changed with this patient."
-
-Zumi internally normalizes useful context such as `I AM`, `I NEED`, `I HAVE`, and `I WANT TO DO`, but the user should not have to learn those categories.
-
-Zumi must tolerate ordinary misspellings, shorthand, incomplete sentences, speech-to-text imperfections, abbreviations, and informal language. Harmless normalization may occur silently. Consequential ambiguity must trigger minimal clarification rather than guesswork.
+No sector is automatically a build target. Apply `NOW / NEXT / LATER / PARTNER / CONNECT / INTERNALIZE / NEVER_BUILD` based on value, differentiation, safety, economics, dependencies, legal obligations, and opportunity cost.
 
 ---
 
-# 5. UNIVERSAL IDENTITY, CLAIMS, VERIFICATION, AUTHORITY
+# 4. ECONOMIC & RESOURCE UNIVERSE
 
-## KLINIKOS-IDENTITY-001
+The canonical resource universe includes at minimum:
 
-One person has one durable Klinikos identity with many governed relationships and contexts.
+- work / job / shift;
+- professional service;
+- business service;
+- appointment;
+- encounter / care capacity;
+- governed referral / consultation / diagnostic capacity;
+- room / chair / space / facility;
+- equipment;
+- permitted product;
+- permitted supply;
+- restricted clinical inventory as a separately governed class;
+- education / training;
+- clinical placement;
+- preceptor capacity;
+- mentorship;
+- expert / audit / quality service;
+- organization capacity;
+- project / contract;
+- vendor capacity;
+- availability / time;
+- lead / opportunity;
+- referral relationship;
+- order / result;
+- claim / receivable;
+- invoice;
+- payment obligation;
+- payable / payout;
+- subscription / entitlement;
+- implementation engagement;
+- capital / funding opportunity;
+- strategic partnership opportunity;
+- government / RFP opportunity;
+- evidence artifact;
+- reputation / trust evidence;
+- future policy-approved resource classes.
 
-The same person may be a patient, caregiver/proxy, student, CNA, MA, LPN, RN, NP, PA, physician, therapist, technician, coder, biller, front-desk employee, case manager, employee, contractor, Grid participant, educator, preceptor, clinic owner, organization executive, employer, or resource owner without creating disconnected identities.
+Grid is the universal governed exchange substrate for appropriate resource and economic classes. **Not every healthcare or economic event becomes a public marketplace event.**
 
-## 5.1 Conceptual stack
+## 4.1 I NEED / I HAVE
 
-`PERSON`
-→ `ACCOUNT / AUTHENTICATION`
-→ `CLAIMS`
-→ `VERIFICATION EVIDENCE`
-→ `RELATIONSHIPS`
-→ `ROLES / PROFESSIONS`
-→ `CREDENTIALS / LICENSES / PRIVILEGES`
-→ `ASSIGNMENTS / LOCATIONS`
-→ `PURPOSE / CONSENT / CASE / RESOURCE CONTEXT`
-→ `ENTITLEMENT / ELIGIBILITY`
-→ `AUTHORITY DECISION`.
+Human-facing language stays simple:
 
-## KLINIKOS-AUTHORITY-001
+- “I need an RN Tuesday.”
+- “I have a treatment room open Tuesdays.”
+- “I need clinical placement hours.”
+- “I have imaging capacity.”
+- “I need a quality expert.”
+- “I’m available for work.”
 
-`IDENTITY != CLAIM != VERIFIED FACT != RELATIONSHIP != ELIGIBILITY != ENTITLEMENT != AUTHORITY`.
+Zumi may structure the request. Deterministic policy decides what can be published, discovered, booked, assigned, paid, or fulfilled.
 
-"I'm a nurse," "I own this clinic," "I'm the patient's daughter," or "I'm the manager" may establish conversational context. Those statements do not independently grant regulated or organization authority.
+## 4.2 UNIVERSAL GRID TRANSACTION LIFECYCLE
 
-Payment or subscription never upgrades identity truth or regulated authority.
+`CREATE DRAFT → VERIFY OWNER / RULES → PUBLISH → DISCOVER → HARD ELIGIBILITY → RANK → INTEREST / REQUEST → MESSAGE → OFFER / CART / QUOTE → AGREEMENT → RESERVATION / ORDER / ASSIGNMENT → FULFILLMENT / DELIVERY → EVIDENCE → FINANCIAL OBLIGATION → PAYMENT → PAYABLE / SETTLEMENT → REVIEW / REPUTATION → REPEAT`.
 
-## 5.2 Progressive/path-aware verification
+Hard eligibility precedes ranking. Payment, subscription, popularity, sponsorship, AI preference, or reputation cannot override a disqualifying credential, jurisdiction, scope, supervision, consent, policy, privacy, or organization rule.
 
-Verify only what the next consequential action requires.
+Patients are never public Grid supply.
+
+Regulated clinical inventory is not ordinary public commerce.
+
+---
+
+# 5. CANONICAL LIFECYCLE GRAMMAR
+
+The complete composable grammar is:
+
+`DISCOVER → IDENTIFY → EXPRESS INTENT → CLAIM → VERIFY WHAT IS REQUIRED → ESTABLISH RELATIONSHIP → DETERMINE AUTHORITY → CREATE NEED / RESOURCE / WORK → CHECK REQUIREMENTS → ELIGIBILITY → DISCOVER / MATCH / ROUTE → COMMUNICATE → OFFER / QUOTE / PLAN → AGREEMENT / CONSENT → RESERVATION / ORDER / ASSIGNMENT / APPOINTMENT → PREPARE → WORK / CARE / LEARNING / COMMERCE → FULFILLMENT → EVIDENCE → OBLIGATION → PAYMENT / CLAIM / PAYABLE → SETTLEMENT / RECONCILIATION → OUTCOME → REPUTATION → MEMORY → ANALYTICS → NEXT ACTION → RETURN / EXPANSION / REFERRAL`.
+
+Not every journey uses every state.
+
+A shorter transaction grammar may be used where appropriate:
+
+`ACTOR → IDENTITY → CLAIM → VERIFICATION → RELATIONSHIP → AUTHORITY → INTENT → NEED / RESOURCE / WORK → REQUIREMENT → ELIGIBILITY → DISCOVERY / MATCH / ROUTE → COMMUNICATION → OFFER / PLAN / QUOTE → AGREEMENT / CONSENT → RESERVATION / ORDER / ASSIGNMENT / APPOINTMENT → EXECUTION → FULFILLMENT → EVIDENCE → OBLIGATION → PAYMENT / CLAIM / PAYABLE → SETTLEMENT / RECONCILIATION → OUTCOME → REPUTATION → MEMORY → ANALYTICS → NEXT ACTION → DISTRIBUTION / RETURN / EXPANSION`.
+
+No route may skip a required gate merely because a user-facing flow is visually simple.
+
+---
+
+# 6. IDENTITY, TRUST, CLAIMS, RELATIONSHIPS, ELIGIBILITY, ENTITLEMENT, AUTHORITY
+
+One person has one durable Klinikos identity that may accumulate many verified relationships over time.
+
+Canonical trust direction:
+
+`IDENTITY → CLAIM → EVIDENCE → VERIFICATION → RELATIONSHIP → ELIGIBILITY → ENTITLEMENT → AUTHORITY`.
+
+These states must never collapse.
+
+**Payment does not create authority.**
+
+**Subscription does not create professional eligibility.**
+
+A role label is not complete authority. A résumé is not credential verification. A school completion record is not licensure. An organization invitation is not unrestricted data access. A signed contract is not patient consent. A payment is not professional verification.
+
+Contextual authorization may depend on:
+
+`identity + authentication assurance + tenant / organization + location + relationship + role + profession + capability + assignment + purpose + privilege + credential + consent + delegation / supervision + active case / patient / resource + jurisdiction + entitlement + risk`.
+
+## 6.1 Progressive verification
+
+Verify only what the next consequential action needs.
 
 Examples:
 
-- explore learning: authenticated identity may be enough;
-- regulated Grid opportunity: profession/license/credential evidence may be required;
-- organization claim: representative authority must be established;
-- chart access: tenant, relationship, role, purpose, resource scope, and privacy/clinical authorization must be satisfied;
-- note signature: profession, privilege, assignment, scope, location, supervision/cosign, and encounter context matter;
-- billing management: billing authority does not imply clinical signing;
-- organization administration: admin authority does not automatically create unrestricted patient access.
+- browse public-safe content: no account may be required;
+- save/persist: authenticated identity;
+- claim an organization: representative authority;
+- list regulated professional services: verified profession/license and any required credentials, supervision, malpractice, location/facility relationship, scope, and jurisdiction;
+- access PHI: tenant/relationship/purpose/minimum-necessary authorization;
+- sign clinical documentation: profession/privilege/assignment/supervision as applicable;
+- receive payout: regulated financial onboarding as required.
 
-## 5.3 Assurance ladder
+## 6.2 Context switch
 
-Possible evidence levels include:
+Context switch is a security event, not a tab click. Switching between Clinic A, Clinic B, personal Grid, EDU, patient, provider, owner, enterprise, or other contexts recomputes navigation, visible data, authority, entitlements, Zumi context, tools, notifications, and audit scope.
 
-1. authenticated account,
-2. self-described context,
-3. verified email,
-4. verified phone,
-5. organization-domain association,
-6. organization representative evidence,
-7. student/institutional evidence,
-8. identity proofing where required,
-9. professional identity evidence,
-10. license evidence,
-11. credential/privilege evidence,
-12. organization/location assignment,
-13. specific purpose/case/resource authority.
-
-This is not one universal onboarding wizard. The action determines the required proof.
+Cross-context and cross-tenant data must not leak.
 
 ---
 
-# 6. EXPERIENCE ENGINE
+# 7. LIVING HOME + EXPERIENCE ENGINE
 
-## KLINIKOS-EXPERIENCE-001
+Living Home is the authenticated adaptive front door. It is not a static dashboard or permanent persona selector.
 
-Klinikos intentionally combines two ideas:
+After protected access and authentication, Zumi helps determine the current purpose and Klinikos resolves an Active Experience Envelope.
 
-1. **purpose-built experience families** so each major class of healthcare user receives an experience designed for their work; and
-2. **a continuously recomputed Experience Engine** so those families never become rigid persona silos.
+Representative protected sequence:
 
-The result is not a generic universal dashboard and not a collection of disconnected role applications.
+`PUBLIC DISCOVERY / REFERRAL / INVITATION → ENTER KLINIKOS → TERMS / CONFIDENTIALITY / IP AIRLOCK → SIGN IN OR CREATE ONE IDENTITY → BIND ACCEPTANCE → RESTORE SAFE ENTRY CONTEXT → AUTHENTICATED ZUMI → INTENT / CONTEXT → CLAIMS / RELATIONSHIPS AS NEEDED → PATH-AWARE VERIFICATION → ACTIVE EXPERIENCE ENVELOPE → EXPERIENCE ENGINE → PURPOSE-BUILT EXPERIENCE → REAL ACTION → OUTCOME / EVIDENCE → MEMORY / NEXT ACTION → RETURN / CONTEXT SWITCH / EXPANSION`.
 
-It is one system that can feel purpose-built for every legitimate context.
+Public discovery may deliver useful public-safe value before signup. Identity becomes required when persistence, private data, governed action, transaction, or authority requires it.
 
-## 6.1 Active Experience Envelope
+The Experience Engine projects purpose-built experiences for patient/caregiver, front desk, MA, LPN, RN, provider, therapist, biller/coder, owner/operator, manager/admin, Grid professional, learner/student, instructor/preceptor, institution/workforce, multi-location/network/enterprise, and other verified contexts without creating separate identities.
 
-The Active Experience Envelope is the server-resolved context determining what Klinikos becomes for the person now.
+## 7.1 SCREEN CONTRACT
 
-Inputs may include:
+Every production surface must define:
 
-- person/account,
-- authentication assurance,
-- organization/location,
-- relationships,
-- patient/caregiver relationship,
-- role/profession,
-- claims/verification,
-- licenses/credentials/privileges,
-- assignments,
-- delegation/supervision,
-- purpose of use,
-- consent,
-- active patient/case/resource,
-- current intent,
-- current obligations/work,
-- available capabilities,
-- policy blockers,
-- entitlements,
-- external dependency state,
-- time,
-- jurisdiction,
-- risk,
-- device/form factor,
-- safe remembered context.
+- audience / active context;
+- purpose;
+- dominant object;
+- dominant safe action;
+- visible data;
+- hidden/prohibited data;
+- authority/eligibility requirements;
+- Zumi capabilities and limits;
+- density mode;
+- navigation behavior;
+- entitlement/commercial state;
+- responsive behavior;
+- loading, empty, partial, error, blocked, unauthorized, pending and no-result states;
+- audit/evidence consequences;
+- accessibility behavior.
 
-## 6.2 Experience Engine output
-
-The Experience Engine converts the Active Experience Envelope into a minimum-necessary Experience Contract containing, as applicable:
-
-- active context label,
-- dominant purpose,
-- dominant object,
-- dominant next action,
-- experience family,
-- information density mode,
-- navigation emphasis,
-- permitted routes/workspaces,
-- visible fields/objects,
-- hidden/prohibited fields,
-- permitted actions,
-- required verification,
-- blockers,
-- relevant Zumi tools/context,
-- relevant Grid/EDU/Clinic/Care/Financial capabilities,
-- commercial entitlement state,
-- upgrade boundary where real,
-- responsive/mobile treatment,
-- audit/evidence obligations.
-
-## 6.3 Experience families
-
-Recognizable experience families include, at minimum:
-
-- Patient / caregiver hospitality experience
-- Front desk / scheduling operations
-- MA clinical preparation
-- LPN nursing workflow
-- RN nursing/care-coordination workflow
-- NP / PA / physician provider experience
-- Therapist/allied-health experience
-- Biller/coder/revenue experience
-- Clinic owner/operator experience
-- Practice manager/administrator experience
-- Professional/Grid work experience
-- Student/learner EDU experience
-- Instructor/preceptor EDU experience
-- Institution/workforce-program experience
-- Multi-location/network/enterprise experience
-- Partner/investor protected experience where appropriate
-
-These are projections, not permanent account types.
-
-## 6.4 Same person, different experience
-
-Example: the same RN may have:
-
-`Clinic A · RN`
-→ patient work, nursing tasks, results, care coordination, handoffs.
-
-`Personal Grid`
-→ availability, opportunities, map, offers, earnings/evidence.
-
-`EDU Learner`
-→ pathway, current work, simulation, competency evidence, feedback.
-
-`Clinic Owner`
-→ organization operations, people, capacity, revenue, Grid, growth.
-
-No new identity is created. Context switching recomputes navigation, data projection, Zumi context, authority, entitlements, and audit scope.
-
-## 6.5 Role label alone is insufficient
-
-`RN`, `Doctor`, `Owner`, `Admin`, `Student`, or any other label does not determine complete access.
-
-The server evaluates the complete Active Experience Envelope and authoritative policy.
-
-An RN in one organization may have different permissions than the same RN in another.
-
-A physician may be privileged for one service/location and not another.
-
-An owner may have business authority without unrestricted clinical-chart authority.
-
-An instructor may evaluate assigned learners without receiving clinical authority.
-
-## 6.6 Context switching is a security event
-
-Clinic A, Clinic B, personal Grid, patient, EDU, provider, owner, and enterprise contexts must recompute:
-
-- tenant scope,
-- object visibility,
-- routes,
-- Zumi context,
-- permissions,
-- entitlements,
-- available actions,
-- audit context.
-
-Prior PHI or tenant data must not bleed across contexts.
+The first viewport must begin the user’s goal. Authenticated core product surfaces may not become brochure-first card walls.
 
 ---
 
-# 7. SCREEN CONTRACT LAW
+# 8. RECRUITER / RESUME EVIDENCE PATH
 
-## KLINIKOS-SCREEN-001
+Resume evidence is a claim, not professional authority.
 
-Every production screen, route, workspace, modal, object stage, and major responsive state must have an explicit Screen Contract.
+Canonical direction:
 
-A screen is not complete because it renders.
+`resume → structured career profile → person confirms extracted facts → claims stored with source/provenance → verified facts attached separately → career preferences / availability → Grid matching inputs → employer/recruiter view under privacy policy`.
 
-Every Screen Contract must define:
+A résumé may contribute education, experience, skills, roles, dates, professional stage, strengths, interests, goals, training/support needs, and career direction. It may not fabricate credentials, licenses, authority, competencies, employment, graduation, or protected status.
 
-1. **Audience/context** - which Active Experience Envelopes may receive the screen.
-2. **Purpose** - the single dominant reason the screen exists.
-3. **Dominant object** - the patient, appointment, Grid need, claim, result, student, organization, etc. at the center.
-4. **Dominant action** - the most important safe next action.
-5. **Visible data** - minimum necessary information.
-6. **Hidden/prohibited data** - information that must not be projected.
-7. **Authority/eligibility** - what must be true to see or act.
-8. **Zumi behavior** - what Zumi may know, explain, prepare, or execute through governed tools.
-9. **Density mode** - contemplative or operative.
-10. **Navigation behavior** - persistent context, object stage, back/resume behavior, context switch.
-11. **Commercial state** - free, included, paid, usage-bound, upgrade boundary, or not commercial.
-12. **Loading state** - truthful work-in-progress behavior.
-13. **Empty state** - useful next action, never meaningless "No data".
-14. **Partial/degraded state** - what worked and what did not.
-15. **Blocked state** - clear reason, missing requirement, and next step.
-16. **Error state** - what was preserved, what failed, retry/recovery.
-17. **Responsive behavior** - desktop, tablet, mobile, touch.
-18. **Accessibility** - keyboard, focus, screen reader, contrast, zoom, reduced motion.
-19. **Evidence/audit consequences** - what event/evidence exists after consequential actions.
+**Tiffany provenance use case:** recruiter-facing résumé review should understand education, clinical experience, strengths, professional stage, goals, growth direction, support needs, and fit before interview while preserving claim-versus-verified distinctions.
 
-## 7.1 First-viewport law
+Professional/private/public projections are separate:
 
-Every major Klinikos door must pass this test:
+- private identity record;
+- organization relationship profile;
+- intentionally permitted Grid/public professional profile.
 
-> **Can the person begin accomplishing the reason they came here within the first viewport?**
-
-If no, the route fails product acceptance.
-
-Grid must exchange immediately.
-
-EDU must learn/teach/operate immediately.
-
-Clinic must diagnose/operate/activate immediately.
-
-Patient must show the next care action immediately.
-
-Current Visit must practice medicine immediately.
-
-Billing must show where money is stuck immediately.
-
-Living Home must accept intent immediately after authenticated entry.
-
-## 7.2 Anti-brochure law
-
-Do not make Grid, EDU, Clinics, Billing, Care, or authenticated product routes explain the whole subsystem before allowing the user to work.
-
-No ten-card category walls as the primary product experience.
-
-No giant role/curriculum tables as the EDU front door.
-
-No clinic-pricing brochure as the clinic operating gateway.
-
-No KPI-card wall as the primary owner or financial experience.
-
-Public marketing may explain. Product surfaces operate.
+Employment, salary, internal schedules, HR details, clinical assignments, and private organization data are not automatically public.
 
 ---
 
-# 8. FIRST-CLASS USER PATHS AND STARTING PROJECTIONS
+# 9. EDU, STUDENT, COMPETENCY, PLACEMENT, AND WORKFORCE
 
-The paths below are lifecycle truths, not permanent persona assignments.
+Klinikos EDU is education, simulation, competency, institutional delivery, workforce transition, and continuing-development infrastructure.
 
-## 8.1 Patient / client
+Canonical learner loop:
 
-Lifecycle:
+`STUDENT → TRAINING → COMPETENCY → CREDENTIAL / EXTERNAL REQUIREMENTS → GRADUATION → GRID ELIGIBILITY → OPPORTUNITY → WORK → REPUTATION → CONTINUING EDUCATION`.
 
-`DEMAND → ACCESS → IDENTITY → REGISTRATION → INTAKE → CONSENT → COVERAGE / FINANCIAL CASE → SCHEDULING → ENCOUNTER → ORDERS → RESULTS → FOLLOW-UP → BILLING → OUTCOME → FUTURE CARE`.
+**EDU completion does not create licensure.** Education evidence may support readiness and future eligibility but does not silently create a state license, privilege, organization assignment, independent-practice authority, or clinical scope.
 
-Starting projection:
+Virtual Clinic Lab is synthetic/de-identified training first. Live PHI is not a normal training substrate.
 
-# **WHAT'S NEXT?**
+EDU must support learner, instructor, and institution/workforce experiences, including programs, cohorts, modules, sessions, simulation, assessment, submission, evidence, rubrics, human review, completion decisions, certificates where appropriate, workforce reporting, placement requirements, and Grid/workforce transition.
 
-May surface upcoming appointment, incomplete forms, consent, released result, referral step, visible balance, instructions, messages, and follow-up.
+## 9.1 PLACEMENT RELATIONSHIP OBJECT
 
-Patient experience is hospitality-oriented, warm, low-cognitive-load, and mobile-first.
+A clinical placement is not a simple job match. It is a governed multi-party relationship:
 
-Patient access remains separately governed from staff/clinic access.
+`STUDENT + PROGRAM / SCHOOL + SITE + PRECEPTOR + HOURS / TIME + COMPETENCIES + REQUIREMENTS + AGREEMENTS + APPROVALS`.
 
-## 8.2 Caregiver / proxy
+Placement matching does not equal school/site/preceptor approval.
 
-The experience is patient-oriented but explicitly identifies proxy capacity and scope.
+Matching sequence:
 
-Proxy authority is relationship-, purpose-, record-, time-, and policy-dependent. It is never assumed universal or permanent.
+`DISCOVERY → ELIGIBILITY → AUTHORIZATION → SUITABILITY → RANKING → OFFER / PROPOSAL → MULTI-PARTY APPROVAL → ASSIGNMENT → HOURS / EVIDENCE → REVIEW → COMPLETION`.
 
-## 8.3 Front desk / scheduler
+Student profile fields may include school/program/year/graduation, modules, simulation history, clinical hours needed/completed, placement requirements, preceptor need, instructor evaluations, career interests, availability, geography, and role preference.
 
-Primary question:
-
-# **WHAT NEEDS FRONT DESK ATTENTION?**
-
-Primary work:
-
-`ARRIVALS → READINESS → SCHEDULE CHANGES → CALLS / MESSAGES → INTAKE / DOCUMENTS → FOLLOW-UP → REFERRALS → EXCEPTIONS`.
-
-The experience prioritizes today, readiness, ownership, and rapid resolution.
-
-## 8.4 Medical Assistant
-
-Primary work:
-
-`ARRIVAL → REGISTRATION READINESS → INTAKE → VITALS → HISTORY UPDATE → MISSING INFORMATION → ROOMING → PROVIDER HANDOFF`.
-
-MA screens must not expose unrelated owner, billing, or physician-signing controls merely because they exist elsewhere in Klinikos.
-
-## 8.5 LPN
-
-Primary work may include, where authorized:
-
-`INTAKE → VITALS → MEDICATION/HISTORY SUPPORT → ASSIGNED CLINICAL TASKS → CARE TASKS → ESCALATION → HANDOFF`.
-
-Exact action scope comes from authority and policy, not the profession label alone.
-
-## 8.6 RN
-
-Inside an organization, the experience may center on:
-
-`PATIENT WORK → CLINICAL TASKS → CARE COORDINATION → RESULTS → FOLLOW-UP → ESCALATIONS → PROVIDER HANDOFF`.
-
-The same RN may switch into personal Grid or EDU contexts without creating another account.
-
-## 8.7 NP / PA / physician provider experience
-
-Provider lifecycle:
-
-`PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY'S REASON → RELEVANT HISTORY / ROS / VITALS / EXAM / BODY MAP → ASSESSMENT → PLAN → PROCEDURES → ORDERS / REFERRALS → RESULT REVIEW → DOCUMENTATION → CODING SUPPORT → REVIEW / SIGN / LOCK → FOLLOW-UP`.
-
-NP, PA, and physician screens may share visual structure while server-governed actions differ by profession, credential, privilege, organization, location, supervision, payer/case, purpose, and policy.
-
-## 8.8 Professional / career
-
-Lifecycle:
-
-`IDENTITY → EDU / EXISTING TRAINING → COMPETENCY → CREDENTIAL → AUTHORITY → GRID ELIGIBILITY → OPPORTUNITY → WORK → EXPERIENCE → REPUTATION → INDEPENDENT PRACTICE → CLINIC → NETWORK → EDUCATOR / EMPLOYER`.
-
-An already licensed professional may enter at a later stage. EDU is not a prerequisite for professional identity.
-
-## 8.9 Grid professional
-
-Primary experience:
-
-`PROFILE / VERIFICATION → AVAILABILITY → I NEED / I HAVE → ELIGIBLE OPPORTUNITIES / RESOURCES → MAP/LIST → INSPECT → OFFER / REQUEST → RESERVATION / ASSIGNMENT → FULFILLMENT → EARNINGS / EVIDENCE → REPUTATION`.
-
-Only the present task should dominate the screen.
-
-## 8.10 Clinic owner/operator
-
-Lifecycle:
-
-`ORGANIZATION → PEOPLE → LOCATIONS → CAPACITY → PATIENT ACCESS → OPERATIONS → CARE → WORKFLOW → FINANCIAL TRUTH → REVENUE → GRID → NETWORK → MULTI-LOCATION → ENTERPRISE`.
-
-Starting acquisition projection should help the owner operate or diagnose, not read a brochure.
-
-Representative first question:
-
-# **WHAT IS GETTING IN THE WAY OF YOUR PRACTICE?**
-
-Zumi may build an Operating Map from natural language and progressively identify staffing, scheduling, documentation, follow-up, referral, billing, revenue, capacity, or multi-location pressure.
-
-Owner/admin authority does not automatically expose unrestricted clinical data.
-
-## 8.11 Practice manager / administrator
-
-The experience coordinates people, scheduling, work queues, capacity, operational exceptions, revenue-readiness, organization configuration, and escalation without assuming physician or patient-record authority beyond policy.
-
-## 8.12 Biller / coder / revenue user
-
-Primary question:
-
-# **WHERE IS REVENUE STUCK?**
-
-Primary narrative:
-
-`CARE → DOCUMENTATION → EVIDENCE → CODING → CHARGE → BILLING READINESS → CLAIM → ADJUDICATION → PAYMENT → RECONCILIATION`.
-
-The financial experience should surface exceptions in the revenue path rather than defaulting to a KPI wall.
-
-## 8.13 Learner / student
-
-Primary question:
-
-# **WHAT ARE YOU BECOMING, AND WHAT IS NEXT?**
-
-Lifecycle:
-
-`PATH → CURRENT WORK → SIMULATION → EVIDENCE → FEEDBACK → COMPETENCY → NEXT REQUIREMENT → PLACEMENT / GRID READINESS → OPPORTUNITY`.
-
-## 8.14 Instructor / preceptor
-
-Lifecycle:
-
-`TODAY'S SESSION / PLACEMENT → ROSTER → ACTIVITY → EXCEPTIONS → SUBMISSIONS / EVIDENCE → RUBRIC → FEEDBACK → COMPLETION DECISION → REPORTING`.
-
-## 8.15 Institution / workforce program
-
-Lifecycle:
-
-`ORGANIZATION → PROGRAM → COHORTS → INSTRUCTORS → PARTICIPANTS → DELIVERY → ATTENDANCE → ASSESSMENT → EVIDENCE → OUTCOMES → REPORTING → WORKFORCE CONNECTION`.
-
-## 8.16 Employer
-
-`ORGANIZATION AUTHORITY → NEED / CAPACITY GAP → REQUIREMENTS → ELIGIBILITY POLICY → GRID DISTRIBUTION → CANDIDATES / MATCH → SELECTION → AGREEMENT → WORK → FULFILLMENT / PERFORMANCE EVIDENCE → REPEAT / WORKFORCE PLANNING`.
-
-## 8.17 Network / enterprise
-
-Primary question:
-
-# **WHAT NEEDS ATTENTION ACROSS THE NETWORK?**
-
-The experience may project location, people, capacity, patient access, revenue, Grid, operational exceptions, and network relationships while minimizing unnecessary clinical detail.
-
-## 8.18 Network / referral
-
-`NEED → IDENTIFY ORGANIZATION / PROVIDER / CAPACITY → RELATIONSHIP REQUIREMENT → PURPOSE / CONSENT / SHARING RULE → REQUEST / REFERRAL → TRANSMISSION → ACCEPTANCE → SCHEDULING / FULFILLMENT → RESULT / CONSULTATION → REVIEW / COMMUNICATION → CLOSED LOOP → NETWORK EVIDENCE`.
-
-Invitation acceptance alone does not create chart access, patient consent, or professional authority.
+A former student may later become professional, contractor, employee, preceptor, employer, mentor, room owner, clinic owner, educator, or Grid supply node using the same identity.
 
 ---
 
-# 9. LIVING HOME
+# 10. PROFESSIONAL LIFECYCLE AND RN → INJECTOR / AESTHETICS GOVERNED PATH
 
-Living Home is the authenticated adaptive command surface, not a static dashboard, product catalog, marketing card wall, or permanent persona menu.
+Professional lifecycle:
 
-After sign in, the first-time user may see a deliberately sparse orientation:
+`IDENTITY → TRAINING / EXPERIENCE CLAIMS → VERIFIED CREDENTIALS → RELATIONSHIPS → ELIGIBILITY → AVAILABILITY → GRID / ORGANIZATION OPPORTUNITY → WORK → FULFILLMENT EVIDENCE → REPUTATION → ADVANCED SERVICES / INDEPENDENT PRACTICE / OWNER / PRECEPTOR / EXPERT`.
 
-# **WHAT NEEDS TO HAPPEN?**
+An unverified professional cannot publicly offer governed clinical services.
 
-Zumi composer remains central.
+## 10.1 RN → INJECTOR / AESTHETICS GOVERNED PATH
 
-Returning users may instead see the most relevant unresolved work, current object, or next action based on the Active Experience Envelope.
+A nurse becoming an injector is a professional progression, not a toggle.
 
-When the user submits ordinary language, Klinikos should:
+Required evaluation may include:
 
-1. preserve safe continuity,
-2. place the request in the active thread,
-3. infer the objective,
-4. resolve active identity/context,
-5. retrieve only authorized context,
-6. determine required verification/authority,
-7. resolve relevant engines,
-8. create/update the Experience Contract,
-9. show useful data/action/workspace,
-10. keep Zumi available,
-11. surface blockers truthfully,
-12. preserve unfinished work for return,
-13. use deeper workspaces only when they add value.
+`identity → active RN/NP/PA/physician license as applicable → training/certification evidence → procedure/service scope → jurisdiction → supervision/collaboration rules → organization/facility relationship → malpractice coverage applicable to service → location/facility requirements → consent/safety workflows → product/inventory rules → eligibility decision → Grid / Clinic listing`.
 
-Living Home should increasingly answer:
+Training and malpractice insurance alone never manufacture independent practice authority.
 
-- what matters,
-- what changed,
-- what requires me,
-- what is expected,
-- who owns it,
-- what is acknowledged,
-- what is in progress,
-- what is blocked,
-- what is fulfilled,
-- what requires verification,
-- what requires reconciliation,
-- what is closed,
-- what should happen next.
+The path must preserve **jurisdiction / scope / supervision / facility / malpractice gates**.
 
-Do this by projecting authoritative domain work, not inventing a second universal task authority.
+A verified provider may then declare services, availability, travel radius, on-call state, mobile/clinic/room preferences, and lawful pricing. Matching and booking still require service-specific eligibility at the time of action.
 
 ---
 
-# 10. ZUMI / KLINIKOS INTELLIGENCE
+# 11. GRID — UNIVERSAL HEALTHCARE EXCHANGE
 
-## KLINIKOS-ZUMI-001
+Grid is Klinikos’s universal governed resource exchange and primary network-acquisition wedge. It is not just a job board, staffing page, provider directory, student marketplace, vendor marketplace, or patient directory.
 
-Zumi is Klinikos Intelligence and the semantic navigation/control layer over the user's authorized Klinikos environment.
+Free participation is load-bearing for network liquidity:
 
-Zumi is not product authority, clinical authority, payment authority, credential authority, or legal authority.
+`ENTER FREE → PARTICIPATE FREE → CREATE / USE VALUE → MONETIZE ADVANCED CAPABILITY OR LAWFUL VALUE EVENT`.
 
-Zumi may:
+Identity is not subscription. Participation is not payment. Listing is not transaction. Match is not fulfillment. Fulfillment is not payout. Payment is not authority.
 
-- understand conversational intent,
-- normalize misspellings and harmless shorthand,
-- preserve safe continuity,
-- retrieve permitted context,
-- summarize,
-- explain,
-- compare,
-- prepare actions,
-- organize information,
-- suggest next steps,
-- navigate and recompose the UI,
-- coordinate routes,
-- research safe public information,
-- draft communications subject to outbound controls.
+Grid objects capture owner, organization, resource class, intent, visibility, geography/location, availability, requirements, eligibility, verification, capacity, pricing/rate, status, privacy, restrictions, fulfillment evidence, financial obligations, incidents/disputes, and trust/reputation evidence.
 
-Zumi may not independently establish authentication, tenant membership, clinical signing, patient release, license/credential validity, Grid eligibility, payment success, settlement, entitlement, legal acceptance, patient consent, or regulated clinical truth.
+The spatial map is an operating instrument for supply, demand, geography, radius, time, capacity, relationships, and eligible results—not decorative pins.
 
-## 10.1 Language-normalization pipeline
-
-`RAW HUMAN INPUT`
-→ `LANGUAGE / TYPO NORMALIZATION`
-→ `ABBREVIATION / DOMAIN INTERPRETATION`
-→ `INTENT HYPOTHESES`
-→ `ENTITY RESOLUTION`
-→ `ACTIVE EXPERIENCE ENVELOPE`
-→ `CONFIDENCE / AMBIGUITY`
-→ `POLICY`
-→ `ACTION OR MINIMAL CLARIFICATION`.
-
-Harmless normalization may be silent. Consequential ambiguity involving patient identity, medication, dose, procedure, laterality, clinical order, credential, money, or authority must not be silently guessed.
-
-## 10.2 Preferred execution
-
-`USER INTENT → PRIVACY / SECURITY GATE → ACTIVE EXPERIENCE ENVELOPE → AUTHORIZED CONTEXT → DETERMINISTIC POLICY → ZUMI REASONING WHEN USEFUL → TOOL/ACTION PROPOSAL → AUTHORIZATION / HUMAN CONFIRMATION WHEN REQUIRED → DETERMINISTIC DOMAIN ACTION → VERIFIED RESULT → AUDIT / PROVENANCE → EXPERIENCE ENGINE RECOMPOSITION`.
+Grid must never fabricate supply, availability, distance, credentials, demand, matches, or liquidity.
 
 ---
 
-# 11. OPENAI STRATEGIC INTELLIGENCE DIRECTION
+# 12. PATIENT / CAREGIVER JOURNEY
 
-## KLINIKOS-OPENAI-001
+Patient experience is hospitality-oriented, mobile-first, plain-language, low-cognitive-load, and centered on “What do I need to do next?”
 
-Current verified company direction records Klinikos as accepted into the OpenAI Partner Network and uses OpenAI as the primary production intelligence platform for Zumi. This relationship must not be inflated into unverified claims about tier, specialization, co-sell status, public listing, referrals, credits, BAA, enterprise pricing, FDE support, or other entitlement unless direct evidence establishes them.
+Canonical journey:
 
-OpenAI supplies intelligence where appropriate. Klinikos supplies identity, authority, privacy/security policy, clinical state, financial truth, Grid policy, business logic, workflows, tools, evidence, audit, and deterministic action.
+`DEMAND → ACCESS → IDENTITY → REGISTRATION → INTAKE → CONSENT → COVERAGE / FINANCIAL CASE → SCHEDULING → ENCOUNTER → ORDERS / RESULTS → FOLLOW-UP → BILLING / PAYMENT → OUTCOME → FUTURE CARE`.
 
-Provider abstraction remains intact for fallback, resilience, evaluation, specialized workloads, and commercial leverage.
+Patients are never public Grid supply.
 
-Do not create a parallel Zumi or parallel OpenAI client architecture when the existing governed adapter can be extended.
+Caregiver/proxy access requires explicit relationship, scope, purpose, time, record, policy, and consent/authority where applicable. Proxy access is not universal or permanent.
 
-Model access is bounded by tool schemas, authorization, data classification, audit, idempotency/failure behavior, and confirmation requirements.
-
-Commercial packaging may offer premium intelligence capabilities such as Zumi Advanced, but users buy outcomes/capabilities rather than raw model access. Formal co-sell or partnership benefit claims remain evidence-gated.
+Patient identity, coverage, and financial/legal case context remain separate. One patient may have multiple coverage/case contexts over time.
 
 ---
 
-# 12. MEMORY & KNOWLEDGE OS
+# 13. CLINIC OS — OPERATING LAYER
 
-Memory is governed context, not a chat dump and not a second truth database.
+Clinic OS is the operating layer for healthcare organizations and a sensor for the larger ecosystem.
 
-Distinguish:
+**Clinic OS is both operating product and ecosystem sensor.** It detects staffing gaps, unused capacity, referral leakage, intake incompleteness, documentation gaps, follow-up failures, billing-readiness problems, training needs, inventory pressure, lead leakage, and revenue leakage that can create governed downstream Grid, EDU, Financial OS, Quality, or Network work.
 
-- authoritative live domain record,
-- verified external evidence,
-- human-approved institutional knowledge,
-- verified outcome evidence,
-- human-confirmed personal memory,
-- conversation-derived context,
-- AI hypothesis,
-- historical/provenance material.
+Core clinic capabilities progressively include organization/location management, people and assignments, scheduling/capacity, patient registry, intake/consent, tasks/handoffs, communications, referrals, documents, provider profiles, clinical work, orders/results, billing readiness, revenue integrity, owner reporting, Grid demand/supply, multi-location operations, and network relationships.
 
-Memory/knowledge should carry appropriate source, tenant scope, subject, purpose, time, effective range, version, confidence, verification state, authority class, supersession, expiry/retention, and provenance.
+Klinikos may initially overlay existing systems and earn deeper replacement through measurable value. It should progressively replace unnecessary overlapping software while continuing to connect authoritative external rails it should not recreate.
 
-Before consequential actions, Klinikos re-retrieves governing live state where required. Clinical truth stays clinical, payment truth stays financial, credential truth stays credentialing, organization authority stays identity/relationship, legal acceptance stays legal evidence, Grid eligibility stays policy/eligibility.
+## 13.1 Nadja first-clinic provenance
 
-Do not blend contradictory same-authority memory into fabricated certainty.
+**Nadja first-clinic provenance** establishes the practical wedge: a real clinic needs a simpler, lower-cost workflow than fragmented incumbent tooling, including schedule → intake → Current Visit → telemedicine → documentation → billing-ready → follow-up. This provenance informs product priority; it does not waive production, privacy, billing, interoperability, or safety requirements.
 
 ---
 
-# 13. GRID
-
-## KLINIKOS-GRID-001
-
-Grid is universal healthcare resource, capacity, opportunity, relationship, and transaction infrastructure.
-
-Grid must be a flagship spatial operating environment, not a staffing landing page or category-card wall.
-
-Grid may govern lawful combinations of professionals, work, shifts, jobs, contracts, rooms, chairs, facilities, time, services, equipment/permitted resources, organization capacity, education seats, clinical placements, preceptors, referrals, appointment/diagnostic capacity, and future legitimate resource classes.
-
-Universal language:
-
-**I NEED** = demand.
-
-**I HAVE** = resource/supply/capacity.
-
-Canonical flow:
-
-`NEED / HAVE → STRUCTURED DEMAND OR RESOURCE → REQUIREMENTS → HARD ELIGIBILITY → CANDIDATE SET → MAP / LIST / INSPECT → RANK / EXPLAIN → OFFER / REQUEST → AGREEMENT → RESERVATION / ASSIGNMENT → FINANCIAL OBLIGATION → FULFILLMENT → EVIDENCE → REPUTATION / OUTCOME → REPEAT`.
-
-Hard eligibility precedes ranking. AI may interpret and explain. Payment, sponsorship, popularity, or model preference never overrides disqualifying policy.
-
-The map is an operating instrument, not decoration. It may represent geography, supply, demand, capacity, availability, clusters, selected objects, search radius, and active network relationships where appropriate.
-
-Never fabricate Grid liquidity, listings, distance, availability, or pins. Empty states should truthfully offer next steps such as keep need active, expand radius, adjust time, or ask Zumi.
-
-Public discovery exposes minimum necessary information only. Patients are not public Grid profiles.
-
-Clinic OS can create governed Grid demand/supply from staffing gaps, unused capacity, schedule gaps, referral leakage, unmet services, specialist shortages, and resource needs. Grid outcomes return to Clinic OS as real booking, assignment, fulfillment, follow-up, financial obligation, issue, and audit state.
-
-EDU may release competency/training evidence into future Grid discovery or eligibility where policy permits. EDU completion never automatically creates licensure or professional authority.
-
----
-
-# 14. KLINIKOS EDU / WORKFORCE
-
-Klinikos EDU is education, simulation, competency, institutional delivery, career-readiness, and workforce infrastructure, not merely an LMS.
-
-EDU must open as an interactive academy/workforce environment, not curriculum tables or brochure copy.
-
-Primary entry question may be:
-
-# **WHAT ARE YOU HERE TO BECOME, TEACH, OR OPERATE?**
-
-Institutional structure should support organizations, programs, cohorts, instructors, participant enrollment/import, delivery mode, curriculum, custom modules/configuration, learning objectives, completion criteria, assessments/rubrics, non-licensure certificate templates, workforce reporting, accommodations metadata, lifecycle states, and audit evidence.
-
-Instructor workflow:
-
-`ROSTER → SESSION AGENDA → SCENARIO / ACTIVITY → PARTICIPANT EVIDENCE → ASSESSMENT QUEUE → RUBRIC / HUMAN REVIEW → FEEDBACK → COMPLETION DECISION → RELEASE → REPORTING`.
-
-Virtual Clinic Lab is synthetic-data-first and should increasingly simulate the same healthcare operating model used by the real platform:
-
-`PATIENT ARRIVES → REGISTRATION → INTAKE → MA / NURSING WORK → PROVIDER HANDOFF → CURRENT VISIT → ORDERS / RESULTS → FOLLOW-UP → CODING → BILLING READINESS`.
-
-Learner authority must reflect the simulated role. Training simulation does not create real clinical authority.
-
-Representative curriculum families include Medical Office Operations, Intro to EHR/Clinical Systems, Billing/Claims, Clinical Documentation Lab, Referral/Care Coordination, Privacy/Security/HIPAA Operations, AI in Healthcare Operations, and Healthcare Entrepreneurship/Practice Management.
-
-Career readiness may support responsible AI job search, resume support without fabrication, applications, professional communication, interview preparation, prompt basics, fact checking, privacy, employer policy, honest disclosure of AI-assisted work, and recognizing inaccurate AI output.
-
----
-
-# 15. CLINIC OS
-
-Clinic OS is the operating layer for healthcare organizations.
-
-It should progressively unify organization/location management, staff, schedules/capacity, patient management, appointments, intake/consent readiness, tasks/handoffs, communications, referrals, documents, provider profiles, clinical work, orders/results, billing readiness, revenue integrity, owner reporting, Grid demand/supply, multi-location operations, and network relationships.
-
-The public/early clinic route must behave like an interactive operating diagnosis/activation experience, not a price brochure.
-
-Klinikos should be able to land without immediate EHR rip-and-replace. Initial value may overlay workflow, follow-up, staffing/capacity, intake readiness, referral coordination, billing readiness, revenue recovery, communications, and owner intelligence. Deeper clinical replacement can follow earned trust and migration readiness.
-
-Activation should be progressive and Zumi-guided rather than one enormous setup wizard:
-
-`ORGANIZATION → LOCATIONS → PEOPLE → ASSIGNMENTS → SERVICES → CAPACITY → CURRENT SYSTEMS → PATIENT ACCESS → CARE → WORKFLOW → MONEY → GRID → NETWORK`.
-
----
-
-# 16. CURRENT VISIT / CLINICAL CONVERGENCE
-
-## KLINIKOS-CLINICAL-001
+# 14. CURRENT VISIT — CLINICAL CONVERGENCE
 
 Current Visit is the provider-facing convergence surface.
 
-Provider sequence:
+Canonical clinical sequence:
 
-`PATIENT SNAPSHOT → WHAT CHANGED → STAFF HANDOFF → TODAY'S REASON → RELEVANT HISTORY → ROS → VITALS → PHYSICAL EXAM / BODY MAP → ASSESSMENT → PLAN → PROCEDURES / INJECTIONS → ORDERS / REFERRALS → RESULT REVIEW → DOCUMENTATION → CODING SUPPORT → REVIEW / SIGN / LOCK → FOLLOW-UP`.
+`SCHEDULE → INTAKE → STAFF HANDOFF → CURRENT VISIT → PATIENT SNAPSHOT → WHAT CHANGED → TODAY → RELEVANT HISTORY / ROS / VITALS → CLINICAL EXAM / BODY MAP → ASSESSMENT & PLAN → PROCEDURES → ORDERS / RESULTS → TELEMEDICINE SAME ENCOUNTER WHEN APPLICABLE → AI DOCUMENTATION DRAFT → CPT / ICD / MODIFIER SUPPORT → BILLING READY → REVIEW / SIGN / LOCK → CLOSE → FOLLOW-UP`.
 
-Klinikos should maintain structured longitudinal change such as new, improved, worsened, unchanged, resolved, and pending where evidence supports it. AI may summarize deterministic change but may not invent change from absence.
+Longitudinal evidence preserves:
 
-Body maps and clinically consequential structured data are versioned. Initial state, prior state, and current state should remain comparable rather than overwriting history.
+`INITIAL → PREVIOUS → TODAY`.
 
-Specialties compose through:
+Do not overwrite historical clinical truth. Signed records do not silently mutate. Corrections and addenda remain attributable, versioned, and time-stamped.
 
-`BASE KLINIKOS → SPECIALTY PACK → ORGANIZATION OVERRIDE → LOCATION OVERRIDE`.
+Clinical change states may include `NEW / IMPROVED / WORSE / UNCHANGED / RESOLVED / PENDING` where evidence supports them.
 
-Signed records do not silently mutate. Corrections/addenda remain attributable and time-stamped. Body maps, consent, results, templates, orders, and important clinical evidence require appropriate version/provenance.
+AI scribe pipeline:
 
-AI scribe/dictation may assist but may not invent findings/laterality, create unsupported diagnoses, place unapproved orders, sign, submit claims, or close a visit.
+`audio → transcript → evidence extraction → structured draft → missing-documentation prompts → code candidates → human review → authorized provider signature`.
 
-Telehealth is an encounter modality, not a second chart.
+AI may not invent findings, laterality, diagnoses, orders, treatment, signatures, claim submission, or visit closure.
 
----
+Telemedicine is an encounter modality, not a separate chart or product silo.
 
-# 17. INTAKE & CONSENT OS
-
-## KLINIKOS-INTAKE-001
-
-Intake and consent are first-party Klinikos capabilities.
-
-Klinikos owns the patient/staff workflow engine, form/questionnaire engine, conditional logic, completion/readiness, patient links/portal completion, document/ID upload, patient-photo workflows where appropriate, e-signature capture, consent versioning, timestamps/provenance, reminders, review queues, workflow triggers, audit trail, and configuration by organization/location/specialty/service/case.
-
-Organizations control approved clinical/legal content within platform governance and law, including required forms, consent language, questions, re-consent rules, review requirements, and case-specific content.
-
-Consent is permission + version + purpose, not merely a PDF signature.
-
-A consent record should answer who agreed, what they agreed to, version, purpose, when, active relationship/context, validity, what workflow it permits, and whether it was withdrawn/replaced.
-
-Consent families may include privacy/HIPAA acknowledgments, treatment/procedure, telehealth, AI/audio, photo/media, communication preferences, information sharing, proxy/access, specialty, and case-specific/No-Fault/Workers' Compensation documents.
+No-Fault / Workers’ Compensation require case-aware workflows, evidence, documents, billing context, and longitudinal care—not one generic template.
 
 ---
 
-# 18. SCHEDULING & CAPACITY
+# 15. INTAKE, CONSENT, SCHEDULING, CAPACITY, ORDERS, RESULTS
 
-Scheduling is a capability/eligibility engine, not merely a calendar row.
+Klinikos owns first-party workflow state around intake and consent: questionnaires, conditional logic, ID/document upload, e-signature, versioning, purpose, completion/readiness, reminders, review queues, triggers, organization/location/specialty/service/case configuration, and audit evidence.
 
-Depending on the action it may consider patient/service need, provider capability, profession/privilege, location assignment, appointment type, room/equipment, duration, availability, recurring series, insurance/case restrictions, supervision, telehealth mode, organization policy, resource capacity, geography, and conflicts.
+Consent is permission + version + purpose + context, not merely a PDF signature.
 
-Capacity is shared by Clinic OS, Grid, referrals, EDU, and patient access, including provider hours, rooms/chairs, imaging slots, therapy slots, education seats, preceptor capacity, appointment inventory, and staffing capacity.
+Scheduling is a capability/eligibility engine, not just a calendar row. It may consider service need, provider eligibility, location, room/equipment, duration, availability, recurrence, payer/case restrictions, supervision, telemedicine mode, policy, geography, and capacity.
 
-Recurring care should support a series model with recurrence pattern, effective dates, exceptions, cancellation/reschedule effects, linked plan/case, and authorization limits.
+Canonical orders/results lifecycle:
 
----
+`DRAFT / PROPOSED → ORDERED → TRANSMISSION REQUIRED → TRANSMITTED → ACCEPTED / ACKNOWLEDGED EXTERNALLY → SCHEDULED / IN PROCESS → PERFORMED → RESULTED → CORRECTED / AMENDED → PROVIDER REVIEWED → PATIENT COMMUNICATED AS REQUIRED → CLOSED`.
 
-# 19. PATIENT, COVERAGE, FINANCIAL CASE
-
-Do not collapse patient identity, coverage, and financial/legal case context.
-
-- Patient = person in care context.
-- Coverage = payer/coverage with effective periods.
-- FinancialCase = financial/legal billing context for an episode/case, including insurance, cash pay, No-Fault, Workers' Compensation, and other supported structures.
-
-One patient may have multiple cases/coverage contexts over time.
-
-No-Fault should be treated as a case operating system where appropriate, not merely a note template.
+An internal order does not prove external receipt. A result does not prove review. Review does not prove patient communication. External ambiguity becomes explicit reconciliation work.
 
 ---
 
-# 20. ORDERS & RESULTS
+# 16. MED SPA = CLINIC + PROVIDER NETWORK + COMMERCE / RESOURCE NODE
 
-Target semantic lifecycle:
+Med Spa is a proof case of universal Klinikos composition—not a separate marketplace kernel.
 
-`DRAFT / PROPOSED → ORDERED → TRANSMISSION REQUIRED → TRANSMITTED → ACCEPTED / ACKNOWLEDGED EXTERNALLY → SCHEDULED / IN PROCESS → PERFORMED → RESULTED → CORRECTED / AMENDED IF NEEDED → PROVIDER REVIEWED → PATIENT COMMUNICATED AS REQUIRED → CLOSED`.
+A med spa may simultaneously be:
 
-An internal order does not prove external receipt. A result does not prove provider review. Review does not prove patient communication. Communication does not always close every downstream obligation.
+- a clinic;
+- a seller/buyer of permitted goods;
+- an employer;
+- a contractor network node;
+- a room/chair/resource owner;
+- a customer-acquisition business;
+- an EDU/preceptor site;
+- a Grid supply/demand node.
 
-External ambiguity becomes work: rejected transmission, unmatched result, duplicate result, corrected result, stale pending, wrong patient, missing review, or missing communication.
+Med-spa operations may include owner/front-desk/provider/admin experiences, patient registry/timeline, intake/consent/ID/documents, tasks, scheduling, rooms/chairs, lead CRM, consult pipeline, packages/memberships, treatment history, photo consent, rebooking/reactivation, revenue leakage, cash-pay payments/deposits/refunds, clinical/procedure notes, AI summaries, inventory/lot/expiration, telemedicine where appropriate, and security/privacy controls.
 
-Canonical Klinikos order/result objects should sit above vendor adapters so one outside vendor format does not define the internal clinical model.
+CRM path:
 
----
+`LEAD → CONSULT → BOOKED → TREATED → FOLLOW-UP → REBOOK`.
 
-# 21. BILLING, FINANCIAL OS, AND RCM
+Med-spa transaction path:
 
-## KLINIKOS-BILLING-001
+`CUSTOMER DEMAND → SERVICE → VERIFIED ELIGIBLE PROFESSIONAL → LOCATION / ROOM / CHAIR / MOBILE CONTEXT → AVAILABILITY → BOOKING → DEPOSIT / PAYMENT → PROCEDURE DOCUMENTS → FULFILLMENT EVIDENCE → FINANCIAL OBLIGATION → PERMITTED ECONOMICS → PAYABLE / PAYOUT / SETTLEMENT → FOLLOW-UP / REBOOKING / REPUTATION`.
 
-Billing is first-party Klinikos scope.
-
-Klinikos owns workflow, domain model, financial state, normalization, reconciliation, revenue integrity, evidence, and user experience. Klinikos integrates external payer/clearinghouse rails rather than pretending to recreate regulated networks.
-
-Canonical path:
-
-`CARE / EVENT → DOCUMENTATION → EVIDENCE → CODING → CHARGE → BILLING READINESS → CLAIM PREPARATION → EXTERNAL TRANSMISSION / CLEARINGHOUSE / PAYER RAIL → ACCEPTANCE / REJECTION → ADJUDICATION → REMITTANCE → PAYMENT → RECONCILIATION → REVENUE INTEGRITY`.
-
-Klinikos-owned capabilities include billing readiness, documentation completeness, coding support, modifiers, superbills, itemized receipts, patient invoices/balances, cash-pay receipts, CMS-1500 support, eligibility workflow when connected, claim preparation/submission orchestration, claim status, rejections/denials workflow, payment posting, remittance reconciliation, No-Fault/Workers' Compensation workflows, performed-versus-charged reconciliation, revenue leakage detection, and owner revenue-integrity views.
-
-External insurance rails may include 270/271 eligibility, 837 claims, 276/277 status, 835 ERA/remittance, clearinghouses, and payer networks.
-
-Keep separate:
-
-`PRICE != QUOTE != CHARGE != INVOICE != PAYMENT INTENT != PAYMENT EVIDENCE != ENTITLEMENT != OBLIGATION != PAYABLE != PAYOUT != SETTLEMENT != REFUND != RECONCILIATION`.
-
-`REDIRECT != PAYMENT`.
-
-`CLAIM SENT != CLAIM ACCEPTED`.
-
-`CLAIM ACCEPTED != ADJUDICATED`.
-
-`ERA RECEIVED != RECONCILED`.
-
-Revenue Integrity should progressively surface exceptions across:
-
-`PERFORMED → DOCUMENTED → CODED → CHARGE EXPECTED → CHARGE PRESENT → CLAIM READY → CLAIM SENT → CLAIM ACCEPTED → ADJUDICATED → PAID → RECONCILED`.
+Regulated inventory boundary: restricted medications, injectables, prescription products, or other regulated clinical stock remain separately governed clinical inventory unless an explicit lawful commerce path is approved. **Regulated clinical inventory is not ordinary public commerce.**
 
 ---
 
-# 22. PAYMENTS, BANK CONNECTION, TRANSACTIONS, AND ENTITLEMENTS
+# 17. QUALITY GUARDIAN → EXPERT GRID
 
-General transaction path:
+Quality architecture:
 
-`OPPORTUNITY → AGREEMENT → BOOKING / RESERVATION → FULFILLMENT → FINANCIAL OBLIGATION → PAYMENT EVIDENCE → PAYOUT / SETTLEMENT WHERE APPLICABLE → RECONCILIATION → REPORTING`.
+`RULES & EVIDENCE → SIGNAL / MONITORING → ZUMI ORCHESTRATION → INTERNAL REMEDIATION ATTEMPT → HUMAN REVIEW WHEN REQUIRED → EVIDENCE / RESOLUTION / AUDIT`.
 
-Payment/bank setup is contextual, not universal signup friction.
+If specialized human expertise is needed:
 
-A professional who wants to receive paid Grid opportunities may be prompted to connect a payout account through approved regulated payment infrastructure.
+`QUALITY SIGNAL → SCOPE PROBLEM → GRID VERIFIED EXPERT → AGREEMENT → MINIMUM-NECESSARY / TIME-LIMITED ACCESS → EXPERT REVIEW → REMEDIATION → EVIDENCE PACKET → OUTCOME → REPUTATION / PREVENTION`.
 
-A clinic may connect a payment account when it begins collecting or receiving permitted platform-connected payments.
+**Melissa provenance use case:** quality/audit/documentation/care-gap/reimbursement/workflow expertise informed this lane. Provenance does not imply a signed partnership or customer relationship.
 
-A patient may pay a balance without becoming a professional subscriber.
+Expert Grid law: automate routine expertise first; bring a qualified human expert only when judgment adds value. Expert access must be scoped, auditable, purpose-bound, minimum necessary, and time limited where feasible.
 
-Klinikos should not ask users to enter raw bank credentials into ordinary product forms. Processor-hosted or otherwise approved secure financial onboarding should handle sensitive banking/payment information where appropriate.
-
-The browser is never trusted price authority.
-
-Customer-funded variable usage should generally follow:
-
-`CUSTOMER PAYMENT / PLAN → ENTITLEMENT → INCLUDED ALLOWANCE / PREPAID BALANCE → EXTERNAL USAGE → COST LEDGER → OVERAGE / LIMIT / HOLD → MARGIN / RECONCILIATION`.
-
-Commercial upgrades should appear when they unlock a real next capability, not as random paywalls.
-
-Examples include persistent/high-volume Grid tooling, additional organization/location capability, advanced Zumi workloads, Clinic OS activation, institutional EDU delivery, network/enterprise controls, or expensive external rails.
-
-Money changes entitlement. It does not change identity truth, credential truth, clinical authority, or organization authority.
+Quality results may inform operational priority and evidence. They do not create unsupported compliance guarantees.
 
 ---
 
-# 23. EXTERNAL INTEGRATION STRATEGY
+# 18. CROSS-ORGANIZATIONAL HEALTHCARE LIFECYCLES
 
-Klinikos builds its own experience, workflows, normalization, evidence, intelligence, and reconciliation where that creates product value. It integrates regulated/network infrastructure where rebuilding would be unsafe, wasteful, or impossible.
+Klinikos must model healthcare that crosses organizations, not just work inside one tenant.
 
-External service classes include platform infrastructure, customer/organization external relationships, and activate-after-sale/use-case services.
+Canonical closed-loop referral:
 
-Never collapse all external states into "integrated." Use truthful states such as PLANNED, CONTRACT PENDING, CREDENTIALS PENDING, ADAPTER READY, SANDBOX, CONNECTED, UAT, CONTROLLED PRODUCTION, PRODUCTION VERIFIED, DEGRADED, DISABLED, or BLOCKED.
+`NEED → IDENTIFY ELIGIBLE ORGANIZATION / PROVIDER / CAPACITY → RELATIONSHIP REQUIREMENT → PURPOSE / CONSENT / SHARING RULE → REFERRAL REQUEST → TRANSMISSION → RECEIPT / ACCEPTANCE → SCHEDULING → FULFILLMENT → RESULT / CONSULTATION → REVIEW → COMMUNICATION → CLOSED LOOP → NETWORK EVIDENCE`.
 
-External failures become reconciliation work. Do not silently swallow rejected claims, failed lab transmissions, duplicate webhooks, unmatched remittances, stale statuses, or provider failures.
+Cross-org access follows **relationship + purpose + minimum necessary**. A network relationship, invitation, contract, referral, or shared patient does not automatically expose entire charts or organization data.
 
----
-
-# 24. NETWORK
-
-Network is the governed relationship/capacity fabric connecting organizations, professionals, referrals, education, services, employment, and operational collaboration.
-
-Relationships may include employment, contracting, organization membership, referral relationships, school/clinical site, preceptor, vendor/service, payer/clearinghouse, and network affiliation.
-
-Relationship is not authority. It may enable authority evaluation but does not automatically create chart access, consent, privilege, transaction approval, or payment authority.
-
-Network flywheel:
-
-`CLINIC VALUE → GRID ACTIVITY → RELATIONSHIPS → MORE CAPACITY / SUPPLY / DEMAND → MORE USEFUL MATCHES → MORE WORK / CARE / EDUCATION → MORE EVIDENCE → MORE TRUST → MORE ORGANIZATIONS → MORE CLINIC VALUE`.
+Cross-org workflows may include referrals, consultations, labs, imaging, pharmacy, DME, transfer/transition of care, workforce placements, expert engagements, payer/clearinghouse transactions, employer/occupational health, and regulated case participants.
 
 ---
 
-# 25. CONFIGURATION REGISTRY
+# 19. REVENUE INTEGRITY STATE MACHINE
 
-Avoid customer-specific forks.
+Klinikos owns clinical-to-financial workflow truth while integrating payer/clearinghouse/payment rails.
 
-Configuration hierarchy:
+Canonical RCM path:
 
-`BASE KLINIKOS → SPECIALTY PACK → ORGANIZATION OVERRIDE → LOCATION OVERRIDE`.
+`CARE / EVENT → DOCUMENTATION → EVIDENCE → CODING → CHARGE → BILLING READINESS → CLAIM PREPARATION → EXTERNAL TRANSMISSION → ACCEPTANCE / REJECTION → ADJUDICATION → REMITTANCE → PAYMENT → RECONCILIATION → REVENUE INTEGRITY`.
 
-Configurable areas may include intake, consent, workflow, clinical templates, scheduling, services, billing requirements, lawful role configuration, alerts, routing, reporting, EDU programs, and Grid policies.
+Operational revenue progression:
 
-Material configuration should support version, effective date, approval, source/provenance, audit, and history/rollback.
+`PERFORMED → CHARGE EXPECTED → CHARGE PRESENT → CLAIM READY → CLAIM SENT → ACCEPTED → ADJUDICATED → PAID → RECONCILED`.
 
-Configuration may not violate platform-level security/safety law.
+Klinikos capabilities may include documentation completeness, coding support, modifiers, superbills, itemized receipts, patient balances, CMS-1500 support, eligibility workflow when connected, claim preparation/orchestration, status, rejections/denials, payment posting, remittance reconciliation, No-Fault/Workers’ Compensation billing, performed-versus-charged reconciliation, leakage detection, and owner revenue-integrity views.
+
+Never collapse financial states.
 
 ---
 
-# 26. SECURITY, CONFIDENTIALITY, AND IP
+# 20. PAYMENTS, ENTITLEMENTS, OBLIGATIONS, PAYOUTS, SETTLEMENT
 
-## KLINIKOS-SECURITY-001
+Canonical distinction:
+
+`PRICE ≠ QUOTE ≠ CHARGE ≠ INVOICE ≠ PAYMENT INTENT ≠ PAYMENT EVIDENCE ≠ ENTITLEMENT ≠ OBLIGATION ≠ PAYABLE ≠ PAYOUT ≠ SETTLEMENT ≠ REFUND ≠ RECONCILIATION`.
+
+Also:
+
+`checkout ≠ payment evidence ≠ entitlement ≠ provisioning ≠ operational external connection`.
+
+A redirect is not payment. Claim submission is not acceptance. Acceptance is not adjudication. ERA receipt is not reconciliation.
+
+Payment lifecycle for company commercial offers:
+
+`OFFER → CHECKOUT / AGREEMENT → PAYMENT → VERIFIED WEBHOOK / PAYMENT EVIDENCE → RECONCILIATION → CRM → ENTITLEMENT → ONBOARDING → DELIVERY → RENEWAL / EXPANSION`.
+
+Klinikos entitlements are authoritative for product access. Financial providers remain authoritative for their external transaction state.
+
+Do not deploy complex marketplace payout architecture prematurely where demand, legal review, resource-class economics, and transaction volume do not justify it.
+
+---
+
+# 21. PARTNER / EXTERNAL RAILS
+
+Klinikos should own the workflow, normalized state, evidence, user experience, reconciliation, and intelligence where that creates value. It should connect authoritative external networks that are unsafe, wasteful, regulated, capital-intensive, or irrational to recreate.
+
+Build-vs-connect ladder:
+
+`CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE`.
+
+Some systems may remain `NEVER_BUILD` where recreating the authoritative rail is strategically irrational.
+
+Likely long-lived external rails include payment networks, national pharmacy/eRx rails, payers/clearinghouses, labs, imaging networks, identity/credential sources, and selected enterprise infrastructure.
+
+External connection states must be truthful: `PLANNED / CONTRACTING / CREDENTIALS_PENDING / ADAPTER_READY / SANDBOX / CONNECTED / UAT / CONTROLLED_PRODUCTION / PRODUCTION_VERIFIED / DEGRADED / DISABLED / BLOCKED`.
+
+External failures become reconciliation work, not silent success.
+
+---
+
+# 22. PHARMACY / DEVICES / REMOTE CARE
+
+Medication, pharmacy, DME, device, and remote-care workflows belong in the healthcare operating graph while external authoritative networks remain separately governed.
+
+Klinikos may own medication workflow context, orders, reconciliation, formulary/benefit context when available, device observation normalization, remote patient monitoring tasks, home-care coordination, result review, and follow-up.
+
+**eRx / pharmacy / device rails remain separately governed** and require verified technical, legal, contractual, privacy, clinical, and deployment eligibility.
+
+---
+
+# 23. OPENAI / ZUMI GOVERNED INTELLIGENCE
+
+Zumi is Klinikos Intelligence, semantic navigation, and orchestration. Zumi is not parent brand, clinical authority, legal authority, credential authority, payment authority, or tenant authority.
+
+Permanent doctrine:
+
+> **OpenAI intelligence, Klinikos authority.**
+
+Canonical architecture:
+
+`USER → SECURITY / PRIVACY GATE → EXPERIENCE CONTEXT → AUTHORIZED CONTEXT BUILDER → TASK CLASS → DETERMINISTIC POLICY → ZUMI → OPENAI RESPONSES WHEN USEFUL → TOOL / ACTION PROPOSAL → AUTHORIZATION → HUMAN CONFIRMATION WHEN CONSEQUENTIAL → BACKEND EXECUTION → VERIFIED RESULT → AUDIT / PROVENANCE → PLAIN-LANGUAGE RESULT`.
+
+Zumi may interpret, summarize, research, compare, draft, route, explain, prepare actions, suggest next steps, and operate tools within granted authority. Deterministic domains decide permissions, credentials, money, regulated eligibility, signing, patient release, and authoritative state transitions.
+
+AI cannot sign, submit, settle, or create regulated authority on its own.
+
+Partnership status cannot bypass PHI, security, privacy, or legal gates.
+
+OpenAI partner evidence must distinguish verified facts such as accepted/onboarding/portal/training from unverified benefits such as credits, tier, co-sell, funding, special support, special PHI rights, certifications, or special pricing.
+
+Provider abstraction remains. Model/provider choice must not redefine domain authority.
+
+---
+
+# 24. DATA / EVIDENCE / MEMORY / ANALYTICS PLANE
+
+Consequential facts require provenance.
+
+Separate at minimum:
+
+- clinical truth;
+- financial truth;
+- credential truth;
+- identity/relationship truth;
+- legal agreement evidence;
+- Grid eligibility/fulfillment evidence;
+- EDU evidence;
+- product analytics;
+- marketing attribution;
+- security telemetry;
+- company financial data;
+- AI memory/context;
+- historical/provenance material.
+
+**AI memory never overrides authoritative domain state.** Before consequential action, Klinikos re-retrieves governing live state where required.
+
+Evidence should carry source, subject, tenant/context, purpose, time, effective range, version, verification state, authority class, supersession, retention/expiry, and provenance as appropriate.
+
+Data products and analytics should help answer:
+
+- what happened;
+- what changed;
+- what is blocked;
+- who owns it;
+- what outcome resulted;
+- what should happen next;
+- what creates customer and company value.
+
+---
+
+# 25. SECURITY / PRIVACY / LEGAL / TRUST DEFENSE STACK
 
 Permanent boundary:
 
-`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER-SIDE POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY DTO → BROWSER`.
+`BROWSER INTENT / INPUT → AUTHENTICATED SERVER CAPABILITY → SERVER POLICY / PROPRIETARY ENGINE → MINIMUM-NECESSARY DTO / VIEW MODEL → BROWSER`.
 
-Assume everything delivered to the browser can be inspected, copied, retained, replayed, diffed, automated, and decompiled where applicable.
+Browser = experience; server = authority. DTO/view model = disclosure boundary.
 
 Server-confidential by default:
 
-- secrets/credentials,
-- Zumi hidden prompts/directives,
-- private orchestration state,
-- Grid ranking/matching/anti-gaming internals,
-- trust/risk/fraud heuristics,
-- private pricing/margin logic,
-- unpublished discount strategy,
-- unreleased roadmap/business strategy,
-- privileged security/infrastructure detail,
-- unnecessary PHI/PII,
+- credentials/secrets;
+- hidden Zumi prompts/directives;
+- private orchestration state;
+- Grid ranking/anti-gaming internals;
+- trust/risk/fraud heuristics;
+- unpublished pricing/margin logic;
+- unreleased roadmap/strategy;
+- privileged security/infrastructure detail;
+- unnecessary PHI/PII;
 - private tenant state.
 
-Raw ORM/domain records are not browser contracts by default. Server Component values passed to Client Components are browser disclosures.
+Security gate for material capability:
 
-Tenant context is server-owned. Sensitive actions enforce identity, tenant, relationship, role, permission, purpose, resource scope, and minimum necessary access as applicable.
+- authentication;
+- authorization;
+- tenant isolation;
+- minimum necessary;
+- encryption;
+- secrets management;
+- audit;
+- logging/monitoring;
+- retention/deletion;
+- backup/restore;
+- recovery;
+- abuse/fraud protection;
+- privacy;
+- HIPAA-related safeguards where applicable;
+- payment/vendor controls;
+- incident response;
+- dependency/supply-chain review;
+- vulnerability management;
+- rate limiting;
+- secure uploads;
+- webhook verification;
+- idempotency;
+- queues/retries/dead-letter/reconciliation where needed.
 
-Do not make blanket unsupported compliance claims. Do not represent PHI-capable external AI use as approved without exact provider, contract/BAA, configuration, egress, and deployment evidence.
+Do not claim HIPAA production readiness, SOC 2, certification, penetration-test completion, BAA coverage, enterprise readiness, or live integration status before evidence exists.
 
----
+## 25.1 Protected access / confidentiality / IP
 
-# 27. LEGAL DEFENSE AND LIABILITY ARCHITECTURE
+Protected product entry should use versioned affirmative agreement evidence for applicable Terms, confidentiality, IP/restricted-use protections, privacy acknowledgments, and other approved agreements.
 
-The protected access stack should be defense-in-depth, not one weak NDA.
+The execution package may include anti-scraping, anti-reverse-engineering, no hidden-prompt/ranking extraction, no unauthorized replication/training, credential-sharing restrictions, evidence preservation, suspension/revocation, remedies, and other counsel-approved protections.
 
-## 27.1 Layer 1 - Combined protected access terms
-
-The first protected airlock should combine website/protected-access terms with confidentiality, IP, trade-secret, restricted-use, and explicit breach-consequence acknowledgments.
-
-## 27.2 Layer 2 - Relationship/product agreements
-
-Additional progressive agreements may include:
-
-- Acceptable Use Policy,
-- AI/Zumi terms,
-- Grid provider/organization/marketplace terms,
-- Clinic MSA,
-- implementation SOW,
-- DPA/Security Addendum,
-- BAA where required,
-- EDU institution/learner terms,
-- contractor/employee/contributor confidentiality/IP assignment,
-- investor/partner/data-room agreements.
-
-## 27.3 Layer 3 - Technical enforcement
-
-Contract rights do not replace controls. Protect through authentication, authorization, tenant isolation, server-side proprietary logic, secure sessions, rate limits, anti-enumeration, audit, access revocation, safe downloads, client-bundle/source-map leakage checks, secret management, and incident response.
-
-## 27.4 Breach classes and remedies
-
-Contract drafts may classify material breach, serious confidentiality/IP breach, and severe protected-asset breach so prohibited acts map to consequence, evidence, survival, and remedy.
-
-Severe examples may include intentional/reckless trade-secret theft, unauthorized source/repository acquisition, deliberate security/auth/legal-gate bypass, mass exfiltration, hidden-prompt/orchestration/ranking extraction for exploitation, credential compromise, evidence destruction, or unauthorized replication/training use.
-
-Potential remedies, where lawful and contractually available, may include:
-
-- actual/direct damages,
-- injunctive/equitable relief,
-- restitution/unjust enrichment/disgorgement where available,
-- recoverable forensic/containment/credential-rotation/restoration/remediation/notification/incident-response costs caused by breach,
-- attorneys' fees, experts, costs, and enforcement expenses where contract/law permit,
-- applicable statutory/IP/trade-secret remedies,
-- termination of evaluation/license/Grid/partner/data-room rights,
-- lawful referral to authorities where appropriate.
-
-No double recovery for the same injury.
-
-Do not use arbitrary punitive liquidated-damages numbers. Any liquidated-damages provision must target a defined hard-to-measure breach, be a reasonable estimate rather than punishment, avoid duplicate recovery, and receive licensed-counsel approval for governing law and facts.
-
-## 27.5 Mandatory-law carve-outs
-
-Protected reporting and non-waivable whistleblower rights remain intact. Covered worker/contractor/consultant confidentiality agreements must include or lawfully cross-reference the applicable DTSA 18 U.S.C. §1833(b) immunity notice.
-
-Electronic execution should preserve reproducible records and intent-to-sign evidence consistent with applicable E-SIGN rules and exceptions.
-
-## 27.6 Production legal gate
-
-No legal document becomes attorney-approved or production-approved merely because it is drafted, committed, rendered, accepted in test, or technically enforceable in code.
-
-Licensed counsel should review final contracting entity, governing law, forum, arbitration/jury/class terms if used, indemnity, limitation of liability, fee shifting, liquidated damages, restrictive covenant/anti-circumvention scope, worker rules, consumer/business distinctions, privacy/healthcare requirements, and international use.
+Final enforceability, liquidated damages, indemnity, liability allocation, arbitration/forum, restrictive covenants, consumer/business treatment, and similar legal terms remain licensed-counsel decisions.
 
 ---
 
-# 28. AUTOMATED OUTBOUND AND CONFIDENTIAL DISCLOSURE
+# 26. MARKETPLACE SAFETY / FRAUD / DISPUTES
 
-No automated or agent-assisted process may send confidential decks, proprietary architecture, source code, sensitive roadmaps, non-public financial details, labs/clinical documents, PHI, patient lists, credentials/secrets, or protected attachments without required disclosure classification, intended-recipient validation, minimum-necessary review, and governing human/policy approval.
+Grid and commerce require trust/safety infrastructure proportional to risk.
 
-Keep truth states separate:
+Canonical incident path:
 
-`MESSAGE PREPARED != PROVIDER ACCEPTED != DELIVERED != RESPONSE RECEIVED != APPLICATION SUBMITTED != AWARD / CONTRACT != CASH RECEIVED`.
+`SIGNAL / REPORT → PRESERVE EVIDENCE → TRIAGE → TEMPORARY CONTROL IF REQUIRED → INVESTIGATE → POLICY / HUMAN DECISION → REMEDIATION / SUSPENSION / RESTORATION → APPEAL WHERE APPROPRIATE → AUDIT → REPUTATION / RISK UPDATE`.
 
-Protected business materials should support public/green, limited/yellow, confidential/red, and crown-jewel classifications or equivalent governed labels.
+Marketplace systems must support incident / dispute / reputation evidence, anti-gaming, duplicate/fraud controls, safe communication, payment dispute handling where applicable, and explicit appeal/review paths.
 
----
-
-# 29. BLACK LABEL EXPERIENCE AND DESIGN SYSTEM
-
-Klinikos should feel premium, calm, editorial, futuristic, medical, cinematic, and trustworthy rather than generic healthcare SaaS.
-
-Luxury is created through restraint, spatial hierarchy, typography, material depth, motion discipline, precision, and usefulness, not decorative overload.
-
-## 29.1 Obsidian
-
-Dark mode uses layered near-black/black-cherry/oxblood materials, warm ivory typography, dusty rose/ember accents, controlled rose atmosphere, subtle depth, and exceptional contrast.
-
-It should feel like a private healthcare operating environment, not neon cyberpunk.
-
-## 29.2 Marble
-
-Light mode uses warm ivory/calacatta/bone/limestone materials, graphite typography, muted oxblood authority, rose-quartz contextual surfaces, and restrained shadow/material cues.
-
-It should feel like a private medical atelier/editorial dossier, not white/blue hospital software.
-
-## 29.3 Theme control
-
-Support appropriate `System`, `Marble`, and `Obsidian` modes. Theme preference persists without changing information architecture, authority, or workflow semantics.
-
-## 29.4 Domain personality
-
-- Living Home: cinematic, spacious, conversational.
-- Current Visit: quiet, surgical, clinically focused.
-- Grid: spatial, map-driven, alive, networked.
-- Billing/Financial: structured, numeric, precise.
-- EDU: editorial, immersive, instructional.
-- Patient: warm, calming, hospitality-oriented.
-- Enterprise/Network: institutional, commanding, spatially organized.
-- Front desk/operations: efficient, exception-oriented.
-
-All remain unmistakably Klinikos.
-
-## 29.5 Two density modes
-
-**Contemplative mode** is used for Living Home, first-run orientation, patient next-step, EDU orientation, major insights, and completion moments.
-
-**Operative mode** is used for Current Visit, front desk, claims, billing, results, Grid transaction management, staff work queues, and administration.
-
-Do not force contemplative sparsity onto high-density work. Do not force dashboard density onto orientation and decision moments.
-
-## 29.6 Object Stage
-
-A consequential object may become the center of the application without destroying surrounding context.
-
-Examples include patient, claim, result, provider, student, Grid resource, opportunity, referral, task, and organization.
-
-When an object enters Stage, Klinikos preserves relevant context, reveals permitted actions/history, and makes Zumi aware of the active object while maintaining authorization boundaries.
-
-## 29.7 Anti-clutter law
-
-One viewport must not attempt to explain an entire subsystem.
-
-A screen should normally have:
-
-- one dominant purpose,
-- one dominant object,
-- one dominant next action,
-- only the context required to make that action safely.
-
-Depth appears through interaction.
-
-No text may scroll behind hero imagery or visual atmosphere. Cinematic assets remain contained by their own spatial section and stacking context.
-
-## 29.8 Motion
-
-Motion communicates state, selection, continuity, and completion. It does not exist merely to animate.
-
-Good motion includes Zumi understanding, Object Stage transition, Grid map/result coordination, and governed completion transitions.
-
-Avoid scroll-jacking, permanent pulsing, random parallax, excessive card motion, or decoration that impairs task efficiency/accessibility.
+Trust score never substitutes for hard eligibility. No pay-to-eligibility.
 
 ---
 
-# 30. WIRING LAW
+# 27. ENTERPRISE / MULTI-LOCATION / NETWORK
 
-A page is not completion. A button is not wiring. A route is not proof. An AI answer is not execution.
+Enterprise capability includes organization hierarchy, locations, departments, delegated administration, enterprise policy, SSO where justified, network relationships, interoperability, reporting, entitlements, procurement evidence, and multi-location operational views.
 
-Full consequential chain:
+Owner/enterprise views should answer what needs attention across the network while minimizing unnecessary clinical detail.
 
-`VISIBLE EXPERIENCE`
-→ `USER INTENT / ACTION`
-→ `INPUT NORMALIZATION`
-→ `IDENTITY / ACTIVE CONTEXT`
-→ `ACTIVE EXPERIENCE ENVELOPE`
-→ `CLAIM / REQUIREMENT RESOLUTION`
-→ `AUTHORIZATION / ELIGIBILITY / ENTITLEMENT`
-→ `RELEVANT ENGINE(S)`
-→ `AUTHORITATIVE DATA / WORKFLOW`
-→ `PERSISTENCE / EVENT`
-→ `EXTERNAL ADAPTER IF REQUIRED`
-→ `EXTERNAL ACK / RECONCILIATION IF REQUIRED`
-→ `EVIDENCE / AUDIT`
-→ `FINANCIAL CONSEQUENCE IF REQUIRED`
-→ `TRUTHFUL RESULT`
-→ `MEMORY / CONTINUITY`
-→ `EXPERIENCE ENGINE RECOMPOSITION`
-→ `NEXT USEFUL ACTION`.
+Cross-organization governance must preserve organization boundaries, relationship scope, purpose, consent, data minimization, and audit.
 
-For every major flow ask:
+Network flywheel:
 
-1. What surface starts it?
-2. What user action occurs?
-3. Which identity/context is active?
-4. Which claims/requirements matter?
-5. Who decides authority?
-6. Which domain owns read/write truth?
-7. What persists?
-8. What event/evidence is created?
-9. Does an external rail participate?
-10. How is external truth reconciled?
-11. What does the user see?
-12. What remains unfinished?
-13. What is the next useful action?
-14. What is audited?
-15. What financial consequence exists?
-16. Can failure be distinguished from success?
-17. How does the Experience Engine change the surface afterward?
-
-Never fake payment, delivery, license verification, claim acceptance, payout, API result, Grid supply, distance, availability, or completion. Manual fallback is valid only when represented honestly.
+`CLINIC VALUE → GRID ACTIVITY → RELATIONSHIPS → MORE CAPACITY / SUPPLY / DEMAND → MORE USEFUL MATCHES → MORE CARE / WORK / EDUCATION → MORE EVIDENCE → MORE TRUST → MORE ORGANIZATIONS → MORE CLINIC VALUE`.
 
 ---
 
-# 31. IMPLEMENTATION-STATE RECORD
+# 28. RESEARCH / PUBLIC HEALTH / GOVERNMENT
 
-Product target and implementation state belong together.
+Klinikos may support separately governed research purpose, study/site workflows, lawful real-world/outcomes evidence, public-health exchange, workforce/public programs, government procurement, and institutional reporting where strategically justified.
 
-Every major capability should carry one current record containing:
+Research/public-health/government access never inherits unrestricted clinical or company access by category alone. Purpose, authorization, agreements, legal basis, data governance, minimization, and evidence remain required.
 
-- **Canonical State** - what this canon requires.
-- **Current Implementation** - VERIFIED LIVE / BUILT / PARTIALLY BUILT / MANUAL FALLBACK / ADAPTER READY / PENDING CONNECTION / BLOCKED / NOT BUILT / NOT BUILT BY DESIGN.
-- **Verified Against** - commit, tests, runtime/deployment evidence, date.
-- **Already Working** - specific proven behavior.
-- **Remaining Gap** - specific missing behavior.
-- **Dependencies** - internal prerequisites.
-- **External Gate** - vendor/legal/contract/credential/deployment/BAA/payer/institution condition.
-- **Next Convergence** - dependency-aware next step.
-- **Evidence Links** - code/tests/verification/runbooks/PRs.
-
-Status snapshots are evidence, not immutable truth. Reverify before current claims.
+Government contracting is a real distribution/capital channel and should be treated as a pipeline with procurement requirements, proposal evidence, implementation capacity, milestones, and truthful status—not as guaranteed revenue.
 
 ---
 
-# 32. COMMERCIALIZATION AND UNICORN-SCALE FLYWHEEL
+# 29. API / DEVELOPER / PARTNER ECOSYSTEM
 
-Klinikos should land with usefulness, expand by value, and replace legacy systems only after earned trust.
+Klinikos should expose versioned governed APIs, webhooks, and interoperability surfaces where they increase ecosystem value without leaking crown-jewel internals.
 
-Early clinic sequence:
+Relevant standards may include **APIs / webhooks / FHIR / HL7 / DICOM / X12 where applicable**.
 
-`TARGET CLINIC → EXECUTIVE CONVERSATION → IDENTIFY EXPENSIVE WORKFLOW → PAID ASSESSMENT / PROOF → MEASURE IMPROVEMENT → FOUNDING DEPLOYMENT → RECURRING PLATFORM → CASE STUDY / REFERRAL → TARGETED EXPANSION`.
+Partner/developer access requires scoped authentication/authorization, tenant and purpose boundaries, rate limits, versioned contracts, audit, data minimization, security review, and deprecation/migration policy.
 
-Prioritize reachable independent and multi-location practices with measurable scheduling, follow-up, staffing, paperwork, referral, billing-readiness, revenue-leakage, or coordination pain.
-
-Sell outcomes and validated capability, not crown-jewel internals.
-
-Do not make exact pricing immutable canon unless it is current, approved, and intended as product/commercial truth.
-
-## 32.1 Contextual monetization law
-
-Do not charge everyone for the entire ecosystem.
-
-Charge for the person's or organization's current economic role and next valuable capability.
-
-Potential economic families include:
-
-- Clinic OS recurring SaaS,
-- implementation/professional services,
-- Grid professional/organization capability,
-- transaction/booking economics where lawful,
-- EDU individual/institutional programs,
-- Zumi advanced/high-cost intelligence,
-- enterprise/network controls,
-- usage-based external rails.
-
-Upgrades should occur at a real value boundary, not arbitrary navigation boundaries.
-
-## 32.2 Compounding platform flywheel
-
-`EDU → SKILLS → COMPETENCY EVIDENCE → GRID → OPPORTUNITY → WORK → EXPERIENCE → REPUTATION → INDEPENDENT PRACTICE → CLINIC OWNERSHIP → CLINIC OS → NETWORK → MORE CAPACITY / JOBS / PATIENT DEMAND → GRID → MORE OPPORTUNITY → MORE EDUCATION DEMAND → EDU`.
-
-## 32.3 Financial flywheel
-
-`OPPORTUNITY → AGREEMENT → BOOKING → FULFILLMENT → PAYMENT / OBLIGATION → SETTLEMENT / RECONCILIATION → REPORTING → TRUST / REPEAT`.
-
-## 32.4 Klinikos 10
-
-Klinikos 10 is the first high-value organization network proof program, not a separate product. Its purpose is to prove active network nodes across onboarding, organization verification, Current Visit, telemedicine continuity, Grid demand/supply, Financial OS usefulness, provider/staff/patient/vendor/referral growth, Zumi value, measurable outcomes, retention, and expansion.
+The developer ecosystem is an expansion surface, not a bypass around Klinikos authority.
 
 ---
 
-# 33. EXECUTION ORDER
+# 30. MARKET / BRAND / CATEGORY POSITIONING
 
-Implementation converges dependency-first rather than jumping among visible screens.
+Klinikos brand direction is Klinikos / KLINIKOS™. Zumi is the intelligence inside Klinikos, not the governing product name.
 
-## 33.1 Foundation
+Primary category story:
 
-1. One Master Canon and authority map.
-2. Truthful implementation-state records.
-3. Universal identity/account foundation.
-4. Relationship/context model.
-5. Claim/verification/authority model.
-6. Active Experience Envelope.
-7. Experience Engine.
-8. Screen Contract law and route contracts.
-9. Server/client confidentiality boundary.
-10. Audit/evidence/event foundations.
-11. Configuration registry.
-12. Shared financial semantics.
+> **The Operating Network for Healthcare.**
 
-## 33.2 Front door
+Core market narrative: healthcare software fragments the work; Klinikos coordinates unfinished work across care, people, organizations, capacity, money, education, evidence, and networks.
 
-13. Public discovery surfaces.
-14. Enter Klinikos action.
-15. Protected access Terms/Confidentiality/IP airlock.
-16. Exact acceptance evidence.
-17. Sign in/create one universal identity.
-18. Bind acceptance and restore safe return-to/entry context.
-19. Authenticated Zumi introduction.
-20. Intent/context discovery.
-21. Claims/relationships as needed.
-22. Path-aware verification.
-23. Active Experience Envelope resolution.
-24. Experience Engine projection.
-25. First role/context-specific Screen Contract.
+Public messaging must explain value in ordinary language within seconds, demonstrate the product, and avoid exposing crown-jewel implementation details.
 
-## 33.3 Core operations
+Public website architecture may use Platform, Solutions, Grid, EDU, Resources, Trust, Pricing, Sign in, and an interactive clinic operating-map/analysis entry, but navigation is subordinate to actual customer evidence and conversion data.
 
-26. Clinic OS operational work.
-27. Scheduling/capacity.
-28. Patient registration/intake/consent.
-29. Current Visit clinical convergence.
-30. Orders/results and reconciliation.
-31. Referrals/network continuity.
-32. Billing readiness/RCM/revenue integrity.
-33. Telehealth as encounter mode.
-
-## 33.4 Network and workforce
-
-34. Grid universal demand/resource participation.
-35. Spatial map/list/inspector marketplace.
-36. Eligibility/matching/offer/agreement/reservation/fulfillment.
-37. EDU competency evidence.
-38. EDU-to-Grid opt-in bridge.
-39. Work-to-experience/reputation evidence.
-40. Organization/network relationship growth.
-
-## 33.5 Intelligence and scale
-
-41. Zumi governed tools over deterministic domains.
-42. OpenAI primary intelligence integration under Klinikos authority.
-43. Memory/Knowledge OS with provenance/authority.
-44. Insights/next-best-action projections.
-45. Multi-location/network/enterprise scaling.
-46. Agentic execution only behind explicit policy, disclosure, financial, clinical, and founder/human gates.
+No fake customers, logos, ROI, integrations, savings, certifications, partner benefits, revenue, or market traction.
 
 ---
 
-# 34. ACCEPTANCE STANDARD
+# 31. MARKET INTELLIGENCE / COMPETITION / ICP
 
-Klinikos is not converged because the homepage looks right or each module exists separately.
+Klinikos continuously studies market size, trends, AI, interoperability, workforce, administration, RCM, provider/patient pain, education, marketplace dynamics, procurement, government, and competitors.
 
-Representative end-to-end journeys must work truthfully, including:
+Competition includes direct products, EHR/EMR, PM, CRM, RCM, staffing, marketplace, education, patient engagement, scheduling, AI products, manual processes, spreadsheets, email/phone, incumbent vendors, and “do nothing.”
 
-- protected access agreement → sign in/create identity → authenticated Zumi → preserved entry context → claim/verification as needed → Experience Engine → relevant experience;
-- returning user → sign in → restore safe context → recompute Active Experience Envelope → resume relevant work;
-- RN Clinic A context → patient/nursing work → switch to personal Grid → no tenant/PHI bleed → opportunity/map experience;
-- learner → evidence → human review → Grid discovery → opportunity → work → experience evidence;
-- clinic staffing/capacity need → Grid → eligible result → map/list/inspect → agreement/reservation → fulfillment → operational/financial consequence;
-- patient → intake/consent → appointment → Current Visit → order/result → follow-up → billing;
-- MA/LPN/RN staff work → structured encounter handoff → provider Current Visit without duplicate data-entry burden;
-- provider → What Changed → assessment/plan → orders/results → documentation/coding → sign/lock → follow-up;
-- care → evidence → coding → charge → claim → external rail → remittance → reconciliation;
-- clinic owner → operating pressure → Zumi Operating Map → paid/implementation path where appropriate → Clinic OS activation;
-- EDU learner/instructor/institution each receives distinct projection over shared EDU truth;
-- billing user → revenue path exception → responsible work item → resolution → measured outcome;
-- context switch → correct data/tools/permissions/Zumi behavior with no cross-tenant bleed;
-- external disconnected state → truthful blocker/manual fallback, never fake success;
-- automated outbound → confidentiality classification/recipient/review gate before sensitive disclosure.
+For each priority segment define:
 
-## 34.1 Screen-level acceptance
+- role/persona;
+- organization size/type/specialty;
+- current systems;
+- urgent problem;
+- economic buyer / decision-maker / champion / end user / influencer / blocker;
+- measurable desired outcome;
+- switching cost/fear;
+- objections;
+- purchasing trigger;
+- willingness to pay;
+- sales motion;
+- implementation cost/time;
+- retention potential;
+- network/defensibility value.
 
-Every major surface must prove:
+Every initiative should pass an initiative gate:
 
-- correct Experience Contract,
-- first-viewport usefulness,
-- correct visible/hidden data projection,
-- correct authority/eligibility behavior,
-- purposeful Zumi behavior,
-- no brochure-first authenticated experience,
-- Obsidian and Marble support where applicable,
-- desktop/tablet/mobile behavior,
-- loading/empty/partial/error/blocked states,
-- keyboard/focus/screen-reader/reduced-motion/zoom behavior,
-- no overlapping hero/rose/text layering defects,
-- truthful economic and external integration states.
+`CUSTOMER / PROBLEM / CURRENT ALTERNATIVE / KLINIKOS SOLUTION / MEASURABLE OUTCOME / WTP / DISTRIBUTION / IMPLEMENTATION COST / TTV / MARGIN / RETENTION / DEFENSIBILITY / RISK / EVIDENCE`.
+
+Decision: `BUILD NOW / TEST FIRST / DEFER / PARTNER / BUY-INTEGRATE / REJECT`.
+
+Always identify the three riskiest assumptions and the cheapest credible tests.
 
 ---
 
-# 35. PERMANENT CLOSING DOCTRINE
+# 32. PRICING / MONETIZATION / UNIT ECONOMICS
 
-Klinikos should never again fragment into competing current snapshots or disconnected product experiences.
+Klinikos uses contextual monetization. Do not charge everyone for the entire ecosystem and do not use one fee model for every Grid class.
 
-Physician and engineer feedback improved the healthcare operating model.
+Current code-owned commercial anchors must remain aligned with the executable commercial registry before external quoting:
 
-Grid expanded Klinikos into resource/capacity/opportunity infrastructure.
+- Clinic Operating Analysis: **$500 one-time**;
+- Implementation Blueprint: **$1,500 one-time**;
+- Founding Clinic Implementation: **from $8,000 one-time** after applicable credits/review;
+- Core: **$995/month**;
+- Growth: **$1,995/month**;
+- Scale: **$3,995/month**;
+- Enterprise: **custom**;
+- Zumi Intelligence Plus: planning/current commercial direction from **$350/month** where active registry supports it;
+- Revenue OS: planning/current commercial direction from **$750/month** plus setup where active registry supports it;
+- Network: planning/current commercial direction from **$300/month** plus setup where active registry supports it;
+- EDU individual free plus optional paid pathways/courses; institution/workforce pricing by current approved offer registry;
+- services/audits/optimization only when explicitly current and approved.
 
-EDU extended the healthcare lifecycle.
+A previously discussed **$3,500 Workflow Sprint** is not to be presented as an active price unless it is restored to the executable offer registry and re-approved. Until then it is `TARGET / OFFER_UNDER_REVIEW`, not current price authority.
 
-Financial OS created shared financial truth.
+Grid economics must be resource-class-specific and legally gated. Never apply a universal percentage to patient care or referrals. Clinical staffing/provider-time economics, regulated clinical services, referrals, products, supplies, rooms, equipment, education, and nonclinical services may require different rules or zero platform transaction fee.
 
-Identity and authority matured the trust model.
+One server-owned **Offer Registry** should control effective prices, buyer, scope, credits, entitlements, effective dates, and external presentation.
 
-The Experience Engine lets every major healthcare role receive a purpose-built experience without fragmenting one identity or one platform.
+Model price, COGS, gross margin, CAC, payback, sales cycle, implementation cost, support cost, churn, NRR, external usage, legal risk, dependency risk, and strategic value.
 
-Zumi Memory creates institutional and personal continuity without replacing authoritative truth.
+---
 
-OpenAI partnership direction strengthens the intelligence strategy without becoming authority.
+# 33. SALES / PIPELINE / REVENUE SYSTEM
 
-Prototype work compresses business architecture into visible experiences that engineering must make real underneath.
+Canonical sales progression:
 
-All of that is now one product.
+`VISITOR → LEAD → QUALIFIED → DISCOVERY → DEMO → PROPOSAL → PILOT / PROOF SPRINT → AGREEMENT → PAYMENT → ONBOARDING → ACTIVATED → CUSTOMER → EXPANSION → RENEWAL → ADVOCATE`.
 
-> **Chat is where we think. This canon records the current merged state.**
+Truth law:
 
-When a conversation changes Klinikos, the accepted decision must merge forward here and its implementation consequence must be identified.
+> **OUTREACH ≠ PIPELINE ≠ CONTRACT ≠ CASH.**
+
+Sales priority:
+
+`EXPECTED VALUE × CLOSE PROBABILITY × STRATEGIC VALUE ÷ TIME / COST`.
+
+Near-term proof milestone:
+
+> **ONE REAL CUSTOMER → ONE REAL PAYMENT → ONE MEASURED RESULT → ONE REPEATABLE SALES STORY.**
+
+Sell outcomes and validated capability. Protect crown-jewel internals.
+
+Commercial clinic progression should be driven by actual current offers and may follow:
+
+`TARGET ACCOUNT → QUALIFIED PROBLEM → PAID ANALYSIS / BLUEPRINT / PROOF → IMPLEMENTATION → FIRST VALUE → RECURRING PLATFORM → EXPANSION`.
+
+CRM stages must reflect real evidence. No fake closing dates, customer status, revenue, or “verbal commitment” inflation.
+
+---
+
+# 34. ACQUISITION / DISTRIBUTION / ATTRIBUTION
+
+Grid is Klinikos’s primary network-acquisition wedge and one flagship application. The Experience Engine remains the authenticated operating front door and determines which application dominates based on current purpose, verified authority, and active context.
+
+Acquisition channels may include:
+
+- public Grid discovery/liquidity;
+- clinic Operating Map / analysis;
+- referrals;
+- professional and student networks;
+- EDU institutions/workforce programs;
+- government procurement/RFPs;
+- strategic partners;
+- integrations;
+- founder-led sales;
+- targeted outbound;
+- SEO/content;
+- customer case studies;
+- expert/quality network;
+- enterprise relationships.
+
+Canonical attribution:
+
+`SOURCE → CAMPAIGN → CONTENT → VISIT → LEAD → QUALIFIED → DEMO → PILOT → CONTRACT → REVENUE → RETENTION → EXPANSION`.
+
+Measure source, cost, qualification, conversion, sales cycle, contract value, retention, and expansion. Do not optimize vanity traffic that does not produce qualified value.
+
+Public-safe discovery may precede identity. Governed actions require appropriate identity/verification.
+
+---
+
+# 35. ONBOARDING / ACTIVATION / RETENTION / CUSTOMER SUCCESS
+
+Onboarding must get each customer to first measurable value quickly.
+
+Use Day 0 / Day 1 / Day 3 / Day 7 / Day 14 checkpoints plus behavior-triggered interventions where useful.
+
+Track:
+
+- time to first value;
+- activation rate;
+- onboarding completion;
+- core action completion;
+- invite/team activation;
+- return behavior;
+- unresolved blockers;
+- support friction;
+- measurable outcome;
+- expansion readiness.
+
+Customer health states:
+
+`HEALTHY / WATCH / AT-RISK / CRITICAL / EXPANSION`.
+
+Customer Success must own success plans, implementation handoffs, health, outcomes, risk, renewal, expansion, reference/case-study readiness, and escalation—not merely ticket closure.
+
+Retention should compound because Klinikos holds useful workflows, evidence history, team relationships, configured operations, network relationships, longitudinal context, and measurable outcomes—not because data is trapped or cancellation is obstructed.
+
+---
+
+# 36. SUPPORT / IMPLEMENTATION / SERVICE OPERATIONS
+
+Implementation engagement is a first-class operating object with scope, owner, customer, milestones, dependencies, evidence, configuration, data migration/import, training, go-live readiness, success criteria, issues, and handoff to Customer Success.
+
+Support cases require severity, category, tenant/context, minimum-necessary access, owner, SLA/expectation, investigation evidence, resolution, customer communication, root cause, and knowledge/runbook update when appropriate.
+
+Support escalation must route product defects, security/privacy issues, clinical-safety concerns, billing/financial issues, integration failures, and customer-success risks to the correct owner rather than treating everything as generic support.
+
+Professional services can generate revenue, but repeatable product value should progressively reduce custom manual work.
+
+---
+
+# 37. AUTOMATION / OPERATIONS SYSTEM
+
+Company and product operations follow:
+
+`ELIMINATE → SIMPLIFY → STANDARDIZE → AUTOMATE → DELEGATE → MEASURE`.
+
+Automation should reduce recurring labor, error, delay, and inconsistency only after the process is understood and safely governed.
+
+Human approval remains required for material clinical, legal, financial, regulated, contractual, security, or external consequences unless a clear policy lawfully and safely delegates the action.
+
+Agentic execution must preserve identity, authorization, input evidence, proposed action, approval state, execution result, reconciliation, audit, and rollback/escalation where appropriate.
+
+---
+
+# 38. CAPITAL / FUNDING / BUSINESS CREDIT / INVESTOR READINESS
+
+Capital strategy is full-spectrum:
+
+- customer revenue / paid pilots / customer-funded implementation;
+- government procurement/contracts;
+- grants / non-dilutive funding;
+- competitions / accelerators;
+- strategic capital/partnerships;
+- angels;
+- venture capital;
+- revenue-based financing where appropriate;
+- loans / lines of credit;
+- CDFI / state-backed or similar programs;
+- business credit;
+- other lawful funding rails.
+
+Prefer the cheapest capital that reaches the next value inflection without creating disproportionate risk.
+
+Rank opportunities by:
+
+`probability × speed × amount × dilution × repayment burden × strategic value`.
+
+Customer-funded implementation is especially valuable because it simultaneously proves demand, produces cash, validates delivery, and creates evidence.
+
+Business-credit/bankability discipline includes entity/EIN/address/contact consistency, bank account/books/statements, cash flow, revenue/payment history, utilization, obligations, credit files, guarantees/inquiries, tax/compliance, and truthful application facts. No deceptive tradelines, fake revenue, fake addresses, fabricated employees, fabricated contracts, or misleading applications.
+
+Investor readiness includes deck, business plan, financial model, cap table, corporate documents, demo, market/competition, traction/pipeline evidence, security posture, data room, use of funds, milestone plan, and governance.
+
+Every raise answers: why capital, why now, how much, what it buys, what milestone it creates, and how that changes enterprise value.
+
+---
+
+# 39. CFO / FINANCIAL MODEL / CASH CONTROL
+
+Company finance must maintain, as appropriate:
+
+- 13-week cash forecast;
+- income statement / cash flow / balance-sheet view;
+- runway and burn;
+- MRR / ARR / ACV / CAC / LTV / gross margin / payback / churn / NRR;
+- pipeline and weighted pipeline;
+- implementation cost;
+- external/vendor usage cost;
+- support cost;
+- accounts receivable/payable;
+- capital obligations;
+- break-even analysis;
+- cash collected versus invoiced;
+- scenario sensitivities.
+
+Use base / upside / downside scenarios. Scenario is not actual.
+
+Cash control requires source-linked evidence from bank/payment/ledger/contracts wherever possible. Blank cash models, sandbox-only processor data, unsigned proposals, or outreach counts are not financial proof.
+
+---
+
+# 40. EXTERNAL-SERVICE ECONOMICS / COST-TO-SERVE
+
+External services fall into useful economic classes:
+
+1. **Platform infrastructure** Klinikos absorbs or meters because it is required to operate the product.
+2. **Customer-owned connections** where the customer maintains the external relationship and Klinikos connects it.
+3. **Activate-after-sale services** that should be provisioned only after a customer/use case requires them when safely feasible.
+
+**Revenue should precede avoidable variable cost** whenever reasonably possible. Do not pay for unnecessary vendor provisioning, enrollment, reserved capacity, premium plans, or usage before demand/payment makes it economically rational unless security/reliability/contract obligations require otherwise.
+
+Variable platform/vendor usage should be metered by tenant, feature, vendor, unit, cost, billing period, and entitlement where feasible. Feed usage into gross-margin, pricing, allowance, overage, cost-to-serve, and product-priority decisions.
+
+The user should see guided “Connections” and provisioning status—not raw API/vendor complexity.
+
+---
+
+# 41. DEFENSIBILITY / NETWORK EFFECTS
+
+Defensibility may come from:
+
+- workflow depth;
+- network liquidity;
+- longitudinal evidence/history;
+- trusted identity/verification;
+- relationships;
+- integrations;
+- distribution;
+- customer outcomes;
+- reputation;
+- configuration;
+- institutional knowledge;
+- data rights and derived intelligence where lawful;
+- ecosystem participation;
+- switching value;
+- brand/trust;
+- partner relationships;
+- proprietary orchestration/ranking/risk logic.
+
+Complexity alone is not a moat.
+
+Value Graph:
+
+`USER VALUE → BEHAVIOR CHANGE → EVIDENCE → ECONOMIC VALUE → RETENTION → NETWORK EFFECT → DEFENSIBILITY → ENTERPRISE VALUE`.
+
+Do not intentionally create harmful lock-in. Switching value should arise because Klinikos becomes deeply useful and connected.
+
+---
+
+# 42. SCALE / UNICORN TEST
+
+Every major system should be examined at roughly:
+
+`10 / 100 / 1,000 / 10,000 customers/users / 1M users`.
+
+Test architecture, support, onboarding, reliability, multi-tenancy, data volume, cost, security, permissions, integrations, Grid liquidity, EDU operations, company operations, and incident handling at each scale.
+
+Company-value test:
+
+`$1M / $10M / $100M / $1B / $10B`.
+
+At each level evaluate product depth, market size, ACV, distribution, retention, gross margin, network effects, capital requirements, team, enterprise procurement, brand, data/relationship advantages, and defensibility.
+
+A unicorn outcome is not guaranteed by broad architecture. It requires verified customer value, repeated distribution, strong retention, scalable economics, defensibility, and disciplined execution.
+
+---
+
+# 43. ENTERPRISE PROCUREMENT / TRUST / ASSURANCE
+
+Enterprise sales require evidence before claim.
+
+Klinikos should progressively maintain a trust/evidence room covering security architecture, privacy, data processing, subprocessors/vendors, incident response, business continuity, backup/restore, access control, audit, vulnerability management, SDLC, external integrations, uptime/reliability evidence, and applicable contractual/compliance materials.
+
+Security questionnaire / BAA / DPA / vendor review processes must reflect actual control state. Do not promise a certification, insurance level, SLA, BAA, DPA term, data residency, integration, uptime, or control that has not been verified and approved.
+
+Enterprise procurement is a sales workflow with owners, evidence, blockers, deadlines, contract state, and next action.
+
+---
+
+# 44. PRODUCTION / RELEASE / DEVSECOPS / RESILIENCE
+
+Permanent truth:
+
+`DESIGNED ≠ CODED ≠ TESTED ≠ MERGED ≠ DEPLOYED ≠ PRODUCTION VERIFIED`.
+
+In plain language: **build ≠ deployed ≠ production verified**.
+
+Professional engineering controls progressively include:
+
+- CI and required checks;
+- typecheck/lint/unit/integration/E2E tests;
+- schema/migration safety;
+- security gates;
+- dependency scanning;
+- release capture/versioning;
+- environment validation;
+- secrets management;
+- feature flags;
+- rollback;
+- observability/logging/metrics/traces;
+- alerts/runbooks;
+- queues/retries/reconciliation;
+- load/performance tests;
+- backup / restore / disaster recovery;
+- incident response;
+- vulnerability management;
+- change management;
+- accessibility QA;
+- browser/mobile QA;
+- production-currency verification.
+
+Real PHI must not be enabled merely because the UI or schema exists. Production PHI readiness requires independently verified database, tenant, access, audit, encryption, vendor, contract/BAA where applicable, backup/recovery, incident, and operational controls.
+
+---
+
+# 45. BLACK LABEL EXPERIENCE AND DESIGN
+
+“Klinikos Black Label” is cinematic, calm, expensive, restrained, and operationally clear.
+
+Core visual direction:
+
+- Obsidian/dark mode;
+- Marble/light mode;
+- black cherry / oxblood accents;
+- ivory / bone;
+- rose ash;
+- Living Edge attention signal used sparingly for consequential attention.
+
+Experience personalities:
+
+- Living Home: cinematic/conversational;
+- Grid: spatial/map-led/networked;
+- EDU: editorial/immersive academy/workforce;
+- Current Visit: surgical/quiet/clinical;
+- Billing: structured/financial/precise;
+- Patient: warm/hospitality;
+- Enterprise: institutional/command.
+
+Design must never obscure function, status, accessibility, or truth. Avoid dashboard theater, generic card walls, fake data, overlapping hero/text defects, or decorative complexity that slows work.
+
+Accessibility includes keyboard, visible focus, screen reader, touch targets, reduced motion, zoom, color contrast, desktop/tablet/mobile, and truthful loading/empty/error/blocked states.
+
+---
+
+# 46. CANONICAL ECOSYSTEM GRAPH + GENERATED VIEWS
+
+Architecture must converge on **one canonical ecosystem graph + generated views** so diagrams cannot drift.
+
+Generated views should include at minimum:
+
+1. Whole healthcare universe;
+2. Identity / trust / authority;
+3. Patient / care;
+4. Current Visit / clinical;
+5. Student / EDU / placement;
+6. Professional / career / injector;
+7. Grid exchange;
+8. Med-spa commerce/resource;
+9. Clinic operations;
+10. RCM / claims / financial;
+11. Quality / Expert Grid;
+12. Organization / enterprise;
+13. Partner / integration;
+14. OpenAI / Zumi;
+15. Security / privacy / trust;
+16. Money / settlement;
+17. Acquisition / distribution;
+18. Retention / network effects;
+19. Capital / company OS;
+20. Data / evidence / memory;
+21. Expansion map.
+
+No independent architecture per view. All generated views must derive from the same typed nodes, edges, states, owners, strategy disposition, implementation status, and evidence links.
+
+---
+
+# 47. EXECUTIVE DASHBOARD / OPERATING CADENCE
+
+The company should maintain a single executive operating view across product, sales, finance, customer, marketing, network, capital, and risk.
+
+Priority horizons:
+
+`TODAY / THIS WEEK / THIS MONTH / THIS QUARTER`.
+
+Do not maintain one hundred equal priorities. Rank by customer value, cash/revenue impact, risk, dependency, urgency, defensibility, learning value, and implementation cost.
+
+Operating loop:
+
+`OBSERVE → RESEARCH → VALIDATE → PRIORITIZE → DESIGN → BUILD → VERIFY → SECURE → PACKAGE → PRICE → LAUNCH → DISTRIBUTE → SELL → CONVERT → ONBOARD → ACTIVATE → DELIVER VALUE → COLLECT → MEASURE → RETAIN → EXPAND → REFER → LEARN → REINVEST → SCALE → REPEAT`.
+
+Company flywheel:
+
+`INTELLIGENCE → VALIDATION → PRODUCT → PROOF → DISTRIBUTION → CUSTOMER → REVENUE → RETENTION → NETWORK → DATA / LEARNING → BETTER PRODUCT → STRONGER DISTRIBUTION → MORE REVENUE → GREATER DEFENSIBILITY → GREATER ENTERPRISE VALUE`.
+
+Major initiative decisions should answer:
+
+`BUILD / SELL / COLLECT / RETAIN / EXPAND / DEFEND / MEASURE / LEARN / SCALE`.
+
+---
+
+# 48. NON-NEGOTIABLE REGRESSION INVARIANTS
+
+The following are permanent merge-blocking truths:
+
+1. **Resume evidence is a claim, not professional authority**.
+2. **EDU completion does not create licensure**.
+3. **Payment does not create authority**.
+4. **Subscription does not create professional eligibility**.
+5. **Patients are never public Grid supply**.
+6. **An unverified professional cannot publicly offer governed clinical services**.
+7. **Placement matching does not equal school/site/preceptor approval**.
+8. **AI cannot sign, submit, settle, or create regulated authority on its own**.
+9. **Partnership status cannot bypass PHI, security, privacy, or legal gates**.
+10. **Cross-context and cross-tenant data must not leak**.
+11. **Regulated clinical inventory is not ordinary public commerce**.
+12. `PRICE ≠ PAYMENT ≠ ENTITLEMENT ≠ AUTHORITY`.
+13. `CLAIM SENT ≠ CLAIM ACCEPTED ≠ ADJUDICATED ≠ PAID ≠ RECONCILED`.
+14. A network relationship does not equal chart access.
+15. A role label does not equal full permission.
+16. A prototype does not equal implementation.
+17. A build does not equal production.
+18. Outreach does not equal pipeline, contract, or cash.
+19. Historical documents do not regain authority because an agent discovers them later.
+20. No accepted architecture may disappear through summary compression.
+
+Automated synchronization tests must fail when these invariants, required layers, or authority rules disappear.
+
+---
+
+# 49. IMPLEMENTATION-STATE RECORD
+
+Every major capability should carry:
+
+- canonical required state;
+- strategy state;
+- implementation/evidence state;
+- verified-against commit/runtime/date;
+- already working behavior;
+- remaining gap;
+- dependencies;
+- external/legal gate;
+- next convergence action;
+- owner;
+- risk;
+- evidence links;
+- business/value consequence.
+
+Implementation status documents are evidence snapshots and must be refreshed before current claims.
+
+---
+
+# 50. EXECUTION ORDER
+
+Dependency-first convergence:
+
+## 50.1 Authority and truth
+
+1. Master Canon;
+2. Engineering Blueprint;
+3. Authority Map;
+4. canonical layer registry and synchronization gate;
+5. retire/de-authorize predecessor authorities only after content preservation.
+
+## 50.2 Security/trust/data foundation
+
+6. identity/account;
+7. relationships/claims/verification;
+8. contextual authorization;
+9. audit/evidence/events;
+10. tenant/privacy/security boundaries;
+11. configuration;
+12. shared financial semantics;
+13. data/memory/provenance.
+
+## 50.3 Experience/front door
+
+14. public discovery;
+15. protected access airlock;
+16. authentication / one identity;
+17. safe return context;
+18. authenticated Zumi;
+19. Experience Engine;
+20. Screen Contracts.
+
+## 50.4 First value / clinic proof
+
+21. Clinic OS operating map;
+22. scheduling/capacity;
+23. patient intake/consent;
+24. Current Visit;
+25. telemedicine encounter mode;
+26. orders/results;
+27. referrals/follow-up;
+28. billing readiness / revenue integrity;
+29. measurable first-clinic outcome.
+
+## 50.5 Network/workforce proof
+
+30. Grid universal resource/need kernel;
+31. professional verification/profile;
+32. resume/career profile;
+33. EDU evidence;
+34. placement relationship;
+35. professional/work routes;
+36. RN/injector governed path;
+37. med-spa resource/commerce proof;
+38. Quality Guardian / Expert Grid;
+39. network relationships;
+40. lawful money/settlement state.
+
+## 50.6 Commercial proof
+
+41. offer/payment/CRM truth;
+42. one real paying customer;
+43. one measured result;
+44. repeatable sales story;
+45. attribution;
+46. onboarding/retention;
+47. expansion/referral.
+
+## 50.7 Enterprise/scale
+
+48. external integrations based on sold demand;
+49. enterprise procurement/trust;
+50. multi-location/network;
+51. government/education contracts;
+52. APIs/partner ecosystem;
+53. automation/cost reduction;
+54. scale and resilience;
+55. data/network defensibility.
+
+---
+
+# 51. ACCEPTANCE STANDARD
+
+Klinikos is not synchronized because documents share similar language. Synchronization requires:
+
+- every required layer exists in this Canon;
+- the Engineering Blueprint expresses the same layer with engineering consequences;
+- the Authority Map routes to the correct source;
+- predecessor authorities no longer claim supremacy;
+- specialist docs explicitly defer to Master Canon;
+- machine-readable contracts cover critical paths;
+- negative/safety invariants are tested;
+- current implementation claims are evidence-backed;
+- generated views derive from one graph;
+- company functions terminate in owners/KPIs/evidence/money/risk;
+- no accepted project-folder decision remains `PARTIAL/MISSING` at the Canon level;
+- implementation gaps remain explicit rather than being hidden by document convergence.
+
+Representative end-to-end acceptance includes:
+
+- public discovery → protected entry → one identity → Zumi → verification → purpose-built experience;
+- RN clinic context → safe switch to personal Grid with no PHI bleed;
+- learner → resume/profile → EDU evidence → placement → external credential → verified professional → work;
+- RN → injector path with jurisdiction/scope/supervision/facility/malpractice gates;
+- clinic operating issue → Grid/EDU/Quality/Financial downstream action;
+- patient → intake/consent → Current Visit → orders/results → follow-up → billing;
+- care → documentation → claim → external rail → remittance/payment → reconciliation;
+- med spa → eligible provider → room/capacity → booking → documentation → payment/payout → rebooking;
+- quality signal → internal remediation → Expert Grid when needed → evidence/audit;
+- sales lead → verified opportunity → agreement → payment → onboarding → first value → retention/expansion;
+- external dependency disconnected → truthful blocked/degraded state;
+- production claim → exact-head/runtime evidence;
+- company KPI → source-linked actual data rather than scenario or memory.
+
+---
+
+# 52. PERMANENT CLOSING DOCTRINE
+
+Klinikos must never again fragment into competing current snapshots, disconnected product experiences, or business strategy that lives outside the governing architecture.
+
+The system is one healthcare operating network across people, organizations, care, capacity, work, education, commerce, money, evidence, relationships, intelligence, and company growth.
+
+The Master Canon governs instituted direction.
+
+The Engineering Blueprint turns it into buildable contracts.
+
+Current implementation evidence tells the truth about what exists.
+
+The company operating system turns product value into customers, revenue, retention, network effects, defensibility, capital efficiency, and enterprise value.
+
+> **Chat is where we think. The Master Canon records the merged company/product truth.**
+
+When accepted decisions change Klinikos, they merge forward here immediately, the Blueprint is updated if engineering shape changes, the implementation consequence is identified, and synchronization gates prevent silent regression.
