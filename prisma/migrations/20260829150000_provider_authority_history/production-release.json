@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260829150000_provider_authority_history",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "1ff08c4af7524872d6dd3cf296322f1976fc4f8545380446147c56b6997cefc2",
+  "approvalReference": "Issue #369 provider credential, malpractice, and facility-privilege history acceptance, 2026-08-29"
+}
