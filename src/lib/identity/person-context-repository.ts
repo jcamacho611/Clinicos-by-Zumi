@@ -1,4 +1,8 @@
-import type { PersonContextInput } from "@/lib/identity/person-context";
+import type {
+  PersonContextInput,
+  PersonDomainLink,
+  VerificationState,
+} from "@/lib/identity/person-context";
 
 export type StoredLocationAssignment = {
   id: string;
@@ -24,25 +28,66 @@ export type StoredOrganizationMembership = {
   locationAssignments: StoredLocationAssignment[];
 };
 
+export type StoredPersonRelationship = {
+  id: string;
+  personId: string;
+  relationshipType: string;
+  organizationId: string | null;
+  status: string;
+  verificationState: string;
+  domainKind: string | null;
+  domainRecordId: string | null;
+  effectiveFrom: Date;
+  effectiveTo: Date | null;
+};
+
 export type StoredPersonContextRow = {
   id: string;
   displayName: string | null;
   status: string;
   memberships: StoredOrganizationMembership[];
+  relationships: StoredPersonRelationship[];
 };
 
 export type PersonContextDataSource = {
   findPersonByLegacyUserId(legacyUserId: string): Promise<StoredPersonContextRow | null>;
 };
 
+const verificationStates = new Set<VerificationState>([
+  "claimed",
+  "verified",
+  "rejected",
+  "expired",
+  "unknown",
+]);
+
+function normalizeVerificationState(value: string): VerificationState {
+  return verificationStates.has(value as VerificationState)
+    ? (value as VerificationState)
+    : "unknown";
+}
+
+function normalizeDomainKind(value: string): PersonDomainLink["kind"] {
+  switch (value) {
+    case "user":
+    case "patient":
+    case "provider":
+    case "education_enrollment":
+    case "other":
+      return value;
+    default:
+      return "other";
+  }
+}
+
 /**
- * Converts the already-persisted universal identity foundation into the domain input
- * consumed by resolvePersonExperienceContext.
+ * Converts the persisted universal identity foundation into the domain input consumed
+ * by resolvePersonExperienceContext.
  *
- * This adapter is deliberately conservative. Today the persisted identity foundation
- * has a durable, explicit legacy User anchor. It does not yet contain explicit durable
- * Patient, Provider, EDU, credential, or semantic relationship links, so this mapper
- * does not manufacture any of them from names/emails or nearby records.
+ * The adapter accepts only explicit durable anchors. It never manufactures Patient,
+ * Provider, EDU, credential, or semantic relationships from names, emails, roles, or
+ * nearby records. Relationships and linked records remain context/evidence only and
+ * do not create consequential authority.
  */
 export async function loadPersonContextInputByLegacyUserIdWith(
   dataSource: PersonContextDataSource,
@@ -53,6 +98,41 @@ export async function loadPersonContextInputByLegacyUserIdWith(
 
   const row = await dataSource.findPersonByLegacyUserId(anchor);
   if (!row) return null;
+
+  const relationships = row.relationships.map((relationship) => ({
+    id: relationship.id,
+    personId: relationship.personId,
+    relationshipType: relationship.relationshipType,
+    organizationId: relationship.organizationId,
+    status: relationship.status,
+    verificationState: normalizeVerificationState(relationship.verificationState),
+    effectiveFrom: relationship.effectiveFrom,
+    effectiveTo: relationship.effectiveTo,
+  }));
+
+  const membershipLinks: PersonDomainLink[] = row.memberships.flatMap((membership) =>
+    membership.legacyUserId
+      ? [
+          {
+            kind: "user" as const,
+            recordId: membership.legacyUserId,
+            organizationId: membership.organizationId,
+          },
+        ]
+      : [],
+  );
+
+  const relationshipLinks: PersonDomainLink[] = row.relationships.flatMap((relationship) =>
+    relationship.domainKind && relationship.domainRecordId
+      ? [
+          {
+            kind: normalizeDomainKind(relationship.domainKind),
+            recordId: relationship.domainRecordId,
+            organizationId: relationship.organizationId,
+          },
+        ]
+      : [],
+  );
 
   return {
     person: {
@@ -83,18 +163,8 @@ export async function loadPersonContextInputByLegacyUserIdWith(
         effectiveTo: assignment.effectiveTo,
       })),
     ),
-    relationships: [],
-    domainLinks: row.memberships.flatMap((membership) =>
-      membership.legacyUserId
-        ? [
-            {
-              kind: "user" as const,
-              recordId: membership.legacyUserId,
-              organizationId: membership.organizationId,
-            },
-          ]
-        : [],
-    ),
+    relationships,
+    domainLinks: [...membershipLinks, ...relationshipLinks],
     evidence: [],
   };
 }
