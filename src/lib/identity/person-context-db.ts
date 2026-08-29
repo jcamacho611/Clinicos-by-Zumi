@@ -9,8 +9,10 @@ import {
 
 const prismaPersonContextDataSource: PersonContextDataSource = {
   async findPersonByLegacyUserId(legacyUserId): Promise<StoredPersonContextRow | null> {
-    const anchoredMembership = await db.organizationMembership.findUnique({
+    const anchoredMemberships = await db.organizationMembership.findMany({
       where: { legacyUserId },
+      take: 2,
+      orderBy: { createdAt: "asc" },
       select: {
         person: {
           select: {
@@ -49,7 +51,14 @@ const prismaPersonContextDataSource: PersonContextDataSource = {
       },
     });
 
-    return anchoredMembership?.person ?? null;
+    if (anchoredMemberships.length === 0) return null;
+    if (anchoredMemberships.length > 1) {
+      throw new Error(
+        `Ambiguous Person anchor for legacy user ${legacyUserId}: more than one organization membership references the same legacy User.`,
+      );
+    }
+
+    return anchoredMemberships[0]?.person ?? null;
   },
 };
 
@@ -58,8 +67,8 @@ const prismaPersonContextDataSource: PersonContextDataSource = {
  * the universal identity foundation.
  *
  * The lookup intentionally uses OrganizationMembership.legacyUserId rather than
- * names or emails. That field is unique in the active Prisma model, so an existing
- * anchor resolves to one durable Person without fuzzy matching or identity merging.
+ * names or emails. The current model indexes this field but does not make it unique,
+ * so the loader queries at most two matches and fails closed if the data is ambiguous.
  * This function only loads context; it does not infer professional, clinical,
  * billing, organization-binding, or other consequential authority.
  */
