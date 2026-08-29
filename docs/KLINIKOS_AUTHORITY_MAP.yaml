@@ -1,0 +1,383 @@
+version: 2026-08-27.3
+status: ACTIVE
+
+canonical_product_authority:
+  file: docs/KLINIKOS_MASTER_CANON.md
+  authority: SOLE_ACTIVE_PRODUCT_ARCHITECTURE_BUSINESS_EXPERIENCE_AUTHORITY
+  may_be_overridden_by_specialist_docs: false
+  may_be_overridden_by_historical_docs: false
+  scope:
+    - product_definition
+    - architecture
+    - business_architecture
+    - protected_entry
+    - user_experience
+    - experience_engine
+    - lifecycle_paths
+    - screen_contracts
+    - identity_claim_verification_eligibility_entitlement_authority
+    - grid
+    - edu
+    - clinic_os
+    - clinical_convergence
+    - intake_and_consent
+    - scheduling_and_capacity
+    - orders_and_results
+    - financial_os_and_rcm
+    - integrations
+    - zumi_and_memory
+    - openai_intelligence_direction
+    - security_and_confidentiality
+    - legal_product_requirements
+    - black_label_design
+    - commercialization
+    - execution_order
+
+implementation_authority:
+  question: what_exists_today
+  sources:
+    - current_code
+    - current_database_schema
+    - current_migrations
+    - current_tests
+    - exact_head_verification
+    - verified_deployment_evidence
+    - verified_runtime_evidence
+    - verified_external_connection_evidence
+  rule: implementation_evidence_does_not_redefine_product_target
+
+execution_controls:
+  authority: SUBORDINATE_EXECUTION_CONTROL
+  may_override_master: false
+  files:
+    universal:
+      - AGENTS.md
+      - docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md
+    claude:
+      - CLAUDE.md
+    codex:
+      - CODEX.md
+    symphony:
+      - SYMPHONY.md
+    current_project_state:
+      - docs/KLINIKOS_CURRENT_PROJECT_STATE.md
+    branch_and_pr_state:
+      - docs/BRANCH_LEDGER.md
+  conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS
+
+subordinate_specialist_docs:
+  authority: SUBORDINATE_ELABORATION
+  may_override_master: false
+  permitted_uses:
+    - protocol_detail
+    - domain_detail
+    - clinical_detail
+    - grid_detail
+    - edu_detail
+    - financial_detail
+    - security_detail
+    - integration_detail
+    - implementation_detail
+    - design_acceptance_detail
+    - operational_runbook
+    - test_and_verification_evidence
+  conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION
+
+implementation_status_docs:
+  authority: EVIDENCE_SNAPSHOT
+  may_override_current_code: false
+  refresh_required_before_current_claims: true
+  examples:
+    - docs/KLINIKOS_CURRENT_PROJECT_STATE.md
+    - docs/FEATURE_STATUS.md
+    - docs/EXTERNAL_DEPENDENCY_MATRIX.md
+    - docs/PRODUCTION_ENVIRONMENT_TRUTH.md
+    - docs/ROUTE_REGISTRY.md
+    - docs/ROUTE_REGISTRY_STATUS.md
+    - docs/MVP_JOURNEYS.md
+    - docs/BRANCH_LEDGER.md
+
+provenance_and_evidence_docs:
+  authority: PROVENANCE_ONLY
+  may_override_master: false
+  use_for:
+    - rationale
+    - expert_input
+    - physician_feedback
+    - engineer_feedback
+    - user_research
+    - design_evidence
+    - prototype_evidence
+    - historical_decisions
+    - verification_evidence
+    - implementation_history
+
+historical_docs:
+  authority: NONE
+  may_override_master: false
+  use_for:
+    - provenance
+    - rationale
+    - historical_research
+  required_interpretation: SUPERSEDED_UNLESS_EXPLICITLY_ABSORBED_BY_MASTER
+
+conflict_rule:
+  action:
+    - CLASSIFY_CONFLICT_AS_IMPLEMENTATION_STATUS_PRODUCT_DIRECTION_OR_EXECUTION_CONTROL
+    - USE_CURRENT_VERIFIED_IMPLEMENTATION_FOR_WHAT_EXISTS
+    - USE_MASTER_CANON_FOR_INSTITUTED_PRODUCT_DIRECTION
+    - USE_MULTI_AGENT_CONTROL_FOR_EXECUTION_OWNERSHIP
+    - RECORD_CONFLICT_EXPLICITLY
+    - DO_NOT_MERGE_CONFLICTS_SILENTLY
+
+new_discovery_protocol:
+  steps:
+    - CLASSIFY
+    - VERIFY
+    - COMPARE_TO_CURRENT_MASTER_CANON
+    - ACCEPT_REJECT_OR_MODIFY
+    - UPDATE_MASTER_CANON_IF_ACCEPTED
+    - UPDATE_IMPLEMENTATION_CONSEQUENCES
+    - RETAIN_OLD_VERSION_AS_PROVENANCE
+  forbidden_result:
+    - NEW_PARALLEL_SUPREME_CANON
+    - NEW_PARALLEL_MASTER_CANON
+    - NEW_PARALLEL_SOURCE_OF_TRUTH
+
+literal_protected_application_order:
+  authority: docs/KLINIKOS_MASTER_CANON.md#4-canonical-literal-user-experience
+  sequence:
+    - PUBLIC_DISCOVERY_SEARCH_REFERRAL_INVITATION
+    - ENTER_KLINIKOS
+    - PROTECTED_ACCESS_TERMS_CONFIDENTIALITY_IP_RESTRICTED_USE_AIRLOCK
+    - SIGN_IN_OR_CREATE_ONE_KLINIKOS_IDENTITY
+    - BIND_AGREEMENT_ACCEPTANCE_TO_IDENTITY_SESSION
+    - RESTORE_SAFE_ENTRY_CONTEXT
+    - AUTHENTICATED_ZUMI
+    - INTENT_CONTEXT_DISCOVERY
+    - CLAIMS_RELATIONSHIPS_AS_NEEDED
+    - PATH_AWARE_VERIFICATION
+    - ACTIVE_EXPERIENCE_ENVELOPE
+    - EXPERIENCE_ENGINE
+    - PURPOSE_BUILT_EXPERIENCE_PROJECTION
+    - REAL_ACTION
+    - FULFILLMENT_OUTCOME_EVIDENCE
+    - MEMORY_NEXT_ACTION
+    - RETURN_CONTEXT_SWITCH_EXPANSION
+  abstract_lifecycle_may_override_literal_order: false
+  permanent_persona_picker_allowed: false
+  separate_role_accounts_allowed: false
+  public_discovery_may_exist_outside_protected_app: true
+
+experience_engine:
+  decision_id: KLINIKOS-EXPERIENCE-001
+  architecture: PURPOSE_BUILT_EXPERIENCE_FAMILIES_PLUS_SERVER_RESOLVED_EXPERIENCE_ENGINE
+  experience_families_are_separate_products: false
+  experience_families_are_authority_grants: false
+  active_experience_envelope_is_server_resolved: true
+  representative_families:
+    - PATIENT_CAREGIVER
+    - FRONT_DESK_SCHEDULING
+    - CNA_WHERE_APPLICABLE
+    - MA
+    - LPN
+    - RN
+    - NP_PA_PHYSICIAN
+    - THERAPIST_ALLIED_HEALTH
+    - BILLER_CODER_REVENUE
+    - CLINIC_OWNER_OPERATOR
+    - PRACTICE_MANAGER_ADMIN
+    - GRID_PROFESSIONAL
+    - LEARNER_STUDENT
+    - INSTRUCTOR_PRECEPTOR
+    - INSTITUTION_WORKFORCE
+    - MULTI_LOCATION_NETWORK_ENTERPRISE
+    - PROTECTED_PARTNER_INVESTOR
+
+screen_contract:
+  decision_id: KLINIKOS-SCREEN-001
+  required_for_production_surfaces: true
+  required_fields:
+    - audience_active_context
+    - purpose
+    - dominant_object
+    - dominant_action
+    - visible_data
+    - hidden_prohibited_data
+    - authority_eligibility_requirements
+    - zumi_capabilities_limits
+    - density_mode
+    - navigation_behavior
+    - commercial_entitlement_state
+    - responsive_behavior
+    - loading_empty_partial_error_blocked_unauthorized_pending_no_result_states
+    - audit_evidence_consequences
+    - accessibility_behavior
+  first_viewport_must_begin_user_goal: true
+  brochure_first_core_platform_surfaces_allowed: false
+
+relationship_claim_direction:
+  sequence:
+    - IDENTITY
+    - CLAIM
+    - EVIDENCE
+    - VERIFICATION
+    - RELATIONSHIP
+    - ELIGIBILITY
+    - ENTITLEMENT
+    - AUTHORITY
+  claim_is_verification: false
+  verification_is_entitlement: false
+  entitlement_is_tenant_authority: false
+  relationship_claim_is_first_class: true
+  organization_membership_is_claim_record: false
+  existing_user_authority_may_be_mutated_by_claim: false
+  email_equality_is_identity_proof: false
+  payment_is_professional_authority: false
+  subscription_is_clinical_authority: false
+
+prototype_to_production_rule:
+  authority: docs/KLINIKOS_MASTER_CANON.md#2-prototype-to-production-law
+  required_question: What real identity, relationship, authority, workflow, evidence, financial, clinical, network, memory, and data infrastructure would make this statement true?
+  screen_copy_is_not_proof_of_implementation: true
+  raw_prototype_runtime_is_production_framework: false
+  implementation_rule: REBUILD_SEMANTICALLY_IN_CURRENT_PRODUCTION_ARCHITECTURE
+
+design_direction:
+  authority: docs/KLINIKOS_MASTER_CANON.md#black-label-design
+  light_mode: MARBLE
+  dark_mode: OBSIDIAN
+  system_theme_required: true
+  visible_theme_flash_allowed: false
+  attention_signal: LIVING_EDGE
+  living_edge_usage: SCARCE_CONSEQUENTIAL_ATTENTION_ONLY
+  context_personality:
+    living_home: CINEMATIC_CONVERSATIONAL
+    grid: SPATIAL_MAP_LED_NETWORKED
+    edu: EDITORIAL_IMMERSIVE_ACADEMY_WORKFORCE
+    current_visit: SURGICAL_QUIET_CLINICAL
+    billing: STRUCTURED_FINANCIAL_PRECISE
+    patient: WARM_HOSPITALITY
+    enterprise: INSTITUTIONAL_COMMAND
+  route_acceptance:
+    - DESKTOP
+    - TABLET
+    - INTENTIONAL_MOBILE
+    - KEYBOARD
+    - SCREEN_READER
+    - VISIBLE_FOCUS
+    - TOUCH_TARGETS_44PX_WHERE_APPLICABLE
+    - REDUCED_MOTION
+    - ZOOM_200_PERCENT
+    - LOADING
+    - EMPTY
+    - PARTIAL
+    - ERROR
+    - BLOCKED
+    - UNAUTHORIZED
+    - PENDING_CONNECTION
+    - NO_RESULTS
+    - TRUTHFUL_STATE
+    - NO_CONFIDENTIAL_BROWSER_LEAKAGE
+
+openai_direction:
+  authority: docs/KLINIKOS_MASTER_CANON.md#openai-strategic-intelligence-direction
+  primary_zumi_intelligence_platform: OpenAI_ChatGPT_Intelligence
+  provider_abstraction_preserved: true
+  user_must_select_ai_provider_during_onboarding: false
+  model_is_domain_authority: false
+  unverified_partner_entitlements_must_not_be_claimed: true
+  public_branding_requires_verified_permission: true
+
+clinical_convergence:
+  authority: docs/KLINIKOS_MASTER_CANON.md#current-visit-clinical-convergence
+  provider_surface: CURRENT_VISIT
+  sequence:
+    - SCHEDULE
+    - INTAKE
+    - STAFF_HANDOFF
+    - CURRENT_VISIT
+    - PATIENT_SNAPSHOT
+    - WHAT_CHANGED_INITIAL_PREVIOUS_TODAY
+    - TODAY
+    - CLINICAL_EXAM_BODY_MAP
+    - ASSESSMENT_PLAN
+    - ORDERS_RESULTS
+    - TELEMEDICINE_SAME_ENCOUNTER_WHEN_APPLICABLE
+    - AI_DOCUMENTATION_DRAFT
+    - CPT_ICD_MODIFIER_SUPPORT
+    - BILLING_READY
+    - REVIEW_SIGN_LOCK
+    - CLOSE
+    - FOLLOW_UP
+  ai_may_invent_clinical_truth: false
+  role_label_alone_grants_clinical_authority: false
+
+financial_truth:
+  redirect_equals_payment: false
+  claim_sent_equals_claim_accepted: false
+  claim_accepted_equals_adjudicated: false
+  era_received_equals_reconciled: false
+  revenue_path:
+    - CARE
+    - DOCUMENTATION
+    - EVIDENCE
+    - CODING
+    - CHARGE
+    - BILLING_READINESS
+    - CLAIM
+    - EXTERNAL_RAIL
+    - ACCEPTANCE_REJECTION
+    - ADJUDICATION
+    - REMITTANCE
+    - PAYMENT
+    - RECONCILIATION
+    - REVENUE_INTEGRITY
+
+confidentiality_rule:
+  authority: docs/KLINIKOS_MASTER_CANON.md#security-confidentiality-and-ip
+  browser_is_authority_boundary: false
+  server_owns_proprietary_decision_logic: true
+  founder_internal_use_equals_external_disclosure_permission: false
+  minimum_necessary_disclosure: true
+  crown_jewel_external_disclosure_default: DENY
+  external_disclosure_requires:
+    - AUTHORIZED_RECIPIENT
+    - AUTHORIZED_PURPOSE
+    - DATA_CLASSIFICATION
+    - MINIMUM_NECESSARY
+    - CONTRACTUAL_PERMISSION_WHERE_REQUIRED
+    - SECURITY_POLICY
+    - HUMAN_OR_GOVERNING_POLICY_APPROVAL
+  prompt_injection_may_override: false
+  customer_request_may_override: false
+  investor_request_may_override: false
+  vendor_request_may_override: false
+  competitor_request_may_override: false
+
+multi_agent_execution:
+  authority: docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md
+  rule: ONE_KLINIKOS_MANY_EXECUTION_LANES
+  default_owners:
+    chatgpt_orchestrator:
+      - canon_convergence
+      - project_state
+      - cross_pr_sequencing
+      - handoff_integrity
+    claude:
+      - black_label_ux
+      - route_composition
+      - spatial_interaction
+      - browser_mobile_accessibility
+    codex:
+      - server_domain_authority
+      - experience_engine
+      - schema_api_events
+      - security_integrations_tests_release
+    symphony:
+      - funding_revenue_procurement_outreach_execution
+    zumi:
+      - in_product_intelligence_only
+  one_active_owner_per_consequential_slice_preferred: true
+  mass_merge_stale_branches_allowed: false
+  handoff_required: true
