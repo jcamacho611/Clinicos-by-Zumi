@@ -1,4 +1,4 @@
-version: 2026-08-27.3
+version: 2026-08-29.1
 status: ACTIVE
 
 canonical_product_authority:
@@ -32,6 +32,30 @@ canonical_product_authority:
     - black_label_design
     - commercialization
     - execution_order
+
+canonical_implementation_contract:
+  file: docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md
+  authority: IMPLEMENTATION_CONTRACT
+  generated_from: docs/KLINIKOS_MASTER_CANON.md
+  companion_design: docs/superpowers/specs/2026-08-29-klinikos-universal-healthcare-universe-company-constitution-design.md
+  may_override_master: false
+  may_override_verified_implementation: false
+  purpose: ENGINEERING_BUILDABLE_EXPRESSION_OF_MASTER_CANON
+  scope:
+    - five_plane_architecture
+    - actor_and_organization_universe
+    - resource_and_grid_classes
+    - lifecycle_routes
+    - shared_domain_ownership
+    - route_registry_contracts
+    - screen_experience_contract_direction
+    - production_wiring
+    - scope_classification
+    - executive_council_evaluation_frame
+    - reconciliation_program
+  implementation_status_sections_are_snapshot_only: true
+  snapshot_refresh_rule: CURRENT_VERIFIED_CODE_SCHEMA_TEST_RUNTIME_AND_EXTERNAL_EVIDENCE_WIN_FOR_WHAT_EXISTS_TODAY
+  conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS
 
 implementation_authority:
   question: what_exists_today
@@ -126,6 +150,7 @@ conflict_rule:
     - CLASSIFY_CONFLICT_AS_IMPLEMENTATION_STATUS_PRODUCT_DIRECTION_OR_EXECUTION_CONTROL
     - USE_CURRENT_VERIFIED_IMPLEMENTATION_FOR_WHAT_EXISTS
     - USE_MASTER_CANON_FOR_INSTITUTED_PRODUCT_DIRECTION
+    - USE_CANONICAL_IMPLEMENTATION_CONTRACT_FOR_ENGINEERING_BUILD_SHAPE
     - USE_MULTI_AGENT_CONTROL_FOR_EXECUTION_OWNERSHIP
     - RECORD_CONFLICT_EXPLICITLY
     - DO_NOT_MERGE_CONFLICTS_SILENTLY
@@ -137,12 +162,14 @@ new_discovery_protocol:
     - COMPARE_TO_CURRENT_MASTER_CANON
     - ACCEPT_REJECT_OR_MODIFY
     - UPDATE_MASTER_CANON_IF_ACCEPTED
+    - UPDATE_CANONICAL_IMPLEMENTATION_CONTRACT_IF_BUILD_CONSEQUENCES_CHANGE
     - UPDATE_IMPLEMENTATION_CONSEQUENCES
     - RETAIN_OLD_VERSION_AS_PROVENANCE
   forbidden_result:
     - NEW_PARALLEL_SUPREME_CANON
     - NEW_PARALLEL_MASTER_CANON
     - NEW_PARALLEL_SOURCE_OF_TRUTH
+    - NEW_PARALLEL_ENGINEERING_BLUEPRINT
 
 literal_protected_application_order:
   authority: docs/KLINIKOS_MASTER_CANON.md#4-canonical-literal-user-experience
