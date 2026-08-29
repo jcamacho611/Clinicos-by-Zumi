@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 
 const providerCredentialFindFirst = vi.fn();
@@ -71,6 +72,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     $transaction: (callback: (client: typeof tx) => unknown) => transaction(callback),
     providerCredential: { findFirst: (...args: unknown[]) => providerCredentialFindFirst(...args) },
+    providerFacilityPrivilege: { findFirst: (...args: unknown[]) => privilegeFindFirst(...args) },
   },
 }));
 
@@ -218,7 +220,7 @@ describe("provider authority history", () => {
       authorityVersion: 1,
       action: "credentialing.credential_created",
       actorId: "reviewer-1",
-      beforeState: null,
+      beforeState: Prisma.DbNull,
       evidenceDocumentId: "document-1",
       afterState: expect.objectContaining({
         number: "SYNTH-LICENSE-001",
@@ -273,7 +275,7 @@ describe("provider authority history", () => {
       authorityRecordId: "privilege-1",
       authorityVersion: 1,
       action: "credentialing.facility_privilege_created",
-      beforeState: null,
+      beforeState: Prisma.DbNull,
       afterState: expect.objectContaining({ facilityId: "facility-1", status: "pending", authorityVersion: 1 }),
     }) });
 

@@ -1,0 +1,33 @@
+// Durable decision history for the existing provider authority domains.
+//
+// Provider, ProviderCredential, and ProviderFacilityPrivilege remain the current
+// domain authority. This table is an append-only decision ledger, not a second
+// credential system. It deliberately carries no cascading relation to those mutable
+// rows so an authorized source-record deletion cannot silently erase decision history.
+// Evidence content remains governed by its own retention, legal-hold, deletion, and
+// de-identification rules; only a permitted reference/provenance trace is kept here.
+model ProviderAuthorityEvent {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  providerId         String
+  authorityKind      String
+  authorityRecordId  String
+  authorityVersion   Int
+  action             String
+  actorId            String?
+  actorType          String
+  beforeState        Json?
+  afterState         Json
+  evidenceDocumentId String?
+  evidenceReference  String?
+  provenanceSource   String?
+  note               String?
+  metadata           Json?
+  schemaVersion      Int      @default(1)
+  occurredAt         DateTime @default(now())
+
+  @@unique([organizationId, authorityKind, authorityRecordId, authorityVersion])
+  @@index([organizationId, providerId, occurredAt])
+  @@index([authorityKind, authorityRecordId, occurredAt])
+  @@map("provider_authority_events")
+}
