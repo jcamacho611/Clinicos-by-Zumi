@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-import { BriefcaseBusiness, Building2, List, Map, MapPin, Radar, Users } from "lucide-react";
+import { Building2, List, Map, MapPin, Radar, Search, Sparkles, Users } from "lucide-react";
 import { GoogleGridMap, type GridMapPoint } from "@/components/grid/google-grid-map";
 import { rankGridCoordinatesByDistance, type GridCoordinates } from "@/lib/grid/geo-rules";
 
@@ -39,20 +38,44 @@ type MapResource = {
   longitude: number | null;
 };
 
-function money(cents: number | null) {
-  if (cents == null) return null;
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100);
-}
+type ActiveGridContext = {
+  intent: string;
+  query: string;
+};
 
 function humanize(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export function GridLiveMap({ locations, providers, resources }: { locations: MapLocation[]; providers: MapProvider[]; resources: MapResource[] }) {
+function demandKind(intent: string) {
+  const allowed = new Set(["work", "provider", "space", "product", "equipment", "service", "network", "education", "organization", "referral"]);
+  return allowed.has(intent) ? intent : "service";
+}
+
+function focusGridComposer() {
+  const composer = document.getElementById("grid-exchange-query") as HTMLTextAreaElement | null;
+  composer?.scrollIntoView({ behavior: "smooth", block: "center" });
+  composer?.focus();
+}
+
+export function GridLiveMap({
+  activeContext,
+  locations,
+  providers,
+  resources,
+}: {
+  activeContext: ActiveGridContext;
+  locations: MapLocation[];
+  providers: MapProvider[];
+  resources: MapResource[];
+}) {
   const [userLocation, setUserLocation] = useState<GridCoordinates | null>(null);
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
-  const [mobileView, setMobileView] = useState<"map" | "list">("list");
-  const [radiusMiles, setRadiusMiles] = useState<number | null>(25);
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
+  const [radiusMiles, setRadiusMiles] = useState<number | null>(10);
+  const [saveState, setSaveState] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const mapped: GridMapPoint[] = useMemo(() => resources.flatMap((resource) => {
     if (resource.latitude == null || resource.longitude == null) return [];
     return [{
@@ -65,16 +88,15 @@ export function GridLiveMap({ locations, providers, resources }: { locations: Ma
       longitude: resource.longitude,
     }];
   }), [resources]);
+
   const rankedMapped = useMemo(
     () => rankGridCoordinatesByDistance(mapped, userLocation, userLocation ? radiusMiles : null),
     [mapped, radiusMiles, userLocation],
   );
   const unmappedResources = resources.filter((resource) => resource.latitude == null || resource.longitude == null);
-  const hasInventory = locations.length + providers.length + resources.length > 0;
   const radiusActive = userLocation !== null && radiusMiles !== null;
-  const hiddenMappedCount = mapped.length - rankedMapped.length;
-  const unpinnedCount = locations.length + providers.length + unmappedResources.length;
   const selectedVisiblePointId = rankedMapped.some((point) => point.id === selectedPointId) ? selectedPointId : null;
+  const nothingMatches = rankedMapped.length === 0 && locations.length + providers.length + unmappedResources.length === 0;
 
   const selectPoint = useCallback((id: string) => {
     setSelectedPointId(id);
@@ -87,66 +109,149 @@ export function GridLiveMap({ locations, providers, resources }: { locations: Ma
     requestAnimationFrame(() => document.getElementById(`grid-map-result-${id}`)?.scrollIntoView({ block: "nearest" }));
   }, []);
 
-  const muted = "text-[var(--k-muted)]";
-  const accent = "text-[var(--k-accent)]";
+  async function keepNeedActive() {
+    const query = activeContext.query.trim();
+    if (!query) {
+      setSaveState("Describe the need first so Klinikos has something truthful to keep active.");
+      focusGridComposer();
+      return;
+    }
+
+    setSaving(true);
+    setSaveState(null);
+    try {
+      const response = await fetch("/api/grid/demands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: demandKind(activeContext.intent),
+          title: query.slice(0, 160),
+          description: `Active Grid need: ${query}`.slice(0, 2000),
+          category: activeContext.intent === "all" ? "general" : activeContext.intent,
+          radiusMiles: radiusMiles ?? 10,
+          quantity: 1,
+          requiresClinicalEligibility: ["work", "provider", "referral"].includes(activeContext.intent),
+          requirements: [],
+          status: "open",
+          visibility: "matched_only",
+        }),
+      });
+
+      if (response.status === 401) {
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(`/access?returnTo=${encodeURIComponent(returnTo)}`);
+        return;
+      }
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSaveState(typeof payload.error === "string" ? payload.error : "This need could not be kept active safely.");
+        return;
+      }
+      setSaveState("Need active. Klinikos recorded it through the governed Grid demand rail.");
+    } catch {
+      setSaveState("The need could not be saved right now. Nothing was fabricated or marked active.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const visibleCount = rankedMapped.length + (radiusActive ? 0 : locations.length + providers.length + unmappedResources.length);
 
   return (
-    <section className="grid-marble-surface border-y border-[var(--k-line)] bg-[var(--k-work-bg)]">
-      <div className="mx-auto max-w-[1500px] px-5 py-12 sm:px-8 lg:py-16">
-        <div className="mb-8 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="max-w-4xl">
-            <p className={`text-xs font-extrabold uppercase tracking-[.18em] ${accent}`}>Spatial Grid</p>
-            <h2 className="mt-3 max-w-4xl text-3xl font-semibold tracking-[-.05em] text-[var(--k-text)] sm:text-5xl">One geographic field for real published healthcare capacity.</h2>
-            <p className={`mt-4 max-w-3xl text-[13px] leading-7 ${muted}`}>Choose location access when you want real distance. Grid pins only reviewed resources with supplied coordinates, keeps city/state-only inventory unpinned, and never fills an empty map with invented places.</p>
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold lg:justify-end">
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><MapPin className={`size-3.5 ${accent}`} /> {rankedMapped.length} mapped{radiusActive ? ` in ${radiusMiles} mi` : ""}</span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><Building2 className={`size-3.5 ${accent}`} /> {locations.length} spaces</span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--k-text)]"><Users className={`size-3.5 ${accent}`} /> {providers.length} professionals</span>
-          </div>
+    <section className="bg-[#050303] px-4 py-4 text-[#f8efed] sm:px-6 lg:px-8" data-grid-spatial-workspace>
+      <div className="mx-auto max-w-[1600px]">
+        <div className="mb-3 grid grid-cols-2 overflow-hidden border border-[#e28b85]/12 bg-[#090506] lg:hidden">
+          <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-semibold ${mobileView === "map" ? "bg-[#e6817b] text-[#19090b]" : "text-[#a8908b]"}`} onClick={() => setMobileView("map")} type="button" aria-pressed={mobileView === "map"}><Map className="size-4" /> Map</button>
+          <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-semibold ${mobileView === "list" ? "bg-[#e6817b] text-[#19090b]" : "text-[#a8908b]"}`} onClick={() => setMobileView("list")} type="button" aria-pressed={mobileView === "list"}><List className="size-4" /> Matches</button>
         </div>
 
-        {/* Mobile begins with results; the map is an explicit user choice. */}
-        <div className="mb-3 grid grid-cols-2 border border-[var(--k-line)] bg-[var(--k-public-surface)] lg:hidden">
-          <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-extrabold ${mobileView === "map" ? "bg-[var(--k-text)] text-[var(--k-work-bg)]" : "text-[var(--k-muted)]"}`} onClick={() => setMobileView("map")} type="button" aria-pressed={mobileView === "map"}><Map className="size-4" /> Map</button>
-          <button className={`inline-flex min-h-11 items-center justify-center gap-2 text-xs font-extrabold ${mobileView === "list" ? "bg-[var(--k-text)] text-[var(--k-work-bg)]" : "text-[var(--k-muted)]"}`} onClick={() => setMobileView("list")} type="button" aria-pressed={mobileView === "list"}><List className="size-4" /> Results</button>
-        </div>
-
-        <div data-grid-map-ledger className="grid overflow-hidden border border-[var(--k-line)] bg-[var(--k-public-surface)] lg:grid-cols-[1.35fr_.65fr]">
-          <div className={`${mobileView === "map" ? "block" : "hidden"} min-w-0 lg:block`}>
-            <GoogleGridMap onLocationChange={setUserLocation} onPointSelect={selectFromMap} points={rankedMapped} selectedPointId={selectedVisiblePointId} />
+        <div className="grid min-h-[66vh] overflow-hidden border border-[#e28b85]/12 bg-[#080405] lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,.65fr)]">
+          <div className={`${mobileView === "map" ? "block" : "hidden"} min-w-0 bg-[#070405] lg:block`}>
+            <GoogleGridMap
+              onLocationChange={setUserLocation}
+              onPointSelect={selectFromMap}
+              points={rankedMapped}
+              selectedPointId={selectedVisiblePointId}
+            />
           </div>
 
-          <aside className={`${mobileView === "list" ? "block" : "hidden"} min-w-0 border-t border-[var(--k-line)] bg-[var(--k-public-surface)] lg:block lg:border-l lg:border-t-0`}>
-            <div className="border-b border-[var(--k-line)] p-5 sm:p-6">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[var(--k-muted)]">Published inventory</p>{userLocation && <p className="mt-2 text-xs font-bold text-[var(--k-accent)]">Mapped results sorted by real distance</p>}</div>
-                {userLocation && <label className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">Distance<select aria-label="Map search radius" className="mt-1 block h-11 border border-[var(--k-line)] bg-[var(--k-public-surface)] px-3 text-xs font-bold normal-case tracking-normal text-[var(--k-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--k-accent)]" value={radiusMiles ?? "all"} onChange={(event) => setRadiusMiles(event.target.value === "all" ? null : Number(event.target.value))}><option value="5">Within 5 mi</option><option value="10">Within 10 mi</option><option value="25">Within 25 mi</option><option value="50">Within 50 mi</option><option value="100">Within 100 mi</option><option value="all">Any distance</option></select></label>}
+          <aside aria-label="Grid match inspector" className={`${mobileView === "list" ? "block" : "hidden"} min-w-0 border-t border-[#e28b85]/12 bg-[#0a0507] lg:block lg:border-l lg:border-t-0`}>
+            <div className="flex min-h-16 items-center justify-between gap-3 border-b border-[#e28b85]/12 px-5 py-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#e6817b]">Matches</p>
+                <p className="mt-1 text-xs text-[#927d79]">{visibleCount} real published result{visibleCount === 1 ? "" : "s"}</p>
               </div>
-              {radiusActive && (hiddenMappedCount > 0 || unpinnedCount > 0) && <p className="mt-3 text-xs leading-5 text-[#8a641f]">{hiddenMappedCount > 0 ? `${hiddenMappedCount} mapped result${hiddenMappedCount === 1 ? " is" : "s are"} outside this radius. ` : ""}{unpinnedCount > 0 ? `${unpinnedCount} city/state or service-area result${unpinnedCount === 1 ? " is" : "s are"} excluded because exact distance cannot be calculated.` : ""}</p>}
+              <label className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#806d69]">
+                Radius
+                <select aria-label="Map search radius" className="ml-2 h-10 border border-[#e28b85]/12 bg-[#100708] px-2 text-xs font-semibold normal-case tracking-normal text-[#e7d4d1]" value={radiusMiles ?? "all"} onChange={(event) => setRadiusMiles(event.target.value === "all" ? null : Number(event.target.value))}>
+                  <option value="5">5 mi</option>
+                  <option value="10">10 mi</option>
+                  <option value="25">25 mi</option>
+                  <option value="50">50 mi</option>
+                  <option value="100">100 mi</option>
+                  <option value="all">Any</option>
+                </select>
+              </label>
             </div>
 
-            <div className="max-h-[500px] overflow-auto" aria-label="Grid spatial results">
-              {rankedMapped.map((resource) => <article className={`border-b border-[var(--k-line)] px-5 py-5 transition-colors sm:px-6 ${selectedPointId === resource.id ? "bg-[var(--k-public-raised)]" : "bg-[var(--k-public-surface)]"}`} id={`grid-map-result-${resource.id}`} key={`mapped-resource-${resource.id}`}>
-                <button className="min-h-11 w-full text-left" onClick={() => selectPoint(resource.id)} type="button">
-                  <div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-extrabold text-[var(--k-text)]">{resource.title}</h3><p className="mt-1 text-xs text-[var(--k-muted)]">{[resource.city, resource.state].filter(Boolean).join(", ") || humanize(resource.category)}</p></div><MapPin className="size-4 shrink-0 text-[var(--k-accent)]" /></div>
-                  <div className="mt-3 flex flex-wrap gap-2"><span className="border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800">Reviewed public resource</span>{resource.distanceMiles != null && <span className="border border-[var(--k-line)] bg-[var(--k-public-raised)] px-2 py-1 text-xs font-bold text-[var(--k-text)]">{resource.distanceMiles.toFixed(1)} mi</span>}</div>
-                  <p className="mt-3 text-xs font-extrabold text-[var(--k-accent)]">Center on map →</p>
-                </button>
-                <Link className="mt-2 inline-flex min-h-11 items-center text-xs font-extrabold text-[var(--k-text)] underline decoration-[var(--k-accent)] decoration-2 underline-offset-4" href={`/login?returnTo=${encodeURIComponent(`/grid/resources/request/${resource.id}?from=map`)}`}>Start governed request</Link>
-              </article>)}
+            <div className="max-h-[62vh] overflow-auto" aria-label="Grid spatial results">
+              {rankedMapped.map((resource) => (
+                <article className={`border-b border-[#e28b85]/10 px-5 py-5 ${selectedPointId === resource.id ? "bg-[#14090b]" : "bg-[#0a0507]"}`} id={`grid-map-result-${resource.id}`} key={resource.id}>
+                  <button className="min-h-11 w-full text-left" onClick={() => selectPoint(resource.id)} type="button">
+                    <div className="flex items-start justify-between gap-3">
+                      <div><h3 className="text-sm font-semibold text-[#fff8f6]">{resource.title}</h3><p className="mt-1 text-xs text-[#8f7773]">{[resource.city, resource.state].filter(Boolean).join(", ") || humanize(resource.category)}</p></div>
+                      <MapPin className="size-4 shrink-0 text-[#e6817b]" />
+                    </div>
+                    <p className="mt-3 text-xs text-[#bca5a1]">Reviewed public resource{resource.distanceMiles != null ? ` · ${resource.distanceMiles.toFixed(1)} mi` : ""}</p>
+                  </button>
+                </article>
+              ))}
 
-              {!radiusActive && locations.map((location) => <article className="border-b border-[var(--k-line)] px-5 py-5 sm:px-6" key={`location-${location.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-extrabold text-[var(--k-text)]">{location.name}</h3><p className="mt-1 text-xs text-[var(--k-muted)]">{[location.city, location.state].filter(Boolean).join(", ") || location.locationType}</p></div><Building2 className="size-4 text-[var(--k-accent)]" /></div><div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[var(--k-muted)]">{location.roomTypes.slice(0, 3).map((room) => <span key={room}>{room}</span>)}{location.chairRentalAvailable && <span className="font-bold text-[var(--k-accent)]">Chair rental</span>}</div><p className="mt-3 text-sm font-bold tabular-nums text-[var(--k-text)]">{money(location.hourlyRateCents) ? `${money(location.hourlyRateCents)}/hr` : money(location.dailyRateCents) ? `${money(location.dailyRateCents)}/day` : "Rate on request"}</p><Link className="mt-2 inline-flex min-h-11 items-center text-xs font-extrabold text-[var(--k-accent)]" href={`/grid/browse?intent=space&q=${encodeURIComponent(location.city ?? location.name)}`}>Explore location →</Link><p className="mt-2 text-xs leading-5 text-[#8a641f]">No pin shown until this legacy location supplies reviewed coordinates.</p></article>)}
+              {!radiusActive && locations.map((location) => (
+                <article className="border-b border-[#e28b85]/10 px-5 py-5" key={`location-${location.id}`}>
+                  <div className="flex items-start gap-3"><Building2 className="mt-0.5 size-4 text-[#e6817b]" /><div><h3 className="text-sm font-semibold text-[#fff8f6]">{location.name}</h3><p className="mt-1 text-xs text-[#8f7773]">{[location.city, location.state].filter(Boolean).join(", ") || location.locationType}</p><p className="mt-2 text-xs text-[#806d69]">No pin until reviewed coordinates are supplied.</p></div></div>
+                </article>
+              ))}
 
-              {!radiusActive && providers.map((provider) => <article className="border-b border-[var(--k-line)] px-5 py-5 sm:px-6" key={`provider-${provider.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-extrabold text-[var(--k-text)]">{provider.serviceName}</h3><p className="mt-1 text-xs text-[var(--k-muted)]">{provider.providerName} · {humanize(provider.providerType)}</p></div><BriefcaseBusiness className="size-4 text-[var(--k-accent)]" /></div><div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[var(--k-muted)]">{provider.onCallNow && <span className="font-bold text-emerald-700">Available now</span>}{provider.states.slice(0, 3).map((state) => <span key={state}>{state}</span>)}</div><p className="mt-2 text-xs leading-5 text-[#8a641f]">Professional service area is shown without an exact public location pin.</p></article>)}
+              {!radiusActive && providers.map((provider) => (
+                <article className="border-b border-[#e28b85]/10 px-5 py-5" key={`provider-${provider.id}`}>
+                  <div className="flex items-start gap-3"><Users className="mt-0.5 size-4 text-[#e6817b]" /><div><h3 className="text-sm font-semibold text-[#fff8f6]">{provider.serviceName}</h3><p className="mt-1 text-xs text-[#8f7773]">{provider.providerName} · {humanize(provider.providerType)}</p><p className="mt-2 text-xs text-[#806d69]">Service-area inventory stays unpinned without an exact reviewed position.</p></div></div>
+                </article>
+              ))}
 
-              {!radiusActive && unmappedResources.slice(0, 20).map((resource) => <article className="border-b border-[var(--k-line)] px-5 py-5 sm:px-6" key={`resource-${resource.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-extrabold text-[var(--k-text)]">{resource.title}</h3><p className="mt-1 text-xs text-[var(--k-muted)]">{[resource.city, resource.state].filter(Boolean).join(", ") || humanize(resource.resourceType)}</p></div><MapPin className="size-4 text-[var(--k-premium)]" /></div><p className="mt-3 text-xs leading-5 text-[#8a641f]">Published, but not pinned because a reviewed map position has not been supplied.</p></article>)}
+              {!radiusActive && unmappedResources.map((resource) => (
+                <article className="border-b border-[#e28b85]/10 px-5 py-5" key={`unmapped-${resource.id}`}>
+                  <h3 className="text-sm font-semibold text-[#fff8f6]">{resource.title}</h3>
+                  <p className="mt-1 text-xs text-[#8f7773]">{[resource.city, resource.state].filter(Boolean).join(", ") || humanize(resource.resourceType)}</p>
+                  <p className="mt-2 text-xs text-[#806d69]">Published, but not pinned without reviewed coordinates.</p>
+                </article>
+              ))}
 
-              {radiusActive && rankedMapped.length === 0 && <div className="p-10 text-center"><Radar className="mx-auto size-7 text-[var(--k-accent)]" /><p className="mt-5 text-sm font-extrabold text-[var(--k-text)]">No mapped resources are inside this radius.</p><p className="mt-3 text-xs leading-6 text-[var(--k-muted)]">Widen the distance filter or choose Any distance. Grid does not pull unpinned inventory into an exact-radius result.</p></div>}
-
-              {!hasInventory && <div className="p-10 text-center"><Radar className="mx-auto size-7 text-[var(--k-accent)]" /><p className="mt-5 text-sm font-extrabold text-[var(--k-text)]">You are early.</p><p className="mt-3 text-xs leading-6 text-[var(--k-muted)]">There is no reviewed public Grid inventory here yet. As people and organizations publish real availability, it will appear around your location.</p><Link className="mt-5 inline-flex min-h-11 items-center text-xs font-extrabold text-[var(--k-accent)]" href="/grid/join">Be one of the first to add something →</Link></div>}
+              {(nothingMatches || (radiusActive && rankedMapped.length === 0)) ? (
+                <div className="p-7 sm:p-9">
+                  <Radar className="size-6 text-[#e6817b]" />
+                  <h3 className="mt-4 text-lg font-medium tracking-[-.02em] text-[#fff8f6]">Nothing currently matches within 10 miles.</h3>
+                  <p className="mt-2 text-xs leading-6 text-[#8f7773]">Grid is showing only real published capacity. It will not invent supply to fill this state.</p>
+                  <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                    <button className="min-h-11 border border-[#e28b85]/16 bg-[#12090b] px-3 text-xs font-semibold text-[#f0d8d4] disabled:opacity-50" disabled={saving} onClick={keepNeedActive} type="button">{saving ? "Saving…" : "Keep this need active"}</button>
+                    <button className="min-h-11 border border-[#e28b85]/16 bg-[#12090b] px-3 text-xs font-semibold text-[#f0d8d4]" onClick={() => setRadiusMiles(25)} type="button">Expand area</button>
+                    <button className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#e28b85]/16 bg-[#12090b] px-3 text-xs font-semibold text-[#f0d8d4]" onClick={focusGridComposer} type="button"><Search className="size-3.5" />Adjust time</button>
+                    <button className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#e6817b] px-3 text-xs font-semibold text-[#19090b]" onClick={focusGridComposer} type="button"><Sparkles className="size-3.5" />Ask Zumi</button>
+                  </div>
+                  {saveState ? <p aria-live="polite" className="mt-4 text-xs leading-5 text-[#c7aaa6]">{saveState}</p> : null}
+                </div>
+              ) : null}
             </div>
           </aside>
+        </div>
+
+        <div className="flex flex-col gap-3 border-x border-b border-[#e28b85]/12 bg-[#0d0608] px-4 py-3 sm:flex-row sm:items-center sm:justify-between" data-grid-context-bar>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#e6817b]">Discovery</p>
+            <p className="mt-1 truncate text-xs text-[#cbb4b0]">{activeContext.query || "Tell Grid what you need or what you have."}</p>
+          </div>
+          <p className="text-[10px] uppercase tracking-[.14em] text-[#725f5b]">{humanize(activeContext.intent)} · {radiusMiles == null ? "any distance" : `${radiusMiles} mi`}</p>
         </div>
       </div>
     </section>
