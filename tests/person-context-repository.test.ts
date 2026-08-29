@@ -56,6 +56,7 @@ const personRow = {
       ],
     },
   ],
+  relationships: [],
 };
 
 describe("Person context repository adoption", () => {
