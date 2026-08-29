@@ -43,6 +43,7 @@ beforeAll(async () => {
           legacyUserId: userId,
           membershipType: "organization_user",
           roleKey: "provider",
+          effectiveFrom: new Date("2026-08-29T00:00:00.000Z"),
         },
       },
     },
@@ -61,6 +62,7 @@ beforeAll(async () => {
       sourceType: "explicit_link",
       sourceReference: providerRecordId,
       evidenceReference: `credential_evidence_${suffix}`,
+      effectiveFrom: new Date("2026-08-29T00:00:00.000Z"),
     },
   });
 });
