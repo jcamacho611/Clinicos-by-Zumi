@@ -139,6 +139,10 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       NEXT_PUBLIC_APP_URL: https://klinikos.io
+      # This database is the disposable Postgres service declared below. Authorizing
+      # migration deploy here exercises the production build contract without weakening
+      # render-build's fail-closed behavior anywhere else.
+      KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
     services:
       postgres:
         image: postgres:16
@@ -163,7 +167,8 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
-      # Render's Build Command, verbatim.
+      # Render's Build Command, verbatim except for the explicit disposable-verification
+      # migration token above, which is CI-only and points at this job's disposable DB.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
