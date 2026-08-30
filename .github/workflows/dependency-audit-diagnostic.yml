@@ -1,0 +1,69 @@
+name: Dependency audit diagnostic
+
+on:
+  push:
+    branches:
+      - security/dependency-audit-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Audit exact lockfile and print actionable High/Critical findings
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > npm-audit.json
+          audit_code=$?
+          set -e
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const counts = audit.metadata?.vulnerabilities ?? {};
+          console.log('VULNERABILITY_COUNTS', JSON.stringify(counts));
+
+          const vulnerabilities = audit.vulnerabilities ?? {};
+          const rows = Object.entries(vulnerabilities)
+            .filter(([, value]) => ['high', 'critical'].includes(value.severity))
+            .sort(([a], [b]) => a.localeCompare(b));
+
+          console.log(`HIGH_CRITICAL_PACKAGE_COUNT ${rows.length}`);
+          for (const [name, value] of rows) {
+            console.log(`\nPACKAGE ${name}`);
+            console.log(`SEVERITY ${value.severity}`);
+            console.log(`DIRECT ${Boolean(value.isDirect)}`);
+            console.log(`RANGE ${value.range ?? 'unknown'}`);
+            console.log(`NODES ${JSON.stringify(value.nodes ?? [])}`);
+            console.log(`FIX_AVAILABLE ${JSON.stringify(value.fixAvailable ?? false)}`);
+            const via = Array.isArray(value.via) ? value.via : [];
+            for (const item of via) {
+              if (typeof item === 'string') {
+                console.log(`VIA_PACKAGE ${item}`);
+                continue;
+              }
+              console.log(`ADVISORY ${item.source ?? 'unknown'} ${item.title ?? 'untitled'}`);
+              console.log(`URL ${item.url ?? 'unknown'}`);
+              console.log(`ADVISORY_RANGE ${item.range ?? 'unknown'}`);
+            }
+          }
+          NODE
+
+          exit "$audit_code"
