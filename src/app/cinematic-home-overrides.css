@@ -94,18 +94,21 @@
 
   .rose-home #living-composer > div {
     min-height: 112px !important;
-  }}
+  }
+}
 
 @media (min-width: 1441px) {
   .rose-home .rose-atmosphere {
     background-size: min(66.7vw, 1280px) auto !important;
-  }}
+  }
+}
 
 @media (max-width: 1023px) {
   .rose-home .rose-atmosphere {
     background-position: center 58px !important;
     background-size: min(142vw,1085px) auto !important;
-  }}
+  }
+}
 
 @media (max-width: 767px) {
   .rose-home .reference-header {
@@ -154,4 +157,5 @@
 
   .rose-home .reference-composer-shell textarea {
     font-size: 13px;
-  }}
+  }
+}
