@@ -16,12 +16,26 @@ const matchedPlacement = () =>
     matchedAt: new Date("2026-08-30T10:00:00.000Z"),
   });
 
+const approveAll = () => {
+  let placement = matchedPlacement();
+  for (const actor of ["learner", "school", "site", "preceptor"] as const) {
+    placement = recordPlacementApproval(placement, {
+      actor,
+      decision: "approved",
+      decidedAt: new Date("2026-08-30T10:30:00.000Z"),
+      evidenceRef: `${actor}_approval`,
+    });
+  }
+  return placement;
+};
+
 describe("governed EDU placement lifecycle", () => {
-  it("treats a Grid match as matched, not approved or active", () => {
+  it("treats a Grid match as matched, not accepted, approved, or active", () => {
     const placement = matchedPlacement();
 
     expect(placement.status).toBe("matched");
     expect(placement.approvals).toEqual({
+      learner: "pending",
       school: "pending",
       site: "pending",
       preceptor: "pending",
@@ -33,8 +47,45 @@ describe("governed EDU placement lifecycle", () => {
     });
   });
 
-  it("requires school, site, and preceptor approvals before becoming approved", () => {
+  it("keeps learner acceptance distinct from school, site, and preceptor approval", () => {
     let placement = matchedPlacement();
+    for (const actor of ["school", "site", "preceptor"] as const) {
+      placement = recordPlacementApproval(placement, {
+        actor,
+        decision: "approved",
+        decidedAt: new Date("2026-08-30T10:30:00.000Z"),
+        evidenceRef: `${actor}_approval`,
+      });
+    }
+
+    expect(placement.approvals).toMatchObject({
+      learner: "pending",
+      school: "approved",
+      site: "approved",
+      preceptor: "approved",
+    });
+    expect(placement.status).toBe("approval_pending");
+    expect(placement.authority.mayStartPlacement).toBe(false);
+
+    placement = recordPlacementApproval(placement, {
+      actor: "learner",
+      decision: "approved",
+      decidedAt: new Date("2026-08-30T10:40:00.000Z"),
+      evidenceRef: "learner_acceptance_1",
+    });
+
+    expect(placement.status).toBe("approved");
+    expect(placement.authority.mayStartPlacement).toBe(true);
+  });
+
+  it("requires learner, school, site, and preceptor approvals before becoming approved", () => {
+    let placement = matchedPlacement();
+    placement = recordPlacementApproval(placement, {
+      actor: "learner",
+      decision: "approved",
+      decidedAt: new Date("2026-08-30T10:05:00.000Z"),
+      evidenceRef: "learner_acceptance_1",
+    });
     placement = recordPlacementApproval(placement, {
       actor: "school",
       decision: "approved",
@@ -75,15 +126,7 @@ describe("governed EDU placement lifecycle", () => {
   });
 
   it("requires explicit activation after all approvals", () => {
-    let placement = matchedPlacement();
-    for (const actor of ["school", "site", "preceptor"] as const) {
-      placement = recordPlacementApproval(placement, {
-        actor,
-        decision: "approved",
-        decidedAt: new Date("2026-08-30T10:30:00.000Z"),
-        evidenceRef: `${actor}_approval`,
-      });
-    }
+    let placement = approveAll();
 
     expect(placement.status).toBe("approved");
 
@@ -101,8 +144,14 @@ describe("governed EDU placement lifecycle", () => {
     });
   });
 
-  it("blocks activation when any required approver rejects the placement", () => {
+  it("blocks activation when any required party rejects the placement", () => {
     let placement = matchedPlacement();
+    placement = recordPlacementApproval(placement, {
+      actor: "learner",
+      decision: "approved",
+      decidedAt: new Date("2026-08-30T10:05:00.000Z"),
+      evidenceRef: "learner_acceptance",
+    });
     placement = recordPlacementApproval(placement, {
       actor: "school",
       decision: "approved",
@@ -127,8 +176,14 @@ describe("governed EDU placement lifecycle", () => {
     ).toThrow(/rejected|approved/i);
   });
 
-  it("preserves approval and transition evidence instead of overwriting history", () => {
+  it("preserves acceptance, approval, and transition evidence instead of overwriting history", () => {
     let placement = matchedPlacement();
+    placement = recordPlacementApproval(placement, {
+      actor: "learner",
+      decision: "approved",
+      decidedAt: new Date("2026-08-30T10:05:00.000Z"),
+      evidenceRef: "learner_evidence_v1",
+    });
     placement = recordPlacementApproval(placement, {
       actor: "school",
       decision: "approved",
@@ -137,6 +192,11 @@ describe("governed EDU placement lifecycle", () => {
     });
 
     expect(placement.approvalHistory).toEqual([
+      expect.objectContaining({
+        actor: "learner",
+        decision: "approved",
+        evidenceRef: "learner_evidence_v1",
+      }),
       expect.objectContaining({
         actor: "school",
         decision: "approved",
@@ -147,15 +207,7 @@ describe("governed EDU placement lifecycle", () => {
   });
 
   it("does not let placement completion create a professional license", () => {
-    let placement = matchedPlacement();
-    for (const actor of ["school", "site", "preceptor"] as const) {
-      placement = recordPlacementApproval(placement, {
-        actor,
-        decision: "approved",
-        decidedAt: new Date("2026-08-30T10:30:00.000Z"),
-        evidenceRef: `${actor}_approval`,
-      });
-    }
+    let placement = approveAll();
     placement = transitionPlacement(placement, {
       to: "active",
       at: new Date("2026-08-31T08:00:00.000Z"),
