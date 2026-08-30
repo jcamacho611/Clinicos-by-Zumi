@@ -1,7 +1,7 @@
 # KLINIKOS ACTIVE NON-DILUTIVE / INSTITUTIONAL OPPORTUNITY REGISTER
 
 Status: ACTIVE COMPANY-TRUTH REGISTER
-Date: 2026-08-25
+Date: 2026-08-26
 Scope: grants, procurement, accelerators, prizes, pilots, strategic institutional opportunities, and other non-equity / non-SBA-debt capital paths
 
 Governing authorities:
@@ -24,15 +24,68 @@ Never call an opportunity funding until authoritative evidence shows cash, a sig
 
 ---
 
+## P0 - Building Better Futures for Health 2027 / IDE Group
+
+Opportunity type: healthcare / MedTech challenge; prize services; commercialization exposure
+Current truth: **DIRECT WRITTEN FIT CONFIRMATION / DECISION READY / NOT SUBMITTED**
+Deadline: **2026-08-31 at 16:59 Sydney time**
+
+### Direct IDE clarification controlling execution
+
+IDE Group Marketing Manager Matt Allison told Klinikos in writing on 2026-08-24:
+
+> "You are most welcome to enter. Commercializing in Australia is part of the commitment requirements to be eligible for the MedTech Compass subscription from the MTAA, not the main prize, or people's choice award."
+
+This removes Australian commercialisation intent as a blocker to the direct main-prize / People's Choice application.
+
+The public page still contains broader Australian-intent language, so the repository preserves both authorities and applies the more specific written clarification to Klinikos's direct eligibility question.
+
+Truth constraints:
+- do not fabricate Australian operations or commercial intent;
+- if the live form asks about Australian market/collaboration interest and no pathway has been authorized, answer No;
+- do not claim MedTech Compass eligibility unless its separate commitment requirement is actually met;
+- program fit != submission or award.
+
+### Public 2027 program economics
+
+IDE Group's current 2027 page states:
+- grand-prize winner receives `$30,000` in IDE Group services;
+- People's Choice receives an additional `$10,000` in IDE services;
+- applications close August 31, 2026;
+- semifinalists announced October 15, 2026;
+- semifinalist showcase November 12, 2026;
+- grand finals March 3, 2027.
+
+These are services/support, not cash.
+
+### Remaining BBFH completion gates
+
+All routine fields, narratives, technical support, viability responses, team text, prize-use narrative, and non-confidential supporting material are prepared.
+
+Remaining non-delegable actions only:
+1. truthfully answer availability for the **2026-11-12 Sydney semi-final**;
+2. truthfully answer availability for the **2027-03-03 Sydney final**;
+3. review/accept the live competition IP/publicity/entry terms as an authorized company representative;
+4. press final Submit and preserve receipt evidence.
+
+Australian market interest no longer blocks the main-prize application; answer No unless genuine intent has actually been adopted.
+
+Authoritative execution files:
+- `docs/business/funding/BBFH_2027_ELIGIBILITY_OVERRIDE_2026-08-26.md`
+- `docs/business/funding/BBFH_2027_FINAL_EXECUTION_DELTA_2026-08-26.md`
+- `docs/business/funding/BBFH_AUSTRALIA_COMMERCIALISATION_PATHWAY_2026-08-26.md`
+
+---
+
 ## P0 - Kentucky AI Workforce Readiness Network
 
 Opportunity type: public procurement / workforce program contract
 Current truth: ACTIVE PROCUREMENT PIPELINE
 Prime respondent: KLINIKOS, INC.
 
-### Material new clarification from SCWDB
+### Material clarification from SCWDB
 
-SCWDB's 2026-08-24 formal Q&A materially reduces the qualification ambiguity that existed around Klinikos being a newly formed legal entity.
+SCWDB's formal Q&A materially reduces the qualification ambiguity around Klinikos being a newly formed legal entity.
 
 SCWDB states that it may consider clearly documented relevant experience of key personnel, affiliated entities, or predecessor organizations when evaluating the three-year experience requirement, particularly where meaningful continuity of leadership, personnel, operations, or service delivery exists.
 
@@ -53,7 +106,7 @@ Each reference should identify:
 - role of proposed key personnel;
 - nature and scope of comparable services.
 
-Appendix C requires three references for comparable work completed within the last five years, but SCWDB's Q&A says it does not expressly require all three contracts to have been held directly by the current prime legal entity.
+Appendix C requires three references for comparable work completed within the last five years.
 
 ### Teaming / subcontractors
 
@@ -80,104 +133,43 @@ Therefore:
 
 ### Current action
 
-Priority: P0
-
-1. Reconcile the prepared Kentucky proposal against the 2026-08-24 Q&A.
-2. Make founder/key-person/affiliate experience attribution explicit everywhere.
-3. Ensure all three Appendix C references clearly identify actual performer, relationship, key-person role, and comparable scope.
-4. Keep KLINIKOS, INC. as prime only if the final capacity case remains supportable.
-5. Preserve the existing truthful distinction between proposal pipeline and revenue.
-6. Finalize and submit by the solicitation deadline after addenda/Q&A reconciliation.
+1. Lock three correctly attributable Appendix C references.
+2. Finalize core personnel / backup coverage with truthful commitment status.
+3. Document present prime administrative and financial capacity without inventing revenue/history.
+4. Reconcile pricing, technology-access, cancellation/class-size, travel, and completion assumptions against the September 4 addenda.
+5. Submit by September 18, 2026 at 4:00 PM Central only after required authorized signatures/certifications.
 
 ---
 
-## P0 - Building Better Futures for Health 2027 / IDE Group
+## P0/P1 - Medical Alley Innovation Showcase
 
-Opportunity type: healthcare / MedTech challenge; prize services; commercialization exposure
-Current truth: ELIGIBLE / APPLICATION NOT YET VERIFIED AS SUBMITTED
-Deadline: 2026-08-31
+Opportunity type: U.S. healthcare innovation showcase / no-equity strategic exposure
+Current truth: APPLICATION NARRATIVE COMPLETE / DIRECT FORM ENDPOINT RESOLVED / NOT SUBMITTED
+Deadline: 2026-09-14
+Event: 2026-11-05, Eagan, Minnesota
 
-### Direct program response
+Current execution:
+- application narratives are prepared;
+- verified company facts are prepared;
+- direct HubSpot presenter form endpoint is recorded in the repo;
+- no binding submission or legal acceptance has been represented.
 
-IDE Group's Matt Allison told Klinikos that it is welcome to enter.
-
-He clarified that Australian commercialization is a commitment requirement for eligibility for the MTAA MedTech Compass subscription, not for the main prize or People's Choice Award.
-
-For U.S. entrants, IDE Group is also working with Medical Alley in Minnesota on a U.S. showcase event alongside BBFH on November 5.
-
-### Public 2027 program economics
-
-IDE Group's current 2027 page states:
-- grand-prize winner receives `$30,000` in IDE Group services;
-- People's Choice receives an additional `$10,000` in IDE services;
-- applications close August 31, 2026;
-- semifinalists announced October 15, 2026;
-- semifinalist showcase November 12, 2026;
-- grand finals March 3, 2027.
-
-Truth constraint:
-- these are services/support, not cash;
-- do not book prize value as revenue or cash;
-- do not represent MTAA membership as secured unless actually awarded and eligibility conditions are satisfied.
-
-### Current action
-
-Priority: P0 - deadline within days.
-
-1. Complete the BBFH application before August 31 if the final product-category fit remains defensible.
-2. Lead with measurable healthcare operational impact, novelty, and growth potential.
-3. Do not present Klinikos as an FDA-cleared device if it is not one.
-4. Consider the Medical Alley U.S. showcase as a separate strategic-distribution opportunity.
+Next action: a browser-capable executor should map the live form fields, populate from the existing answer bank, upload only non-confidential material, and submit if the final action is free/non-binding and introduces no signature, equity, fee, or reserved legal attestation.
 
 ---
 
 ## P0/P1 - CancerX 2027 Accelerator
 
 Opportunity type: no-equity accelerator / health-system, payer, pharma, investor and federal-ecosystem access
-Current truth: DIRECT POSITIVE FIT RESPONSE / FIT CALL SCHEDULING / APPLICATION NOT YET VERIFIED AS SUBMITTED
+Current truth: DIRECT POSITIVE FIT RESPONSE / PORTAL AUTHENTICATION REQUIRED / APPLICATION NOT SUBMITTED
 Application deadline: 2026-10-01
 Program period: February-June 2027
 
-### Direct CancerX response
+CancerX stated that non-oncology validation can be considered if Klinikos can demonstrate a live use case with proven traction that translates to oncology.
 
-CancerX Accelerator told Klinikos that the solution sounds like a strong fit.
+Published materials contain an evidence ambiguity between at least one launched/completed proof-of-concept and newer language referencing approximately 50 patients tested. Do not manufacture the threshold.
 
-CancerX stated that non-oncology validation can still be considered if Klinikos can demonstrate a live use case with proven traction that translates to oncology.
-
-CancerX copied Associate Director Fatou Jallow to schedule a brief fit conversation.
-
-Klinikos replied with availability for:
-- Wednesday, August 26 at 10:00 AM, 11:30 AM, or 1:00 PM ET;
-- Thursday, August 27 between 10:00 AM and 1:30 PM ET.
-
-The proposed pressure-test is a truthful oncology-operations use case around:
-- unfinished work;
-- care coordination;
-- patient follow-through;
-- workforce/capacity constraints;
-- operational visibility.
-
-### Public 2027 program facts
-
-CancerX states that the six-month accelerator:
-- takes no equity;
-- charges no application fee;
-- connects companies with champion organizations across health systems, cancer centers, payers, life sciences, and investors;
-- requires at least two champions to show strong interest before acceptance;
-- exposes applications to 75+ champion judges;
-- focuses one 2027 theme on smarter care operations.
-
-Published eligibility emphasizes a proven product/live market use case and approximately 50 patients tested, alongside alignment to a 2027 theme.
-
-### Current action
-
-Priority: P0/P1
-
-1. Secure the fit call time with CancerX / Fatou.
-2. Treat the call as an eligibility and evidence audit, not a sales call only.
-3. Determine exactly what evidence CancerX will accept for the live-use-case / patient-testing requirement.
-4. Do not invent oncology validation.
-5. If the CancerX team confirms the evidence path, complete the application well before October 1.
+Current portal gate: Constellation account sign-in / email verification / MFA. After authentication, resume application population from the repository answer package rather than asking the founder to rewrite fields.
 
 ---
 
@@ -186,25 +178,12 @@ Priority: P0/P1
 Opportunity type: regional healthcare transformation / future partner-vendor / pilot / funding-opportunity pipeline
 Current truth: RELATIONSHIP OPEN / STATE SCOPE AND CONTRACTING STILL BEING FINALIZED
 
-### Direct response
-
 Impact Health stated that it is working with the state to clarify scope and finalize contractual details and expects to engage partners in the coming months.
 
-It directed Klinikos to:
-- complete the region's engagement form;
-- follow the NC ROOTS Hub work;
-- sign up for updates on NCRHTP progress and funding opportunities.
-
-Klinikos has already replied asking to remain in the partner/vendor lane for a contained measurable workflow pilot when the regional contracting structure becomes clearer.
-
-### Current action
-
-Priority: P1 / WATCH
-
-1. Ensure the engagement form is completed if not already done.
-2. Maintain partner/vendor positioning rather than prematurely claiming a contract opportunity.
-3. Watch for actual procurement, pilot, subaward, vendor, or technology funding notices.
-4. When a real opportunity appears, map one measurable operational use case rather than pitching the entire platform.
+Current action:
+1. ensure the engagement form is completed if not already done;
+2. maintain partner/vendor positioning rather than prematurely claiming a contract opportunity;
+3. watch for actual procurement, pilot, subaward, vendor, or technology funding notices.
 
 No current cash, award, contract, or guaranteed pilot should be recorded.
 
@@ -216,20 +195,9 @@ Opportunity type: interest-free crowdfunded microloan
 Current truth: DIRECT PROGRAM RESPONSE / APPLICATION NOT VERIFIED AS SUBMITTED
 Potential amount: up to `$10,000` based on Kiva's direct response
 
-### Direct response
-
-Kiva informed Klinikos that U.S. entrepreneurs may pursue interest-free business loans up to `$10,000`.
-
 Kiva stated that U.S. underwriting relies on trust networks rather than traditional credit history / financial statements and requires applicants to secure a trustee or initial lenders from their own network before public fundraising.
 
-### Current action
-
-Priority: P1
-
-1. Evaluate whether the required trustee / initial-lender network can be satisfied without distracting from larger capital paths.
-2. If yes, use Kiva as a small, low-cost working-capital lane.
-3. Do not treat a Kiva inquiry as an approved loan.
-4. Keep the obligation in the company debt schedule if funded.
+Current action: pursue only if the trustee / initial-lender network can be satisfied without distracting from larger completion-first opportunities.
 
 ---
 
@@ -239,24 +207,18 @@ The company operating system correctly prioritizes customer capital and evidence
 
 Current executed commercialization motion includes the `$500` Clinic Operating Analysis being actively offered to clinic prospects through a Stripe purchase path.
 
-The currently connected Stripe session exposes only a sandbox account, so live payment/revenue remains unverified in this register.
-
-Any authoritative live payment should immediately update:
-- cash;
-- booked/collected revenue;
-- customer register;
-- lender-readiness package;
-- repayment model.
+The currently connected Stripe session does not provide authoritative live cash truth here, so no live payment/revenue is inferred in this register.
 
 ---
 
-## Opportunity ranking as of 2026-08-25
+## Completion-first ranking as of 2026-08-26
 
 | Priority | Opportunity | Why it matters | Immediate constraint |
 |---|---|---|---|
-| P0 | Kentucky AI Workforce Readiness Network | Potential material public contract; favorable Q&A now clarifies new-entity/team experience path | Proposal must precisely attribute experience and prove prime capacity |
-| P0 | BBFH 2027 | August 31 deadline; up to $40K in services plus U.S./Medical Alley exposure | Services, not cash; application still needs completion |
-| P0/P1 | CancerX 2027 | Direct positive fit response; no-equity/no-fee; champion health-system/payer/investor access | Must satisfy/clarify live-use-case and patient evidence threshold |
+| P0 | BBFH 2027 | Nearest deadline; written IDE fit confirmation; application content complete | Sydney attendance answers + authorized terms acceptance/final submit |
+| P0 | Kentucky AI Workforce Readiness Network | Potential material public contract; favorable Q&A clarifies new-entity/team path | Three recent attributable references + prime capacity + Sept. 4 addenda reconciliation |
+| P0/P1 | Medical Alley Innovation Showcase | Sept. 14 deadline; direct U.S. pathway from IDE | Browser field mapping / portal execution |
+| P0/P1 | CancerX 2027 | Direct positive fit; no-equity/no-fee; high-value champion access | Portal authentication + evidence-threshold clarification |
 | P1 | Kiva U.S. | Up to $10K interest-free working-capital option | Trust-network / initial-lender requirement |
 | P1 Watch | NC ROOTS Region 1 | Future rural-health transformation partner/vendor and funding pipeline | State scope and contracting not final |
 
@@ -266,6 +228,8 @@ Any authoritative live payment should immediately update:
 
 For every opportunity:
 
-`DISCOVER → VERIFY → QUALIFY → APPLY / ENGAGE → DOCUMENT → FOLLOW UP → WIN / LOSE → CONTRACT → COLLECT → MEASURE`
+`DISCOVER → VERIFY → QUALIFY → COMPLETE → SUBMIT / ENGAGE → DOCUMENT → FOLLOW UP → WIN / LOSE → CONTRACT → COLLECT → MEASURE`
+
+Completion of existing viable applications outranks discovery of additional opportunities.
 
 Do not skip directly from `DISCOVER` or `APPLY` to `FUNDING` in company truth.

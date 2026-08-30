@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "auditedMainSha": "5c93b4079d6080055a1f97527164a1fa763ab52f",
+  "auditedAt": "2026-08-26T11:55:00Z",
+  "records": [
+    {
+      "key": "public.living-home",
+      "name": "Public Living Home",
+      "domainOwner": "public-experience",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "src/app/page.tsx",
+        "src/components/marketing/public-living-gateway.tsx",
+        "tests/public-living-home.test.ts"
+      ],
+      "externalDependencyState": "public-intelligence-provider-may-degrade; deterministic/public experience remains separately evidenced",
+      "publicClaimPolicy": "claim-implemented-with-qualification",
+      "authoritativeSource": "docs/FEATURE_STATUS.md"
+    },
+    {
+      "key": "grid.core",
+      "name": "Grid core resource and transaction network",
+      "domainOwner": "grid",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "src/app/grid/page.tsx",
+        "src/lib/paths/catalog.ts",
+        "tests/route-registry.test.ts"
+      ],
+      "externalDependencyState": "core-internal-state-exists; external-license-malpractice-payout-and-selected-provider-rails-remain-separately-gated",
+      "publicClaimPolicy": "claim-implemented-with-qualification",
+      "authoritativeSource": "docs/FEATURE_STATUS.md"
+    },
+    {
+      "key": "zumi.public",
+      "name": "Public Zumi guidance and routing",
+      "domainOwner": "zumi",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "src/app/api/zumi/public/route.ts",
+        "src/lib/orchestration/public-living-intent.ts",
+        "tests/public-zumi-conversation.test.ts"
+      ],
+      "externalDependencyState": "general-model-provider-production-state-must-be-verified-independently; bounded deterministic fallback exists",
+      "publicClaimPolicy": "claim-implemented-with-qualification",
+      "authoritativeSource": "docs/FEATURE_STATUS.md"
+    },
+    {
+      "key": "care.current-visit",
+      "name": "Current Visit clinical convergence",
+      "domainOwner": "care",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "src/lib/clinical/current-visit-model.ts",
+        "src/app/(platform)/encounters/[encounterId]/page.tsx",
+        "tests/current-visit-model.test.ts",
+        "tests/current-visit-experience.test.ts"
+      ],
+      "externalDependencyState": "internal-encounter-workflow-exists; labs-imaging-payer-erx-and-other-external-clinical-rails-require-separate-production-evidence",
+      "publicClaimPolicy": "claim-clinical-workflow-with-certification-and-integration-qualification",
+      "authoritativeSource": "docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md"
+    },
+    {
+      "key": "edu.core",
+      "name": "Klinikos EDU core",
+      "domainOwner": "edu",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "src/app/edu/page.tsx",
+        "docs/EDU_CANON.md",
+        "docs/FEATURE_STATUS.md"
+      ],
+      "externalDependencyState": "core-internal-education-state-exists; institutional-sso-ferpa-review-and-external-authority-remain-separate-gates",
+      "publicClaimPolicy": "claim-implemented-with-qualification",
+      "authoritativeSource": "docs/EDU_CANON.md"
+    },
+    {
+      "key": "financial.payment-evidence",
+      "name": "Financial OS payment evidence boundary",
+      "domainOwner": "financial-os",
+      "truthState": "IMPLEMENTED_UNVERIFIED",
+      "evidencePaths": [
+        "docs/FINANCIAL_OS_CANON.md",
+        "scripts/mvp/stripe-payment-journey.mts",
+        "docs/FEATURE_STATUS.md"
+      ],
+      "externalDependencyState": "internal-payment-evidence-contract-exists; exact-live-provider-webhook-and-deployment-state-must-be-verified-independently",
+      "publicClaimPolicy": "claim-payment-workflow-with-provider-and-deployment-qualification",
+      "authoritativeSource": "docs/FINANCIAL_OS_CANON.md"
+    },
+    {
+      "key": "operating-network.architecture",
+      "name": "Operating Network parent architecture",
+      "domainOwner": "platform-architecture",
+      "truthState": "APPROVED_DESIGN",
+      "evidencePaths": [
+        "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md",
+        "governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md",
+        "src/lib/operating-network-canon.ts"
+      ],
+      "externalDependencyState": "architecture-contract-only; each runtime capability retains its own implementation-and-external-dependency-state",
+      "publicClaimPolicy": "claim-design-only",
+      "authoritativeSource": "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md"
+    }
+  ]
+}

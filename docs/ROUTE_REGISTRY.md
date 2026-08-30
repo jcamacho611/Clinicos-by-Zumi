@@ -4,103 +4,130 @@ Status: `IMPLEMENTATION TRUTH INDEX`
 
 A **route** is a product journey that crosses Klinikos engines. A **page** is a surface a route step lands on. Pages are implementation detail; routes are the product.
 
-This document describes the registry that **exists in the repository today**. It is not a roadmap. A journey that is not in `src/lib/paths/catalog.ts` is not a route, however desirable it may be.
+This document describes the registry that exists in the repository today. It is not a roadmap.
 
-## Where the registry lives
+## Machine authority
+
+The authoritative route catalog is:
+
+`src/lib/paths/catalog.ts`
+
+The authoritative deterministic phrase-to-route resolver is:
+
+`src/lib/orchestration/intent-engine.ts`
+
+The human-readable route list in this document is intentionally **not** duplicated as a hard-coded snapshot anymore. The catalog expanded beyond the original four routes while this prose remained stale. Future agents must derive route count, ids, audiences, engines, steps, intent examples, and openable destinations from the code and its tests rather than treating an old Markdown table as implementation truth.
+
+A journey that is not in `src/lib/paths/catalog.ts` is not a persisted Klinikos Path, however desirable it may be. A deterministic intent rule that is not represented by the Path catalog must be treated as a drift defect rather than silently becoming a second routing authority.
+
+## Where the route system lives
 
 | Concern | Module |
 | --- | --- |
 | Route definitions and their steps | `src/lib/paths/catalog.ts` |
-| Phrase → route resolution (deterministic, no model) | `src/lib/orchestration/intent-engine.ts` |
+| Phrase → route resolution, deterministic | `src/lib/orchestration/intent-engine.ts` |
+| Public high-level Path → destination projection | `src/lib/orchestration/public-living-intent.ts` |
+| Safe public → authenticated continuation metadata | `src/lib/distribution/public-continuation.ts` |
 | Step state for a started route | `src/lib/orchestration/path-engine.ts` |
 | Next governed step, blockers, and owner | `src/lib/orchestration/path-guidance-engine.ts` |
 | Persistence of a started route | `src/lib/orchestration/path-persistence-repository.ts` |
-| Entry surface | `src/components/clinic/living-home.tsx` |
+| Authenticated Path API | `src/app/api/paths/route.ts` |
+| Public entry surface | `src/components/marketing/public-living-gateway.tsx` |
+| Authenticated operating front door | `src/components/clinic/living-home.tsx` |
 
-`POST /api/paths` starts a route. Living Home resolves the typed request through the intent engine, starts the route, and renders the resolved next step in place.
+`POST /api/paths` starts a governed authenticated Path. Public Living Home can understand intent and provide value before unnecessary registration, but public conversation does not silently create a privileged Path, role, organization relationship, credential, payment, or clinical authority.
 
-## Routes that exist today
+## Canonical journey law
 
-| Route id | Audience | Engines it crosses | Steps |
-| --- | --- | --- | --- |
-| `find-extra-work` | professional | provider → network → grid | profile → credentials → availability → matches → work and payment |
-| `become-grid-ready` | learner | edu → network → grid | goal → learning → competency → readiness → grid |
-| `fill-staffing-need` | clinic | grid | need → matches → availability → confirm |
-| `fix-referral-leakage` | operations | referrals → tasks → patient-navigation → network | diagnose → ownership → follow-up → network → closure |
+The operating-network parent architecture defines the value-first order:
 
-Three of the four already cross more than one engine, which is what makes them routes rather than links. `fill-staffing-need` stays inside Grid today; that is a real limitation, not a description of the target.
+`DISCOVER → RECEIVE VALUE → EXPRESS INTENT → CREATE IDENTITY WHEN PERSISTENCE MATTERS → BUILD CLAIMS → VERIFY ONLY WHAT THE NEXT ACTION REQUIRES → ENTER GRID / RELEVANT NETWORK EXPERIENCE → WORK / LEARNING / CONNECTION VALUE → EVIDENCE → RETURN → ORGANIZATION VALUE → PAID OPERATIONS → EXPANSION`
+
+A Path is one governed implementation mechanism inside that lifecycle. The lifecycle is not a requirement for a user to click through a twenty-screen wizard.
+
+## Public-to-authenticated continuation
+
+Public Zumi may project a resolved Path into a high-level public destination such as Grid, EDU, clinic operations, referral follow-up, revenue, or patient access.
+
+When a destination requires staff authentication:
+
+- the browser carries only a bounded destination key and `from=public-zumi` marker;
+- raw user-entered healthcare/business/free text is not serialized into the return URL;
+- the destination remains same-origin;
+- login revalidates the return path;
+- reaching the destination still passes normal authentication, RBAC, tenant, purpose, consent, and domain authorization;
+- structured continuation metadata never creates role, organization ownership, clinical authority, Grid eligibility, or entitlement.
+
+Patient access remains on the separately governed patient-auth path. Public-safe Grid, EDU, pricing, trust, and other approved surfaces remain low-friction rather than being forced through clinic-staff authentication.
 
 ## What the registry is checked against
 
-`tests/route-registry.test.ts` enforces the properties that make a route trustworthy. Each check exists because the corresponding defect was actually observed:
+`tests/route-registry.test.ts` enforces the properties that make a route trustworthy:
 
-1. **Every step lands on a surface that exists.** `/grid/transactions` is the terminal step of two routes and returned a 500 in production-mode browser QA while every unit test stayed green.
-2. **Every route's own stated intent examples resolve back to it.** Three routes advertised phrasings — "Find coverage for Friday", "Find me weekend healthcare work", "What do I need to learn next" — that the intent engine did not match, so typing the product's own example into Living Home produced a clarification request instead of the route.
-3. **No step sends a signed-in person to a public marketplace entry.** `/grid` renders signed-out chrome with a "Sign in" button; `/grid/workspace` is the authenticated Grid home.
+1. **Every step lands on a surface that exists.** A route is not complete when its next page 404s or crashes.
+2. **Every route's own stated intent examples resolve back to it.** Product copy and deterministic routing may not drift apart.
+3. **No signed-in route step sends a person back to a public marketplace entry when an authenticated workspace exists.**
 4. **Route ids and step ids are unique**, and every route has at least one step a person can open.
+5. **Cross-engine expectations stay explicit** rather than being inferred from page names.
 
-`tests/raw-sql-table-names.test.ts` guards the defect class that broke `/grid/transactions`: every Prisma model here is `@@map`ped to a snake_case table, so raw SQL naming the model compiles and type-checks but throws `42P01` at runtime.
+`tests/public-intent-path-coverage.test.ts` additionally guards the public distribution boundary. Every deterministic Path currently recognized by the intent engine must map intentionally to an existing Public Zumi destination class rather than depending on accidental regex fallback.
+
+`tests/raw-sql-table-names.test.ts` guards the raw-SQL naming defect class: Prisma models are mapped to snake_case tables, so model names in raw SQL can compile and then fail at runtime.
 
 ## Cross-engine bridges
 
-A route is one way engines connect: a person starts it. A **bridge** is the other: one engine notices something the other could act on, without anyone having to re-type it.
+A route is one way engines connect: a person starts it. A **bridge** is the other: one engine detects something another engine could act on without asking a person to re-type authoritative state.
 
 ### Clinic OS → Grid
 
-`src/lib/ecosystem/clinic-grid-bridge.ts` reads real Clinic OS records and reports what this clinic could take to the network.
+`src/lib/ecosystem/clinic-grid-bridge.ts` reads governed Clinic OS records and can prepare truthful Grid drafts for real gaps or capacity.
 
-| Signal | Direction | Read from |
-| --- | --- | --- |
-| `coverage_gap` | demand | Scheduled, non-terminal appointments in the next 30 days with no provider on the record |
-| `referral_leak` | demand | Open referrals with no destination organization recorded |
-| `unused_capacity` | supply | Open capacity listings starting in the future |
+Representative signals include:
 
-Three rules keep the bridge honest, each enforced by `tests/clinic-grid-bridge.test.ts`:
+- `coverage_gap` → demand;
+- `referral_leak` → demand;
+- `unused_capacity` → supply.
 
-1. **Nothing is posted here.** Detection returns a *draft*. Creating the demand goes through `POST /api/grid/demands`, which enforces RBAC, refuses organizations that have not passed production review, writes the audit record, and emits `grid.demand.created`. Every draft opens as `status: draft`, `visibility: matched_only`. A gap the clinic has not chosen to publish is not a Grid need.
+Bridge laws:
 
-2. **No PHI crosses.** Grid demand records are visible outside the originating organization, so a coverage gap describes the shift — role, window, location — never the patient whose appointment exposed it. The appointment query selects only `startsAt`, `endsAt` and `locationId`; the patient relation is never read, because what is never selected cannot leak. A test asserts this against fixtures carrying a name, MRN, DOB, email, phone and reason for visit. Referral specialty is deliberately omitted from the draft: on a small panel, a specialty plus a count can narrow to a person.
-
-3. **Nothing is invented.** A signal is emitted only when rows were actually counted, and each carries the sentence describing what was counted. No estimated value, no projected fill rate, no "you could earn" figure — money here would be a claim about an outcome nobody has agreed to. A clinic with no gaps sees no section at all.
-
-Reading each signal is governed by the Clinic OS permission for the records behind it, so a role without `appointments:read` never triggers the query. Acting on one additionally needs Grid create rights; a role that can see a gap but not publish is shown the gap without the action rather than a control that would fail.
-
-Each signal that produces a draft links to `/grid/needs/new?from=<signal>`. The link carries **only the signal name** — never the demand. The composer page re-derives the draft from live records on open, so a link cannot carry a forged need into the form, and a gap that closed in the meantime yields an empty form with a plain note rather than a prefill for work nobody needs. An unrecognised signal name is ignored. Prefilled fields stay editable, the form says where they came from, and the demand is created only when a person submits it.
+1. **Detection is not publication.** A detected gap remains a draft until an authorized person or approved delegated workflow creates the governed Grid object.
+2. **No unnecessary PHI crosses.** A staffing/capacity need describes the resource requirement, not the patient whose workflow exposed it.
+3. **Nothing is invented.** Only observed records produce signals; estimated revenue or fill outcomes do not become facts.
+4. **Authority is preserved.** Seeing a clinic gap does not automatically grant Grid publication rights.
+5. **Links carry identifiers, not authoritative demand truth.** The destination re-derives current state so stale/forged URLs cannot manufacture a need.
 
 ### EDU → Grid
 
-`src/lib/ecosystem/edu-grid-bridge.ts` reads the signed-in learner's own competency determinations and reports what they mean for Grid — and what they do not.
+`src/lib/ecosystem/edu-grid-bridge.ts` can translate learner evidence into opportunity context without manufacturing professional authority.
 
-| Signal | Read from |
-| --- | --- |
-| `placement_ready` | Competency areas an instructor marked achieved |
-| `competency_in_progress` | Competency records not yet marked achieved |
-| `no_determination_yet` | An enrollment exists but no competency record does |
+Dominant law:
 
-**One rule dominates this bridge: an educational competency is not a licence.** `CREDENTIAL_DISCLAIMER` states it exactly — a Klinikos EDU credential is not professional licensure, board certification, clinical credentialing, authorisation to practise, or scope-of-practice approval. So the bridge may describe what EDU recorded and may help a learner ask for supervised placement, but it must never convert an education record into Grid eligibility for regulated work. Every placement draft therefore sets `requiresClinicalEligibility: true` and says in its own text that eligibility is verified against real credentials at match. Grid's eligibility enforcement remains the only thing that decides who may do regulated work.
+> **Educational competency is not licensure, credentialing, clinical privilege, employment eligibility, or Grid eligibility.**
 
-The disclaimer travels on the readiness object itself rather than being left to each caller, so a surface cannot render the encouraging half of this bridge without the limiting half. Competency areas are skills and may travel to Grid; the learner's name, email, institution and cohort do not — who is asking is carried by the demand record's ownership fields. Publishing a placement request needs the ordinary Grid create permission: being a learner does not confer it, and neither does passing an assessment.
+EDU can contribute evidence. Grid and professional/organization authority systems still determine eligibility for regulated work.
 
-Competency determinations are read for the signed-in identity's own enrollments only, matched on email the same way `resolveEduIdentity` scopes EDU.
+## Adding or changing a route
 
-**Two vocabularies, deliberately.** An instructor's *determination* is `demonstrated` / `needs_development`; the stored *status* is one of `not_assessed`, `developing`, `approaching`, `achieved`, `not_achieved`, fixed by a CHECK constraint in `20260810160000_klinikos_edu_foundation`. They were previously assumed identical and written straight through, so every determination was rejected by PostgreSQL while TypeScript, ESLint and the unit suite stayed green. `competencyStatusForDetermination` maps one to the other and `competencyIsDemonstrated` reads it back; `tests/competency-status-vocabulary.test.ts` derives the legal list from the migration rather than restating it.
+A route may be added or changed only when the applicable conditions are true:
 
-Bridge destinations are checked by the same route guard as route steps — `/grid/needs` has no page of its own, and pointing at it produced a 404 that browser QA caught.
+- every step `href` resolves to a real surface;
+- the intended role can reach that surface under existing access policy;
+- at least one declared intent example resolves deterministically to the route;
+- authenticated steps do not accidentally land on public-only entry surfaces;
+- the guidance engine can state the next step and owner of blockers;
+- public projection is added when the route should be discoverable from Public Zumi;
+- public continuation carries only bounded low-sensitivity metadata;
+- external dependency state remains explicit;
+- relevant tests are extended.
 
-## Adding a route
-
-A route may be added when all of the following are true. Anything short of this produces a journey that dead-ends on a person.
-
-- every step's `href` resolves to a real page;
-- the role the route is written for can actually reach those pages under `canAccessWorkspace`;
-- at least one phrase in `intentExamples` resolves to the route through `resolveIntentDeterministically`;
-- no step points at a public marketplace entry page;
-- the guidance engine can state a next step and name the owner of any blocker.
-
-Adding phrases to `intent-engine.ts` widens what Living Home can route. Adding a route whose steps are not yet built does not; it produces a journey that fails at the step that does not exist.
+Adding phrases alone does not create a complete Path. Adding a Path whose steps do not exist creates a broken journey. Adding a public marketing route does not create authorization.
 
 ## Deliberate limits
 
-- **Intent resolution is deterministic.** No model chooses a route. Klinikos Intelligence may explain, draft, or research; route selection, eligibility, and authorization stay deterministic. This is why the Living Home composer keeps working on a deployment with no model provider configured.
-- **A route does not widen authority.** Reaching a step still passes the route guard, RBAC, tenant scoping, and eligibility rules. A route is a description of a journey, never a grant.
-- **Steps are not claims about the outside world.** A step landing on a Grid or billing surface says the surface is reachable, not that an external connector, payer, clearinghouse, or payout rail is live. `docs/EXTERNAL_DEPENDENCY_MATRIX.md` remains authoritative for those.
+- **Intent resolution is deterministic for route selection.** Zumi may understand, research, draft, or explain; deterministic systems own route selection, eligibility, authorization, and consequential execution.
+- **A route does not widen authority.** Reaching a step still passes route guards, RBAC, tenant scoping, eligibility, purpose, consent, and domain policy.
+- **Steps are not claims about the outside world.** A step landing on Grid, billing, labs, imaging, payments, or another integration surface does not prove the relevant external rail is live.
+- **Public intent is not privileged state.** A public user saying “I am a doctor” or “I own this clinic” is a claim, not verification or authority.
+- **Route count comes from code.** Do not copy a count into governance prose unless it is generated and mechanically checked.
+
+See `docs/EXTERNAL_DEPENDENCY_MATRIX.md` for external rail truth and `governance/product-truth-registry.json` for machine-readable capability claim state introduced by the operating-network convergence work.

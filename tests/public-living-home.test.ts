@@ -71,6 +71,7 @@ describe("public Living Home intent", () => {
 describe("public Living Home conversation and accessibility contract", () => {
   const source = read("src/components/marketing/public-living-gateway.tsx");
   const publicRoute = read("src/app/api/zumi/public/route.ts");
+  const continuation = read("src/lib/distribution/public-continuation.ts");
   const page = read("src/app/page.tsx");
   const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
   const brand = read("src/components/brand/klinikos-brand.tsx");
@@ -94,22 +95,16 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(publicRoute).toContain("resolvePublicZumiTurn");
     expect(publicRoute).not.toContain("getClinicSession");
 
-    // The escalating deterministic path is still exercised, and still receives the
-    // prior resolution and the unresolved-turn count. It moved to the server: shipping
-    // the routing engine to the browser disclosed Klinikos routing logic to every
-    // visitor of the public site, which the frontend trade-secret canon forbids.
     expect(source).toContain("let unresolvedTurns = 0");
     expect(source).toContain("priorResolution,");
     expect(source).toContain("unresolvedTurns,");
     expect(publicRoute).toContain("resolvePublicLivingIntent(");
     expect(publicRoute).toContain("parsed.data.unresolvedTurns");
 
-    // The engine itself must not reach the browser bundle. A type-only import is
-    // erased at compile time and is therefore not a disclosure; a value import is.
     expect(source).not.toContain("resolvePublicLivingIntent(prompt");
-    expect(source).toContain('import type { PublicLivingResolution }');
+    expect(source).toContain("import type {");
+    expect(source).toContain("PublicLivingResolution");
 
-    // An unreachable server must degrade honestly rather than invent an answer.
     expect(source).toContain("I can't reach Klinikos right now");
     expect(source).not.toContain("Public routing preview");
     expect(source).not.toContain("Deterministic public route");
@@ -151,12 +146,16 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
   });
 
-  it("keeps public and patient destinations out of clinic-staff authentication", () => {
-    expect(source).toContain('if (href === "/portal") return "/portal/login"');
+  it("keeps public and patient destinations out of clinic-staff authentication while preserving safe structured protected intent", () => {
+    expect(source).toContain('if (destination.href === "/portal") return "/portal/login"');
     expect(source).toContain('"/grid", "/edu"');
-    expect(source).toContain("publicActionPaths.has(href)");
-    expect(source).toContain("return protectedHref(href)");
-    expect(source).toContain("destinationActionHref(resolution.destination.href)");
+    expect(source).toContain("publicActionPaths.has(destination.href)");
+    expect(source).toContain("protectedPublicContinuationHref(destination.href, destination.key)");
+    expect(source).toContain("destinationActionHref(resolution.destination)");
+    expect(source).not.toContain("/login?next=");
+    expect(continuation).toContain('destination.searchParams.set("from", "public-zumi")');
+    expect(continuation).toContain('destination.searchParams.set("intent", intentKey)');
+    expect(continuation).not.toContain("rawPrompt");
   });
 
   it("provides equivalent mobile navigation rather than hiding the only primary nav", () => {

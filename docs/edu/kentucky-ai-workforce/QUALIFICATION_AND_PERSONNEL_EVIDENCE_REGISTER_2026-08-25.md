@@ -1,7 +1,7 @@
 # SCWDB Kentucky AI Workforce Readiness Network — Qualification & Personnel Evidence Register
 
 Status: **ACTIVE capture register — evidence only.**
-Date: 2026-08-25
+Updated: 2026-08-26
 
 This register tracks the evidence required to support Klinikos, Inc. as prime respondent without converting requests, recommendations, informal relationships, public biographies, or proposed roles into contractual facts.
 
@@ -28,8 +28,9 @@ Use one row per experience item relied upon toward qualification.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Justin R. Camacho | Founder / key personnel | Technical systems, software/security, healthcare/business operations, project execution | **Needs dated qualification mapping** | Repository history, academic/professional records, recommendations, project records | Program leadership / AI systems / implementation | Peter Kravsky and Peggy Sniezek may verify bounded academic/professional dimensions if permissioned; not automatically comparable-work references | `PARTIAL — SOURCE MAPPING REQUIRED` |
 | Klinikos, Inc. | Prime respondent | Current AI workforce curriculum/product architecture and proposal delivery system | 2026 | Repository, proposal artifacts, live product evidence subject to deployment truth | Current organizational capability | Current company evidence | `CURRENT CAPABILITY — NOT 3 YEARS HISTORY` |
-| Peggy Sniezek | Potential key personnel / instructor only if she agrees | 17+ years Computer Science instruction; public practical generative-AI teaching/presentations; systems/database/security background | Public record supports long-duration teaching plus 2025 AI presentations | ASQ/IEEE/SUNY-related public sources; exact engagement packets still required | AI Industry Accelerator / Career Readiness / instructor calibration | Institution/event references only after permission and exact engagement attribution | `PUBLIC QUALIFICATION VERIFIED / PARTICIPATION PENDING` |
-| Gerard Louis-Jacques | Potential healthcare/allied-health team member only if he agrees | Historical Allied Health faculty; current/recent public association with Consortium for Worker Education | Historical faculty records + current/recent professional profile; exact qualifying dates/duties need direct confirmation | College of Westchester archival records + LinkedIn public record | Healthcare pathway / adult-workforce education / team-experience case | Actual engagement verifier required | `PUBLIC QUALIFICATION VERIFIED / CONTACT + PARTICIPATION UNRESOLVED` |
+| Gerard Louis-Jacques | Founder-reported intended healthcare/allied-health instructor / SME; formal subcontract scope still to be documented | Allied Health faculty instruction; continuing education teaching; current/recent association with Consortium for Worker Education | Public evidence now spans at least 2011/2012 faculty listing, 2018 Hostos continuing-education teaching, and current/recent CWE association | College of Westchester archival faculty/catalog records; Hostos/CUNY public payroll record showing `Continuing Education Teacher` in 2018; current LinkedIn public profile showing Consortium for Worker Education | Healthcare pathway / adult-workforce education / three-year team-experience case | Exact within-five-year comparable engagements and verifier still required for Appendix C | `FOUNDER-REPORTED WILLINGNESS / MULTI-YEAR PUBLIC INSTRUCTIONAL HISTORY VERIFIED / FORMAL SCOPE + CURRENT ENGAGEMENT DETAILS REQUIRED` |
+| Nadja Louis-Jacques | Founder-reported intended Healthcare Operations & Clinical Workflow SME / Instructor; formal subcontract scope still to be documented | Healthcare operations, clinical workflow, patient communication, privacy and real-world practice context | Existing current/prior healthcare evidence; exact instruction dates still required | Practice/operator records and professional credential evidence | Healthcare pathway realism, workflow instruction and SME review | Exact comparable engagement/verifier still required if used for Appendix C | `FOUNDER-REPORTED WILLINGNESS / ROLE INTENT CLEAR / FORMAL SCOPE + COMPARABLE-ENGAGEMENT PROOF REQUIRED` |
+| Peggy Sniezek | **Independent academic/professional validation only; not proposed delivery personnel** | Computer Science teaching; public generative-AI presentations; signed academic recommendation within its actual scope | Public record supports long-duration teaching plus 2025 AI presentations | ASQ/IEEE/SUNY-related public sources and signed recommendation | Credibility annex / academic validation only unless a future explicit independent agreement changes scope | May verify bounded academic/professional dimensions if permissioned; not to be represented as delivery personnel or comparable government-contract performance | `VALIDATION ONLY — REMOVE FROM STAFFING` |
 | Any affiliate/predecessor | Only if real and documented | TBD | TBD | Executed corporate/project evidence required | Qualification only if directly relevant | Real reference required | `UNRESOLVED — DO NOT CLAIM` |
 | Any other subcontractor/team member | Only after permission/teaming evidence | TBD | TBD | Resume + source records + written scope | Instruction/pathway/technical qualification | Real reference required | `UNRESOLVED — DO NOT CLAIM` |
 
@@ -37,85 +38,78 @@ Use one row per experience item relied upon toward qualification.
 
 Do not count a person's years in healthcare, technology, education, business, or another profession as qualifying training experience unless the actual work fits the RFP's permitted experience categories or closely related services.
 
-Public biography evidence may justify pursuing a person. It does not establish permission, availability, subcontracting terms, or a reference relationship.
+Public biography evidence may support qualification research. Founder-reported willingness may support continued packaging of a proposed role, but it does not replace a written scope, compensation terms, availability, resume/bio, or an attributable comparable-work reference.
 
-## 3. Reference permission ledger
+## 3. Personnel / reference permission ledger
 
 Appendix C requires three references for comparable work within the required five-year period. Academic/professional recommendations may strengthen credibility but do not automatically satisfy comparable-work requirements.
 
-| Person | Requested use | Request sent | Latest reply harvest | Permission status | May be listed now? |
-| --- | --- | ---: | --- | --- | --- |
-| Peter Kravsky | Academic/professional reference based on direct evaluation of technical work and signed recommendation | 2026-08-23 | No affirmative reply found as of 2026-08-25 | `PENDING` | **No** as a permissioned contact; recommendation may be used only within its actual signed scope |
-| Peggy Sniezek | Academic/professional reference based on direct evaluation of systems project and signed recommendation | 2026-08-23 | No affirmative reply found as of 2026-08-25 | `PENDING` | **No** as committed instructor/reference; public qualifications may be described internally only |
-| Nadja Louis-Jacques | Prospective Healthcare Operations & Clinical Workflow SME / Instructor | 2026-08-23 | No affirmative reply found as of 2026-08-25 | `PENDING` | **No** as committed personnel/instructor/reference |
-| Frederique Louis-Jacques | Prospective Healthcare IT / EHR Testing SME / Instructor | 2026-08-23 | No affirmative reply found as of 2026-08-25 | `PENDING` | **No** as committed personnel/instructor/reference |
-| Gerard Louis-Jacques | Potential Healthcare / Allied Health / workforce-education partner | No verified direct outreach/contact found in connected mail | No affirmative participation record located | `CONTACT / PERMISSION UNRESOLVED` | **No** |
+| Person | Intended use | Current evidence | Current status | May be represented now? |
+| --- | --- | --- | --- | --- |
+| Peter Kravsky | Academic/professional reference based on direct evaluation of technical work and signed recommendation | Existing recommendation; no new affirmative reference-contact permission documented | `VALIDATION / CONTACT PERMISSION PENDING` | Recommendation only within its actual signed scope; do not call government past performance |
+| Peggy Sniezek | Academic/professional validation only | User explicitly removed Peggy from delivery staffing; signed recommendation/public teaching record remain supporting evidence | `VALIDATION ONLY` | **No** as instructor, subcontractor, SME, employee or delivery personnel |
+| Nadja Louis-Jacques | Healthcare Operations & Clinical Workflow SME / Instructor | Founder reported that Nadja is directly available and willing to support the project; no written scope/terms yet in the evidence set | `FOUNDER-CONFIRMED WILLINGNESS / FORMALIZATION PENDING` | May be described internally as intended personnel; external final proposal should include only role/availability facts that are documented before signature |
+| Gerard Louis-Jacques | Healthcare / Allied Health Workforce Instructor / SME | Founder reported that Gerard is directly available and willing to support the project; public evidence now verifies multi-year instruction/workforce history | `FOUNDER-CONFIRMED WILLINGNESS / FORMALIZATION PENDING` | May be described internally as intended personnel; external final proposal should include only role/availability facts that are documented before signature |
+| Frederique Louis-Jacques | Prospective Healthcare IT / EHR Testing SME / Instructor | Prior request exists; no affirmative current role confirmation in this register | `PENDING` | **No** as committed personnel until confirmed |
 
 ## 4. Public partner-candidate evidence
 
 See `EXPERIENCED_PARTNER_CANDIDATE_REGISTER_2026-08-25.md` for source-level details.
 
-### Peggy Sniezek
+### Gerard Louis-Jacques — materially strengthened 2026-08-26
 
-Independently reviewed public evidence supports:
+Fresh public-source review adds a concrete instructional data point beyond the previously known College of Westchester and CWE evidence:
 
-- 17+ years teaching Computer Science;
-- practical generative-AI instruction and presentations;
-- early integration of generative AI in college coursework;
-- systems analysis/design, databases, information security and industrial IT experience.
+- The College of Westchester 2011/2012 catalog identifies Gerard Louis-Jacques, M.D., among Allied Health faculty.
+- A Hostos Community College public payroll record identifies Gerard Louis-jacques as a **Continuing Education Teacher in 2018**.
+- Current/recent LinkedIn public profile identifies **Consortium for Worker Education** as his organization.
 
-This is materially stronger qualification evidence than merely calling Peggy a professor who knows Justin.
+Together these sources support a genuine longitudinal adult/health/workforce instructional history. They materially strengthen the Q19 team-experience narrative.
 
-However:
+They do **not** by themselves solve Appendix C because the RFP's comparable references must be within the required five-year period and need exact engagement verifier/contact details. The highest-value next documentation request for Gerard is therefore: 2021-present workforce/continuing-education engagements, dates, audience, role, program/client, verifier, and permission to use those engagements.
 
-`PUBLIC TEACHING HISTORY ≠ KLINIKOS TEAM COMMITMENT`
+### Peggy Sniezek — corrected scope
 
-If she agrees to participate, her own historical instruction may be much more useful to the Q19/Q20 qualification case than using Justin's Fall 2025 student project as a purported comparable-work reference.
+Public evidence of long-duration Computer Science and practical generative-AI teaching remains useful credibility evidence. However, the founder explicitly removed Peggy from the delivery team. Keep her recommendation/public record in the credibility annex only unless she independently enters a new, explicit arrangement.
 
-### Gerard Louis-Jacques
+### Nadja Louis-Jacques — corrected availability state
 
-Independently reviewed public evidence supports:
+The founder directly reported that Nadja is available and willing to support the project. This resolves the earlier false framing that her availability itself was a major blocker. What remains is documentation: exact role, availability, bio/resume, compensation/subcontract terms if applicable, and any specific comparable engagement used in Appendix C.
 
-- historical Allied Health faculty status at The College of Westchester;
-- M.D. credential listed in historical College of Westchester catalog material;
-- current/recent public association with Consortium for Worker Education.
-
-This makes Gerard a high-value candidate for direct outreach and validation, but exact instructional/workforce dates, duties, engagement references, availability and permission remain unresolved.
-
-## 5. Exact outbound scope preserved
-
-### Peter Kravsky
-
-Request scope:
-
-- academic/professional reference;
-- direct evaluation of computing competency, systems thinking, technical discipline, reliability, and professional execution;
-- explicitly **not** a Klinikos employee, instructor, client, or government-contract reference.
+## 5. Exact role boundaries preserved
 
 ### Peggy Sniezek
 
-Request scope:
+Allowed scope:
 
-- academic/professional reference;
-- direct evaluation of leadership, systems thinking, technical execution, collaboration, and communication;
-- explicitly **not** a Klinikos employee, instructor, client, or government-contract reference.
+- independent academic/professional validation;
+- direct evaluation of leadership, systems thinking, technical execution, collaboration, communication and academic work within her actual knowledge;
+- public teaching/AI background may be included only as biography/credibility evidence if relevant.
 
-A stronger instructor/team ask would require a separate affirmative response defining role, availability, and terms.
+Not allowed without a new explicit agreement:
+
+- Klinikos instructor;
+- subcontractor;
+- SME;
+- employee;
+- proposed personnel;
+- Appendix C comparable-work performer merely because she taught Justin.
 
 ### Nadja Louis-Jacques
 
-Requested proposed role:
+Intended proposed role:
 
 - Healthcare Operations & Clinical Workflow SME / Instructor;
 - healthcare pathway remains focused on responsible administrative/operational AI use;
 - no representation that AI replaces licensed clinical judgment.
 
-### Frederique Louis-Jacques
+### Gerard Louis-Jacques
 
-Requested proposed role:
+Intended proposed role:
 
-- Healthcare IT / EHR Testing SME / Instructor;
-- current employer/title wording must be confirmed directly before external use.
+- Healthcare / Allied Health Workforce Instructor;
+- pathway SME;
+- co-teaching structure in which Justin leads applied AI/platform functionality and Gerard supplies healthcare/allied-health/workforce instructional depth.
 
 ## 6. Appendix C qualification checklist
 
@@ -136,10 +130,9 @@ Use `APPENDIX_C_REFERENCE_REBUILD_STRATEGY_2026-08-25.md` to score and rebuild t
 
 ## 7. Instructor / SME commitment checklist
 
-Before naming a person as committed delivery personnel:
+Before final signature for any named delivery person:
 
-- [ ] affirmative permission to be named;
-- [ ] exact current title/employer wording verified;
+- [ ] exact current title/employer wording verified where represented;
 - [ ] assigned pathway/role confirmed;
 - [ ] relevant qualifications documented;
 - [ ] actual historical engagements used for qualification documented;
@@ -148,6 +141,8 @@ Before naming a person as committed delivery personnel:
 - [ ] compensation / subcontractor structure documented if applicable;
 - [ ] backup coverage established;
 - [ ] SCWDB approval path acknowledged for subcontractors.
+
+Founder-reported willingness is now captured for Gerard and Nadja; the remaining work is formalization and evidence, not re-proving that the founder can reach them.
 
 ## 8. Prime-capacity evidence still required
 
@@ -170,27 +165,26 @@ The lender financial workbook and Capital War Room provide planning structures, 
 
 ## 9. Current bid status
 
-`PRIME PATH REMAINS OPEN — QUALIFICATION EVIDENCE INCOMPLETE`
+`PRIME PATH REMAINS OPEN — QUALIFICATION EVIDENCE INCOMPLETE BUT PERSONNEL STORY STRONGER`
 
-The three-year legal-entity-age ambiguity is resolved favorably enough to continue capture. The remaining risk is documentary execution:
+The three-year legal-entity-age ambiguity is resolved favorably enough to continue capture. Gerard's newly verified longitudinal instructional history materially strengthens the team-experience case, and founder-reported willingness removes the prior false assumption that Gerard/Nadja availability itself was unresolved.
 
-1. prove at least three years of relevant experience through properly attributed source records and/or permissioned team history;
-2. secure three real comparable-work references;
-3. secure actual instructor/SME commitments where named;
-4. prove current prime administrative and financial capacity;
-5. reconcile all September 4 addenda before signature.
+The remaining documentary risks are now:
 
-If current candidates do not commit, recruit one experienced instructional/workforce subcontractor rather than force weak history.
+1. secure three **within-five-year** comparable-work references with verifier permission;
+2. formalize Gerard/Nadja role scope, availability and subcontract/compensation treatment where applicable;
+3. prove current prime administrative and financial capacity;
+4. reconcile all September 4 addenda before signature.
 
 ## 10. Truth rule
 
-`REQUESTED ≠ AGREED`
+`FOUNDER-REPORTED WILLINGNESS ≠ SIGNED SUBCONTRACT`
 
-`PUBLIC BIOGRAPHY ≠ TEAM COMMITMENT`
+`PUBLIC BIOGRAPHY ≠ APPENDIX C REFERENCE`
 
 `RECOMMENDATION ≠ COMPARABLE-WORK REFERENCE`
 
-`PROPOSED ROLE ≠ COMMITTED PERSONNEL`
+`PROPOSED ROLE ≠ EXECUTED EMPLOYMENT`
 
 `KEY-PERSON EXPERIENCE ≠ KLINIKOS CORPORATE HISTORY`
 

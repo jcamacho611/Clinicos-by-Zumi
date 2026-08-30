@@ -6,6 +6,10 @@ This file is the bootstrap for Claude Code and other implementation agents worki
 
 Klinikos is being built as a **governed healthcare operating network**, not merely an EHR, practice-management app, marketplace, LMS, billing tool, AI assistant, or marketing website.
 
+Canonical brand statement:
+
+> **Klinikos. The clinic operations ecosystem, powered by Zumi.**
+
 The governing human-experience law is:
 
 > **The complexity belongs to Klinikos, not to the person using Klinikos.**
@@ -22,6 +26,18 @@ The governing public-discovery law is:
 
 > **Broadly discoverable outside. Deeply orchestrated inside.**
 
+The governing distribution law is:
+
+> **Free participation is distribution infrastructure.**
+
+The governing displacement law is:
+
+> **Land without displacement. Expand by usefulness. Replace by earned trust.**
+
+The governing engineering law is:
+
+> **Founder omission does not equal engineering omission. No known failure may disappear silently.**
+
 The governing business objective is:
 
 > Build a product and company that create measurable customer value, become recurring infrastructure, progressively consolidate fragmented vendor workflows, compound through Grid, Network, EDU, identity, evidence and Zumi, and operate with enterprise-grade security, reliability, financial discipline, implementation excellence and commercial truth.
@@ -33,45 +49,64 @@ Before material work, read current repository/runtime truth and then read these 
 1. `docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md`
 2. `docs/KLINIKOS_ARCHITECTURE_INDEX.md`
 3. `docs/SOURCE_OF_TRUTH.md`
-4. `src/lib/feature-registry-canon.ts`
-5. `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md`
-6. `docs/CLINIC_OS_CANON.md`
-7. `docs/GRID_CANON.md`
-8. `docs/EDU_CANON.md`
-9. `docs/ZUMI_CANON.md`
-10. `docs/FINANCIAL_OS_CANON.md`
-11. `docs/KLINIKOS_COMMERCIAL_CANON.md`
-12. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`
-13. `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`
-14. `docs/SECURITY_ARCHITECTURE.md`
-15. `docs/CLINICAL_SAFETY.md`
-16. `docs/KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md`
-17. `docs/business/KLINIKOS_VENTURE_SCALE_OPERATING_PACKAGE_2026-08-24.md`
-18. `governance/KLINIKOS_FINAL_FORM_CONTROL_PLANE.md`
-19. `governance/KLINIKOS_SOURCE_LOCKED_REQUIREMENTS.md`
-20. `governance/KLINIKOS_FINAL_FORM_BUSINESS_PLAN.md`
-21. `governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md`
-22. `src/lib/company-operating-canon.ts`
-23. `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md`
-24. `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md`
-25. `governance/KLINIKOS_COMPANY_EXECUTION_CONTROL_PLANE.md`
-26. `governance/KLINIKOS_COMPANY_STAGE_GATES.md`
-27. `src/lib/company-execution-control-plane.ts`
-28. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
-29. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
-30. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
-31. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
-32. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
-33. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
-34. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
-35. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
-36. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
-37. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
-38. `src/lib/public-capability-registry.ts`
-39. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
-40. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
+4. `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md`
+5. `governance/KLINIKOS_OPERATING_NETWORK_IMPLEMENTATION_AUTHORIZATION_2026-08-26.md`
+6. `src/lib/feature-registry-canon.ts`
+7. `docs/KLINIKOS_CLINICAL_CONVERGENCE_CANON.md`
+8. `docs/CLINIC_OS_CANON.md`
+9. `docs/GRID_CANON.md`
+10. `docs/EDU_CANON.md`
+11. `docs/ZUMI_CANON.md`
+12. `docs/FINANCIAL_OS_CANON.md`
+13. `docs/KLINIKOS_COMMERCIAL_CANON.md`
+14. `docs/KLINIKOS_PRICING_AND_MONETIZATION_CANON.md`
+15. `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md`
+16. `docs/FRONTEND_EXPERIENCE_CANON.md`
+17. `docs/SECURITY_ARCHITECTURE.md`
+18. `docs/CLINICAL_SAFETY.md`
+19. `docs/KLINIKOS_BLACK_LABEL_V2_DESIGN_HANDOFF_2026-08-23.md`
+20. `docs/business/KLINIKOS_VENTURE_SCALE_OPERATING_PACKAGE_2026-08-24.md`
+21. `governance/KLINIKOS_FINAL_FORM_CONTROL_PLANE.md`
+22. `governance/KLINIKOS_SOURCE_LOCKED_REQUIREMENTS.md`
+23. `governance/KLINIKOS_FINAL_FORM_BUSINESS_PLAN.md`
+24. `governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md`
+25. `src/lib/company-operating-canon.ts`
+26. `governance/KLINIKOS_COMPANY_CONTROL_REGISTERS.md`
+27. `governance/KLINIKOS_EXECUTIVE_REVIEW_GAUNTLET.md`
+28. `governance/KLINIKOS_COMPANY_EXECUTION_CONTROL_PLANE.md`
+29. `governance/KLINIKOS_COMPANY_STAGE_GATES.md`
+30. `src/lib/company-execution-control-plane.ts`
+31. `governance/KLINIKOS_PRODUCTION_AND_ENTERPRISE_READINESS.md`
+32. `governance/KLINIKOS_UNICORN_OPPORTUNITY_REGISTER.md`
+33. `governance/KLINIKOS_AI_OPERATED_DIGITAL_BUSINESS.md`
+34. `governance/KLINIKOS_HYPERSCALE_PLATFORM_STRATEGY.md`
+35. `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md`
+36. `governance/KLINIKOS_CLINICIAN_CUSTOMER_PATIENT_EXPERIENCE_CANON.md`
+37. `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md`
+38. `governance/KLINIKOS_CROSS_CUTTING_CAPABILITY_FABRIC.md`
+39. `governance/KLINIKOS_PUBLIC_DISCOVERY_SEO_AND_CATEGORY_TAXONOMY.md`
+40. `governance/KLINIKOS_WEBSITE_PRICING_AND_CONVERSION_BLUEPRINT.md`
+41. `src/lib/public-capability-registry.ts`
+42. `governance/KLINIKOS_ZUMI_EXPERT_INTELLIGENCE_STANDARD.md`
+43. `governance/KLINIKOS_ACCESS_IDENTITY_AGREEMENTS_IP_TRUST_CANON.md`
 
 Current code/schema/tests/runtime determine **what exists**. Governing product documents determine **what should exist**. Company governance determines **how the company must operate while building and selling it**. Source-locked requirements determine **what user needs may not silently disappear**.
+
+## Operating-network implementation law
+
+The approved parent architecture is `docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md`.
+
+Implementation must preserve existing authorities and converge them. Do not create a second Grid, Zumi, identity system, Clinic OS, Financial OS, entitlement system, Path authority, or product-truth authority merely because a new experience is easier to prototype separately.
+
+The universal value/growth order is:
+
+`DISCOVER → RECEIVE VALUE → EXPRESS INTENT → CREATE IDENTITY WHEN PERSISTENCE MATTERS → BUILD CLAIMS → VERIFY ONLY WHAT THE NEXT ACTION REQUIRES → ENTER GRID / RELEVANT NETWORK EXPERIENCE → RECEIVE WORK / LEARNING / CONNECTION VALUE → BUILD EVIDENCE + RELATIONSHIPS → RETURN → INVITE / REFER → ORGANIZATION ENTERS OR DEEPENS → OPERATING MAP → FIRST WORKFLOW → PAID IMPLEMENTATION / SUBSCRIPTION / CONTRACT → CARE + MONEY + OPERATIONS EXPAND → MORE ACTIVITY → MORE GRID SUPPLY / DEMAND → MORE NETWORK VALUE → MORE DISCOVERY`
+
+This is architecture, not a requirement for twenty visible screens. The frontend remains calm and progressively disclosed.
+
+Basic individual participation should generally remain free or low-friction where economically and legally appropriate because it creates supply, demand, identity, density, liquidity, relationships, referrals and distribution. Organizations pay for leverage: control, automation, volume, workflow, analytics, institutional delivery, implementation, premium distribution, enterprise administration and lawful transaction economics.
+
+A clinic must be able to receive meaningful Klinikos value while an incumbent EHR remains in place. Own workflow and user experience first; replace infrastructure only after Klinikos has earned the operational, safety, migration, reliability and economic case.
 
 ## Three truth classes
 
@@ -108,6 +143,8 @@ The UI should answer:
 4. What happens next?
 
 Professional detail may appear secondarily for expert users.
+
+The interface itself is the product signature. Decorative motifs are optional and subordinate to the work. Do not make a flower, rose, orb, network graphic, animation, stock image, or other atmosphere a requirement for a page to be considered Klinikos.
 
 ## Company operating law
 
@@ -291,7 +328,7 @@ Preserve the complete final-form map, but keep **one active dependency-ordered c
 
 Current default active loop:
 
-`VISITOR → UNDERSTANDS KLINIKOS → QUALIFIES → PAYS/CONTRACTS → ACTIVATES → FIRST VALUE → REPEATED VALUE → EXPANDS → GRID/NETWORK VALUE`
+`VISITOR → RECEIVES VALUE → EXPRESSES INTENT → PERSISTS IDENTITY WHEN USEFUL → GRID / RELEVANT NETWORK VALUE → QUALIFIES → PAYS/CONTRACTS WHEN ORGANIZATION LEVERAGE IS NEEDED → ACTIVATES → FIRST VALUE → REPEATED VALUE → EXPANDS → GRID/NETWORK VALUE`
 
 A new idea interrupts current P0 only if it is required for safety, required customer value, revenue activation, a blocker, or a reusable prerequisite.
 
@@ -303,16 +340,23 @@ The founder should not need to know to ask for security engineering, SRE, backup
 
 Agents must proactively identify and schedule them at the correct dependency point.
 
+## Failure visibility law
+
+The happy path is not the architecture. Material failures must become visible state, retry/reconciliation work, an owned obligation, an alert, a manual fallback, a blocked state, an audit record, or an incident as appropriate.
+
+Assume duplicate requests, stale sessions, concurrent writes, late external success, webhook replay/reordering, provider outages, credential expiry, revoked relationships, withdrawn consent, duplicate results, communication failure, disputes/refunds, malicious uploads, cross-tenant attacks, prompt injection, model outages, failed migrations, bad deploys and restore scenarios will occur.
+
 ## Before implementing
 
 1. Fetch current `main` and record exact SHA.
 2. Inspect relevant open PRs and recent commits.
-3. Reconcile current implementation with source-locked requirements.
-4. For public/product-discovery work, reconcile against `public-capability-registry.ts` and the SEO/category taxonomy.
-5. Reconcile the work against `company-operating-canon.ts`, `company-execution-control-plane.ts`, the current company stage, and the company value loop.
-6. Identify the single vertical slice being advanced.
-7. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
-8. For architectural work, present design and obtain approval before implementation unless the governing design/spec has already been explicitly approved.
+3. Read the approved operating-network design and current implementation authorization when the work touches final-form convergence.
+4. Reconcile current implementation with source-locked requirements.
+5. For public/product-discovery work, reconcile against `public-capability-registry.ts` and the SEO/category taxonomy.
+6. Reconcile the work against `company-operating-canon.ts`, `company-execution-control-plane.ts`, the current company stage, and the company value loop.
+7. Identify the single vertical slice being advanced.
+8. State user outcome, business outcome, architecture, data authority, security/privacy impact, monetization impact and acceptance tests.
+9. For architectural work, present design and obtain approval before implementation unless the governing design/spec has already been explicitly approved.
 
 ## During implementation
 
