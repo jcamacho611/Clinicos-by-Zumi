@@ -1,0 +1,10 @@
+{
+  "manifestVersion": 1,
+  "migration": "20260830131000_career_artifact_foundation",
+  "classification": "additive-only",
+  "automaticDeployAllowed": true,
+  "approvedAt": "2026-08-30T13:08:00Z",
+  "approvedBy": "OpenAI GPT-5.6 Sol",
+  "notes": "Additive Person-owned CareerArtifact persistence for versioned resume/career claims and safe matching inputs. No authority fields, no destructive rewrite, and raw resume bytes remain outside this table.",
+  "sha256": "c77cb4b5eb7572ca3f72834077b9b1abb91c1829b1aaeaa12fb69e7565939170"
+}

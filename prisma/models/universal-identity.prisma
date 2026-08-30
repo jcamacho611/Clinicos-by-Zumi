@@ -16,6 +16,7 @@ model Person {
   updatedAt       DateTime                 @updatedAt
   memberships     OrganizationMembership[]
   relationships   PersonRelationship[]
+  careerArtifacts CareerArtifact[]
 
   @@index([primaryEmail])
   @@index([status])
@@ -96,4 +97,42 @@ model PersonRelationship {
   @@index([domainKind, domainRecordId])
   @@index([effectiveFrom, effectiveTo])
   @@map("person_relationships")
+}
+
+// Person-owned career claims and matching preferences. This is evidence/context only:
+// it has deliberately no professional, clinical, billing, organization-binding,
+// placement-approval, listing, or other authority field. Raw resume bytes stay in the
+// approved private document boundary; sourceReference stores only a private pointer.
+model CareerArtifact {
+  id                      String           @id @default(cuid())
+  personId                String
+  artifactType            String
+  sourceType              String
+  sourceReference         String?
+  version                 Int
+  status                  String           @default("active")
+  supersedesArtifactId    String?
+  claimState              String           @default("claimed")
+  educationClaims         Json
+  experienceClaims        Json
+  skillClaims             Json
+  careerGoals             Json
+  roleInterests           Json
+  locationPreferences     Json
+  availabilityPreferences Json
+  parserProvenance        Json?
+  humanConfirmedAt        DateTime?
+  effectiveFrom           DateTime         @default(now())
+  effectiveTo             DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  person                  Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  supersedesArtifact      CareerArtifact?  @relation("CareerArtifactSupersession", fields: [supersedesArtifactId], references: [id], onDelete: SetNull)
+  supersededBy            CareerArtifact[] @relation("CareerArtifactSupersession")
+
+  @@unique([personId, version])
+  @@index([personId, status])
+  @@index([supersedesArtifactId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("career_artifacts")
 }
