@@ -139,10 +139,6 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_deploy?schema=public
       NEXT_PUBLIC_APP_URL: https://klinikos.io
-      # This database is the disposable Postgres service declared below. Authorizing
-      # migration deploy here exercises the production build contract without weakening
-      # render-build's fail-closed behavior anywhere else.
-      KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
     services:
       postgres:
         image: postgres:16
@@ -173,6 +169,15 @@ jobs:
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
         run: npm run render:build
+        env:
+          # Scoped to this one step, never to the job. A job-level grant would hand every
+          # future step here a fail-open migration control.
+          #
+          # This flag states an intent and grants nothing on its own: render-build.mjs
+          # proves the target is an empty, non-managed database before it honours it, and
+          # fails the step if it is not. Pointing this job at anything real therefore stops
+          # the build rather than migrating it.
+          KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
       - name: Post-build confidentiality gates
         run: npm run security:check
       # Render's Start Command, verbatim. A build that cannot start is not a deploy.

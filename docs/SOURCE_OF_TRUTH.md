@@ -1,7 +1,7 @@
 # KLINIKOS — CURRENT SOURCE OF TRUTH
 
 Version: `2026-08-22.1`
-Status: `AUTHORITATIVE`
+Status: `PREDECESSOR REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 
 This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
 

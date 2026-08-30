@@ -1,6 +1,6 @@
 # KLINIKOS MASTER PRODUCT & ENGINEERING SPECIFICATION
 
-Status: `AUTHORITATIVE — TOP OF THE DOCUMENT CHAIN`
+Status: `PREDECESSOR REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Date: 2026-08-23
 
 This document exists so that a person or an agent can read **one** source and understand

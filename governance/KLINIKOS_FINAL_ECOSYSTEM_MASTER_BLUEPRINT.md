@@ -1,6 +1,10 @@
 # KLINIKOS Final Ecosystem Master Blueprint
 
-Status: **TOP-LEVEL FINAL-FORM TARGET ARCHITECTURE**
+Status: **PREDECESSOR REFERENCE — SUBORDINATE TO `docs/KLINIKOS_MASTER_CANON.md`**
+
+> This document was the top-level target architecture before Canon convergence. Its
+> content is retained as specialist reference and history. Where it conflicts with the
+> Master Canon, the Master Canon governs.
 Date: 2026-08-25
 Baseline when created: `main@5eb1bda23c4053093f4e11d351298ffe1c7131ea`
 Canonical domain: `https://klinikos.io`

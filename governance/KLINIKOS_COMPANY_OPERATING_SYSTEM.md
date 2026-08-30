@@ -1,6 +1,10 @@
 # KLINIKOS COMPANY OPERATING SYSTEM
 
-Status: GOVERNING COMPANY-BUILDING ARCHITECTURE
+Status: PREDECESSOR REFERENCE — SUBORDINATE TO `docs/KLINIKOS_MASTER_CANON.md`
+
+> This document defined company-building architecture before Canon convergence. Its
+> content is retained as specialist reference. Where it conflicts with the Master Canon,
+> the Master Canon governs.
 Date: 2026-08-25
 
 ## 1. Company definition
