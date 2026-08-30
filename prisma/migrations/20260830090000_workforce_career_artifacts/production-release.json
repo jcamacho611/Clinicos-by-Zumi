@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260830090000_workforce_career_artifacts",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "fdd2dd0d4e36d3ff823944334995db41d55cbb6325c4d20b7bd636060ce2e24d",
+  "approvalReference": "PR #387 workforce flywheel private Resume/CareerArtifact persistence, 2026-08-30"
+}
