@@ -11,7 +11,7 @@ function documentForSlug(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ document: string }> }): Promise<Metadata> {
   const { document } = await params;
   const definition = documentForSlug(document);
-  if (!definition) return { title: "Legal document not found — Klinikos" };
+  if (!definition) return { title: "Legal document not found" };
   return {
     title: `${definition.title} Status — Klinikos`,
     description: `Governance and approval status for the Klinikos ${definition.title}.`,

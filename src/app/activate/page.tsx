@@ -7,7 +7,7 @@ import { getClinicActivationDraft } from "@/lib/commercial/clinic-activation-dra
 import { ClinicProvisioningError, getClinicActivationPreview } from "@/lib/commercial/clinic-provisioning";
 
 export const metadata = {
-  title: "Activate Klinikos",
+  title: "Activate your workspace",
   description: "Complete a paid Klinikos clinic workspace activation.",
 };
 
