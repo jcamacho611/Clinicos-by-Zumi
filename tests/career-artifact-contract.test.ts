@@ -130,7 +130,7 @@ describe("CareerArtifact contract", () => {
       { name: "patient intake", claimState: "claimed", evidenceVerificationState: "unverified" },
     ]);
     expect(matching.roleInterests).toContain("clinical placement");
-    expect(matching.sourceReference).toBeUndefined();
+    expect("sourceReference" in matching).toBe(false);
     expect(matching.professionalEligibilitySatisfied).toBe(false);
   });
 
