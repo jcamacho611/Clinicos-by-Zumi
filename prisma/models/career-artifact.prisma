@@ -1,0 +1,43 @@
+// Person-owned career evidence used for EDU, placement discovery, and Grid matching.
+//
+// CareerArtifact is a claim/evidence record only. Human confirmation, parser output,
+// verification references, or organization scope never grant professional, clinical,
+// billing, listing, placement, or organization-binding authority.
+model CareerArtifact {
+  id                     String   @id @default(cuid())
+  personId               String
+  organizationId         String?
+  artifactType           String   @default("resume")
+  sourceType             String   @default("resume")
+  sourceReference        String?
+  storageLocator         String?
+  format                  String?
+  mimeType                String?
+  sizeBytes               Int?
+  versionGroupId          String
+  version                 Int      @default(1)
+  supersedesId            String?
+  status                   String   @default("active")
+  claimState               String   @default("claimed")
+  verificationState        String   @default("claimed")
+  claims                   Json     @default("[]")
+  parserProvenance         Json?
+  humanConfirmationState   String   @default("pending")
+  humanConfirmedFields     Json?
+  evidenceReferences       Json?
+  provenance               Json?
+  effectiveFrom            DateTime @default(now())
+  effectiveTo              DateTime?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  person                    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, versionGroupId, version])
+  @@unique([personId, supersedesId])
+  @@index([personId, status, effectiveFrom])
+  @@index([organizationId, status, effectiveFrom])
+  @@index([versionGroupId, version])
+  @@index([artifactType, status])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("career_artifacts")
+}
