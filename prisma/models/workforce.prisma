@@ -1,0 +1,23 @@
+// Workforce evidence belongs to the durable Person but does not create authority.
+// Resume/career artifacts are private claimed evidence until a separate governed review
+// says otherwise. Even reviewed evidence never substitutes for professional eligibility.
+model WorkforceCareerArtifact {
+  id                String   @id @default(cuid())
+  personId          String
+  artifactType      String   @default("resume")
+  sourceType        String
+  sourceReference   String
+  verificationState String   @default("claimed")
+  privacy           String   @default("private")
+  status            String   @default("active")
+  claims             Json
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([personId, artifactType, sourceReference])
+  @@index([personId, status])
+  @@index([verificationState, status])
+  @@map("workforce_career_artifacts")
+}
