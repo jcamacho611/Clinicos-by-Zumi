@@ -3,8 +3,8 @@ import "server-only";
 import { Prisma, type CareerArtifact } from "@prisma/client";
 import { db } from "@/lib/db";
 
-export type CareerEducationClaim = Record<string, unknown>;
-export type CareerExperienceClaim = Record<string, unknown>;
+export type CareerEducationClaim = Prisma.JsonObject;
+export type CareerExperienceClaim = Prisma.JsonObject;
 
 export type CareerClaims = {
   education: CareerEducationClaim[];
@@ -53,10 +53,10 @@ export type CreateResumeCareerArtifactInput = {
   parser?: CareerParserProvenance | null;
 };
 
-function asRecordArray(value: Prisma.JsonValue): Record<string, unknown>[] {
+function asRecordArray(value: Prisma.JsonValue): Prisma.JsonObject[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
-    (item): item is Record<string, unknown> =>
+    (item): item is Prisma.JsonObject =>
       typeof item === "object" && item !== null && !Array.isArray(item),
   );
 }
