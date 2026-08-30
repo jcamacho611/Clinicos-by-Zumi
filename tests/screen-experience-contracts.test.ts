@@ -24,7 +24,7 @@ const requiredFamilies = [
 
 describe("Klinikos screen experience contracts", () => {
   it("registers every priority screen family", () => {
-    expect(REQUIRED_SCREEN_FAMILIES).toEqual(expect.arrayContaining([...requiredFamilies]));
+    expect(REQUIRED_SCREEN_FAMILIES).toEqual(expect.arrayContaining(requiredFamilies));
     const ids = KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS.map((contract) => contract.id);
     for (const family of requiredFamilies) expect(ids).toContain(family);
   });
