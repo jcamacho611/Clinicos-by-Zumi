@@ -110,23 +110,24 @@ export async function recordReferralConsultation(session: ClinicSession, referra
         );
       }
 
-      if (evidence.referralBinding === "bind_on_receipt") {
-        const bound = await tx.document.updateMany({
-          where: {
-            id: document.id,
-            organizationId: session.organizationId,
-            patientId: referral.patientId,
-            referralId: null,
-            status: "active",
-            reviewStatus: "approved",
-            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-          },
-          data: { referralId: referral.id },
-        });
-        if (bound.count !== 1) {
-          throw new NetworkAccessError("Consultation document changed. Refresh and try again.", 409);
-        }
+      const expectedReferralId = evidence.referralBinding === "bind_on_receipt" ? null : referral.id;
+      const bound = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          organizationId: session.organizationId,
+          patientId: referral.patientId,
+          referralId: expectedReferralId,
+          status: "active",
+          reviewStatus: "approved",
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        },
+        data: { referralId: referral.id },
+      });
+      if (bound.count !== 1) {
+        throw new NetworkAccessError("Consultation document changed. Refresh and try again.", 409);
+      }
 
+      if (evidence.referralBinding === "bind_on_receipt") {
         await tx.documentEvent.create({
           data: {
             organizationId: session.organizationId,
