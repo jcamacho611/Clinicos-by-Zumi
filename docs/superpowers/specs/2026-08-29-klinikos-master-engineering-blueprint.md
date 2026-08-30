@@ -1017,3 +1017,714 @@ The final visual is generated from the reconciled architecture, not from convers
 *This document is the engineering-buildable expression of the Klinikos Universal Healthcare Universe. It is authored for the repo commit to `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md` alongside the Universal Healthcare Universe + Company Constitution design spec already committed on the `docs/luxe-master-canon-reconciliation-20260829` branch.*
 
 *Every decision in this document has been evaluated through the Klinikos Executive Council 8-lens framework. Every capability has been classified NOW / BUILD-EXPAND / LATER / PARTNER / CONNECT / NEVER BUILD. Every lifecycle has been encoded at full complexity. No journey has been compressed to four words.*
+
+---
+
+# CANON LAYER IMPLEMENTATION COVERAGE
+
+Every layer in `src/lib/governance/canon-layer-registry.ts` terminates here in buildable
+meaning. The registry is the machine-checkable index; this section is what an engineer
+actually builds against.
+
+The columns are deliberate. A layer that names no owner has nobody to build it. One with
+no evidence cannot be proven to work. One with no money path is cost without return. One
+with no risk control is an unbounded liability. One with no KPI cannot be measured, so its
+failure would be invisible. `tests/canon-synchronization.test.ts` fails the build if any
+layer loses one of them, which is what stops a later compression pass from quietly
+deleting a requirement.
+
+Terms in **bold** are the canonical anchors. They are load-bearing vocabulary, not
+decoration: the same words appear in the Master Canon and the registry so a requirement
+can be traced across all three without relying on prose that drifts.
+
+## 1. Authority, anti-compression, truth and merge-forward
+
+`governance-authority`
+
+- **AUTHORITY AND ANTI-COMPRESSION CONTRACT**
+- **Canon compression must never erase accepted architecture**
+
+| | |
+|---|---|
+| Owners | executive-council, architecture |
+| Builds into | authority-map, sync-gates, document-retirement |
+| Proven by | git-history, canon-diff, verification-report |
+| Money path | reduces-rework, protects-speed |
+| Risk controls | no-parallel-authority, no-silent-deletion |
+| Measured by | authority-conflicts, canon-drift-failures |
+
+## 2. Five-plane ecosystem architecture
+
+`five-planes`
+
+- **PLANE A — HEALTHCARE UNIVERSE**
+- **PLANE B — ECONOMIC & RESOURCE UNIVERSE**
+- **PLANE C — LIFECYCLE / JOURNEY UNIVERSE**
+- **PLANE D — KLINIKOS OPERATING INFRASTRUCTURE**
+- **PLANE E — COMPANY COMPOUNDING SYSTEM**
+
+| | |
+|---|---|
+| Owners | architecture, product |
+| Builds into | ecosystem-graph, generated-views, domain-contracts |
+| Proven by | graph-tests, route-tests |
+| Money path | cross-sell, network-effects |
+| Risk controls | no-module-silos |
+| Measured by | cross-engine-journeys, connected-node-coverage |
+
+## 3. Actors, organizations, rails, assets and sectors
+
+`healthcare-universe`
+
+- **HEALTHCARE UNIVERSE TAXONOMY**
+- **sector strategy state**
+
+| | |
+|---|---|
+| Owners | product, partnerships |
+| Builds into | actor-registry, organization-types, sector-policy |
+| Proven by | schema-coverage, integration-register |
+| Money path | market-expansion, enterprise-contracts |
+| Risk controls | scope-classification, regulated-boundaries |
+| Measured by | sector-coverage, activated-sectors |
+
+## 4. Universal economic/resource universe and Grid
+
+`resource-universe-grid`
+
+- **ECONOMIC & RESOURCE UNIVERSE**
+- **I NEED / I HAVE**
+- **UNIVERSAL GRID TRANSACTION LIFECYCLE**
+
+| | |
+|---|---|
+| Owners | grid, financial-os |
+| Builds into | resource-kernel, demand-kernel, eligibility-engine, transaction-state-machine |
+| Proven by | grid-tests, transaction-evidence |
+| Money path | subscriptions, lawful-transaction-economics, organization-tools |
+| Risk controls | eligibility-before-ranking, marketplace-safety, regulated-fee-gates |
+| Measured by | liquidity, match-rate, time-to-fill, fulfillment-rate |
+
+## 5. Universal composable lifecycle grammar
+
+`lifecycle-grammar`
+
+- **CANONICAL LIFECYCLE GRAMMAR**
+- **DISCOVER → IDENTIFY → EXPRESS INTENT**
+
+| | |
+|---|---|
+| Owners | product, architecture |
+| Builds into | route-registry, state-machines, unfinished-work |
+| Proven by | end-to-end-tests, route-coverage |
+| Money path | conversion, retention |
+| Risk controls | no-happy-path-only-design |
+| Measured by | journey-completion, dropoff-by-state |
+
+## 6. Identity, claims, verification, relationships and authority
+
+`identity-trust-authority`
+
+- **IDENTITY → CLAIM → EVIDENCE → VERIFICATION → RELATIONSHIP → ELIGIBILITY → ENTITLEMENT → AUTHORITY**
+- **context switch is a security event**
+
+| | |
+|---|---|
+| Owners | identity-trust, security |
+| Builds into | person-graph, claim-model, verification-model, authority-engine |
+| Proven by | negative-authorization-tests, audit-events |
+| Money path | trusted-marketplace, enterprise-readiness |
+| Risk controls | least-privilege, purpose-of-use, progressive-verification |
+| Measured by | verification-conversion, authorization-denials, fraud-rate |
+
+## 7. Living Home, Experience Engine and Screen Contracts
+
+`experience-living-home`
+
+- **LIVING HOME + EXPERIENCE ENGINE**
+- **SCREEN CONTRACT**
+
+| | |
+|---|---|
+| Owners | experience, frontend |
+| Builds into | active-experience-envelope, screen-contracts, context-switch |
+| Proven by | accessibility-tests, responsive-tests, route-tests |
+| Money path | activation, retention, upgrade-conversion |
+| Risk controls | minimum-necessary-projection, no-brochure-first |
+| Measured by | time-to-first-value, task-completion, return-rate |
+
+## 8. Professional profile, resume evidence and recruiting
+
+`profile-resume-recruiting`
+
+- **RECRUITER / RESUME EVIDENCE PATH**
+- **resume → structured career profile**
+
+| | |
+|---|---|
+| Owners | identity-trust, grid, edu |
+| Builds into | resume-parser, career-profile, claim-provenance, matching-inputs |
+| Proven by | resume-source, human-confirmation, verification-records |
+| Money path | recruiting, grid-pro, employer-tools |
+| Risk controls | no-fabricated-credentials, claim-vs-verified-separation |
+| Measured by | profile-completion, qualified-match-rate |
+
+## 9. EDU, student, competency, placement and workforce transition
+
+`edu-student-placement`
+
+- **STUDENT → TRAINING → COMPETENCY**
+- **PLACEMENT RELATIONSHIP OBJECT**
+
+| | |
+|---|---|
+| Owners | edu, grid, identity-trust |
+| Builds into | programs, cohorts, simulation, competency-evidence, placement-object |
+| Proven by | rubrics, human-review, hours-evidence |
+| Money path | edu-plus, courses, institution-contracts, workforce-contracts |
+| Risk controls | synthetic-data-first, external-credential-separation |
+| Measured by | completion, placement-rate, time-to-work |
+
+## 10. Professional progression and injector/aesthetics path
+
+`professional-injector`
+
+- **RN → INJECTOR / AESTHETICS GOVERNED PATH**
+- **jurisdiction / scope / supervision / facility / malpractice gates**
+
+| | |
+|---|---|
+| Owners | grid, identity-trust, clinical-safety |
+| Builds into | credential-gates, service-eligibility, availability, contractor-relationships |
+| Proven by | license-source, malpractice-evidence, supervision-evidence |
+| Money path | professional-tools, lawful-booking-economics |
+| Risk controls | scope-of-practice, jurisdiction, facility-policy |
+| Measured by | verified-professionals, eligible-services, safe-fulfillment |
+
+## 11. Clinic OS and operating overlay
+
+`clinic-os`
+
+- **CLINIC OS — OPERATING LAYER**
+- **ecosystem sensor**
+
+| | |
+|---|---|
+| Owners | clinic-os, operations |
+| Builds into | organization, locations, staff, work-queues, capacity, bridges |
+| Proven by | workflow-evidence, owner-outcomes |
+| Money path | clinic-saas, implementation, expansion |
+| Risk controls | progressive-migration, tenant-separation |
+| Measured by | activation, workflow-cycle-time, revenue-recovery |
+
+## 12. Current Visit clinical convergence
+
+`current-visit`
+
+- **CURRENT VISIT — CLINICAL CONVERGENCE**
+- **INITIAL → PREVIOUS → TODAY**
+
+| | |
+|---|---|
+| Owners | care, clinical |
+| Builds into | current-visit, staff-handoff, clinical-change, body-map, scribe-review |
+| Proven by | signed-records, clinical-provenance, audit |
+| Money path | clinic-retention, billing-readiness, software-consolidation |
+| Risk controls | human-signature, no-invented-clinical-truth, versioning |
+| Measured by | documentation-time, visit-close-rate, billing-ready-rate |
+
+## 13. Patient, caregiver and longitudinal care
+
+`patient-caregiver`
+
+- **PATIENT / CAREGIVER JOURNEY**
+- **patient identity remains private**
+
+| | |
+|---|---|
+| Owners | care, patient-experience |
+| Builds into | patient-portal, proxy-access, intake, follow-up |
+| Proven by | consent, relationship-evidence, release-audit |
+| Money path | clinic-value, patient-payments, retention |
+| Risk controls | privacy, proxy-scope, minimum-necessary |
+| Measured by | intake-completion, follow-up-completion, no-show-rate |
+
+## 14. Cross-organizational healthcare workflows
+
+`cross-org`
+
+- **CROSS-ORGANIZATIONAL HEALTHCARE LIFECYCLES**
+- **closed-loop referral**
+
+| | |
+|---|---|
+| Owners | network, integration-hub, security |
+| Builds into | referrals, consults, orders-results, cross-org-relationship |
+| Proven by | transmission-evidence, acceptance, review, closure |
+| Money path | network-tools, enterprise, reduced-leakage |
+| Risk controls | purpose-of-use, consent, data-minimization |
+| Measured by | closed-loop-rate, referral-completion, result-review-time |
+
+## 15. Med Spa clinic + provider network + commerce/resource proof case
+
+`medspa-commerce`
+
+- **MED SPA = CLINIC + PROVIDER NETWORK + COMMERCE / RESOURCE NODE**
+- **regulated inventory boundary**
+
+| | |
+|---|---|
+| Owners | clinic-os, grid, commerce |
+| Builds into | lead-crm, services, rooms-chairs, inventory, bookings, payouts |
+| Proven by | consent, lot-expiration, fulfillment-evidence |
+| Money path | cash-pay, memberships, lawful-commerce, space-capacity |
+| Risk controls | scope-of-practice, regulated-inventory, adverse-event-workflow |
+| Measured by | lead-to-booking, rebooking, chair-utilization, inventory-waste |
+
+## 16. Quality Guardian, Rules & Evidence and Expert Grid
+
+`quality-expert-grid`
+
+- **QUALITY GUARDIAN → EXPERT GRID**
+- **minimum-necessary / time-limited expert access**
+
+| | |
+|---|---|
+| Owners | quality, grid, zumi |
+| Builds into | rules-engine, quality-signals, expert-engagement, evidence-packet |
+| Proven by | rule-provenance, human-review, remediation-evidence |
+| Money path | expert-services, quality-subscription, revenue-protection |
+| Risk controls | human-judgment, minimum-necessary, no-automatic-compliance-claims |
+| Measured by | issues-detected, time-to-remediate, repeat-issue-rate |
+
+## 17. Financial OS, billing, claims and revenue integrity
+
+`rcm-financial`
+
+- **REVENUE INTEGRITY STATE MACHINE**
+- **PERFORMED → CHARGE EXPECTED → CHARGE PRESENT → CLAIM READY**
+
+| | |
+|---|---|
+| Owners | financial-os, rcm |
+| Builds into | billing-readiness, claims, denials, remittance, reconciliation |
+| Proven by | claim-events, payment-evidence, reconciliation |
+| Money path | revenue-os, recovered-revenue, implementation |
+| Risk controls | financial-state-separation, no-fake-claim-status |
+| Measured by | clean-claim-rate, days-to-payment, reconciliation-rate, leakage |
+
+## 18. Payments, obligations, payout, settlement and entitlements
+
+`payments-settlement`
+
+- **PRICE ≠ QUOTE ≠ CHARGE ≠ INVOICE ≠ PAYMENT**
+- **payment-driven provisioning**
+
+| | |
+|---|---|
+| Owners | financial-os, commerce |
+| Builds into | offer-registry, payment-evidence, entitlements, payout-settlement |
+| Proven by | webhook-evidence, ledger, reconciliation |
+| Money path | subscriptions, implementation, usage, lawful-fees |
+| Risk controls | server-owned-price, idempotency, regulated-payments |
+| Measured by | paid-conversion, failed-payment, settlement-lag, gross-margin |
+
+## 19. Zumi and OpenAI governed intelligence
+
+`zumi-openai`
+
+- **OPENAI / ZUMI GOVERNED INTELLIGENCE**
+- **OpenAI intelligence, Klinikos authority**
+
+| | |
+|---|---|
+| Owners | zumi, ai-platform |
+| Builds into | provider-adapter, policy-gate, tool-authority, provenance |
+| Proven by | model-telemetry, tool-audit, partner-evidence-register |
+| Money path | zumi-plus, automation, usage-margin |
+| Risk controls | human-approval, phi-eligibility, provider-abstraction |
+| Measured by | task-success, cost-per-task, human-override, latency |
+
+## 20. Data, evidence, memory, knowledge and analytics
+
+`memory-data-evidence`
+
+- **DATA / EVIDENCE / MEMORY / ANALYTICS**
+- **provenance**
+
+| | |
+|---|---|
+| Owners | data, analytics, zumi |
+| Builds into | evidence-model, memory-store, analytics-events, knowledge-provenance |
+| Proven by | source, effective-date, version, authority-class |
+| Money path | insights, retention, enterprise-analytics |
+| Risk controls | data-classification, retention, supersession |
+| Measured by | evidence-completeness, analytics-coverage, stale-memory-rate |
+
+## 21. Integration Hub, partners and external rails
+
+`integrations-partners`
+
+- **CONNECT → ABSTRACT → CONTROL → INTERNALIZE → REPLACE**
+- **PARTNER / EXTERNAL RAILS**
+
+| | |
+|---|---|
+| Owners | integration-hub, partnerships |
+| Builds into | adapters, webhooks, reconciliation-work, connection-state |
+| Proven by | sandbox, uat, production-verification, vendor-contract |
+| Money path | premium-connections, enterprise, software-consolidation |
+| Risk controls | truthful-integration-status, vendor-risk, failure-reconciliation |
+| Measured by | connection-success, sync-latency, error-backlog |
+
+## 22. Security, privacy, legal, confidentiality and trust
+
+`security-privacy-legal`
+
+- **SECURITY / PRIVACY / LEGAL / TRUST DEFENSE STACK**
+- **browser = experience; server = authority**
+
+| | |
+|---|---|
+| Owners | security, privacy, legal |
+| Builds into | authn, authz, audit, encryption, secrets, incident-response, agreements |
+| Proven by | security-tests, audit-log, vendor-evidence, counsel-review |
+| Money path | enterprise-trust, risk-reduction |
+| Risk controls | least-privilege, minimum-necessary, no-unsupported-compliance-claim |
+| Measured by | security-findings, time-to-remediate, audit-coverage |
+
+## 23. Enterprise, multi-location, payer/employer/network operations
+
+`enterprise-network`
+
+- **ENTERPRISE / MULTI-LOCATION / NETWORK**
+- **delegated administration**
+
+| | |
+|---|---|
+| Owners | enterprise, network |
+| Builds into | org-hierarchy, sso, delegated-admin, policy, reporting |
+| Proven by | tenant-boundary-tests, contract-evidence, procurement-evidence |
+| Money path | enterprise-acv, network-expansion |
+| Risk controls | tenant-isolation, policy-inheritance, procurement-gates |
+| Measured by | locations-per-org, enterprise-acv, net-revenue-retention |
+
+## 24. Research, public health and government
+
+`research-public-health`
+
+- **RESEARCH / PUBLIC HEALTH / GOVERNMENT**
+- **government procurement**
+
+| | |
+|---|---|
+| Owners | enterprise, government, data-governance |
+| Builds into | purpose-separation, institutional-reporting, procurement |
+| Proven by | contract, approval, data-use-evidence |
+| Money path | government-contracts, institutional-contracts |
+| Risk controls | research-purpose, data-governance, legal-review |
+| Measured by | contracts-won, reporting-compliance, program-outcomes |
+
+## 25. Pharmacy, devices, DME and remote care
+
+`pharmacy-device-remote`
+
+- **PHARMACY / DEVICES / REMOTE CARE**
+- **CONNECT external authoritative rails**
+
+| | |
+|---|---|
+| Owners | care, integration-hub |
+| Builds into | orders, device-observations, remote-care, external-adapters |
+| Proven by | order-evidence, device-source, external-acknowledgement |
+| Money path | clinic-value, premium-integrations |
+| Risk controls | clinical-authority, external-truth, device-security |
+| Measured by | order-completion, remote-monitoring-adherence |
+
+## 26. Brand, market thesis and positioning
+
+`brand-market-positioning`
+
+- **MARKET / BRAND / CATEGORY POSITIONING**
+- **unfinished work falls between systems**
+
+| | |
+|---|---|
+| Owners | ceo, marketing, product |
+| Builds into | website, messaging, demo, proof |
+| Proven by | customer-research, conversion-data |
+| Money path | demand-generation, sales |
+| Risk controls | no-fake-claims, protect-crown-jewels |
+| Measured by | qualified-traffic, demo-rate, message-comprehension |
+
+## 27. Market intelligence, competition and ICP
+
+`market-competition-icp`
+
+- **MARKET INTELLIGENCE / COMPETITION / ICP**
+- **initiative gate**
+
+| | |
+|---|---|
+| Owners | strategy, sales, marketing |
+| Builds into | research-register, segment-priority, buyer-map |
+| Proven by | dated-research, interviews, pipeline-data |
+| Money path | higher-win-rate, lower-cac |
+| Risk controls | dated-evidence, scenario-labeling |
+| Measured by | win-rate, sales-cycle, cac |
+
+## 28. Pricing, offers, monetization and unit economics
+
+`pricing-monetization`
+
+- **PRICING / MONETIZATION / UNIT ECONOMICS**
+- **Offer Registry**
+
+| | |
+|---|---|
+| Owners | cfo, revenue, product |
+| Builds into | offer-registry, entitlements, usage-ledger, margin-reporting |
+| Proven by | code-owned-prices, payment-evidence, cohort-margin |
+| Money path | subscription, implementation, usage, services, enterprise |
+| Risk controls | no-universal-clinical-fee, legal-review, server-owned-price |
+| Measured by | gross-margin, arpu, attach-rate, payback |
+
+## 29. Sales, pipeline and revenue conversion
+
+`sales-revenue`
+
+- **SALES / PIPELINE / REVENUE SYSTEM**
+- **OUTREACH ≠ PIPELINE ≠ CONTRACT ≠ CASH**
+
+| | |
+|---|---|
+| Owners | cro, sales |
+| Builds into | crm, stages, follow-up, proposal, payment |
+| Proven by | crm-stage, signed-agreement, payment |
+| Money path | new-arr, implementation-revenue |
+| Risk controls | truthful-stage, no-fake-traction |
+| Measured by | pipeline, win-rate, sales-cycle, cash-collected |
+
+## 30. Acquisition, distribution, attribution and content
+
+`acquisition-distribution`
+
+- **ACQUISITION / DISTRIBUTION / ATTRIBUTION**
+- **Grid is Klinikos’s primary network-acquisition wedge**
+
+| | |
+|---|---|
+| Owners | growth, marketing, grid |
+| Builds into | utm-attribution, public-grid, seo, partnership-distribution |
+| Proven by | analytics, lead-source, campaign-cost |
+| Money path | lower-cac, network-growth |
+| Risk controls | truthful-content, privacy-safe-public-discovery |
+| Measured by | cac, qualified-leads, organic-share, referral-rate |
+
+## 31. Onboarding, activation, customer success, retention and expansion
+
+`onboarding-retention-cs`
+
+- **ONBOARDING / ACTIVATION / RETENTION / CUSTOMER SUCCESS**
+- **Day 0 / Day 1 / Day 3 / Day 7 / Day 14**
+
+| | |
+|---|---|
+| Owners | customer-success, product-growth |
+| Builds into | activation-events, health-score, success-plan, expansion-triggers |
+| Proven by | usage, outcomes, support-history |
+| Money path | retention, nrr, expansion |
+| Risk controls | no-dark-patterns, outcome-truth |
+| Measured by | ttfv, activation, logo-retention, nrr |
+
+## 32. Automation, operations and human approval
+
+`automation-ops`
+
+- **ELIMINATE → SIMPLIFY → STANDARDIZE → AUTOMATE → DELEGATE → MEASURE**
+- **human approval**
+
+| | |
+|---|---|
+| Owners | coo, zumi, engineering |
+| Builds into | workflows, agents, approval-gates, runbooks |
+| Proven by | automation-audit, human-approval, outcome |
+| Money path | lower-cogs, higher-capacity |
+| Risk controls | consequential-action-gates, rollback |
+| Measured by | hours-saved, automation-success, exception-rate |
+
+## 33. Capital, funding, business credit and investor readiness
+
+`capital-credit-investor`
+
+- **CAPITAL / FUNDING / BUSINESS CREDIT / INVESTOR READINESS**
+- **customer-funded implementation**
+
+| | |
+|---|---|
+| Owners | cfo, ceo, capital |
+| Builds into | capital-register, data-room, bankability, application-evidence |
+| Proven by | actual-applications, bank-records, signed-terms |
+| Money path | customer-capital, non-dilutive, debt, equity |
+| Risk controls | no-fake-application-facts, cheapest-capital-first |
+| Measured by | runway, capital-cost, funding-probability |
+
+## 34. Financial model, cash control and company economics
+
+`financial-model-cfo`
+
+- **CFO / FINANCIAL MODEL / CASH CONTROL**
+- **base / upside / downside**
+
+| | |
+|---|---|
+| Owners | cfo, finance |
+| Builds into | 13-week-cash, pnl, unit-economics, scenario-model |
+| Proven by | bank, payments, ledger, contracts |
+| Money path | cash-discipline, margin, runway |
+| Risk controls | actual-vs-scenario, cash-reconciliation |
+| Measured by | runway, burn, gross-margin, cash-collected |
+
+## 35. Defensibility, network effects and switching value
+
+`defensibility-network-effects`
+
+- **DEFENSIBILITY / NETWORK EFFECTS**
+- **USER VALUE → BEHAVIOR CHANGE → EVIDENCE → ECONOMIC VALUE**
+
+| | |
+|---|---|
+| Owners | strategy, product, network |
+| Builds into | reputation, evidence-history, relationships, workflow-depth, distribution |
+| Proven by | cohort-retention, network-density, workflow-outcomes |
+| Money path | retention, pricing-power, enterprise-value |
+| Risk controls | no-fake-moat, data-rights |
+| Measured by | nrr, multi-product-attach, network-density, switching-intent |
+
+## 36. Scale and unicorn-value tests
+
+`scale-unicorn`
+
+- **SCALE / UNICORN TEST**
+- **10 / 100 / 1,000 / 10,000 customers/users / 1M users**
+
+| | |
+|---|---|
+| Owners | executive-council, architecture |
+| Builds into | capacity-model, org-design, platform-reliability, market-expansion |
+| Proven by | load-tests, financial-model, retention, market-data |
+| Money path | enterprise-value, scale-economics |
+| Risk controls | premature-scale, capital-efficiency |
+| Measured by | arr, gross-margin, nrr, uptime, market-penetration |
+
+## 37. Executive dashboard, priorities and operating cadence
+
+`company-dashboard-cadence`
+
+- **EXECUTIVE DASHBOARD / OPERATING CADENCE**
+- **OBSERVE → RESEARCH → VALIDATE → PRIORITIZE**
+
+| | |
+|---|---|
+| Owners | executive-council, coo |
+| Builds into | dashboard, registers, owners, cadence |
+| Proven by | source-linked-kpis, decision-log |
+| Money path | focus, execution-speed |
+| Risk controls | no-100-equal-priorities, owner-accountability |
+| Measured by | priority-throughput, blocked-work-age, cash-impact |
+
+## 38. Production, release, SRE, DevSecOps and resilience
+
+`production-release-devsecops`
+
+- **PRODUCTION / RELEASE / DEVSECOPS / RESILIENCE**
+- **backup / restore / disaster recovery**
+
+| | |
+|---|---|
+| Owners | engineering, security, sre |
+| Builds into | ci, release-gates, observability, backup-restore, incident-response |
+| Proven by | exact-head-ci, deployment, runtime, restore-test |
+| Money path | reliability, enterprise-readiness |
+| Risk controls | rollback, feature-flags, dependency-security |
+| Measured by | deployment-frequency, change-failure-rate, mttr, uptime |
+
+## 39. External service economics and capital-efficient provisioning
+
+`external-service-economics`
+
+- **EXTERNAL-SERVICE ECONOMICS / COST-TO-SERVE**
+- **platform infrastructure / customer-owned connections / activate-after-sale**
+
+| | |
+|---|---|
+| Owners | cfo, integration-hub, product |
+| Builds into | vendor-classification, usage-metering, provisioning-state |
+| Proven by | vendor-cost, usage-ledger, customer-demand |
+| Money path | margin, customer-funded-usage, reduced-burn |
+| Risk controls | no-premature-provisioning, vendor-lock-in-review |
+| Measured by | cost-to-serve, gross-margin, unused-vendor-spend |
+
+## 40. Support, implementation and service operations
+
+`support-service-operations`
+
+- **SUPPORT / IMPLEMENTATION / SERVICE OPERATIONS**
+- **support escalation**
+
+| | |
+|---|---|
+| Owners | customer-success, implementation, operations |
+| Builds into | onboarding-project, support-case, sla, knowledge |
+| Proven by | case-history, resolution, customer-outcome |
+| Money path | implementation-revenue, retention, services |
+| Risk controls | scope-control, minimum-necessary-access |
+| Measured by | time-to-resolution, implementation-cycle, csat |
+
+## 41. Enterprise procurement, trust and assurance
+
+`enterprise-procurement-trust`
+
+- **ENTERPRISE PROCUREMENT / TRUST / ASSURANCE**
+- **security questionnaire / BAA / DPA / vendor review**
+
+| | |
+|---|---|
+| Owners | security, enterprise-sales, legal |
+| Builds into | trust-center, evidence-room, questionnaires, contracting |
+| Proven by | control-evidence, vendor-evidence, runtime-evidence |
+| Money path | enterprise-sales, larger-acv |
+| Risk controls | no-unsupported-certification, contract-scope |
+| Measured by | procurement-cycle, security-review-pass-rate, enterprise-win-rate |
+
+## 42. Marketplace safety, fraud, incidents and disputes
+
+`marketplace-safety-disputes`
+
+- **MARKETPLACE SAFETY / FRAUD / DISPUTES**
+- **trust and anti-gaming**
+
+| | |
+|---|---|
+| Owners | grid, trust-safety, legal |
+| Builds into | reporting, disputes, suspension, risk-scoring, appeals |
+| Proven by | incident-evidence, decision-provenance |
+| Money path | loss-prevention, marketplace-trust |
+| Risk controls | anti-fraud, appeal-path, no-pay-to-eligibility |
+| Measured by | incident-rate, fraud-loss, resolution-time |
+
+## 43. API, developer and partner ecosystem
+
+`api-developer-ecosystem`
+
+- **API / DEVELOPER / PARTNER ECOSYSTEM**
+- **versioned contracts**
+
+| | |
+|---|---|
+| Owners | platform, integration-hub |
+| Builds into | api-contracts, webhooks, partner-auth, developer-docs |
+| Proven by | contract-tests, integration-tests, version-history |
+| Money path | premium-integrations, ecosystem-distribution |
+| Risk controls | scoped-auth, rate-limits, data-minimization |
+| Measured by | api-adoption, integration-time, error-rate |
