@@ -7,7 +7,7 @@ export type PlacementStatus =
   | "rejected"
   | "cancelled";
 
-export type PlacementApprovalActor = "school" | "site" | "preceptor";
+export type PlacementApprovalActor = "learner" | "school" | "site" | "preceptor";
 export type PlacementApprovalDecision = "approved" | "rejected";
 export type PlacementApprovalState = "pending" | PlacementApprovalDecision;
 
@@ -112,9 +112,9 @@ function appendTransition(
 /**
  * Start EDU's placement lifecycle after Grid has produced a candidate composition.
  *
- * Grid owns discovery/matching/composition. EDU owns the separate approval and
- * placement lifecycle. A match therefore enters as `matched` with zero approval or
- * professional authority.
+ * Grid owns discovery/matching/composition. EDU owns the separate acceptance,
+ * approval, and placement lifecycle. A match therefore enters as `matched` with zero
+ * acceptance, approval, or professional authority.
  */
 export function createPlacementLifecycle(
   input: CreatePlacementLifecycleInput,
@@ -129,6 +129,7 @@ export function createPlacementLifecycle(
     matchedAt: input.matchedAt,
     status: "matched",
     approvals: {
+      learner: "pending",
       school: "pending",
       site: "pending",
       preceptor: "pending",
@@ -140,8 +141,9 @@ export function createPlacementLifecycle(
 }
 
 /**
- * Record one required party's decision. Decisions are evidence-bearing events; they
- * are appended to history rather than silently overwriting the past.
+ * Record one required party's decision. Learner acceptance is deliberately separate
+ * from school, site, and preceptor approval. Decisions are evidence-bearing events;
+ * they are appended to history rather than silently overwriting the past.
  */
 export function recordPlacementApproval(
   placement: EduPlacementLifecycle,
@@ -183,7 +185,8 @@ export function recordPlacementApproval(
 
 /**
  * Advance only the placement itself. This function deliberately cannot create
- * school/site/preceptor approvals, licensure, or independent clinical authority.
+ * learner acceptance, school/site/preceptor approvals, licensure, or independent
+ * clinical authority.
  */
 export function transitionPlacement(
   placement: EduPlacementLifecycle,
@@ -193,7 +196,9 @@ export function transitionPlacement(
 
   if (input.to === "active") {
     if (placement.status !== "approved") {
-      throw new Error("A placement must be approved by school, site, and preceptor before it can become active.");
+      throw new Error(
+        "A placement must be accepted by the learner and approved by school, site, and preceptor before it can become active.",
+      );
     }
   } else if (input.to === "completed") {
     if (placement.status !== "active") {
