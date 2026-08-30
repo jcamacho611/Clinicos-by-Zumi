@@ -30,7 +30,7 @@ describe("Zumi FinOps", () => {
       row(),
       row({ capability: "grid_match_explanation", modelId: "gpt-cheap", inputTokens: 1_000, outputTokens: 200, costMicroUsd: 300 }),
       row({ outcome: "denied", reason: "entitlement_required", providerKey: null, modelId: null, inputTokens: 0, outputTokens: 0, costMicroUsd: 0 }),
-      row({ outcome: "error", reason: "provider_error", costMicroUsd: 0, durationMs: 20_000 }),
+      row({ outcome: "error", reason: "provider_error", inputTokens: 0, outputTokens: 0, costMicroUsd: 0, durationMs: 20_000 }),
     ]);
 
     expect(summary).toMatchObject({
