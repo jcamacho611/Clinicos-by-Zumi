@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
+import { computeGridLiquidityMetrics } from "@/lib/grid/liquidity-metrics";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
 type DemandBoardRow = {
@@ -151,6 +152,12 @@ export async function getGridTransactionBoard(session: ClinicSession) {
   const settledToYouCents = obligations
     .filter((line) => line.beneficiaryType === "organization" && line.beneficiaryReference === session.organizationId && line.status === "settled")
     .reduce((sum, line) => sum + line.amountCents, 0);
+  const liquidity = computeGridLiquidityMetrics({
+    demands,
+    offers,
+    reservations,
+    sourceWindowComplete: demands.length < 100 && offers.length < 150 && reservations.length < 150,
+  });
 
   return {
     organizationId: session.organizationId,
@@ -162,6 +169,7 @@ export async function getGridTransactionBoard(session: ClinicSession) {
       pendingToYouCents,
       settledToYouCents,
     },
+    liquidity,
     demands: demands.map((item) => ({ ...item, requestedStartAt: iso(item.requestedStartAt), requestedEndAt: iso(item.requestedEndAt), updatedAt: item.updatedAt.toISOString() })),
     offers: offers.map((item) => ({ ...item, offeredStartAt: item.offeredStartAt.toISOString(), offeredEndAt: iso(item.offeredEndAt), expiresAt: item.expiresAt.toISOString(), updatedAt: item.updatedAt.toISOString() })),
     reservations: reservations.map((item) => ({ ...item, reservedStartAt: item.reservedStartAt.toISOString(), reservedEndAt: iso(item.reservedEndAt), updatedAt: item.updatedAt.toISOString() })),
