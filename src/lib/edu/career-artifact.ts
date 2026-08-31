@@ -73,6 +73,13 @@ const NO_AUTHORITY = {
   organizationBinding: false,
 } as const;
 
+function normalizeResumeClaimState(state: CareerVerificationState): CareerVerificationState {
+  // A resume is a claim source, not a verification authority. A caller cannot make a
+  // resume fact verified merely by labeling it that way. Separate governed evidence
+  // may later verify the same fact through the appropriate domain workflow.
+  return state === "verified" ? "claimed" : state;
+}
+
 /**
  * Creates a private, versioned career evidence object.
  *
@@ -85,9 +92,18 @@ export function createCareerArtifact(input: CareerArtifactInput): CareerArtifact
   return {
     ...input,
     source: { ...input.source },
-    education: input.education.map((claim) => ({ ...claim })),
-    experience: input.experience.map((claim) => ({ ...claim })),
-    skills: input.skills.map((claim) => ({ ...claim })),
+    education: input.education.map((claim) => ({
+      ...claim,
+      verificationState: normalizeResumeClaimState(claim.verificationState),
+    })),
+    experience: input.experience.map((claim) => ({
+      ...claim,
+      verificationState: normalizeResumeClaimState(claim.verificationState),
+    })),
+    skills: input.skills.map((claim) => ({
+      ...claim,
+      verificationState: normalizeResumeClaimState(claim.verificationState),
+    })),
     preferences: {
       ...(input.preferences.roleInterests ? { roleInterests: [...input.preferences.roleInterests] } : {}),
       ...(input.preferences.locationText ? { locationText: input.preferences.locationText } : {}),
