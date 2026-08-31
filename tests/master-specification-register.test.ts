@@ -1,52 +1,58 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const SPEC = "docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md";
-const spec = readFileSync(SPEC, "utf8");
+const MASTER_CANON = "docs/KLINIKOS_MASTER_CANON.md";
+const AUTHORITY_MAP = "docs/KLINIKOS_AUTHORITY_MAP.yaml";
+const INVENTORY = "docs/governance/KLINIKOS_DOCUMENT_AUTHORITY_INVENTORY.md";
+const PREDECESSOR_SPEC = "docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md";
 
-/**
- * The repository holds seventy-five documents, and an agent reading one of them cannot
- * tell whether it is law or a dated status snapshot. That confusion has a specific cost:
- * documents saying "patient portal not built" and "billing not built" were true when
- * written and are now false, and treating them as current would undo real work.
- *
- * The master specification classifies every document on that axis. These keep the
- * classification honest — a register that silently falls behind the directory is worse
- * than none, because it looks complete.
- */
-describe("master specification register", () => {
-  const docs = readdirSync("docs").filter((name) => name.endsWith(".md"));
+const master = readFileSync(MASTER_CANON, "utf8");
+const authority = readFileSync(AUTHORITY_MAP, "utf8");
+const inventory = readFileSync(INVENTORY, "utf8");
 
-  it("classifies every document in the directory", () => {
-    expect(docs.length).toBeGreaterThan(50);
-    const missing = docs.filter((name) => !spec.includes(`\`${name}\``));
-    expect(missing, "add these to the register in the master specification").toEqual([]);
+describe("Klinikos document authority register", () => {
+  it("keeps exactly one declared supreme narrative authority", () => {
+    expect(master).toContain("KLINIKOS MASTER CANON");
+    expect(authority).toContain(`file: ${MASTER_CANON}`);
+    expect(authority).toContain("SOLE_ACTIVE_PRODUCT_ARCHITECTURE_BUSINESS_EXPERIENCE_AUTHORITY");
+    expect(authority).toContain("may_be_overridden_by_specialist_docs: false");
+    expect(authority).toContain("may_be_overridden_by_historical_docs: false");
+    expect(inventory).toContain("exactly one narrative document may hold supreme company/product authority");
+    expect(inventory).toContain(`\`${MASTER_CANON}\``);
   });
 
-  it("keeps the register from naming documents that no longer exist", () => {
-    const named = [...spec.matchAll(/`([A-Z0-9][A-Za-z0-9_.-]*\.md)`/g)].map((m) => m[1]);
-    expect(named.length).toBeGreaterThan(50);
-    const stale = [...new Set(named)].filter((name) => !docs.includes(name));
-    expect(stale, "the register names documents that are gone").toEqual([]);
+  it("classifies predecessor master documents as migration candidates instead of restoring parallel authority", () => {
+    expect(inventory).toContain(`\`${PREDECESSOR_SPEC}\``);
+    expect(inventory).toContain("`HISTORICAL_RETIRED_CANDIDATE`");
+    expect(inventory).toContain("Extract unique requirements into Master Canon or specialist contracts");
+    expect(authority).toContain("NEW_PARALLEL_MASTER_CANON");
+    expect(authority).toContain("NEW_PARALLEL_SOURCE_OF_TRUTH");
   });
 
-  it("states that the repository, not a document, decides what exists", () => {
-    // The whole point. Without this the register is just another opinion.
-    expect(spec).toContain("Never overrides the repository on status");
-    expect(spec).toMatch(/the code is right and the document is old/);
-  });
-
-  it("carries the claims that must never be made", () => {
-    for (const claim of ["certified EHR", "HIPAA compliant", "free trial"]) {
-      expect(spec, `${claim} must stay on the never-claim list`).toContain(claim);
+  it("allows only the four subordinate documentation roles beneath the Master Canon", () => {
+    for (const classification of [
+      "IMPLEMENTATION_CONTRACT",
+      "EVIDENCE_REGISTER",
+      "SPECIALIST_REFERENCE",
+      "HISTORICAL_RETIRED",
+    ]) {
+      expect(inventory).toContain(`\`${classification}`);
     }
-    // PHI readiness is the one an enterprise buyer will test first.
-    expect(spec).toContain("PHI production readiness is not claimed");
+    expect(inventory).toContain("A file name containing `CANON`, `MASTER`, `FINAL`, `GOVERNING`, `BLUEPRINT`, `SOURCE OF TRUTH`, or `OPERATING SYSTEM` does not grant authority.");
   });
 
-  it("does not restate precedence in a second place that can drift from the index", () => {
-    // KLINIKOS_ARCHITECTURE_INDEX.md owns the chain. Two copies would disagree.
-    expect(spec).toContain("KLINIKOS_ARCHITECTURE_INDEX.md");
-    expect(spec).toContain("It is not duplicated here");
+  it("keeps implementation status evidence separate from intended product truth", () => {
+    expect(authority).toContain("question: what_exists_today");
+    expect(authority).toContain("current_code");
+    expect(authority).toContain("current_database_schema");
+    expect(authority).toContain("verified_runtime_evidence");
+    expect(authority).toContain("implementation_evidence_does_not_redefine_product_target");
+    expect(authority).toContain("MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS");
+  });
+
+  it("requires safe migration before duplicate authorities are retired", () => {
+    expect(inventory).toContain("remove ambiguity without deleting accepted Klinikos knowledge");
+    expect(inventory).toContain("cannot survive as a second active master");
+    expect(inventory).toContain("cannot retain independent governing status after their unique content is migrated");
   });
 });

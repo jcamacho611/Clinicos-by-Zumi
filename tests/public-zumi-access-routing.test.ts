@@ -37,13 +37,13 @@ describe("public Zumi access and typo routing", () => {
     expect(result.destination).toMatchObject({ key: "signin", href: "/login" });
   });
 
-  it("keeps the real access-verification route public on both public Zumi surfaces", () => {
+  it("keeps the real access-verification route public on both public Zumi surfaces without depending on local variable names", () => {
     const livingHome = read("src/components/marketing/public-living-gateway.tsx");
     const siteControl = read("src/components/marketing/public-zumi-site-control.tsx");
 
-    expect(livingHome).toContain('"/access"');
-    expect(siteControl).toContain('"/access"');
-    expect(livingHome).toContain("publicActionPaths.has(href)");
-    expect(siteControl).toContain("publicActionPaths.has(href)");
+    for (const source of [livingHome, siteControl]) {
+      expect(source).toContain('"/access"');
+      expect(source).toMatch(/publicActionPaths\.has\(/u);
+    }
   });
 });

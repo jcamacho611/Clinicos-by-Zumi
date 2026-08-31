@@ -1,23 +1,11 @@
-# CI has not executed on this repository since at least 2026-08-18.
+# Historical incident note: on 2026-08-25, run 32886481649 received no runner and
+# recorded zero billable compute. That account-level Actions-capacity incident is not
+# current CI truth. By 2026-08-29, Quality run 33273321573 provisioned both jobs, executed
+# every step, passed deploy-contract, and reported an application-test failure in verify.
+# Therefore exact-head GitHub checks are again required; never reuse the historical
+# no-runner explanation for a current failure without fresh job evidence.
 #
-# Every run — this workflow and the separate runner diagnostic alike — fails in about
-# two seconds with `runner_id: 0`, an empty runner name, and no `steps` array at all.
-# That is the signature of a job that was never assigned a runner, not of a job that ran
-# and failed: the workflow is valid, its YAML parses, and its steps are well formed.
-#
-# The cause is account-level. This repository is private, and private repositories
-# consume billable Actions minutes; when the included allowance is spent or the spending
-# limit is $0, GitHub accepts the run and then never provisions a runner. Nothing in this
-# file can fix it. It is resolved in Settings → Billing and plans → either raise the
-# Actions spending limit or wait for the monthly reset.
-#
-# Measured rather than inferred, on run 32886481649 (2026-08-25): the billing API reports
-# `total_ms: 0` with `duration_ms: 0` for both jobs, while the run itself records
-# `run_duration_ms: 4000`. GitHub therefore clocked four seconds of wall time and zero
-# billable compute — the jobs consumed no runner at all. A workflow defect would still
-# burn minutes.
-#
-# Until it is fixed, release proof comes from two commands that do run:
+# Local release proof remains available through:
 #   npm run verify:release      full gate — migrations on an empty database, tests,
 #                               journeys, production build, startup, health
 #   npm run verify:production   read-only check of what is actually deployed
@@ -163,11 +151,21 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
-      # Render's Build Command, verbatim.
+      # Render's Build Command, verbatim except for the explicit disposable-verification
+      # migration token above, which is CI-only and points at this job's disposable DB.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
         run: npm run render:build
+        env:
+          # Scoped to this one step, never to the job. A job-level grant would hand every
+          # future step here a fail-open migration control.
+          #
+          # This flag states an intent and grants nothing on its own: render-build.mjs
+          # proves the target is an empty, non-managed database before it honours it, and
+          # fails the step if it is not. Pointing this job at anything real therefore stops
+          # the build rather than migrating it.
+          KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
       - name: Post-build confidentiality gates
         run: npm run security:check
       # Render's Start Command, verbatim. A build that cannot start is not a deploy.
