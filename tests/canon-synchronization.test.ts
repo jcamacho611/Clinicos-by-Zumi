@@ -317,6 +317,31 @@ describe("Klinikos Canon synchronization", () => {
     expect(canon).toBeLessThan(frontend);
   });
 
+  it("routes implementation work to the current Blueprint, not the superseded design", () => {
+    // The index's read order is what a fresh agent actually follows. Ranking the Canon
+    // first is not enough on its own: if the implementation step still pointed at the
+    // 2026-08-26 operating-network kernel design, an agent would build to a superseded
+    // contract while believing it had read the current one. The 2026-08-26 design
+    // remains valuable as approved background, so this guards its rank, not its
+    // presence.
+    const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+    const readOrder = index.slice(index.indexOf("## Required read order"));
+    expect(readOrder, "read-order section missing").not.toBe("");
+
+    const blueprint = readOrder.indexOf(blueprintPath);
+    const kernelDesign = readOrder.indexOf(
+      "docs/superpowers/specs/2026-08-26-klinikos-operating-network-kernel-design.md",
+    );
+
+    expect(blueprint, "read order does not reach the current Blueprint").toBeGreaterThan(-1);
+    if (kernelDesign > -1) {
+      expect(
+        blueprint,
+        "the superseded 2026-08-26 design is read before the current Blueprint",
+      ).toBeLessThan(kernelDesign);
+    }
+  });
+
   it("keeps the merge-forward deltas that a later compression pass would drop first", () => {
     // MF-001..MF-008 are the accepted additions most at risk of vanishing in a summary,
     // because each reads like detail rather than law. They are law.

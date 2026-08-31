@@ -23,8 +23,11 @@ export type PublicLivingDestination = {
     | "care"
     /* Public-only destinations. `explore` covers the product-explanation routes a
        visitor asks for by name; `signin` is where a request for real clinic data has to
-       go, because this page has none. */
+       go, because this page has none. `join` is free ecosystem entry: the only
+       destination a visitor with no account can complete, and the one MF-001 requires
+       the front door to offer. */
     | "explore"
+    | "join"
     | "signin";
   href: string;
   action: string;
@@ -150,6 +153,21 @@ const publicRules: readonly PublicRule[] = [
     assumption: "The next useful move is learning or demonstrating readiness.",
   },
   {
+    /* Free ecosystem entry (MF-001). A person who wants to work, learn, or offer what
+       they have is not an existing customer: sending them to a marketing page or a
+       sign-in wall ends the journey before it starts. `/grid/join` is live, takes no
+       payment, and already enrols both individual professionals and organizations. */
+    destination: { key: "join", href: "/grid/join", action: "Join Grid free" },
+    patterns: [
+      /\b(?:i|i'?m|im)\b[^.?!]*\b(?:need|needs|looking for|want|wants|seeking|search(?:ing)? for)\b[^.?!]*\b(?:jobs?|work|shifts?|gigs?|positions?|roles?|employment|placements?|hours?)\b/i,
+      /\b(?:join|sign\s*up|signup|register|create an account|get started)\b/i,
+      /\bi\s+(?:have|own|got|run)\b[^.?!]*\b(?:rooms?|chairs?|space|suite|office|equipment|capacity|time)\b[^.?!]*\b(?:rent|lease|list|offer|share|out|available)\b/i,
+    ],
+    title: "You can join Klinikos free.",
+    body: "Joining costs nothing and takes no card. You get a Klinikos identity, you can say what you need or what you have, and you can start seeing real opportunities on Grid. Joining is not a credential and does not decide what any particular opportunity requires.",
+    assumption: "You want to take part yourself rather than read about the product.",
+  },
+  {
     destination: { key: "grid", href: "/grid", action: "Open Grid" },
     patterns: [
       /\b(?:job|work|shift|opportunity|gig|contract)\b/i,
@@ -207,6 +225,7 @@ const destinationLabels: Record<PublicLivingDestination["key"], string> = {
   insights: "operational insights",
   care: "care",
   explore: "the product overview",
+  join: "joining Klinikos",
   signin: "signing in",
 };
 

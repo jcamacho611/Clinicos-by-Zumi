@@ -148,7 +148,14 @@ describe("public Living Home conversation and accessibility contract", () => {
 
   it("keeps public and patient destinations out of clinic-staff authentication while preserving safe structured protected intent", () => {
     expect(source).toContain('if (destination.href === "/portal") return "/portal/login"');
-    expect(source).toContain('"/grid", "/edu"');
+    // Each public destination is asserted on its own rather than as one adjacent
+    // literal. The law is that public destinations stay out of the clinic-staff login
+    // wrapper, not that they sit next to each other in source order; free entry
+    // (`/grid/join`) joined the allowlist and shifted the old adjacency without
+    // changing what is guarded.
+    for (const publicHref of ['"/grid"', '"/grid/join"', '"/edu"']) {
+      expect(source).toContain(publicHref);
+    }
     expect(source).toContain("publicActionPaths.has(destination.href)");
     expect(source).toContain("protectedPublicContinuationHref(destination.href, destination.key)");
     expect(source).toContain("destinationActionHref(resolution.destination)");
