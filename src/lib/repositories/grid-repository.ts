@@ -24,6 +24,11 @@ import {
   providerReadyForGrid,
 } from "@/lib/grid-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import {
+  appendProviderAuthorityEvent,
+  credentialAuthoritySnapshot,
+  malpracticeAuthoritySnapshot,
+} from "@/lib/repositories/provider-authority-history";
 
 function requirePermission(session: ClinicSession, resource: "network" | "credentialing" | "grid", action: "read" | "create" | "update" | "manage") {
   if (!can(session.role, resource, action)) throw new NetworkAccessError("Grid access is not permitted for this role.", 403);
@@ -471,7 +476,43 @@ export async function createGridContractorEnrollment(rawInput: unknown) {
           })),
         },
       },
+      include: { credentials: true },
     });
+    const enrollmentCredential = provider.credentials[0];
+    if (!enrollmentCredential) throw new NetworkAccessError("Contractor credential history could not be initialized.", 409);
+    await Promise.all([
+      appendProviderAuthorityEvent(tx, {
+        organizationId: organization.id,
+        providerId: provider.id,
+        authorityKind: "credential",
+        authorityRecordId: enrollmentCredential.id,
+        authorityVersion: enrollmentCredential.authorityVersion,
+        action: "grid.contractor_credential_created",
+        actorId: user.id,
+        actorType: "contractor_applicant",
+        beforeState: null,
+        afterState: credentialAuthoritySnapshot(enrollmentCredential),
+        evidenceDocumentId: enrollmentCredential.evidenceDocumentId,
+        evidenceReference: enrollmentCredential.evidenceReference,
+        provenanceSource: enrollmentCredential.verificationSource,
+        metadata: { retention: "evidence_reference_only", humanApprovalRequired: true },
+      }),
+      appendProviderAuthorityEvent(tx, {
+        organizationId: organization.id,
+        providerId: provider.id,
+        authorityKind: "malpractice",
+        authorityRecordId: provider.id,
+        authorityVersion: provider.malpracticeAuthorityVersion,
+        action: "grid.contractor_malpractice_created",
+        actorId: user.id,
+        actorType: "contractor_applicant",
+        beforeState: null,
+        afterState: malpracticeAuthoritySnapshot(provider),
+        evidenceReference: provider.malpracticeEvidenceReference,
+        provenanceSource: "contractor_submission",
+        metadata: { retention: "evidence_reference_only", humanApprovalRequired: true },
+      }),
+    ]);
     await Promise.all([
       tx.task.create({ data: { organizationId: organization.id, category: "grid_contractor_review", title: `Review contractor application: ${provider.displayName}`, details: "Verify license evidence, malpractice policy, services, scope, work settings, and availability before activating account access.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "credentialing", createdBy: user.id } }),
       tx.auditLog.create({ data: { organizationId: organization.id, actorId: user.id, actorType: "contractor_applicant", action: "grid.contractor_enrolled", resourceType: "provider", resourceId: provider.id, metadata: { syntheticDemo: true, humanApprovalRequired: true, accountStatus: "pending_approval", requestedOnCall: input.onCallNow } } }),
@@ -510,11 +551,41 @@ export async function reviewGridCredential(session: ClinicSession, providerId: s
   return db.$transaction(async (tx) => {
     const credential = await tx.providerCredential.findFirst({ where: { id: credentialId, providerId, organizationId: session.organizationId }, include: { provider: true } });
     if (!credential) throw new NetworkAccessError("Credential record not found.", 404);
-    const updated = await tx.providerCredential.update({ where: { id: credential.id }, data: { verificationStatus: input.decision, verificationSource: input.verificationSource, primarySourceVerifiedAt: input.decision === "verified" ? new Date() : null, verifiedBy: session.userId, reviewNotes: input.note } });
+    const changed = await tx.providerCredential.updateMany({
+      where: { id: credential.id, organizationId: session.organizationId, authorityVersion: credential.authorityVersion },
+      data: {
+        verificationStatus: input.decision,
+        verificationSource: input.verificationSource,
+        primarySourceVerifiedAt: input.decision === "verified" ? new Date() : null,
+        verifiedBy: session.userId,
+        reviewNotes: input.note,
+        authorityVersion: { increment: 1 },
+      },
+    });
+    if (changed.count !== 1) throw new NetworkAccessError("Credential authority changed during review. Refresh and retry.", 409);
+    const updated = await tx.providerCredential.findUnique({ where: { id: credential.id } });
+    if (!updated) throw new NetworkAccessError("Credential authority could not be reloaded after review.", 409);
     if (input.decision === "rejected") {
       await tx.provider.update({ where: { id: providerId }, data: { verificationStatus: "needs_review" } });
       if (credential.provider.engagementType === "independent_contractor") await restrictContractorAccess(tx, credential.provider);
     }
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId,
+      authorityKind: "credential",
+      authorityRecordId: credential.id,
+      authorityVersion: updated.authorityVersion,
+      action: `grid.credential_${input.decision}`,
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: credentialAuthoritySnapshot(credential),
+      afterState: credentialAuthoritySnapshot(updated),
+      evidenceDocumentId: updated.evidenceDocumentId,
+      evidenceReference: updated.evidenceReference,
+      provenanceSource: updated.verificationSource,
+      note: input.note,
+      metadata: { retention: "evidence_reference_only", humanDecision: true },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: `grid.credential_${input.decision}`, resourceType: "provider_credential", resourceId: credential.id, metadata: { providerId, note: input.note, verificationSource: input.verificationSource, humanDecision: true } } });
     return updated;
   });
@@ -526,8 +597,37 @@ export async function reviewGridMalpractice(session: ClinicSession, providerId: 
   return db.$transaction(async (tx) => {
     const provider = await tx.provider.findFirst({ where: { id: providerId, organizationId: session.organizationId } });
     if (!provider) throw new NetworkAccessError("Provider profile not found.", 404);
-    const updated = await tx.provider.update({ where: { id: provider.id }, data: { malpracticeVerificationStatus: input.decision, malpracticeVerifiedAt: input.decision === "verified" ? new Date() : null, malpracticeVerifiedBy: session.userId, malpracticeReviewNotes: input.note, ...(input.decision === "rejected" ? { verificationStatus: "needs_review" } : {}) } });
+    const changed = await tx.provider.updateMany({
+      where: { id: provider.id, organizationId: session.organizationId, malpracticeAuthorityVersion: provider.malpracticeAuthorityVersion },
+      data: {
+        malpracticeVerificationStatus: input.decision,
+        malpracticeVerifiedAt: input.decision === "verified" ? new Date() : null,
+        malpracticeVerifiedBy: session.userId,
+        malpracticeReviewNotes: input.note,
+        malpracticeAuthorityVersion: { increment: 1 },
+        ...(input.decision === "rejected" ? { verificationStatus: "needs_review" } : {}),
+      },
+    });
+    if (changed.count !== 1) throw new NetworkAccessError("Malpractice authority changed during review. Refresh and retry.", 409);
+    const updated = await tx.provider.findUnique({ where: { id: provider.id } });
+    if (!updated) throw new NetworkAccessError("Malpractice authority could not be reloaded after review.", 409);
     if (input.decision === "rejected" && provider.engagementType === "independent_contractor") await restrictContractorAccess(tx, provider);
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId: provider.id,
+      authorityKind: "malpractice",
+      authorityRecordId: provider.id,
+      authorityVersion: updated.malpracticeAuthorityVersion,
+      action: `grid.malpractice_${input.decision}`,
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: malpracticeAuthoritySnapshot(provider),
+      afterState: malpracticeAuthoritySnapshot(updated),
+      evidenceReference: updated.malpracticeEvidenceReference,
+      provenanceSource: "human_coverage_review",
+      note: input.note,
+      metadata: { retention: "evidence_reference_only", humanDecision: true },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: `grid.malpractice_${input.decision}`, resourceType: "provider", resourceId: provider.id, metadata: { note: input.note, humanDecision: true } } });
     return updated;
   });
@@ -581,6 +681,41 @@ export async function createGridProvider(session: ClinicSession, rawInput: unkno
       },
       include: { credentials: true },
     });
+    const createdCredential = provider.credentials[0];
+    if (!createdCredential) throw new NetworkAccessError("Grid provider credential history could not be initialized.", 409);
+    await Promise.all([
+      appendProviderAuthorityEvent(tx, {
+        organizationId: session.organizationId,
+        providerId: provider.id,
+        authorityKind: "credential",
+        authorityRecordId: createdCredential.id,
+        authorityVersion: createdCredential.authorityVersion,
+        action: "grid.provider_credential_created",
+        actorId: session.userId,
+        actorType: "user",
+        beforeState: null,
+        afterState: credentialAuthoritySnapshot(createdCredential),
+        evidenceDocumentId: createdCredential.evidenceDocumentId,
+        evidenceReference: createdCredential.evidenceReference,
+        provenanceSource: createdCredential.verificationSource,
+        metadata: { retention: "evidence_reference_only", humanApprovalRequired: true },
+      }),
+      appendProviderAuthorityEvent(tx, {
+        organizationId: session.organizationId,
+        providerId: provider.id,
+        authorityKind: "malpractice",
+        authorityRecordId: provider.id,
+        authorityVersion: provider.malpracticeAuthorityVersion,
+        action: "grid.provider_malpractice_created",
+        actorId: session.userId,
+        actorType: "user",
+        beforeState: null,
+        afterState: malpracticeAuthoritySnapshot(provider),
+        evidenceReference: provider.malpracticeEvidenceReference,
+        provenanceSource: "operator_intake",
+        metadata: { retention: "evidence_reference_only", humanApprovalRequired: true },
+      }),
+    ]);
     await tx.task.create({ data: { organizationId: session.organizationId, category: "credentialing_verification", title: `Review Grid profile for ${provider.displayName}`, details: "Verify license, malpractice coverage, service scope, location privileges, and public profile before activation.", priority: "high", riskLevel: RiskLevel.NEEDS_STAFF, status: "open", ownerId: "credentialing", createdBy: session.userId } });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "grid.provider_profile_created", resourceType: "provider", resourceId: provider.id, metadata: { verificationStatus: "draft", syntheticDemo: true, humanApprovalRequired: true } } });
     return provider;

@@ -357,6 +357,7 @@ model Provider {
   malpracticeVerifiedAt          DateTime?
   malpracticeVerifiedBy          String?
   malpracticeReviewNotes         String?
+  malpracticeAuthorityVersion    Int                         @default(1)
   certifications                 String[]                    @default([])
   servicesOffered                String[]                    @default([])
   experienceLevel                String                      @default("Entry")
@@ -411,6 +412,7 @@ model ProviderCredential {
   exceptionReason         String?
   verifiedBy              String?
   reviewNotes             String?
+  authorityVersion        Int       @default(1)
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
   provider                Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -429,6 +431,7 @@ model ProviderFacilityPrivilege {
   expiresAt          DateTime?
   verificationSource String?
   notes              String?
+  authorityVersion   Int          @default(1)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

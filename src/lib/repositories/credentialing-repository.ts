@@ -5,6 +5,11 @@ import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { credentialNeedsAttention, facilityPrivilegeTransitionSchema, providerCredentialSchema, providerCredentialTransitionSchema, providerFacilityPrivilegeSchema } from "@/lib/credentialing-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import {
+  appendProviderAuthorityEvent,
+  credentialAuthoritySnapshot,
+  facilityPrivilegeAuthoritySnapshot,
+} from "@/lib/repositories/provider-authority-history";
 
 function dateOrNull(value?: string | null) {
   return value ? new Date(value) : null;
@@ -76,6 +81,22 @@ export async function createProviderCredential(session: ClinicSession, rawInput:
     if (!provider) throw new NetworkAccessError("Provider not found for this organization.", 404);
     const credential = await tx.providerCredential.create({ data: { organizationId: session.organizationId, providerId: provider.id, type: input.type, number: input.number, state: input.state ?? null, expiresAt: dateOrNull(input.expiresAt), status: "pending", verificationStatus: "pending", verificationSource: input.verificationSource ?? null, evidenceDocumentId: input.evidenceDocumentId ?? null } });
     const task = await tx.task.create({ data: { organizationId: session.organizationId, category: "credentialing_verification", title: `Verify ${input.type} for ${provider.name}`, details: `credential:${credential.id} Primary-source or manual evidence review required.`, ownerId: provider.userId, priority: "high", riskLevel: "NEEDS_STAFF", dueAt: new Date(), status: "open", createdBy: session.userId } });
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId: provider.id,
+      authorityKind: "credential",
+      authorityRecordId: credential.id,
+      authorityVersion: credential.authorityVersion,
+      action: "credentialing.credential_created",
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: null,
+      afterState: credentialAuthoritySnapshot(credential),
+      evidenceDocumentId: credential.evidenceDocumentId,
+      evidenceReference: credential.evidenceReference,
+      provenanceSource: credential.verificationSource,
+      metadata: { retention: "evidence_reference_only" },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "credentialing.credential_created", resourceType: "provider_credential", resourceId: credential.id, metadata: { providerId: provider.id, taskId: task.id, manualFallback: true } } });
     return { credential, taskId: task.id };
   });
@@ -92,10 +113,43 @@ export async function transitionProviderCredential(session: ClinicSession, crede
   const verificationStatus = input.action === "verify" ? "verified" : input.action === "reject" ? "rejected" : input.action === "exception" ? "exception" : "pending";
   const now = new Date();
   return db.$transaction(async (tx) => {
-    const updated = await tx.providerCredential.update({ where: { id: credential.id }, data: { status, verificationStatus, verificationSource: input.verificationSource ?? credential.verificationSource, primarySourceVerifiedAt: input.action === "verify" ? now : credential.primarySourceVerifiedAt, expiresAt: input.action === "renew" ? dateOrNull(input.expiresAt) : credential.expiresAt, exceptionReason: input.action === "exception" ? input.exceptionReason : input.action === "verify" ? null : credential.exceptionReason } });
+    const changed = await tx.providerCredential.updateMany({
+      where: { id: credential.id, organizationId: session.organizationId, authorityVersion: credential.authorityVersion },
+      data: {
+        status,
+        verificationStatus,
+        verificationSource: input.verificationSource ?? credential.verificationSource,
+        primarySourceVerifiedAt: input.action === "verify" ? now : credential.primarySourceVerifiedAt,
+        expiresAt: input.action === "renew" ? dateOrNull(input.expiresAt) : credential.expiresAt,
+        exceptionReason: input.action === "exception" ? input.exceptionReason : input.action === "verify" ? null : credential.exceptionReason,
+        verifiedBy: ["verify", "reject", "exception"].includes(input.action) ? session.userId : credential.verifiedBy,
+        reviewNotes: input.note,
+        authorityVersion: { increment: 1 },
+      },
+    });
+    if (changed.count !== 1) throw new NetworkAccessError("Credential authority changed during review. Refresh and retry.", 409);
+    const updated = await tx.providerCredential.findUnique({ where: { id: credential.id } });
+    if (!updated) throw new NetworkAccessError("Credential authority could not be reloaded after review.", 409);
     const taskStatus = input.action === "verify" ? "completed" : "open";
     await tx.task.updateMany({ where: { organizationId: session.organizationId, category: { in: ["credentialing", "credentialing_verification", "credentialing_renewal"] }, details: { contains: `credential:${credential.id}` }, status: { not: "completed" } }, data: { status: taskStatus, completedAt: taskStatus === "completed" ? now : null } });
     if (taskStatus === "open" && ["request_verification", "renew", "exception", "reject"].includes(input.action)) await tx.task.create({ data: { organizationId: session.organizationId, category: input.action === "renew" ? "credentialing_renewal" : "credentialing_verification", title: `${input.action === "renew" ? "Review renewal" : "Review credential"}: ${credential.provider.name}`, details: `credential:${credential.id} ${input.note}`, ownerId: credential.provider.userId, priority: input.action === "exception" || input.action === "reject" ? "urgent" : "high", riskLevel: input.action === "exception" || input.action === "reject" ? "URGENT" : "NEEDS_STAFF", dueAt: new Date(), status: "open", createdBy: session.userId } });
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId: credential.provider.id,
+      authorityKind: "credential",
+      authorityRecordId: credential.id,
+      authorityVersion: updated.authorityVersion,
+      action: `credentialing.credential_${input.action}`,
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: credentialAuthoritySnapshot(credential),
+      afterState: credentialAuthoritySnapshot(updated),
+      evidenceDocumentId: updated.evidenceDocumentId,
+      evidenceReference: updated.evidenceReference,
+      provenanceSource: updated.verificationSource,
+      note: input.note,
+      metadata: { retention: "evidence_reference_only" },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: `credentialing.credential_${input.action}`, resourceType: "provider_credential", resourceId: credential.id, changes: { status: { from: credential.status, to: updated.status }, verificationStatus: { from: credential.verificationStatus, to: updated.verificationStatus }, expiresAt: { from: credential.expiresAt, to: updated.expiresAt } }, metadata: { providerId: credential.provider.id, note: input.note, verificationSource: input.verificationSource, manualFallback: true } } });
     return updated;
   });
@@ -112,6 +166,20 @@ export async function createFacilityPrivilege(session: ClinicSession, rawInput: 
     if (!provider || !facility) throw new NetworkAccessError("Provider and facility must belong to this organization.", 404);
     const privilege = await tx.providerFacilityPrivilege.create({ data: { organizationId: session.organizationId, providerId: provider.id, facilityId: facility.id, status: "pending", expiresAt: dateOrNull(input.expiresAt), notes: input.notes ?? null } });
     await tx.task.create({ data: { organizationId: session.organizationId, category: "credentialing", title: `Review facility privilege for ${provider.name}`, details: `privilege:${privilege.id} ${facility.name}`, priority: "high", riskLevel: "NEEDS_STAFF", dueAt: new Date(), status: "open", createdBy: session.userId } });
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId: provider.id,
+      authorityKind: "facility_privilege",
+      authorityRecordId: privilege.id,
+      authorityVersion: privilege.authorityVersion,
+      action: "credentialing.facility_privilege_created",
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: null,
+      afterState: facilityPrivilegeAuthoritySnapshot(privilege),
+      note: input.notes ?? null,
+      metadata: { facilityId: facility.id, retention: "authority_decision_only" },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: "credentialing.facility_privilege_created", resourceType: "provider_facility_privilege", resourceId: privilege.id, metadata: { providerId: provider.id, facilityId: facility.id, manualFallback: true } } });
     return privilege;
   });
@@ -124,8 +192,36 @@ export async function transitionFacilityPrivilege(session: ClinicSession, privil
   if (!privilege) throw new NetworkAccessError("Facility privilege not found for this organization.", 404);
   const status = input.action === "grant" ? "active" : input.action === "suspend" ? "suspended" : "expired";
   return db.$transaction(async (tx) => {
-    const updated = await tx.providerFacilityPrivilege.update({ where: { id: privilege.id }, data: { status, grantedAt: input.action === "grant" ? new Date() : privilege.grantedAt, verificationSource: input.verificationSource ?? privilege.verificationSource } });
+    const now = new Date();
+    const changed = await tx.providerFacilityPrivilege.updateMany({
+      where: { id: privilege.id, organizationId: session.organizationId, authorityVersion: privilege.authorityVersion },
+      data: {
+        status,
+        grantedAt: input.action === "grant" ? now : privilege.grantedAt,
+        verificationSource: input.verificationSource ?? privilege.verificationSource,
+        notes: input.note,
+        authorityVersion: { increment: 1 },
+      },
+    });
+    if (changed.count !== 1) throw new NetworkAccessError("Facility privilege authority changed during review. Refresh and retry.", 409);
+    const updated = await tx.providerFacilityPrivilege.findUnique({ where: { id: privilege.id } });
+    if (!updated) throw new NetworkAccessError("Facility privilege authority could not be reloaded after review.", 409);
     await tx.task.updateMany({ where: { organizationId: session.organizationId, category: "credentialing", details: { contains: `privilege:${privilege.id}` }, status: { not: "completed" } }, data: { status: input.action === "grant" ? "completed" : "open", completedAt: input.action === "grant" ? new Date() : null } });
+    await appendProviderAuthorityEvent(tx, {
+      organizationId: session.organizationId,
+      providerId: privilege.providerId,
+      authorityKind: "facility_privilege",
+      authorityRecordId: privilege.id,
+      authorityVersion: updated.authorityVersion,
+      action: `credentialing.facility_privilege_${input.action}`,
+      actorId: session.userId,
+      actorType: "user",
+      beforeState: facilityPrivilegeAuthoritySnapshot(privilege),
+      afterState: facilityPrivilegeAuthoritySnapshot(updated),
+      provenanceSource: updated.verificationSource,
+      note: input.note,
+      metadata: { facilityId: privilege.facilityId, retention: "authority_decision_only" },
+    });
     await tx.auditLog.create({ data: { organizationId: session.organizationId, actorId: session.userId, actorType: "user", action: `credentialing.facility_privilege_${input.action}`, resourceType: "provider_facility_privilege", resourceId: privilege.id, changes: { status: { from: privilege.status, to: updated.status } }, metadata: { note: input.note, verificationSource: input.verificationSource, manualFallback: true } } });
     return updated;
   });
