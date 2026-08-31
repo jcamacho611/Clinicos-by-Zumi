@@ -1,0 +1,41 @@
+// Durable Person-owned career/resume claims and provenance.
+//
+// This is evidence/context only. Resume parsing, human confirmation, or artifact
+// verification metadata never grants professional, clinical, billing,
+// organization-binding, listing, signing, payout, school/site approval, or other
+// consequential authority.
+model CareerArtifact {
+  id                      String   @id @default(cuid())
+  personId                String
+  artifactType            String   @default("resume")
+  artifactVersion         Int
+  supersedesArtifactId    String?
+  sourceType              String   @default("resume_upload")
+  sourceReference         String?
+  sourceChecksumSha256    String?
+  claimState              String   @default("claimed")
+  verificationState       String   @default("unverified")
+  educationClaims         Json     @default("[]")
+  experienceClaims        Json     @default("[]")
+  skillClaims             Json     @default("[]")
+  careerGoals             Json     @default("[]")
+  locationPreferences     Json     @default("[]")
+  availabilityPreferences Json     @default("[]")
+  parserProvider          String?
+  parserModel             String?
+  parserRunId             String?
+  parserSchemaVersion     Int?
+  parserConfidence        Float?
+  parsedAt                DateTime?
+  humanConfirmedAt        DateTime?
+  humanConfirmedBy        String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  person                  Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, artifactType, artifactVersion])
+  @@index([personId, artifactType, createdAt])
+  @@index([supersedesArtifactId])
+  @@index([sourceChecksumSha256])
+  @@map("career_artifacts")
+}
