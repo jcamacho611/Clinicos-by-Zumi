@@ -3,6 +3,7 @@ import "server-only";
 import type { ClinicSession } from "@/lib/auth/types";
 import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
+import { resolveInteroperabilityLifecycle } from "@/lib/integrations/interoperability-lifecycle";
 import { integrationRetrySchema, reliabilityEventSchema, reliabilityEventTransitionSchema } from "@/lib/system-health-rules";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 
@@ -40,7 +41,25 @@ export async function listSystemHealthWorkspace(session: ClinicSession) {
       { key: "queue", label: "Work queues", status: urgentEvents.length || escalations.length ? "needs_attention" : "healthy", detail: `${tasks.length} open tasks, ${escalations.length} open escalations.` },
       { key: "fallback", label: "Manual fallback", status: "available", detail: "Failed interfaces remain retryable or manually documentable." },
     ],
-    integrations: integrations.map((integration) => ({ id: integration.id, type: integration.type, vendor: integration.vendor, status: integration.status, riskLevel: integration.riskLevel, phase: integration.phase, lastSyncAt: integration.lastSyncAt?.toISOString() ?? null })),
+    integrations: integrations.map((integration) => {
+      // Legacy Integration records currently carry status/phase but no durable field that
+      // proves controlled production verification. We therefore pass no evidence ref here:
+      // even a raw `active`/`connected` row remains CONNECTED rather than VERIFIED LIVE.
+      const lifecycle = resolveInteroperabilityLifecycle({ status: integration.status, phase: integration.phase });
+      return {
+        id: integration.id,
+        type: integration.type,
+        vendor: integration.vendor,
+        status: integration.status,
+        riskLevel: integration.riskLevel,
+        phase: integration.phase,
+        lastSyncAt: integration.lastSyncAt?.toISOString() ?? null,
+        lifecycle: lifecycle.lifecycle,
+        productionVerified: lifecycle.productionVerified,
+        productionClaimAllowed: lifecycle.productionClaimAllowed,
+        lifecycleReason: lifecycle.reason,
+      };
+    }),
     failedIntegrationEvents: retryableEvents.slice(0, 30).map((event) => ({ id: event.id, vendor: event.integration?.vendor ?? "Unassigned adapter", type: event.integration?.type ?? event.resourceType, eventType: event.eventType, status: event.status, errorCode: event.errorCode, errorMessage: event.errorMessage, retryCount: event.retryCount, nextRetryAt: event.nextRetryAt?.toISOString() ?? null, occurredAt: event.occurredAt.toISOString() })),
     events: events.map((event) => ({ id: event.id, category: event.category, severity: event.severity, status: event.status, title: event.title, summary: event.summary, source: event.source, acknowledgedAt: event.acknowledgedAt?.toISOString() ?? null, resolvedAt: event.resolvedAt?.toISOString() ?? null, createdAt: event.createdAt.toISOString() })),
     recentAudits: recentAudits.map((audit) => ({ id: audit.id, action: audit.action, resourceType: audit.resourceType, createdAt: audit.createdAt.toISOString() })),
