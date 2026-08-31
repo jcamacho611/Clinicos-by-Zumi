@@ -62,7 +62,9 @@ describe("canonical Klinikos truth", () => {
     const source = read("docs/SOURCE_OF_TRUTH.md");
     const status = read("docs/FEATURE_STATUS.md");
 
-    expect(source).toContain("Browser redirect/return state does **not** establish payment.");
+    // Law verified present at docs/SOURCE_OF_TRUTH.md:250 and again in the Master Canon. The
+    // #388 rewrite dropped the markdown bold only; asserting on emphasis made this brittle.
+    expect(source).toContain("Browser redirect/return state does not establish payment.");
     expect(source).toContain("Payment evidence is recorded separately from entitlement.");
     expect(status).toContain("Redirect state is never payment evidence.");
   });
