@@ -32,7 +32,9 @@ describe("universal identity compatibility boundary", () => {
     expect(repository).toContain("current session tenant authority");
     expect(repository).not.toContain("setSession");
     expect(repository).not.toContain("switchOrganization");
-    expect(sourceOfTruth).toContain("The UI adapts to active role, organization, task and permissions without requiring separate identities or disconnected products.");
+    // Law verified present at docs/SOURCE_OF_TRUTH.md:70 after the #388 rewrite. Only the
+    // serial comma before "and" changed, so the guard tracks the text, not a lost rule.
+    expect(sourceOfTruth).toContain("The UI adapts to active role, organization, task, and permissions without requiring separate identities or disconnected products.");
   });
 
   it("anchors legacy membership context to the still-authoritative legacy user organization", () => {

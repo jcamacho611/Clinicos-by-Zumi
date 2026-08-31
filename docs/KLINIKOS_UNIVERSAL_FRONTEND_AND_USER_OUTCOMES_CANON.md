@@ -1,10 +1,18 @@
 # KLINIKOS UNIVERSAL FRONTEND & USER OUTCOMES CANON
 
-Status: `AUTHORITATIVE FRONTEND / PRODUCT EXPERIENCE CONTRACT`
+Status: `SPECIALIST FRONTEND IMPLEMENTATION CONTRACT — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+
+> This document says how Klinikos is presented to humans. It does not decide what
+> Klinikos is. Where it and the Master Canon disagree, the Master Canon governs and
+> this contract is corrected to follow it.
+>
+> Its frontend substance — role-by-role outcomes, route coverage, readability,
+> spacing, clinical-operational clarity, accessibility, light operational surfaces —
+> is retained in full. Only its authority rank changed.
 Date: `2026-08-30`
 Scope: all Klinikos public, authenticated, role-specific, clinical, Grid, EDU, financial, patient, provider, enterprise, administrative, integration, mobile and prototype/Figma surfaces.
 
-This document is the complete design prompt and acceptance contract for the Klinikos frontend. It does not replace implementation truth, security law, clinical truth, Grid eligibility law, financial truth, or specialist domain canons. It defines how those systems are presented to humans and the expected outcome for each major user class.
+This document is the complete design prompt and acceptance contract for the Klinikos frontend. It does not replace implementation truth, security law, clinical truth, Grid eligibility law, financial truth, or specialist domain canons. It defines how those systems are presented to humans and the expected outcome for each major user class, under the authority of `docs/KLINIKOS_MASTER_CANON.md`.
 
 When this document conflicts with an older cinematic, dark-first, architecture-poster, dashboard-heavy, neon, game-like, or decorative reference, this document controls the current operational frontend direction unless a newer explicit product decision supersedes it.
 

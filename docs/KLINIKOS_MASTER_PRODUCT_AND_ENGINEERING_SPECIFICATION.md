@@ -1,12 +1,13 @@
 # KLINIKOS MASTER PRODUCT & ENGINEERING SPECIFICATION
 
-Status: `AUTHORITATIVE — TOP OF THE DOCUMENT CHAIN`
+Status: `PREDECESSOR REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Date: 2026-08-23
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md` and `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md`
 
-This document exists so that a person or an agent can read **one** source and understand
-what Klinikos is, what governs it, and which of the other seventy-five documents in this
-directory still apply. It does not replace the specialist canons. It sits above them and
-says how to read them.
+This document preserves an earlier comprehensive product/engineering synthesis. It no
+longer sits above the document chain and cannot override the Master Canon, Authority Map,
+verified implementation/runtime truth, or the current Master Engineering Blueprint.
+Unique accepted detail remains preserved here until its migration is verified.
 
 It deliberately does not restate what the specialist canons already say. Where this
 document names a subject and a canon owns it, the canon governs the detail.
@@ -213,14 +214,18 @@ this document tell me what currently exists?*
 A canon test fails when a document exists in `docs/` without an entry here, so this
 register cannot silently fall behind.
 
-### Governing
+### Historical register (authority classifications superseded)
+
+The table below is preserved to show how this predecessor once routed documents. It is
+not a current precedence list. Current authority and scoped specialist routing are defined
+by `docs/KLINIKOS_MASTER_CANON.md` and `docs/KLINIKOS_AUTHORITY_MAP.yaml`.
 
 | Document | Owns |
 | --- | --- |
-| `CLINICOS_MASTER_CANON.md` | Product and architecture source of truth |
+| `CLINICOS_MASTER_CANON.md` | Historical product/architecture predecessor; subordinate reference |
 | `KLINIKOS_CONSTITUTION.md` | Constitutional laws, operationalizing the Master Canon |
 | `KLINIKOS_ARCHITECTURE_INDEX.md` | Precedence and navigation |
-| `SOURCE_OF_TRUTH.md` | Current operating law |
+| `SOURCE_OF_TRUTH.md` | Historical operating-law predecessor; subordinate reference |
 | `KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md` | Cross-domain knowledge translation |
 | `KLINIKOS_ECOSYSTEM_CANON.md` | Ecosystem, wiring and lifecycle direction |
 | `KLINIKOS_CLINICAL_CONVERGENCE_CANON.md` | Current Visit, clinical change, clinical experience |

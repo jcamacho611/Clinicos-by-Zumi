@@ -5,6 +5,7 @@ import {
   parsePendingMigrationNames,
   validatePendingMigrations,
 } from "./release/production-migration-policy.mjs";
+import { assertDisposableDatabase } from "./release/disposable-database-safety.mjs";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -125,7 +126,21 @@ if (process.env.RENDER === "true") {
 }
 
 if (process.env.KLINIKOS_ALLOW_MIGRATION_DEPLOY === "disposable-verification") {
-  console.log("Disposable verification build detected. Applying migrations to the verified disposable database...");
+  // The flag states an intent; it does not establish a fact. Prove the target is actually
+  // disposable here, at the point migrations are applied, so the claim cannot be asserted
+  // by a caller and taken on trust.
+  console.log("Disposable verification build detected. Proving the migration target is disposable...");
+  try {
+    await assertDisposableDatabase(databaseUrl);
+  } catch (error) {
+    console.error(
+      "Refusing to apply migrations: KLINIKOS_ALLOW_MIGRATION_DEPLOY=disposable-verification was set, but the target is not a provably disposable database.",
+      error instanceof Error ? error.message : error,
+    );
+    process.exit(1);
+  }
+
+  console.log("Target proved disposable. Applying migrations...");
   run(
     process.execPath,
     ["node_modules/prisma/build/index.js", "migrate", "deploy"],
