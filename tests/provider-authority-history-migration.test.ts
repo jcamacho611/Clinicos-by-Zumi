@@ -25,6 +25,15 @@ describe("provider authority history migration", () => {
     expect(sql.match(/ON CONFLICT \("organizationId", "authorityKind", "authorityRecordId", "authorityVersion"\) DO NOTHING/g)).toHaveLength(3);
   });
 
+  it("keeps bootstrap event creation time distinct from the source record timestamp", () => {
+    const sql = readFileSync(join(migrationDir, "migration.sql"), "utf8");
+
+    expect(sql).toContain('"occurredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP');
+    expect(sql.match(/'sourceUpdatedAt', "updatedAt"/g)).toHaveLength(3);
+    expect(sql).not.toContain('"schemaVersion", "occurredAt"');
+    expect(sql).not.toMatch(/\b1,\s*"updatedAt"\s*\nFROM "(?:provider_credentials|provider_facility_privileges|providers)"/);
+  });
+
   it("keeps source evidence content outside the history table", () => {
     const sql = readFileSync(join(migrationDir, "migration.sql"), "utf8");
 
