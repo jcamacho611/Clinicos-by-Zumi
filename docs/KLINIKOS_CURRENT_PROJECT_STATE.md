@@ -1,6 +1,6 @@
 # KLINIKOS CURRENT PROJECT STATE
 
-**Snapshot date:** 2026-08-30
+**Snapshot date:** 2026-08-31
 **Authority class:** EVIDENCE_SNAPSHOT
 **May override Master Canon:** No
 **May override current verified code/runtime:** No
@@ -12,7 +12,7 @@ This file records dated evidence. It is not a roadmap, Canon, implementation con
 
 Repository: `jcamacho611/Clinicos-by-Zumi`
 
-Verified `main` after the final read-only pre-push fetch:
+Verified remote `main` at this closeout checkpoint:
 
 `9ac2dcb5709abd57c3321f8865212ff13d61568a`
 
@@ -20,19 +20,22 @@ Current dependency chain:
 
 ```text
 main@9ac2dcb5
-  └─ PR #367 docs/luxe-master-canon-reconciliation-20260829@d6e1aeed (remote before repair push)
-       └─ local preserved inventory commit c7c9bde6
-       └─ PR #370 feat/canonical-five-plane-graph-20260829@38d5f887
-            └─ PR #371 feat/person-relationship-adoption-20260829@f9bdf12a
+  └─ PR #367 docs/luxe-master-canon-reconciliation-20260829
+       ├─ preserving Canon-convergence commit 409a3512
+       ├─ reconciled prior remote head 43a4ac37
+       ├─ verified pre-snapshot-refresh merge commit b66817b9
+       └─ intended next stack after explicit approval:
+            PR #370 feat/canonical-five-plane-graph-20260829@38d5f887
+              └─ PR #371 feat/person-relationship-adoption-20260829@f9bdf12a
 ```
 
-The isolated repair worktree is on `repair/pr367-authority-rev3-20260830` at parent `c7c9bde65638fcd6b6a5e6843b8099c9dd46afa1` immediately before this snapshot update. That parent is 35 commits ahead of and 1 behind current `main`; merge base remains `0fe5fdbdbb5377842e20338920204397ba6dceda`.
+The isolated repair worktree remains on `repair/pr367-authority-rev3-20260830`. It preserved local Canon work in `409a3512`, merged the then-current remote #367 head `43a4ac37` without force or an independent `main` merge, resolved the combined authority/frontend/CI history, and pushed merge commit `b66817b9` normally to the PR branch. This status refresh follows that verified merge commit. The exact containing commit is intentionally not self-referenced; GitHub PR head plus exact-head Quality are authoritative for the latest candidate SHA.
 
-Current `main` advanced through `9ac2dcb5` / PR `#388` after the #367 base and added a universal-frontend/user-outcomes document plus changes to historical authority-routing files. Those changes are not present in this isolated candidate and were not merged/rebased into it during final closeout. Their authority/content consequences require explicit post-audit reconciliation with the one-Canon chain; neither branch may silently become a second current authority.
+Current `main@9ac2dcb5` / PR `#388` added the universal-frontend/user-outcomes contract plus historical authority-routing changes. The #367 closeout now includes and reconciles that material: the frontend contract is preserved as a specialist implementation contract subordinate to the Master Canon, body-level predecessor authority leaks are guarded, and the production/deploy verification safety changes remain intact.
 
 Pull-request state verified at this snapshot:
 
-- PR `#367` is open, non-draft, mergeable, and `UNSTABLE` because remote head `d6e1aeed` failed the Quality `verify` job while `deploy-contract` passed. The failure was isolated to Canon synchronization.
+- PR `#367` is open, non-draft, mergeable, and was `CLEAN` at pre-refresh head `b66817b9`. Exact-head Quality run `#1953` / ID `33364321083` passed both `verify` and `deploy-contract`. Any later status-only commit still requires its own exact-head Quality; the old run never transfers automatically.
 - PR `#370` is open/draft and clean on its current parent, with both Quality jobs green at `38d5f887`; it must be reconciled and reverified after PR `#367` merges.
 - PR `#371` is open/draft and clean on its current parent, with both Quality jobs green at `f9bdf12a`; it must be reconciled and reverified after PR `#370` merges.
 - No child PR's old green run is evidence that it is green against a newly merged parent.
@@ -132,14 +135,14 @@ No revenue, customer, integration, partner, ROI, security-certification, or prod
 
 ## 6. Current repair status
 
-Observed RED at PR `#367` remote head:
+Historical RED at the earlier PR `#367` remote head:
 
 - 92 missing Canon-layer anchors in the existing Master Engineering Blueprint;
 - three predecessor governance documents still claiming top-level authority.
 
-Local repair result at this snapshot:
+Reconciled repair result:
 
-- the existing Canon synchronization test now passes all 6 tests;
+- the Canon synchronization test now passes 15 tests, including body-level authority, MF-001–MF-008, five-plane, safety-invariant, and twelve-workstream projection guards;
 - predecessor content remains preserved;
 - the Blueprint now carries the exact five-plane hierarchy, dual status axes, Rev3 architecture-to-code corrections, privacy/regulated-commerce/reputation/retention distinctions, and company/production contracts;
 - Master Canon gained the missing machine-contract phrases and absorbed the clinician/lead-IT/redesign/pricing requirements directly without changing the five-plane architecture;
@@ -148,30 +151,28 @@ Local repair result at this snapshot:
 - final founder-risk review identified 42 additional compressed anchors covering registration/relationships, provider context, EHR migration, Workers’ Compensation, universal orders, full Black Label V2, pricing version/context, cost law, and cross-surface propagation; the synchronization test went RED as intended and returned GREEN after in-place Canon/Blueprint expansion;
 - a subsequent source check added six guarded BodyMap/change-state and verified-payment/provisioning anchors; the synchronization test again went RED as intended and returned GREEN after the same Canon/Blueprint were completed in place;
 - the final 1,987-line merge-forward source audit identified 25 additional source-locked anchors per document (50 missing Canon/Blueprint anchors total) for universal free entry/Ecosystem Passport, Living Universe route/Path law, institutional EDU/workforce delivery, reusable workforce-program configuration, one-Zumi capability packs, evidence-retention separation, and the RFP/procurement operating lifecycle; the synchronization test went RED with those 50 omissions and returned GREEN after in-place Canon/Blueprint/registry reconciliation;
-- 21 focused authority/clinical/commercial suites pass 105 tests after the expansion;
+- the final focused authority/clinical suite passes 5 files / 38 tests;
 - `src/lib/governance/canon-layer-registry.ts` now makes the accepted source consequences machine-checkable without creating another authority;
 - the canonical graph source is intentionally not copied into #367 because it is stacked in PR #370; that branch must add the new graph/view relationships and rerun its tests after this parent is approved.
 
-Fresh local verification for the expanded substantive candidate is now proven:
+Fresh local verification for the expanded substantive candidate is proven:
 
-- `npm run verify:code` passed all 9 code checks on the final reviewed candidate;
-- the first full-release attempt correctly stopped during production-mode role routing because the isolated verifier lacked the required 32+ character `AUTH_SECRET`; this was a verifier-environment omission, not bypassed authentication;
-- a fresh empty local PostgreSQL container plus an ephemeral local verification secret was then used—no production database, secret, account, or service was touched;
-- `npm run verify:release` passed all 12 checks on the final reviewed candidate: Render install integrity, Prisma generate/validate, source and post-build confidentiality, typecheck, lint (0 errors, 3 existing image warnings), the full test suite, empty-database safety, Render build, all 62 migrations, MVP journeys, production startup, and `/api/health`;
+- exact-commit `npm test` passed 307 files with 1 skipped and 2,008 tests with 1 skipped;
+- fresh empty local PostgreSQL containers plus an ephemeral local verification secret were used—no production database, secret, account, or service was touched;
+- after the twelve-workstream delivery projection was added in place, `npm run verify:release` passed all 12 checks in 164.1 seconds: Render install integrity, Prisma generate/validate, source and post-build confidentiality, typecheck, lint (0 errors, 3 existing image warnings), the full test suite, empty-database safety, Render build, all 62 migrations, MVP journeys, production startup, and `/api/health`;
 - the disposable container was stopped and automatically removed after verification.
+- exact-head GitHub Quality on `b66817b9` passed: run `#1953` / ID `33364321083`, `verify` job `99401735091`, and `deploy-contract` job `99401735269`.
 
-This is local candidate evidence, not exact-head GitHub CI or deployment evidence. The branch must remain unmerged until the checkpoint is committed/pushed, exact-head Quality and review succeed, and the founder explicitly authorizes convergence.
+This is candidate/CI evidence, not deployment evidence for `main` or `klinikos.io`. Runtime remains a separate demo-mode release with live integrations off. The branch remains unmerged until founder/orchestrator audit and explicit authorization; each later commit requires a new exact-head Quality result.
 
 ## 7. Immediate execution order
 
-1. review the repair diff for content loss, unsupported status claims, and authority contradictions;
-2. run focused authority tests, `git diff --check`, Prisma generation/validation, typecheck, lint, full tests, build, and applicable release/security gates;
-3. commit and push the repair to PR `#367` without force, then stop for founder architecture/product/business audit;
-4. do **not** merge `main` until the founder explicitly authorizes convergence after that checkpoint;
-5. after authorization, require exact-head Quality and review; resolve blockers and merge PR `#367` only when all required gates are green;
-6. fetch/verify `main`, reconcile the new Canon/Blueprint graph consequences into PR `#370`, reverify/review, then conditionally merge only if authorized;
-7. repeat for PR `#371`, preserving its migrations/history and updating its implementation evidence;
-8. only after the stack is clean, continue Career/Resume → EDU Placement → Professional Grid/Work → Current Visit/No-Fault reference experience → Zumi assistance → external rails → pricing/payment/provisioning → Black Label conversion.
+1. founder/orchestrator audits the exact #367 head and returns approval or correction; do not merge during this checkpoint;
+2. if corrected, update only this #367 branch, rerun affected local gates and exact-head Quality, and return to audit;
+3. after explicit authorization, merge #367 through the governed PR path, fetch/verify resulting `main`, and verify post-merge checks;
+4. reconcile the Canon/Blueprint consequences into PR `#370`, reverify/review, and merge only if separately authorized;
+5. repeat for PR `#371`, preserving its migrations/history and updating implementation evidence;
+6. only after the dependency stack is clean, begin the production-visible wave and later workstreams without creating duplicate identity, Grid, EDU, financial, communication, document, or integration systems.
 
 ## 8. External and security blockers
 
