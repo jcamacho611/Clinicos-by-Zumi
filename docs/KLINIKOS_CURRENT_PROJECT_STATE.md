@@ -12,21 +12,31 @@ This file records dated evidence. It is not a roadmap, Canon, implementation con
 
 Repository: `jcamacho611/Clinicos-by-Zumi`
 
-Verified remote `main` at this closeout checkpoint:
+Verified remote `main` at this checkpoint (2026-08-31T07:49Z):
 
-`9ac2dcb5709abd57c3321f8865212ff13d61568a`
+`0a2705fbea4a30e4953210a4ca6ef35458b465d6`
+
+**PR #367 is MERGED.** It merged at `2026-08-31T07:24:05Z` at head
+`0ac96a62d98c867edb084e211975faac05ae53e7`, which includes the conditional-money
+correction (`governance: keep Grid money events conditional`). The merge commit is the
+`main` SHA above. The earlier authorization naming exact head `fe208983` was superseded
+before merge: the head moved on to `0ac96a62`, and that is the candidate that landed.
 
 Current dependency chain:
 
 ```text
-main@9ac2dcb5
-  └─ PR #367 docs/luxe-master-canon-reconciliation-20260829
-       ├─ preserving Canon-convergence commit 409a3512
-       ├─ reconciled prior remote head 43a4ac37
-       ├─ verified pre-snapshot-refresh merge commit b66817b9
-       └─ intended next stack after explicit approval:
-            PR #370 feat/canonical-five-plane-graph-20260829@38d5f887
-              └─ PR #371 feat/person-relationship-adoption-20260829@f9bdf12a
+main@0a2705fb  (contains merged #367)
+  └─ PR #370 feat/canonical-five-plane-graph-20260829@855bee57
+       │    reconciled ONTO this main; base 0a2705fb; mergeable_state clean;
+       │    exact-head Quality #1961 / run 33369119075 green on both jobs;
+       │    diff is exactly 2 files (graph module + its test)
+       └─ PR #371 feat/person-relationship-adoption-20260829@a0f8ed42
+            still based on the STALE #370 base 38d5f887; mergeable_state
+            unstable; must be restacked onto 855bee57 and reverified
+
+  └─ PR #354 claude/whop-portal-grid-marketplace-wdw811@8641f4d9
+       independent of the #370/#371 stack — shares no file with either —
+       and carries the first production-visible tranche (see §2.1)
 ```
 
 The isolated repair worktree remains on `repair/pr367-authority-rev3-20260830`. It preserved local Canon work in `409a3512`, merged the then-current remote #367 head `43a4ac37` without force or an independent `main` merge, resolved the combined authority/frontend/CI history, and pushed merge commit `b66817b9` normally to the PR branch. This status refresh follows that verified merge commit. The exact containing commit is intentionally not self-referenced; GitHub PR head plus exact-head Quality are authoritative for the latest candidate SHA.
@@ -35,14 +45,56 @@ Current `main@9ac2dcb5` / PR `#388` added the universal-frontend/user-outcomes c
 
 Pull-request state verified at this snapshot:
 
-- PR `#367` is open, non-draft, mergeable, and was `CLEAN` at pre-refresh head `b66817b9`. Exact-head Quality run `#1953` / ID `33364321083` passed both `verify` and `deploy-contract`. Any later status-only commit still requires its own exact-head Quality; the old run never transfers automatically.
-- PR `#370` is open/draft and clean on its current parent, with both Quality jobs green at `38d5f887`; it must be reconciled and reverified after PR `#367` merges.
-- PR `#371` is open/draft and clean on its current parent, with both Quality jobs green at `f9bdf12a`; it must be reconciled and reverified after PR `#370` merges.
+- PR `#367` is **merged** (see above). Nothing further is owed on it.
+- PR `#370` is open/draft, already reconciled onto `main@0a2705fb`, `mergeable_state` clean, with exact-head Quality `#1961` / run `33369119075` green on both `verify` and `deploy-contract`. Its reconciliation caught and fixed a real semantic drift: the graph had made payment/settlement/reconciliation unconditional after an optional financial obligation, and they are now `where_applicable`.
+- PR `#371` is open/draft at `a0f8ed42` but is **still based on the stale `#370` base `38d5f887`**, and `mergeable_state` is `unstable`. It must be restacked onto `#370`'s reconciled head and reverified before it can be judged.
+- PR `#354` is open/draft at `8641f4d9` on the designated frontend branch. It is not part of the `#370`/`#371` stack and shares no file with either.
 - No child PR's old green run is evidence that it is green against a newly merged parent.
 
-Required merge order is `#367 → #370 → #371`. After each authorized merge: fetch `main`, verify the resulting SHA and checks, reconcile the next child without destructive history loss, and run exact-head gates again.
+Remaining merge order for the stack is `#370 → #371`. After each authorized merge: fetch `main`, verify the resulting SHA and checks, reconcile the next child without destructive history loss, and run exact-head gates again.
 
 ## 2. Live runtime truth
+
+At `2026-08-31T07:49:41Z`, `https://www.klinikos.io/api/health` returned HTTP 200 with
+release commit `0a2705fbea4a30e4953210a4ca6ef35458b465d6` on branch `main`.
+
+**Production is exactly current `main`.** The deploy pipeline is not the blocker, and the
+merged #367 candidate reached production within roughly twenty-five minutes of merging.
+
+### 2.1 Why the website still looks unchanged
+
+This is measured, not inferred. `#367` was governance and documentation convergence: it
+changed no user-facing surface, so shipping it correctly produced no visible change.
+`#370` is two files (a graph module and its test) and `#371` is identity/schema work.
+**None of the three merges in the authorized sequence produces any visible change to
+klinikos.io.** Waiting for the stack to finish before touching the frontend means the
+site stays as it is through two more merges.
+
+A separate, measured gap explains part of the founder-visible complaint. `#367` made
+MF-001 (Master Canon §7.1) law: `DISCOVERY → PUBLIC ZUMI → JOIN FREE → ONE KLINIKOS
+IDENTITY → ... → FIRST USEFUL RESULT`, and it forbids the `signup → empty dashboard`
+shape. The public front door had no JOIN FREE step at all:
+
+- all eleven public-Zumi destinations were existing-customer destinations
+  (`/tasks`, `/crm`, `/billing`, `/quality`, `/grid`, `/referrals`, `/portal`,
+  `/provider`, `/edu`, `/dashboard`);
+- seven of them were wrapped in the sign-in redirect, which a visitor with no account
+  cannot pass;
+- `/grid/join` — live, free, no card, already able to enrol both individual
+  professionals and organizations — was offered nowhere on the front door.
+
+So a visitor who typed `I need an MA job` was routed to a marketing page or a login wall.
+PR `#354` closes that specific gap and is verified in a real browser at 1440 and 390.
+
+Two further facts recorded as evidence, not as claims:
+
+- `/register` and `/join` both return `307 → /login` in production. Neither redirect
+  exists in this repository — there is no `middleware.ts`, no `next.config` redirect, and
+  no rule in `render.yaml` — so both are configured in the host dashboard and are
+  invisible to the repository. Any future free-entry surface placed at those paths would
+  be shadowed before Next.js ever sees it.
+- `/access` is a work-email-gated evaluation wall with IP/confidentiality terms. It is
+  not free ecosystem entry and must not be counted as MF-001 satisfaction.
 
 At `2026-08-30T06:41:39Z`, both:
 
