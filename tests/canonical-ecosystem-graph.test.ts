@@ -117,9 +117,9 @@ describe("canonical five-plane ecosystem graph", () => {
       "fulfillment",
       "evidence",
       "financial_obligation_where_applicable",
-      "payment_or_payable_or_payout",
-      "settlement",
-      "reconciliation",
+      "payment_or_payable_or_payout_where_applicable",
+      "settlement_where_applicable",
+      "reconciliation_where_applicable",
     ]);
   });
 
