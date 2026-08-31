@@ -1,4 +1,4 @@
-version: 2026-08-29.1
+version: 2026-08-30.2
 status: ACTIVE
 
 canonical_product_authority:
@@ -13,24 +13,44 @@ canonical_product_authority:
     - protected_entry
     - user_experience
     - experience_engine
+    - universal_free_entry_and_ecosystem_passport
+    - living_universe_routes_and_paths
     - lifecycle_paths
+    - cross_surface_patient_provider_grid_edu_enterprise_propagation
     - screen_contracts
     - identity_claim_verification_eligibility_entitlement_authority
+    - patient_identity_documents_relationships_consent_and_duplicate_reconciliation
+    - provider_location_service_payer_case_readiness_and_chart_authority
     - grid
     - edu
+    - institutional_edu_and_workforce_program_delivery
     - clinic_os
+    - ehr_migration_and_overlay
     - clinical_convergence
     - intake_and_consent
     - scheduling_and_capacity
+    - coverage_financial_case_and_appointment_series
+    - clinical_composition_specialty_packs_and_configuration_registry
+    - no_fault_workers_comp_longitudinal_case
     - orders_and_results
+    - universal_service_order
+    - corrected_result_rereview_and_integration_reconciliation
+    - ambient_coding_terminology_and_biller_handoff
+    - quality_measure_and_hedis_rule_governance
     - financial_os_and_rcm
     - integrations
     - zumi_and_memory
+    - evidence_durability_and_governed_retention
     - openai_intelligence_direction
     - security_and_confidentiality
     - legal_product_requirements
     - black_label_design
+    - black_label_v2_route_conversion
     - commercialization
+    - pricing_fabric
+    - rfp_and_procurement_operating_system
+    - synthetic_reference_environment
+    - source_to_canon_blueprint_completeness
     - execution_order
 
 canonical_implementation_contract:
@@ -49,6 +69,19 @@ canonical_implementation_contract:
     - shared_domain_ownership
     - route_registry_contracts
     - screen_experience_contract_direction
+    - canon_layer_registry_contracts
+    - source_completeness_contracts
+    - reuse_extend_generalize_connect_partner_build_new_classification
+    - cross_surface_propagation_contracts
+    - universal_free_entry_and_passport_contracts
+    - living_universe_route_path_contracts
+    - institutional_edu_workforce_contracts
+    - rfp_procurement_workflow_contracts
+    - ehr_migration_overlay_contracts
+    - universal_service_order_contracts
+    - clinical_configuration_contracts
+    - pricing_fabric_contracts
+    - synthetic_golden_case_contracts
     - production_wiring
     - scope_classification
     - executive_council_evaluation_frame
@@ -56,6 +89,27 @@ canonical_implementation_contract:
   implementation_status_sections_are_snapshot_only: true
   snapshot_refresh_rule: CURRENT_VERIFIED_CODE_SCHEMA_TEST_RUNTIME_AND_EXTERNAL_EVIDENCE_WIN_FOR_WHAT_EXISTS_TODAY
   conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS
+
+machine_readable_canon_contract:
+  file: src/lib/governance/canon-layer-registry.ts
+  authority: SUBORDINATE_MACHINE_CONTRACT
+  generated_from:
+    - docs/KLINIKOS_MASTER_CANON.md
+    - docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md
+  synchronization_test: tests/canon-synchronization.test.ts
+  may_override_master: false
+  may_override_blueprint: false
+  may_manufacture_implementation_status: false
+  required_consequences:
+    - owners
+    - implementation
+    - evidence
+    - money_path
+    - risk_controls
+    - kpis
+  graph_dependency:
+    pull_request: 370
+    rule: RECONCILE_NEW_LAYER_RELATIONSHIPS_AFTER_PARENT_367_IS_APPROVED_WITHOUT_CREATING_A_SIXTH_PLANE
 
 implementation_authority:
   question: what_exists_today

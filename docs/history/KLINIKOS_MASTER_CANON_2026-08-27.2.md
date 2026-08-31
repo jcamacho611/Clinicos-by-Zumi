@@ -1,14 +1,16 @@
 # KLINIKOS MASTER CANON
 
 Version: `2026-08-27.2`
-Status: `ACTIVE - SOLE PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
+Status: `HISTORICAL SNAPSHOT (2026-08-27.2) — NOT ACTIVE, SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Repository convergence baseline: `main@0c562d02bba5ca4e9500ef53cfb49c50126ed6bc`
 
 > **There is one Klinikos.**
 >
 > **We did not abandon our earlier work. We graduated through it.**
 
-This file is the single current governing specification for what Klinikos is, how it behaves as one healthcare operating ecosystem, how users enter it, how identity and authority work, how Zumi guides people, how every experience is composed, how the platform is designed, how economic paths work, how clinical work converges, how Grid and EDU compound the network, how money and evidence flow, how proprietary technology is protected, and how implementation must converge.
+At the time of this dated snapshot, its live predecessor described itself as the governing
+specification. That claim is historical provenance, not a present instruction. Current
+company/product law is `docs/KLINIKOS_MASTER_CANON.md`; this snapshot cannot override it.
 
 Earlier prompts, specialist canons, architecture snapshots, physician/engineer discussions, Grid iterations, EDU iterations, legal drafts, design packages, PR descriptions, status snapshots, and historical plans are evidence and provenance. They are not parallel current products.
 

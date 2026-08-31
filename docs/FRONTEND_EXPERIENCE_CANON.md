@@ -1,6 +1,10 @@
 # Klinikos Frontend Experience Canon
 
-Status: authoritative product/design/implementation contract
+Status: `SPECIALIST FRONTEND IMPLEMENTATION CONTRACT — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+
+This specialist contract preserves frontend implementation guidance within its scope. It
+does not define company-wide product law and cannot override the Master Canon, current
+verified implementation/runtime truth, or server-side authorization and domain authority.
 
 ## Product law
 

@@ -19,6 +19,16 @@ const legacyAuthorityFiles = [
   "governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md",
 ] as const;
 
+const subordinateAuthorityFiles = [
+  "docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md",
+  "docs/FRONTEND_EXPERIENCE_CANON.md",
+  "docs/KLINIKOS_ECOSYSTEM_CANON.md",
+  "docs/SOURCE_OF_TRUTH.md",
+  "docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md",
+  "docs/CLINICOS_MASTER_CANON.md",
+  "docs/history/KLINIKOS_MASTER_CANON_2026-08-27.2.md",
+] as const;
+
 describe("Klinikos Canon synchronization", () => {
   it("keeps every required company/product layer in both the Master Canon and Engineering Blueprint", () => {
     const master = read(masterPath);
@@ -80,6 +90,101 @@ describe("Klinikos Canon synchronization", () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it("rejects body-level authority leaks even when a predecessor header is subordinate", () => {
+    const offenders: string[] = [];
+
+    for (const file of subordinateAuthorityFiles) {
+      if (!fs.existsSync(path.join(root, file))) continue;
+      const content = read(file);
+      const status = content
+        .split("\n")
+        .find((line) => line.trim().toLowerCase().startsWith("status:"));
+
+      if (
+        status
+        && /authoritativ|governing|supreme|sole|final-form target/i.test(status)
+        && !/subordinate|historical/i.test(status)
+      ) {
+        offenders.push(`${file}: status line asserts peer authority — ${status.trim()}`);
+      }
+
+      if (!/SUBORDINATE TO [`]?docs\/KLINIKOS_MASTER_CANON\.md/i.test(content)) {
+        offenders.push(`${file}: does not route authority to the Master Canon`);
+      }
+    }
+
+    const legacy = read("docs/CLINICOS_MASTER_CANON.md");
+    const history = read("docs/history/KLINIKOS_MASTER_CANON_2026-08-27.2.md");
+    const constitution = read("docs/KLINIKOS_CONSTITUTION.md");
+    const predecessor = read("docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md");
+
+    if (legacy.includes("All future repository work must use this document as the product and architecture source of truth.")) {
+      offenders.push("docs/CLINICOS_MASTER_CANON.md: body issues a current repository instruction");
+    }
+    if (history.includes("This file is the single current governing specification")) {
+      offenders.push("docs/history/KLINIKOS_MASTER_CANON_2026-08-27.2.md: history body claims current authority");
+    }
+    if (constitution.includes("docs/CLINICOS_MASTER_CANON.md")) {
+      offenders.push("docs/KLINIKOS_CONSTITUTION.md: conflict route points to the legacy-spelling Canon");
+    }
+    if (predecessor.includes("It sits above them and says how to read them.")) {
+      offenders.push("docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md: body claims precedence");
+    }
+    if (predecessor.includes("| `CLINICOS_MASTER_CANON.md` | Product and architecture source of truth |")) {
+      offenders.push("docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md: register restores legacy authority");
+    }
+    if (predecessor.includes("| `SOURCE_OF_TRUTH.md` | Current operating law |")) {
+      offenders.push("docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md: register restores predecessor law");
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps SOURCE_OF_TRUTH and navigation subordinate to the one intended-truth authority", () => {
+    const source = read("docs/SOURCE_OF_TRUTH.md");
+    const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+    const masterPosition = index.indexOf("docs/KLINIKOS_MASTER_CANON.md");
+    const sourcePosition = index.indexOf("docs/SOURCE_OF_TRUTH.md");
+    const blueprintPosition = index.indexOf(blueprintPath);
+
+    expect(source).not.toContain(
+      "This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law.",
+    );
+    expect(source).toContain("Superseded by: `docs/KLINIKOS_MASTER_CANON.md`");
+    expect(masterPosition).toBeGreaterThan(-1);
+    expect(masterPosition).toBeLessThan(sourcePosition);
+    expect(masterPosition).toBeLessThan(blueprintPosition);
+  });
+
+  it("makes every agent bootstrap from the Master Canon before subordinate implementation sources", () => {
+    for (const file of ["AGENTS.md", "CLAUDE.md", "CODEX.md", "SYMPHONY.md"]) {
+      const content = read(file);
+      const masterPosition = content.indexOf(masterPath);
+      const blueprintPosition = content.indexOf(blueprintPath);
+      expect(masterPosition, `${file}: missing Master Canon`).toBeGreaterThan(-1);
+      expect(blueprintPosition, `${file}: missing Engineering Blueprint`).toBeGreaterThan(-1);
+      expect(masterPosition, `${file}: Master Canon must be read first`).toBeLessThan(blueprintPosition);
+    }
+  });
+
+  it("guards MF-001 through MF-008 against future Canon and Blueprint compression", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+    const required = [
+      "MF-001",
+      "MF-002",
+      "MF-003",
+      "MF-004",
+      "MF-005",
+      "MF-006",
+      "MF-007",
+      "MF-008",
+    ];
+
+    expect(required.filter((anchor) => !master.includes(anchor))).toEqual([]);
+    expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
   });
 
   it("protects the hard safety and truth invariants against future Canon compression", () => {

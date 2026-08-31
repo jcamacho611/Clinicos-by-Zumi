@@ -1,11 +1,11 @@
 # KLINIKOS CONSTITUTION
 
-Status: AUTHORITATIVE COMPANION TO `docs/CLINICOS_MASTER_CANON.md`
+Status: SPECIALIST CONSTITUTIONAL COMPANION — SUBORDINATE TO `docs/KLINIKOS_MASTER_CANON.md`
 Date: 2026-08-11
 
 This document does not replace the Master Canon. It operationalizes it.
 
-If this document conflicts with `docs/CLINICOS_MASTER_CANON.md`, the Master Canon governs.
+If this document conflicts with `docs/KLINIKOS_MASTER_CANON.md`, the Master Canon governs.
 
 ## Purpose
 

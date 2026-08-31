@@ -1,7 +1,10 @@
 # KLINIKOS Ecosystem Universe & Expansion Map
 
-Status: GOVERNING FINAL-FORM ECOSYSTEM BOUNDARY
+Status: HISTORICAL_SUBORDINATE_REFERENCE
 Date: 2026-08-25
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md` and the existing Master Engineering Blueprint
+
+This file preserves an earlier ecosystem-universe and expansion map. It does not govern current product direction, implementation status, or the five-plane hierarchy. Retain it as provenance until unique accepted detail is migrated and verified.
 
 ## 1. Core principle
 

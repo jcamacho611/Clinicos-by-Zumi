@@ -1,13 +1,14 @@
 # KLINIKOS Final Ecosystem Master Blueprint
 
-Status: **TOP-LEVEL FINAL-FORM TARGET ARCHITECTURE**
+Status: **HISTORICAL_SUBORDINATE_REFERENCE**
 Date: 2026-08-25
 Baseline when created: `main@5eb1bda23c4053093f4e11d351298ffe1c7131ea`
 Canonical domain: `https://klinikos.io`
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md` and the existing Master Engineering Blueprint
 
-This is the root handoff for the complete Klinikos ecosystem.
+This file preserves an earlier root handoff for the complete Klinikos ecosystem. It is not a current authority. Unique accepted content remains preserved for provenance and migration verification.
 
-Current repository/schema/tests/runtime determine what exists today. This document and its linked governing canons determine the final-form direction. Source-locked founder, clinician, customer and approved product requirements may not silently disappear.
+Current repository/schema/tests/runtime determine what exists today. The Master Canon determines required final-form direction, and the Master Engineering Blueprint expresses that direction as an implementation contract. Source-locked founder, clinician, customer and approved product requirements may not silently disappear.
 
 ---
 

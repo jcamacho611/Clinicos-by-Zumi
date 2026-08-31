@@ -1,9 +1,28 @@
 # Klinikos Document Authority Inventory
 
-Date: 2026-08-29
+Initial deterministic scan: 2026-08-29
+Remediation checkpoint: 2026-08-30
 Status: `CONSOLIDATION CONTROL — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Audit base: `19ebfe5a`
 Scope: root Markdown, `docs/**`, `governance/**`, relevant canon/registry/control-plane source, and the authority map.
+
+## Purpose and governing classification law
+
+This inventory exists to remove ambiguity without deleting accepted Klinikos knowledge.
+
+After consolidation, exactly one narrative document may hold supreme company/product authority:
+
+`docs/KLINIKOS_MASTER_CANON.md`
+
+Every other non-code artifact must be classified as an `IMPLEMENTATION_CONTRACT`, `EVIDENCE_REGISTER`, `SPECIALIST_REFERENCE`, `HISTORICAL_RETIRED_CANDIDATE` pending migration proof, or `HISTORICAL_RETIRED` after that proof. A file name containing `CANON`, `MASTER`, `FINAL`, `GOVERNING`, `BLUEPRINT`, `SOURCE OF TRUTH`, or `OPERATING SYSTEM` does not grant authority.
+
+Permanent cleanup invariants:
+
+- `docs/CLINICOS_MASTER_CANON.md` cannot survive as a second active master.
+- `docs/SOURCE_OF_TRUTH.md` cannot retain parallel product authority.
+- Predecessor ecosystem/universe/company documents cannot retain independent governing status after their unique content is migrated.
+- Header/read-path repair must remove ambiguity without deleting accepted Klinikos knowledge.
+- A retirement candidate remains preserved until the migration matrix and inbound-reference review prove a safe destination.
 
 ## Reading this register
 
@@ -11,7 +30,7 @@ This is a document-level inventory, not a directory-family classification. Every
 
 `MASTER_CANON` is the only class permitted to institute current product, architecture, business, or experience law. `IMPLEMENTATION_CONTRACT` implements or routes decisions; `EVIDENCE_REGISTER` records bounded facts or source material; `SPECIALIST_REFERENCE` explains a domain beneath the Master Canon; `HISTORICAL_RETIRED_CANDIDATE` has governing-looking or predecessor content that must be migrated before it can become historical provenance. No row authorizes deletion or retirement in this task.
 
-**Inbound key.** `AGENTS-5..9` means the exact conditional read instruction in `AGENTS.md:13-19`; `AGENTS-domain` means its final “corresponding specialist canon” instruction. `CLAUDE-R<n>` means the numbered legacy required-reading list in `CLAUDE.md:47-89`. `INDEX` and `SOT` mean the currently conflicting read/precedence instructions in `docs/KLINIKOS_ARCHITECTURE_INDEX.md` and `docs/SOURCE_OF_TRUTH.md`; their presence is evidence of a remediation target, not an endorsement. `None found` means no direct bootstrap/read instruction was found by the 2026-08-29 `rg` scan; normal links from domain documentation may still exist.
+**Inbound key.** `AGENTS-5..9` means the exact conditional read instruction in `AGENTS.md:13-19`; `AGENTS-domain` means its final “corresponding specialist canon” instruction. `CLAUDE-R<n>` means the numbered legacy required-reading list in `CLAUDE.md:47-89`. `INDEX` and `SOT` preserve the conflicting read/precedence instructions found by the original 2026-08-29 scan; their presence is historical evidence of the remediation target, not an endorsement or a claim that the conflict still exists. `None found` means no direct bootstrap/read instruction was found by that scan; normal links from domain documentation may still exist.
 
 ## Authority and predecessor records
 
@@ -23,7 +42,7 @@ This is a document-level inventory, not a directory-family classification. Every
 | `docs/KLINIKOS_CONSTITUTION.md` | `AUTHORITATIVE COMPANION` to old master | Earlier constitutional primitives | Master Canon §§ identity, authority, events, finance, safety | Twenty concise constitutional laws and engine inventory | `HISTORICAL_RETIRED_CANDIDATE` | Map unique laws upward, then retain as provenance/reference | Directly names `CLINICOS_MASTER_CANON`; no current bootstrap read | Header and constitutional-laws section |
 | `docs/SOURCE_OF_TRUTH.md` | `AUTHORITATIVE` | Legacy product-law and read-routing document | Master Canon and Architecture Index | Older wiring, ecosystem, design and commercial routing | `HISTORICAL_RETIRED_CANDIDATE` | Preserve pending migration; remove competing authority language later | `AGENTS.md:11`, `CLAUDE-R3`, `INDEX` precedence #2 | Header and §§1–13 |
 | `docs/KLINIKOS_ARCHITECTURE_INDEX.md` | `AUTHORITATIVE INDEX` | Legacy navigation/read-order index | Source of Truth, specialist canons, older designs | Historical ordered reading chain | `HISTORICAL_RETIRED_CANDIDATE` | Rework only after this audit to subordinate navigation | `AGENTS.md:11`, `CLAUDE-R2` | Header; precedence/read-order sections |
-| `docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md` | Master product/engineering specification | Older comprehensive product-engineering source | Master Canon, feature registry, routes | Predecessor detail requiring migration trace | `HISTORICAL_RETIRED_CANDIDATE` | Preserve; reconcile unique accepted requirements | `CLAUDE-R1` | Filename/header and CLAUDE read instruction |
+| `docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md` | Master product/engineering specification | Older comprehensive product-engineering source | Master Canon, feature registry, routes | Predecessor detail requiring migration trace | `HISTORICAL_RETIRED_CANDIDATE` | Extract unique requirements into Master Canon or specialist contracts; preserve provenance | `CLAUDE-R1` | Filename/header and CLAUDE read instruction |
 | `docs/KLINIKOS_PRODUCT_AND_WEBSITE_MASTER_SCOPE.md` | Master-scope language | Product/site breadth and public-surface requirements | Master Canon, public-discovery and commercial records | Scope framing and website inventory | `HISTORICAL_RETIRED_CANDIDATE` | Extract accepted unique scope into Canon/route contracts | None found | Header/status scan and direct reference count 1 |
 | `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md` | `TOP-LEVEL FINAL-FORM TARGET ARCHITECTURE` | Earlier final ecosystem handoff | Master Canon; ecosystem/universe/control-plane records | Cross-engine target inventory | `HISTORICAL_RETIRED_CANDIDATE` | Preserve; migrate unique accepted detail | `CLAUDE-R35` | Header; legacy read list |
 | `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md` | `GOVERNING FINAL-FORM ECOSYSTEM BOUNDARY` | Earlier universe/expansion architecture | Master Canon, Ecosystem Canon, blueprint | Actor/resource/sector expansion map | `HISTORICAL_RETIRED_CANDIDATE` | Preserve; migrate accepted universe detail | `CLAUDE-R37` | Header; legacy read list |
@@ -302,12 +321,24 @@ The following scanned files contain applications, proposal artifacts, candidate/
 
 The audit scan found **230** Markdown/YAML/JSON/text candidates containing an authority/status marker across the required roots. The rows above individually cover every root/top-level product document, every `governance/` document, all `docs/governance/` documents, every specialist/design/legal/business/plan/specification document, every relevant `src/lib/*canon*`, `*registry*`, `*authority*`, and `*control-plane*` file, plus all funding/workforce candidates flagged by the scan.
 
-Material discrepancies found:
+Material discrepancies found by the original scan, with 2026-08-30 remediation state:
 
-1. `CLAUDE.md`, `SOURCE_OF_TRUTH.md`, and `KLINIKOS_ARCHITECTURE_INDEX.md` still instruct readers toward a many-document precedence chain that conflicts with the Master Canon’s sole-authority rule.
-2. Multiple retained documents declare `AUTHORITATIVE`, `GOVERNING`, `FINAL`, `MASTER`, `SOURCE OF TRUTH`, or equivalent status despite being proposed as subordinate classes above.
-3. `KLINIKOS_CONSTITUTION.md` still names the misspelled predecessor master, and the predecessor remains read by legacy routing documents.
-4. No retirement, deletion, or header rewrite is performed by this Task 2 inventory; the migration matrix must prove destinations before any such action.
+1. **REPAIRED IN THE PR #367 CANDIDATE:** agent bootstrap files, `SOURCE_OF_TRUTH.md`, and `KLINIKOS_ARCHITECTURE_INDEX.md` now route through Master Canon → Authority Map → existing Master Engineering Blueprint → verified implementation/runtime evidence.
+2. **PARTIAL / CONTROLLED:** the six highest-risk predecessor files listed below now declare historical/subordinate status. Other retained specialist/historical files may still contain governing-looking words, but the Authority Map limits them and later retirement requires destination/inbound-reference proof.
+3. **PENDING SAFE-RETIREMENT REVIEW:** `KLINIKOS_CONSTITUTION.md` and other predecessor references remain preserved until their unique accepted content and inbound links are reconciled.
+4. **PRESERVATION CONFIRMED:** no predecessor was deleted. Header/read-path remediation changed authority, not historical content ownership.
+
+### 2026-08-30 remediated predecessor set
+
+- `docs/CLINICOS_MASTER_CANON.md` → `HISTORICAL_SUBORDINATE_REFERENCE`;
+- `docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md` → `HISTORICAL_SUBORDINATE_REFERENCE`;
+- `docs/SOURCE_OF_TRUTH.md` → `HISTORICAL_SUBORDINATE_REFERENCE` and current-chain pointer;
+- `governance/KLINIKOS_FINAL_ECOSYSTEM_MASTER_BLUEPRINT.md` → `HISTORICAL_SUBORDINATE_REFERENCE`;
+- `governance/KLINIKOS_ECOSYSTEM_UNIVERSE_AND_EXPANSION_MAP.md` → `HISTORICAL_SUBORDINATE_REFERENCE`;
+- `governance/KLINIKOS_COMPANY_OPERATING_SYSTEM.md` → `HISTORICAL_SUBORDINATE_REFERENCE`;
+- `docs/KLINIKOS_ARCHITECTURE_INDEX.md` → `SUBORDINATE_NAVIGATION_INDEX`.
+
+The existing Master Engineering Blueprint absorbed the rev3 architecture-to-code corrections in place. This is an implementation-contract update, not a new source of truth or a sixth plane.
 
 ## Task-2 self-review
 

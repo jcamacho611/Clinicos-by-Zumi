@@ -1,11 +1,12 @@
-# KLINIKOS OPERATING SYSTEM — MASTER SOURCE OF TRUTH
+# KLINIKOS OPERATING SYSTEM — HISTORICAL MASTER-CANON PREDECESSOR
 
 Version: `2026-08-11.1`
-Status: `AUTHORITATIVE`
+Status: `HISTORICAL REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md`
 
-This document is the product and architecture source of truth for Klinikos.
+This document preserves accepted earlier product and architecture detail and provenance. It is not a current authority and may not override the Master Canon, its Authority Map, verified implementation/runtime truth, or the Master Engineering Blueprint generated from the Canon.
 
-If implementation, documentation, design, legacy naming, feature registries, or prior briefs conflict with this document, this document governs product direction unless explicitly superseded by a later source-of-truth update.
+If this predecessor conflicts with the current authority chain, the current chain governs. Unique accepted content must be migrated and verified before this file is ever retired; until then it remains a read-only historical reference.
 
 ## Non-negotiable definition
 
@@ -671,7 +672,9 @@ Every major application or subsystem must define its relationship to:
 
 ## Repository implementation law
 
-All future repository work must use this document as the product and architecture source of truth.
+Historical instruction preserved as provenance: this predecessor once directed future
+repository work. Current work must instead begin with `docs/KLINIKOS_MASTER_CANON.md` and
+use this file only for unique accepted detail that has not yet completed migration review.
 
 Existing code must be inspected before changing it.
 

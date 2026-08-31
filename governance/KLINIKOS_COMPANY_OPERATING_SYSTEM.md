@@ -1,7 +1,10 @@
 # KLINIKOS COMPANY OPERATING SYSTEM
 
-Status: GOVERNING COMPANY-BUILDING ARCHITECTURE
+Status: HISTORICAL_SUBORDINATE_REFERENCE
 Date: 2026-08-25
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md`
+
+This file preserves an earlier company-operating architecture. It is not a parallel Company OS authority and may not override the Master Canon or the current machine-readable company-operating contract. Retain its unique accepted business detail as provenance until migration is verified.
 
 ## 1. Company definition
 

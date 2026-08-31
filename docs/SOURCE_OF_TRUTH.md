@@ -1,9 +1,14 @@
-# KLINIKOS — CURRENT SOURCE OF TRUTH
+# KLINIKOS — HISTORICAL SOURCE-OF-TRUTH PREDECESSOR
 
 Version: `2026-08-22.1`
-Status: `AUTHORITATIVE`
+Status: `HISTORICAL REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+Superseded by: `docs/KLINIKOS_MASTER_CANON.md`
 
-This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+This document preserves an earlier accepted statement of Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering direction. It does not define current governing law and cannot override the Master Canon, Authority Map, verified code/runtime truth, or the Master Engineering Blueprint. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+
+Permanent evidence rule preserved from this predecessor: Implementation truth remains current code/schema/migrations/tests/CI.
+
+Read current authority in this order: `docs/KLINIKOS_MASTER_CANON.md` → `docs/KLINIKOS_AUTHORITY_MAP.yaml` → the existing Master Engineering Blueprint → current verified implementation/runtime evidence. Preserve this predecessor for provenance until every unique accepted requirement has a verified destination.
 
 ## 1. Current product definition
 
@@ -13,9 +18,9 @@ Klinikos is the operating and opportunity infrastructure for the healthcare life
 
 It is not reducible to an EHR, CRM, clinic app, staffing marketplace, education product, patient portal, billing product, or AI assistant.
 
-The detailed newest ecosystem model is authoritative in `docs/KLINIKOS_ECOSYSTEM_CANON.md`.
+The detailed ecosystem model recorded in `docs/KLINIKOS_ECOSYSTEM_CANON.md` remains a subordinate specialist reference where it does not conflict with the current authority chain.
 
-The newest accepted **cross-domain translation of expert, operator, clinical, billing, interface/integration, security, commercial, and implementation knowledge into reusable architecture** is authoritative in `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`. The ledger sits below this Source of Truth and below current implementation/runtime truth, but it outranks older/narrower architecture when it records an explicit newer accepted cross-domain correction. It does not by itself change `FEATURE_STATUS` or external-connection truth.
+The **cross-domain translation of expert, operator, clinical, billing, interface/integration, security, commercial, and implementation knowledge into reusable architecture** is preserved in `docs/KLINIKOS_KNOWLEDGE_TO_ARCHITECTURE_LEDGER.md`. That ledger is subordinate evidence and does not by itself change the Master Canon, `FEATURE_STATUS`, or external-connection truth.
 
 Specialist law is defined in:
 
