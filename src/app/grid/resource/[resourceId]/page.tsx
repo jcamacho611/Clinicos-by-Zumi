@@ -127,7 +127,7 @@ export default async function GridResourceDetailPage({ params }: { params: Promi
 
       <footer className="mx-auto max-w-[1240px] px-5 py-8 sm:px-8">
         <div className="flex flex-wrap gap-5 text-[11px] font-semibold text-[#756461]"><Link href="/grid">Grid home</Link><Link href="/grid/browse">Browse Grid</Link><Link href="/legal/grid">Grid marketplace terms</Link><Link href="/legal/privacy">Privacy notice</Link></div>
-        <p className="mt-4 text-[10px] text-[#9b8782]">Resource information reflects the current published Grid record. Updated {new Date(resource.updatedAt).toLocaleDateString()}.</p>
+        <p className="mt-4 text-xs text-[#9b8782]">Resource information reflects the current published Grid record. Updated {new Date(resource.updatedAt).toLocaleDateString()}.</p>
       </footer>
     </main>
   );
