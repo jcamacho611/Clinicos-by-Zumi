@@ -231,6 +231,22 @@ describe("Klinikos Canon synchronization", () => {
     expect(missing).toEqual([]);
   });
 
+  it("keeps Grid money states conditional on resource-class economic policy", () => {
+    const blueprint = read(blueprintPath);
+
+    expect(blueprint).toContain("pricing / rate set where applicable");
+    expect(blueprint).toContain(
+      "obligations created only when resource-class / economic policy requires them",
+    );
+    expect(blueprint).toContain("MONEY EVENT (WHERE APPLICABLE)");
+    expect(blueprint).toContain("no-money / zero-fee completion remains valid");
+    expect(blueprint).not.toContain(
+      "Every resource class below uses the same underlying primitives: a listing (I HAVE), a need (I NEED), a match, an agreement, fulfillment, evidence, and a money event.",
+    );
+    expect(blueprint).not.toContain("  → obligations created\n");
+    expect(blueprint).not.toContain("MONEY EVENT\n");
+  });
+
   it("lets no subordinate document claim peer or supreme product authority", () => {
     // The failure this catches is specific and already happened once: Quality went fully
     // green while three documents each called themselves authoritative. A green build is

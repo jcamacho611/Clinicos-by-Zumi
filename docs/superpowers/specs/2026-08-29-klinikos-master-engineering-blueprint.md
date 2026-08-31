@@ -114,7 +114,7 @@ Everything that can be needed, supplied, scheduled, allocated, sold, rented, tau
 
 ## 2.1 Grid Resource Classes
 
-Grid is universal supply/demand/capacity infrastructure. Every resource class below uses the same underlying primitives: a listing (I HAVE), a need (I NEED), a match, an agreement, fulfillment, evidence, and a money event.
+Grid is universal supply/demand/capacity infrastructure. Every resource class below uses the same underlying primitives: a listing (I HAVE), a need (I NEED), a match, an agreement, fulfillment, evidence, and an explicitly evaluated financial state. Pricing, obligations, payment, and settlement exist only when resource-class / economic policy requires them; a lawful no-money or zero-fee path remains a complete Grid transaction.
 
 | Grid Class | What It Represents | NOW / LATER |
 |---|---|---|
@@ -146,7 +146,7 @@ LISTING (I HAVE / I OFFER)
   → identity verified
   → resource class defined
   → requirements specified (credential, license, equipment, location)
-  → pricing / rate set
+  → pricing / rate set where applicable
   → availability declared
   → approval gates applied
 
@@ -160,7 +160,7 @@ MATCH
   → requirements ↔ qualifications
   → availability ↔ schedule
   → location ↔ travel radius
-  → price ↔ budget
+  → price ↔ budget where applicable
   → trust signals weighted
 
 AGREEMENT
@@ -171,18 +171,20 @@ AGREEMENT
 
 WORK / FULFILLMENT / CARE / LEARNING / COMMERCE
   → delivery state tracked
-  → obligations created
+  → obligations created only when resource-class / economic policy requires them
 
 EVIDENCE
   → completion recorded
   → outcome measured
   → documented
 
-MONEY EVENT
-  → obligation calculated
-  → payment triggered
-  → settlement processed
-  → Financial OS records
+MONEY EVENT (WHERE APPLICABLE)
+  → resource-class / economic policy evaluated
+  → obligation calculated only when policy creates one
+  → payment initiated only when required through the configured authoritative rail
+  → verified payment / settlement state recorded without inferring processor truth
+  → no-money / zero-fee completion remains valid
+  → Financial OS records the actual applicable state
 
 REPUTATION
   → objective evidence added to both parties' records
