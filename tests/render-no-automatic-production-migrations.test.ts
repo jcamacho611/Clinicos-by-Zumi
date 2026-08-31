@@ -8,6 +8,7 @@ const migrationPolicy = readFileSync(
 );
 const verifyRelease = readFileSync("scripts/verify-release.mjs", "utf8");
 const renderYaml = readFileSync("render.yaml", "utf8");
+const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 
 describe("Render production migration boundary", () => {
   it("keeps commit auto-deploy and a governed migration path", () => {
@@ -69,5 +70,32 @@ describe("Render production migration boundary", () => {
     expect(safetyCheck).toBeGreaterThan(-1);
     expect(marker).toBeGreaterThan(safetyCheck);
     expect(renderBuildCall).toBeGreaterThan(marker);
+  });
+
+  it("proves the database is disposable inside the disposable branch, before any migration runs", () => {
+    const disposableBranch = renderBuild.slice(
+      renderBuild.indexOf('KLINIKOS_ALLOW_MIGRATION_DEPLOY === "disposable-verification"'),
+    );
+    const assertion = disposableBranch.indexOf("assertDisposableDatabase");
+    const deploy = disposableBranch.indexOf('["node_modules/prisma/build/index.js", "migrate", "deploy"]');
+
+    expect(assertion).toBeGreaterThan(-1);
+    expect(deploy).toBeGreaterThan(assertion);
+  });
+
+  it("keeps one shared implementation of the disposable-database check", () => {
+    expect(renderBuild).toContain("release/disposable-database-safety.mjs");
+    expect(verifyRelease).toContain("release/disposable-database-safety.mjs");
+    expect(verifyRelease).not.toMatch(/async function assertDisposableDatabase/);
+    expect(renderBuild).not.toMatch(/async function assertDisposableDatabase/);
+  });
+
+  it("never grants the migration flag to a whole CI job", () => {
+    const deployContract = qualityWorkflow.slice(qualityWorkflow.indexOf("deploy-contract:"));
+    const jobEnv = deployContract.slice(
+      deployContract.indexOf("env:"),
+      deployContract.indexOf("services:"),
+    );
+    expect(jobEnv).not.toContain("KLINIKOS_ALLOW_MIGRATION_DEPLOY");
   });
 });

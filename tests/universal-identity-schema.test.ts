@@ -41,7 +41,9 @@ describe("universal identity foundation", () => {
   });
 
   it("inherits the current one-identity/contextual-authority law instead of replacing architecture precedence", () => {
-    expect(sourceOfTruth).toContain("Implementation truth remains current code/schema/migrations/tests/CI.");
+    // The #388 rewrite widened this law rather than dropping it: runtime evidence now counts
+    // as implementation truth alongside code/schema/migrations/tests/CI. Guard the wider form.
+    expect(sourceOfTruth).toContain("Implementation truth remains current code/schema/migrations/tests/CI/runtime evidence.");
     expect(sourceOfTruth).toContain("One identity may hold multiple roles and evolve through the ecosystem.");
     expect(sourceOfTruth).toContain("A generic `provider` label is never sufficient to grant regulated capability.");
   });

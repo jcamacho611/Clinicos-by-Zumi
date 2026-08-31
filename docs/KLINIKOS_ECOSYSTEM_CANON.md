@@ -1,9 +1,12 @@
 # KLINIKOS — ECOSYSTEM CANON
 
 Version: `2026-08-16.2`
-Status: `AUTHORITATIVE PRODUCT-DIRECTION CANON`
+Status: `SPECIALIST ECOSYSTEM REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 
-This document captures the newest product architecture and supersedes narrower interpretations of Klinikos as clinic software, a marketplace, an education product, or an AI assistant. Runtime/code/schema/tests remain authoritative for what is actually implemented today.
+This document preserves an earlier ecosystem synthesis for scoped reference. It does not
+supersede or independently define current company/product architecture. Accepted intended
+law belongs in `docs/KLINIKOS_MASTER_CANON.md`; runtime/code/schema/tests remain
+authoritative for what is actually implemented today.
 
 ## 1. Master definition
 

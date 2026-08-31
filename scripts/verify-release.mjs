@@ -22,17 +22,13 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
+import { assertDisposableDatabase } from "./release/disposable-database-safety.mjs";
 
 const CODE_ONLY = process.argv.includes("--code-only");
 const startedAt = Date.now();
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
 /** Hosts that are never acceptable targets for a gate that migrates an empty database. */
-const PRODUCTION_MARKERS = [
-  "neon.tech", "supabase.co", "rds.amazonaws.com", "render.com", "railway.app",
-  "planetscale", "azure.com", "digitalocean.com", "heroku",
-];
-
 /**
  * Prisma generate/validate parse the schema but do not need a live connection. Give them
  * a syntactically valid URL when no usable database URL is configured so failures report
@@ -63,46 +59,6 @@ function run(name, command, args, options = {}) {
 }
 
 /** Refuse to run the migration gate against anything that could be real. */
-async function assertDisposableDatabase(url) {
-  if (!url) {
-    throw new Error(
-      "DATABASE_URL is not set. The release gate reproduces Render against an EMPTY " +
-      "disposable database and will not guess a target. Point it at a disposable database, " +
-      "or run `npm run verify:code`.",
-    );
-  }
-  if (process.env.VERIFY_ALLOW_PRODUCTION_DATABASE === "true") {
-    log("info", "VERIFY_ALLOW_PRODUCTION_DATABASE=true — managed-host check bypassed by explicit request");
-  } else {
-    const marker = PRODUCTION_MARKERS.find((host) => url.includes(host));
-    if (marker) {
-      throw new Error(
-        `DATABASE_URL points at ${marker}, which looks like a managed production host. ` +
-        "This gate applies migrations and must never run there. " +
-        "Set VERIFY_ALLOW_PRODUCTION_DATABASE=true only for a genuinely disposable target.",
-      );
-    }
-  }
-
-  const { PrismaClient } = await import("@prisma/client");
-  const client = new PrismaClient({ datasources: { db: { url } } });
-  try {
-    const rows = await client.$queryRawUnsafe(
-      `SELECT COUNT(*)::int AS count FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name NOT LIKE '\\_prisma%'`,
-    );
-    const tables = Number(rows?.[0]?.count ?? 0);
-    if (tables > 0) {
-      throw new Error(
-        `The target database already has ${tables} table(s). The migration path ` +
-        "must be proven against an EMPTY database before release.",
-      );
-    }
-  } finally {
-    await client.$disconnect();
-  }
-}
-
 /** Poll until the server answers or the deadline passes. Never use a blind sleep. */
 async function waitForHealth(url, timeoutMs = 90_000) {
   const deadline = Date.now() + timeoutMs;
