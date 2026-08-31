@@ -25,7 +25,8 @@ export type ClinicalPlacementDemand = {
   demand: GridDemand;
   gate: {
     canMatch: boolean;
-    canAssign: boolean;
+    canAssign: false;
+    assignmentAuthority: "persisted_clinical_placement";
     missingApprovals: PlacementApprovalKey[];
   };
   grantsAuthority: false;
@@ -43,8 +44,13 @@ function normalizedOptional(value: string | null | undefined) {
  * contract. Discovery readiness and placement assignment remain separate truths.
  *
  * A verified learner relationship plus completed prerequisites may allow discovery, but
- * a Grid match cannot create school/site/preceptor approval, placement assignment,
- * licensure, professional eligibility or clinical authority.
+ * this adapter never authorizes placement assignment. Caller-supplied approval hints are
+ * useful only for explaining what still appears missing. The persisted clinical-placement
+ * workflow remains authoritative for evidenced school, site, preceptor, and learner
+ * approvals and owns assignment/activation state.
+ *
+ * A Grid match cannot create placement approval, assignment, licensure, professional
+ * eligibility or clinical authority.
  */
 export function buildClinicalPlacementDemand(input: ClinicalPlacementDemandInput): ClinicalPlacementDemand {
   const personId = input.personId.trim();
@@ -65,7 +71,6 @@ export function buildClinicalPlacementDemand(input: ClinicalPlacementDemandInput
     input.learnerEligibility.prerequisitesComplete;
 
   const missingApprovals = approvalKeys.filter((key) => !input.approvals[key]);
-  const canAssign = canMatch && missingApprovals.length === 0;
 
   const demand = gridDemandSchema.parse({
     kind: "education",
@@ -88,7 +93,8 @@ export function buildClinicalPlacementDemand(input: ClinicalPlacementDemandInput
     demand,
     gate: {
       canMatch,
-      canAssign,
+      canAssign: false,
+      assignmentAuthority: "persisted_clinical_placement",
       missingApprovals,
     },
     grantsAuthority: false,
