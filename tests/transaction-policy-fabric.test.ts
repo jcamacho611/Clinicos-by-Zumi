@@ -34,20 +34,20 @@ describe("transaction policy fabric", () => {
 
   it("preserves the existing Grid fee declaration as the economic source instead of copying fee numbers", () => {
     const space = transactionPolicyForGridResourceClass("space");
-    expect(space?.economicSource.resourceClass).toBe("space");
-    expect(space?.economicSource.version).toBe(1);
-    expect(space?.economicSource.feeModel).toBe("percentage");
-    expect(space?.economicSource.legalReview).toBe("business_draft");
+    expect(space?.economicSource?.resourceClass).toBe("space");
+    expect(space?.economicSource?.version).toBe(1);
+    expect(space?.economicSource?.feeModel).toBe("percentage");
+    expect(space?.economicSource?.legalReview).toBe("business_draft");
   });
 
   it("marks patient-care and referral classes as no current platform-fee policy without claiming legal approval", () => {
     const clinical = transactionPolicyForGridResourceClass("regulated_clinical_service");
     const referral = transactionPolicyForGridResourceClass("referral");
 
-    expect(clinical?.economicSource.feeModel).toBe("none");
-    expect(clinical?.economicSource.legalReview).toBe("requires_legal_review");
-    expect(referral?.economicSource.feeModel).toBe("none");
-    expect(referral?.economicSource.legalReview).toBe("requires_legal_review");
+    expect(clinical?.economicSource?.feeModel).toBe("none");
+    expect(clinical?.economicSource?.legalReview).toBe("requires_legal_review");
+    expect(referral?.economicSource?.feeModel).toBe("none");
+    expect(referral?.economicSource?.legalReview).toBe("requires_legal_review");
     expect(clinical?.requiresCounselBeforeFeeActivation).toBe(true);
     expect(referral?.requiresCounselBeforeFeeActivation).toBe(true);
   });
