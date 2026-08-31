@@ -1,0 +1,85 @@
+// Durable governed clinical placement state.
+//
+// Placement is orchestration/context only. It never grants licensure, professional
+// authority, clinical authority, Grid eligibility, school/site approval, or other
+// consequential authority. Approved supervised time is derived from append-only
+// PlacementHourEvent history rather than a mutable counter.
+model EducationPlacement {
+  id                          String               @id @default(cuid())
+  learnerPersonId             String
+  learnerRelationshipId       String
+  enrollmentId                String
+  institutionId               String
+  programId                   String?
+  preceptorPersonId           String
+  preceptorRelationshipId     String?
+  siteOrganizationId          String
+  siteLocationId              String
+  gridDemandId                String?
+  gridOfferId                 String?
+  gridCompositionId           String?
+  status                      String               @default("matched")
+  schoolApprovalState         String               @default("pending")
+  schoolDecidedByPersonId     String?
+  schoolEvidenceReference     String?
+  schoolDecidedAt             DateTime?
+  siteApprovalState           String               @default("pending")
+  siteDecidedByPersonId       String?
+  siteEvidenceReference       String?
+  siteDecidedAt               DateTime?
+  preceptorApprovalState      String               @default("pending")
+  preceptorDecidedByPersonId  String?
+  preceptorEvidenceReference  String?
+  preceptorDecidedAt          DateTime?
+  learnerApprovalState        String               @default("pending")
+  learnerDecidedByPersonId    String?
+  learnerEvidenceReference    String?
+  learnerDecidedAt            DateTime?
+  requiredMinutes             Int
+  plannedStartAt              DateTime?
+  plannedEndAt                DateTime?
+  matchedAt                   DateTime
+  assignedAt                  DateTime?
+  assignedByPersonId          String?
+  actualStartAt               DateTime?
+  activatedByPersonId         String?
+  completedAt                 DateTime?
+  cancelledAt                 DateTime?
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  hourEvents                  PlacementHourEvent[]
+
+  @@index([learnerPersonId, status])
+  @@index([enrollmentId, status])
+  @@index([institutionId, status])
+  @@index([preceptorPersonId, status])
+  @@index([siteOrganizationId, siteLocationId, status])
+  @@index([gridDemandId])
+  @@index([gridOfferId])
+  @@index([gridCompositionId])
+  @@map("education_placements")
+}
+
+model PlacementHourEvent {
+  id                 String             @id @default(cuid())
+  placementId        String
+  serviceDate        DateTime
+  minutes            Int
+  activity           String
+  status             String
+  reportedByPersonId String
+  reviewedByPersonId String?
+  sourceType         String
+  sourceReference    String?
+  evidenceReference  String?
+  supersedesEventId  String?
+  occurredAt         DateTime
+  createdAt          DateTime           @default(now())
+  placement          EducationPlacement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@index([placementId, occurredAt])
+  @@index([supersedesEventId])
+  @@index([reportedByPersonId])
+  @@index([reviewedByPersonId])
+  @@map("placement_hour_events")
+}
