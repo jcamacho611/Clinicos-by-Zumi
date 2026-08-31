@@ -47,12 +47,13 @@ CREATE INDEX IF NOT EXISTS "provider_authority_events_authorityKind_authorityRec
 
 -- Establish an honest version-one baseline for every current credential. This does not
 -- infer verification or authority; it records exactly the current domain state observed
--- when the migration runs.
+-- when the migration runs. The event timestamp records when bootstrap occurred; the
+-- source record's prior updatedAt is retained separately as metadata provenance.
 INSERT INTO "provider_authority_events" (
     "id", "organizationId", "providerId", "authorityKind", "authorityRecordId",
     "authorityVersion", "action", "actorId", "actorType", "beforeState", "afterState",
     "evidenceDocumentId", "evidenceReference", "provenanceSource", "note", "metadata",
-    "schemaVersion", "occurredAt"
+    "schemaVersion"
 )
 SELECT
     'authority_credential_' || "id",
@@ -86,9 +87,12 @@ SELECT
     "evidenceReference",
     "verificationSource",
     'Baseline captured from current credential state; no verification inferred.',
-    jsonb_build_object('bootstrap', true, 'retention', 'evidence_reference_only'),
-    1,
-    "updatedAt"
+    jsonb_build_object(
+        'bootstrap', true,
+        'retention', 'evidence_reference_only',
+        'sourceUpdatedAt', "updatedAt"
+    ),
+    1
 FROM "provider_credentials"
 ON CONFLICT ("organizationId", "authorityKind", "authorityRecordId", "authorityVersion") DO NOTHING;
 
@@ -97,7 +101,7 @@ INSERT INTO "provider_authority_events" (
     "id", "organizationId", "providerId", "authorityKind", "authorityRecordId",
     "authorityVersion", "action", "actorId", "actorType", "beforeState", "afterState",
     "evidenceDocumentId", "evidenceReference", "provenanceSource", "note", "metadata",
-    "schemaVersion", "occurredAt"
+    "schemaVersion"
 )
 SELECT
     'authority_privilege_' || "id",
@@ -124,9 +128,13 @@ SELECT
     NULL,
     "verificationSource",
     'Baseline captured from current facility privilege state; no authority inferred.',
-    jsonb_build_object('bootstrap', true, 'retention', 'authority_decision_only', 'facilityId', "facilityId"),
-    1,
-    "updatedAt"
+    jsonb_build_object(
+        'bootstrap', true,
+        'retention', 'authority_decision_only',
+        'facilityId', "facilityId",
+        'sourceUpdatedAt', "updatedAt"
+    ),
+    1
 FROM "provider_facility_privileges"
 ON CONFLICT ("organizationId", "authorityKind", "authorityRecordId", "authorityVersion") DO NOTHING;
 
@@ -136,7 +144,7 @@ INSERT INTO "provider_authority_events" (
     "id", "organizationId", "providerId", "authorityKind", "authorityRecordId",
     "authorityVersion", "action", "actorId", "actorType", "beforeState", "afterState",
     "evidenceDocumentId", "evidenceReference", "provenanceSource", "note", "metadata",
-    "schemaVersion", "occurredAt"
+    "schemaVersion"
 )
 SELECT
     'authority_malpractice_' || "id",
@@ -167,8 +175,11 @@ SELECT
     "malpracticeEvidenceReference",
     'provider_current_state',
     'Baseline captured from current malpractice state; no verification inferred.',
-    jsonb_build_object('bootstrap', true, 'retention', 'evidence_reference_only'),
-    1,
-    "updatedAt"
+    jsonb_build_object(
+        'bootstrap', true,
+        'retention', 'evidence_reference_only',
+        'sourceUpdatedAt', "updatedAt"
+    ),
+    1
 FROM "providers"
 ON CONFLICT ("organizationId", "authorityKind", "authorityRecordId", "authorityVersion") DO NOTHING;
