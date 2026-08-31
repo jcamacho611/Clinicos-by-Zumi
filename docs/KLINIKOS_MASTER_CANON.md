@@ -1039,7 +1039,7 @@ Enterprise capability includes organization hierarchy, locations, departments, d
 
 Owner/enterprise views should answer what needs attention across the network while minimizing unnecessary clinical detail.
 
-The cross-organization governance contract must preserve organization boundaries, relationship scope, purpose, consent, data minimization, and audit.
+Cross-organization governance must preserve organization boundaries, relationship scope, purpose, consent, data minimization, and audit.
 
 Network flywheel:
 
@@ -1101,7 +1101,7 @@ For each priority segment define:
 - organization size/type/specialty;
 - current systems;
 - urgent problem;
-- economic buyer / decision-maker / champion / end user / blocker, with influencer recorded separately where relevant;
+- economic buyer / decision-maker / champion / end user / influencer / blocker, with each role recorded separately where relevant;
 - measurable desired outcome;
 - switching cost/fear;
 - objections;
@@ -1422,6 +1422,8 @@ Enterprise procurement is a sales workflow with owners, evidence, blockers, dead
 
 ## 43.1 MF-006 — RFP / PROCUREMENT OPERATING SYSTEM AND LIFECYCLE
 
+The **RFP / PROCUREMENT LIFECYCLE** is a governed operating system rather than a document-production shortcut.
+
 RFPs, grants, workforce solicitations, enterprise security reviews, and institutional proposals are governed company workflows, not isolated documents or product forks.
 
 Canonical lifecycle:
@@ -1655,6 +1657,25 @@ The first required proof is a **SOURCE-LOCKED SYNTHETIC NO-FAULT GOLDEN CASE** c
 ---
 
 # 50. EXECUTION ORDER
+
+## 50.0 TWELVE MASTER DELIVERY WORKSTREAMS
+
+The complete Klinikos scope is managed through the following twelve workstreams. This is a **delivery projection, not a sixth plane**, a new universe, a product fork, or another source of truth. It groups related requirements so ownership, sequencing, evidence, risk, and money impact remain understandable; it deletes no accepted architecture, lifecycle, safety law, or implementation obligation. Every workstream maps into or across the fixed five planes and must still follow the dependency order below.
+
+1. **CANON + FIVE-PLANE ARCHITECTURE** — one Master Canon, one subordinate Engineering Blueprint, one canonical ecosystem graph, synchronized contracts, and no competing final authorities.
+2. **IDENTITY + TRUST + SECURITY** — Person, organizations, memberships, relationships, credentials, contextual authority, privacy, tenant isolation, audit/evidence history, and PHI-readiness gates.
+3. **PATIENT + CLINICAL OS** — patient identity/relationships, registration/intake, scheduling, Current Visit, telemedicine encounter mode, orders/results, referrals, longitudinal care, No-Fault, and Workers’ Compensation.
+4. **FINANCIAL OS + RCM** — coding evidence, charge/claim/denial/remittance states, balances, verified payments, reconciliation, subscriptions, financial obligations, payables, payouts, and settlement truth.
+5. **GRID EXCHANGE** — one universal I NEED / I HAVE engine for legitimate work, professionals, capacity, rooms, equipment, permitted products, services, resources, education opportunities, and governed transactions.
+6. **WORKFORCE CONVERSION** — `RESUME / CAREERARTIFACT CLAIMS → EDU → HUMAN-REVIEWED COMPETENCY EVIDENCE → MULTI-PARTY PLACEMENT → EXTERNAL CREDENTIAL / LICENSE VERIFICATION → PROFESSIONAL PROFILE → GRID WORK → CAREER GROWTH`, without creating a second identity, student marketplace, job board, or Grid.
+7. **MED SPA + INDEPENDENT PRACTICE** — governed professional progression, services, availability, booking, facility/room capacity, private regulated inventory, permitted commerce, leads, follow-up, rebooking, and clinic/network operations.
+8. **QUALITY + EXPERT GRID** — detect operational/clinical/revenue gaps, resolve safely with deterministic workflows and Zumi support, route unresolved governed work to eligible experts, and preserve evidence/outcomes.
+9. **ZUMI + INTEGRATIONS** — governed intelligence plus approved external clinical, financial, communications, identity, credential, pharmacy, laboratory, imaging, payer, clearinghouse, and other authoritative rails; partnership/API access never proves PHI approval or live connection.
+10. **CUSTOMER EXPERIENCE + DESIGN** — Living Home, Experience Engine, public and authenticated journeys, Black Label V2, mobile/responsive behavior, portals, onboarding, accessibility, and guided workflow clarity.
+11. **REVENUE + GROWTH COMPANY OS** — versioned Pricing Fabric, checkout/payment evidence, sales/CRM, acquisition, attribution, retention, partnerships, procurement, funding/capital, company finance, and measurable outcome economics.
+12. **PRODUCTION + SCALE + UNICORN READINESS** — CI/CD, migrations, observability, security, reliability, recovery, tests, incident readiness, cost/scale controls, network effects, defensibility, enterprise proof, and investor-readiness evidence.
+
+Workstream status is a dated evidence projection, never implementation truth by declaration. A workstream may be reported as done, building, blocked/risk, or not yet, but every report must also state evidence, owner, money impact, engineering action, dependencies, and the next highest-value safe step. Cross-workstream sequencing cannot be bypassed merely to make a dashboard look complete.
 
 Dependency-first convergence:
 

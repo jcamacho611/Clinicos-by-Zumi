@@ -1,10 +1,14 @@
 # Klinikos Frontend Experience Canon
 
 Status: `SPECIALIST FRONTEND IMPLEMENTATION CONTRACT — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+Updated: 2026-08-30
 
 This specialist contract preserves frontend implementation guidance within its scope. It
 does not define company-wide product law and cannot override the Master Canon, current
 verified implementation/runtime truth, or server-side authorization and domain authority.
+For the full role-by-role, route-by-route, surface-by-surface frontend implementation
+contract, read `docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md`. Both files
+remain subordinate to the Master Canon; neither independently controls product-wide law.
 
 ## Product law
 
@@ -29,6 +33,8 @@ The user should discover Klinikos power by accomplishing work, not by being show
 - Provider: Home, Today, Patients, Care, Results.
 - Biller: Home, Money, Readiness, Follow-up, Tasks.
 - Quality: Home, Quality, Patients, Review, Referrals.
+- Patient: Home, Appointments, Forms, Messages, Account.
+- Learner: Home, Learn, Practice, Progress, Opportunities.
 
 These are presentation defaults, not authorization shortcuts.
 
@@ -46,20 +52,20 @@ Incorrect model:
 
 A briefing item should, where applicable, carry stable structured fields such as:
 
-- kind
-- count
-- severity/state
-- record identifiers or governed query reference
-- due state
-- evidence/provenance summary
-- next action
-- href/action contract
+- kind;
+- count;
+- severity/state;
+- record identifiers or governed query reference;
+- due state;
+- evidence/provenance summary;
+- next action;
+- href/action contract.
 
 Counts must come from the same source that produced the visible meaning. Do not scrape prose.
 
 ## Living Home
 
-Home is an adaptive operational briefing, not a traditional KPI dashboard.
+Home is an adaptive operational briefing, not a traditional KPI dashboard and not a five-plane architecture diagram.
 
 Default Home should prioritize:
 
@@ -110,23 +116,49 @@ For every page ask:
 
 If 70% of visible information can be hidden without preventing the next correct action, move it deeper rather than deleting the capability.
 
-## Visual system
+## Visual system — current operational direction
+
+### Light clinical default
+
+Normal authenticated healthcare work is **light-first**.
+
+Use:
+
+- white / pearl / mist clinical canvases;
+- graphite / deep slate typography;
+- restrained healthcare teal, sage, and medical-blue interaction/information accents;
+- precise success / attention / risk states;
+- strong negative space;
+- subtle hairlines/elevation;
+- approved orbital mark and wordmark where useful;
+- typography and hierarchy as the primary visual structure.
+
+Recommended working palette is defined in `KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md`.
+
+This is not permission to recreate generic hospital-blue or generic enterprise SaaS UI. Klinikos remains distinctive through typography, composition, behavior, brand assets, contextual intelligence, and restraint.
+
+### Brand accents
+
+Oxblood, deep burgundy, dusty rose, rose ash, ember, and muted/antique gold remain available as signature accents. They do not need to fill every product surface.
+
+### Dark mode
+
+Obsidian/black-cherry/oxblood remains available as optional dark mode and for selected public/premium/system presentation contexts.
+
+Dark mode must not become:
+
+- neon;
+- cyberpunk;
+- game-like;
+- a glowing command center;
+- an architecture poster;
+- a permanent constellation/network visualization behind routine work.
+
+## Luxury definition
 
 Luxury means restraint, spacing, typography, precision, calm motion, honest state, and high-quality interaction.
 
 Luxury does not mean more glow, more cards, more gradients, more borders, or more animation.
-
-Use:
-
-- warm ivory / bone / pearl with graphite / near-black for light-mode foundations;
-- obsidian / true-black with deep black-cherry / oxblood for dark-mode foundations;
-- restrained copper / dusty rose / coral / ember accents;
-- approved orbital mark and wordmark where useful;
-- strong negative space;
-- few purposeful radii and elevation levels;
-- typography and hierarchy as primary visual structure.
-
-Do not recreate generic hospital-blue or generic enterprise SaaS UI.
 
 ## Brand atmosphere contract
 
@@ -152,12 +184,31 @@ Prefer **order emerging from complexity** through spacing, typography, hierarchy
 - The work owns the screen.
 - Use quiet geometry, hierarchy, spacing, and contextual state before imagery.
 - Clinical, billing, Grid, EDU, and administrative workspaces must remain readable under sustained daily use.
+- Five-plane/system architecture belongs in an explicit System X-Ray / architecture presentation, not the normal user's dashboard.
 
 ### Accessibility
 
 - Decorative assets are decorative and receive no meaningless screen-reader narration.
 - `prefers-reduced-motion` disables non-essential motion while preserving state and meaning.
 - Decoration must never be the sole carrier of status, action, hierarchy, or eligibility.
+
+## Current Visit contract
+
+Current Visit is the provider-facing clinical convergence surface.
+
+Target sequence:
+
+`Patient Snapshot → What Changed → Staff Handoff → Today → Clinical → Assessment & Plan → Orders & Results → Documentation & Coding → Close Visit`
+
+The first viewport should answer:
+
+- Who is this patient?
+- Why are they here?
+- What changed?
+- What did staff already do?
+- What requires my judgment?
+
+Structured longitudinal change is deterministic truth. AI may summarize but may not invent it.
 
 ## Grid design contract
 
@@ -188,7 +239,7 @@ Users should not need marketplace taxonomy before stating intent.
 - Unpinned city/state/service-area inventory stays explicitly unpinned.
 - Desktop grants the map meaningful space.
 - Mobile defaults to results with deliberate Map/Results switching.
-- Critical decision information must remain available in the accessible list; no result exists only as a marker.
+- Critical decision information remains available in the accessible list; no result exists only as a marker.
 - If primary map tiles/runtime fail, show an honest unavailable/fallback state. Never draw a fake replacement map.
 
 ## Grid transaction truth
@@ -367,6 +418,11 @@ not:
 
 Do not merge frontend work that reintroduces any of the following without an explicit product decision:
 
+- video-game aesthetics;
+- neon/cyberpunk clinical UI;
+- dark-first requirement for routine healthcare operations;
+- five-plane architecture maps as normal dashboards;
+- giant ecosystem balls/orbits on operational screens;
 - 8+ permanent primary destinations for a normal role;
 - sidebar exposure of every authorized module;
 - duplicate full-product directories on Home;
@@ -378,14 +434,17 @@ Do not merge frontend work that reintroduces any of the following without an exp
 - badge counts parsed from prose;
 - fake unread/activity/AI/payment/provider states;
 - visual role switchers that bypass authenticated role/context truth;
-- mandatory decorative motifs that compete with the user's work.
+- mandatory decorative motifs that compete with the user's work;
+- micro-text used to compensate for excessive information density.
 
 ## Implementation handoff required per major surface
 
 Document:
 
 - user role;
+- active context;
 - user goal;
+- expected successful outcome;
 - primary action;
 - required server state;
 - minimum data;
@@ -395,4 +454,6 @@ Document:
 - external dependency;
 - mobile behavior;
 - accessibility behavior;
-- ambient Zumi context.
+- ambient Zumi context;
+- audit/financial consequence where applicable;
+- next useful route.

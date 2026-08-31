@@ -1320,7 +1320,7 @@ What decision should become durable Klinikos architecture or business knowledge 
 
 ## Verified Current Baseline (2026-08-30)
 
-Verified repository `main` after the final read-only fetch is `9ac2dcb5709abd57c3321f8865212ff13d61568a` (PR #388). This isolated #367 candidate remains based at merge base `0fe5fdbdbb5377842e20338920204397ba6dceda`, 35 commits ahead of and 1 behind current `main`; it was not rebased or merged during closeout. Both public health endpoints last returned HTTP 200 in demo mode with the database configured, `liveIntegrations:false`, and runtime release SHA `0fe5fdbdbb5377842e20338920204397ba6dceda`. Repository-main state and deployed-runtime state are therefore intentionally distinct. The 62 candidate Prisma migrations, current code/tests, and dated runtime evidence—not this table—remain authoritative for what exists.
+Verified remote refs on 2026-08-31 are `main@9ac2dcb5709abd57c3321f8865212ff13d61568a` (PR #388) and the pre-closeout PR #367 head `43a4ac372d7a4a7ea93e108995b72553429c2717`. The final #367 closeout candidate reconciles that remote PR head—which already contains `main@9ac2dcb5` through its own recorded history—with the preserved local Canon-convergence commit `409a35126361c569e52840d1d62aa29df6ace4e5`; this closeout did not independently merge `main`. Its final candidate SHA and exact-head Quality result belong in release evidence rather than being hard-coded before completion. Both public health endpoints last returned HTTP 200 in demo mode with the database configured, `liveIntegrations:false`, and runtime release SHA `0fe5fdbdbb5377842e20338920204397ba6dceda`. Repository-main state, candidate state, and deployed-runtime state are therefore intentionally distinct. The 62 candidate Prisma migrations, current code/tests, and dated runtime evidence—not this table—remain authoritative for what exists.
 
 | Domain | Implementation/evidence state | Verified boundary |
 |---|---|---|
@@ -1340,7 +1340,7 @@ Verified repository `main` after the final read-only fetch is `9ac2dcb5709abd57c
 
 1. PR #367 must pass fresh full local verification, exact-head Quality, and review after the authority/rev3 repair.
 2. PR #370 and then PR #371 must be reconciled against each newly merged parent and reverified; old green child runs do not satisfy that gate.
-3. Current `main@9ac2dcb5` adds `docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md` with an `AUTHORITATIVE FRONTEND / PRODUCT EXPERIENCE CONTRACT` declaration after this branch point. It is not silently accepted as co-equal authority; its unique accepted content and inbound routing require explicit one-Canon reconciliation after the #367 founder checkpoint.
+3. The frontend implementation contract introduced by `main@9ac2dcb5` is reconciled in this candidate as subordinate to the Master Canon, with authority and body-level drift tests; exact-head review still has to prove the combined result.
 4. Runtime remains demo mode with live integrations off; regulated external rails and live settlement cannot be claimed.
 5. PHI-adjacent Zumi use requires exact provider/environment/model/configuration, BAA/contract, retention, security, and legal evidence.
 6. Complete production journeys, browser E2E, responsive/accessibility evidence, concurrency, payment/settlement, and pilot-scoped rollback/restore evidence remain required.
@@ -1372,6 +1372,27 @@ Make all applications behave as one operating environment. Plain-language screen
 
 **Stage F — Canon-Generated Ecosystem Map**
 The final visual is generated from the reconciled architecture, not from conversation memory. The underlying engineering representation (ACTOR → IDENTITY → RELATIONSHIP → AUTHORITY → NEED → MATCH → AGREEMENT → WORK → EVIDENCE → OBLIGATION → MONEY → OUTCOME → REPUTATION → MEMORY → NEXT ACTION) generates each view. Whole-company universe, patient lifecycle, professional lifecycle, student/workforce, clinic, Grid marketplace, med-spa commerce, RCM/claims, enterprise, partner/integration, Zumi/OpenAI, security/trust, money, distribution/network effects, data/evidence.
+
+## TWELVE MASTER DELIVERY WORKSTREAMS
+
+These workstreams are the executable portfolio projection of the fixed five-plane Canon. They reduce coordination fragmentation without deleting scope, creating another architecture, changing domain authority, or permitting parallel duplicate systems.
+
+| ID | Workstream | Executable consequence |
+|---|---|---|
+| W01 | **CANON + FIVE-PLANE ARCHITECTURE** | Synchronize Canon, Blueprint, Authority Map, graph, registries, tests, provenance, and subordinate references; prevent rival authorities and sixth-plane drift. |
+| W02 | **IDENTITY + TRUST + SECURITY** | REUSE and EXTEND Person/identity, relationships, organizations, memberships, credentials, contextual authorization, tenant/privacy controls, audit/evidence, and PHI gates. |
+| W03 | **PATIENT + CLINICAL OS** | CONNECT patient identity/relationships, registration, scheduling, intake, Current Visit, telemedicine mode, orders/results, referrals, No-Fault, Workers’ Compensation, and longitudinal evidence. |
+| W04 | **FINANCIAL OS + RCM** | GENERALIZE shared charge/claim/denial/payment/obligation/payable/payout/settlement semantics and CONNECT authoritative payer/processor rails. |
+| W05 | **GRID EXCHANGE** | REUSE the one universal I NEED / I HAVE engine; add resource-class policy and adapters rather than separate job, student, space, product, service, or expert marketplaces. |
+| W06 | **WORKFORCE CONVERSION** | CONNECT `RESUME / CAREERARTIFACT → EDU → COMPETENCY EVIDENCE → PLACEMENT → VERIFIED PROFESSIONAL → GRID WORK → CAREER GROWTH`; claims, completion, placement, payment, and reputation never manufacture authority. |
+| W07 | **MED SPA + INDEPENDENT PRACTICE** | Compose Clinic OS + professional authority + Grid + facility capacity + permitted commerce; keep regulated inventory on its separately governed private path. |
+| W08 | **QUALITY + EXPERT GRID** | CONNECT detection, deterministic remediation, governed Zumi assistance, eligible-expert routing, exception handling, evidence, and measured outcomes. |
+| W09 | **ZUMI + INTEGRATIONS** | REUSE the governed intelligence gateway and CONNECT/PARTNER to authoritative clinical, financial, communications, credential, and other rails; fail PHI/live claims closed. |
+| W10 | **CUSTOMER EXPERIENCE + DESIGN** | Translate every governed journey into Screen Contracts, Living Home/Experience Engine, Black Label V2, portals, mobile/responsive/accessibility behavior, and truthful states. |
+| W11 | **REVENUE + GROWTH COMPANY OS** | CONNECT server-owned Pricing Fabric, offers, verified payment/provisioning, CRM, acquisition/attribution, retention, procurement, partnerships, capital, and financial measurement. |
+| W12 | **PRODUCTION + SCALE + UNICORN READINESS** | Prove CI/CD, all migrations, security, observability, backup/restore, reliability, incident controls, cost/scale, defensibility, network effects, enterprise evidence, and investor-readiness truth. |
+
+Every checkpoint reports `DONE / BUILDING / BLOCKED_OR_RISK / NOT_YET` plus `MONEY_IMPACT`, `ENGINEERING_ACTION`, exact evidence, owner, dependencies, and next safe action. `DONE` requires verified code/runtime/evidence for the claimed scope; a document, branch, old green check, external redirect, API key, partnership, or scenario does not qualify. Current issue/PR ownership remains authoritative for collision avoidance, and dependency order outranks parallelism.
 
 ---
 

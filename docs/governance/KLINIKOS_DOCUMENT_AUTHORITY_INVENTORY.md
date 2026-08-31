@@ -340,6 +340,8 @@ Material discrepancies found by the original scan, with 2026-08-30 remediation s
 
 The existing Master Engineering Blueprint absorbed the rev3 architecture-to-code corrections in place. This is an implementation-contract update, not a new source of truth or a sixth plane.
 
+All later consolidation work must migrate accepted unique content before cleanup, then enforce the one-authority chain mechanically through references and tests.
+
 ## Task-2 self-review
 
 - [x] One structured nine-field row per potentially authoritative document, including every specifically required file.

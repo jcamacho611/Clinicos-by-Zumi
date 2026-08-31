@@ -185,3 +185,16 @@ This is local candidate evidence, not exact-head GitHub CI or deployment evidenc
 ## 9. Snapshot maintenance law
 
 Refresh this file whenever `main`, the active stack, exact-head CI, runtime release, major implementation evidence, external connection truth, security/legal gates, pricing authority, blockers, or merge status changes. Replace stale optimism with exact evidence; never preserve a successful status after its parent or candidate changes.
+
+At every consequential handoff or merge, explicitly check whether any of the following changed materially:
+
+- `main` SHA;
+- governing branch/PR;
+- ownership lanes;
+- major verified implementation state;
+- release blockers;
+- external connection truth;
+- active reconciliation stage;
+- verification status.
+
+Do not preserve optimistic stale status. Replace it with the newest verified evidence.

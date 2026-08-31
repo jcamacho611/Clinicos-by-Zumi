@@ -187,6 +187,30 @@ describe("Klinikos Canon synchronization", () => {
     expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
   });
 
+  it("preserves the twelve delivery workstreams as a projection of the five-plane Canon", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+    const workstreams = [
+      "CANON + FIVE-PLANE ARCHITECTURE",
+      "IDENTITY + TRUST + SECURITY",
+      "PATIENT + CLINICAL OS",
+      "FINANCIAL OS + RCM",
+      "GRID EXCHANGE",
+      "WORKFORCE CONVERSION",
+      "MED SPA + INDEPENDENT PRACTICE",
+      "QUALITY + EXPERT GRID",
+      "ZUMI + INTEGRATIONS",
+      "CUSTOMER EXPERIENCE + DESIGN",
+      "REVENUE + GROWTH COMPANY OS",
+      "PRODUCTION + SCALE + UNICORN READINESS",
+    ];
+
+    expect(workstreams.filter((anchor) => !master.includes(anchor))).toEqual([]);
+    expect(workstreams.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
+    expect(master).toContain("delivery projection, not a sixth plane");
+    expect(blueprint).toContain("DONE / BUILDING / BLOCKED_OR_RISK / NOT_YET");
+  });
+
   it("protects the hard safety and truth invariants against future Canon compression", () => {
     const master = read(masterPath);
     const invariants = [
@@ -205,5 +229,101 @@ describe("Klinikos Canon synchronization", () => {
 
     const missing = invariants.filter((invariant) => !master.includes(invariant));
     expect(missing).toEqual([]);
+  });
+
+  it("lets no subordinate document claim peer or supreme product authority", () => {
+    // The failure this catches is specific and already happened once: Quality went fully
+    // green while three documents each called themselves authoritative. A green build is
+    // not evidence of one authority unless something actually checks for rivals.
+    const subordinates = [
+      "docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md",
+      "docs/FRONTEND_EXPERIENCE_CANON.md",
+      "docs/KLINIKOS_ECOSYSTEM_CANON.md",
+      "docs/SOURCE_OF_TRUTH.md",
+      "docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md",
+      // A repo-wide sweep found these two after the first pass. Both are named "MASTER
+      // CANON" and both claimed current authority — the legacy-spelling copy plainly, and
+      // a dated history snapshot as "ACTIVE - SOLE ... AUTHORITY". A history file that
+      // calls itself the sole active authority is the worst kind of rival: it reads as
+      // settled law and is invisible to anyone auditing the live documents.
+      "docs/CLINICOS_MASTER_CANON.md",
+      "docs/history/KLINIKOS_MASTER_CANON_2026-08-27.2.md",
+    ];
+    const claims = [
+      "AUTHORITATIVE FRONTEND / PRODUCT EXPERIENCE CONTRACT",
+      "Status: `AUTHORITATIVE`",
+      "Status: AUTHORITATIVE",
+      "AUTHORITATIVE — TOP OF THE DOCUMENT CHAIN",
+      "SOLE ACTIVE PRODUCT AUTHORITY",
+    ];
+    const offenders: string[] = [];
+    for (const file of subordinates) {
+      if (!fs.existsSync(path.join(root, file))) continue;
+      const content = read(file);
+      for (const claim of claims) {
+        if (content.includes(claim)) offenders.push(`${file}: ${claim}`);
+      }
+      // Literal strings are not enough on their own: two of these once claimed authority
+      // in casing the list did not cover ("authoritative product/design/implementation
+      // contract"). Any Status line asserting authority counts, however it is spelled.
+      const status = content.split("\n").find((line) => line.trim().toLowerCase().startsWith("status:"));
+      if (status && /authoritativ|governing|supreme|final-form target/i.test(status) && !/subordinate to/i.test(status)) {
+        offenders.push(`${file}: status line asserts authority — ${status.trim()}`);
+      }
+
+      // Each must also name what it is subordinate to, so a reader landing in the middle
+      // of the file cannot mistake it for the top of the chain.
+      if (!content.includes("SUBORDINATE TO")) offenders.push(`${file}: does not declare subordination`);
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("stops SOURCE_OF_TRUTH from defining permanent product law in its body", () => {
+    // Its header was corrected once while the first paragraph still said it "defines
+    // current Klinikos product ... law". A subordinate header over a governing body is
+    // not a reconciled document, so the body is asserted separately from the status line.
+    const sot = read("docs/SOURCE_OF_TRUTH.md");
+    expect(sot).not.toContain("This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law.");
+    expect(sot).toContain("Permanent intended company/product law belongs to `docs/KLINIKOS_MASTER_CANON.md`");
+  });
+
+  it("makes a fresh agent read the Master Canon before any subordinate source", () => {
+    // An index that ranks the Canon 18th is worse than no index: an agent following it
+    // correctly would rebuild exactly the parallel authority this convergence removed.
+    const index = read("docs/KLINIKOS_ARCHITECTURE_INDEX.md");
+    const canon = index.indexOf("docs/KLINIKOS_MASTER_CANON.md");
+    const sourceOfTruth = index.indexOf("docs/SOURCE_OF_TRUTH.md");
+    const frontend = index.indexOf("docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md");
+
+    expect(canon).toBeGreaterThan(-1);
+    expect(canon).toBeLessThan(sourceOfTruth);
+    expect(canon).toBeLessThan(frontend);
+  });
+
+  it("keeps the merge-forward deltas that a later compression pass would drop first", () => {
+    // MF-001..MF-008 are the accepted additions most at risk of vanishing in a summary,
+    // because each reads like detail rather than law. They are law.
+    const master = read(masterPath);
+    const deltas = [
+      "MF-001",
+      "UNIVERSAL FREE ECOSYSTEM ENTRY",
+      "MF-002",
+      "ECOSYSTEM PASSPORT",
+      "MF-003",
+      "LIVING UNIVERSE INTERACTION LAW",
+      "MF-004",
+      "BEFORE / NOW / NEXT",
+      "MF-005",
+      "WORKFORCE BOARD / GOVERNMENT TRAINING",
+      "MF-006",
+      "RFP / PROCUREMENT LIFECYCLE",
+      "MF-007",
+      "ACTIVE_PUBLIC / ACTIVE_PRIVATE / LEGACY_QUOTED / GRANDFATHERED / TARGET / SCENARIO / RETIRED",
+      "MF-008",
+      "REPRESENTATIVE HUMAN JOURNEYS",
+    ];
+
+    expect(deltas.filter((delta) => !master.includes(delta))).toEqual([]);
   });
 });

@@ -428,7 +428,7 @@ export const klinikosCanonLayers: readonly KlinikosCanonLayer[] = [
   {
     id: "enterprise-network",
     name: "Enterprise, multi-location, payer/employer/network operations",
-    canonAnchors: ["ENTERPRISE / MULTI-LOCATION / NETWORK", "cross-organization governance"],
+    canonAnchors: ["ENTERPRISE / MULTI-LOCATION / NETWORK", "Cross-organization governance"],
     blueprintAnchors: ["ENTERPRISE / MULTI-LOCATION / NETWORK", "delegated administration"],
     owners: ["enterprise", "network"],
     implementationConsequences: ["org-hierarchy", "sso", "delegated-admin", "policy", "reporting"],
@@ -476,7 +476,7 @@ export const klinikosCanonLayers: readonly KlinikosCanonLayer[] = [
   {
     id: "market-competition-icp",
     name: "Market intelligence, competition and ICP",
-    canonAnchors: ["MARKET INTELLIGENCE / COMPETITION / ICP", "economic buyer / decision-maker / champion / end user / blocker"],
+    canonAnchors: ["MARKET INTELLIGENCE / COMPETITION / ICP", "economic buyer / decision-maker / champion / end user / influencer / blocker"],
     blueprintAnchors: ["MARKET INTELLIGENCE / COMPETITION / ICP", "initiative gate"],
     owners: ["strategy", "sales", "marketing"],
     implementationConsequences: ["research-register", "segment-priority", "buyer-map"],

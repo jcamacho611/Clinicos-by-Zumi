@@ -1,7 +1,7 @@
 # KLINIKOS OPERATING SYSTEM — HISTORICAL MASTER-CANON PREDECESSOR
 
 Version: `2026-08-11.1`
-Status: `HISTORICAL REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
+Status: `LEGACY-SPELLING HISTORICAL REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Superseded by: `docs/KLINIKOS_MASTER_CANON.md`
 
 This document preserves accepted earlier product and architecture detail and provenance. It is not a current authority and may not override the Master Canon, its Authority Map, verified implementation/runtime truth, or the Master Engineering Blueprint generated from the Canon.
