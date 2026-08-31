@@ -1,6 +1,6 @@
 # Klinikos Frontend Experience Canon
 
-Status: authoritative product/design/implementation contract  
+Status: compact frontend operational contract — SUBORDINATE TO `docs/KLINIKOS_MASTER_CANON.md`
 Updated: 2026-08-30
 
 For the full role-by-role, route-by-route, surface-by-surface frontend contract, read `docs/KLINIKOS_UNIVERSAL_FRONTEND_AND_USER_OUTCOMES_CANON.md`. This file remains the compact operational law; the universal canon expands it and controls when an older visual reference conflicts with the newer approved healthcare-first direction.

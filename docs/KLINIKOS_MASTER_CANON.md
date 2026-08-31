@@ -1566,3 +1566,108 @@ The company operating system turns product value into customers, revenue, retent
 > **Chat is where we think. The Master Canon records the merged company/product truth.**
 
 When accepted decisions change Klinikos, they merge forward here immediately, the Blueprint is updated if engineering shape changes, the implementation consequence is identified, and synchronization gates prevent silent regression.
+
+---
+
+# 53. MERGE-FORWARD DELTAS (MF-001 — MF-008)
+
+Accepted law that arrived after the main body was drafted. It lives here as law, not as
+an appendix: each item below is the kind that reads like detail in a summary and gets
+dropped first, which is exactly why `tests/canon-synchronization.test.ts` fails the build
+if any of them disappears.
+
+## MF-001 — UNIVERSAL FREE ECOSYSTEM ENTRY
+
+Nobody creates an empty Klinikos account and then goes looking for the product. Joining
+places a person inside the ecosystem immediately.
+
+`VISITOR → PUBLIC ZUMI / INTENT → JOIN FREE → ONE PERSON IDENTITY → BASIC PROFILE → ROLE / ORGANIZATION CONTEXT → GRID PARTICIPATION WHERE APPLICABLE → RELEVANT PATHS → EDU / WORK / CARE / ORGANIZATION RELEVANCE → FIRST USEFUL RESULT → LIVING HOME → PROGRESSIVE VERIFICATION`
+
+Free participation is distribution infrastructure, not a cheap tier. Basic Grid and
+network participation are part of free entry. Paid plans add leverage — automation,
+organization tooling, volume, commercial capability, enterprise administration. Klinikos
+does not paywall basic existence in the network, because a person who cannot participate
+generates no supply, no demand, and no reason to return.
+
+Onboarding is intent-driven, not form-driven: collect only what the next useful result
+requires, and never re-ask what the entry route, referral, invitation or prior Zumi
+conversation already established.
+
+## MF-002 — ECOSYSTEM PASSPORT
+
+A person or organization can see their own standing in one place, in plain language:
+identity, relationships, claims, verified evidence, EDU progress, Grid status,
+organizations, work, reputation, and the single next action.
+
+The Passport is a projection of governed truth. It is not a credential, and it never
+converts a claim into authority by displaying it. Claimed and verified must remain
+visually distinguishable without the reader having to know the difference.
+
+## MF-003 — LIVING UNIVERSE INTERACTION LAW
+
+The Living Universe is the experience layer over the five planes. It is **not** a sixth
+plane and not a second ecosystem.
+
+`INTENT → CONTEXT → ACTIVE OBJECT → PATHS → FIVE-PLANE LENS → BEFORE / NOW / NEXT → INSPECTOR → GRID WHERE A NEED/HAVE EXCHANGE EXISTS → ZUMI → GOVERNED NEXT ACTION → EVIDENCE → UPDATED OBJECT`
+
+The product organizes around real objects — patient, provider, claim, encounter,
+placement, course, shift, resource, organization, result, referral, financial case, RFP,
+contract, task — not around the application architecture underneath them.
+
+## MF-004 — BEFORE / NOW / NEXT UNIVERSAL GRAMMAR
+
+One mental model across every domain, so a person who learns one surface can read the
+others:
+
+- Clinical: `INITIAL → PREVIOUS → TODAY → NEXT`
+- Financial: `EXPECTED → ACTUAL → GAP → NEXT`
+- Grid: `NEED → ELIGIBILITY → MATCH → FULFILLMENT`
+- EDU: `LEARN → PRACTICE → EVIDENCE → COMPETENCY → PLACEMENT`
+- Professional: `CLAIM → VERIFY → CREDENTIAL → PRIVILEGE → WORK`
+- Customer: `FREE VALUE → FIRST RESULT → PAID VALUE → OUTCOME → EXPANSION`
+- Procurement: `DISCOVERED → QUALIFIED → SUBMITTED → AWARDED → IMPLEMENTED → RENEWED`
+
+## MF-005 — WORKFORCE BOARD / GOVERNMENT TRAINING
+
+Institutional workforce delivery is a configuration of EDU, never a product fork.
+
+`BUYER / PROGRAM CONFIGURATION → REQUIRED PATHWAYS → PARTICIPANT INTAKE → COHORT FORMATION → SCHEDULING → ATTENDANCE → INSTRUCTION → PRACTICE → ASSESSMENT → HUMAN REVIEW → COMPLETION EVIDENCE → INVOICING EVIDENCE → PARTICIPANT AND INSTITUTIONAL REPORTING → CURRICULUM UPDATE → EMPLOYER FEEDBACK → RENEWAL / EXPANSION`
+
+Delivery is remote-first with strategic in-person capability. Practice runs on synthetic
+data first. Completion requires human approval — attendance alone is not competency, and
+a certificate is not licensure.
+
+## MF-006 — RFP / PROCUREMENT LIFECYCLE
+
+Every bid must compound into reusable company capability rather than being a one-off
+document.
+
+`OPPORTUNITY DISCOVERED → BUYER / SOLICITATION → SOURCE DOCUMENTS → REQUIREMENTS EXTRACTION → COMPLIANCE MATRIX → ELIGIBILITY → CAPABILITY MAPPING → GAP ANALYSIS → GO / NO-GO → TEAM / REFERENCES → SOLUTION CONFIGURATION → PRICING → NARRATIVE → ATTACHMENTS / FORMS → RED TEAM → APPROVALS / SIGNATURES → SUBMISSION → ACKNOWLEDGMENT → QUESTIONS / INTERVIEW → AWARD / LOSS → CONTRACT → IMPLEMENTATION → REPORTING → RENEWAL / EXPANSION → REUSABLE EVIDENCE`
+
+Each cycle must leave behind reusable buyer language, requirements, security and
+accessibility answers, pricing patterns, implementation and training templates, risk
+controls, objection handling, references and reporting patterns.
+
+## MF-007 — PRICING STATES
+
+One governed pricing fabric. Every price carries an explicit state, because a price that
+does not say what it is becomes a promise nobody agreed to:
+
+`ACTIVE_PUBLIC / ACTIVE_PRIVATE / LEGACY_QUOTED / GRANDFATHERED / TARGET / SCENARIO / RETIRED`
+
+A `TARGET` or `SCENARIO` price is not a published offer and may never be quoted as one.
+`LEGACY_QUOTED` and `GRANDFATHERED` commitments survive later public repricing.
+
+## MF-008 — REPRESENTATIVE HUMAN JOURNEYS
+
+These are protected against compression. Each must remain explicit somewhere in the
+Canon or a Canon-governed registry; none may be reduced to a phrase:
+
+- **Student** — free join → Person → school → resume → EDU → practice → competency → placement → Grid → work → graduation → licensure → professional → reputation → advancement.
+- **Professional** — Person → claim → verify → profile → organization → authority → Grid → work → evidence → reputation → educator / owner.
+- **Clinic** — discover → free value → organization identity → needs → Grid → Clinic OS → care → money → workforce → outcomes → expansion.
+- **Patient** — need → private identity → discovery → registration → scheduling → intake → care → result → follow-up → financial resolution → continuity.
+- **Med Spa** — discovery → consult → authority → treatment → evidence → follow-up → payment → retention → Grid capacity / staffing → growth.
+- **Workforce institution** — RFP → contract → program → cohort → delivery → evidence → completion → reporting → employer feedback → improvement → renewal.
+- **Grid resource** — have → requirements → eligibility → discovery → match → agreement → fulfil → evidence → settlement → reputation.
+- **Claim** — care → documentation → coding → claim → acceptance → adjudication → remittance → payment → reconciliation.

@@ -3,7 +3,7 @@
 Version: `2026-08-30.1`
 Status: `PREDECESSOR REFERENCE — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 
-This document defines current Klinikos product, ecosystem, experience, design, wiring, security, Grid, intelligence, commercial, and engineering law. Implementation truth remains current code/schema/migrations/tests/CI/runtime evidence. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
+This document is a current-state navigation and reference map. It records where Klinikos stands and where to look, not what Klinikos must be. Permanent intended company/product law belongs to `docs/KLINIKOS_MASTER_CANON.md`; where this document and the Master Canon disagree, the Master Canon governs. Implementation truth remains current code/schema/migrations/tests/CI/runtime evidence. Capability status belongs in `docs/FEATURE_STATUS.md`; external connection truth belongs in `docs/EXTERNAL_DEPENDENCY_MATRIX.md`.
 
 ## 1. Current product definition
 
