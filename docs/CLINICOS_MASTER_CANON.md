@@ -1,7 +1,7 @@
 # KLINIKOS OPERATING SYSTEM — MASTER SOURCE OF TRUTH
 
 Version: `2026-08-11.1`
-Status: `AUTHORITATIVE`
+Status: `LEGACY-SPELLING PREDECESSOR — SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 
 This document is the product and architecture source of truth for Klinikos.
 

@@ -1,6 +1,6 @@
 # KLINIKOS CONSTITUTION
 
-Status: AUTHORITATIVE COMPANION TO `docs/CLINICOS_MASTER_CANON.md`
+Status: SPECIALIST COMPANION — SUBORDINATE TO `docs/KLINIKOS_MASTER_CANON.md`
 Date: 2026-08-11
 
 This document does not replace the Master Canon. It operationalizes it.

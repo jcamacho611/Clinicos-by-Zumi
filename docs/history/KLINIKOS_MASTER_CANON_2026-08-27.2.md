@@ -1,7 +1,7 @@
 # KLINIKOS MASTER CANON
 
 Version: `2026-08-27.2`
-Status: `ACTIVE - SOLE PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
+Status: `HISTORICAL SNAPSHOT (2026-08-27.2) — NOT ACTIVE, SUBORDINATE TO docs/KLINIKOS_MASTER_CANON.md`
 Repository convergence baseline: `main@0c562d02bba5ca4e9500ef53cfb49c50126ed6bc`
 
 > **There is one Klinikos.**

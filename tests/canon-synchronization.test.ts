@@ -112,6 +112,13 @@ describe("Klinikos Canon synchronization", () => {
       "docs/KLINIKOS_ECOSYSTEM_CANON.md",
       "docs/SOURCE_OF_TRUTH.md",
       "docs/KLINIKOS_MASTER_PRODUCT_AND_ENGINEERING_SPECIFICATION.md",
+      // A repo-wide sweep found these two after the first pass. Both are named "MASTER
+      // CANON" and both claimed current authority — the legacy-spelling copy plainly, and
+      // a dated history snapshot as "ACTIVE - SOLE ... AUTHORITY". A history file that
+      // calls itself the sole active authority is the worst kind of rival: it reads as
+      // settled law and is invisible to anyone auditing the live documents.
+      "docs/CLINICOS_MASTER_CANON.md",
+      "docs/history/KLINIKOS_MASTER_CANON_2026-08-27.2.md",
     ];
     const claims = [
       "AUTHORITATIVE FRONTEND / PRODUCT EXPERIENCE CONTRACT",
