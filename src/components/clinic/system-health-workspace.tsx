@@ -71,19 +71,19 @@ export function SystemHealthWorkspace({ workspace, canCreate, canUpdate }: { wor
               <div className="min-w-0">
                 <p className="text-xs font-extrabold text-slate-900">{integration.vendor}</p>
                 <p className="mt-1 text-[11px] text-slate-500">{integration.type} · raw status {integration.status}{integration.phase ? ` · phase ${integration.phase}` : ""}</p>
-                {integration.lastSyncAt ? <p className="mt-1 text-[10px] text-slate-400">Last recorded sync {new Date(integration.lastSyncAt).toLocaleString()}</p> : null}
+                {integration.lastSyncAt ? <p className="mt-1 text-xs text-slate-400">Last recorded sync {new Date(integration.lastSyncAt).toLocaleString()}</p> : null}
               </div>
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-slate-400">Klinikos lifecycle</p>
+                <p className="text-xs font-extrabold uppercase tracking-[.13em] text-slate-400">Klinikos lifecycle</p>
                 <p className="mt-2 text-xs font-extrabold text-slate-800">{lifecycleLabel(integration.lifecycle)}</p>
-                <p className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[10px] font-extrabold ${integration.productionVerified ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                <p className={`mt-2 inline-flex rounded-full border px-2 py-1 text-xs font-extrabold ${integration.productionVerified ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
                   {integration.productionVerified ? "Production verified" : "Not production verified"}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-slate-400">Why</p>
+                <p className="text-xs font-extrabold uppercase tracking-[.13em] text-slate-400">Why</p>
                 <p className="mt-2 text-[11px] leading-5 text-slate-600">{integration.lifecycleReason}</p>
-                {!integration.productionClaimAllowed ? <p className="mt-2 text-[10px] font-bold text-amber-700">Do not represent this connection as verified live production.</p> : null}
+                {!integration.productionClaimAllowed ? <p className="mt-2 text-xs font-bold text-amber-700">Do not represent this connection as verified live production.</p> : null}
               </div>
             </div>
           ))}
