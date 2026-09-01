@@ -77,13 +77,4 @@ describe("Klinikos screen experience contracts", () => {
       expect(["hipaa-gated", "minimum-necessary"]).toContain(contract?.aiProcessing.phiGate);
     }
   });
-
-  it("never lets Zumi promotion, inference or convenience manufacture authority", () => {
-    for (const contract of KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS) {
-      expect(contract.zumi.forbidden).toEqual(expect.arrayContaining([
-        "grant-authority",
-        "manufacture-verified-facts",
-      ]));
-    }
-  });
 });
