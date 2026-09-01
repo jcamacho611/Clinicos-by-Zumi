@@ -6,6 +6,7 @@ import { can } from "@/lib/auth/rbac";
 import { db } from "@/lib/db";
 import { getGridTrustSummary } from "@/lib/grid/trust-repository";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
+import { projectGridTrustSignals } from "@/lib/trust/universal-trust";
 
 type ReservationRow = {
   id: string;
@@ -94,23 +95,31 @@ export async function getGridTrustWorkspace(session: ClinicSession) {
     `),
   ]);
 
+  const normalizedDisputes = disputes.map((row) => ({
+    ...row,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  }));
+  const normalizedSafetyIncidents = incidents.map((row) => ({
+    ...row,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  }));
+  const trustSignals = projectGridTrustSignals({
+    disputes: normalizedDisputes,
+    safetyIncidents: normalizedSafetyIncidents,
+  });
+
   return {
     summary,
+    trustSignals,
     reservations: reservations.map((row) => ({
       ...row,
       reservedStartAt: row.reservedStartAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     })),
-    disputes: disputes.map((row) => ({
-      ...row,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    })),
-    safetyIncidents: incidents.map((row) => ({
-      ...row,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    })),
+    disputes: normalizedDisputes,
+    safetyIncidents: normalizedSafetyIncidents,
   };
 }
 
