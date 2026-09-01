@@ -6,6 +6,8 @@ import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
+import { PublicLivingUniverseObjectStage } from "@/components/marketing/public-living-universe-stage";
 import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
 import {
   KLINIKOS_ECONOMIC_THESIS,
@@ -26,14 +28,32 @@ type ConversationTurn = {
   prompt: string;
   resolution: PublicLivingResolution;
   suggestions: PublicZumiSuggestion[];
+  /** The Object Stage this answer recomposes. Null when no Path applies. */
+  universe: PublicLivingUniverseProjection | null;
 };
 
 type PublicZumiApiResponse = {
   data?: {
     resolution?: unknown;
     suggestions?: unknown;
+    universe?: unknown;
   };
 };
+
+/**
+ * The projection is presentation only, but it still arrives over the wire, so it is
+ * shape-checked before it is rendered rather than trusted.
+ */
+function isUniverseProjection(value: unknown): value is PublicLivingUniverseProjection {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PublicLivingUniverseProjection>;
+  return typeof candidate.pathId === "string"
+    && typeof candidate.title === "string"
+    && typeof candidate.summary === "string"
+    && typeof candidate.availabilityCopy === "string"
+    && typeof candidate.governance === "string"
+    && Array.isArray(candidate.steps);
+}
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const publicActionPaths = new Set(["/grid", "/grid/join", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/start", "/access"]);
@@ -188,6 +208,7 @@ export function PublicLivingGateway() {
     // means honest degraded guidance rather than an invented answer.
     let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
+    let universe: PublicLivingUniverseProjection | null = null;
 
     try {
       const response = await fetch("/api/zumi/public", {
@@ -213,6 +234,9 @@ export function PublicLivingGateway() {
         if (isPublicZumiSuggestions(payload.data?.suggestions)) {
           suggestions = payload.data.suggestions;
         }
+        if (isUniverseProjection(payload.data?.universe)) {
+          universe = payload.data.universe;
+        }
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -222,7 +246,7 @@ export function PublicLivingGateway() {
       if (activeRequest.current === controller) activeRequest.current = null;
     }
 
-    setTurns((current) => [...current, { id, prompt, resolution, suggestions }]);
+    setTurns((current) => [...current, { id, prompt, resolution, suggestions, universe }]);
     setPendingPrompt(null);
     setIsSubmitting(false);
   }
@@ -358,7 +382,7 @@ export function PublicLivingGateway() {
               <div className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Common things people need">
                 {quickIntentActions.map((action) => (
                   <button
-                    className="min-h-10 rounded-full border border-[#d0837d]/25 bg-[#1a0c0f]/70 px-4 text-[12.5px] font-medium text-[#e8cbc7] transition hover:border-[#efaaa1]/50 hover:bg-[#241014] hover:text-[#fff6f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                    className="min-h-11 rounded-full border border-[#d0837d]/25 bg-[#1a0c0f]/70 px-4 text-[12.5px] font-medium text-[#e8cbc7] transition hover:border-[#efaaa1]/50 hover:bg-[#241014] hover:text-[#fff6f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
                     disabled={isSubmitting}
                     key={action.id}
                     onClick={() => void sendPrompt(action.prompt)}
@@ -409,12 +433,22 @@ export function PublicLivingGateway() {
                           </Link>
                         )}
 
+                        {/* Zumi recomposes the Object Stage in place. The visitor never
+                            scrolls to a second application to see where their own words
+                            lead — this is the same stage the front door shows, driven by
+                            what they just said. */}
+                        {turn.universe && (
+                          <div className="mt-6">
+                            <PublicLivingUniverseObjectStage item={turn.universe} />
+                          </div>
+                        )}
+
                         {showSuggestions && (
                           <div className="mt-5 flex flex-wrap gap-2" aria-label="Suggested replies">
                             {turn.suggestions.map((suggestion) => (
                               <button
                                 aria-label={`Reply: ${suggestion.label}`}
-                                className="min-h-10 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                                className="min-h-11 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
                                 disabled={isSubmitting}
                                 key={suggestion.id}
                                 onClick={() => void sendPrompt(suggestion.prompt)}

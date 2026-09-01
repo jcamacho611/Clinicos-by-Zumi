@@ -1,4 +1,9 @@
-import { klinikosPathCatalog, type KlinikosPathAvailability } from "@/lib/paths/catalog";
+import {
+  findKlinikosPathFromIntent,
+  klinikosPathCatalog,
+  type KlinikosPathAvailability,
+  type KlinikosPathDefinition,
+} from "@/lib/paths/catalog";
 
 /**
  * The action-first public surface.
@@ -75,6 +80,90 @@ export type PublicLivingUniverseProjection = {
  * where it really stands. Node `href`s and `capabilityKey`s are deliberately dropped:
  * they describe internal routing, and a logged-out visitor cannot follow them anyway.
  */
+/** Shared projection for one Path. Everything public sees goes through here. */
+function projectPath(
+  path: KlinikosPathDefinition,
+  action: { id: string; label: string; side: "need" | "have" },
+): PublicLivingUniverseProjection {
+  return {
+    id: action.id,
+    label: action.label,
+    side: action.side,
+    pathId: path.id,
+    title: path.title,
+    summary: path.summary,
+    from: path.from,
+    to: path.to,
+    availability: path.availability,
+    availabilityCopy: AVAILABILITY_COPY[path.availability],
+    governance: path.governance,
+    commercialBoundary: path.commercialBoundary ?? null,
+    steps: path.nodes.map((node) => ({
+      label: node.label,
+      description: node.description,
+      state: node.state,
+    })),
+  };
+}
+
+/**
+ * Which Path each public destination stands for.
+ *
+ * The deterministic intent engine only recognises a narrow set of phrasings, so the raw
+ * prompt is too weak to drive the stage — "I need work" resolves to nothing. The
+ * resolution's destination key is reliable, and this maps it to the journey behind it.
+ *
+ * Written out rather than derived: several Paths can share a destination, and which one
+ * a visitor is shown is a product decision that should be reviewable here, not the
+ * incidental result of catalog ordering.
+ */
+const DESTINATION_PATHS: Record<string, string> = {
+  join: "find-extra-work",
+  grid: "find-extra-work",
+  staffing: "fill-staffing-need",
+  edu: "student-clinical-placement",
+  clinic: "clinic-operational-optimization",
+  revenue: "clinic-improve-revenue",
+  billing: "clinic-improve-revenue",
+  referrals: "fix-referral-leakage",
+  patient: "patient-find-care",
+  insights: "clinic-operational-optimization",
+  priorities: "clinic-operational-optimization",
+  care: "clinic-operational-optimization",
+};
+
+/**
+ * The seam that makes Zumi and the Path stage one interaction rather than two.
+ *
+ * A person says what they need; the same turn that produces the reply selects the Path,
+ * and the stage recomposes around it. Without this the visitor talks to Zumi and then
+ * scrolls to a separate application, which is the module-first shape in disguise.
+ *
+ * Server-side: the catalog and the intent engine never reach the browser, and what comes
+ * back is the same minimum-necessary projection the front-door stage already uses.
+ */
+export function projectPublicLivingUniverseForIntent(
+  prompt: string,
+  destinationKey?: string | null,
+): PublicLivingUniverseProjection | null {
+  const byId = new Map(klinikosPathCatalog.map((path) => [path.id, path]));
+
+  const mappedId = destinationKey ? DESTINATION_PATHS[destinationKey] : undefined;
+  // Fall back to the deterministic engine for the phrasings it does recognise, so a
+  // conversation with no destination can still land somewhere true.
+  const path = (mappedId ? byId.get(mappedId) : undefined) ?? findKlinikosPathFromIntent(prompt);
+  if (!path) return null;
+
+  // Prefer the everyday label the front door already offers for this Path, so the stage
+  // headline reads in the person's language rather than the catalog's.
+  const known = PUBLIC_LIVING_UNIVERSE_ACTIONS.find((action) => action.pathId === path.id);
+  return projectPath(path, {
+    id: known?.id ?? path.id,
+    label: known?.label ?? path.title,
+    side: known?.side ?? "need",
+  });
+}
+
 export function projectPublicLivingUniverse(): PublicLivingUniverseProjection[] {
   const byId = new Map(klinikosPathCatalog.map((path) => [path.id, path]));
 
@@ -82,24 +171,6 @@ export function projectPublicLivingUniverse(): PublicLivingUniverseProjection[] 
     const path = byId.get(action.pathId);
     if (!path) return [];
 
-    return [{
-      id: action.id,
-      label: action.label,
-      side: action.side,
-      pathId: path.id,
-      title: path.title,
-      summary: path.summary,
-      from: path.from,
-      to: path.to,
-      availability: path.availability,
-      availabilityCopy: AVAILABILITY_COPY[path.availability],
-      governance: path.governance,
-      commercialBoundary: path.commercialBoundary ?? null,
-      steps: path.nodes.map((node) => ({
-        label: node.label,
-        description: node.description,
-        state: node.state,
-      })),
-    }];
+    return [projectPath(path, action)];
   });
 }
