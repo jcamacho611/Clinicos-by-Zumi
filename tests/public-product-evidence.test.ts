@@ -50,11 +50,20 @@ describe("public product evidence", () => {
 
   it("answers the question on the page people actually land on", () => {
     // The reviewer never reached the explainer. Evidence one click away is evidence the
-    // person who needed it did not see, so the homepage carries the same figure.
+    // person who needed it did not see, so the landing page must carry real product
+    // evidence rather than pointing at it.
+    //
+    // That law is unchanged. What satisfies it moved: the action-first contract
+    // (PR #442) removed the standalone evidence section from the root because a stack of
+    // marketing sections is the brochure shape the Living Universe replaces. The landing
+    // page now carries the Living Universe stage, which renders real Path steps and their
+    // true availability straight from the server-owned catalog — evidence a visitor can
+    // interrogate, not a figure they scroll past. The figure itself remains on the
+    // explainer, which is still asserted below.
     expect(homeSection).toContain("<ProductEvidenceFigure");
     expect(howItWorks).toContain("<ProductEvidenceFigure");
     const home = readFileSync("src/app/page.tsx", "utf8");
-    expect(home).toContain("<ProductEvidenceSection />");
+    expect(home).toContain("<PublicLivingUniverse />");
   });
 
   it("puts no person in the example", () => {

@@ -98,11 +98,29 @@ function ZumiSendGlyph({ active }: { active: boolean }) {
 }
 
 const navItems = [
-  { label: "Clinics", href: "/founding-clinic" },
-  { label: "Grid", href: "/grid" },
-  { label: "EDU", href: "/edu" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Trust", href: "/trust" },
+  { label: "How Klinikos helps", href: "/how-it-works" },
+] as const;
+
+/**
+ * What a person actually says when they arrive.
+ *
+ * Nobody lands here wanting "Grid" or "EDU" — they arrive with a sentence. Each of these
+ * is a real opener, and clicking one sends it through the same server-side public Zumi
+ * path a typed message takes. Nothing is resolved in the browser.
+ */
+const quickIntentActions = [
+  { id: "care", label: "I need care", prompt: "I need care" },
+  { id: "work", label: "I need work", prompt: "I need work" },
+  { id: "cover", label: "I need someone tomorrow", prompt: "I need someone tomorrow" },
+  { id: "client", label: "I have my own client", prompt: "I have my own client and need somewhere to treat them" },
+  { id: "room", label: "I need a room", prompt: "I need a room to treat a client" },
+  { id: "space", label: "I have space available", prompt: "I have space available at my clinic" },
+  { id: "learn", label: "I want to learn", prompt: "I want to learn a healthcare skill" },
+  { id: "placement", label: "I need a placement", prompt: "I need a clinical placement" },
+  { id: "students", label: "I can take students", prompt: "I can take students for clinical placement" },
+  { id: "practice", label: "Help me run my practice", prompt: "Help me run my practice" },
+  { id: "paid", label: "I need to get paid", prompt: "I need to get paid for work we already did" },
+  { id: "grow", label: "I want to grow my healthcare business", prompt: "I want to grow my healthcare business" },
 ] as const;
 
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
@@ -308,8 +326,11 @@ export function PublicLivingGateway() {
               <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
                 {ZUMI_COMPOSER_PROMPT}
               </p>
+              <p className="mt-2 max-w-[560px] text-[15px] font-medium leading-7 text-[#f0dcd8]">
+                What do you need today?
+              </p>
               <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-[#c3aaa6]">
-                Describe something your clinic is dealing with and Zumi will help you find the next useful step.
+                Tell Klinikos what you need, what you have, or what you are trying to become. You do not have to know which part of Klinikos to open.
               </p>
 
               <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>
@@ -333,6 +354,20 @@ export function PublicLivingGateway() {
                   Public Zumi can answer general Klinikos questions and guide you to a next step. This page cannot open private clinic records or make changes. Do not enter patient information here.
                 </p>
               </form>
+
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Common things people need">
+                {quickIntentActions.map((action) => (
+                  <button
+                    className="min-h-10 rounded-full border border-[#d0837d]/25 bg-[#1a0c0f]/70 px-4 text-[12.5px] font-medium text-[#e8cbc7] transition hover:border-[#efaaa1]/50 hover:bg-[#241014] hover:text-[#fff6f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                    disabled={isSubmitting}
+                    key={action.id}
+                    onClick={() => void sendPrompt(action.prompt)}
+                    type="button"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
                 <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/grid/join">Join free</Link>
