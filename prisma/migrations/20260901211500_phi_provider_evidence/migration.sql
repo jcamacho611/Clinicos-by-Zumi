@@ -10,7 +10,7 @@ CREATE TABLE "phi_provider_evidence" (
     "baaStatus" TEXT NOT NULL DEFAULT 'unverified',
     "retentionPolicyStatus" TEXT NOT NULL DEFAULT 'unverified',
     "trainingUseStatus" TEXT NOT NULL DEFAULT 'unverified',
-    "approvedModelIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "approvedModelIds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "verifiedAt" TIMESTAMP(3),
     "effectiveAt" TIMESTAMP(3),
     "expiresAt" TIMESTAMP(3),
