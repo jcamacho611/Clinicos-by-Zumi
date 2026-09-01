@@ -174,7 +174,7 @@ describe("public Living Home conversation and accessibility contract", () => {
 
     // Entry paths a small screen must not lose.
     expect(source).toContain('href="/portal/login"');
-    expect(source).toContain('href="/grid/join"');
+    expect(source).toContain('href="/signup"');
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {

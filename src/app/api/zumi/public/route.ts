@@ -28,12 +28,13 @@ const priorResolutionSchema = z.object({
   title: z.string().trim().max(400),
   body: z.string().trim().max(4_000),
   assumption: z.string().trim().max(400).nullable().default(null),
+  // Only the key survives the boundary. The engine rebuilds href and action from its
+  // own rules, so accepting them here would let a visitor hand the server a link it
+  // then presents as its own. `strip` (the default) also drops any extra fields the
+  // browser attaches, which `passthrough()` previously carried straight through.
   destination: z.object({
     key: z.string().trim().max(60),
-    href: z.string().trim().max(400).regex(/^\/(?!\/)/),
-    action: z.string().trim().max(200),
-    label: z.string().trim().max(200).optional(),
-  }).passthrough().nullable().default(null),
+  }).nullable().default(null),
   confidence: z.number().min(0).max(1),
 });
 

@@ -348,14 +348,23 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  const stickyPrior = priorResolution?.destination
-    && priorResolution.destination.key !== "signin"
-    && priorResolution.destination.key !== "explore"
-    ? priorResolution
+  // A carried-over destination is rebuilt from this module's own rules, never echoed.
+  //
+  // The gateway sends its previous resolution back so a short follow-up ("Saturday")
+  // can be read against the earlier goal. Only the `key` is taken from that echo — the
+  // href, the action text, and anything else the browser attached are discarded and
+  // replaced with the server's own values for that key. An unrecognised key does not
+  // stick at all, rather than carrying a browser-supplied link forward under a label
+  // the server never chose.
+  const priorKey = priorResolution?.destination?.key;
+  const stickyRule = priorKey
+    && priorKey !== "signin"
+    && priorKey !== "explore"
+    ? ruleForKey(priorKey as PublicLivingDestination["key"])
     : null;
 
-  if (stickyPrior?.destination) {
-    const destination = stickyPrior.destination;
+  if (stickyRule && priorResolution) {
+    const destination = stickyRule.destination;
     const label = destinationLabels[destination.key];
     return {
       kind: "conversation",
@@ -363,7 +372,7 @@ export function resolvePublicLivingIntent(
       body: `I’ll keep that with your ${label} request. What else should I know?`,
       assumption: `Your latest message refines the previous ${label} request rather than starting an unrelated goal.`,
       destination,
-      confidence: Math.max(0.52, stickyPrior.confidence * 0.9),
+      confidence: Math.max(0.52, priorResolution.confidence * 0.9),
     };
   }
 

@@ -36,7 +36,11 @@ describe("Action-First public Living Universe", () => {
 
   it("keeps public navigation simple and offers a real free entry", () => {
     expect(source).toContain('{ label: "How Klinikos helps", href: "/how-it-works" }');
-    expect(source).toContain('href="/grid/join"');
+    // Free entry moved from the Grid-specific funnel to the one Person account.
+    // The law this asserts — the front door offers a real free entry — is unchanged;
+    // /signup is now the entry that creates the single Klinikos identity, and it is
+    // backed by a real page and API rather than a Grid participant record.
+    expect(source).toContain('href="/signup"');
     expect(source).toContain("Join free");
     expect(source).toContain('href="/login"');
 
