@@ -1,14 +1,20 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
+import { can } from "@/lib/auth/rbac";
+import { acceptedInvitationCounterpart } from "@/lib/network-invitation-continuity";
 import { NetworkAccessError } from "@/lib/repositories/network-access-error";
 import {
   canManageNetworkConnections,
   connectionTransition,
+  createInvitationNetworkConnectionSchema,
   createNetworkConnectionSchema,
   transitionNetworkConnectionSchema,
 } from "@/lib/network-directory-rules";
+
+type Transaction = Prisma.TransactionClient;
 
 export async function listNetworkDirectory(organizationId: string) {
   const [organizations, locations, departments, facilities, providers, connections, agreements, integrations, events] = await Promise.all([
@@ -134,46 +140,122 @@ export async function listNetworkDirectory(organizationId: string) {
 
 export type NetworkDirectoryWorkspace = Awaited<ReturnType<typeof listNetworkDirectory>>;
 
+function requireNetworkConnectionCreatePermission(session: ClinicSession) {
+  if (!can(session.role, "network", "create")) {
+    throw new NetworkAccessError("Network relationship requests are not permitted for this role.", 403);
+  }
+}
+
+async function createPendingNetworkConnection(
+  tx: Transaction,
+  session: ClinicSession,
+  targetOrganizationId: string,
+  allowedPurposes: string[],
+  sourceInvitationId?: string,
+) {
+  if (targetOrganizationId === session.organizationId) {
+    throw new NetworkAccessError("An organization cannot connect to itself.", 400);
+  }
+
+  const target = await tx.organization.findFirst({
+    where: { id: targetOrganizationId, status: "active" },
+    select: { id: true, name: true },
+  });
+  if (!target) throw new NetworkAccessError("The target organization is not an active participant.", 404);
+
+  const relationshipPairKey = [session.organizationId, target.id].sort().join("|");
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${relationshipPairKey}, 0))`;
+
+  const existing = await tx.networkConnection.findFirst({
+    where: {
+      OR: [
+        { sourceOrganizationId: session.organizationId, targetOrganizationId: target.id },
+        { sourceOrganizationId: target.id, targetOrganizationId: session.organizationId },
+      ],
+    },
+  });
+  if (existing) throw new NetworkAccessError(`A ${existing.status} relationship already exists with this organization.`, 409);
+
+  const connection = await tx.networkConnection.create({
+    data: {
+      sourceOrganizationId: session.organizationId,
+      targetOrganizationId: target.id,
+      status: "pending",
+      trustLevel: "unverified",
+      allowedPurposes,
+      requestedBy: session.userId,
+    },
+  });
+  await tx.auditLog.createMany({
+    data: [session.organizationId, target.id].map((organizationId) => ({
+      organizationId,
+      actorId: session.userId,
+      actorType: "user",
+      action: "network.connection_requested",
+      resourceType: "network_connection",
+      resourceId: connection.id,
+      metadata: {
+        representedOrganizationId: session.organizationId,
+        targetOrganizationId: target.id,
+        allowedPurposes,
+        ...(sourceInvitationId ? { sourceInvitationId } : {}),
+      },
+    })),
+  });
+  return connection;
+}
+
 export async function createNetworkConnection(session: ClinicSession, rawInput: unknown) {
+  requireNetworkConnectionCreatePermission(session);
   const input = createNetworkConnectionSchema.parse(rawInput);
-  if (input.targetOrganizationId === session.organizationId) throw new NetworkAccessError("A clinic cannot connect to itself.", 400);
+  return db.$transaction((tx) => createPendingNetworkConnection(
+    tx,
+    session,
+    input.targetOrganizationId,
+    input.allowedPurposes,
+  ));
+}
+
+export async function createNetworkConnectionFromInvitation(
+  session: ClinicSession,
+  invitationId: string,
+  rawInput: unknown,
+) {
+  requireNetworkConnectionCreatePermission(session);
+  const input = createInvitationNetworkConnectionSchema.parse(rawInput);
 
   return db.$transaction(async (tx) => {
-    const target = await tx.organization.findFirst({ where: { id: input.targetOrganizationId, status: "active" }, select: { id: true, name: true } });
-    if (!target) throw new NetworkAccessError("The target clinic is not an active participating organization.", 404);
-
-    const existing = await tx.networkConnection.findFirst({
+    const invitationLockKey = `network-invitation:${invitationId}`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${invitationLockKey}, 0))`;
+    const invitation = await tx.networkInvitation.findFirst({
       where: {
+        id: invitationId,
         OR: [
-          { sourceOrganizationId: session.organizationId, targetOrganizationId: target.id },
-          { sourceOrganizationId: target.id, targetOrganizationId: session.organizationId },
+          { invitingOrganizationId: session.organizationId },
+          { targetOrganizationId: session.organizationId },
         ],
       },
-    });
-    if (existing) throw new NetworkAccessError(`A ${existing.status} relationship already exists with this clinic.`, 409);
-
-    const connection = await tx.networkConnection.create({
-      data: {
-        sourceOrganizationId: session.organizationId,
-        targetOrganizationId: target.id,
-        status: "pending",
-        trustLevel: "standard",
-        allowedPurposes: input.allowedPurposes,
-        requestedBy: session.userId,
+      select: {
+        id: true,
+        status: true,
+        invitingOrganizationId: true,
+        targetOrganizationId: true,
       },
     });
-    await tx.auditLog.createMany({
-      data: [session.organizationId, target.id].map((organizationId) => ({
-        organizationId,
-        actorId: session.userId,
-        actorType: "user",
-        action: "network.connection_requested",
-        resourceType: "network_connection",
-        resourceId: connection.id,
-        metadata: { representedOrganizationId: session.organizationId, targetOrganizationId: target.id, allowedPurposes: input.allowedPurposes },
-      })),
-    });
-    return connection;
+    if (!invitation) throw new NetworkAccessError("Network invitation not found for this organization.", 404);
+
+    const counterpartOrganizationId = acceptedInvitationCounterpart(invitation, session.organizationId);
+    if (!counterpartOrganizationId) {
+      throw new NetworkAccessError("Only an accepted invitation with a known organization can start relationship setup.", 409);
+    }
+
+    return createPendingNetworkConnection(
+      tx,
+      session,
+      counterpartOrganizationId,
+      input.allowedPurposes,
+      invitation.id,
+    );
   });
 }
 
@@ -182,6 +264,8 @@ export async function transitionNetworkConnection(session: ClinicSession, connec
   if (!canManageNetworkConnections(session.role)) throw new NetworkAccessError("Only clinic owners and administrators can manage network relationships.", 403);
 
   return db.$transaction(async (tx) => {
+    const connectionLockKey = `network-connection:${connectionId}`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${connectionLockKey}, 0))`;
     const connection = await tx.networkConnection.findFirst({
       where: { id: connectionId, OR: [{ sourceOrganizationId: session.organizationId }, { targetOrganizationId: session.organizationId }] },
     });

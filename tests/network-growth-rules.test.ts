@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { networkInvitationSchema, networkInvitationTransitionSchema } from "@/lib/network-growth-rules";
+import {
+  networkInvitationSchema,
+  networkInvitationTransition,
+  networkInvitationTransitionSchema,
+} from "@/lib/network-growth-rules";
 
 describe("network growth rules", () => {
   it("accepts known and manual partner applications", () => {
@@ -16,5 +20,15 @@ describe("network growth rules", () => {
     expect(() => networkInvitationTransitionSchema.parse({ action: "accept" })).toThrow();
     expect(networkInvitationTransitionSchema.parse({ action: "verify", note: "Identity and participation evidence reviewed." }).action).toBe("verify");
     expect(networkInvitationTransitionSchema.parse({ action: "accept", note: "Invited clinic confirmed the participation scope." }).action).toBe("accept");
+  });
+
+  it("keeps acceptance, suspension, and restoration sequential", () => {
+    expect(networkInvitationTransition("sent", "accept")).toBe("accepted");
+    expect(networkInvitationTransition("verified", "accept")).toBe("accepted");
+    expect(networkInvitationTransition("accepted", "suspend")).toBe("suspended");
+    expect(networkInvitationTransition("suspended", "restore")).toBe("accepted");
+    expect(networkInvitationTransition("rejected", "accept")).toBeNull();
+    expect(networkInvitationTransition("accepted", "accept")).toBeNull();
+    expect(networkInvitationTransition("sent", "restore")).toBeNull();
   });
 });

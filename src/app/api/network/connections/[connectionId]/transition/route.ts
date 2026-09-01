@@ -8,7 +8,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ con
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const { connectionId } = await params;
-  const denied = await enforceApiPermission(session, "network", "manage", { request, resourceId: connectionId });
+  const denied = await enforceApiPermission(session, "network", "update", { request, resourceId: connectionId });
   if (denied) return denied;
 
   try {
