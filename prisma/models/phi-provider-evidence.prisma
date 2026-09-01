@@ -1,0 +1,30 @@
+model PhiProviderEvidenceRecord {
+  id                    String   @id @default(cuid())
+  providerKey           String
+  deploymentKey         String
+  endpointOrigin        String
+  accountReference      String
+  projectReference      String
+  capabilityKey         String   @default("phi_inference")
+  status                String   @default("pending")
+  baaStatus             String   @default("unverified")
+  retentionPolicyStatus String   @default("unverified")
+  trainingUseStatus     String   @default("unverified")
+  approvedModelIds      String[] @default([])
+  verifiedAt            DateTime?
+  effectiveAt           DateTime?
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  evidenceReference     String
+  authorityVersion      Int
+  recordedBy            String
+  revokedBy             String?
+  revocationReason      String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([providerKey, deploymentKey, accountReference, projectReference, capabilityKey, authorityVersion], map: "phi_provider_evidence_identity_version_uq")
+  @@index([providerKey, deploymentKey, accountReference, projectReference, capabilityKey, status], map: "phi_provider_evidence_identity_status_idx")
+  @@index([effectiveAt, expiresAt, revokedAt], map: "phi_provider_evidence_lifecycle_idx")
+  @@map("phi_provider_evidence")
+}
