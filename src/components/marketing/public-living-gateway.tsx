@@ -265,7 +265,7 @@ export function PublicLivingGateway() {
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
-      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
+      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title" data-living-universe-stage="true">
         <div className="rose-vignette pointer-events-none fixed inset-0 -z-10" />
         <div className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
 

@@ -25,6 +25,9 @@ describe("public Living Home intent", () => {
     ["Show me outstanding claims", "billing", "/billing"],
     ["Show me our care gaps", "insights", "/quality"],
     ["Open the provider workspace", "care", "/provider"],
+    ["I need an RN Friday night", "staffing", "/grid"],
+    ["Find an LPN tomorrow", "staffing", "/grid"],
+    ["Prepare our healthcare workforce RFP response", "procurement", "/dashboard"],
   ])("infers %s into a real product destination", (prompt, key, href) => {
     const resolution = resolvePublicLivingIntent(prompt);
     expect(resolution.kind).toBe("route");
@@ -86,7 +89,20 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
+    expect(page).not.toContain("PublicLivingUniverse");
+    expect(source).toContain('data-living-universe-stage="true"');
+    expect(source).toContain("PublicLivingUniverseObjectStage");
     expect(page).not.toContain("PublicConversionBridge");
+  });
+
+  it("renders one Object Stage with Before, Now, Next, Inspector, and Action Dock", () => {
+    const stage = read("src/components/marketing/public-living-universe-stage.tsx");
+    expect(stage).toContain("Before");
+    expect(stage).toContain("Now");
+    expect(stage).toContain("Next");
+    expect(stage).toContain("Inspector");
+    expect(stage).toContain("Action dock");
+    expect(stage).toContain('data-object-stage="true"');
   });
 
   it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {

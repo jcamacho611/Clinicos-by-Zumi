@@ -37,11 +37,13 @@ export const PUBLIC_LIVING_UNIVERSE_ACTIONS: readonly PublicLivingUniverseAction
   { id: "paid", label: "Why hasn't this been paid?", side: "need", pathId: "clinic-improve-revenue" },
   { id: "followup", label: "I need to close open loops", side: "need", pathId: "fix-referral-leakage" },
   { id: "rooms", label: "I have rooms open Friday", side: "have", pathId: "clinic-monetize-capacity" },
+  { id: "resource", label: "I need healthcare space or equipment", side: "need", pathId: "find-healthcare-resource" },
   { id: "students", label: "I can take students", side: "have", pathId: "organization-education-partner" },
   { id: "precept", label: "I want to precept", side: "have", pathId: "educator-preceptor-opportunity" },
   { id: "ownpractice", label: "I want to work for myself", side: "have", pathId: "clinician-independent-practice" },
   { id: "runclinic", label: "Help me run my practice", side: "have", pathId: "clinic-operational-optimization" },
   { id: "aesthetics", label: "I want to build an injector career", side: "have", pathId: "become-grid-ready" },
+  { id: "procurement", label: "I need to prepare an RFP response", side: "need", pathId: "prepare-procurement-response" },
 ] as const;
 
 /** Reader-facing wording for each catalog state. Renames only — never promotes. */
@@ -119,7 +121,7 @@ function projectPath(
  */
 const DESTINATION_PATHS: Record<string, string> = {
   join: "find-extra-work",
-  grid: "find-extra-work",
+  grid: "find-healthcare-resource",
   staffing: "fill-staffing-need",
   edu: "student-clinical-placement",
   clinic: "clinic-operational-optimization",
@@ -130,7 +132,11 @@ const DESTINATION_PATHS: Record<string, string> = {
   insights: "clinic-operational-optimization",
   priorities: "clinic-operational-optimization",
   care: "clinic-operational-optimization",
+  procurement: "prepare-procurement-response",
 };
+
+const OFFERED_CAPACITY = /\b(?:i|we)\s+(?:have|offer|provide|own|can\s+provide|am\s+available|are\s+available)\b|\b(?:list|rent\s+out)\s+(?:my|our|a|an)\b/i;
+const SPACE_OR_CAPACITY = /\b(?:room|chair|space|facility|equipment|device|capacity)\b/i;
 
 /**
  * The seam that makes Zumi and the Path stage one interaction rather than two.
@@ -148,7 +154,11 @@ export function projectPublicLivingUniverseForIntent(
 ): PublicLivingUniverseProjection | null {
   const byId = new Map(klinikosPathCatalog.map((path) => [path.id, path]));
 
-  const mappedId = destinationKey ? DESTINATION_PATHS[destinationKey] : undefined;
+  const mappedId = destinationKey === "grid" && OFFERED_CAPACITY.test(prompt) && SPACE_OR_CAPACITY.test(prompt)
+    ? "clinic-monetize-capacity"
+    : destinationKey
+      ? DESTINATION_PATHS[destinationKey]
+      : undefined;
   // Fall back to the deterministic engine for the phrasings it does recognise, so a
   // conversation with no destination can still land somewhere true.
   const path = (mappedId ? byId.get(mappedId) : undefined) ?? findKlinikosPathFromIntent(prompt);

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
-import { PublicLivingUniverse } from "@/components/marketing/public-living-universe";
 import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
 
 export const metadata: Metadata = {
@@ -41,7 +40,6 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
       <PublicLivingGateway />
-      <PublicLivingUniverse />
       <PublicTrustFooter />
     </>
   );

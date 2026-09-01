@@ -21,11 +21,15 @@ import {
  */
 
 const page = readFileSync("src/app/page.tsx", "utf8");
+const gateway = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
 const stage = readFileSync("src/components/marketing/public-living-universe-stage.tsx", "utf8");
 
 describe("public action-first Living Universe", () => {
   it("puts the action-first stage on the page people land on", () => {
-    expect(page).toContain("PublicLivingUniverse");
+    expect(page).toContain("PublicLivingGateway");
+    expect(page).not.toContain("<PublicLivingUniverse />");
+    expect(gateway).toContain('data-living-universe-stage="true"');
+    expect(gateway).toContain("PublicLivingUniverseObjectStage");
     // The module list is the shape the law forbids. It must not come back.
     expect(page).not.toContain("EcosystemHierarchy");
   });

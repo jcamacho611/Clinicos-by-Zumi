@@ -56,14 +56,17 @@ describe("public product evidence", () => {
     // That law is unchanged. What satisfies it moved: the action-first contract
     // (PR #442) removed the standalone evidence section from the root because a stack of
     // marketing sections is the brochure shape the Living Universe replaces. The landing
-    // page now carries the Living Universe stage, which renders real Path steps and their
-    // true availability straight from the server-owned catalog — evidence a visitor can
-    // interrogate, not a figure they scroll past. The figure itself remains on the
-    // explainer, which is still asserted below.
+    // page now carries one integrated Living Universe stage inside the gateway. Zumi
+    // recomposes that same stage from the server-owned Path projection; there is no
+    // second, below-fold Path browser pretending to be another application.
     expect(homeSection).toContain("<ProductEvidenceFigure");
     expect(howItWorks).toContain("<ProductEvidenceFigure");
     const home = readFileSync("src/app/page.tsx", "utf8");
-    expect(home).toContain("<PublicLivingUniverse />");
+    const gateway = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
+    expect(home).toContain("<PublicLivingGateway />");
+    expect(home).not.toContain("<PublicLivingUniverse />");
+    expect(gateway).toContain('data-living-universe-stage="true"');
+    expect(gateway).toContain("<PublicLivingUniverseObjectStage");
   });
 
   it("puts no person in the example", () => {
