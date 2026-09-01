@@ -24,7 +24,7 @@ export function GovernedTrustSignals({ signals }: { signals: readonly UniversalT
         </div>
         <div className="rounded-xl border border-[#e6817b]/12 bg-black/20 px-4 py-3 text-right">
           <p className="text-xl font-black text-white">{openCount}</p>
-          <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[.13em] text-[#9f8985]">Open signals</p>
+          <p className="mt-1 text-[11px] font-extrabold uppercase tracking-[.13em] text-[#9f8985]">Open signals</p>
         </div>
       </div>
 
@@ -45,16 +45,16 @@ export function GovernedTrustSignals({ signals }: { signals: readonly UniversalT
                 <div className="flex flex-wrap items-center gap-2">
                   {signal.open ? <AlertTriangle className="size-4" /> : <CheckCircle2 className="size-4" />}
                   <p className="text-xs font-extrabold">{signal.kind === "commercial_dispute" ? "Commercial dispute" : "Safety incident"}</p>
-                  <span className="rounded-full border border-current/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-[.12em] opacity-75">{human(signal.category)}</span>
+                  <span className="rounded-full border border-current/15 px-2 py-0.5 text-[11px] font-black uppercase tracking-[.12em] opacity-75">{human(signal.category)}</span>
                 </div>
                 <p className="mt-2 max-w-3xl text-[11px] leading-5 opacity-70">{signal.summary}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-extrabold uppercase tracking-[.12em] opacity-80">{human(signal.status)}</p>
-                <p className="mt-1 text-[9px] uppercase tracking-[.12em] opacity-55">{signal.severity}</p>
+                <p className="text-[11px] font-extrabold uppercase tracking-[.12em] opacity-80">{human(signal.status)}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[.12em] opacity-55">{signal.severity}</p>
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-current/10 pt-3 text-[9px] font-bold uppercase tracking-[.1em] opacity-55">
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-current/10 pt-3 text-[11px] font-bold uppercase tracking-[.1em] opacity-55">
               <span>Source: {signal.source.recordType}</span>
               <span>{signal.open && signal.blocksSettlement ? "Settlement held while active" : "No active settlement hold from this record"}</span>
               <span>Updated {new Date(signal.updatedAt).toLocaleString()}</span>
