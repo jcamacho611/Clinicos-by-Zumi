@@ -15,3 +15,15 @@ export const networkInvitationTransitionSchema = z.object({
   action: z.enum(["verify", "accept", "reject", "cancel", "suspend", "restore"]),
   note: z.string().trim().min(8).max(600),
 });
+
+export type NetworkInvitationAction = z.infer<typeof networkInvitationTransitionSchema>["action"];
+
+export function networkInvitationTransition(currentStatus: string, action: NetworkInvitationAction) {
+  if (action === "verify" && currentStatus === "pending_verification") return "verified";
+  if (action === "accept" && ["sent", "verified"].includes(currentStatus)) return "accepted";
+  if (action === "reject" && ["pending_verification", "sent", "verified"].includes(currentStatus)) return "rejected";
+  if (action === "cancel" && ["pending_verification", "sent", "verified"].includes(currentStatus)) return "cancelled";
+  if (action === "suspend" && currentStatus === "accepted") return "suspended";
+  if (action === "restore" && currentStatus === "suspended") return "accepted";
+  return null;
+}

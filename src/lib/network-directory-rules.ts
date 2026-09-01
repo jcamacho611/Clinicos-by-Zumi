@@ -11,6 +11,10 @@ export const createNetworkConnectionSchema = z.object({
   allowedPurposes: purposes,
 });
 
+export const createInvitationNetworkConnectionSchema = z.object({
+  allowedPurposes: purposes,
+});
+
 export const transitionNetworkConnectionSchema = z.object({
   action: z.enum(["approve", "suspend", "restore"]),
   reason: z.string().trim().min(8).max(500),
