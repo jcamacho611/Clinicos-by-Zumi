@@ -10,3 +10,18 @@ export function safeReturnTo(value: unknown) {
     return null;
   }
 }
+
+export function safePersonReturnTo(value: unknown) {
+  const candidate = safeReturnTo(value);
+  if (!candidate) return null;
+  const pathname = new URL(candidate, "https://klinikos.local").pathname;
+  return pathname === "/member" || pathname === "/grid" ? candidate : null;
+}
+
+export function safeClinicReturnTo(value: unknown) {
+  const candidate = safeReturnTo(value);
+  if (!candidate) return null;
+  const pathname = new URL(candidate, "https://klinikos.local").pathname;
+  if (pathname === "/member" || pathname === "/signup" || pathname === "/login") return null;
+  return candidate;
+}

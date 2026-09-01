@@ -37,7 +37,7 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
 
       if (response.ok) {
         // A full navigation, so the new session cookie is presented on the next request.
-        window.location.assign(returnTo ?? "/");
+        window.location.assign(returnTo ?? "/member");
         return;
       }
 
@@ -48,7 +48,7 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
       setStatus("error");
       // Honest failure. The browser does not know whether the account was created, so
       // it does not claim either way.
-      setMessage("We could not reach Klinikos. Your account was not created.");
+      setMessage("We could not confirm the response. Klinikos may have received it; try signing in before trying again.");
     }
   }
 

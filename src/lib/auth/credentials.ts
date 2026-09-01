@@ -88,3 +88,13 @@ export async function authenticateCredentials(emailInput: string, password: stri
 
   return null;
 }
+
+export async function hasClinicIdentity(emailInput: string) {
+  if (!process.env.DATABASE_URL) return false;
+  const email = emailInput.trim().toLowerCase();
+  const user = await db.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  return Boolean(user);
+}

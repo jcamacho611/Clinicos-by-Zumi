@@ -17,6 +17,19 @@ const structuredIntentSchema = z.object({
 
 const rules = [
   {
+    pathId: "find-healthcare-resource",
+    actor: "unknown" as const,
+    phrases: [
+      "treatment room",
+      "healthcare equipment",
+      "space for a client",
+      "clinical capacity",
+      "need healthcare space",
+      "find available space",
+    ],
+    outcome: "Discover real healthcare space, equipment, or capacity, then apply the relevant eligibility and reservation rules.",
+  },
+  {
     pathId: "find-extra-work",
     actor: "professional" as const,
     phrases: ["extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday", "healthcare work"],
@@ -123,6 +136,18 @@ const rules = [
     actor: "clinic" as const,
     phrases: ["launch another organization", "start another clinic", "create a new healthcare company", "another organization"],
     outcome: "Define a separate governed organization context without carrying tenant assumptions across boundaries.",
+  },
+  {
+    pathId: "prepare-procurement-response",
+    actor: "operations" as const,
+    phrases: [
+      "rfp response",
+      "review this rfq",
+      "procurement compliance matrix",
+      "healthcare solicitation",
+      "prepare an rfi",
+    ],
+    outcome: "Organize procurement requirements, evidence, pricing, risks, approvals, and a human-authorized submission package.",
   },
 ] as const;
 

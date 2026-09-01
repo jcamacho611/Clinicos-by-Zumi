@@ -30,7 +30,7 @@ export type ScreenSourceBinding = {
 export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
   {
     id: "identity-access",
-    sourcePattern: /^src\/app\/(?:login|access|activate)(?:\/.*)?\/page\.tsx$/,
+    sourcePattern: /^src\/app\/(?:login|signup|access|activate)(?:\/.*)?\/page\.tsx$/,
     contractId: "auth-signup",
     rationale: "Authentication, access and activation surfaces establish identity/session state, not professional authority.",
   },
@@ -185,6 +185,12 @@ export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
     rationale: "Authenticated Zumi is an ambient operating interface bounded by the active experience envelope, not a superuser surface.",
   },
   {
+    id: "person-home",
+    sourcePattern: /^src\/app\/member(?:\/.*)?\/page\.tsx$/,
+    contractId: "person-home",
+    rationale: "The person-level Living Home requires an active Person account but carries no implicit organization, professional, patient or clinical authority.",
+  },
+  {
     id: "platform-workspace",
     sourcePattern: /^src\/app\/\(platform\)\/(?!(?:admin|provider|billing|front-desk|patients|encounters|owner|network|grid|luxe-medi|settings|design-system|paths|zumi)(?:\/|$))(?:.*\/)?page\.tsx$/,
     contractId: "clinic-owner-operations",
@@ -192,7 +198,7 @@ export const SCREEN_SOURCE_BINDINGS: readonly ScreenSourceBinding[] = [
   },
   {
     id: "public-general",
-    sourcePattern: /^src\/app\/(?!(?:\(clinic\)|\(platform\)|api|edu|grid|portal|legal|luxe|login|access|activate)(?:\/|$))(?:[^/]+\/)*page\.tsx$/,
+    sourcePattern: /^src\/app\/(?!(?:\(clinic\)|\(platform\)|api|edu|grid|portal|legal|luxe|login|signup|member|access|activate)(?:\/|$))(?:[^/]+\/)*page\.tsx$/,
     contractId: "public-discovery",
     rationale: "All remaining non-route-group product, commercial and informational pages are public-safe discovery surfaces by default.",
   },

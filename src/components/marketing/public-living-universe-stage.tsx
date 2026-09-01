@@ -91,9 +91,9 @@ export function PublicLivingUniverseObjectStage({ item }: { item: PublicLivingUn
           <li className="min-w-0 bg-[#0b0607]/95 p-5" key={moment.key}>
             <div className="flex items-center gap-2">
               <span aria-hidden="true" className={`size-2 rounded-full ${moment.key === "before" ? STATE_DOT.complete : moment.key === "now" ? STATE_DOT.current : STATE_DOT.upcoming}`} />
-              <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#e89b94]">{moment.label}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#e89b94]">{moment.label}</p>
             </div>
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[.14em] text-[#786764]">{moment.eyebrow}</p>
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[.14em] text-[#786764]">{moment.eyebrow}</p>
             <p className="mt-2 text-[13px] font-medium leading-5 text-[#f5edeb]">{moment.title}</p>
             <p className="mt-2 text-[12px] leading-5 text-[#a68e8a]">{moment.detail}</p>
           </li>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createFreePersonAccount,
   PersonAccountEmailTakenError,
+  resolvePersonAccountSessionById,
 } from "@/lib/auth/person-account-repository";
 import { db } from "@/lib/db";
 
@@ -54,6 +55,15 @@ describe("free person-account signup against PostgreSQL", () => {
     expect(account?.sessions).toHaveLength(1);
     expect(account?.events[0]?.eventType).toBe("account_created");
     expect(JSON.stringify(account?.events[0]?.metadata)).not.toContain(password);
+
+    // A created cookie claim is not enough. The runtime re-reads this durable session,
+    // Account, and Person truth on every request before it projects the member surface.
+    await expect(resolvePersonAccountSessionById(created.sessionId)).resolves.toMatchObject({
+      sessionId: created.sessionId,
+      accountId: created.accountId,
+      personId: created.personId,
+      email,
+    });
 
     // Authentication only. An account is not a membership.
     expect(await db.organizationMembership.count({ where: { personId: created.personId } })).toBe(0);

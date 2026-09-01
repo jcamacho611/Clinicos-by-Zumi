@@ -68,8 +68,8 @@ export const klinikosPathCatalog: KlinikosPathDefinition[] = [
     commercialBoundary: "A request, reservation, payment, or entitlement exists only after the authenticated Grid workflow verifies its required conditions.",
     intentExamples: ["I need a treatment room Saturday", "find healthcare equipment", "I need space for a client", "find available clinical capacity"],
     nodes: [
-      { id: "need", label: "Describe the real need", description: "Capture the resource, timing, location, use, and constraints without exposing patient information.", href: "/grid", state: "current" },
-      { id: "discover", label: "Review real availability", description: "Use Grid discovery and the map to inspect currently published resource truth.", href: "/grid", state: "current" },
+      { id: "need", label: "Describe the real need", description: "Capture the resource, timing, location, use, and constraints without exposing patient information.", href: "/grid/workspace", state: "current" },
+      { id: "discover", label: "Review real availability", description: "Use Grid discovery and the map to inspect currently published resource truth.", href: "/grid/workspace", state: "current" },
       { id: "eligibility", label: "Check the requirements", description: "Confirm the requester, intended use, resource rules, evidence, and any regulated conditions.", href: "/grid/trust", state: "upcoming" },
       { id: "request", label: "Create a governed request", description: "Ask for the resource without treating discovery, payment, or a browser redirect as a reservation.", href: "/grid/requests", state: "upcoming" },
       { id: "confirm", label: "Confirm only after recheck", description: "Reserve and transact only after availability, eligibility, and required financial conditions are revalidated.", href: "/grid/transactions", state: "upcoming" },

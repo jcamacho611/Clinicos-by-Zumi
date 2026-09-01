@@ -1,10 +1,11 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { ACCOUNT_SESSION_TTL_SECONDS } from "@/lib/auth/account-session";
+import { ACCOUNT_SESSION_TTL_SECONDS } from "@/lib/auth/account-session-config";
+import type { PersonAccountSession } from "@/lib/auth/account-types";
 import type { PersonAccountSignupInput } from "@/lib/auth/person-account-signup";
 
 /**
@@ -35,6 +36,9 @@ export type CreatedPersonAccount = {
   expiresAt: Date;
 };
 
+const LOCK_AFTER_ATTEMPTS = 5;
+const LOCK_MINUTES = 15;
+
 export async function createFreePersonAccount(
   input: PersonAccountSignupInput,
   context: { ipAddress?: string; userAgent?: string } = {},
@@ -47,6 +51,17 @@ export async function createFreePersonAccount(
 
   try {
     return await db.$transaction(async (tx) => {
+      // Legacy clinic identities stay on the clinic-authentication rail. Free signup
+      // must not silently duplicate an email into a second Person with less context.
+      const legacy = await tx.user.findUnique({ where: { email: input.email }, select: { id: true } });
+      if (legacy) throw new PersonAccountEmailTakenError();
+
+      const existingPerson = await tx.person.findFirst({
+        where: { primaryEmail: { equals: input.email, mode: "insensitive" } },
+        select: { id: true },
+      });
+      if (existingPerson) throw new PersonAccountEmailTakenError();
+
       const person = await tx.person.create({
         data: {
           displayName: input.displayName,
@@ -97,4 +112,114 @@ export async function createFreePersonAccount(
     }
     throw error;
   }
+}
+
+export async function authenticatePersonAccount(
+  emailInput: string,
+  password: string,
+  context: { ipAddress?: string; userAgent?: string } = {},
+): Promise<PersonAccountSession | null> {
+  const email = emailInput.trim().toLowerCase();
+  const account = await db.account.findUnique({
+    where: { primaryEmail: email },
+    include: { credential: true, person: true },
+  });
+
+  if (!account || account.status !== "active" || account.person.status !== "active" || !account.credential) return null;
+  const credential = account.credential;
+  if (credential.lockedUntil && credential.lockedUntil > new Date()) return null;
+
+  const valid = await compare(password, credential.passwordHash);
+  if (!valid) {
+    const failedAttempts = credential.failedAttempts + 1;
+    await db.accountCredential.update({
+      where: { accountId: account.id },
+      data: {
+        failedAttempts,
+        lockedUntil: failedAttempts >= LOCK_AFTER_ATTEMPTS
+          ? new Date(Date.now() + LOCK_MINUTES * 60 * 1_000)
+          : null,
+      },
+    });
+    return null;
+  }
+
+  const sessionId = randomUUID();
+  const expiresAtDate = new Date(Date.now() + ACCOUNT_SESSION_TTL_SECONDS * 1_000);
+  await db.$transaction([
+    db.accountCredential.update({
+      where: { accountId: account.id },
+      data: { failedAttempts: 0, lockedUntil: null },
+    }),
+    db.accountSession.create({
+      data: {
+        id: sessionId,
+        accountId: account.id,
+        expiresAt: expiresAtDate,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      },
+    }),
+    db.accountEvent.create({
+      data: {
+        accountId: account.id,
+        eventType: "account_signed_in",
+        sourceType: "password",
+        metadata: { sessionCreated: true },
+      },
+    }),
+  ]);
+
+  return {
+    sessionId,
+    accountId: account.id,
+    personId: account.personId,
+    email: account.primaryEmail,
+    displayName: account.displayName,
+    expiresAt: Math.floor(expiresAtDate.getTime() / 1_000),
+  };
+}
+
+export async function resolvePersonAccountSessionById(sessionId: string): Promise<PersonAccountSession | null> {
+  try {
+    const persisted = await db.accountSession.findUnique({
+      where: { id: sessionId },
+      include: { account: { include: { person: true } } },
+    });
+    if (
+      !persisted
+      || persisted.id !== sessionId
+      || persisted.accountId !== persisted.account.id
+      || persisted.revokedAt
+      || persisted.expiresAt <= new Date()
+      || persisted.account.status !== "active"
+      || persisted.account.person.status !== "active"
+      || persisted.account.personId !== persisted.account.person.id
+    ) return null;
+
+    if (persisted.lastSeenAt < new Date(Date.now() - 15 * 60 * 1_000)) {
+      await db.accountSession.updateMany({
+        where: { id: persisted.id, accountId: persisted.accountId, revokedAt: null },
+        data: { lastSeenAt: new Date() },
+      });
+    }
+
+    return {
+      sessionId: persisted.id,
+      accountId: persisted.account.id,
+      personId: persisted.account.personId,
+      email: persisted.account.primaryEmail,
+      displayName: persisted.account.displayName,
+      expiresAt: Math.floor(persisted.expiresAt.getTime() / 1_000),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function revokePersonAccountSessionById(sessionId: string, accountId: string) {
+  await db.accountSession.updateMany({
+    where: { id: sessionId, accountId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
 }
