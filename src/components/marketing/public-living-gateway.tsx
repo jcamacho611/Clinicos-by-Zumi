@@ -271,7 +271,7 @@ export function PublicLivingGateway() {
                 <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
               ))}
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/grid/join">Join free</Link>
+              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/signup">Join free</Link>
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
             </nav>
           </details>
@@ -280,7 +280,7 @@ export function PublicLivingGateway() {
               below the composer. Sign-in is not an entry point for a visitor who has no
               account yet, and burying the one action they can complete puts it ~30 tab
               stops away from where they start. */}
-          <Link className="ml-auto hidden min-h-11 items-center justify-center rounded-full bg-[#e6817b] px-5 text-[11px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] sm:inline-flex lg:ml-0" href="/grid/join">
+          <Link className="ml-auto hidden min-h-11 items-center justify-center rounded-full bg-[#e6817b] px-5 text-[11px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] sm:inline-flex lg:ml-0" href="/signup">
             Join free
           </Link>
 
@@ -370,7 +370,7 @@ export function PublicLivingGateway() {
               </div>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
-                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/grid/join">Join free</Link>
+                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/signup">Join free</Link>
                 <span aria-hidden="true">·</span>
                 <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
                 <span aria-hidden="true">·</span>

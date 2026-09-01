@@ -144,7 +144,7 @@ export function PublicLivingUniverseStage({ items }: { items: PublicLivingUniver
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-[13px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                href="/grid/join"
+                href="/signup"
               >
                 Join free and start here <ArrowRight aria-hidden="true" className="size-4" />
               </Link>

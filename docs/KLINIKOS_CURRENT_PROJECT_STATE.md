@@ -61,6 +61,27 @@ release commit `0a2705fbea4a30e4953210a4ca6ef35458b465d6` on branch `main`.
 **Production is exactly current `main`.** The deploy pipeline is not the blocker, and the
 merged #367 candidate reached production within roughly twenty-five minutes of merging.
 
+### 2.1 Free entry is real but not yet the universal Person entry
+
+The free-entry law is `VISITOR → FREE ACCOUNT → ONE PERSON IDENTITY → ...`. As of
+`2026-09-01` only the first half exists in a form a visitor can use.
+
+- `/grid/join` is live, free, takes no card, and creates a real account for both
+  individual professionals and organizations. The public front door links to it, and
+  that link works.
+- The person-account work landed `ACCOUNT_SESSION_COOKIE_NAME` and `PersonAccountSession`
+  in `src/lib/auth/`, but **no account-creation service and no `/signup` route**. There
+  is therefore no universal one-Person entry a browser can reach yet.
+
+So the front door deliberately offers the entry that works and does **not** describe it
+as the one-Klinikos-identity entry. `tests/public-free-entry-truthfulness.test.ts` holds
+that line: it forbids linking to the unimplemented `/signup`, and forbids copy claiming
+free entry produces a verified or universal identity.
+
+This is a frontend-visible symptom of a backend gap, not a frontend defect. When the
+person-account signup path lands, revisit the guard and the link together — do not
+delete the guard to make new copy pass.
+
 ### 2.1 Why the website still looks unchanged
 
 This is measured, not inferred. `#367` was governance and documentation convergence: it
