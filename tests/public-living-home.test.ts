@@ -162,9 +162,19 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("<details");
     expect(source).toContain('aria-label="Open navigation menu"');
     expect(source).toContain('aria-label="Mobile navigation"');
-    expect(source).toContain('{ label: "Trust", href: "/trust" }');
-    expect(source).toContain('{ label: "Pricing", href: "/pricing" }');
+
+    // The law is equivalence, not a particular set of links. Naming Trust and Pricing
+    // pinned the old module nav, which the action-first contract deliberately removed.
+    // Asserting that the mobile menu renders the same `navItems` the desktop nav does
+    // proves the same thing and survives the nav changing again.
+    const desktopNav = source.match(/aria-label="Primary"[\s\S]{0,400}?navItems\.map/);
+    const mobileNav = source.match(/aria-label="Mobile navigation"[\s\S]{0,400}?navItems\.map/);
+    expect(desktopNav, "desktop nav does not render navItems").not.toBeNull();
+    expect(mobileNav, "mobile menu does not render the same navItems").not.toBeNull();
+
+    // Entry paths a small screen must not lose.
     expect(source).toContain('href="/portal/login"');
+    expect(source).toContain('href="/grid/join"');
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {
