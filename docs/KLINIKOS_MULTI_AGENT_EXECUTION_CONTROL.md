@@ -84,16 +84,27 @@ Codex must not invent visual/product doctrine or claim external readiness withou
 
 ### Symphony
 
+Symphony is the **cross-tool company execution / automation layer beneath the governing Orchestrator**.
+
 Owns primarily:
 
+- company task intake, routing, status, deadline, and blocker tracking;
+- multi-agent coordination and explicit handoffs after ownership is resolved;
+- GitHub issue/PR/status awareness without replacing GitHub implementation truth;
+- engineering-to-commercial and commercial-to-engineering handoffs;
 - funding and capital-opportunity execution;
-- grants/RFPs/procurement/workforce/accelerator pipeline;
-- sales/account research/outreach/follow-up;
-- proposal assembly from approved truth;
-- commercial execution tracking;
-- founder/company action queues.
+- grants/RFPs/procurement/workforce/accelerator/competition/partnership pipeline;
+- sales/account research/outreach/follow-up preparation and evidence tracking;
+- proposal and due-diligence assembly from approved truth;
+- customer implementation scheduling and operational follow-up;
+- founder/company action queues;
+- connected-tool evidence collection;
+- next-action generation after verified events;
+- approved low-risk automation.
 
-Symphony may not expose crown jewels, invent traction, promise engineering scope without acceptance, or redefine Klinikos architecture.
+Symphony does not independently decide Canon, product architecture, implementation truth, or engineering ownership. Before assigning a consequential engineering task it must inspect current GitHub ownership and this control plane. If an active owner exists, Symphony routes to that owner rather than creating parallel work.
+
+Symphony may not expose crown jewels, invent traction, promise engineering scope without acceptance, bypass approval gates, or redefine Klinikos architecture.
 
 ### Zumi
 
@@ -137,6 +148,10 @@ For a UX-discovered backend requirement:
 For a commercial requirement:
 
 `SYMPHONY EVIDENCE → ORCHESTRATOR CLASSIFIES → CANON/BLUEPRINT CHECK → OWNER ASSIGNED → ENGINEERING ACCEPTS → IMPLEMENT → VERIFY → SYMPHONY MAY PROMISE/SELL ONLY VERIFIED OR APPROVED FUTURE SCOPE`
+
+For a Symphony-routed company task:
+
+`SYMPHONY INTAKE / EVIDENCE → ORCHESTRATOR / CONTROL-PLANE OWNERSHIP CHECK → ACTIVE OWNER OR NEW OWNER → EXECUTE IN OWNED LANE → VERIFY → HANDOFF → SYMPHONY UPDATES STATUS / NEXT ACTION`.
 
 ## 6. Mandatory handoff contract
 
