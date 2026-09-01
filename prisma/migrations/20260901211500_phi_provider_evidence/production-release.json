@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260901211500_phi_provider_evidence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "8c3a3b4a6db5abdbcb3353a3d9d2cef0f770fe45660f3acf920606dcd2e873c1",
+  "approvalReference": "Current-main corrected recovery of PR #440 durable PHI provider evidence persistence, 2026-09-01"
+}
