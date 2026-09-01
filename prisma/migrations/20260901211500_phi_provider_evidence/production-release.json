@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260901211500_phi_provider_evidence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "c16454f8c8fd606e0aa6cc27ddc0e710a786636b3cb448988edf94248858b105",
+  "approvalReference": "PR #440 durable PHI provider evidence persistence TDD contract, 2026-09-01"
+}
