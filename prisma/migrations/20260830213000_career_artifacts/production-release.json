@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260830213000_career_artifacts",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "a1de2b72a4657053c5b646255b41cad18b1e29a813dc3a8e4177d62e13d2a83d",
+  "approvalReference": "Issue #383 CareerArtifact additive claims/provenance review, 2026-08-30"
+}

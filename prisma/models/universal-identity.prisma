@@ -15,6 +15,9 @@ model Person {
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
   memberships     OrganizationMembership[]
+  relationships   PersonRelationship[]
+  careerArtifacts CareerArtifact[]
+  account         Account?
 
   @@index([primaryEmail])
   @@index([status])
@@ -64,4 +67,35 @@ model LocationAssignment {
   @@index([locationId, status])
   @@index([effectiveFrom, effectiveTo])
   @@map("location_assignments")
+}
+
+// A relationship describes how a durable Person participates in the healthcare
+// universe and may optionally carry an explicit traceable link to an existing domain
+// record. It is context/evidence only. Even a verified relationship does not grant
+// professional, clinical, billing, organization-binding, listing, signing, payout,
+// school/site approval, or other consequential authority.
+model PersonRelationship {
+  id                String   @id @default(cuid())
+  personId          String
+  relationshipType  String
+  organizationId    String?
+  status             String   @default("active")
+  verificationState String   @default("claimed")
+  domainKind        String?
+  domainRecordId    String?
+  sourceType        String   @default("system")
+  sourceReference   String?
+  evidenceReference String?
+  effectiveFrom     DateTime @default(now())
+  effectiveTo       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  person             Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId, status])
+  @@index([organizationId, status])
+  @@index([relationshipType, status])
+  @@index([domainKind, domainRecordId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("person_relationships")
 }

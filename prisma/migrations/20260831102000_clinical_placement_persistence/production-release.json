@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260831102000_clinical_placement_persistence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "8eacc8d2359d383847f2c703bc31374c1e41aba745af9aff653a75f91c520e81",
+  "approvalReference": "PR #410 clinical placement persistence TDD contract, 2026-08-31"
+}

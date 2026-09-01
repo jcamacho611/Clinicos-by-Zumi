@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260829110000_person_relationship_substrate",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "a9ebf511e0a33f8f7a304d2ef253912fade67fdf24d5412f79fc63c389d5c076",
+  "approvalReference": "Issue #369 additive Person relationship substrate review, 2026-08-29"
+}

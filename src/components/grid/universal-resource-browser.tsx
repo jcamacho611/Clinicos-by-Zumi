@@ -101,7 +101,7 @@ export function UniversalResourceBrowser({ resources, intent }: { resources: Pub
           <div className="lg:text-right">
             <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[var(--k-muted)]">Terms / rate</p>
             <strong className="mt-2 block text-base tabular-nums text-[var(--k-text)]">{money(resource)}</strong>
-            <Link className="mt-3 inline-flex min-h-11 items-center gap-2 text-xs font-extrabold text-[var(--k-accent)] underline decoration-[var(--k-accent)]/45 underline-offset-4" href={`/login?returnTo=${encodeURIComponent(`/grid/resources/request/${resource.id}?from=discovery`)}`}>Start governed request <ArrowRight className="size-3.5" /></Link>
+            <Link className="mt-3 inline-flex min-h-11 items-center gap-2 text-xs font-extrabold text-[var(--k-accent)] underline decoration-[var(--k-accent)]/45 underline-offset-4" href={`/grid/resource/${resource.id}`}>View details <ArrowRight className="size-3.5" /></Link>
           </div>
         </article>)}
       </div>}
