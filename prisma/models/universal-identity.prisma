@@ -17,6 +17,7 @@ model Person {
   memberships     OrganizationMembership[]
   relationships   PersonRelationship[]
   careerArtifacts CareerArtifact[]
+  account         Account?
 
   @@index([primaryEmail])
   @@index([status])
@@ -78,7 +79,7 @@ model PersonRelationship {
   personId          String
   relationshipType  String
   organizationId    String?
-  status            String   @default("active")
+  status             String   @default("active")
   verificationState String   @default("claimed")
   domainKind        String?
   domainRecordId    String?

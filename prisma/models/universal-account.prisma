@@ -1,0 +1,82 @@
+// Additive person-level account foundation.
+//
+// Account proves authentication identity only. It carries no organization,
+// professional, clinical, billing, Grid eligibility, or patient authority.
+
+model Account {
+  id                      String                  @id @default(cuid())
+  personId                String                  @unique
+  primaryEmail            String                  @unique
+  displayName             String
+  status                  String                  @default("active")
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  person                  Person                  @relation(fields: [personId], references: [id], onDelete: Restrict)
+  credential              AccountCredential?
+  sessions                AccountSession[]
+  legacyLinks             LegacyUserAccountLink[]
+  events                  AccountEvent[]
+
+  @@index([status])
+  @@map("accounts")
+}
+
+model AccountCredential {
+  id                String   @id @default(cuid())
+  accountId         String   @unique
+  passwordHash      String
+  passwordChangedAt DateTime @default(now())
+  mustReset         Boolean  @default(false)
+  failedAttempts    Int      @default(0)
+  lockedUntil       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  account           Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_credentials")
+}
+
+model AccountSession {
+  id          String   @id
+  accountId   String
+  expiresAt   DateTime
+  lastSeenAt  DateTime @default(now())
+  revokedAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  deviceLabel String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, revokedAt, expiresAt])
+  @@map("account_sessions")
+}
+
+model LegacyUserAccountLink {
+  id           String   @id @default(cuid())
+  accountId    String
+  legacyUserId String   @unique
+  sourceType   String   @default("legacy_user")
+  createdAt    DateTime @default(now())
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("legacy_user_account_links")
+}
+
+model AccountEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  eventType       String
+  sourceType      String
+  sourceReference String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("account_events")
+}

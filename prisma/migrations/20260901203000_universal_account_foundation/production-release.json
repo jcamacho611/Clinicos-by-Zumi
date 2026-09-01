@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260901203000_universal_account_foundation",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "7d68d855fda7f074a8f3f3b32b62caa90f1cb16b6d347022eec588130763e14d",
+  "approvalReference": "PR #436 Living Universe person-first Account substrate TDD contract, 2026-09-01"
+}
