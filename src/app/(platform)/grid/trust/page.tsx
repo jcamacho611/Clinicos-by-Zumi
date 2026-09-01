@@ -10,6 +10,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { GridTrustWorkspace } from "@/components/grid/grid-trust-workspace";
+import { GovernedTrustSignals } from "@/components/trust/governed-trust-signals";
 import { requireClinicSession } from "@/lib/auth/session";
 import { getGridTrustWorkspace } from "@/lib/grid/trust-workspace-repository";
 
@@ -19,38 +20,10 @@ export const metadata: Metadata = {
 };
 
 const readinessSteps = [
-  {
-    number: "01",
-    title: "Define a legitimate resource",
-    body: "Record only capacity the organization controls or is permitted to offer, including real restrictions and the correct policy class.",
-    href: "/grid/resources",
-    action: "Manage resources",
-    icon: Layers3,
-  },
-  {
-    number: "02",
-    title: "Record real availability",
-    body: "Time-sensitive capacity needs a real availability window. Missing availability stays missing instead of becoming invented supply.",
-    href: "/grid/availability",
-    action: "Open availability",
-    icon: CalendarClock,
-  },
-  {
-    number: "03",
-    title: "Complete required review",
-    body: "Ownership, permitted use, credentials, insurance, operator limits, facility rules, and other evidence remain resource-specific. A listing is not authorization.",
-    href: "/grid/resources",
-    action: "Review resource state",
-    icon: FileCheck2,
-  },
-  {
-    number: "04",
-    title: "Keep the transaction states separate",
-    body: "Publication can create discoverability. Offer, acceptance, reservation, fulfillment, customer payment, obligation, payout, and settlement remain different facts.",
-    href: "/grid/resources/offers",
-    action: "Review offers",
-    icon: ShieldCheck,
-  },
+  { number: "01", title: "Define a legitimate resource", body: "Record only capacity the organization controls or is permitted to offer, including real restrictions and the correct policy class.", href: "/grid/resources", action: "Manage resources", icon: Layers3 },
+  { number: "02", title: "Record real availability", body: "Time-sensitive capacity needs a real availability window. Missing availability stays missing instead of becoming invented supply.", href: "/grid/availability", action: "Open availability", icon: CalendarClock },
+  { number: "03", title: "Complete required review", body: "Ownership, permitted use, credentials, insurance, operator limits, facility rules, and other evidence remain resource-specific. A listing is not authorization.", href: "/grid/resources", action: "Review resource state", icon: FileCheck2 },
+  { number: "04", title: "Keep the transaction states separate", body: "Publication can create discoverability. Offer, acceptance, reservation, fulfillment, customer payment, obligation, payout, and settlement remain different facts.", href: "/grid/resources/offers", action: "Review offers", icon: ShieldCheck },
 ] as const;
 
 export default async function GridTrustPage() {
@@ -101,6 +74,7 @@ export default async function GridTrustPage() {
           <h2 className="mt-3 text-3xl font-semibold tracking-[-.04em] text-[#fff8f6]" id="grid-issues-title">Transaction history, disputes, and safety issues stay governed separately.</h2>
         </div>
         <div className="rounded-[1.35rem] border border-[#d6b787]/12 bg-[#d6b787]/[.045] px-4 py-3 text-[12px] leading-5 text-[#d9c2a1]"><TriangleAlert className="mr-2 inline size-4" /><strong className="font-extrabold text-[#efd8ad]">Safety boundary:</strong> this workflow records and routes concerns. It does not diagnose injury, determine malpractice, suspend a participant automatically, or prove that a refund or payout occurred.</div>
+        <div className="mt-5"><GovernedTrustSignals signals={workspace.trustSignals} /></div>
         <div className="mt-5"><GridTrustWorkspace workspace={workspace} /></div>
         <div className="mt-5 rounded-[1.35rem] border border-[#e6817b]/10 bg-[#100708] px-4 py-3 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="mr-2 inline size-4 text-[#efaaa1]" />Open disputes and safety incidents are settlement holds. Closing an issue is a governance record; processor refunds, payout reversals, participant restrictions, and resource suspensions require their own verified execution paths.</div>
       </section>
