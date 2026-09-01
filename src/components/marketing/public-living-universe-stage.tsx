@@ -29,6 +29,73 @@ const AVAILABILITY_TONE: Record<PublicLivingUniverseProjection["availability"], 
   defined: "border-white/12 bg-white/[.04] text-[#b89f9b]",
 };
 
+/**
+ * One Path, rendered as the Object Stage. Shared deliberately: the static front-door
+ * stage and the stage Zumi recomposes after an answer are the same component, so a
+ * visitor is never handed a second, differently-shaped application.
+ */
+export function PublicLivingUniverseObjectStage({ item }: { item: PublicLivingUniverseProjection }) {
+  return (
+    <div className="rounded-2xl border border-white/[.08] bg-white/[.02] p-6 sm:p-8">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
+            Where this goes
+          </p>
+          <h3 className="mt-3 text-xl font-medium tracking-[-.02em] text-[#f5edeb]">{item.title}</h3>
+        </div>
+        <span
+          className={`ml-auto shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${AVAILABILITY_TONE[item.availability]}`}
+        >
+          {item.availabilityCopy}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm leading-7 text-[#c6aeaa]">{item.summary}</p>
+
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-[#8e7c79]">
+        <span className="text-[#b89f9b]">{item.from}</span>
+        <ArrowRight aria-hidden="true" className="size-3.5" />
+        <span className="text-[#efaaa1]">{item.to}</span>
+      </div>
+
+      <ol className="mt-7 space-y-4">
+        {item.steps.map((step, index) => (
+          <li className="flex gap-3.5" key={`${item.id}-${index}`}>
+            <span aria-hidden="true" className={`mt-[7px] size-2 shrink-0 rounded-full ${STATE_DOT[step.state]}`} />
+            <div className="min-w-0">
+              <p className="text-[13.5px] font-medium text-[#f5edeb]">{step.label}</p>
+              <p className="mt-1 text-[12.5px] leading-6 text-[#a68e8a]">{step.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-7 border-t border-white/[.06] pt-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
+          What governs this
+        </p>
+        <p className="mt-2.5 text-[12.5px] leading-6 text-[#a68e8a]">{item.governance}</p>
+        {item.commercialBoundary ? (
+          <p className="mt-2.5 text-[12.5px] leading-6 text-[#a68e8a]">{item.commercialBoundary}</p>
+        ) : null}
+      </div>
+
+      <div className="mt-7 flex flex-wrap items-center gap-3">
+        <Link
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-[13px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
+          href="/signup"
+        >
+          Join free and start here <ArrowRight aria-hidden="true" className="size-4" />
+        </Link>
+        <span className="text-[12px] text-[#8e7c79]">
+          Joining costs nothing and is not a credential.
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function PublicLivingUniverseStage({ items }: { items: PublicLivingUniverseProjection[] }) {
   const [selectedId, setSelectedId] = useState(items[0]?.id ?? "");
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
@@ -89,70 +156,7 @@ export function PublicLivingUniverseStage({ items }: { items: PublicLivingUniver
             ))}
           </div>
 
-          <div className="rounded-2xl border border-white/[.08] bg-white/[.02] p-6 sm:p-8">
-            <div className="flex flex-wrap items-start gap-3">
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
-                  Where this goes
-                </p>
-                <h3 className="mt-3 text-xl font-medium tracking-[-.02em] text-[#f5edeb]">
-                  {selected.title}
-                </h3>
-              </div>
-              <span
-                className={`ml-auto shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${AVAILABILITY_TONE[selected.availability]}`}
-              >
-                {selected.availabilityCopy}
-              </span>
-            </div>
-
-            <p className="mt-4 text-sm leading-7 text-[#c6aeaa]">{selected.summary}</p>
-
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-[#8e7c79]">
-              <span className="text-[#b89f9b]">{selected.from}</span>
-              <ArrowRight aria-hidden="true" className="size-3.5" />
-              <span className="text-[#efaaa1]">{selected.to}</span>
-            </div>
-
-            <ol className="mt-7 space-y-4">
-              {selected.steps.map((step, index) => (
-                <li className="flex gap-3.5" key={`${selected.id}-${index}`}>
-                  <span
-                    aria-hidden="true"
-                    className={`mt-[7px] size-2 shrink-0 rounded-full ${STATE_DOT[step.state]}`}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-[13.5px] font-medium text-[#f5edeb]">{step.label}</p>
-                    <p className="mt-1 text-[12.5px] leading-6 text-[#a68e8a]">{step.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-
-            <div className="mt-7 border-t border-white/[.06] pt-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
-                What governs this
-              </p>
-              <p className="mt-2.5 text-[12.5px] leading-6 text-[#a68e8a]">{selected.governance}</p>
-              {selected.commercialBoundary ? (
-                <p className="mt-2.5 text-[12.5px] leading-6 text-[#a68e8a]">
-                  {selected.commercialBoundary}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-[13px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                href="/signup"
-              >
-                Join free and start here <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
-              <span className="text-[12px] text-[#8e7c79]">
-                Joining costs nothing and is not a credential.
-              </span>
-            </div>
-          </div>
+          <PublicLivingUniverseObjectStage item={selected} />
         </div>
       </div>
     </section>
