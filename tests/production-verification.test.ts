@@ -3,15 +3,19 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The production gate exists because CI cannot execute — every workflow run fails in
- * about two seconds with no runner assigned, which is an account-level problem no code
- * change fixes. This checks the properties that make the gate trustworthy, since a
- * verification script nobody verifies is just a comfortable noise.
+ * The production gate complements exact-head CI and local release checks with an
+ * external, read-only view of the runtime. This checks the properties that make the
+ * gate trustworthy, since a verification script nobody verifies is comfortable noise.
  */
 
 const source = fs.readFileSync(path.join(process.cwd(), "scripts/verify-production.mjs"), "utf8");
 
 describe("the production gate is read-only and can actually fail", () => {
+  it("acts as an external runtime complement rather than a substitute for CI", () => {
+    expect(source).toContain("external runtime complement to exact-head CI and local release gates");
+    expect(source).not.toContain("CI cannot execute");
+  });
+
   it("performs no write of any kind against production", () => {
     // A verification script that can change production is a liability, not a check.
     expect(source).not.toMatch(/method:\s*["'](POST|PUT|PATCH|DELETE)["']/i);
@@ -39,6 +43,27 @@ describe("the production gate is read-only and can actually fail", () => {
     // actually running?" was unanswerable during exactly the incident where it matters.
     expect(source).toContain("cannot name the commit it is running");
     expect(source).toContain("is not on origin/main");
+  });
+
+  it("proves the browser-visible Living Universe came from the running release", () => {
+    expect(source).toContain("klinikos-release");
+    expect(source).toContain("htmlCommit !== liveCommit");
+    expect(source).toContain("ROOT_DOCUMENT_LIMIT");
+    for (const marker of [
+      'data-public-universe-shell="true"',
+      'data-public-object-stage="true"',
+      'data-public-plane-lens="true"',
+      'data-public-inspector="true"',
+      'data-public-action-dock="true"',
+      "What do you need today?",
+      "I need something",
+      "I have something",
+    ]) {
+      expect(source, `does not require ${marker}`).toContain(marker);
+    }
+    for (const retired of ["One system, three extensions", "What it actually does"]) {
+      expect(source, `does not reject ${retired}`).toContain(retired);
+    }
   });
 
   it("checks the public health payload carries no secret", () => {

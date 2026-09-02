@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
 import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
+import responsiveStyles from "@/components/marketing/public-living-universe-responsive.module.css";
 import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
 
 export const metadata: Metadata = {
@@ -42,7 +43,9 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
-      <PublicLivingGateway signupEnabled={memberSignup.enabled} />
+      <div className={responsiveStyles.releaseSurface}>
+        <PublicLivingGateway signupEnabled={memberSignup.enabled} />
+      </div>
       <PublicTrustFooter />
     </>
   );

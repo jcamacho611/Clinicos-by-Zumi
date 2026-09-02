@@ -1,6 +1,6 @@
 # KLINIKOS MASTER CANON
 
-Version: `2026-08-30.1`
+Version: `2026-09-01.1`
 Status: `ACTIVE — SOLE COMPANY / PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
 Canonical implementation contract: `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md`
 Machine-readable routing: `docs/KLINIKOS_AUTHORITY_MAP.yaml`
@@ -500,6 +500,8 @@ Core projection primitives are **`UniverseShell / LivingHome / ObjectStage / Pla
 **ROUTES ARE IMPLEMENTATION PROJECTIONS. PATHS ARE GOVERNED OBJECTIVE / LIFECYCLE PROJECTIONS.** Neither is a sixth plane. Every material route must declare audience/purpose, active object, free value where applicable, identity/verification/authority requirements, money state, permitted Zumi behavior, failures/blocked states, and governed next action. Do not invent a route merely because prose names a concept; use the real route registry and Screen Contracts.
 
 Permanent connective law: **Every Klinikos experience is a governed projection of the same five-plane world. Grid connects needs and resources. Paths connect state over time. Zumi helps the person navigate. The Living Universe makes the world understandable. Deterministic Klinikos authority decides what may actually happen.**
+
+**LIVING UNIVERSE FOUNDATION ≠ FRONTEND COMPLETION.** The action-first public entry, person-owned continuation, governed Path projection, Object Stage, five-plane lens, Inspector, Action Dock, and security boundaries established by PR #460 are a legitimate foundation tranche. They do not establish total visual or experience completion. Completion additionally requires the approved Black Label V2 geometry and assets, authored Marble/Obsidian use, customer-visible release parity, responsive recomposition, accessibility, canonical-reference comparison, browser journeys, screenshot evidence, and production-domain verification. A strong backend, a merged component, or a passing health endpoint may not upgrade a materially incomplete customer experience to complete.
 
 ## 7.3 SCREEN CONTRACT
 
@@ -1444,6 +1446,10 @@ Permanent truth:
 
 In plain language: **build ≠ deployed ≠ production verified**.
 
+For customer surfaces, the additional permanent boundary is **`MERGED ≠ DEPLOYED ≠ CUSTOMER-VISIBLE`**. **CUSTOMER-VISIBLE FRONTEND PARITY IS A RELEASE REQUIREMENT.** **HEALTH RELEASE IDENTITY ALONE DOES NOT PROVE CUSTOMER-SURFACE PARITY.** A frontend release is verified only when the expected repository release, runtime health release, customer-surface release marker, stable semantic experience markers, and actual browser-rendered customer experience agree. The gate must also prove retired composition is absent; HTTP 200 and a current health SHA are insufficient.
+
+Frontend evidence must include reviewable browser output at the canonical reference viewport plus desktop, tablet, and mobile recompositions, with keyboard/focus, zoom, reduced-motion, overflow, blocked/partial/error/no-data, and responsive-Inspector behavior appropriate to the changed surface. If browser or reference evidence is unavailable, the candidate may be code-verified but may not be called frontend-complete.
+
 Professional engineering controls progressively include:
 
 - CI and required checks;
@@ -1706,54 +1712,57 @@ Dependency-first convergence:
 17. safe return context;
 18. authenticated Zumi;
 19. Experience Engine;
-20. Screen Contracts.
+20. Screen Contracts;
+21. customer-visible Living Universe / Black Label parity;
+22. versioned member legal-acceptance evidence before opening gated signup;
+23. real provider / organization / location / credential / availability supply without synthetic production claims.
 
 ## 50.4 First value / clinic proof
 
-21. Clinic OS operating map;
-22. scheduling/capacity;
-23. patient intake/consent;
-24. Current Visit;
-25. telemedicine encounter mode;
-26. orders/results;
-27. referrals/follow-up;
-28. billing readiness / revenue integrity;
-29. measurable first-clinic outcome.
+24. Clinic OS operating map;
+25. scheduling/capacity;
+26. patient intake/consent;
+27. Current Visit;
+28. telemedicine encounter mode;
+29. orders/results;
+30. referrals/follow-up;
+31. billing readiness / revenue integrity;
+32. measurable first-clinic outcome.
 
 ## 50.5 Network/workforce proof
 
-30. Grid universal resource/need kernel;
-31. professional verification/profile;
-32. resume/career profile;
-33. EDU evidence;
-34. placement relationship;
-35. professional/work routes;
-36. RN/injector governed path;
-37. med-spa resource/commerce proof;
-38. Quality Guardian / Expert Grid;
-39. network relationships;
-40. lawful money/settlement state.
+33. Grid universal resource/need kernel;
+34. professional verification/profile;
+35. resume/career profile;
+36. EDU evidence;
+37. placement relationship;
+38. professional/work routes;
+39. RN/injector governed path;
+40. med-spa resource/commerce proof;
+41. Quality Guardian / Expert Grid;
+42. network relationships;
+43. lawful money/settlement state.
 
 ## 50.6 Commercial proof
 
-41. offer/payment/CRM truth;
-42. one real paying customer;
-43. one measured result;
-44. repeatable sales story;
-45. attribution;
-46. onboarding/retention;
-47. expansion/referral.
+44. offer/payment/CRM truth;
+45. one real paying customer;
+46. one measured result;
+47. repeatable sales story;
+48. attribution;
+49. onboarding/retention;
+50. expansion/referral.
 
 ## 50.7 Enterprise/scale
 
-48. external integrations based on sold demand;
-49. enterprise procurement/trust;
-50. multi-location/network;
-51. government/education contracts;
-52. APIs/partner ecosystem;
-53. automation/cost reduction;
-54. scale and resilience;
-55. data/network defensibility.
+51. external integrations based on sold demand;
+52. enterprise procurement/trust;
+53. multi-location/network;
+54. government/education contracts;
+55. APIs/partner ecosystem;
+56. automation/cost reduction;
+57. scale and resilience;
+58. data/network defensibility.
 
 ---
 

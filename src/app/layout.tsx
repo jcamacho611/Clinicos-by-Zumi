@@ -4,6 +4,7 @@ import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmos
 import { PublicZumiSiteControl } from "@/components/marketing/public-zumi-site-control";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { klinikosAtmosphereBootstrap } from "@/lib/design/atmosphere";
+import { readBuildReleaseIdentity } from "@/lib/readiness/release-identity";
 import "./globals.css";
 import "./cinematic-global.css";
 import "./cinematic-legacy-overrides.css";
@@ -43,6 +44,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const release = readBuildReleaseIdentity();
+
   return (
     <html
       lang="en"
@@ -52,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       data-klinikos-atmosphere-preference="system"
     >
       <head>
+        <meta name="klinikos-release" content={release.commit ?? "unknown"} />
         <script dangerouslySetInnerHTML={{ __html: klinikosAtmosphereBootstrap }} />
       </head>
       <body className="klinikos-cinematic-root">
