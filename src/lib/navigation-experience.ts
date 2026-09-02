@@ -1,5 +1,5 @@
 import type { ClinicRole } from "@/lib/auth/rbac";
-import { canAccessWorkspace } from "@/lib/auth/workspace-authorization";
+import { canAccessWorkspace, workspaceAccessRules } from "@/lib/auth/workspace-authorization";
 import { navigation } from "@/lib/navigation";
 
 export type PrimaryNavigationItem = {
@@ -103,19 +103,26 @@ const rolePrimaryNavigation: Record<ClinicRole, readonly PrimaryNavigationItem[]
 };
 
 /**
- * Whether a role may open a destination.
+ * Resolve a protected destination to the most specific authorization workspace that
+ * actually exists. `/admin/sales` and `/owner/founding-program` have explicit rules,
+ * while deeper Grid routes intentionally inherit the top-level `grid` rule.
  *
- * Exported so tests check the rule rather than restate it: a local copy that derived
- * the workspace with `href.slice(1)` was right for `/billing` and wrong for
- * `/grid/workspace`, whose authorization rule is keyed on `grid`.
+ * This is presentation resolution only. The destination remains responsible for
+ * revalidating its own authorization on the server.
  */
+export function workspaceKeyForHref(href: string) {
+  const segments = href.split("/").filter(Boolean);
+  for (let length = segments.length; length > 0; length -= 1) {
+    const candidate = segments.slice(0, length).join("/");
+    if (candidate in workspaceAccessRules) return candidate;
+  }
+  return segments[0] ?? "";
+}
+
+/** Whether a role may be offered a destination by the navigation presentation. */
 export function canOpen(role: ClinicRole, href: string) {
   if (href === "/edu") return true;
-  // Nested destinations answer to their top-level workspace rule: /grid/workspace and
-  // /grid/opportunities are both governed by `grid`. Passing the full path would look
-  // up a rule that does not exist and quietly drop the entry off the rail.
-  const segments = href.split("/").filter(Boolean);
-  return canAccessWorkspace(role, segments[0] ?? "");
+  return canAccessWorkspace(role, workspaceKeyForHref(href));
 }
 
 export function primaryNavigationForRole(role: ClinicRole) {
