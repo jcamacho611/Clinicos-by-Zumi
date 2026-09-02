@@ -88,13 +88,13 @@ export function PublicLivingUniverseObjectStage({
       <div className="p-5 sm:p-7 lg:p-8">
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
+          <p className="text-[12px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
             Path preview
           </p>
           <h3 className="mt-3 text-xl font-medium tracking-[-.02em] text-[#f5edeb]">{item.title}</h3>
         </div>
         <span
-          className={`ml-auto shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${AVAILABILITY_TONE[item.availability]}`}
+          className={`ml-auto shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold ${AVAILABILITY_TONE[item.availability]}`}
         >
           {item.availabilityCopy}
         </span>
@@ -107,9 +107,9 @@ export function PublicLivingUniverseObjectStage({
           <li className="min-w-0 bg-[#0b0607]/95 p-5" key={moment.key}>
             <div className="flex items-center gap-2">
               <span aria-hidden="true" className={`size-2 rounded-full ${moment.key === "before" ? PATH_STATE_DOT.complete : moment.key === "now" ? PATH_STATE_DOT.current : PATH_STATE_DOT.upcoming}`} />
-              <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#e89b94]">{moment.label}</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[.2em] text-[#e89b94]">{moment.label}</p>
             </div>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[.14em] text-[#9f8985]">{moment.eyebrow}</p>
+            <p className="mt-4 text-[12px] font-semibold uppercase tracking-[.14em] text-[#9f8985]">{moment.eyebrow}</p>
             <p className="mt-2 text-[13px] font-medium leading-5 text-[#f5edeb]">{moment.title}</p>
             <p className="mt-2 text-[12px] leading-5 text-[#a68e8a]">{moment.detail}</p>
           </li>
@@ -118,18 +118,18 @@ export function PublicLivingUniverseObjectStage({
 
       <aside aria-label="Inspector" className="mt-7 grid gap-5 border-t border-white/[.07] pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(240px,.55fr)]">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">Inspector</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">Inspector</p>
           <p className="mt-3 text-[12.5px] leading-6 text-[#bda5a1]">{item.governance}</p>
           {item.commercialBoundary ? <p className="mt-3 text-[12px] leading-6 text-[#8e7c79]">{item.commercialBoundary}</p> : null}
         </div>
         <details className="rounded-2xl border border-white/[.07] bg-black/10 p-4">
-          <summary className="flex min-h-11 cursor-pointer items-center text-[11px] font-semibold uppercase tracking-[.14em] text-[#cdb7b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]">Path checkpoints</summary>
+          <summary className="flex min-h-11 cursor-pointer items-center text-[12px] font-semibold uppercase tracking-[.14em] text-[#cdb7b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]">Path checkpoints</summary>
           <ol className="mt-4 space-y-3">
             {item.steps.map((step, index) => (
               <li className="flex gap-3" key={`${item.id}-checkpoint-${index}`}>
                 <span aria-hidden="true" className={`mt-1.5 size-2 shrink-0 rounded-full ${PATH_STATE_DOT[step.state]}`} />
-                <span className="text-[11.5px] leading-5 text-[#9d8884]">
-                  {step.label}<span className="block text-[11px] text-[#9f8985]">{PATH_STATE_COPY[step.state]}</span>
+                <span className="text-[12px] leading-5 text-[#9d8884]">
+                  {step.label}<span className="block text-[12px] text-[#9f8985]">{PATH_STATE_COPY[step.state]}</span>
                 </span>
               </li>
             ))}

@@ -83,7 +83,6 @@ describe("public Living Home conversation and accessibility contract", () => {
   it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
-    expect(source).toContain("ZUMI_COMPOSER_PROMPT");
     expect(source).toContain("KLINIKOS_ONE_LINE");
     expect(source).toContain("KLINIKOS_SUPPORTING");
     expect(source).toContain('aria-label="Public Zumi guidance"');
@@ -131,22 +130,26 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).not.toContain("reference-card-row");
   });
 
-  it("shows only truthful request progress and prevents duplicate concurrent sends", () => {
+  it("shows page-only interface progress and prevents duplicate concurrent sends", () => {
     expect(source).toContain("pendingPrompt");
     expect(source).toContain("isSubmitting");
     expect(source).toContain("Working on your question…");
     expect(source).toContain("activeRequest.current?.abort()");
     expect(source).toContain("disabled={isSubmitting || !intent.trim()}");
     expect(source).not.toContain("setTimeout");
-    expect(source).not.toContain("Listening");
-    expect(source).not.toContain("Connecting");
-    expect(source).not.toContain("Preparing");
+    expect(source).toContain('const PUBLIC_INTERFACE_STEPS = ["Listening", "Understanding", "Connecting", "Preparing", "Ready"] as const');
+    expect(source).toContain("interfaceProgressIndex");
+    expect(source).toContain("data-interface-state={state}");
+    expect(source).toContain("This rail reflects this page only");
+    expect(source).toContain("It never claims care, work, payment, eligibility, or authority is complete.");
   });
 
-  it("makes Zumi the composer send control instead of leaving a detached decorative orb", () => {
+  it("keeps Zumi embedded in the composer while making the send action explicit", () => {
     expect(source).toContain("function ZumiSendGlyph");
     expect(source).toContain("data-zumi-send-glyph");
     expect(source).toContain("<ZumiSendGlyph active={isSubmitting} />");
+    expect(source).toContain("styles.zumiPresence");
+    expect(source).toContain('<ArrowRight aria-hidden="true" className="size-5" />');
     expect(source).not.toContain('<ZumiOrb state="observing" size={44} />');
     expect(source).not.toContain("ArrowUp");
   });

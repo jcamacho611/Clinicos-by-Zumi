@@ -64,13 +64,12 @@ describe("persistent public Living Universe stage", () => {
   it("keeps the composer persistent as the action dock", () => {
     expect(gateway).toContain('id="living-composer"');
     expect(gateway).toContain('aria-label="Ask Zumi"');
-    expect(gateway).toContain("Message Zumi...");
+    expect(gateway).toContain("Ask Klinikos anything...");
     expect(gateway).toContain("Do not enter patient information here.");
   });
 
   it("uses the approved identity artwork and a scarce Living Edge", () => {
     expect(gateway).toContain("<KlinikosWordmark");
-    expect(gateway).toContain("<KlinikosMark");
     expect(footer).toContain("<KlinikosWordmark");
     expect(gateway).toContain("data-living-edge");
     expect(gateway.match(/data-living-edge/g) ?? []).toHaveLength(2);
@@ -82,23 +81,29 @@ describe("persistent public Living Universe stage", () => {
     expect(gateway).toContain('variant="obsidian"');
   });
 
-  it("keeps the Zumi dock in the viewport while the stage content scrolls", () => {
-    expect(materials).toContain("height: calc(100svh - 88px)");
-    expect(materials).toContain("overflow: hidden");
-    expect(materials).toContain("overflow-y: auto");
-    expect(materials).toContain("height: calc(100svh - 74px)");
-    expect(materials).toContain("@media (max-width: 960px)");
-    expect(materials).not.toContain(".stage { min-height: 720px; }");
+  it("keeps one Zumi action dock inside the dominant Object Stage", () => {
+    const stageIndex = gateway.indexOf(`<section className={styles.stage}`);
+    const composerIndex = gateway.indexOf(`<div className={styles.composerDock}`);
+    const stageCloseIndex = gateway.indexOf(`<aside className={styles.contextRail}`);
+    expect(stageIndex).toBeGreaterThan(0);
+    expect(composerIndex).toBeGreaterThan(stageIndex);
+    expect(composerIndex).toBeLessThan(stageCloseIndex);
+    expect(gateway.match(/className=\{styles\.composerDock\}/g) ?? []).toHaveLength(1);
+    expect(materials).toContain(".composerDock");
+    expect(materials).toContain("min-height: 112px");
   });
 
-  it("keeps stage, lenses, and intent in the same DOM and visual order", () => {
+  it("keeps progress, Object Stage, and context in the approved desktop order without mobile column stacking", () => {
+    const progressIndex = gateway.indexOf(`<aside aria-label="Public interface progress"`);
     const stageIndex = gateway.indexOf(`<section className={styles.stage}`);
-    const lensIndex = gateway.indexOf(`<aside className={styles.lensRail}`);
-    const intentIndex = gateway.indexOf(`<aside className={styles.intentRail}`);
-    expect(stageIndex).toBeGreaterThan(0);
-    expect(lensIndex).toBeGreaterThan(stageIndex);
-    expect(intentIndex).toBeGreaterThan(lensIndex);
-    expect(materials).toContain('grid-template-areas: "lens stage intent"');
-    expect(materials).toContain('grid-template-areas: "stage" "lens" "intent"');
+    const contextIndex = gateway.indexOf(`<aside className={styles.contextRail}`);
+    expect(progressIndex).toBeGreaterThan(0);
+    expect(stageIndex).toBeGreaterThan(progressIndex);
+    expect(contextIndex).toBeGreaterThan(stageIndex);
+    expect(materials).toContain('grid-template-areas: "progress stage context"');
+    expect(materials).toContain("@media (max-width: 1024px)");
+    expect(materials).toContain(".experienceRail,");
+    expect(materials).toContain(".contextRail { display: none; }");
+    expect(materials).not.toContain('grid-template-areas: "stage" "progress" "context"');
   });
 });

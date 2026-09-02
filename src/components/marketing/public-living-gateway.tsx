@@ -2,9 +2,16 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Menu } from "lucide-react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Building2,
+  GraduationCap,
+  HeartPulse,
+  Menu,
+} from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
-import { KlinikosMark, KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
 import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
@@ -13,11 +20,9 @@ import { PublicLivingUniverseObjectStage } from "@/components/marketing/public-l
 import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
 import styles from "@/components/marketing/public-living-universe-shell.module.css";
 import {
-  KLINIKOS_ECONOMIC_THESIS,
   KLINIKOS_HUMAN_AUTHORITY,
   KLINIKOS_ONE_LINE,
   KLINIKOS_SUPPORTING,
-  ZUMI_COMPOSER_PROMPT,
 } from "@/lib/brand/canonical-messaging";
 
 type PublicZumiSuggestion = {
@@ -180,7 +185,44 @@ function ZumiSendGlyph({ active }: { active: boolean }) {
 
 const navItems = [
   { label: "How Klinikos helps", href: "/how-it-works" },
+  { label: "Explore Grid", href: "/grid" },
+  { label: "Find care", href: "/grid/browse?intent=provider" },
+  { label: "Learn", href: "/edu" },
+  { label: "For clinics", href: "/founding-clinic" },
 ] as const;
+
+const PUBLIC_INTERFACE_STEPS = ["Listening", "Understanding", "Connecting", "Preparing", "Ready"] as const;
+
+const FEATURED_ACTION_IDS = ["care", "work", "rooms", "placement"] as const;
+
+const FEATURED_ACTION_CONTENT = {
+  care: {
+    title: "Find care",
+    body: "Begin private provider discovery. A patient need is never published as public Grid demand.",
+    icon: HeartPulse,
+  },
+  work: {
+    title: "Find healthcare work",
+    body: "Start with the work you want, then keep credentials, eligibility, and authority explicit.",
+    icon: BriefcaseBusiness,
+  },
+  rooms: {
+    title: "Share clinical capacity",
+    body: "Describe rooms or space you have. Publication still requires owner and rule verification.",
+    icon: Building2,
+  },
+  placement: {
+    title: "Find a placement",
+    body: "Coordinate learner, school, site, and preceptor approval without treating placement as licensure.",
+    icon: GraduationCap,
+  },
+} as const;
+
+const FEATURED_PUBLIC_ACTIONS = FEATURED_ACTION_IDS.map((id) => {
+  const action = PUBLIC_LIVING_ACTIONS.find((candidate) => candidate.id === id);
+  if (!action) throw new Error(`Missing public Living Universe action: ${id}`);
+  return { ...action, ...FEATURED_ACTION_CONTENT[id] };
+});
 
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   kind: "conversation",
@@ -319,6 +361,67 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
   const activePlane = PUBLIC_LIVING_PLANE_LENSES.find((plane) => plane.id === activePlaneId)
     ?? PUBLIC_LIVING_PLANE_LENSES[2];
 
+  const interfaceProgressIndex = activeUniverse
+    ? 4
+    : isSubmitting
+      ? 1
+      : latestTurn?.resolution.destination
+        ? 2
+        : latestTurn
+          ? 1
+          : 0;
+  const activePathLabel = activeUniverse
+    ? activeUniverse.availabilityCopy
+    : latestTurn
+      ? "More context needed"
+      : "Waiting for an objective";
+
+  function renderPlaneControls(surface: "desktop" | "mobile") {
+    return (
+      <div aria-label="Five-plane view" className={styles.planeNav} role="group">
+        {PUBLIC_LIVING_PLANE_LENSES.map((plane) => (
+          <button
+            aria-controls="public-plane-readout"
+            aria-pressed={activePlane.id === plane.id}
+            className={styles.planeButton}
+            data-living-edge={surface === "desktop" && activePlane.id === plane.id ? "active-plane" : undefined}
+            key={`${surface}-${plane.id}`}
+            onClick={() => setActivePlaneId(plane.id)}
+            type="button"
+          >
+            <span className={styles.planeNumber}>{plane.number}</span>
+            <span>
+              <strong>{plane.title}</strong>
+              <small>{plane.shortTitle}</small>
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  function renderActionGroup(side: "need" | "have", surface: "desktop" | "mobile") {
+    return (
+      <section className={styles.actionGroup} key={`${surface}-${side}`}>
+        <h3 className={styles.actionGroupTitle}>{side === "need" ? "I need something" : "I have something"}</h3>
+        <div className={styles.actionList}>
+          {PUBLIC_LIVING_ACTIONS.filter((action) => action.side === side).map((action) => (
+            <button
+              className={styles.actionButton}
+              disabled={isSubmitting}
+              key={`${surface}-${action.id}`}
+              onClick={() => void sendPrompt(action.prompt, action.id)}
+              type="button"
+            >
+              <span className={styles.actionText}>{action.label}</span>
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
@@ -330,30 +433,27 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
       >
         <header className={styles.header}>
           <KlinikosWordmark
-            className="living-home-brand gap-3"
-            frameClassName="size-[52px]"
+            className="living-home-brand gap-4"
+            frameClassName="size-[62px]"
             href="/"
             framed
             inverse
             markClassName="h-full w-full"
-            textClassName="h-[29px] w-[208px]"
+            textClassName="h-[32px] w-[232px]"
           />
 
-          <div className={styles.headerContext}>
-            <strong>Living Universe · public entry</strong>
-            <span>One identity · one network · governed healthcare paths</span>
-          </div>
-
-          <nav aria-label="Primary" className={styles.headerActions}>
+          <nav aria-label="Primary" className={styles.primaryNavigation}>
             {navItems.map((item) => (
               <Link className={styles.headerLink} href={item.href} key={item.label}>{item.label}</Link>
             ))}
-            <Link className={styles.headerLink} href="/portal/login">Patient access</Link>
+          </nav>
+
+          <div className={styles.headerActions}>
             <Link className={styles.joinLink} href="/signup">
               {signupEnabled ? "Join free" : "Free membership status"}
             </Link>
             <Link className={styles.headerLink} href="/login">Sign in</Link>
-          </nav>
+          </div>
 
           <details className={styles.mobileMenu}>
             <summary aria-label="Open navigation menu">
@@ -371,60 +471,44 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
         </header>
 
         <main className={styles.workspace}>
+          <aside aria-label="Public interface progress" className={styles.experienceRail}>
+            <p className={styles.railEyebrow}>Klinikos intelligence</p>
+            <ol>
+              {PUBLIC_INTERFACE_STEPS.map((step, index) => {
+                const state = index < interfaceProgressIndex
+                  ? "complete"
+                  : index === interfaceProgressIndex
+                    ? "active"
+                    : "upcoming";
+                return (
+                  <li data-interface-state={state} key={step}>
+                    <span aria-hidden="true" />
+                    <strong>{step}</strong>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className={styles.progressBoundary}>
+              This rail reflects this page only. It never claims care, work, payment, eligibility, or authority is complete.
+            </p>
+          </aside>
+
           <section className={styles.stage} data-public-object-stage="true">
             <div className={styles.stageScroll}>
               {!conversationStarted ? (
-                <div>
-                  <div className={styles.stageIntro}>
-                    <div>
-                      <p className={styles.stageEyebrow}>A living healthcare operating universe</p>
-                      <h1 id="public-living-title">
-                        What do you need today?
-                        <em>{KLINIKOS_ONE_LINE}</em>
-                      </h1>
-                    </div>
-                    <p className={styles.stageSummary}>
-                      {KLINIKOS_SUPPORTING} Tell Klinikos what you need, what you have, or what you are trying to become.
-                    </p>
-                  </div>
-
-                  <section aria-label="Neutral Object Stage" className={styles.neutralObject}>
-                    <div className={styles.neutralObjectHeader}>
-                      <KlinikosMark className="size-7 rounded-full" />
-                      <p>Object Stage · waiting for your objective</p>
-                    </div>
-                    <ol className={styles.narrative} aria-label="Before, now, next">
-                      <li>
-                        <span className={styles.narrativeLabel}>Before</span>
-                        <h2>Healthcare work is scattered.</h2>
-                        <p>People, care, capacity, learning, evidence, operations, and money live in separate places.</p>
-                      </li>
-                      <li>
-                        <span className={styles.narrativeLabel}>Now</span>
-                        <h2>{ZUMI_COMPOSER_PROMPT}</h2>
-                        <p>Use your own words. Zumi interprets the goal; governed systems determine what is actually possible.</p>
-                      </li>
-                      <li>
-                        <span className={styles.narrativeLabel}>Next</span>
-                        <h2>Klinikos assembles the path.</h2>
-                        <p>The stage recomposes around the people, resources, evidence, safeguards, and next action that matter.</p>
-                      </li>
-                    </ol>
-                  </section>
-
-                  <div className={styles.planeReadout} aria-live="polite">
-                    <div>
-                      <strong>{activePlane.title}</strong>
-                      <span>{activePlane.question}</span>
-                    </div>
-                    <p>{activePlane.description}</p>
-                  </div>
-                </div>
+                <section className={styles.stageIntro} aria-label="Public Living Universe Object Stage">
+                  <p className={styles.stageEyebrow}>Klinikos intelligence</p>
+                  <h1 id="public-living-title">What do you need today?</h1>
+                  <p className={styles.stageThesis}>{KLINIKOS_ONE_LINE}</p>
+                  <p className={styles.stageSummary}>
+                    Tell Klinikos what you need, what you have, or what you are trying to become. The system projects a governed path without inventing identity, eligibility, availability, or authority.
+                  </p>
+                </section>
               ) : (
                 <section aria-label="Public Zumi guidance" className={styles.conversation}>
                   <div className={styles.conversationHeading}>
                     <div>
-                      <p className={styles.stageEyebrow}>Zumi · live public guidance</p>
+                      <p className={styles.stageEyebrow}>Zumi · public guidance</p>
                       <h1 id="public-living-title">The universe is recomposing.</h1>
                     </div>
                     <span>
@@ -505,109 +589,145 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                   />
                 </div>
               )}
-            </div>
 
-            <div className={styles.composerDock} data-public-action-dock="true">
-              <form aria-label="Ask Zumi" id="living-composer" onSubmit={submit}>
-                <label className="sr-only" htmlFor="public-klinikos-intent">Message Zumi</label>
-                <div className={`${styles.composer} reference-composer-shell grid-cols-[minmax(0,1fr)_3.5rem]`}>
-                  <textarea
-                    aria-describedby="public-conversation-disclosure"
-                    className="min-w-0 w-full"
-                    id="public-klinikos-intent"
-                    onChange={(event) => setIntent(event.target.value)}
-                    onKeyDown={handleComposerKeyDown}
-                    placeholder="Message Zumi..."
-                    rows={1}
-                    value={intent}
-                  />
-                  <button
-                    aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"}
-                    className={styles.sendButton}
-                    disabled={isSubmitting || !intent.trim()}
-                    type="submit"
-                  >
-                    <ZumiSendGlyph active={isSubmitting} />
-                  </button>
+              <div className={styles.composerDock} data-public-action-dock="true">
+                <form aria-label="Ask Zumi" id="living-composer" onSubmit={submit}>
+                  <label className="sr-only" htmlFor="public-klinikos-intent">Message Zumi</label>
+                  <div className={`${styles.composer} reference-composer-shell grid-cols-[minmax(0,1fr)_3.5rem]`}>
+                    <textarea
+                      aria-describedby="public-conversation-disclosure"
+                      className="min-w-0 w-full"
+                      id="public-klinikos-intent"
+                      onChange={(event) => setIntent(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
+                      placeholder="Ask Klinikos anything..."
+                      rows={1}
+                      value={intent}
+                    />
+                    <button
+                      aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"}
+                      className={styles.sendButton}
+                      disabled={isSubmitting || !intent.trim()}
+                      type="submit"
+                    >
+                      <ArrowRight aria-hidden="true" className="size-5" />
+                    </button>
+                    <span aria-hidden="true" className={styles.zumiPresence}>
+                      <span><ZumiSendGlyph active={isSubmitting} /></span>
+                      <strong>zumi</strong>
+                      <small>Your AI operating partner</small>
+                    </span>
+                  </div>
+                  <p className={styles.disclosure} id="public-conversation-disclosure">
+                    Public Zumi can answer general Klinikos questions and guide you to a next step. This page cannot open private clinic records or make changes. Do not enter patient information here.
+                  </p>
+                </form>
+              </div>
+
+              {!conversationStarted ? (
+                <div className={styles.stageReadout} aria-live="polite">
+                  <strong>{activePlane.title}</strong>
+                  <span>{activePlane.question}</span>
+                  <p>{activePlane.description}</p>
                 </div>
-                <p className={styles.disclosure} id="public-conversation-disclosure">
-                  Public Zumi can answer general Klinikos questions and guide you to a next step. This page cannot open private clinic records or make changes. Do not enter patient information here.
-                </p>
-              </form>
+              ) : null}
             </div>
           </section>
 
-          <aside className={styles.lensRail} data-public-plane-lens="true">
-            <p className={styles.railEyebrow}>Five-plane lens</p>
-            <h2>One universe.<br />Five views.</h2>
-            <p>Change the lens, not the underlying person, need, evidence, or authority.</p>
-
-            <div aria-label="Five-plane view" className={styles.planeNav} role="group">
-              {PUBLIC_LIVING_PLANE_LENSES.map((plane) => (
-                <button
-                  aria-controls="public-plane-readout"
-                  aria-pressed={activePlane.id === plane.id}
-                  className={styles.planeButton}
-                  data-living-edge={activePlane.id === plane.id ? "active-plane" : undefined}
-                  key={plane.id}
-                  onClick={() => setActivePlaneId(plane.id)}
-                  type="button"
-                >
-                  <span className={styles.planeNumber}>{plane.number}</span>
-                  <span>
-                    <strong>{plane.title}</strong>
-                    <small>{plane.shortTitle}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </aside>
-
-          <aside className={styles.intentRail} data-public-inspector="true">
-            <p className={styles.railEyebrow}>Intent constellation</p>
-            <h2>I need / I have</h2>
-            <p>Choose a sentence or write your own. Every choice uses the same Zumi boundary and the same governed Path engine.</p>
-
-            <div className={styles.intentScroller} data-public-intent-constellation="true">
-              {(["need", "have"] as const).map((side) => (
-                <section className={styles.actionGroup} key={side}>
-                  <h3 className={styles.actionGroupTitle}>{side === "need" ? "I need something" : "I have something"}</h3>
-                  <div className={styles.actionList}>
-                    {PUBLIC_LIVING_ACTIONS.filter((action) => action.side === side).map((action, index) => (
-                      <button
-                        className={styles.actionButton}
-                        disabled={isSubmitting}
-                        key={action.id}
-                        onClick={() => void sendPrompt(action.prompt, action.id)}
-                        type="button"
-                      >
-                        <span className={styles.actionIndex}>{String(index + 1).padStart(2, "0")}</span>
-                        <span className={styles.actionText}>{action.label}</span>
-                        <ArrowRight aria-hidden="true" className="size-3" />
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-
+          <aside className={styles.contextRail} data-public-inspector="true" data-public-plane-lens="true">
+            <p className={styles.railEyebrow}>Public context</p>
+            <dl className={styles.contextFacts}>
+              <div><dt>Mode</dt><dd>Public guidance</dd></div>
+              <div><dt>Identity</dt><dd>Not assumed</dd></div>
+              <div><dt>Active lens</dt><dd>{activePlane.shortTitle}</dd></div>
+              <div><dt>Path</dt><dd>{activePathLabel}</dd></div>
+            </dl>
+            <p className={styles.contextBoundary}>
+              This surface shows minimum-necessary public guidance. Policy, eligibility, ranking, and authority remain server-owned.
+            </p>
+            {renderPlaneControls("desktop")}
             <section className={styles.inspector} aria-label="Inspector" id="public-plane-readout">
               <p className={styles.inspectorLabel}>Inspector · {activePlane.number}</p>
-              <h3>{activePlane.title}</h3>
+              <h2>{activePlane.title}</h2>
               <p>{activePlane.description}</p>
+              <p>{KLINIKOS_HUMAN_AUTHORITY}</p>
               <div className={styles.truthRow} aria-label="Public safety boundaries">
                 <span>AI ≠ authority</span>
                 <span>Eligibility first</span>
                 <span>Patient data private</span>
               </div>
-              <p>{KLINIKOS_HUMAN_AUTHORITY}</p>
-              <p>{KLINIKOS_ECONOMIC_THESIS}</p>
-              <Link className={styles.inlineLink} href="/grid/browse">
-                Explore Grid <ArrowRight aria-hidden="true" className="size-3" />
-              </Link>
             </section>
           </aside>
         </main>
+
+        {!conversationStarted ? (
+          <section className={styles.objectShelf} aria-label="Start with a real Klinikos objective">
+            <div className={styles.featuredObjects} data-public-object-row="true">
+              {FEATURED_PUBLIC_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    className={styles.featuredButton}
+                    disabled={isSubmitting}
+                    key={action.id}
+                    onClick={() => void sendPrompt(action.prompt, action.id)}
+                    type="button"
+                  >
+                    <span className={styles.featuredIcon}><Icon aria-hidden="true" className="size-5" /></span>
+                    <span>
+                      <strong>{action.title}</strong>
+                      <small>{action.body}</small>
+                    </span>
+                    <ArrowRight aria-hidden="true" className="size-4" />
+                  </button>
+                );
+              })}
+            </div>
+
+            <details className={styles.intentLibrary}>
+              <summary>See every way to begin</summary>
+              <div data-public-intent-constellation="true">
+                {(["need", "have"] as const).map((side) => renderActionGroup(side, "desktop"))}
+              </div>
+            </details>
+
+            <section className={styles.lowerStrip} data-public-lower-strip="true">
+              <span aria-hidden="true" className={styles.lowerStripArt} />
+              <div className={styles.lowerStripContent}>
+                <p className={styles.railEyebrow}>One governed healthcare network</p>
+                <h2>Start with the objective. Klinikos assembles what must happen next.</h2>
+                <p>{KLINIKOS_SUPPORTING}</p>
+                <Link className={styles.lowerStripLink} href="/how-it-works">
+                  See how Klinikos works <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
+              </div>
+            </section>
+          </section>
+        ) : null}
+
+        <nav aria-label="Living Universe mobile controls" className={styles.mobileDock}>
+          <details className={styles.mobileDrawer}>
+            <summary>Start</summary>
+            <div className={styles.mobileDrawerPanel}>
+              {(["need", "have"] as const).map((side) => renderActionGroup(side, "mobile"))}
+            </div>
+          </details>
+          <details className={styles.mobileDrawer}>
+            <summary>Planes</summary>
+            <div className={styles.mobileDrawerPanel}>{renderPlaneControls("mobile")}</div>
+          </details>
+          <details className={styles.mobileDrawer}>
+            <summary>Context</summary>
+            <div className={styles.mobileDrawerPanel}>
+              <dl className={styles.contextFacts}>
+                <div><dt>Mode</dt><dd>Public guidance</dd></div>
+                <div><dt>Identity</dt><dd>Not assumed</dd></div>
+                <div><dt>Path</dt><dd>{activePathLabel}</dd></div>
+              </dl>
+            </div>
+          </details>
+          <Link href="/grid/browse">Grid</Link>
+        </nav>
       </section>
     </>
   );

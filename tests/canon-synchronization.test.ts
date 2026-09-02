@@ -201,6 +201,17 @@ describe("Klinikos Canon synchronization", () => {
     expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
   });
 
+  it("versions the public-reference tranche without claiming authenticated member convergence", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+
+    expect(master).toContain("Version: `2026-09-01.1`");
+    expect(blueprint).toContain("**Version:** 2026-09-01 rev4");
+    expect(blueprint).toContain("ordinary-language intent actions");
+    expect(blueprint).not.toContain("twelve ordinary-language intents");
+    expect(blueprint).toContain("This public-first convergence tranche does not claim `/member` visual convergence.");
+  });
+
   it("preserves the twelve delivery workstreams as a projection of the five-plane Canon", () => {
     const master = read(masterPath);
     const blueprint = read(blueprintPath);

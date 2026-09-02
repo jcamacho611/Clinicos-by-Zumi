@@ -1,6 +1,6 @@
 # KLINIKOS MASTER CANON
 
-Version: `2026-08-30.1`
+Version: `2026-09-01.1`
 Status: `ACTIVE — SOLE COMPANY / PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
 Canonical implementation contract: `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md`
 Machine-readable routing: `docs/KLINIKOS_AUTHORITY_MAP.yaml`

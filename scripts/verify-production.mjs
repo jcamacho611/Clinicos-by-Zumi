@@ -2,15 +2,12 @@
 /**
  * Read-only verification of what is actually running in production.
  *
- * This exists because CI cannot execute. Every run of GitHub Actions on this repository
- * fails in about two seconds with no runner assigned and no steps, which is an account
- * level problem no code change fixes. The consequence is that nothing independent
- * confirms a deploy — the local release gate proves a candidate *can* ship, and then
- * silence.
- *
- * So this checks the half CI was going to cover anyway, from outside: what commit is
- * serving, how far behind the branch it is, whether the public surface answers, and —
- * the part worth the most — whether anything private is reachable without signing in.
+ * This is the external runtime complement to exact-head CI and local release gates.
+ * CI and local gates establish whether a candidate is safe to ship; this read-only
+ * external check establishes what commit and customer surface are actually serving.
+ * It does not replace CI, browser evidence, or release review. It checks the serving
+ * commit, branch delta, public surface, and — the part worth the most — whether anything
+ * private is reachable without signing in.
  *
  * Strictly read-only. It performs GET requests against public endpoints and nothing
  * else: no writes, no authentication, no state. A verification script that can change
