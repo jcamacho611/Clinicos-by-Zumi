@@ -6,24 +6,9 @@ import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import { routePresentationPolicy } from "@/lib/design/route-presentation-policy";
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
-const PUBLIC_PATHS = new Set([
-  "/about",
-  "/capabilities",
-  "/ecosystem",
-  "/founding-clinic",
-  "/how-it-works",
-  "/operational-audit",
-  "/pricing",
-  "/sales",
-  "/start",
-  "/trust",
-  "/grid",
-  "/grid/browse",
-  "/grid/pricing",
-  "/edu",
-]);
 
 type PublicZumiSuggestion = { id: string; label: string; prompt: string };
 type Turn = { id: number; prompt: string; resolution: PublicLivingResolution; suggestions: PublicZumiSuggestion[] };
@@ -109,7 +94,7 @@ export function PublicZumiSiteControl({
   const request = useRef<AbortController | null>(null);
   const nextId = useRef(1);
   const endRef = useRef<HTMLDivElement>(null);
-  const enabled = PUBLIC_PATHS.has(pathname);
+  const enabled = routePresentationPolicy(pathname).publicZumiVisible;
   const latest = turns[turns.length - 1] ?? null;
 
   useEffect(() => () => request.current?.abort(), []);
