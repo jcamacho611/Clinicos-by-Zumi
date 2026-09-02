@@ -62,7 +62,8 @@ describe("coordinated public utilities", () => {
     expect(layout).not.toContain("<PublicZumiSiteControl />");
     expect(layout).not.toContain("<KlinikosAtmosphereController />");
     expect(dock).toContain('useState<"zumi" | "appearance" | null>');
-    expect(dock).toContain('data-public-utility-dock={hasVisibleUtility ? "true" : undefined}');
+    expect(dock).toContain("{hasVisibleUtility ? (");
+    expect(dock).toContain('data-public-utility-dock="true"');
     expect(dock).toContain("resolvePublicRoutePresentation(pathname)");
     expect(dock).toContain('open={activePanel === "zumi"}');
     expect(dock).toContain('open={activePanel === "appearance"}');
