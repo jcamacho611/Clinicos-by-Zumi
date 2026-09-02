@@ -45,6 +45,13 @@ describe("the production gate is read-only and can actually fail", () => {
     expect(source).toContain("is not on origin/main");
   });
 
+  it("fails when the customer release is behind the exact current main commit", () => {
+    expect(source).toContain("production must match origin/main exactly");
+    expect(source).toContain("classifyProductionRelease(history, commit)");
+    expect(source).toContain("productionReleaseParityStates.behindMain");
+    expect(source).toContain("exact production parity is unproven");
+  });
+
   it("proves the browser-visible Living Universe came from the running release", () => {
     expect(source).toContain("klinikos-release");
     expect(source).toContain("htmlCommit !== liveCommit");
