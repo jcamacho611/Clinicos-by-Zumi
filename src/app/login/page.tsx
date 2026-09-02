@@ -11,8 +11,6 @@ import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
   const { returnTo: rawReturnTo, next: legacyNext } = await searchParams;
-  // `returnTo` is canonical. `next` remains supported because older public surfaces
-  // emitted it; both values still pass through the same same-origin safety gate.
   const requestedReturnTo = rawReturnTo ?? legacyNext;
   const session = await getAuthenticationSession();
   if (session) redirect(safeClinicReturnTo(requestedReturnTo) ?? (session.role === "contractor" ? "/grid/opportunities" : "/dashboard"));
@@ -20,14 +18,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (personSession) redirect(safePersonReturnTo(requestedReturnTo) ?? "/member");
   const returnTo = safeReturnTo(requestedReturnTo);
   const personReturnTo = safePersonReturnTo(requestedReturnTo);
-  const signupHref = personReturnTo
-    ? `/signup?returnTo=${encodeURIComponent(personReturnTo)}`
-    : "/signup";
+  const signupHref = personReturnTo ? `/signup?returnTo=${encodeURIComponent(personReturnTo)}` : "/signup";
   const memberSignup = getMemberSignupReleaseState();
-
-  const demoCredentials = isDemoAuthEnabled()
-    ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD }
-    : undefined;
+  const demoCredentials = isDemoAuthEnabled() ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD } : undefined;
 
   return (
     <main className="grid min-h-screen overflow-hidden bg-[#050303] text-[#f8efed] lg:grid-cols-[.88fr_1.12fr]" data-klinikos-ds>
@@ -38,15 +31,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="text-[12px] font-semibold uppercase tracking-[.22em] text-[#e6817b]">Secure workspace</p>
           <h1 className="mt-3 text-4xl font-light tracking-[-.055em] text-[#f8efed]">Welcome back.</h1>
           <p className="mt-3 text-sm leading-6 text-[#a98f8b]">Sign in to your Klinikos account. Organization workspaces remain separately bound to an authorized organization and role.</p>
-          <div className="rose-auth-form mt-8">
-            <LoginForm demoCredentials={demoCredentials} returnTo={returnTo} />
-          </div>
-          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Considering Klinikos? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/start">Start the Clinic Operating Analysis</Link></p>
+          <div className="rose-auth-form mt-8"><LoginForm demoCredentials={demoCredentials} returnTo={returnTo} /></div>
+          <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Considering Klinikos? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/sales">Get a first useful result</Link></p>
           <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">New here? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href={signupHref}>{memberSignup.enabled ? "Join free" : "View free membership status"}</Link></p>
           <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">Looking for your records? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/portal/login">Open the patient portal</Link></p>
-          <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]">
-            <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.
-          </div>
+          <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]"><strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.</div>
           <p className="mt-8 flex items-center gap-2 text-[12px] leading-5 text-[#8f7773]"><ShieldCheck className="size-4 shrink-0 text-[#d9948d]" />Never enter real patient information until your organization has been approved for production patient-data use.</p>
         </div>
       </section>
@@ -54,11 +43,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_31%,rgba(149,42,49,.38),transparent_30%),radial-gradient(circle_at_74%_58%,rgba(230,129,123,.07),transparent_34%)]" />
         <div className="absolute left-[17%] top-[12%] size-[430px] rounded-full border border-[#efaaa1]/12" />
         <div className="absolute left-[27%] top-[21%] size-[270px] rounded-full border border-[#e6817b]/18" />
-        <div className="relative max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[.24em] text-[#e6817b]">Klinikos Intelligence</p>
-          <h2 className="mt-5 text-5xl font-light leading-[1.02] tracking-[-.055em]">One place to see what matters and move it forward.</h2>
-          <p className="mt-6 max-w-lg text-sm leading-7 text-[#bca5a1]">Klinikos keeps each organization inside its authorized workspace while bringing operations, care, network activity, learning, and revenue follow-through into one coherent environment.</p>
-        </div>
+        <div className="relative max-w-xl"><p className="text-xs font-semibold uppercase tracking-[.24em] text-[#e6817b]">Klinikos Intelligence</p><h2 className="mt-5 text-5xl font-light leading-[1.02] tracking-[-.055em]">One place to see what matters and move it forward.</h2><p className="mt-6 max-w-lg text-sm leading-7 text-[#bca5a1]">Klinikos keeps each organization inside its authorized workspace while bringing operations, care, network activity, learning, and revenue follow-through into one coherent environment.</p></div>
       </section>
     </main>
   );
