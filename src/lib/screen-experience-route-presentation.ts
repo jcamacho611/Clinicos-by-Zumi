@@ -17,7 +17,7 @@ export type PublicProjection =
   | "payment-return";
 
 export type PublicChromeMode = "reference" | "shared-public" | "route-owned";
-export type PublicZumiMode = "embedded-command" | "floating-public" | "none";
+export type PublicZumiMode = "embedded-command" | "route-owned" | "floating-public" | "none";
 export type PublicAppearanceMode =
   | "reference-obsidian"
   | "adaptive"
@@ -120,7 +120,7 @@ export const PUBLIC_ROUTE_PRESENTATION_POLICIES: readonly PublicRoutePresentatio
     id: "founding-clinic",
     pathname: "/founding-clinic",
     match: "exact",
-    publicZumiPrompt: "What does the founding clinic path mean for a clinic?",
+    zumiMode: "route-owned",
     sitemap: { changeFrequency: "weekly", priority: 0.9 },
     navigation: { order: 5, label: "For clinics", href: "/founding-clinic" },
   },
@@ -137,6 +137,7 @@ export const PUBLIC_ROUTE_PRESENTATION_POLICIES: readonly PublicRoutePresentatio
     id: "sales",
     pathname: "/sales",
     match: "exact",
+    zumiMode: "route-owned",
     sitemap: { changeFrequency: "weekly", priority: 0.7 },
   },
   {
@@ -144,6 +145,7 @@ export const PUBLIC_ROUTE_PRESENTATION_POLICIES: readonly PublicRoutePresentatio
     id: "start",
     pathname: "/start",
     match: "exact",
+    zumiMode: "route-owned",
     sitemap: { changeFrequency: "weekly", priority: 0.8 },
   },
   {
@@ -305,8 +307,25 @@ export const PUBLIC_ROUTE_PRESENTATION_POLICIES: readonly PublicRoutePresentatio
 
 const PUBLIC_ROUTE_BASE = "https://klinikos.invalid";
 
+function hasUnsafePathSegments(value: string) {
+  let decodedPath = value.split(/[?#]/, 1)[0];
+
+  try {
+    for (let pass = 0; pass < 3; pass += 1) {
+      const decoded = decodeURIComponent(decodedPath);
+      if (decoded === decodedPath) break;
+      decodedPath = decoded;
+    }
+  } catch {
+    return true;
+  }
+
+  if (decodedPath.includes("\\")) return true;
+  return decodedPath.split("/").some((segment) => segment === "." || segment === "..");
+}
+
 function normalizePathname(value: string): string | null {
-  if (!value.startsWith("/") || value.includes("\\")) return null;
+  if (!value.startsWith("/") || hasUnsafePathSegments(value)) return null;
 
   try {
     const url = new URL(value, PUBLIC_ROUTE_BASE);

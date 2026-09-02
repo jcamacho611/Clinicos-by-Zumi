@@ -45,6 +45,14 @@ describe("public route presentation policy", () => {
       .toHaveLength(1);
   });
 
+  it("keeps route-owned intelligence pages out of the global floating Zumi", () => {
+    for (const pathname of ["/sales", "/start", "/founding-clinic"]) {
+      expect(resolve(pathname), pathname).toMatchObject({ zumiMode: "route-owned" });
+    }
+
+    expect(resolve("/operational-audit")?.zumiMode).toBe("floating-public");
+  });
+
   it("keeps one floating public Zumi across the complete public Grid family", () => {
     for (const pathname of [
       "/grid",
@@ -74,6 +82,10 @@ describe("public route presentation policy", () => {
     expect(presentationRegistry.isPublicDirectDestination?.("/grid/requests")).toBe(false);
     expect(presentationRegistry.isPublicDirectDestination?.("/grid/browse/../../dashboard")).toBe(false);
     expect(presentationRegistry.isPublicDirectDestination?.("/grid/browse/%2e%2e/%2e%2e/dashboard")).toBe(false);
+    expect(presentationRegistry.isPublicDirectDestination?.("/grid/browse/../../about")).toBe(false);
+    expect(presentationRegistry.isPublicDirectDestination?.("/grid/browse/%2e%2e/%2e%2e/about")).toBe(false);
+    expect(resolve("/grid/browse/../../about")).toBeNull();
+    expect(resolve("/grid/browse/%2e%2e/%2e%2e/about")).toBeNull();
     expect(presentationRegistry.isPublicDirectDestination?.("/\\\\example.com/grid")).toBe(false);
     expect(presentationRegistry.isPublicDirectDestination?.("//example.com/grid")).toBe(false);
     expect(presentationRegistry.isPublicDirectDestination?.("https://example.com/grid")).toBe(false);

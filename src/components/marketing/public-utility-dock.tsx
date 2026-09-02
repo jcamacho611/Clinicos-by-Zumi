@@ -8,6 +8,10 @@ import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-pr
 
 export function PublicUtilityDock() {
   const pathname = usePathname();
+  return <RouteScopedPublicUtilityDock key={pathname} pathname={pathname} />;
+}
+
+function RouteScopedPublicUtilityDock({ pathname }: { pathname: string }) {
   const [activePanel, setActivePanel] = useState<"zumi" | "appearance" | null>(null);
   const presentation = resolvePublicRoutePresentation(pathname);
   const hasVisibleUtility = presentation?.zumiMode === "floating-public"

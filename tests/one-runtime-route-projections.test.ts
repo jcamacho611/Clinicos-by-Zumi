@@ -27,6 +27,10 @@ describe("one runtime with governed public projections", () => {
     const layout = read("src/app/layout.tsx");
     expect(layout.match(/<PublicUtilityDock \/>/g)).toHaveLength(1);
     expect(layout).not.toMatch(/createRoot|hydrateRoot|iframe/);
+
+    const dock = read("src/components/marketing/public-utility-dock.tsx");
+    expect(dock).toContain("<RouteScopedPublicUtilityDock key={pathname} pathname={pathname} />");
+    expect(dock.indexOf("function RouteScopedPublicUtilityDock")).toBeLessThan(dock.indexOf("useState<"));
   });
 
   it("makes the screen-experience registry the route-presentation authority for mounted consumers", () => {

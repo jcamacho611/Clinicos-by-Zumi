@@ -17,9 +17,15 @@ describe("public Zumi site control", () => {
     const resolve = (registry as typeof registry & {
       resolvePublicRoutePresentation?: (pathname: string) => { zumiMode: string } | null;
     }).resolvePublicRoutePresentation;
-    for (const pathname of ["/pricing", "/trust", "/how-it-works", "/founding-clinic", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/grid/resource/resource_1", "/grid/join/seller", "/edu"]) {
+    for (const pathname of ["/pricing", "/trust", "/how-it-works", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/grid/resource/resource_1", "/grid/join/seller", "/edu"]) {
       expect(resolve?.(pathname)?.zumiMode, pathname).toBe("floating-public");
     }
+    for (const pathname of ["/sales", "/start", "/founding-clinic"]) {
+      expect(resolve?.(pathname)?.zumiMode, pathname).toBe("route-owned");
+      expect(read(`src/app${pathname}/page.tsx`), pathname).toContain("<ZumiCommandShell>");
+    }
+    expect(control).toContain('presentation?.zumiMode === "floating-public"');
+    expect(utilityDock).toContain('presentation?.zumiMode === "floating-public"');
     expect(resolve?.("/")?.zumiMode).toBe("embedded-command");
     expect(resolve?.("/login") ?? null).toBeNull();
     expect(resolve?.("/portal") ?? null).toBeNull();
