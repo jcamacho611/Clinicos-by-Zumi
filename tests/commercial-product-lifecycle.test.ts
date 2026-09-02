@@ -21,14 +21,14 @@ describe("commercial product lifecycle", () => {
     }
   });
 
-  it("blocks historical aliases before checkout intent persistence", () => {
+  it("blocks non-direct offers before checkout intent persistence", () => {
     const source = fs.readFileSync(path.join(process.cwd(), "src/lib/commercial/checkout-service.ts"), "utf8");
-    const guard = source.indexOf("canStartNewCommercialCheckout(product)");
+    const guard = source.indexOf("canStartDirectCommercialCheckout(product)");
     const persistence = source.indexOf("createCommercialCheckoutIntent({");
 
     expect(guard).toBeGreaterThan(-1);
     expect(persistence).toBeGreaterThan(-1);
     expect(guard).toBeLessThan(persistence);
-    expect(source).toContain("retained for historical payment evidence only and cannot start a new checkout");
+    expect(source).toContain("requires its governed sales or qualification path and cannot start a direct checkout");
   });
 });
