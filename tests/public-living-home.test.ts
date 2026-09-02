@@ -4,6 +4,10 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { appearancePolicyForPath } from "@/lib/design/atmosphere";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
+import {
+  isPublicDirectDestination,
+  PUBLIC_PRIMARY_NAVIGATION,
+} from "@/lib/screen-experience-route-presentation";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -170,8 +174,10 @@ describe("public Living Home conversation and accessibility contract", () => {
 
   it("keeps public and patient destinations out of clinic-staff authentication while preserving safe structured protected intent", () => {
     expect(source).toContain('if (destination.href === "/portal") return "/portal/login"');
-    expect(source).toContain('"/grid", "/edu"');
-    expect(source).toContain("publicActionPaths.has(destination.href)");
+    expect(source).toContain("isPublicDirectDestination(destination.href)");
+    expect(isPublicDirectDestination("/grid")).toBe(true);
+    expect(isPublicDirectDestination("/edu")).toBe(true);
+    expect(isPublicDirectDestination("/dashboard")).toBe(false);
     expect(source).toContain("protectedPublicContinuationHref(destination.href, destination.key)");
     expect(source).toContain("destinationActionHref(resolution.destination)");
     expect(source).not.toContain("/login?next=");
@@ -187,12 +193,13 @@ describe("public Living Home conversation and accessibility contract", () => {
 
     // The law is equivalence, not a particular set of links. Naming Trust and Pricing
     // pinned the old module nav, which the action-first contract deliberately removed.
-    // Asserting that the mobile menu renders the same `navItems` the desktop nav does
+    // Asserting that the mobile menu renders the same governed navigation the desktop nav does
     // proves the same thing and survives the nav changing again.
-    const desktopNav = source.match(/aria-label="Primary"[\s\S]{0,400}?navItems\.map/);
-    const mobileNav = source.match(/aria-label="Mobile navigation"[\s\S]{0,400}?navItems\.map/);
-    expect(desktopNav, "desktop nav does not render navItems").not.toBeNull();
-    expect(mobileNav, "mobile menu does not render the same navItems").not.toBeNull();
+    const desktopNav = source.match(/aria-label="Primary"[\s\S]{0,400}?PUBLIC_PRIMARY_NAVIGATION\.map/);
+    const mobileNav = source.match(/aria-label="Mobile navigation"[\s\S]{0,400}?PUBLIC_PRIMARY_NAVIGATION\.map/);
+    expect(desktopNav, "desktop nav does not render governed navigation").not.toBeNull();
+    expect(mobileNav, "mobile menu does not render the same governed navigation").not.toBeNull();
+    expect(PUBLIC_PRIMARY_NAVIGATION.length).toBeGreaterThan(0);
 
     // Entry paths a small screen must not lose.
     expect(source).toContain('href="/portal/login"');

@@ -18,6 +18,8 @@
  * Pure module. No database, no network.
  */
 
+import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-presentation";
+
 /**
  * Surface classes.
  *
@@ -65,37 +67,20 @@ export const surfaceGovernance: Record<SurfaceClass, SurfaceGovernance> = {
   },
 };
 
-/** Route prefixes, longest match wins. */
-const ROUTE_CLASSES: ReadonlyArray<[string, SurfaceClass]> = [
-  ["/grid/browse", "marketplace"],
-  ["/sales", "marketing"],
-  ["/start", "marketing"],
-  ["/founding-clinic", "marketing"],
-  ["/private-demo", "marketing"],
-  ["/edu", "marketing"],
-  ["/grid/join", "marketing"],
-  ["/edu/dashboard", "product"],
-  ["/edu/courses", "product"],
-  ["/edu/cohorts", "product"],
-  ["/edu/scenarios", "product"],
-  ["/edu/lab", "product"],
-  ["/edu/grading", "product"],
-  ["/edu/competencies", "product"],
-  ["/edu/settings", "product"],
-  ["/dashboard", "product"],
-  ["/grid", "product"],
-  ["/admin", "product"],
-  ["/patients", "product"],
-  ["/network", "product"],
-];
-
 export function classifySurface(route: string): SurfaceClass {
-  const match = ROUTE_CLASSES
-    .filter(([prefix]) => route === prefix || route.startsWith(`${prefix}/`))
-    .sort((a, b) => b[0].length - a[0].length)[0];
+  const projection = resolvePublicRoutePresentation(route)?.projection;
+  if (projection === "grid-discovery") return "marketplace";
+  if (
+    projection === "living-home"
+    || projection === "public-discovery"
+    || projection === "grid-entry"
+    || projection === "grid-enrollment"
+    || projection === "edu-entry"
+  ) return "marketing";
+
   // Unclassified routes default to product: the stricter budget. A new workspace
   // that nobody classified should not inherit permission to animate.
-  return match ? match[1] : "product";
+  return "product";
 }
 
 export function governanceFor(route: string) {

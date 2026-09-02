@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
+import { isPublicDirectDestination } from "@/lib/screen-experience-route-presentation";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -41,9 +42,10 @@ describe("public Zumi access and typo routing", () => {
     const livingHome = read("src/components/marketing/public-living-gateway.tsx");
     const siteControl = read("src/components/marketing/public-zumi-site-control.tsx");
 
+    expect(isPublicDirectDestination("/access")).toBe(true);
     for (const source of [livingHome, siteControl]) {
-      expect(source).toContain('"/access"');
-      expect(source).toMatch(/publicActionPaths\.has\(/u);
+      expect(source).toContain("isPublicDirectDestination");
+      expect(source).not.toContain("publicActionPaths");
     }
   });
 });

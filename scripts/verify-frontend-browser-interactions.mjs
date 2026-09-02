@@ -261,6 +261,46 @@ async function typeAndSubmit(text) {
   await evaluate(`document.querySelector('button[aria-label="Send message to Zumi"]')?.click()`);
 }
 
+async function clickClientRouteLink(href, label) {
+  const clicked = await evaluate(`(() => {
+    const link = Array.from(document.querySelectorAll('a[href]'))
+      .find((candidate) => candidate.getAttribute('href') === ${JSON.stringify(href)});
+    if (!link) return false;
+    link.click();
+    return true;
+  })()`);
+  if (!clicked) throw new Error(`Could not find an in-product link to ${href}.`);
+  await waitFor(
+    `client-side route transition to ${label}`,
+    `location.pathname === ${JSON.stringify(href)}`,
+  );
+}
+
+async function recordRoutePresentation(label, expectedPathname, expectedAtmosphere, expectedUtilities) {
+  await waitFor(
+    `route-scoped presentation for ${label}`,
+    `location.pathname === ${JSON.stringify(expectedPathname)}
+      && document.documentElement.dataset.klinikosAtmosphere === ${JSON.stringify(expectedAtmosphere)}
+      && document.documentElement.style.colorScheme === ${JSON.stringify(expectedAtmosphere === "night" ? "dark" : "light")}
+      && Boolean(document.querySelector('button[aria-label="Open appearance settings"]')) === ${expectedUtilities.appearance}
+      && Boolean(document.querySelector('button[aria-label="Open Zumi assistant"]')) === ${expectedUtilities.zumi}`,
+  );
+  const presentation = await evaluate(`(() => ({
+    label: ${JSON.stringify(label)},
+    pathname: location.pathname,
+    atmosphere: document.documentElement.dataset.klinikosAtmosphere ?? null,
+    colorScheme: document.documentElement.style.colorScheme,
+    marbleSurface: document.getElementById('klinikos-page-content')?.classList.contains('grid-marble-surface') ?? false,
+    appearanceControllerVisible: Boolean(document.querySelector('button[aria-label="Open appearance settings"]')),
+    floatingZumiVisible: Boolean(document.querySelector('button[aria-label="Open Zumi assistant"]')),
+  }))()`);
+  const expectedMarble = expectedAtmosphere !== "night";
+  if (presentation.marbleSurface !== expectedMarble) {
+    throw new Error(`The page material did not follow ${label}: ${JSON.stringify(presentation)}.`);
+  }
+  results.routePresentationTransitions.push(presentation);
+}
+
 try {
   const attached = await attachBrowserPageTarget({
     command: (method, params, timeoutMs) => cdp.command(method, params, undefined, timeoutMs),
@@ -658,6 +698,56 @@ try {
   })()`);
   if (!collisionFree) throw new Error("Tablet controls overlap the Zumi composer.");
   results.tablet = await screenshot("browser-tablet-1024x900-collision-check");
+
+  // Prove one mounted Next.js program can move between reference, adaptive, and
+  // route-fixed materials without a reload or a stale document theme. These are
+  // presentation transitions only; the route policy grants no authority.
+  await setViewport(1402, 1122);
+  await navigate();
+  await evaluate(`window.localStorage.setItem('klinikos-atmosphere', 'light')`);
+  results.routePresentationTransitions = [];
+  await recordRoutePresentation(
+    "root-reference-obsidian",
+    "/",
+    "night",
+    { appearance: false, zumi: false },
+  );
+  await clickClientRouteLink("/how-it-works", "adaptive public explanation");
+  await recordRoutePresentation(
+    "how-it-works-adaptive-marble",
+    "/how-it-works",
+    "day",
+    { appearance: true, zumi: true },
+  );
+  await clickClientRouteLink("/grid", "fixed Obsidian Grid entry");
+  await recordRoutePresentation(
+    "grid-fixed-obsidian",
+    "/grid",
+    "night",
+    { appearance: false, zumi: true },
+  );
+  await clickClientRouteLink("/grid/pricing", "fixed Marble Grid pricing");
+  await recordRoutePresentation(
+    "grid-pricing-fixed-marble",
+    "/grid/pricing",
+    "day",
+    { appearance: false, zumi: true },
+  );
+  await clickClientRouteLink("/grid", "return to fixed Obsidian Grid entry");
+  await recordRoutePresentation(
+    "grid-return-fixed-obsidian",
+    "/grid",
+    "night",
+    { appearance: false, zumi: true },
+  );
+  await clickClientRouteLink("/", "return to reference Living Home");
+  await recordRoutePresentation(
+    "root-return-reference-obsidian",
+    "/",
+    "night",
+    { appearance: false, zumi: false },
+  );
+  await evaluate(`window.localStorage.setItem('klinikos-atmosphere', 'system')`);
 
   await setViewport(1402, 1122);
   await navigate();

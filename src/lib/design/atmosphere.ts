@@ -1,4 +1,8 @@
-import { routePresentationPolicy } from "@/lib/design/route-presentation-policy";
+import {
+  publicAppearanceBootstrapRules,
+  resolvePublicRoutePresentation,
+  type PublicAppearanceMode,
+} from "@/lib/screen-experience-route-presentation";
 
 export const klinikosAppearancePreferences = ["system", "light", "dark"] as const;
 export type KlinikosAppearancePreference = (typeof klinikosAppearancePreferences)[number];
@@ -12,21 +16,21 @@ export const KLINIKOS_ATMOSPHERE_STORAGE_KEY = "klinikos-atmosphere";
 export type KlinikosAppearancePolicy = {
   controllerVisible: boolean;
   referenceLocked: boolean;
-  resolvedBy: "reference" | "user-preference";
+  resolvedBy: "reference" | "user-preference" | "route";
 };
 
 /**
- * Route presentation may suggest a density, never silently override a person's theme.
- * The route-presentation policy owns whether the root Appearance control belongs on a
- * route; authenticated AppShell and workflow surfaces must not receive a second global
- * presentation authority from the root layout.
+ * Adaptive surfaces honor the person's theme. Reference-locked and still-route-owned
+ * legacy surfaces declare the material they actually render, so the global control
+ * never promises an appearance change that the mounted page cannot yet deliver.
  */
 export function appearancePolicyForPath(pathname: string): KlinikosAppearancePolicy {
-  const presentation = routePresentationPolicy(pathname);
+  const mode = resolvePublicRoutePresentation(pathname)?.appearanceMode;
+  const referenceLocked = mode === "reference-obsidian";
   return {
-    controllerVisible: presentation.appearanceControllerVisible,
-    referenceLocked: presentation.referenceLocked,
-    resolvedBy: presentation.referenceLocked ? "reference" : "user-preference",
+    controllerVisible: mode === "adaptive",
+    referenceLocked,
+    resolvedBy: referenceLocked ? "reference" : mode === "adaptive" ? "user-preference" : "route",
   };
 }
 
@@ -56,6 +60,16 @@ export function atmosphereForAppearance(
   return prefersDark ? "night" : "day";
 }
 
+export function atmosphereForPresentation(
+  mode: PublicAppearanceMode | undefined,
+  preference: KlinikosAppearancePreference,
+  prefersDark: boolean,
+): KlinikosAtmosphere {
+  if (mode === "fixed-marble") return "day";
+  if (mode === "reference-obsidian" || mode === "fixed-obsidian") return "night";
+  return atmosphereForAppearance(preference, prefersDark);
+}
+
 export const klinikosAtmosphereBootstrap = `(() => {
   try {
     const key = "${KLINIKOS_ATMOSPHERE_STORAGE_KEY}";
@@ -71,10 +85,19 @@ export const klinikosAtmosphereBootstrap = `(() => {
             : "system";
     if (raw && raw !== preference) localStorage.setItem(key, preference);
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const referenceLocked = location.pathname === "/";
-    const atmosphere = referenceLocked
-      ? "night"
-      : preference === "dark"
+    const rules = ${JSON.stringify(publicAppearanceBootstrapRules)};
+    const pathname = location.pathname.length > 1 ? location.pathname.replace(/\\/+$/, "") : location.pathname;
+    const routeRule = rules.find((rule) => rule.match === "exact"
+      ? pathname === rule.pathname
+      : rule.match === "children"
+        ? pathname.startsWith(rule.pathname + "/")
+        : pathname === rule.pathname || pathname.startsWith(rule.pathname + "/"));
+    const appearanceMode = routeRule?.appearanceMode;
+    const atmosphere = appearanceMode === "fixed-marble"
+      ? "day"
+      : appearanceMode === "reference-obsidian" || appearanceMode === "fixed-obsidian"
+        ? "night"
+        : preference === "dark"
         ? "night"
         : preference === "light"
           ? "day"
