@@ -30,7 +30,7 @@ const reusableBottleneckCodes = [
 
 const reusableBottleneckSet = new Set<string>(reusableBottleneckCodes);
 
-export type PaidAnalysisHandoff = {
+export type FirstValueHandoff = {
   clinicType: ClinicTypeOption | null;
   painPoints: SalesPainPoint[];
   biggestPainPoint: SalesPainPoint | null;
@@ -54,12 +54,12 @@ function reusablePainPoints(values: readonly string[]) {
   return [...new Set(values.filter((value): value is SalesPainPoint => reusableBottleneckSet.has(value)))];
 }
 
-function toHandoff(clinicCode: string | undefined, bottlenecks: readonly string[]): PaidAnalysisHandoff {
+function toHandoff(clinicCode: string | undefined, bottlenecks: readonly string[]): FirstValueHandoff {
   const clinicType = isClinicCode(clinicCode) ? clinicTypeByGuidedCode[clinicCode] : null;
   const painPoints = reusablePainPoints(bottlenecks);
   const summaryLabels = [
-    ...(clinicType ? [`Clinic type: ${clinicType}`] : []),
-    ...(painPoints.length ? [`Carried bottlenecks: ${painPoints.map((key) => painPointLabel[key]).join(", ")}`] : []),
+    ...(clinicType ? [`Organization type: ${clinicType}`] : []),
+    ...(painPoints.length ? [`Reported unfinished work: ${painPoints.map((key) => painPointLabel[key]).join(", ")}`] : []),
   ];
 
   return {
@@ -71,32 +71,23 @@ function toHandoff(clinicCode: string | undefined, bottlenecks: readonly string[
 }
 
 /**
- * Builds a continuation URL from predefined guided-answer codes only.
- *
- * No free text, contact data, patient data, vendor names, revenue values, or exact
- * clinic-size values are placed in the URL. The destination validates the same
- * whitelist again before using these values as form defaults.
+ * Continuation URL contains predefined guided-answer codes only. No contact data,
+ * patient data, free text, vendor names, revenue values, or exact organization-size
+ * values are placed in the URL.
  */
-export function buildPaidAnalysisHandoffHref(answers: GuidedSalesAnswers) {
+export function buildFirstValueHandoffHref(answers: GuidedSalesAnswers) {
   const clinicCode = answers.clinic_type?.[0];
   const painPoints = reusablePainPoints(answers.bottleneck ?? []);
   const params = new URLSearchParams();
-
   if (isClinicCode(clinicCode)) params.set("clinic", clinicCode);
   for (const painPoint of painPoints) params.append("pain", painPoint);
-
   const query = params.toString();
-  return `/private-demo${query ? `?${query}` : ""}#reserve`;
+  return `/private-demo${query ? `?${query}` : ""}#first-value`;
 }
 
-/**
- * Server-safe parser for the public continuation query. Treats every URL value as
- * untrusted and returns only canonical enum values already accepted by the paid
- * intake. Unknown values are ignored rather than coerced.
- */
-export function parsePaidAnalysisHandoffSearchParams(input: {
+export function parseFirstValueHandoffSearchParams(input: {
   clinic?: string | string[];
   pain?: string | string[];
-}): PaidAnalysisHandoff {
+}): FirstValueHandoff {
   return toHandoff(firstParam(input.clinic), allParams(input.pain));
 }
