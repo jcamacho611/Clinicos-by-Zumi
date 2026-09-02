@@ -25,6 +25,12 @@ describe("free person-account signup contract", () => {
       email: "  Jane@Example.com ",
       displayName: "Jane Camacho",
       password: "a-long-enough-passphrase",
+      legalAcceptances: {
+        websiteTermsAccepted: true,
+        websiteTermsVersion: "2026-08-10.1",
+        privacyPolicyAcknowledged: true,
+        privacyPolicyVersion: "2026-08-10.1",
+      },
     });
     expect(ok.success).toBe(true);
     // Email is the account key, so it is normalised rather than stored as typed.
@@ -38,6 +44,12 @@ describe("free person-account signup contract", () => {
       email: "jane@example.com",
       displayName: "Jane Camacho",
       password: "a-long-enough-passphrase",
+      legalAcceptances: {
+        websiteTermsAccepted: true,
+        websiteTermsVersion: "2026-08-10.1",
+        privacyPolicyAcknowledged: true,
+        privacyPolicyVersion: "2026-08-10.1",
+      },
       ssn: "123-45-6789",
     });
     expect(withSsn.success && "ssn" in withSsn.data).toBe(false);
@@ -49,6 +61,12 @@ describe("free person-account signup contract", () => {
         email: "jane@example.com",
         displayName: "Jane Camacho",
         password,
+        legalAcceptances: {
+          websiteTermsAccepted: true,
+          websiteTermsVersion: "2026-08-10.1",
+          privacyPolicyAcknowledged: true,
+          privacyPolicyVersion: "2026-08-10.1",
+        },
       }).success).toBe(false);
     }
   });
