@@ -26,7 +26,7 @@ export function PublicHeader({ contextLabel }: { contextLabel?: string }) {
               textClassName="h-[17px] w-[150px]"
             />
           </span>
-          {contextLabel ? <span className="hidden border-l border-[var(--k-line)] pl-3 text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--k-accent)] xl:block">{contextLabel}</span> : null}
+          {contextLabel ? <span className="hidden border-l border-[var(--k-line)] pl-3 text-[11px] font-extrabold uppercase tracking-[.16em] text-[var(--k-accent)] xl:block">{contextLabel}</span> : null}
         </div>
 
         <nav aria-label="Primary Klinikos navigation" className="ml-auto hidden items-center gap-5 text-[11px] font-bold text-[var(--k-muted)] lg:flex">
