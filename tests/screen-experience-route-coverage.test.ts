@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_SCREEN_EXPERIENCE_CONTRACTS,
   SCREEN_SOURCE_BINDINGS,
+  resolveSourceExperienceContract,
   resolveSourceExperienceContracts,
 } from "@/lib/screen-experience-route-registry";
 
@@ -52,6 +53,11 @@ describe("screen experience route coverage", () => {
       expect(binding.sourcePattern.source).not.toBe(".*");
       expect(contractIds.has(binding.contractId)).toBe(true);
     }
+  });
+
+  it("classifies free signup and the person-level Living Home by their real authority boundary", () => {
+    expect(resolveSourceExperienceContract("src/app/signup/page.tsx").id).toBe("auth-signup");
+    expect(resolveSourceExperienceContract("src/app/member/page.tsx").id).toBe("person-home");
   });
 
   it("keeps AI model training opt-in outside ordinary screen contracts", () => {

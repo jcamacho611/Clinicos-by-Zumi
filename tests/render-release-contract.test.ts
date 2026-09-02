@@ -30,4 +30,31 @@ describe("Render release contract", () => {
     expect(gates.some((gate) => gate > codeOnlyBuild && gate < renderBuild)).toBe(true);
     expect(gates.some((gate) => gate > renderBuild)).toBe(true);
   });
+
+  it("migrates the proved-disposable database before the full suite runs database-aware tests", () => {
+    const fullBranch = verifyRelease.slice(verifyRelease.indexOf("} else {"));
+    const safety = fullBranch.indexOf('record("disposable database safety"');
+    const migration = fullBranch.indexOf('record("Render build + disposable migration"');
+    const tests = fullBranch.indexOf('record("tests"');
+
+    expect(safety).toBeGreaterThan(-1);
+    expect(migration).toBeGreaterThan(safety);
+    expect(tests).toBeGreaterThan(migration);
+  });
+
+  it("keeps the database-free gate deterministic by excluding only the explicit PostgreSQL suites", () => {
+    expect(verifyRelease).toContain("CODE_ONLY_DATABASE_TESTS");
+    expect(verifyRelease).toContain('"--exclude"');
+    for (const databaseTest of [
+      "tests/career-artifact.test.ts",
+      "tests/clinical-placement-persistence.test.ts",
+      "tests/person-context-db.test.ts",
+      "tests/person-context-db-ambiguity.test.ts",
+      "tests/person-relationship-db.test.ts",
+      "tests/person-account-signup-db.test.ts",
+      "src/features/zumi/phi-provider-evidence-repository.test.ts",
+    ]) {
+      expect(verifyRelease).toContain(databaseTest);
+    }
+  });
 });

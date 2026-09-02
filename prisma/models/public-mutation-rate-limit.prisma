@@ -1,0 +1,15 @@
+// Durable, privacy-minimized admission buckets for public mutations.
+// keyHash contains a server-keyed HMAC; raw identifiers must never be stored here.
+model PublicMutationRateLimit {
+  scope        String
+  keyHash      String
+  windowStart  DateTime @db.Timestamp(3)
+  attemptCount Int      @default(0)
+  expiresAt    DateTime @db.Timestamp(3)
+  createdAt    DateTime @default(now()) @db.Timestamp(3)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(3)
+
+  @@id([scope, keyHash, windowStart], map: "public_mutation_rate_limits_pkey")
+  @@index([expiresAt], map: "public_mutation_rate_limits_expiry_idx")
+  @@map("public_mutation_rate_limits")
+}

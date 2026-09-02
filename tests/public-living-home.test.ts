@@ -25,6 +25,9 @@ describe("public Living Home intent", () => {
     ["Show me outstanding claims", "billing", "/billing"],
     ["Show me our care gaps", "insights", "/quality"],
     ["Open the provider workspace", "care", "/provider"],
+    ["I need an RN Friday night", "staffing", "/grid"],
+    ["Find an LPN tomorrow", "staffing", "/grid"],
+    ["Prepare our healthcare workforce RFP response", "procurement", "/dashboard"],
   ])("infers %s into a real product destination", (prompt, key, href) => {
     const resolution = resolvePublicLivingIntent(prompt);
     expect(resolution.kind).toBe("route");
@@ -86,7 +89,21 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");
     expect(page).toContain("PublicTrustFooter");
+    expect(page).not.toContain("PublicLivingUniverse");
+    expect(source).toContain('data-living-universe-stage="true"');
+    expect(source).toContain("PublicLivingUniverseObjectStage");
     expect(page).not.toContain("PublicConversionBridge");
+  });
+
+  it("renders one Object Stage with a non-personalized path, Inspector, and Action Dock", () => {
+    const stage = read("src/components/marketing/public-living-universe-stage.tsx");
+    expect(stage).toContain("Starting point");
+    expect(stage).toContain("Orchestration");
+    expect(stage).toContain("Continuation");
+    expect(stage).not.toContain("What you brought");
+    expect(stage).toContain("Inspector");
+    expect(stage).toContain("Action dock");
+    expect(stage).toContain('data-object-stage="true"');
   });
 
   it("uses bounded server intelligence while preserving the verified escalating deterministic path", () => {
@@ -162,9 +179,19 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("<details");
     expect(source).toContain('aria-label="Open navigation menu"');
     expect(source).toContain('aria-label="Mobile navigation"');
-    expect(source).toContain('{ label: "Trust", href: "/trust" }');
-    expect(source).toContain('{ label: "Pricing", href: "/pricing" }');
+
+    // The law is equivalence, not a particular set of links. Naming Trust and Pricing
+    // pinned the old module nav, which the action-first contract deliberately removed.
+    // Asserting that the mobile menu renders the same `navItems` the desktop nav does
+    // proves the same thing and survives the nav changing again.
+    const desktopNav = source.match(/aria-label="Primary"[\s\S]{0,400}?navItems\.map/);
+    const mobileNav = source.match(/aria-label="Mobile navigation"[\s\S]{0,400}?navItems\.map/);
+    expect(desktopNav, "desktop nav does not render navItems").not.toBeNull();
+    expect(mobileNav, "mobile menu does not render the same navItems").not.toBeNull();
+
+    // Entry paths a small screen must not lose.
     expect(source).toContain('href="/portal/login"');
+    expect(source).toContain('href="/signup"');
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {

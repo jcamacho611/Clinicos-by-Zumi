@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260901220000_public_mutation_rate_limits",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "8817d7d7e7b1d5979a6cb032d8c9f8ce5b75f969f10dcbc6f151d057348f6304",
+  "approvalReference": "Living Universe person-account public mutation admission TDD contract, 2026-09-01",
+  "rationale": "Adds a durable HMAC-keyed public mutation rate-limit table. It does not alter or delete existing records and stores no raw email, IP address, prompt, patient data, credential, or request body."
+}
