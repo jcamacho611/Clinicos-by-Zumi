@@ -22,7 +22,7 @@ function publicPageFiles(root = path.join(process.cwd(), "src", "app")): string[
 }
 
 describe("Klinikos MVP commercial activation", () => {
-  it("keeps clinic plan prices server-owned while reviewed subscriptions stay gated", () => {
+  it("keeps clinic plan prices server-owned while reviewed subscriptions stay sellable but not direct-public", () => {
     expect(getCommercialProduct("clinic_core")?.priceCents).toBe(clinicPlans.core.monthlyPriceCents);
     expect(getCommercialProduct("clinic_growth")?.priceCents).toBe(clinicPlans.growth.monthlyPriceCents);
     expect(getCommercialProduct("clinic_scale")?.priceCents).toBe(clinicPlans.scale.monthlyPriceCents);
@@ -31,10 +31,12 @@ describe("Klinikos MVP commercial activation", () => {
       expect(getCommercialProduct(key)).toMatchObject({
         commercialRoute: "recurring_reviewed",
         qualificationRequired: true,
-        publicPurchasable: false,
+        publicPurchasable: true,
+        directPublicCheckoutEligible: false,
       });
     }
     expect(getCommercialProduct("clinic_operator")?.publicPurchasable).toBe(false);
+    expect(getCommercialProduct("clinic_operator")?.directPublicCheckoutEligible).toBe(false);
   });
 
   it("accepts only the named purchasable clinic plans at the activation desk boundary", () => {
