@@ -1,0 +1,25 @@
+.releaseSurface :global([data-public-action-dock]) {
+  /* The Zumi orb is intentionally suspended below the composer. Reserve the open space
+     before the safety disclosure instead of increasing the whole first fold. */
+  padding-bottom: 20px !important;
+}
+
+.releaseSurface :global(#public-conversation-disclosure) {
+  margin-top: 96px;
+}
+
+@media (max-width: 1024px) {
+  .releaseSurface :global([data-living-universe-stage="true"]) {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .releaseSurface :global(nav[aria-label="Living Universe mobile controls"]) {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 520px) {
+  .releaseSurface :global(#public-conversation-disclosure) {
+    margin-top: 104px;
+  }
+}

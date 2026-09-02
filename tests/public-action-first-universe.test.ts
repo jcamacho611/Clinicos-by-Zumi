@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { klinikosPathCatalog } from "@/lib/paths/catalog";
 import {
   PUBLIC_LIVING_UNIVERSE_ACTIONS,
+  projectPublicLivingUniverseForActionId,
 } from "@/lib/orchestration/public-living-universe";
 
 /**
@@ -45,17 +46,30 @@ describe("public action-first Living Universe", () => {
     }
   });
 
-  it("resolves every offered action to a real Path in the server-owned catalog", () => {
+  it("resolves every sufficiently specific action to a real Path in the server-owned catalog", () => {
     const known = new Set(klinikosPathCatalog.map((path) => path.id));
     for (const action of PUBLIC_LIVING_UNIVERSE_ACTIONS) {
-      expect(known.has(action.pathId), `${action.id} -> unknown path ${action.pathId}`).toBe(true);
+      const projection = projectPublicLivingUniverseForActionId(action.id);
+      if (action.id === "learn") {
+        // Generic learning belongs to EDU, but it is not enough information to infer a
+        // profession, placement, or injector-readiness Path.
+        expect(projection).toBeNull();
+        continue;
+      }
+      expect(projection, `${action.id} has no server projection`).not.toBeNull();
+      expect(known.has(projection?.pathId ?? ""), `${action.id} -> unknown server path`).toBe(true);
     }
   });
 
   it("keeps each offered Path governed without shipping a dead second selector", () => {
     for (const action of PUBLIC_LIVING_UNIVERSE_ACTIONS) {
-      const path = klinikosPathCatalog.find((candidate) => candidate.id === action.pathId);
-      expect(path?.governance.length, `${action.pathId}: no governance sentence`).toBeGreaterThan(20);
+      const projection = projectPublicLivingUniverseForActionId(action.id);
+      if (action.id === "learn") {
+        expect(projection).toBeNull();
+        continue;
+      }
+      const path = klinikosPathCatalog.find((candidate) => candidate.id === projection?.pathId);
+      expect(path?.governance.length, `${action.id}: no governance sentence`).toBeGreaterThan(20);
     }
     expect(existsSync("src/components/marketing/public-living-universe.tsx")).toBe(false);
     expect(stage).not.toContain("PublicLivingUniverseStage");
