@@ -306,6 +306,16 @@ export function canStartNewCommercialCheckout(product: CommercialProduct) {
   return product.lifecycle === "active";
 }
 
+export function canStartDirectCommercialCheckout(product: CommercialProduct) {
+  return (
+    product.lifecycle === "active" &&
+    product.commercialRoute === "self_serve" &&
+    product.priceType === "fixed" &&
+    product.priceCents !== null &&
+    product.qualificationRequired === false
+  );
+}
+
 export function resolveCommercialCheckoutAmount(product: CommercialProduct, requestedAmountCents?: number | null) {
   const amountCents = requestedAmountCents ?? product.priceCents ?? null;
   if (amountCents !== null && (!Number.isInteger(amountCents) || amountCents < 0)) {
