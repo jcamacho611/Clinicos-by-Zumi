@@ -19,6 +19,15 @@ const MAX_GRID_ENROLLMENT_ATTEMPTS = 5;
 const LUXE_LEAD_INTAKE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_LUXE_LEAD_INTAKE_ATTEMPTS = 12;
 
+export function loginClientIpAddress(request: Request) {
+  // Forwarding headers are controlled by the caller unless the deployment proves
+  // its edge strips and rewrites them. Keep email as the stable limiter dimension;
+  // add IP only when that proxy boundary is explicitly enabled.
+  if (process.env.KLINIKOS_TRUST_PROXY_HEADERS !== "true") return "unknown";
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwardedFor || request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
 export function checkLoginRateLimit(key: string) {
   const now = Date.now();
   const current = attempts.get(key);

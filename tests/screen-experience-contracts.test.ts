@@ -7,6 +7,7 @@ import {
 const requiredFamilies = [
   "public-discovery",
   "auth-signup",
+  "person-home",
   "grid-professional",
   "grid-organization",
   "edu-learner",
@@ -76,6 +77,26 @@ describe("Klinikos screen experience contracts", () => {
       const contract = KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS.find((item) => item.id === id);
       expect(["hipaa-gated", "minimum-necessary"]).toContain(contract?.aiProcessing.phiGate);
     }
+  });
+
+  it("keeps the person-level Living Home organization-free and non-authoritative", () => {
+    const personHome = KLINIKOS_SCREEN_EXPERIENCE_CONTRACTS.find(
+      (contract) => contract.id === "person-home",
+    );
+
+    expect(personHome?.contextRequirements).toEqual(expect.arrayContaining([
+      "authenticated-person-account",
+      "active-person-record",
+    ]));
+    expect(personHome?.authority).toEqual(expect.arrayContaining([
+      "authentication-proves-account-control-not-professional-organization-patient-or-clinical-authority",
+      "organization-context-requires-separate-active-membership-and-authorized-context-selection",
+    ]));
+    expect(personHome?.intentionallyHidden).toEqual(expect.arrayContaining([
+      "patient-records-without-separate-patient-or-proxy-authority",
+      "organization-internals-without-active-membership-and-purpose",
+    ]));
+    expect(personHome?.aiProcessing.phiGate).toBe("forbidden");
   });
 
   it("never lets Zumi promotion, inference or convenience manufacture authority", () => {

@@ -6,6 +6,8 @@ import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
+import { PublicLivingUniverseObjectStage } from "@/components/marketing/public-living-universe-stage";
 import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
 import {
   KLINIKOS_ECONOMIC_THESIS,
@@ -26,14 +28,90 @@ type ConversationTurn = {
   prompt: string;
   resolution: PublicLivingResolution;
   suggestions: PublicZumiSuggestion[];
+  /** The Object Stage this answer recomposes. Null when no Path applies. */
+  universe: PublicLivingUniverseProjection | null;
 };
 
 type PublicZumiApiResponse = {
   data?: {
     resolution?: unknown;
     suggestions?: unknown;
+    universe?: unknown;
   };
+  emergency?: unknown;
 };
+
+const PUBLIC_ZUMI_HISTORY_CONTENT_MAX_LENGTH = 600;
+
+export function boundedPublicZumiHistoryContent(value: string) {
+  return value.slice(0, PUBLIC_ZUMI_HISTORY_CONTENT_MAX_LENGTH);
+}
+
+/**
+ * A refusal or quota response is still allowed to carry the platform's approved
+ * emergency instruction. The instruction must survive a non-2xx status: otherwise a
+ * rate-limited visitor sees only a generic connectivity message at the precise moment
+ * the server tried to preserve the safety boundary.
+ */
+export function publicZumiEmergencyResolution(value: unknown): PublicLivingResolution | null {
+  if (!value || typeof value !== "object") return null;
+  const emergency = (value as PublicZumiApiResponse).emergency;
+  if (typeof emergency !== "string") return null;
+  const body = emergency.trim();
+  if (!body || body.length > 4_000) return null;
+  return {
+    kind: "conversation",
+    title: "This may be an emergency",
+    body,
+    assumption: null,
+    destination: null,
+    confidence: 1,
+  };
+}
+
+/**
+ * The projection is presentation only, but it still arrives over the wire, so it is
+ * shape-checked before it is rendered rather than trusted.
+ */
+const PUBLIC_PATH_AVAILABILITY = new Set([
+  "available_now",
+  "requires_setup",
+  "requires_verification",
+  "requires_organization_connection",
+  "defined",
+]);
+const PUBLIC_PATH_STEP_STATE = new Set(["complete", "current", "upcoming", "blocked"]);
+
+export function isUniverseProjection(value: unknown): value is PublicLivingUniverseProjection {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PublicLivingUniverseProjection>;
+  if (!(typeof candidate.id === "string"
+    && typeof candidate.label === "string"
+    && (candidate.side === "need" || candidate.side === "have")
+    && typeof candidate.pathId === "string"
+    && typeof candidate.title === "string"
+    && typeof candidate.summary === "string"
+    && typeof candidate.from === "string"
+    && typeof candidate.to === "string"
+    && typeof candidate.availability === "string"
+    && PUBLIC_PATH_AVAILABILITY.has(candidate.availability)
+    && typeof candidate.availabilityCopy === "string"
+    && typeof candidate.governance === "string"
+    && (candidate.commercialBoundary === null || typeof candidate.commercialBoundary === "string")
+    && typeof candidate.continuationHref === "string"
+    && Array.isArray(candidate.steps)
+    && candidate.steps.length > 0
+    && candidate.steps.length <= 20)) return false;
+
+  const continuation = candidate.continuationHref.match(/^\/member\?path=([a-z0-9-]+)$/);
+  if (!continuation || continuation[1] !== candidate.pathId) return false;
+
+  return candidate.steps.every((step) => Boolean(step)
+    && typeof step === "object"
+    && typeof step.label === "string"
+    && typeof step.description === "string"
+    && PUBLIC_PATH_STEP_STATE.has(step.state));
+}
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
 const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/start", "/access"]);
@@ -98,11 +176,29 @@ function ZumiSendGlyph({ active }: { active: boolean }) {
 }
 
 const navItems = [
-  { label: "Clinics", href: "/founding-clinic" },
-  { label: "Grid", href: "/grid" },
-  { label: "EDU", href: "/edu" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Trust", href: "/trust" },
+  { label: "How Klinikos helps", href: "/how-it-works" },
+] as const;
+
+/**
+ * What a person actually says when they arrive.
+ *
+ * Nobody lands here wanting "Grid" or "EDU" — they arrive with a sentence. Each of these
+ * is a real opener, and clicking one sends it through the same server-side public Zumi
+ * path a typed message takes. Nothing is resolved in the browser.
+ */
+const quickIntentActions = [
+  { id: "care", label: "I need care", prompt: "I need care" },
+  { id: "work", label: "I need work", prompt: "I need work" },
+  { id: "cover", label: "I need someone tomorrow", prompt: "I need someone tomorrow" },
+  { id: "client", label: "I have my own client", prompt: "I have my own client and need somewhere to treat them" },
+  { id: "room", label: "I need a room", prompt: "I need a room to treat a client" },
+  { id: "space", label: "I have space available", prompt: "I have space available at my clinic" },
+  { id: "learn", label: "I want to learn", prompt: "I want to learn a healthcare skill" },
+  { id: "placement", label: "I need a placement", prompt: "I need a clinical placement" },
+  { id: "students", label: "I can take students", prompt: "I can take students for clinical placement" },
+  { id: "practice", label: "Help me run my practice", prompt: "Help me run my practice" },
+  { id: "paid", label: "I need to get paid", prompt: "I need to get paid for work we already did" },
+  { id: "grow", label: "I want to grow my healthcare business", prompt: "I want to grow my healthcare business" },
 ] as const;
 
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
@@ -114,7 +210,7 @@ const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   confidence: 0,
 };
 
-export function PublicLivingGateway() {
+export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean }) {
   const [intent, setIntent] = useState("");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
@@ -151,8 +247,8 @@ export function PublicLivingGateway() {
     }
     const history = turns
       .flatMap((turn) => ([
-        { role: "user" as const, content: turn.prompt },
-        { role: "assistant" as const, content: `${turn.resolution.title}\n${turn.resolution.body}` },
+        { role: "user" as const, content: boundedPublicZumiHistoryContent(turn.prompt) },
+        { role: "assistant" as const, content: boundedPublicZumiHistoryContent(`${turn.resolution.title}\n${turn.resolution.body}`) },
       ]))
       .slice(-12);
     const id = nextTurnId.current;
@@ -170,6 +266,7 @@ export function PublicLivingGateway() {
     // means honest degraded guidance rather than an invented answer.
     let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
+    let universe: PublicLivingUniverseProjection | null = null;
 
     try {
       const response = await fetch("/api/zumi/public", {
@@ -187,13 +284,20 @@ export function PublicLivingGateway() {
         signal: controller.signal,
       });
 
-      if (response.ok) {
-        const payload = await response.json() as PublicZumiApiResponse;
-        if (isPublicLivingResolution(payload.data?.resolution)) {
-          resolution = payload.data.resolution;
+      const payload: unknown = await response.json().catch(() => null);
+      const emergencyResolution = publicZumiEmergencyResolution(payload);
+      if (emergencyResolution) {
+        resolution = emergencyResolution;
+      } else if (response.ok && payload && typeof payload === "object") {
+        const successPayload = payload as PublicZumiApiResponse;
+        if (isPublicLivingResolution(successPayload.data?.resolution)) {
+          resolution = successPayload.data.resolution;
         }
-        if (isPublicZumiSuggestions(payload.data?.suggestions)) {
-          suggestions = payload.data.suggestions;
+        if (isPublicZumiSuggestions(successPayload.data?.suggestions)) {
+          suggestions = successPayload.data.suggestions;
+        }
+        if (isUniverseProjection(successPayload.data?.universe)) {
+          universe = successPayload.data.universe;
         }
       }
     } catch (error) {
@@ -204,7 +308,7 @@ export function PublicLivingGateway() {
       if (activeRequest.current === controller) activeRequest.current = null;
     }
 
-    setTurns((current) => [...current, { id, prompt, resolution, suggestions }]);
+    setTurns((current) => [...current, { id, prompt, resolution, suggestions, universe }]);
     setPendingPrompt(null);
     setIsSubmitting(false);
   }
@@ -223,7 +327,7 @@ export function PublicLivingGateway() {
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
-      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title">
+      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title" data-living-universe-stage="true">
         <div className="rose-vignette pointer-events-none fixed inset-0 -z-10" />
         <div className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
 
@@ -253,9 +357,17 @@ export function PublicLivingGateway() {
                 <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
               ))}
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
+              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
             </nav>
           </details>
+
+          {/* Membership status sits beside sign-in. The server supplies the release
+              truth, so a disabled deployment never advertises account creation as an
+              executable action. */}
+          <Link className="ml-auto hidden min-h-11 items-center justify-center rounded-full bg-[#e6817b] px-5 text-[11px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] sm:inline-flex lg:ml-0" href="/signup">
+            {signupEnabled ? "Join free" : "Free membership status"}
+          </Link>
 
           <Link className="reference-auth ml-3 hidden min-h-11 items-center justify-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 px-5 text-[11px] font-semibold text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)] sm:inline-flex" href="/login">
             Sign in
@@ -299,8 +411,11 @@ export function PublicLivingGateway() {
               <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
                 {ZUMI_COMPOSER_PROMPT}
               </p>
+              <p className="mt-2 max-w-[560px] text-[15px] font-medium leading-7 text-[#f0dcd8]">
+                What do you need today?
+              </p>
               <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-[#c3aaa6]">
-                Describe something your clinic is dealing with and Zumi will help you find the next useful step.
+                Tell Klinikos what you need, what you have, or what you are trying to become. You do not have to know which part of Klinikos to open.
               </p>
 
               <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>
@@ -325,7 +440,23 @@ export function PublicLivingGateway() {
                 </p>
               </form>
 
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Common things people need">
+                {quickIntentActions.map((action) => (
+                  <button
+                    className="min-h-11 rounded-full border border-[#d0837d]/25 bg-[#1a0c0f]/70 px-4 text-[12.5px] font-medium text-[#e8cbc7] transition hover:border-[#efaaa1]/50 hover:bg-[#241014] hover:text-[#fff6f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                    disabled={isSubmitting}
+                    key={action.id}
+                    onClick={() => void sendPrompt(action.prompt)}
+                    type="button"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
+                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
+                <span aria-hidden="true">·</span>
                 <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
                 <span aria-hidden="true">·</span>
                 <Link className="hover:text-[#efaaa1]" href="/grid">Open Grid</Link>
@@ -363,12 +494,22 @@ export function PublicLivingGateway() {
                           </Link>
                         )}
 
+                        {/* Zumi recomposes the Object Stage in place. The visitor never
+                            scrolls to a second application to see where their own words
+                            lead — this is the same stage the front door shows, driven by
+                            what they just said. */}
+                        {turn.universe && (
+                          <div className="mt-6">
+                            <PublicLivingUniverseObjectStage item={turn.universe} signupEnabled={signupEnabled} />
+                          </div>
+                        )}
+
                         {showSuggestions && (
                           <div className="mt-5 flex flex-wrap gap-2" aria-label="Suggested replies">
                             {turn.suggestions.map((suggestion) => (
                               <button
                                 aria-label={`Reply: ${suggestion.label}`}
-                                className="min-h-10 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
+                                className="min-h-11 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
                                 disabled={isSubmitting}
                                 key={suggestion.id}
                                 onClick={() => void sendPrompt(suggestion.prompt)}

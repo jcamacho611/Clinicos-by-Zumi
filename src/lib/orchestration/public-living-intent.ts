@@ -21,6 +21,7 @@ export type PublicLivingDestination = {
     | "billing"
     | "insights"
     | "care"
+    | "procurement"
     /* Public-only destinations. `explore` covers the product-explanation routes a
        visitor asks for by name; `signin` is where a request for real clinic data has to
        go, because this page has none. */
@@ -48,6 +49,16 @@ type PublicRule = {
 };
 
 const publicRules: readonly PublicRule[] = [
+  {
+    destination: { key: "procurement", href: "/dashboard", action: "Continue privately" },
+    patterns: [
+      /\b(?:rfp|rfq|rfi|request for (?:proposal|quotation|information))\b/i,
+      /\b(?:procurement|solicitation|bid response|proposal response|compliance matrix)\b/i,
+    ],
+    title: "Let’s organize the opportunity against evidence.",
+    body: "Klinikos can map source requirements to verified evidence, governed pricing, accountable review, and a human-authorized submission path.",
+    assumption: "You want to prepare or assess a procurement response using private source documents and governed company evidence.",
+  },
   {
     destination: { key: "priorities", href: "/tasks", action: "Show today’s priorities" },
     patterns: [
@@ -96,7 +107,7 @@ const publicRules: readonly PublicRule[] = [
     destination: { key: "staffing", href: "/grid", action: "Find coverage in Grid" },
     patterns: [
       /\b(?:hire|hiring|staff|staffing|coverage)\b/i,
-      /\b(?:need|find)\s+(?:an?\s+)?(?:nurse|injector|provider|assistant|receptionist)\b/i,
+      /\b(?:need|find)\s+(?:an?\s+)?(?:rn|lpn|np|pa|nurse|injector|provider|medical\s+assistant|assistant|therapist|receptionist)\b/i,
       /\b(?:open|unfilled)\s+(?:role|shift|position)\b/i,
     ],
     title: "Let’s find the coverage you need.",
@@ -175,6 +186,7 @@ const publicRules: readonly PublicRule[] = [
 
 const pathDestinationKeys: Record<string, PublicLivingDestination["key"]> = {
   "find-extra-work": "grid",
+  "find-healthcare-resource": "grid",
   "become-grid-ready": "edu",
   "student-clinical-placement": "edu",
   "clinician-independent-practice": "clinic",
@@ -192,6 +204,7 @@ const pathDestinationKeys: Record<string, PublicLivingDestination["key"]> = {
   "grid-higher-value-opportunity": "grid",
   "patient-find-care": "patient",
   "launch-another-organization": "clinic",
+  "prepare-procurement-response": "procurement",
 };
 
 const destinationLabels: Record<PublicLivingDestination["key"], string> = {
@@ -206,6 +219,7 @@ const destinationLabels: Record<PublicLivingDestination["key"], string> = {
   billing: "billing",
   insights: "operational insights",
   care: "care",
+  procurement: "procurement readiness",
   explore: "the product overview",
   signin: "signing in",
 };
@@ -302,6 +316,22 @@ export function resolvePublicLivingIntent(
     };
   }
 
+  // Procurement terms are evaluated before the general Path intent engine because
+  // words such as "workforce" and "response" can otherwise collapse an RFP into Grid
+  // staffing. This selects a protected, defined Company OS Path; it does not claim a
+  // submission, award, integration, contract, or production-ready procurement engine.
+  const procurementRule = ruleForKey("procurement");
+  if (procurementRule && matchScore(prompt, procurementRule) > 0) {
+    return {
+      kind: "route",
+      title: procurementRule.title,
+      body: procurementRule.body,
+      assumption: procurementRule.assumption,
+      destination: procurementRule.destination,
+      confidence: 0.82,
+    };
+  }
+
   const established = resolveIntentDeterministically(prompt);
   const establishedKey = established.candidatePathIds[0]
     ? pathDestinationKeys[established.candidatePathIds[0]]
@@ -348,14 +378,23 @@ export function resolvePublicLivingIntent(
     };
   }
 
-  const stickyPrior = priorResolution?.destination
-    && priorResolution.destination.key !== "signin"
-    && priorResolution.destination.key !== "explore"
-    ? priorResolution
+  // A carried-over destination is rebuilt from this module's own rules, never echoed.
+  //
+  // The gateway sends its previous resolution back so a short follow-up ("Saturday")
+  // can be read against the earlier goal. Only the `key` is taken from that echo — the
+  // href, the action text, and anything else the browser attached are discarded and
+  // replaced with the server's own values for that key. An unrecognised key does not
+  // stick at all, rather than carrying a browser-supplied link forward under a label
+  // the server never chose.
+  const priorKey = priorResolution?.destination?.key;
+  const stickyRule = priorKey
+    && priorKey !== "signin"
+    && priorKey !== "explore"
+    ? ruleForKey(priorKey as PublicLivingDestination["key"])
     : null;
 
-  if (stickyPrior?.destination) {
-    const destination = stickyPrior.destination;
+  if (stickyRule && priorResolution) {
+    const destination = stickyRule.destination;
     const label = destinationLabels[destination.key];
     return {
       kind: "conversation",
@@ -363,7 +402,7 @@ export function resolvePublicLivingIntent(
       body: `I’ll keep that with your ${label} request. What else should I know?`,
       assumption: `Your latest message refines the previous ${label} request rather than starting an unrelated goal.`,
       destination,
-      confidence: Math.max(0.52, stickyPrior.confidence * 0.9),
+      confidence: Math.max(0.52, priorResolution.confidence * 0.9),
     };
   }
 

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { KLINIKOS_META } from "@/lib/brand/canonical-messaging";
 import { PublicLivingGateway } from "@/components/marketing/public-living-gateway";
-import { EcosystemHierarchy } from "@/components/marketing/ecosystem-hierarchy";
-import { ProductEvidenceSection } from "@/components/marketing/product-evidence-section";
 import { PublicTrustFooter } from "@/components/marketing/public-trust-footer";
+import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
 
 export const metadata: Metadata = {
   title: KLINIKOS_META.title,
@@ -35,15 +34,15 @@ const structuredData = {
 };
 
 export default function LandingPage() {
+  const memberSignup = getMemberSignupReleaseState();
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
-      <PublicLivingGateway />
-      <ProductEvidenceSection />
-      <EcosystemHierarchy />
+      <PublicLivingGateway signupEnabled={memberSignup.enabled} />
       <PublicTrustFooter />
     </>
   );

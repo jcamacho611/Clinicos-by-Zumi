@@ -255,6 +255,7 @@ const edges: EcosystemEdge[] = [
 
 const routeBindings: RouteGraphBinding[] = [
   { routeId: "find-extra-work", nodeIds: ["healthcare.professional", "resource.work", "lifecycle.eligibility", "infra.grid"] },
+  { routeId: "find-healthcare-resource", nodeIds: ["healthcare.person", "resource.space", "resource.equipment", "resource.professional_service", "lifecycle.eligibility", "infra.grid"] },
   { routeId: "become-grid-ready", nodeIds: ["healthcare.learner", "infra.edu", "healthcare.professional", "lifecycle.eligibility", "infra.grid"] },
   { routeId: "student-clinical-placement", nodeIds: ["healthcare.learner", "resource.placement_capacity", "lifecycle.placement", "infra.edu", "infra.grid"] },
   { routeId: "clinician-independent-practice", nodeIds: ["healthcare.professional", "healthcare.clinic", "infra.clinic_os", "business.customer"] },
@@ -271,6 +272,7 @@ const routeBindings: RouteGraphBinding[] = [
   { routeId: "educator-preceptor-opportunity", nodeIds: ["healthcare.professional", "resource.placement_capacity", "lifecycle.eligibility", "infra.edu", "infra.grid"] },
   { routeId: "grid-higher-value-opportunity", nodeIds: ["healthcare.professional", "resource.work", "lifecycle.reputation", "lifecycle.eligibility", "infra.grid"] },
   { routeId: "patient-find-care", nodeIds: ["healthcare.patient", "resource.care_capacity", "lifecycle.appointment", "infra.grid"] },
+  { routeId: "prepare-procurement-response", nodeIds: ["healthcare.organization", "lifecycle.claim_evidence", "lifecycle.offer", "lifecycle.agreement", "infra.identity_trust", "business.customer"] },
   { routeId: "launch-another-organization", nodeIds: ["healthcare.person", "healthcare.organization", "infra.identity_trust", "infra.clinic_os"] },
 ];
 
