@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import {
+  KlinikosAtmosphereController,
+  KlinikosAtmosphereRouteSync,
+} from "@/components/design/klinikos-atmosphere";
 import { PublicZumiSiteControl } from "@/components/marketing/public-zumi-site-control";
 import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-presentation";
 
@@ -17,27 +20,28 @@ function RouteScopedPublicUtilityDock({ pathname }: { pathname: string }) {
   const hasVisibleUtility = presentation?.zumiMode === "floating-public"
     || presentation?.appearanceMode === "adaptive";
 
-  if (!presentation.utilityDockVisible) return null;
-
   return (
-    <div
-      className={hasVisibleUtility
-        ? "fixed bottom-[max(.75rem,env(safe-area-inset-bottom))] right-3 z-[80] flex items-center gap-2 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-6"
-        : "contents"}
-      data-public-utility-dock={hasVisibleUtility ? "true" : undefined}
-    >
-      {presentation.publicZumiVisible ? (
-        <PublicZumiSiteControl
-          onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
-          open={activePanel === "zumi"}
-        />
+    <>
+      <KlinikosAtmosphereRouteSync pathname={pathname} />
+      {hasVisibleUtility ? (
+        <div
+          className="fixed bottom-[max(.75rem,env(safe-area-inset-bottom))] right-3 z-[80] flex items-center gap-2 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-6"
+          data-public-utility-dock="true"
+        >
+          {presentation?.zumiMode === "floating-public" ? (
+            <PublicZumiSiteControl
+              onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
+              open={activePanel === "zumi"}
+            />
+          ) : null}
+          {presentation?.appearanceMode === "adaptive" ? (
+            <KlinikosAtmosphereController
+              onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
+              open={activePanel === "appearance"}
+            />
+          ) : null}
+        </div>
       ) : null}
-      {presentation.appearanceControllerVisible ? (
-        <KlinikosAtmosphereController
-          onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
-          open={activePanel === "appearance"}
-        />
-      ) : null}
-    </div>
+    </>
   );
 }

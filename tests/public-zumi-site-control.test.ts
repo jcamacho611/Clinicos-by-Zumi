@@ -26,6 +26,10 @@ describe("public Zumi site control", () => {
     }
     expect(control).toContain('presentation?.zumiMode === "floating-public"');
     expect(utilityDock).toContain('presentation?.zumiMode === "floating-public"');
+    expect(utilityDock).toContain('presentation?.appearanceMode === "adaptive"');
+    expect(utilityDock).not.toContain("utilityDockVisible");
+    expect(utilityDock).not.toContain("publicZumiVisible");
+    expect(utilityDock).not.toContain("appearanceControllerVisible");
     expect(resolve?.("/")?.zumiMode).toBe("embedded-command");
     expect(resolve?.("/login") ?? null).toBeNull();
     expect(resolve?.("/portal") ?? null).toBeNull();

@@ -42,6 +42,37 @@ const options: Array<{
   { value: "dark", label: "Dark", description: "Klinikos Obsidian for the cinematic operating environment", icon: Moon },
 ];
 
+/**
+ * Keeps the document material aligned with the mounted route during client-side
+ * navigation, including fixed/reference routes that intentionally have no
+ * appearance control. This changes presentation only; authority is untouched.
+ */
+export function KlinikosAtmosphereRouteSync({ pathname }: { pathname: string }) {
+  useEffect(() => {
+    const media = window.matchMedia(SYSTEM_QUERY);
+    const refresh = () => {
+      const stored = window.localStorage.getItem(KLINIKOS_ATMOSPHERE_STORAGE_KEY);
+      const preference = normalizeAppearancePreference(stored);
+      if (stored !== preference) {
+        window.localStorage.setItem(KLINIKOS_ATMOSPHERE_STORAGE_KEY, preference);
+      }
+      applyAtmosphere(preference, pathname);
+    };
+
+    refresh();
+    media.addEventListener("change", refresh);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      media.removeEventListener("change", refresh);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [pathname]);
+
+  return null;
+}
+
 export function KlinikosAtmosphereController({
   onOpenChange,
   open: controlledOpen,
