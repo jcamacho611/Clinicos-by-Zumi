@@ -49,7 +49,7 @@ describe("Klinikos Black Label V2 Claude Design handoff", () => {
     ]) expect(handoff).toContain(asset);
 
     expect(brand).toContain('/klinikos-orbital-k-production.png');
-    expect(brand).toContain('/klinikos-wordmark-production.png');
+    expect(brand).toContain('/klinikos-wordmark-transparent.png');
     expect(rose).toContain('/klinikos-rose-hero-production.png');
     expect(rose).toContain('/klinikos-rose-wide-production.png');
   });

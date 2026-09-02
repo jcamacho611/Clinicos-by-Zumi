@@ -18,6 +18,10 @@
  */
 
 import { execFileSync } from "node:child_process";
+import {
+  classifyProductionRelease,
+  productionReleaseParityStates,
+} from "./production-release-parity.mjs";
 
 const DEFAULT_BASE = "https://www.klinikos.io";
 const TIMEOUT_MS = 20_000;
@@ -38,7 +42,6 @@ const PUBLIC_ROUTES = ["/", "/pricing", "/trust", "/sales", "/grid", "/edu", "/l
 const PRIVATE_ROUTES = ["/dashboard", "/patients", "/billing", "/settings", "/quality", "/insights"];
 
 const failures = [];
-const notes = [];
 
 function log(kind, message) {
   process.stdout.write(`${{ ok: "✓", fail: "✗", info: " ", run: "→" }[kind] ?? " "} ${message}\n`);
@@ -103,14 +106,19 @@ async function main() {
         failures.push("production cannot name the commit it is running");
       } else {
         const history = localCommits();
-        const index = history.indexOf(commit);
-        if (history.length === 0) {
-          notes.push("could not read local git history; deployed commit not compared to main");
-        } else if (index === -1) {
+        const parity = classifyProductionRelease(history, commit);
+        if (parity.state === productionReleaseParityStates.historyUnavailable) {
+          failures.push("could not read origin/main history; exact production parity is unproven");
+        } else if (parity.state === productionReleaseParityStates.notOnMain) {
           failures.push(`deployed commit ${commit.slice(0, 12)} is not on origin/main`);
+        } else if (parity.state === productionReleaseParityStates.behindMain) {
+          const index = parity.commitsBehind;
+          failures.push(
+            `production is ${index} commit(s) behind origin/main; production must match origin/main exactly`,
+          );
+          log("fail", `serving stale release ${commit.slice(0, 12)} (${index} commit(s) behind origin/main)`);
         } else {
-          log("ok", `serving ${commit.slice(0, 12)} (${index} commit${index === 1 ? "" : "s"} behind origin/main)`);
-          if (index > 0) notes.push(`production is ${index} commit(s) behind origin/main`);
+          log("ok", `serving exact current main ${commit.slice(0, 12)}`);
         }
       }
 
@@ -150,12 +158,23 @@ async function main() {
       'data-public-plane-lens="true"',
       'data-public-inspector="true"',
       'data-public-action-dock="true"',
+      'data-public-intent-constellation="true"',
       "What do you need today?",
-      "I need something",
-      "I have something",
     ];
     for (const marker of requiredExperience) {
       if (!rootDocument.includes(marker)) failures.push(`root HTML is missing Living Universe marker: ${marker}`);
+    }
+
+    const publicActionIds = new Set(
+      Array.from(rootDocument.matchAll(/\bdata-public-action-id=["']([a-z0-9-]+)["']/gi), (match) => match[1]),
+    );
+    if (publicActionIds.size < 12) {
+      failures.push(`root HTML exposes only ${publicActionIds.size} distinct public intent action(s); expected at least 12`);
+    }
+    for (const side of ["need", "have"]) {
+      if (!rootDocument.includes(`data-public-action-side="${side}"`)) {
+        failures.push(`root HTML is missing the ${side} public intent side`);
+      }
     }
 
     for (const retired of ["One system, three extensions", "What it actually does"]) {
@@ -188,8 +207,6 @@ async function main() {
   if (!failures.some((failure) => PRIVATE_ROUTES.some((route) => failure.startsWith(route)))) {
     log("ok", `${PRIVATE_ROUTES.length} private routes refuse anonymous access`);
   }
-
-  for (const note of notes) log("info", note);
 
   if (failures.length) {
     log("fail", `production verification failed — ${failures.length} problem(s)`);
