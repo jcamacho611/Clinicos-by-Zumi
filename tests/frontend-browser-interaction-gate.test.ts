@@ -31,6 +31,8 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("window.innerWidth");
     expect(browserGate).toContain("window.visualViewport?.width");
     expect(browserGate).toContain("matchMedia('(max-width: 768px)')");
+    expect(browserGate).toContain('command("Page.getLayoutMetrics")');
+    expect(browserGate).toContain("cssVisualViewport?.zoom");
     expect(browserGate).toContain("browser-zoom-200.json");
     expect(browserGate).not.toContain("Emulation.setPageScaleFactor");
   });

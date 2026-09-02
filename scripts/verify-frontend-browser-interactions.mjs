@@ -202,6 +202,7 @@ try {
 
   if (isZoomEvidenceRun) {
     await navigate();
+    const layoutMetrics = await command("Page.getLayoutMetrics");
     const zoomState = await evaluate(`(() => {
       const composer = document.querySelector('[data-public-action-dock="true"]')?.getBoundingClientRect();
       const controls = document.querySelector('nav[aria-label="Living Universe mobile controls"]')?.getBoundingClientRect();
@@ -222,6 +223,8 @@ try {
         controlRect: controls ? { top: controls.top, right: controls.right, bottom: controls.bottom, left: controls.left } : null,
       };
     })()`);
+    zoomState.cssLayoutViewportWidth = layoutMetrics.cssLayoutViewport?.clientWidth ?? null;
+    zoomState.cssVisualViewportZoom = layoutMetrics.cssVisualViewport?.zoom ?? null;
     const expectedCssWidth = 1402 / (requestedZoomPercent / 100);
     const widthTolerance = 24;
     if (Math.abs(zoomState.innerWidth - expectedCssWidth) > widthTolerance) {
@@ -231,6 +234,11 @@ try {
     }
     if (Math.abs(zoomState.visualViewportWidth - zoomState.innerWidth) > 1) {
       throw new Error("Browser page zoom produced an inconsistent visual viewport width.");
+    }
+    if (Math.abs(zoomState.cssVisualViewportZoom - (requestedZoomPercent / 100)) > 0.01) {
+      throw new Error(
+        `Chrome layout metrics did not attest ${requestedZoomPercent}% page zoom: ${JSON.stringify(zoomState)}.`,
+      );
     }
     if (!zoomState.responsiveMax768 || !zoomState.mobileControlsVisible || !zoomState.desktopControlsHidden) {
       throw new Error(
