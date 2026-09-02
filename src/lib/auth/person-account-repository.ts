@@ -7,15 +7,17 @@ import { db } from "@/lib/db";
 import { ACCOUNT_SESSION_TTL_SECONDS } from "@/lib/auth/account-session-config";
 import type { PersonAccountSession } from "@/lib/auth/account-types";
 import type { PersonAccountSignupInput } from "@/lib/auth/person-account-signup";
+import type { MemberSignupAcceptanceEvidence } from "@/lib/legal/member-signup-acceptance";
+import { recordMemberSignupLegalEvidence } from "@/lib/legal/member-signup-legal-evidence";
 
 /**
  * Free entry, written against the canonical identity substrate.
  *
  * Person is the lifelong identity; Account proves authentication and nothing else.
- * Both are created in ONE transaction together with the credential, the first session
- * and the audit event, so a partial failure can never leave a Person with no way to
- * sign in, or an Account with no Person behind it. That fragmentation is exactly the
- * defect the identity audit found in the older creation paths.
+ * Both are created in ONE transaction together with the credential, the first session,
+ * the baseline legal evidence and the audit event, so a partial failure can never leave
+ * a Person with no way to sign in, an Account with no Person behind it, or an Account
+ * whose required baseline acceptance evidence failed to persist.
  *
  * This grants no organization membership, no professional or clinical authority, no
  * Grid eligibility and no patient access. Those are separate decisions with separate
@@ -42,6 +44,7 @@ const LOCK_MINUTES = 15;
 export async function createFreePersonAccount(
   input: PersonAccountSignupInput,
   context: { ipAddress?: string; userAgent?: string } = {},
+  legalAcceptance: MemberSignupAcceptanceEvidence,
 ): Promise<CreatedPersonAccount> {
   // Cost 12 matches the existing credential store; the hash is computed outside the
   // transaction so a slow KDF never holds a database transaction open.
@@ -91,6 +94,16 @@ export async function createFreePersonAccount(
         select: { id: true },
       });
 
+      await recordMemberSignupLegalEvidence(tx, {
+        accountId: account.id,
+        personId: person.id,
+        email: input.email,
+        sessionId,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+        legalAcceptance,
+      });
+
       await tx.accountEvent.create({
         data: {
           accountId: account.id,
@@ -98,7 +111,7 @@ export async function createFreePersonAccount(
           sourceType: "free_entry",
           // No password, no token, no request body — an audit trail records that this
           // happened, never the secret that made it possible.
-          metadata: { hasSession: true },
+          metadata: { hasSession: true, baselineLegalEvidenceRecorded: true },
         },
       });
 
