@@ -30,12 +30,13 @@ describe("public Grid surfaces", () => {
     expect(read(file)).toContain("grid-marble-surface");
   });
 
-  it("declares the shared marketplace page shell a light surface", () => {
-    // /grid/browse and the listing detail page both render through this token.
-    expect(read("src/lib/design/marketplace-system.ts")).toContain("grid-marble-surface");
+  it("lets Grid browse follow the shared appearance instead of forcing Marble", () => {
+    const source = read("src/lib/design/marketplace-system.ts");
+    expect(source).not.toMatch(/browsePage:\s*"[^"]*grid-marble-surface/);
+    expect(source).toContain('browsePage: "min-h-screen bg-[var(--k-work-bg)] text-[var(--k-text)]"');
   });
 
-  it.each([...LIGHT_SURFACES, "src/lib/design/marketplace-system.ts"])(
+  it.each(LIGHT_SURFACES)(
     "does not pair %s with a background utility the dark layer will fight over",
     (file) => {
       // `bg-[#f7f8fa]` and `bg-[#f7f3ef]` are both in the conversion layer's darken

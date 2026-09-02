@@ -43,7 +43,8 @@ describe("Klinikos Black Label appearance system", () => {
     expect(appearance).toContain("prefersDark");
     expect(appearance).toContain("referenceLocked");
     expect(appearance).toContain('location.pathname === "/"');
-    expect(controller).toContain('const referenceLocked = pathname === "/"');
+    expect(controller).toContain("appearancePolicyForPath(pathname)");
+    expect(controller).toContain("appearancePolicy.referenceLocked");
     expect(livingHome).toContain("styles.shell");
     expect(livingHomeMaterials).toContain("--lu-obsidian: #080506");
     expect(livingHomeMaterials).toContain("var(--lu-obsidian)");

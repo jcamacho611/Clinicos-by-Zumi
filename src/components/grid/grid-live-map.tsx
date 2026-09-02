@@ -91,7 +91,7 @@ export function GridLiveMap({ locations, providers, resources }: { locations: Ma
   const accent = "text-[var(--k-accent)]";
 
   return (
-    <section className="grid-marble-surface border-y border-[var(--k-line)] bg-[var(--k-work-bg)]">
+    <section className="border-y border-[var(--k-line)] bg-[var(--k-work-bg)]">
       <div className="mx-auto max-w-[1500px] px-5 py-12 sm:px-8 lg:py-16">
         <div className="mb-8 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-4xl">
