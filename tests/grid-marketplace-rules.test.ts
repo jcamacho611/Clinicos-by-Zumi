@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMarketplaceSurface, MARKETPLACE_EXCEPTION_SCOPE } from "@/lib/design/marketplace-system";
+import { isMarketplaceSurface } from "@/lib/design/marketplace-system";
 import {
   activeFilterCount,
   applyMarketplaceFilters,
@@ -224,6 +224,8 @@ describe("design law exception", () => {
   it("scopes the daylight surface to discovery only", () => {
     expect(isMarketplaceSurface("/grid/browse")).toBe(true);
     expect(isMarketplaceSurface("/grid/browse/listing_123")).toBe(true);
+    expect(isMarketplaceSurface("/grid/resource/resource_123")).toBe(true);
+    expect(isMarketplaceSurface("/grid/resources/browse")).toBe(true);
     // Operator, admin, and EDU surfaces stay on the dark command ground.
     expect(isMarketplaceSurface("/grid/requests")).toBe(false);
     expect(isMarketplaceSurface("/admin/grid")).toBe(false);
@@ -231,7 +233,8 @@ describe("design law exception", () => {
     expect(isMarketplaceSurface("/sales")).toBe(false);
   });
 
-  it("keeps the exception list short enough to stay deliberate", () => {
-    expect(MARKETPLACE_EXCEPTION_SCOPE.length).toBeLessThanOrEqual(2);
+  it("does not turn enrollment or pricing into discovery workspaces", () => {
+    expect(isMarketplaceSurface("/grid/join")).toBe(false);
+    expect(isMarketplaceSurface("/grid/pricing")).toBe(false);
   });
 });

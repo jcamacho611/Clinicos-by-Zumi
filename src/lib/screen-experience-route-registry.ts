@@ -3,6 +3,22 @@ import {
   type ScreenExperienceContract,
 } from "@/lib/screen-experience-contracts";
 
+export {
+  isPublicDirectDestination,
+  PUBLIC_PRIMARY_NAVIGATION,
+  PUBLIC_ROUTE_PRESENTATION_POLICIES,
+  publicAppearanceBootstrapRules,
+  publicSitemapEntries,
+  resolvePublicRoutePresentation,
+} from "@/lib/screen-experience-route-presentation";
+export type {
+  PublicAppearanceMode,
+  PublicChromeMode,
+  PublicProjection,
+  PublicRoutePresentation,
+  PublicZumiMode,
+} from "@/lib/screen-experience-route-presentation";
+
 export type ScreenSourceBinding = {
   id: string;
   sourcePattern: RegExp;

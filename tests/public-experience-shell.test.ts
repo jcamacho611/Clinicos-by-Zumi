@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { atmosphereForAppearance, appearancePolicyForPath } from "@/lib/design/atmosphere";
+import { PUBLIC_PRIMARY_NAVIGATION } from "@/lib/screen-experience-route-presentation";
 
 const read = (relative: string) => readFileSync(join(process.cwd(), relative), "utf8");
 
@@ -35,11 +36,12 @@ describe("one public Klinikos shell", () => {
   it("uses the approved wordmark and one canonical desktop/mobile navigation model", () => {
     expect(header).toContain("<KlinikosWordmark");
     expect(header).not.toContain("<BrandMark");
+    expect(header).toContain("PUBLIC_PRIMARY_NAVIGATION.map");
     expect(header).toContain('aria-label="Primary Klinikos navigation"');
     expect(header).toContain('aria-label="Open Klinikos navigation"');
     expect(header).toContain('aria-label="Mobile Klinikos navigation"');
     for (const destination of ["/how-it-works", "/grid", "/grid/browse?intent=provider", "/edu", "/founding-clinic"]) {
-      expect(header).toContain(`href: "${destination}"`);
+      expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.href)).toContain(destination);
     }
   });
 
@@ -60,7 +62,9 @@ describe("coordinated public utilities", () => {
     expect(layout).not.toContain("<PublicZumiSiteControl />");
     expect(layout).not.toContain("<KlinikosAtmosphereController />");
     expect(dock).toContain('useState<"zumi" | "appearance" | null>');
+    expect(dock).toContain("{hasVisibleUtility ? (");
     expect(dock).toContain('data-public-utility-dock="true"');
+    expect(dock).toContain("resolvePublicRoutePresentation(pathname)");
     expect(dock).toContain('open={activePanel === "zumi"}');
     expect(dock).toContain('open={activePanel === "appearance"}');
     expect(zumi).not.toContain("fixed bottom-4 right-4");

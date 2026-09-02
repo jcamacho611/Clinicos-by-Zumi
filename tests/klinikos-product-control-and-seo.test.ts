@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { publicSitemapEntries } from "@/lib/screen-experience-route-presentation";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -88,20 +89,22 @@ describe("public comprehension and SEO law", () => {
   });
 
   it("keeps the sitemap focused on useful public acquisition paths", () => {
+    const publicPaths = publicSitemapEntries.map((entry) => entry.path);
     for (const publicPath of [
-      'path: "/"',
-      'path: "/how-it-works"',
-      'path: "/pricing"',
-      'path: "/trust"',
-      'path: "/founding-clinic"',
-      'path: "/operational-audit"',
-      'path: "/grid"',
-      'path: "/edu"',
-    ]) expect(sitemap).toContain(publicPath);
+      "/",
+      "/how-it-works",
+      "/pricing",
+      "/trust",
+      "/founding-clinic",
+      "/operational-audit",
+      "/grid",
+      "/edu",
+    ]) expect(publicPaths).toContain(publicPath);
 
-    expect(sitemap).not.toContain('path: "/dashboard"');
-    expect(sitemap).not.toContain('path: "/patients"');
-    expect(sitemap).not.toContain('path: "/zumi"');
+    expect(sitemap).toContain("publicSitemapEntries");
+    expect(publicPaths).not.toContain("/dashboard");
+    expect(publicPaths).not.toContain("/patients");
+    expect(publicPaths).not.toContain("/zumi");
   });
 
   it("publishes truthful structured data without fabricated social proof", () => {
