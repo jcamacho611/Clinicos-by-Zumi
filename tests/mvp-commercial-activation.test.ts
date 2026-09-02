@@ -22,11 +22,18 @@ function publicPageFiles(root = path.join(process.cwd(), "src", "app")): string[
 }
 
 describe("Klinikos MVP commercial activation", () => {
-  it("keeps public clinic plan prices server-owned and aligned with approved pricing", () => {
+  it("keeps clinic plan prices server-owned while reviewed subscriptions stay gated", () => {
     expect(getCommercialProduct("clinic_core")?.priceCents).toBe(clinicPlans.core.monthlyPriceCents);
     expect(getCommercialProduct("clinic_growth")?.priceCents).toBe(clinicPlans.growth.monthlyPriceCents);
     expect(getCommercialProduct("clinic_scale")?.priceCents).toBe(clinicPlans.scale.monthlyPriceCents);
-    expect(getCommercialProduct("clinic_core")?.publicPurchasable).toBe(true);
+
+    for (const key of ["clinic_core", "clinic_growth", "clinic_scale"] as const) {
+      expect(getCommercialProduct(key)).toMatchObject({
+        commercialRoute: "recurring_reviewed",
+        qualificationRequired: true,
+        publicPurchasable: false,
+      });
+    }
     expect(getCommercialProduct("clinic_operator")?.publicPurchasable).toBe(false);
   });
 
