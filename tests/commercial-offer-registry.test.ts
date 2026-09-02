@@ -29,6 +29,8 @@ describe("buyer-aware commercial offer registry", () => {
       priceCents: 50_000,
       qualificationRequired: false,
       conversionDestination: "/sales",
+      publicPurchasable: true,
+      directPublicCheckoutEligible: true,
     });
   });
 
@@ -42,6 +44,8 @@ describe("buyer-aware commercial offer registry", () => {
       priceCents: 150_000,
       qualificationRequired: true,
       conversionDestination: "/founding-clinic",
+      publicPurchasable: true,
+      directPublicCheckoutEligible: false,
     });
   });
 
@@ -54,6 +58,8 @@ describe("buyer-aware commercial offer registry", () => {
       priceType: "starting_at",
       qualificationRequired: true,
       conversionDestination: "/founding-clinic",
+      publicPurchasable: true,
+      directPublicCheckoutEligible: false,
     });
     expect(offer?.priceCents).toBeNull();
   });
@@ -68,6 +74,8 @@ describe("buyer-aware commercial offer registry", () => {
         priceType: "fixed",
         qualificationRequired: true,
         conversionDestination: "/founding-clinic",
+        publicPurchasable: true,
+        directPublicCheckoutEligible: false,
       });
       expect(offer?.priceCents).toBeGreaterThan(0);
     }
@@ -83,19 +91,21 @@ describe("buyer-aware commercial offer registry", () => {
       qualificationRequired: true,
       conversionDestination: "/founding-clinic",
       publicPurchasable: false,
+      directPublicCheckoutEligible: false,
     });
   });
 
   it("keeps legacy payment aliases as evidence-only offers", () => {
     for (const offer of commercialProducts.filter((candidate) => candidate.lifecycle === "legacy_evidence_only")) {
       expect(offer.publicPurchasable).toBe(false);
+      expect(offer.directPublicCheckoutEligible).toBe(false);
       expect(offer.commercialRoute).toBe("historical_evidence_only");
       expect(offer.conversionDestination).toBeNull();
     }
   });
 
-  it("keeps publicPurchasable aligned with direct public checkout semantics", () => {
-    expect(getCommercialProduct("operational_audit")?.publicPurchasable).toBe(true);
+  it("keeps direct public checkout eligibility stricter than general sellability", () => {
+    expect(getCommercialProduct("operational_audit")?.directPublicCheckoutEligible).toBe(true);
 
     for (const key of [
       "implementation_blueprint",
@@ -105,11 +115,12 @@ describe("buyer-aware commercial offer registry", () => {
       "clinic_scale",
       "clinic_enterprise",
     ]) {
-      expect(getCommercialProduct(key)?.publicPurchasable, `${key} must remain governed before payment`).toBe(false);
+      expect(getCommercialProduct(key)?.directPublicCheckoutEligible, `${key} must remain governed before direct checkout`).toBe(false);
     }
 
-    for (const offer of commercialProducts.filter((candidate) => candidate.publicPurchasable)) {
+    for (const offer of commercialProducts.filter((candidate) => candidate.directPublicCheckoutEligible)) {
       expect(offer.lifecycle).toBe("active");
+      expect(offer.publicPurchasable).toBe(true);
       expect(offer.commercialRoute).toBe("self_serve");
       expect(offer.priceType).toBe("fixed");
       expect(offer.qualificationRequired).toBe(false);

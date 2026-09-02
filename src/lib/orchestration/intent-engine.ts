@@ -17,9 +17,23 @@ const structuredIntentSchema = z.object({
 
 const rules = [
   {
+    pathId: "find-healthcare-resource",
+    actor: "unknown" as const,
+    phrases: [
+      "treatment room",
+      "healthcare equipment",
+      "space for a client",
+      "clinical capacity",
+      "need healthcare space",
+      "find available space",
+      "somewhere to treat",
+    ],
+    outcome: "Discover real healthcare space, equipment, or capacity, then apply the relevant eligibility and reservation rules.",
+  },
+  {
     pathId: "find-extra-work",
     actor: "professional" as const,
-    phrases: ["extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday", "healthcare work"],
+    phrases: ["need work", "want work", "looking for work", "extra work", "pick up shifts", "pick up a shift", "work friday", "weekend work", "available friday", "available saturday", "healthcare work"],
     outcome: "Find eligible healthcare work that fits professional readiness and availability.",
   },
   {
@@ -43,13 +57,13 @@ const rules = [
   {
     pathId: "provider-to-clinic-owner",
     actor: "professional" as const,
-    phrases: ["own a clinic", "clinic owner", "start a healthcare business", "start my own practice"],
+    phrases: ["own a clinic", "clinic owner", "start a healthcare business", "start my own practice", "grow my healthcare business"],
     outcome: "Move from provider practice into a governed clinic ownership and operating path.",
   },
   {
     pathId: "fill-staffing-need",
     actor: "clinic" as const,
-    phrases: ["need an injector", "need a nurse", "need staff", "need coverage", "staffing gap", "coverage saturday", "coverage friday", "find coverage", "coverage for"],
+    phrases: ["need an injector", "need a nurse", "need staff", "need someone tomorrow", "need coverage", "staffing gap", "coverage saturday", "coverage friday", "find coverage", "coverage for"],
     outcome: "Fill a clinic staffing or professional-capacity need with an eligible available match.",
   },
   {
@@ -61,7 +75,7 @@ const rules = [
   {
     pathId: "clinic-operational-optimization",
     actor: "clinic" as const,
-    phrases: ["clinic is disorganized", "fix our workflow", "dropping follow ups", "dropping follow-ups", "optimize our clinic", "operational problems"],
+    phrases: ["clinic is disorganized", "fix our workflow", "dropping follow ups", "dropping follow-ups", "optimize our clinic", "run my practice", "operational problems"],
     outcome: "Turn recurring clinic friction into owned operating work and measurable follow-through.",
   },
   {
@@ -73,7 +87,7 @@ const rules = [
   {
     pathId: "clinic-improve-revenue",
     actor: "operations" as const,
-    phrases: ["losing money", "improve revenue", "unpaid balances", "revenue leakage", "money delayed", "why are we losing money"],
+    phrases: ["losing money", "improve revenue", "unpaid balances", "revenue leakage", "money delayed", "get paid for work", "why are we losing money"],
     outcome: "Find where revenue is delayed or lost and route each blocker to an owned next action.",
   },
   {
@@ -91,7 +105,7 @@ const rules = [
   {
     pathId: "organization-education-partner",
     actor: "clinic" as const,
-    phrases: ["want students", "education partner", "offer clinical placements", "host trainees", "host students"],
+    phrases: ["want students", "can take students", "take students for clinical placement", "can take students for clinical placement", "education partner", "offer clinical placements", "host trainees", "host students"],
     outcome: "Prepare real organizational learning capacity for governed education participation.",
   },
   {
@@ -123,6 +137,18 @@ const rules = [
     actor: "clinic" as const,
     phrases: ["launch another organization", "start another clinic", "create a new healthcare company", "another organization"],
     outcome: "Define a separate governed organization context without carrying tenant assumptions across boundaries.",
+  },
+  {
+    pathId: "prepare-procurement-response",
+    actor: "operations" as const,
+    phrases: [
+      "rfp response",
+      "review this rfq",
+      "procurement compliance matrix",
+      "healthcare solicitation",
+      "prepare an rfi",
+    ],
+    outcome: "Organize procurement requirements, evidence, pricing, risks, approvals, and a human-authorized submission package.",
   },
 ] as const;
 

@@ -51,8 +51,10 @@ export type CommercialProduct = {
   conversionDestination: string | null;
   /** Current product can start a new governed checkout. Historical aliases cannot. */
   lifecycle: CommercialProductLifecycle;
-  /** May be offered directly on a public purchase surface without another sales gate. */
+  /** Current sellable offer that may be presented to a buyer; its route may still require qualification, review, scope, or contract. */
   publicPurchasable: boolean;
+  /** Buyer may start a public checkout immediately, without a qualification or sales gate. */
+  directPublicCheckoutEligible: boolean;
   modules: readonly string[];
   whopPlanEnvVars: readonly string[];
   /**
@@ -84,6 +86,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     conversionDestination: "/sales",
     lifecycle: "active",
     publicPurchasable: true,
+    directPublicCheckoutEligible: true,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -101,7 +104,8 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -120,7 +124,8 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -139,7 +144,8 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
     modules: ["advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
@@ -166,7 +172,8 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
@@ -193,7 +200,8 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
@@ -221,6 +229,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
     publicPurchasable: false,
+    directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -240,6 +249,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
+    directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: ["WHOP_PLAN_CLINIC_OPERATOR"],
     allowanceEnv: {
@@ -269,6 +279,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
+    directPublicCheckoutEligible: false,
     modules: ["grid"],
     whopPlanEnvVars: ["WHOP_PLAN_GRID_PROFESSIONAL", "WHOP_PLAN_GRID_PROVIDER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_PROFESSIONAL_MAPS_CENTS" },
@@ -290,6 +301,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
+    directPublicCheckoutEligible: false,
     modules: ["grid"],
     whopPlanEnvVars: ["WHOP_PLAN_GRID_FACILITY", "WHOP_PLAN_GRID_LOCATION_PARTNER"],
     allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_FACILITY_MAPS_CENTS" },
@@ -309,6 +321,8 @@ export function canStartNewCommercialCheckout(product: CommercialProduct) {
 export function canStartDirectCommercialCheckout(product: CommercialProduct) {
   return (
     product.lifecycle === "active" &&
+    product.publicPurchasable &&
+    product.directPublicCheckoutEligible &&
     product.commercialRoute === "self_serve" &&
     product.priceType === "fixed" &&
     product.priceCents !== null &&

@@ -5,6 +5,7 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { publicZumiDurableQuotaAttested } from "@/features/zumi/public-quota-attestation";
 import { resolvePublicZumiTurn } from "@/features/zumi/public-intelligence";
+import { projectPublicLivingUniverseForIntent } from "@/lib/orchestration/public-living-universe";
 import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 
 export const maxDuration = 20;
@@ -28,12 +29,13 @@ const priorResolutionSchema = z.object({
   title: z.string().trim().max(400),
   body: z.string().trim().max(4_000),
   assumption: z.string().trim().max(400).nullable().default(null),
+  // Only the key survives the boundary. The engine rebuilds href and action from its
+  // own rules, so accepting them here would let a visitor hand the server a link it
+  // then presents as its own. `strip` (the default) also drops any extra fields the
+  // browser attaches, which `passthrough()` previously carried straight through.
   destination: z.object({
     key: z.string().trim().max(60),
-    href: z.string().trim().max(400).regex(/^\/(?!\/)/),
-    action: z.string().trim().max(200),
-    label: z.string().trim().max(200).optional(),
-  }).passthrough().nullable().default(null),
+  }).nullable().default(null),
   confidence: z.number().min(0).max(1),
 });
 
@@ -155,6 +157,9 @@ export async function POST(request: Request) {
             confidence: 1,
           },
           suggestions: [],
+          // No Object Stage. An emergency answer must not sit above a journey about
+          // finding work or filling a shift — safety overrides ordinary projection.
+          universe: null,
           degraded: false,
         },
       },
@@ -187,6 +192,13 @@ export async function POST(request: Request) {
           confidence: local.confidence,
         },
         suggestions: [],
+        // The deterministic path is an ordinary successful turn, so it carries the same
+        // Object Stage the full path does. Degraded intelligence must not mean a
+        // degraded experience: the visitor still sees where their words lead.
+        universe: projectPublicLivingUniverseForIntent(
+          parsed.data.question,
+          local.destination?.key ?? null,
+        ),
         // Truthful marker: this turn was answered by deterministic guidance, not by the
         // full public intelligence path.
         degraded: true,
@@ -214,6 +226,13 @@ export async function POST(request: Request) {
         label: suggestion.label,
         prompt: suggestion.prompt,
       })),
+      // The Object Stage the answer recomposes, from the same words that produced it.
+      // Null is an honest outcome: a greeting or an unresolved turn has no Path, and
+      // the stage keeps whatever it was showing rather than inventing a journey.
+      universe: projectPublicLivingUniverseForIntent(
+        parsed.data.question,
+        resolution.destination?.key ?? null,
+      ),
     },
   }, { headers: NO_STORE_HEADERS });
 }

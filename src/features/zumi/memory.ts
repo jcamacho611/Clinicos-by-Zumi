@@ -3,6 +3,17 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { ClinicSession } from "@/lib/auth/types";
 import { containsLikelyIdentifiers, redactText } from "@/features/zumi/redaction";
+import {
+  buildVerifiedOutcomeContextItem,
+  VERIFIED_OUTCOME_AUDIT_ACTIONS,
+} from "@/features/zumi/outcome-memory";
+import {
+  formatZumiGovernedContext,
+  rankZumiGovernedContext,
+  resolveZumiGovernedContextConflicts,
+  zumiGovernedContextMatchesQuestion,
+  type ZumiGovernedContextItem,
+} from "@/features/zumi/memory-authority";
 
 export const zumiMemoryKinds = ["preference", "working_style", "project_context", "strategy"] as const;
 export type ZumiMemoryKind = (typeof zumiMemoryKinds)[number];
@@ -12,6 +23,7 @@ export type ZumiMemoryItem = {
   kind: ZumiMemoryKind;
   title: string;
   content: string;
+  version: number;
   updatedAt: Date;
   expiresAt: Date | null;
 };
@@ -20,6 +32,7 @@ const MEMORY_SOURCE = "zumi_user_memory";
 const MAX_MEMORY_ITEMS_PER_USER = 80;
 const DEFAULT_RETENTION_DAYS = 180;
 const FOUNDER_RETENTION_DAYS = 365;
+const VERIFIED_OUTCOME_LOOKBACK_DAYS = 90;
 
 function layerFor(userId: string, kind?: ZumiMemoryKind) {
   return kind ? `zumi_memory:${userId}:${kind}` : `zumi_memory:${userId}:`;
@@ -61,7 +74,7 @@ export async function listZumiMemories(session: ClinicSession, options: { kind?:
     },
     orderBy: { updatedAt: "desc" },
     take,
-    select: { id: true, layer: true, title: true, content: true, updatedAt: true, expiresAt: true },
+    select: { id: true, layer: true, title: true, content: true, version: true, updatedAt: true, expiresAt: true },
   });
 
   return rows.map((row): ZumiMemoryItem => ({
@@ -69,6 +82,7 @@ export async function listZumiMemories(session: ClinicSession, options: { kind?:
     kind: (row.layer.split(":").at(-1) ?? "preference") as ZumiMemoryKind,
     title: row.title.includes(":") ? row.title.slice(row.title.indexOf(":") + 1) : row.title,
     content: row.content,
+    version: row.version,
     updatedAt: row.updatedAt,
     expiresAt: row.expiresAt,
   }));
@@ -174,22 +188,178 @@ export async function forgetZumiMemory(session: ClinicSession, memoryId: string)
   return true;
 }
 
-export async function retrieveZumiMemoryContext(session: ClinicSession, question: string, take = 12) {
-  const memories = await listZumiMemories(session, { take: Math.max(4, Math.min(take, 20)) });
-  if (!memories.length) return { text: "", memoryIds: [] as string[] };
+function personalMemoryContextItem(memory: ZumiMemoryItem): ZumiGovernedContextItem {
+  return {
+    id: memory.id,
+    scope: "user",
+    authority: "human_confirmed_personal",
+    title: `[${memory.kind}] ${memory.title}`,
+    content: memory.content,
+    sourceName: MEMORY_SOURCE,
+    sourceDate: memory.updatedAt.toISOString(),
+    effectiveAt: memory.updatedAt.toISOString(),
+    expiresAt: memory.expiresAt?.toISOString() ?? null,
+    version: memory.version,
+  };
+}
 
-  const queryTerms = new Set(question.toLowerCase().split(/[^a-z0-9]+/).filter((term) => term.length >= 3));
-  const ranked = memories
-    .map((memory) => {
-      const haystack = `${memory.title} ${memory.content}`.toLowerCase();
-      const score = [...queryTerms].reduce((sum, term) => sum + (haystack.includes(term) ? 2 : 0), 0) + (memory.kind === "preference" || memory.kind === "working_style" ? 1 : 0);
-      return { memory, score };
-    })
-    .sort((a, b) => b.score - a.score || b.memory.updatedAt.getTime() - a.memory.updatedAt.getTime())
-    .slice(0, 8);
+function modelSafeKnowledgeText(title: string, content: string, sourceName: string) {
+  const candidate = `${title}\n${content}\n${sourceName}`;
+  return !containsLikelyIdentifiers(candidate) && !redactText(candidate).redactedAny;
+}
+
+export async function retrieveZumiOrganizationKnowledgeContext(session: ClinicSession, question: string, take = 8) {
+  const now = new Date();
+  const rows = await db.knowledgeItem.findMany({
+    where: {
+      AND: [
+        { OR: [{ organizationId: session.organizationId }, { organizationId: null }] },
+        { status: "approved" },
+        { NOT: { sourceName: MEMORY_SOURCE } },
+        { OR: [{ effectiveAt: null }, { effectiveAt: { lte: now } }] },
+        { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      ],
+    },
+    orderBy: [{ updatedAt: "desc" }],
+    take: 60,
+    select: {
+      id: true,
+      organizationId: true,
+      title: true,
+      content: true,
+      sourceName: true,
+      sourceDate: true,
+      effectiveAt: true,
+      expiresAt: true,
+      version: true,
+    },
+  });
+
+  const safeCandidates: ZumiGovernedContextItem[] = rows.flatMap((row) => {
+    if (!modelSafeKnowledgeText(row.title, row.content, row.sourceName)) return [];
+    return [{
+      id: row.id,
+      scope: row.organizationId === null ? "global" : "organization",
+      authority: row.organizationId === null ? "human_approved_global_reference" : "human_approved_organization",
+      title: row.title,
+      content: row.content,
+      sourceName: row.sourceName,
+      sourceDate: row.sourceDate?.toISOString() ?? null,
+      effectiveAt: row.effectiveAt?.toISOString() ?? null,
+      expiresAt: row.expiresAt?.toISOString() ?? null,
+      version: row.version,
+    } satisfies ZumiGovernedContextItem];
+  });
+
+  const resolved = resolveZumiGovernedContextConflicts(safeCandidates);
+  const relevant = resolved.filter((item) => zumiGovernedContextMatchesQuestion(item, question));
+  const ranked = rankZumiGovernedContext(relevant, question, take);
+  return { text: formatZumiGovernedContext(ranked), knowledgeIds: ranked.map((item) => item.id) };
+}
+
+export async function retrieveZumiVerifiedOutcomeContext(session: ClinicSession, question: string, take = 6) {
+  const since = new Date(Date.now() - VERIFIED_OUTCOME_LOOKBACK_DAYS * 24 * 60 * 60 * 1_000);
+  const events = await db.auditLog.findMany({
+    where: {
+      organizationId: session.organizationId,
+      patientId: null,
+      action: { in: VERIFIED_OUTCOME_AUDIT_ACTIONS },
+      resourceType: "task",
+      createdAt: { gte: since },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 60,
+    select: {
+      id: true,
+      organizationId: true,
+      action: true,
+      resourceType: true,
+      resourceId: true,
+      patientId: true,
+      createdAt: true,
+    },
+  });
+
+  const taskIds = [...new Set(events.map((event) => event.resourceId).filter(Boolean))];
+  if (!taskIds.length) return { text: "", outcomeIds: [] as string[], outcomeEvidenceIds: [] as string[] };
+
+  const tasks = await db.task.findMany({
+    where: {
+      organizationId: session.organizationId,
+      id: { in: taskIds },
+      patientId: null,
+      status: "completed",
+      completedAt: { not: null },
+    },
+    select: { id: true, title: true, status: true, patientId: true, completedAt: true },
+  });
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+
+  const candidates = events.flatMap((event) => {
+    const task = taskById.get(event.resourceId);
+    if (!task) return [];
+    const item = buildVerifiedOutcomeContextItem(
+      {
+        auditEventId: event.id,
+        organizationId: event.organizationId,
+        action: event.action,
+        resourceType: event.resourceType,
+        resourceId: event.resourceId,
+        patientId: event.patientId,
+        occurredAt: event.createdAt.toISOString(),
+        subject: task.title,
+        sourceStatus: task.status,
+        sourceCompletedAt: task.completedAt?.toISOString() ?? null,
+      },
+      session.organizationId,
+    );
+    return item ? [item] : [];
+  });
+
+  const relevant = candidates.filter((item) => zumiGovernedContextMatchesQuestion(item, question));
+  const ranked = rankZumiGovernedContext(relevant, question, take);
+  return {
+    text: formatZumiGovernedContext(ranked),
+    outcomeIds: ranked.map((item) => item.id),
+    outcomeEvidenceIds: ranked.flatMap((item) => item.evidenceIds?.slice(0, 1) ?? []),
+  };
+}
+
+export async function retrieveZumiMemoryContext(session: ClinicSession, question: string, take = 12) {
+  const [memories, organizationKnowledge, verifiedOutcomes] = await Promise.all([
+    listZumiMemories(session, { take: Math.max(4, Math.min(take, 20)) }),
+    retrieveZumiOrganizationKnowledgeContext(session, question, 8).catch((error: unknown) => {
+      console.warn("[zumi] approved organization knowledge unavailable; continuing with personal memory only.", error);
+      return { text: "", knowledgeIds: [] as string[] };
+    }),
+    retrieveZumiVerifiedOutcomeContext(session, question, 6).catch((error: unknown) => {
+      console.warn("[zumi] verified outcome evidence unavailable; continuing without outcome context.", error);
+      return { text: "", outcomeIds: [] as string[], outcomeEvidenceIds: [] as string[] };
+    }),
+  ]);
+
+  const personalRanked = rankZumiGovernedContext(memories.map(personalMemoryContextItem), question, 8);
+  const personalText = formatZumiGovernedContext(personalRanked);
+  const sections = [
+    personalText ? `Personal durable memory — context only, never permission or live domain truth:\n${personalText}` : "",
+    organizationKnowledge.text
+      ? `Human-approved organization/reference knowledge — reviewed context, still not live clinical, credential, payment, eligibility, authorization, or transaction truth:\n${organizationKnowledge.text}`
+      : "",
+    verifiedOutcomes.text
+      ? `Verified organization outcome evidence — revalidated against the current source record, context only, never permission or live domain truth:\n${verifiedOutcomes.text}`
+      : "",
+  ].filter(Boolean);
 
   return {
-    text: ranked.map(({ memory }) => `- [${memory.kind}] ${memory.title}: ${memory.content}`).join("\n"),
-    memoryIds: ranked.map(({ memory }) => memory.id),
+    text: sections.join("\n\n"),
+    memoryIds: [
+      ...personalRanked.map((memory) => memory.id),
+      ...organizationKnowledge.knowledgeIds,
+      ...verifiedOutcomes.outcomeIds,
+    ],
+    personalMemoryIds: personalRanked.map((memory) => memory.id),
+    organizationKnowledgeIds: organizationKnowledge.knowledgeIds,
+    outcomeIds: verifiedOutcomes.outcomeIds,
+    outcomeEvidenceIds: verifiedOutcomes.outcomeEvidenceIds,
   };
 }
