@@ -485,7 +485,14 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
 
   return (
     <>
-      <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
+      <div
+        aria-live="polite"
+        className="sr-only"
+        data-mobile-modal-live-exception="true"
+        role="status"
+      >
+        {liveStatus}
+      </div>
       <section
         aria-labelledby="public-living-title"
         className={styles.shell}
@@ -685,7 +692,10 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               </div>
 
               {!conversationStarted ? (
-                <div className={styles.stageReadout} aria-live="polite">
+                <div
+                  aria-live={openMobileDrawer === null ? "polite" : undefined}
+                  className={styles.stageReadout}
+                >
                   <strong>{activePlane.title}</strong>
                   <span>{activePlane.question}</span>
                   <p>{activePlane.description}</p>

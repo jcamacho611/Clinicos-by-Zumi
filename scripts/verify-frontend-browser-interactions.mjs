@@ -483,6 +483,8 @@ try {
     };
     const semanticRegions = Array.from(document.querySelectorAll(semanticSelector));
     const focusableRegions = Array.from(document.querySelectorAll(focusableSelector));
+    const intentionalLiveRegion = document.querySelector('[data-mobile-modal-live-exception="true"][role="status"][aria-live="polite"]');
+    const liveRegions = Array.from(document.querySelectorAll('[aria-live]'));
     const meaningfulBackgroundRegions = Array.from(new Set([...semanticRegions, ...focusableRegions]))
       .filter((node) => isOutsideDialogPortal(node) && isVisible(node));
     const exposedBackgroundRegions = meaningfulBackgroundRegions
@@ -491,13 +493,23 @@ try {
       .filter((node) => isEffectivelyIsolated(node));
     const focusableBackgroundExposure = focusableRegions
       .filter((node) => isOutsideDialogPortal(node) && isVisible(node) && !isEffectivelyIsolated(node));
+    const unintendedLiveRegionExposure = liveRegions
+      .filter((node) => node !== intentionalLiveRegion
+        && isOutsideDialogPortal(node)
+        && isVisible(node)
+        && !isEffectivelyIsolated(node));
     const ariaHiddenNodes = Array.from(document.querySelectorAll('[aria-hidden="true"]'));
     return {
-      backgroundIsolated: meaningfulBackgroundRegions.length > 0 && exposedBackgroundRegions.length === 0,
+      backgroundIsolated: meaningfulBackgroundRegions.length > 0
+        && exposedBackgroundRegions.length === 0
+        && Boolean(intentionalLiveRegion)
+        && unintendedLiveRegionExposure.length === 0,
       meaningfulBackgroundRegions: meaningfulBackgroundRegions.length,
       exposedBackgroundRegions: exposedBackgroundRegions.slice(0, 25).map(describeNode),
       isolatedBackgroundRegions: isolatedBackgroundRegions.slice(0, 25).map(describeNode),
       focusableBackgroundExposure: focusableBackgroundExposure.slice(0, 25).map(describeNode),
+      intentionalLiveRegion: intentionalLiveRegion ? describeNode(intentionalLiveRegion) : null,
+      unintendedLiveRegionExposure: unintendedLiveRegionExposure.slice(0, 25).map(describeNode),
       ariaHiddenNodes: ariaHiddenNodes.slice(0, 25).map(describeNode),
     };
   })()`;
@@ -536,6 +548,8 @@ try {
   results.mobileSheet.exposedBackgroundRegions = mobileIsolationAudit.exposedBackgroundRegions;
   results.mobileSheet.isolatedBackgroundRegions = mobileIsolationAudit.isolatedBackgroundRegions;
   results.mobileSheet.focusableBackgroundExposure = mobileIsolationAudit.focusableBackgroundExposure;
+  results.mobileSheet.intentionalLiveRegion = mobileIsolationAudit.intentionalLiveRegion;
+  results.mobileSheet.unintendedLiveRegionExposure = mobileIsolationAudit.unintendedLiveRegionExposure;
   results.mobileSheet.ariaHiddenNodes = mobileIsolationAudit.ariaHiddenNodes;
   if (!results.mobileSheet.mobileSheetModalIsolated
     || !results.mobileSheet.mobileSheetScrollReachable

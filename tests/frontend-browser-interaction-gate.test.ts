@@ -31,6 +31,8 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("meaningfulBackgroundRegions");
     expect(browserGate).toContain("isolatedBackgroundRegions");
     expect(browserGate).toContain("focusableBackgroundExposure");
+    expect(browserGate).toContain("unintendedLiveRegionExposure");
+    expect(browserGate).toContain("intentionalLiveRegion");
     expect(browserGate).toContain("isEffectivelyIsolated");
     expect(browserGate).not.toContain("let node = document.querySelector('[data-public-universe-shell=\"true\"]')");
     expect(browserGate).toContain("mobileSheetFocusTrapped");
