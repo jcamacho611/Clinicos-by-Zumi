@@ -16,6 +16,11 @@ import {
   MemberSignupAdmissionError,
 } from "@/lib/auth/member-signup-admission";
 import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
+import {
+  MemberSignupAcceptanceMismatchError,
+  MemberSignupAcceptanceUnavailableError,
+  resolveMemberSignupAcceptance,
+} from "@/lib/legal/member-signup-acceptance";
 
 function jsonNoStore(payload: unknown, init: ResponseInit) {
   const response = NextResponse.json(payload, init);
@@ -69,10 +74,19 @@ export async function POST(request: Request) {
       email: parsed.data.email,
       ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
     });
-    const created = await createFreePersonAccount(parsed.data, {
-      ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
-      userAgent: request.headers.get("user-agent") ?? undefined,
-    });
+
+    // The browser proves only its affirmative clicks plus the versions it saw. The
+    // server resolves the authoritative source text/hash again before any identity is
+    // created; stale, missing, draft, or unapproved source evidence fails closed.
+    const legalAcceptance = resolveMemberSignupAcceptance(parsed.data.legalAcceptances);
+    const created = await createFreePersonAccount(
+      parsed.data,
+      {
+        ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
+        userAgent: request.headers.get("user-agent") ?? undefined,
+      },
+      legalAcceptance,
+    );
 
     // The response carries no identifiers. The session is the cookie; the browser has
     // no need for the account or person id, and publishing them would be disclosure
@@ -95,6 +109,15 @@ export async function POST(request: Request) {
       const headers: Record<string, string> = {};
       if (error.retryAfterSeconds) headers["Retry-After"] = String(error.retryAfterSeconds);
       return jsonNoStore({ error: error.message }, { status: error.status, headers });
+    }
+    if (error instanceof MemberSignupAcceptanceMismatchError) {
+      return jsonNoStore({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof MemberSignupAcceptanceUnavailableError) {
+      return jsonNoStore(
+        { error: "Required membership documents are not ready in this deployment." },
+        { status: 503 },
+      );
     }
     if (error instanceof PersonAccountEmailTakenError) {
       return jsonNoStore(
