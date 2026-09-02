@@ -7,6 +7,7 @@ import { DEVELOPMENT_DEMO_EMAIL, DEVELOPMENT_DEMO_PASSWORD, isDemoAuthEnabled } 
 import { getAuthenticationSession } from "@/lib/auth/session";
 import { safeClinicReturnTo, safePersonReturnTo, safeReturnTo } from "@/lib/auth/return-to";
 import { getPersonAccountSession } from "@/lib/auth/account-session";
+import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; next?: string }> }) {
   const { returnTo: rawReturnTo, next: legacyNext } = await searchParams;
@@ -18,6 +19,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const personSession = await getPersonAccountSession();
   if (personSession) redirect(safePersonReturnTo(requestedReturnTo) ?? "/member");
   const returnTo = safeReturnTo(requestedReturnTo);
+  const personReturnTo = safePersonReturnTo(requestedReturnTo);
+  const signupHref = personReturnTo
+    ? `/signup?returnTo=${encodeURIComponent(personReturnTo)}`
+    : "/signup";
+  const memberSignup = getMemberSignupReleaseState();
 
   const demoCredentials = isDemoAuthEnabled()
     ? { email: DEVELOPMENT_DEMO_EMAIL, password: DEVELOPMENT_DEMO_PASSWORD }
@@ -36,7 +42,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <LoginForm demoCredentials={demoCredentials} returnTo={returnTo} />
           </div>
           <p className="mt-5 text-center text-xs font-medium text-[#8f7773]">Considering Klinikos? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/start">Start the Clinic Operating Analysis</Link></p>
-          <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">New here? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/signup">Join free</Link></p>
+          <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">New here? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href={signupHref}>{memberSignup.enabled ? "Join free" : "View free membership status"}</Link></p>
           <p className="mt-3 text-center text-xs font-medium text-[#8f7773]">Looking for your records? <Link className="font-semibold text-[#eaa29b] hover:text-[#f4bbb4]" href="/portal/login">Open the patient portal</Link></p>
           <div className="mt-7 rounded-[18px] border border-[#e28b85]/12 bg-[#12090b]/65 p-4 text-[11px] leading-5 text-[#8f7773]">
             <strong className="text-[#d8c1bd]">Sign-in methods are deployment-specific.</strong> Only methods that are actually configured are presented as usable controls.

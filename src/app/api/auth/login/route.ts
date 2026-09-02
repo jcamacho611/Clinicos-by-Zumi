@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateCredentials, hasClinicIdentity } from "@/lib/auth/credentials";
-import { clearLoginFailures, checkLoginRateLimit, recordLoginFailure } from "@/lib/auth/rate-limit";
+import {
+  clearLoginFailures,
+  checkLoginRateLimit,
+  loginClientIpAddress,
+  recordLoginFailure,
+} from "@/lib/auth/rate-limit";
 import { createClinicSession, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/lib/auth/session";
 import { safeClinicReturnTo, safePersonReturnTo } from "@/lib/auth/return-to";
 import {
@@ -37,8 +42,7 @@ export async function POST(request: Request) {
     return jsonNoStore({ error: "Enter a valid email address and password." }, { status: 400 });
   }
 
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ipAddress = forwardedFor || request.headers.get("x-real-ip") || "unknown";
+  const ipAddress = loginClientIpAddress(request);
   const key = `${ipAddress}:${parsed.data.email.toLowerCase()}`;
   const limit = checkLoginRateLimit(key);
 

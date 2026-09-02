@@ -3,7 +3,13 @@ import "server-only";
 import { db } from "@/lib/db";
 import type { PersonAccountSession } from "@/lib/auth/account-types";
 import { canonicalEcosystemGraph, type CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import { buildEffectiveRelationshipWhere } from "@/lib/identity/relationship-repository";
 import type { MemberHomeProjection } from "@/components/living-universe/universe-shell";
+import { klinikosPathCatalog } from "@/lib/paths/catalog";
+import {
+  isAllowedMemberActionHref,
+  personEntryHrefForPath,
+} from "@/lib/member/member-action-routes";
 
 const PLANE_DESCRIPTIONS: Record<CanonicalPlaneId, string> = {
   healthcare_universe: "Your Person identity can participate in governed contexts without collapsing them into one role.",
@@ -30,7 +36,15 @@ function lensStatus(id: CanonicalPlaneId, input: { hasClaims: boolean; hasRelati
  */
 export async function getMemberHomeProjection(
   session: PersonAccountSession,
+  requestedPathId?: string,
 ): Promise<MemberHomeProjection> {
+  const asOf = new Date();
+  const effectiveRelationshipWhere = buildEffectiveRelationshipWhere(asOf);
+  // The query string is navigation input, never evidence. Resolve it back through the
+  // server-owned catalog before projecting a title, a route, or any other context.
+  const requestedPath = requestedPathId
+    ? klinikosPathCatalog.find((path) => path.id === requestedPathId)
+    : undefined;
   const person = await db.person.findUnique({
     where: { id: session.personId },
     select: {
@@ -44,12 +58,12 @@ export async function getMemberHomeProjection(
         },
       },
       memberships: {
-        where: { status: "active" },
+        where: effectiveRelationshipWhere,
         select: { id: true },
         take: 1,
       },
       relationships: {
-        where: { status: "active" },
+        where: effectiveRelationshipWhere,
         select: { verificationState: true },
         take: 20,
       },
@@ -78,8 +92,9 @@ export async function getMemberHomeProjection(
     (relationship) => relationship.verificationState === "verified",
   );
 
-  const lenses = canonicalEcosystemGraph.planes.map((plane) => ({
+  const lenses = canonicalEcosystemGraph.planes.map((plane, index) => ({
     id: plane.id,
+    number: String(index + 1).padStart(2, "0"),
     title: plane.label,
     description: PLANE_DESCRIPTIONS[plane.id],
     status: lensStatus(plane.id, { hasClaims, hasRelationships }),
@@ -99,6 +114,24 @@ export async function getMemberHomeProjection(
       ? "At least one relationship has verification evidence."
       : "Relationship claims are present without verified authority.");
   }
+  let pathStartHref: `/${string}` | null = null;
+  if (requestedPath) {
+    const target = new URL(personEntryHrefForPath(requestedPath), "https://klinikos.local");
+    target.searchParams.set("path", requestedPath.id);
+    const candidate = `${target.pathname}${target.search}${target.hash}`;
+    pathStartHref = isAllowedMemberActionHref(candidate) ? candidate : null;
+  }
+  const actions: MemberHomeProjection["actions"] = [
+    ...(pathStartHref && requestedPath ? [{
+      id: "continue-path",
+      label: "Continue this path",
+      href: pathStartHref,
+      description: `Continue ${requestedPath.title} at its person-safe entry. The destination keeps its own authorization boundary.`,
+    }] : []),
+    { id: "grid", label: "Explore Grid", href: "/grid", description: "Say what you need or what you have and review public-safe discovery." },
+    { id: "edu", label: "Explore EDU", href: "/edu", description: "Review learning pathways without treating completion as a license." },
+    { id: "home", label: "Keep this context", href: "/member", description: "Return to your person-level Living Home." },
+  ];
 
   return {
     person: { displayName: person.displayName?.trim() || session.displayName },
@@ -120,7 +153,9 @@ export async function getMemberHomeProjection(
       now: hasClaims
         ? "Klinikos is preserving your claims and evidence without presenting them as authority."
         : "Your identity is active without a manufactured patient, professional, learner, or organization role.",
-      next: "Tell Grid what you need or have, explore learning, or continue building only the context relevant to your goal.",
+      next: requestedPath
+        ? `Continue ${requestedPath.title} from its first available governed step. The selected goal remains navigation context, not eligibility or authority.`
+        : "Tell Grid what you need or have, explore learning, or continue building only the context relevant to your goal.",
     },
     inspector: {
       eyebrow: "Evidence and authority",
@@ -133,10 +168,6 @@ export async function getMemberHomeProjection(
         "Zumi may explain and prepare; deterministic policy and authorized people decide consequential state.",
       ],
     },
-    actions: [
-      { id: "grid", label: "Explore Grid", href: "/grid", description: "Say what you need or what you have and review public-safe discovery." },
-      { id: "edu", label: "Explore EDU", href: "/edu", description: "Review learning pathways without treating completion as a license." },
-      { id: "home", label: "Keep this context", href: "/member", description: "Return to your person-level Living Home." },
-    ],
+    actions,
   };
 }

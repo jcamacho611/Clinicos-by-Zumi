@@ -15,6 +15,7 @@ import {
   assertMemberSignupAllowed,
   MemberSignupAdmissionError,
 } from "@/lib/auth/member-signup-admission";
+import { getMemberSignupReleaseState } from "@/lib/auth/member-signup-release";
 
 function jsonNoStore(payload: unknown, init: ResponseInit) {
   const response = NextResponse.json(payload, init);
@@ -27,14 +28,15 @@ function jsonNoStore(payload: unknown, init: ResponseInit) {
  * in, and does nothing else — no organization, no membership, no professional or
  * clinical authority, no Grid eligibility.
  *
- * Reuses the existing onboarding rate limiter rather than adding another, because
- * account creation is the same class of abuse surface it already guards.
+ * Public account creation uses durable, privacy-minimized admission buckets. It stays
+ * separate from provider onboarding because creating an Account grants no provider,
+ * organization, patient, Grid, or other authority.
  */
 export async function POST(request: Request) {
   // The account rail is built, but opening it publicly is a deployment decision.
   // Keep this off until the baseline person-account terms/privacy evidence path has
   // completed counsel and release review; a frontend button is never that approval.
-  if (process.env.KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED !== "true") {
+  if (!getMemberSignupReleaseState().enabled) {
     return jsonNoStore(
       { error: "Free Klinikos membership is not enabled in this deployment." },
       { status: 404 },
@@ -53,8 +55,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ipAddress = forwardedFor || request.headers.get("x-real-ip") || "unknown";
+  // Proxy headers are request-controlled unless the deployment proves its edge strips
+  // and rewrites them. The email digest remains the durable admission key; IP becomes
+  // an additional signal only in an explicitly configured trusted-proxy deployment.
+  const forwardedFor = process.env.KLINIKOS_TRUST_PROXY_HEADERS === "true"
+    ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    : undefined;
+  const ipAddress = forwardedFor
+    || (process.env.KLINIKOS_TRUST_PROXY_HEADERS === "true" ? request.headers.get("x-real-ip") : null)
+    || "unknown";
   try {
     await assertMemberSignupAllowed({
       email: parsed.data.email,

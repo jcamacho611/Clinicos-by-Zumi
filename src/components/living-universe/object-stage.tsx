@@ -72,7 +72,7 @@ export function ObjectStage({ object, timeline, activeLens, lens }: ObjectStageP
         ) : null}
 
         <div className="mt-8 border-y border-white/[.065] py-5" aria-live="polite">
-          <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#806e6a]">
+          <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#9f8985]">
             Seen through {lens.title}
           </p>
           <p className="mt-2 max-w-2xl text-[12px] leading-6 text-[#ad9a95]">{lens.description}</p>

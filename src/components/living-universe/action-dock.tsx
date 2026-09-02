@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { MemberHomeAction } from "@/components/living-universe/universe-shell";
-
-const ALLOWED_MEMBER_ACTIONS = new Set<MemberHomeAction["href"]>(["/grid", "/edu", "/member"]);
+import { isAllowedMemberActionHref } from "@/lib/member/member-action-routes";
 
 export function ActionDock({ actions }: { actions: MemberHomeAction[] }) {
-  const safeActions = actions.filter((action) => ALLOWED_MEMBER_ACTIONS.has(action.href));
+  const safeActions = actions.filter((action) => isAllowedMemberActionHref(action.href));
 
   if (safeActions.length === 0) return null;
 
@@ -16,7 +15,7 @@ export function ActionDock({ actions }: { actions: MemberHomeAction[] }) {
       data-action-dock="true"
     >
       <div className="flex items-center gap-2 overflow-x-auto">
-        <p className="hidden shrink-0 px-3 text-[11px] font-semibold uppercase tracking-[.18em] text-[#816d69] sm:block">
+        <p className="hidden shrink-0 px-3 text-[11px] font-semibold uppercase tracking-[.18em] text-[#9f8985] sm:block">
           Next actions
         </p>
         {safeActions.map((action, index) => (

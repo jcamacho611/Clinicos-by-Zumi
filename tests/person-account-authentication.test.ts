@@ -5,6 +5,7 @@ const accountSessionFindUnique = vi.fn();
 const accountSessionCreate = vi.fn();
 const accountSessionUpdateMany = vi.fn();
 const accountCredentialUpdate = vi.fn();
+const accountCredentialUpdateMany = vi.fn();
 const accountEventCreate = vi.fn();
 const transaction = vi.fn();
 const compare = vi.fn();
@@ -17,7 +18,10 @@ vi.mock("@/lib/db", () => ({
       create: (...args: unknown[]) => accountSessionCreate(...args),
       updateMany: (...args: unknown[]) => accountSessionUpdateMany(...args),
     },
-    accountCredential: { update: (...args: unknown[]) => accountCredentialUpdate(...args) },
+    accountCredential: {
+      update: (...args: unknown[]) => accountCredentialUpdate(...args),
+      updateMany: (...args: unknown[]) => accountCredentialUpdateMany(...args),
+    },
     accountEvent: { create: (...args: unknown[]) => accountEventCreate(...args) },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
@@ -49,10 +53,21 @@ const activeAccount = {
 };
 
 describe("person-account authentication", () => {
+  let persistedFailedAttempts: number;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    persistedFailedAttempts = 0;
     accountFindUnique.mockResolvedValue(activeAccount);
-    accountCredentialUpdate.mockResolvedValue({});
+    accountCredentialUpdate.mockImplementation(async (args: {
+      data: { failedAttempts?: number | { increment: number } };
+    }) => {
+      const mutation = args.data.failedAttempts;
+      if (typeof mutation === "number") persistedFailedAttempts = mutation;
+      if (typeof mutation === "object") persistedFailedAttempts += mutation.increment;
+      return { failedAttempts: persistedFailedAttempts };
+    });
+    accountCredentialUpdateMany.mockResolvedValue({ count: 1 });
     accountSessionCreate.mockResolvedValue({});
     accountSessionUpdateMany.mockResolvedValue({ count: 1 });
     accountEventCreate.mockResolvedValue({});
@@ -86,9 +101,34 @@ describe("person-account authentication", () => {
       .resolves.toBeNull();
     expect(accountCredentialUpdate).toHaveBeenCalledWith(expect.objectContaining({
       where: { accountId: "account-1" },
-      data: expect.objectContaining({ failedAttempts: 1 }),
+      data: expect.objectContaining({ failedAttempts: { increment: 1 } }),
     }));
     expect(accountSessionCreate).not.toHaveBeenCalled();
+  });
+
+  it("atomically accounts for concurrent bad passwords and locks at the threshold", async () => {
+    compare.mockResolvedValue(false);
+
+    await Promise.all(Array.from({ length: 5 }, () => authenticatePersonAccount(
+      "member@example.test",
+      "wrong-password-value",
+    )));
+
+    expect(persistedFailedAttempts).toBe(5);
+    expect(accountCredentialUpdate).toHaveBeenCalledTimes(5);
+    for (const [call] of accountCredentialUpdate.mock.calls) {
+      expect(call).toEqual(expect.objectContaining({
+        where: { accountId: "account-1" },
+        data: { failedAttempts: { increment: 1 } },
+      }));
+    }
+    expect(accountCredentialUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        accountId: "account-1",
+        failedAttempts: { gte: 5 },
+      }),
+      data: { lockedUntil: expect.any(Date) },
+    }));
   });
 
   it("re-reads active Account and Person truth before accepting a cookie session", async () => {

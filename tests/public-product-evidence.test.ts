@@ -63,7 +63,7 @@ describe("public product evidence", () => {
     expect(howItWorks).toContain("<ProductEvidenceFigure");
     const home = readFileSync("src/app/page.tsx", "utf8");
     const gateway = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
-    expect(home).toContain("<PublicLivingGateway />");
+    expect(home).toContain("<PublicLivingGateway signupEnabled={memberSignup.enabled} />");
     expect(home).not.toContain("<PublicLivingUniverse />");
     expect(gateway).toContain('data-living-universe-stage="true"');
     expect(gateway).toContain("<PublicLivingUniverseObjectStage");

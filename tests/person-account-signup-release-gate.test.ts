@@ -7,7 +7,13 @@ describe("free person-account deployment release gate", () => {
   });
 
   it("fails closed before accepting signup input when the deployment is not approved", async () => {
-    vi.stubEnv("KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED", "");
+    // Even an operator flag cannot bypass missing counsel approval and the unbuilt
+    // versioned person-account acceptance rail.
+    vi.stubEnv("KLINIKOS_FREE_MEMBER_SIGNUP_ENABLED", "true");
+    vi.stubEnv("LEGAL_GATE_ENFORCEMENT_ENABLED", "true");
+    vi.stubEnv("KLINIKOS_LEGAL_ENTITY_NAME", "Klinikos test entity");
+    vi.stubEnv("KLINIKOS_GOVERNING_LAW", "Test jurisdiction");
+    vi.stubEnv("KLINIKOS_LEGAL_FORUM", "Test forum");
 
     const response = await POST(new Request("https://klinikos.io/api/account/signup", {
       method: "POST",

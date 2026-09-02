@@ -131,16 +131,29 @@ export async function authenticatePersonAccount(
 
   const valid = await compare(password, credential.passwordHash);
   if (!valid) {
-    const failedAttempts = credential.failedAttempts + 1;
-    await db.accountCredential.update({
+    // Prisma's atomic increment is evaluated by PostgreSQL against the persisted
+    // value. A read/modify/write based on `credential.failedAttempts` loses failures
+    // when wrong-password requests arrive together.
+    const failedCredential = await db.accountCredential.update({
       where: { accountId: account.id },
-      data: {
-        failedAttempts,
-        lockedUntil: failedAttempts >= LOCK_AFTER_ATTEMPTS
-          ? new Date(Date.now() + LOCK_MINUTES * 60 * 1_000)
-          : null,
-      },
+      data: { failedAttempts: { increment: 1 } },
+      select: { failedAttempts: true },
     });
+
+    if (failedCredential.failedAttempts >= LOCK_AFTER_ATTEMPTS) {
+      const now = new Date();
+      // Only the first concurrent request that reaches the threshold establishes
+      // the active lock. A later request may renew an expired lock, but cannot keep
+      // extending a lock another request just created.
+      await db.accountCredential.updateMany({
+        where: {
+          accountId: account.id,
+          failedAttempts: { gte: LOCK_AFTER_ATTEMPTS },
+          OR: [{ lockedUntil: null }, { lockedUntil: { lte: now } }],
+        },
+        data: { lockedUntil: new Date(now.getTime() + LOCK_MINUTES * 60 * 1_000) },
+      });
+    }
     return null;
   }
 

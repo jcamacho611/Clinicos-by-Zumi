@@ -1,9 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { klinikosPathCatalog } from "@/lib/paths/catalog";
 import {
   PUBLIC_LIVING_UNIVERSE_ACTIONS,
-  projectPublicLivingUniverse,
 } from "@/lib/orchestration/public-living-universe";
 
 /**
@@ -53,24 +52,14 @@ describe("public action-first Living Universe", () => {
     }
   });
 
-  it("reports each Path's real availability rather than an encouraging one", () => {
-    const projection = projectPublicLivingUniverse();
-    for (const item of projection) {
-      const path = klinikosPathCatalog.find((candidate) => candidate.id === item.pathId);
-      expect(path, `${item.pathId} missing from catalog`).toBeDefined();
-      // The catalog is the authority. The surface may rename it for a reader, never
-      // upgrade it: a path that requires verification cannot be shown as ready now.
-      expect(item.availability).toBe(path?.availability);
-      expect(item.steps.length).toBe(path?.nodes.length);
+  it("keeps each offered Path governed without shipping a dead second selector", () => {
+    for (const action of PUBLIC_LIVING_UNIVERSE_ACTIONS) {
+      const path = klinikosPathCatalog.find((candidate) => candidate.id === action.pathId);
+      expect(path?.governance.length, `${action.pathId}: no governance sentence`).toBeGreaterThan(20);
     }
-  });
-
-  it("carries the governing sentence with every action", () => {
-    // Each Path states what governs it. Dropping that on the public surface is how a
-    // product starts implying it can grant things it cannot.
-    for (const item of projectPublicLivingUniverse()) {
-      expect(item.governance.length, `${item.pathId}: no governance sentence`).toBeGreaterThan(20);
-    }
+    expect(existsSync("src/components/marketing/public-living-universe.tsx")).toBe(false);
+    expect(stage).not.toContain("PublicLivingUniverseStage");
+    expect(stage).not.toContain("setSelectedId");
   });
 
   it("keeps the routing engine and the Path catalog out of the browser bundle", () => {

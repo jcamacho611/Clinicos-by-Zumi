@@ -95,11 +95,12 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(page).not.toContain("PublicConversionBridge");
   });
 
-  it("renders one Object Stage with Before, Now, Next, Inspector, and Action Dock", () => {
+  it("renders one Object Stage with a non-personalized path, Inspector, and Action Dock", () => {
     const stage = read("src/components/marketing/public-living-universe-stage.tsx");
-    expect(stage).toContain("Before");
-    expect(stage).toContain("Now");
-    expect(stage).toContain("Next");
+    expect(stage).toContain("Starting point");
+    expect(stage).toContain("Orchestration");
+    expect(stage).toContain("Continuation");
+    expect(stage).not.toContain("What you brought");
     expect(stage).toContain("Inspector");
     expect(stage).toContain("Action dock");
     expect(stage).toContain('data-object-stage="true"');

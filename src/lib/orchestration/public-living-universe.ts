@@ -74,8 +74,20 @@ export type PublicLivingUniverseProjection = {
   availabilityCopy: string;
   governance: string;
   commercialBoundary: string | null;
+  continuationHref: `/member?path=${string}`;
   steps: PublicLivingUniverseStep[];
 };
+
+export function continuationHrefForPathId(pathId: string) {
+  const path = klinikosPathCatalog.find((candidate) => candidate.id === pathId);
+  if (!path) return null;
+  // Account creation always returns through the person-owned Living Home first. That
+  // single boundary restores the catalog Path, explains what is and is not authoritative,
+  // and only then offers the first real engine route. Grid and EDU therefore do not need
+  // parallel query-string interpreters, and private patient intent never becomes a public
+  // marketplace request by accident.
+  return `/member?path=${encodeURIComponent(path.id)}` as PublicLivingUniverseProjection["continuationHref"];
+}
 
 /**
  * Server-side. Builds the minimum a public visitor needs to understand the journey and
@@ -87,6 +99,9 @@ function projectPath(
   path: KlinikosPathDefinition,
   action: { id: string; label: string; side: "need" | "have" },
 ): PublicLivingUniverseProjection {
+  const continuationHref = continuationHrefForPathId(path.id);
+  if (!continuationHref) throw new Error(`Unknown public Path continuation: ${path.id}`);
+
   return {
     id: action.id,
     label: action.label,
@@ -100,6 +115,7 @@ function projectPath(
     availabilityCopy: AVAILABILITY_COPY[path.availability],
     governance: path.governance,
     commercialBoundary: path.commercialBoundary ?? null,
+    continuationHref,
     steps: path.nodes.map((node) => ({
       label: node.label,
       description: node.description,
@@ -120,10 +136,8 @@ function projectPath(
  * incidental result of catalog ordering.
  */
 const DESTINATION_PATHS: Record<string, string> = {
-  join: "find-extra-work",
   grid: "find-healthcare-resource",
   staffing: "fill-staffing-need",
-  edu: "student-clinical-placement",
   clinic: "clinic-operational-optimization",
   revenue: "clinic-improve-revenue",
   billing: "clinic-improve-revenue",
@@ -137,6 +151,7 @@ const DESTINATION_PATHS: Record<string, string> = {
 
 const OFFERED_CAPACITY = /\b(?:i|we)\s+(?:have|offer|provide|own|can\s+provide|am\s+available|are\s+available)\b|\b(?:list|rent\s+out)\s+(?:my|our|a|an)\b/i;
 const SPACE_OR_CAPACITY = /\b(?:room|chair|space|facility|equipment|device|capacity)\b/i;
+const GENERIC_WORK_NEED = /\b(?:i\s+(?:need|want)|looking\s+for|find(?:\s+me)?)\s+(?:extra\s+|healthcare\s+)?work\b|\bwork\s+opportunit(?:y|ies)\b/i;
 
 /**
  * The seam that makes Zumi and the Path stage one interaction rather than two.
@@ -154,14 +169,23 @@ export function projectPublicLivingUniverseForIntent(
 ): PublicLivingUniverseProjection | null {
   const byId = new Map(klinikosPathCatalog.map((path) => [path.id, path]));
 
+  const inferredPath = findKlinikosPathFromIntent(prompt);
   const mappedId = destinationKey === "grid" && OFFERED_CAPACITY.test(prompt) && SPACE_OR_CAPACITY.test(prompt)
     ? "clinic-monetize-capacity"
-    : destinationKey
-      ? DESTINATION_PATHS[destinationKey]
-      : undefined;
-  // Fall back to the deterministic engine for the phrasings it does recognise, so a
-  // conversation with no destination can still land somewhere true.
-  const path = (mappedId ? byId.get(mappedId) : undefined) ?? findKlinikosPathFromIntent(prompt);
+    : destinationKey === "grid" && GENERIC_WORK_NEED.test(prompt)
+      ? "find-extra-work"
+      : destinationKey
+        ? DESTINATION_PATHS[destinationKey]
+        : undefined;
+  // Offered capacity must stay on the supply side. Otherwise prefer the exact Path the
+  // deterministic intent engine found over a broad destination family. `edu` has no
+  // generic default: "I want to learn" is not enough evidence to invent a clinical
+  // placement or an injector journey.
+  const offeredCapacity = mappedId === "clinic-monetize-capacity";
+  const exactProtectedDestination = destinationKey === "procurement";
+  const path = (offeredCapacity || exactProtectedDestination) && mappedId
+    ? byId.get(mappedId)
+    : inferredPath ?? (mappedId ? byId.get(mappedId) : undefined);
   if (!path) return null;
 
   // Prefer the everyday label the front door already offers for this Path, so the stage
@@ -171,16 +195,5 @@ export function projectPublicLivingUniverseForIntent(
     id: known?.id ?? path.id,
     label: known?.label ?? path.title,
     side: known?.side ?? "need",
-  });
-}
-
-export function projectPublicLivingUniverse(): PublicLivingUniverseProjection[] {
-  const byId = new Map(klinikosPathCatalog.map((path) => [path.id, path]));
-
-  return PUBLIC_LIVING_UNIVERSE_ACTIONS.flatMap((action) => {
-    const path = byId.get(action.pathId);
-    if (!path) return [];
-
-    return [projectPath(path, action)];
   });
 }

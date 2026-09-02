@@ -3,45 +3,20 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { UniverseShell, type MemberHomeProjection } from "@/components/living-universe/universe-shell";
-import { MEMBER_PLANE_LENSES } from "@/components/living-universe/plane-lens";
+import { canonicalEcosystemGraph } from "@/lib/ecosystem/canonical-ecosystem-graph";
 
 const projection: MemberHomeProjection = {
   person: {
     displayName: "Jordan Lee",
   },
   activeLens: "lifecycle",
-  lenses: [
-    {
-      id: "healthcare_universe",
-      title: "People and institutions",
-      description: "The same person can participate in more than one governed context.",
-      status: "connected",
-    },
-    {
-      id: "economic_resource",
-      title: "Resources and opportunity",
-      description: "Work, learning, and capacity remain distinct governed resources.",
-      status: "available",
-    },
-    {
-      id: "lifecycle",
-      title: "Your path",
-      description: "A claim becomes useful evidence only after the right review.",
-      status: "active",
-    },
-    {
-      id: "operating_infrastructure",
-      title: "What coordinates this",
-      description: "Identity, Grid, EDU, and Zumi coordinate without becoming new identities.",
-      status: "connected",
-    },
-    {
-      id: "compounding_business",
-      title: "Value over time",
-      description: "Completed, governed activity can improve future continuity.",
-      status: "available",
-    },
-  ],
+  lenses: canonicalEcosystemGraph.planes.map((plane, index) => ({
+    id: plane.id,
+    number: String(index + 1).padStart(2, "0"),
+    title: plane.label,
+    description: `${plane.label} explains this Person-owned object without changing its authority.`,
+    status: plane.id === "lifecycle" ? "active" : "available",
+  })),
   object: {
     id: "person-profile",
     title: "Your Klinikos identity",
@@ -71,14 +46,19 @@ const projection: MemberHomeProjection = {
 };
 
 describe("person-level Living Universe home", () => {
-  it("uses exactly the five canonical planes as presentation lenses", () => {
-    expect(MEMBER_PLANE_LENSES.map((lens) => lens.id)).toEqual([
-      "healthcare_universe",
-      "economic_resource",
-      "lifecycle",
-      "operating_infrastructure",
-      "compounding_business",
-    ]);
+  it("renders the server-projected canonical plane order, titles and numbers", () => {
+    const html = renderToStaticMarkup(createElement(UniverseShell, { projection }));
+    const expected = canonicalEcosystemGraph.planes.map((plane, index) => ({
+      id: plane.id,
+      title: plane.label,
+      number: String(index + 1).padStart(2, "0"),
+    }));
+
+    expect(projection.lenses.map(({ id, title, number }) => ({ id, title, number }))).toEqual(expected);
+    for (const plane of expected) {
+      expect(html).toContain(plane.title.replaceAll("&", "&amp;"));
+      expect(html).toContain(`>${plane.number}<`);
+    }
   });
 
   it("keeps one Person object while explaining lifecycle and authority truth", () => {
@@ -100,7 +80,10 @@ describe("person-level Living Universe home", () => {
     const unsafe = {
       ...projection,
       actions: [
+        { id: "path", label: "Continue path", href: "/portal/login?path=patient-find-care" },
         ...projection.actions,
+        { id: "unsafe-api", label: "Mutation", href: "/api/account/signup" },
+        { id: "unsafe-near-prefix", label: "Near prefix", href: "/grid-evil/collect" },
         { id: "unsafe", label: "Untrusted", href: "https://example.test" },
       ],
     } as unknown as MemberHomeProjection;
@@ -111,6 +94,9 @@ describe("person-level Living Universe home", () => {
     expect(html).toContain('href="/grid"');
     expect(html).toContain('href="/edu"');
     expect(html).toContain('href="/member"');
+    expect(html).toContain('href="/portal/login?path=patient-find-care"');
+    expect(html).not.toContain('/api/account/signup');
+    expect(html).not.toContain('/grid-evil/collect');
     expect(html).not.toContain("https://example.test");
   });
 
@@ -119,6 +105,8 @@ describe("person-level Living Universe home", () => {
 
     expect(page).toContain("requirePersonAccountSession");
     expect(page).toContain("getMemberHomeProjection");
+    expect(page).toContain("klinikosPathCatalog.find");
+    expect(page).toContain("requestedPath?.id");
     expect(page).toContain("<UniverseShell projection={projection}");
     expect(page).not.toContain("demo");
     expect(page).not.toContain("mock");

@@ -6,8 +6,16 @@ import {
   getPersonAccountSession,
   revokePersonAccountSession,
 } from "@/lib/auth/account-session";
+import { evaluateSameOriginMutation } from "@/lib/security/same-origin";
 
 export async function POST(request: Request) {
+  if (!evaluateSameOriginMutation(request).allowed) {
+    return NextResponse.json(
+      { error: "This request could not be verified." },
+      { status: 403, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const session = await getAuthenticationSession();
   const personSession = await getPersonAccountSession();
   await Promise.all([

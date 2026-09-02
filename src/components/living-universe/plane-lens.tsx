@@ -2,46 +2,9 @@
 
 import type { CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
 
-export const MEMBER_PLANE_LENSES = [
-  {
-    id: "healthcare_universe",
-    number: "I",
-    label: "Healthcare universe",
-    shortLabel: "People",
-  },
-  {
-    id: "economic_resource",
-    number: "II",
-    label: "Economic & resource",
-    shortLabel: "Resources",
-  },
-  {
-    id: "lifecycle",
-    number: "III",
-    label: "Lifecycle",
-    shortLabel: "Your path",
-  },
-  {
-    id: "operating_infrastructure",
-    number: "IV",
-    label: "Operating infrastructure",
-    shortLabel: "Coordination",
-  },
-  {
-    id: "compounding_business",
-    number: "V",
-    label: "Compounding business",
-    shortLabel: "Value over time",
-  },
-] as const satisfies readonly {
-  id: CanonicalPlaneId;
-  number: string;
-  label: string;
-  shortLabel: string;
-}[];
-
 export type MemberPlaneLensProjection = {
   id: CanonicalPlaneId;
+  number: string;
   title: string;
   description: string;
   status: string;
@@ -66,9 +29,8 @@ export function PlaneLens({ lenses, activeLens, onSelect }: PlaneLensProps) {
       />
 
       <div className="flex gap-2 overflow-x-auto pb-2 lg:grid lg:gap-1.5 lg:overflow-visible lg:pb-0">
-        {MEMBER_PLANE_LENSES.map((presentation) => {
-          const projected = lenses.find((lens) => lens.id === presentation.id);
-          const active = activeLens === presentation.id;
+        {lenses.map((lens) => {
+          const active = activeLens === lens.id;
 
           return (
             <button
@@ -78,8 +40,8 @@ export function PlaneLens({ lenses, activeLens, onSelect }: PlaneLensProps) {
                   ? "border-[#b97870]/45 bg-[#2a1517]/80 text-[#fff8f5] lg:border-[#b97870]/25 lg:bg-[#1b0e10]/70"
                   : "border-white/[.08] bg-white/[.025] text-[#aa9792] hover:border-[#a96c64]/30 hover:text-[#eaded9]"
               }`}
-              key={presentation.id}
-              onClick={() => onSelect(presentation.id)}
+              key={lens.id}
+              onClick={() => onSelect(lens.id)}
               type="button"
             >
               <span
@@ -90,13 +52,13 @@ export function PlaneLens({ lenses, activeLens, onSelect }: PlaneLensProps) {
                     : "border-white/15 bg-[#0e090a] text-[#8d7772]"
                 }`}
               >
-                {presentation.number}
+                {lens.number}
               </span>
-              <span className="block text-[11px] font-semibold tracking-[-.01em]">
-                {presentation.shortLabel}
+              <span className="block text-[11px] font-semibold leading-4 tracking-[-.01em]">
+                {lens.title}
               </span>
-              <span className="mt-1 block truncate text-[11px] uppercase tracking-[.16em] text-[#816e6a]">
-                {projected ? statusLabel(projected.status) : "not projected"}
+              <span className="mt-1 block truncate text-[11px] uppercase tracking-[.16em] text-[#9f8985]">
+                {statusLabel(lens.status)}
               </span>
             </button>
           );

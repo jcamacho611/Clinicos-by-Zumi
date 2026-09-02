@@ -27,6 +27,26 @@ import { assertDisposableDatabase } from "./release/disposable-database-safety.m
 const CODE_ONLY = process.argv.includes("--code-only");
 const startedAt = Date.now();
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+// These suites intentionally prove PostgreSQL behavior and therefore belong to the
+// full disposable-database gate. Keep this list exact: broad filename globs would skip
+// pure persistence/domain tests that still must run without a database.
+const CODE_ONLY_DATABASE_TESTS = [
+  "tests/career-artifact.test.ts",
+  "tests/clinical-placement-persistence.test.ts",
+  "tests/person-context-db.test.ts",
+  "tests/person-context-db-ambiguity.test.ts",
+  "tests/person-relationship-db.test.ts",
+  "tests/person-account-signup-db.test.ts",
+  "src/features/zumi/phi-provider-evidence-repository.test.ts",
+];
+
+function codeOnlyVitestArgs() {
+  return [
+    "vitest",
+    "run",
+    ...CODE_ONLY_DATABASE_TESTS.flatMap((testFile) => ["--exclude", testFile]),
+  ];
+}
 
 /** Hosts that are never acceptable targets for a gate that migrates an empty database. */
 /**
@@ -100,9 +120,11 @@ async function main() {
   await record("source confidentiality", () => run("source confidentiality", npmCommand, ["run", "security:check"]));
   await record("type-check", () => run("type-check", "npx", ["tsc", "--noEmit"]));
   await record("lint", () => run("lint", "npx", ["eslint", "."]));
-  await record("tests", () => run("tests", "npx", ["vitest", "run"], { quiet: true }));
 
   if (CODE_ONLY) {
+    // Code-only deliberately has no database. Explicit PostgreSQL suites run in the full
+    // gate after migration; every deterministic suite still runs here.
+    await record("tests", () => run("tests", "npx", codeOnlyVitestArgs(), { quiet: true }));
     await record("production build", () => run("production build", npmCommand, ["run", "build"], {
       quiet: true,
       env: { NODE_ENV: "production" },
@@ -128,6 +150,17 @@ async function main() {
     ));
 
     await record("post-build confidentiality", () => run("post-build confidentiality", npmCommand, ["run", "security:check"]));
+
+    // Full-gate DATABASE_URL points at the initially empty target. Run the suite only
+    // after the governed Render migration path has created the schema; otherwise every
+    // database-aware test sees a configured but structurally empty database and fails
+    // before the migration proof can execute.
+    await record("tests", () => run(
+      "tests",
+      "npx",
+      ["vitest", "run"],
+      { quiet: true, env: renderEnv },
+    ));
 
     await record("MVP journeys", () => run(
       "MVP journeys",

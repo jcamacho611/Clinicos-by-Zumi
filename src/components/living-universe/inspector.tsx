@@ -17,13 +17,13 @@ function InspectorContent({ inspector, lens }: Pick<InspectorProps, "inspector" 
       <p className="mt-3 text-[12px] leading-6 text-[#aa9792]">{inspector.body}</p>
 
       <div className="mt-6 border-t border-white/[.065] pt-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[#7f6c68]">Current lens</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[#9f8985]">Current lens</p>
         <p className="mt-2 text-[12px] font-semibold text-[#d7b0a9]">{lens.title}</p>
         <p className="mt-1.5 text-[11px] leading-5 text-[#93807c]">{lens.description}</p>
       </div>
 
       <div className="mt-6 border-t border-white/[.065] pt-5">
-        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.18em] text-[#7f6c68]">
+        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.18em] text-[#9f8985]">
           <CircleCheck aria-hidden="true" className="size-3.5 text-[#73ad98]" /> Evidence
         </p>
         <ul className="mt-3 space-y-2.5">
@@ -37,7 +37,7 @@ function InspectorContent({ inspector, lens }: Pick<InspectorProps, "inspector" 
       </div>
 
       <div className="mt-6 border-t border-white/[.065] pt-5">
-        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.18em] text-[#7f6c68]">
+        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.18em] text-[#9f8985]">
           <ShieldCheck aria-hidden="true" className="size-3.5 text-[#d19a90]" /> Authority
         </p>
         <ul className="mt-3 space-y-2.5">

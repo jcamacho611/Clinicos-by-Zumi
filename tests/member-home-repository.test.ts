@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const personFindUnique = vi.fn();
 
@@ -9,6 +9,7 @@ vi.mock("@/lib/db", () => ({
 }));
 
 import { getMemberHomeProjection } from "@/lib/member/member-home-repository";
+import { canonicalEcosystemGraph } from "@/lib/ecosystem/canonical-ecosystem-graph";
 
 const session = {
   sessionId: "session-1",
@@ -20,6 +21,10 @@ const session = {
 };
 
 describe("member Living Home minimum-necessary projection", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     personFindUnique.mockResolvedValue({
@@ -96,5 +101,70 @@ describe("member Living Home minimum-necessary projection", () => {
     expect(select).not.toHaveProperty("patients");
     expect(select).not.toHaveProperty("providers");
     expect(select).not.toHaveProperty("clinicalRecords");
+  });
+
+  it("applies one current effective-time boundary to memberships and relationships", async () => {
+    const asOf = new Date("2026-09-01T18:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(asOf);
+
+    await getMemberHomeProjection(session);
+
+    const select = personFindUnique.mock.calls[0][0].select;
+    const currentEffectiveWindow = {
+      status: "active",
+      effectiveFrom: { lte: asOf },
+      OR: [
+        { effectiveTo: null },
+        { effectiveTo: { gt: asOf } },
+      ],
+    };
+    expect(select.memberships.where).toEqual(currentEffectiveWindow);
+    expect(select.relationships.where).toEqual(currentEffectiveWindow);
+  });
+
+  it("derives ordered plane identifiers, titles and numbers from the canonical graph", async () => {
+    const projection = await getMemberHomeProjection(session);
+
+    expect(projection.lenses.map(({ id, title, number }) => ({ id, title, number }))).toEqual(
+      canonicalEcosystemGraph.planes.map((plane, index) => ({
+        id: plane.id,
+        title: plane.label,
+        number: String(index + 1).padStart(2, "0"),
+      })),
+    );
+  });
+
+  it("restores a catalog-owned goal as navigation context without promoting it to evidence or authority", async () => {
+    const projection = await getMemberHomeProjection(session, "patient-find-care");
+
+    expect(projection.timeline.next).toMatch(/find.*care/i);
+    expect(projection.actions[0]).toMatchObject({
+      id: "continue-path",
+      label: "Continue this path",
+      href: "/portal/login?path=patient-find-care",
+    });
+    expect(projection.actions[0]?.description).toMatch(/authorization boundary/i);
+    expect(projection.inspector.evidence.join(" ")).not.toMatch(/restored goal|find care/i);
+    expect(projection.inspector.authority.join(" ")).toMatch(/eligibility/i);
+  });
+
+  it("does not send a person account into a clinic-session-only current node", async () => {
+    const projection = await getMemberHomeProjection(session, "find-extra-work");
+
+    expect(projection.actions[0]).toMatchObject({
+      id: "continue-path",
+      label: "Continue this path",
+      href: "/grid/browse?intent=work&path=find-extra-work",
+    });
+    expect(projection.actions[0]?.href).not.toBe("/provider-network?path=find-extra-work");
+  });
+
+  it("drops an unknown path id instead of projecting caller-controlled navigation", async () => {
+    const projection = await getMemberHomeProjection(session, "https://attacker.example/collect");
+
+    expect(projection.timeline.next).not.toContain("attacker");
+    expect(projection.actions.map((action) => action.id)).not.toContain("continue-path");
+    expect(JSON.stringify(projection)).not.toContain("attacker.example");
   });
 });

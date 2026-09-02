@@ -27,9 +27,9 @@ describe("public free entry stays truthful about what it creates", () => {
     expect(existsSync("src/app/signup/page.tsx"), "/signup page missing").toBe(true);
     expect(existsSync("src/app/api/account/signup/route.ts"), "signup API missing").toBe(true);
 
-    for (const source of [gateway, stage]) {
-      expect(source).toContain('href="/signup"');
-    }
+    expect(gateway).toContain('href="/signup"');
+    expect(stage).toContain("signupHref");
+    expect(stage).toContain("returnTo");
   });
 
   it("creates the account through the canonical substrate, not a second identity", () => {
@@ -59,7 +59,8 @@ describe("public free entry stays truthful about what it creates", () => {
     }
   });
 
-  it("says plainly that joining is not a credential", () => {
+  it("says plainly that joining is not a credential and reflects the release state", () => {
     expect(stage).toMatch(/not a credential/i);
+    expect(gateway).toContain("Free membership status");
   });
 });

@@ -14,6 +14,7 @@ import {
   ACCOUNT_SESSION_TTL_SECONDS,
   accountSessionCookieOptions,
 } from "@/lib/auth/account-session-config";
+import { safeMemberReturnTo } from "@/lib/auth/return-to";
 
 export type { PersonAccountSession };
 
@@ -45,9 +46,10 @@ export const getPersonAccountSession = cache(async (): Promise<PersonAccountSess
   }
 });
 
-export async function requirePersonAccountSession() {
+export async function requirePersonAccountSession(requestedReturnTo: unknown = "/member") {
   const session = await getPersonAccountSession();
-  if (!session) redirect("/login?returnTo=%2Fmember");
+  const returnTo = safeMemberReturnTo(requestedReturnTo) ?? "/member";
+  if (!session) redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   return session;
 }
 

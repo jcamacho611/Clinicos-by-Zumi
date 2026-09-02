@@ -38,21 +38,79 @@ type PublicZumiApiResponse = {
     suggestions?: unknown;
     universe?: unknown;
   };
+  emergency?: unknown;
 };
+
+const PUBLIC_ZUMI_HISTORY_CONTENT_MAX_LENGTH = 600;
+
+export function boundedPublicZumiHistoryContent(value: string) {
+  return value.slice(0, PUBLIC_ZUMI_HISTORY_CONTENT_MAX_LENGTH);
+}
+
+/**
+ * A refusal or quota response is still allowed to carry the platform's approved
+ * emergency instruction. The instruction must survive a non-2xx status: otherwise a
+ * rate-limited visitor sees only a generic connectivity message at the precise moment
+ * the server tried to preserve the safety boundary.
+ */
+export function publicZumiEmergencyResolution(value: unknown): PublicLivingResolution | null {
+  if (!value || typeof value !== "object") return null;
+  const emergency = (value as PublicZumiApiResponse).emergency;
+  if (typeof emergency !== "string") return null;
+  const body = emergency.trim();
+  if (!body || body.length > 4_000) return null;
+  return {
+    kind: "conversation",
+    title: "This may be an emergency",
+    body,
+    assumption: null,
+    destination: null,
+    confidence: 1,
+  };
+}
 
 /**
  * The projection is presentation only, but it still arrives over the wire, so it is
  * shape-checked before it is rendered rather than trusted.
  */
-function isUniverseProjection(value: unknown): value is PublicLivingUniverseProjection {
+const PUBLIC_PATH_AVAILABILITY = new Set([
+  "available_now",
+  "requires_setup",
+  "requires_verification",
+  "requires_organization_connection",
+  "defined",
+]);
+const PUBLIC_PATH_STEP_STATE = new Set(["complete", "current", "upcoming", "blocked"]);
+
+export function isUniverseProjection(value: unknown): value is PublicLivingUniverseProjection {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<PublicLivingUniverseProjection>;
-  return typeof candidate.pathId === "string"
+  if (!(typeof candidate.id === "string"
+    && typeof candidate.label === "string"
+    && (candidate.side === "need" || candidate.side === "have")
+    && typeof candidate.pathId === "string"
     && typeof candidate.title === "string"
     && typeof candidate.summary === "string"
+    && typeof candidate.from === "string"
+    && typeof candidate.to === "string"
+    && typeof candidate.availability === "string"
+    && PUBLIC_PATH_AVAILABILITY.has(candidate.availability)
     && typeof candidate.availabilityCopy === "string"
     && typeof candidate.governance === "string"
-    && Array.isArray(candidate.steps);
+    && (candidate.commercialBoundary === null || typeof candidate.commercialBoundary === "string")
+    && typeof candidate.continuationHref === "string"
+    && Array.isArray(candidate.steps)
+    && candidate.steps.length > 0
+    && candidate.steps.length <= 20)) return false;
+
+  const continuation = candidate.continuationHref.match(/^\/member\?path=([a-z0-9-]+)$/);
+  if (!continuation || continuation[1] !== candidate.pathId) return false;
+
+  return candidate.steps.every((step) => Boolean(step)
+    && typeof step === "object"
+    && typeof step.label === "string"
+    && typeof step.description === "string"
+    && PUBLIC_PATH_STEP_STATE.has(step.state));
 }
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
@@ -152,7 +210,7 @@ const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   confidence: 0,
 };
 
-export function PublicLivingGateway() {
+export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean }) {
   const [intent, setIntent] = useState("");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
@@ -189,8 +247,8 @@ export function PublicLivingGateway() {
     }
     const history = turns
       .flatMap((turn) => ([
-        { role: "user" as const, content: turn.prompt },
-        { role: "assistant" as const, content: `${turn.resolution.title}\n${turn.resolution.body}` },
+        { role: "user" as const, content: boundedPublicZumiHistoryContent(turn.prompt) },
+        { role: "assistant" as const, content: boundedPublicZumiHistoryContent(`${turn.resolution.title}\n${turn.resolution.body}`) },
       ]))
       .slice(-12);
     const id = nextTurnId.current;
@@ -226,16 +284,20 @@ export function PublicLivingGateway() {
         signal: controller.signal,
       });
 
-      if (response.ok) {
-        const payload = await response.json() as PublicZumiApiResponse;
-        if (isPublicLivingResolution(payload.data?.resolution)) {
-          resolution = payload.data.resolution;
+      const payload: unknown = await response.json().catch(() => null);
+      const emergencyResolution = publicZumiEmergencyResolution(payload);
+      if (emergencyResolution) {
+        resolution = emergencyResolution;
+      } else if (response.ok && payload && typeof payload === "object") {
+        const successPayload = payload as PublicZumiApiResponse;
+        if (isPublicLivingResolution(successPayload.data?.resolution)) {
+          resolution = successPayload.data.resolution;
         }
-        if (isPublicZumiSuggestions(payload.data?.suggestions)) {
-          suggestions = payload.data.suggestions;
+        if (isPublicZumiSuggestions(successPayload.data?.suggestions)) {
+          suggestions = successPayload.data.suggestions;
         }
-        if (isUniverseProjection(payload.data?.universe)) {
-          universe = payload.data.universe;
+        if (isUniverseProjection(successPayload.data?.universe)) {
+          universe = successPayload.data.universe;
         }
       }
     } catch (error) {
@@ -295,17 +357,16 @@ export function PublicLivingGateway() {
                 <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
               ))}
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/signup">Join free</Link>
+              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
               <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
             </nav>
           </details>
 
-          {/* Free entry sits beside sign-in in the header, not only in the quick links
-              below the composer. Sign-in is not an entry point for a visitor who has no
-              account yet, and burying the one action they can complete puts it ~30 tab
-              stops away from where they start. */}
+          {/* Membership status sits beside sign-in. The server supplies the release
+              truth, so a disabled deployment never advertises account creation as an
+              executable action. */}
           <Link className="ml-auto hidden min-h-11 items-center justify-center rounded-full bg-[#e6817b] px-5 text-[11px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] sm:inline-flex lg:ml-0" href="/signup">
-            Join free
+            {signupEnabled ? "Join free" : "Free membership status"}
           </Link>
 
           <Link className="reference-auth ml-3 hidden min-h-11 items-center justify-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 px-5 text-[11px] font-semibold text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)] sm:inline-flex" href="/login">
@@ -394,7 +455,7 @@ export function PublicLivingGateway() {
               </div>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
-                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/signup">Join free</Link>
+                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
                 <span aria-hidden="true">·</span>
                 <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
                 <span aria-hidden="true">·</span>
@@ -439,7 +500,7 @@ export function PublicLivingGateway() {
                             what they just said. */}
                         {turn.universe && (
                           <div className="mt-6">
-                            <PublicLivingUniverseObjectStage item={turn.universe} />
+                            <PublicLivingUniverseObjectStage item={turn.universe} signupEnabled={signupEnabled} />
                           </div>
                         )}
 

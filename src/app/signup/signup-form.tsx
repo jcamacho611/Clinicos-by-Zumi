@@ -15,6 +15,7 @@ import { PERSON_ACCOUNT_SIGNUP_LAWS } from "@/lib/auth/person-account-signup";
 export function SignupForm({ returnTo }: { returnTo: string | null }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const loginHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,7 +120,7 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
           target rather than a few words of link inside a sentence. */}
       <Link
         className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9918a]/30 px-5 text-[13px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/60 hover:text-[#f6dfdc]"
-        href="/login"
+        href={loginHref}
       >
         I already have an account
       </Link>

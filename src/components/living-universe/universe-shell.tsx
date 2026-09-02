@@ -6,7 +6,6 @@ import { CircleUserRound, Sparkles } from "lucide-react";
 import type { CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
 import { ObjectStage } from "@/components/living-universe/object-stage";
 import {
-  MEMBER_PLANE_LENSES,
   PlaneLens,
   type MemberPlaneLensProjection,
 } from "@/components/living-universe/plane-lens";
@@ -40,7 +39,8 @@ export type MemberInspectorProjection = {
 export type MemberHomeAction = {
   id: string;
   label: string;
-  href: "/grid" | "/edu" | "/member";
+  /** Server-projected same-origin route. Every destination still enforces its own auth. */
+  href: `/${string}`;
   description?: string;
 };
 
@@ -61,11 +61,11 @@ function lensProjection(
   id: CanonicalPlaneId,
 ): MemberPlaneLensProjection {
   const projected = lenses.find((lens) => lens.id === id);
-  const presentation = MEMBER_PLANE_LENSES.find((lens) => lens.id === id);
 
   return projected ?? {
     id,
-    title: presentation?.label ?? "Lifecycle",
+    number: "--",
+    title: "Unavailable plane",
     description: "This lens has no additional projection for the current object.",
     status: "not_projected",
   };
@@ -99,7 +99,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
           </span>
           <span>
             <span className="block text-[11px] font-semibold tracking-[.24em] text-[#eee3df]">KLINIKOS</span>
-            <span className="mt-0.5 block text-[11px] uppercase tracking-[.2em] text-[#806d69]">Living home</span>
+            <span className="mt-0.5 block text-[11px] uppercase tracking-[.2em] text-[#9f8985]">Living home</span>
           </span>
         </Link>
 
@@ -109,7 +109,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
           </span>
           <span className="min-w-0">
             <span className="block truncate text-[11px] font-semibold text-[#e9ddda]">{projection.person.displayName}</span>
-            <span className="block text-[11px] uppercase tracking-[.16em] text-[#816e6a]">One person · governed paths</span>
+            <span className="block text-[11px] uppercase tracking-[.16em] text-[#9f8985]">One person · governed paths</span>
           </span>
           <form action="/api/auth/logout" method="post">
             <button
@@ -136,7 +136,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
 
         <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)_270px]">
           <aside className="min-w-0 rounded-[24px] border border-white/[.06] bg-[#0c0809]/72 p-3 lg:p-4">
-            <p className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#806d69]">Five-plane lens</p>
+            <p className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#9f8985]">Five-plane lens</p>
             <PlaneLens
               activeLens={activeLens}
               lenses={projection.lenses}
@@ -159,7 +159,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
           </div>
         </div>
 
-        <p className="mx-auto mt-8 max-w-3xl text-center text-[11px] leading-5 text-[#756460]">
+        <p className="mx-auto mt-8 max-w-3xl text-center text-[11px] leading-5 text-[#9f8985]">
           Klinikos can organize claims, evidence, opportunities, and next steps. Verification and authority remain separate governed decisions.
         </p>
       </div>
