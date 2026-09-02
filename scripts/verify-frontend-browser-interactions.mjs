@@ -38,6 +38,7 @@ class PipeCdp {
     this.process = process;
     this.nextId = 1;
     this.pending = new Map();
+    this.eventWaiters = new Map();
     this.buffer = "";
     process.stdio[4].setEncoding("utf8");
     process.stdio[4].on("data", (chunk) => this.#receive(chunk));
@@ -56,6 +57,12 @@ class PipeCdp {
       this.buffer = this.buffer.slice(boundary + 1);
       if (!raw) continue;
       const message = JSON.parse(raw);
+      if (message.method) {
+        const key = `${message.sessionId ?? "browser"}:${message.method}`;
+        const waiters = this.eventWaiters.get(key) ?? [];
+        this.eventWaiters.delete(key);
+        for (const waiter of waiters) waiter.resolve(message.params ?? {});
+      }
       if (!message.id) continue;
       const pending = this.pending.get(message.id);
       if (!pending) continue;
@@ -79,6 +86,25 @@ class PipeCdp {
         reject: (error) => { clearTimeout(timeout); reject(error); },
       });
       this.process.stdio[3].write(`${JSON.stringify(message)}\0`);
+    });
+  }
+
+  waitForEvent(method, sessionId, timeoutMs = 15_000) {
+    const key = `${sessionId ?? "browser"}:${method}`;
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        const remaining = (this.eventWaiters.get(key) ?? []).filter((waiter) => waiter.resolve !== wrappedResolve);
+        if (remaining.length) this.eventWaiters.set(key, remaining);
+        else this.eventWaiters.delete(key);
+        reject(new Error(`${method} event timed out.`));
+      }, timeoutMs);
+      const wrappedResolve = (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      };
+      const waiters = this.eventWaiters.get(key) ?? [];
+      waiters.push({ resolve: wrappedResolve });
+      this.eventWaiters.set(key, waiters);
     });
   }
 }
@@ -137,7 +163,12 @@ async function setViewport(width, height) {
 }
 
 async function navigate() {
-  await command("Page.navigate", { url: `${baseUrl}/` });
+  // Markers also exist on the previous document, so start listening before navigation
+  // and require the new document's load event before polling stable hydrated state.
+  const loaded = cdp.waitForEvent("Page.loadEventFired", sessionId);
+  const navigation = await command("Page.navigate", { url: `${baseUrl}/` });
+  if (navigation.errorText) throw new Error(`Page.navigate failed: ${navigation.errorText}`);
+  await loaded;
   await waitFor(
     "hydrated Living Universe shell",
     `document.readyState === "complete"
@@ -147,6 +178,43 @@ async function navigate() {
       && document.querySelector('[data-public-action-dock="true"]')
       && [...document.images].every((image) => image.complete)`,
   );
+}
+
+async function firstFoldGeometry() {
+  return evaluate(`(() => {
+    const row = document.querySelector('[data-public-object-row="true"]')?.getBoundingClientRect();
+    const strip = document.querySelector('[data-public-lower-strip="true"]')?.getBoundingClientRect();
+    const inspector = document.querySelector('#public-plane-readout-desktop')?.getBoundingClientRect();
+    const wordmark = document.querySelector('[data-klinikos-approved-wordmark="true"]');
+    const wordmarkRect = wordmark?.getBoundingClientRect();
+    const wordmarkFrame = wordmark?.parentElement?.getBoundingClientRect();
+    const visibleHeight = (rect) => rect
+      ? Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0))
+      : 0;
+    return {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      row: row ? { top: row.top, bottom: row.bottom, visibleHeight: visibleHeight(row) } : null,
+      strip: strip ? { top: strip.top, bottom: strip.bottom, visibleHeight: visibleHeight(strip) } : null,
+      inspector: inspector ? { top: inspector.top, bottom: inspector.bottom, visibleHeight: visibleHeight(inspector) } : null,
+      wordmarkVisibleWidth: wordmarkRect?.width ?? 0,
+      wordmarkFrameWidth: wordmarkFrame?.width ?? 0,
+      wordmarkNaturalWidth: wordmark?.naturalWidth ?? 0,
+      firstFoldOperational: Boolean(
+        ((row && visibleHeight(row) >= Math.min(112, row.height))
+          || (strip && visibleHeight(strip) >= 72))
+        && inspector && visibleHeight(inspector) >= Math.min(140, inspector.height)
+      ),
+    };
+  })()`);
+}
+
+function assertFirstFold(label, geometry) {
+  if (!geometry.firstFoldOperational) {
+    throw new Error(`${label} does not expose an operational row/strip and the Inspector in the first fold: ${JSON.stringify(geometry)}.`);
+  }
+  if (geometry.wordmarkNaturalWidth !== 1937 || geometry.wordmarkVisibleWidth < geometry.wordmarkFrameWidth * 0.9) {
+    throw new Error(`${label} does not render the approved wordmark across its authored frame: ${JSON.stringify(geometry)}.`);
+  }
 }
 
 async function screenshot(label) {
@@ -221,6 +289,10 @@ try {
         collisionFree: Boolean(composer && controls && (controls.top >= composer.bottom || controls.bottom <= composer.top)),
         composerRect: composer ? { top: composer.top, right: composer.right, bottom: composer.bottom, left: composer.left } : null,
         controlRect: controls ? { top: controls.top, right: controls.right, bottom: controls.bottom, left: controls.left } : null,
+        screenshotSurface: {
+          width: Math.round(window.innerWidth * window.devicePixelRatio),
+          height: Math.round(window.innerHeight * window.devicePixelRatio),
+        },
       };
     })()`);
     zoomState.cssLayoutViewportWidth = layoutMetrics.cssLayoutViewport?.clientWidth ?? null;
@@ -260,6 +332,8 @@ try {
     await setViewport(1402, 1122);
     await command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
     await navigate();
+    results.canonicalFirstFold = await firstFoldGeometry();
+    assertFirstFold("1402×1122", results.canonicalFirstFold);
     results.initial = await screenshot("browser-initial-1402x1122");
 
   let focusVisible = false;
@@ -295,16 +369,56 @@ try {
 
   await setViewport(1920, 1080);
   await navigate();
+  results.wideFirstFold = await firstFoldGeometry();
+  assertFirstFold("1920×1080", results.wideFirstFold);
   results.wide = await screenshot("browser-wide-1920x1080");
 
   await setViewport(768, 1024);
   await navigate();
   results.tabletPortrait = await screenshot("browser-tablet-768x1024");
 
+  // The founder's split-window capture maps to roughly 735 CSS pixels on the
+  // Retina display. Prove the browser is actually using the recomposed layout
+  // in that band instead of inferring it from screenshot dimensions.
+  await setViewport(735, 900);
+  await navigate();
+  results.splitViewport = await evaluate(`(() => {
+    const progressRail = document.querySelector('[aria-label="Public interface progress"]');
+    const desktopInspector = document.querySelector('[data-public-inspector="true"]');
+    const mobileControls = document.querySelector('nav[aria-label="Living Universe mobile controls"]');
+    const isRendered = (element) => Boolean(
+      element
+      && element.getClientRects().length > 0
+      && element.getBoundingClientRect().width > 0
+      && element.getBoundingClientRect().height > 0
+    );
+    const state = {
+      cssViewportWidth: window.innerWidth,
+      responsiveMax768: matchMedia('(max-width: 768px)').matches,
+      progressRailHidden: !isRendered(progressRail),
+      desktopInspectorHidden: !isRendered(desktopInspector),
+      mobileControlsVisible: isRendered(mobileControls),
+      noHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 1,
+    };
+    return {
+      ...state,
+      splitViewportRecomposed: state.cssViewportWidth === 735
+        && state.responsiveMax768
+        && state.progressRailHidden
+        && state.desktopInspectorHidden
+        && state.mobileControlsVisible
+        && state.noHorizontalOverflow,
+    };
+  })()`);
+  if (!results.splitViewport.splitViewportRecomposed) {
+    throw new Error(`The 735px split-window band did not use the recomposed Living Universe layout: ${JSON.stringify(results.splitViewport)}.`);
+  }
+  results.splitViewport.screenshot = await screenshot("browser-split-735x900");
+
   await setViewport(390, 844);
   await navigate();
   results.mobileClosed = await screenshot("browser-mobile-390x844-closed");
-  await evaluate(`document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details')[1]?.querySelector('summary')?.click()`);
+  await evaluate(`document.querySelector('[data-mobile-drawer="planes"] summary')?.click()`);
   await waitFor(
     "open mobile plane Inspector",
     `(() => {
@@ -316,9 +430,12 @@ try {
   await waitFor("mobile Compounding Business Inspector", `document.querySelector('#public-plane-readout-mobile')?.textContent?.includes('Compounding Business')`);
   results.mobilePlanes = await screenshot("browser-mobile-390x844-planes-open");
 
-  await evaluate(`document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details')[1]?.querySelector('summary')?.click()`);
-  await evaluate(`document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details')[0]?.querySelector('summary')?.click()`);
-  await waitFor("open mobile action drawer", `document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details')[0]?.open === true`);
+  await evaluate(`document.querySelector('[data-mobile-drawer="start"] summary')?.click()`);
+  await waitFor(
+    "single open mobile action drawer",
+    `document.querySelector('[data-mobile-drawer="start"]')?.open === true
+      && document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details[open]').length === 1`,
+  );
   results.mobileStart = await screenshot("browser-mobile-390x844-start-open");
 
   await setViewport(1024, 900);

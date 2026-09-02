@@ -590,7 +590,11 @@
 
 .contextRail {
   grid-area: context;
-  padding: 120px 0 34px 22px;
+  max-height: 650px;
+  overflow-y: auto;
+  padding: 58px 0 34px 22px;
+  scrollbar-color: rgba(230, 129, 123, .22) transparent;
+  scrollbar-width: thin;
 }
 
 .contextFacts {

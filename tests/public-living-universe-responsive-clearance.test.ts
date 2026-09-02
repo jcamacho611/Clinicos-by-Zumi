@@ -74,4 +74,16 @@ describe("public Living Universe responsive clearance", () => {
     expect(markup).toContain("Planes · Before, now &amp; next");
     expect(markup.match(/aria-label="Inspector"/g) ?? []).toHaveLength(2);
   });
+
+  it("keeps the canonical desktop workspace bounded so the operational row enters the first fold", () => {
+    expect(css).toMatch(/\.contextRail\s*\{[\s\S]*?max-height:\s*650px;[\s\S]*?overflow-y:\s*auto;/);
+  });
+
+  it("keeps only one mobile control drawer open at a time", () => {
+    const source = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
+
+    expect(source).toContain("openMobileDrawer");
+    expect(source).toContain("setOpenMobileDrawer");
+    expect(source).toContain("onToggle");
+  });
 });

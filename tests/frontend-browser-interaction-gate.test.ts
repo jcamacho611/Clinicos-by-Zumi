@@ -18,11 +18,16 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("1440");
     expect(browserGate).toContain("1920");
     expect(browserGate).toContain("768");
+    expect(browserGate).toContain("735");
     expect(browserGate).toContain("390");
     expect(browserGate).toContain("data-public-object-stage");
     expect(browserGate).toContain("data-public-inspector");
     expect(browserGate).toContain("data-public-action-dock");
     expect(browserGate).toContain("public-plane-readout-mobile");
+    expect(browserGate).toContain("firstFoldOperational");
+    expect(browserGate).toContain("wordmarkVisibleWidth");
+    expect(browserGate).toContain("splitViewportRecomposed");
+    expect(browserGate).toContain('waitForEvent("Page.loadEventFired"');
   });
 
   it("proves the 200 percent artifact is browser page zoom rather than pixel scaling", () => {
@@ -34,6 +39,7 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain('command("Page.getLayoutMetrics")');
     expect(browserGate).toContain("cssVisualViewport?.zoom");
     expect(browserGate).toContain("browser-zoom-200.json");
+    expect(browserGate).toContain("screenshotSurface");
     expect(browserGate).not.toContain("Emulation.setPageScaleFactor");
   });
 });

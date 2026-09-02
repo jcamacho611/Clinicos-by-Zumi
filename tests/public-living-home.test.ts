@@ -200,12 +200,14 @@ describe("public Living Home conversation and accessibility contract", () => {
   it("ships the exact approved production artwork instead of broken substitutes", () => {
     expect(sha256("public/klinikos-orbital-k-production.png")).toBe("16d58ca917d56b2a26549896193320c8c4b4cc803dadde3c30a95d5fa49f01ba");
     expect(sha256("public/klinikos-wordmark-production.png")).toBe("dc584c56dd8ea9e420a505c00c78f4d3651405b023c539c4f469c2fe411a0c2d");
+    expect(sha256("public/klinikos-wordmark-transparent.png")).toBe("63137443081f957c49b2cc9afe010c5f391b17f1b4f82a1802432514431a12f3");
     expect(sha256("public/klinikos-rose-hero-production.png")).toBe("f50f9b4cecfb67fba159b29a1375b6e9372497036585b5ab473430effb3ff8be");
     expect(sha256("public/klinikos-rose-wide-production.png")).toBe("90482a6b122605d972ba46877dc3ce8fa537b3994190ba160f30220324687a93");
     expect(brand).toContain('const MARK_SRC = "/klinikos-orbital-k-production.png"');
-    expect(brand).toContain('const WORDMARK_SRC = "/klinikos-wordmark-production.png"');
+    expect(brand).toContain('const WORDMARK_SRC = "/klinikos-wordmark-transparent.png"');
     expect(brand).toContain('data-klinikos-approved-wordmark="true"');
-    expect(brand).toContain("object-contain");
+    expect(brand).toContain("width={1937}");
+    expect(brand).toContain("height={230}");
     expect(brand).not.toContain("mix-blend-screen");
     expect(homeStyles).toContain("url('/klinikos-rose-hero-production.png')");
     expect(homeStyles).toContain("url('/klinikos-rose-wide-production.png')");

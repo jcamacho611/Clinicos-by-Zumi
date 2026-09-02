@@ -40,6 +40,8 @@ type ConversationTurn = {
   suggestions: PublicZumiSuggestion[];
 };
 
+type MobileDrawerId = "start" | "planes" | "context";
+
 type PublicZumiApiResponse = {
   data?: {
     resolution?: unknown;
@@ -248,6 +250,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
   const [activePlaneId, setActivePlaneId] = useState(PUBLIC_LIVING_PLANE_LENSES[2].id);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openMobileDrawer, setOpenMobileDrawer] = useState<MobileDrawerId | null>(null);
   const nextTurnId = useRef(1);
   const activeRequest = useRef<AbortController | null>(null);
   const threadEnd = useRef<HTMLDivElement>(null);
@@ -673,8 +676,8 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
             <p className={styles.contextBoundary}>
               This surface shows minimum-necessary public guidance. Policy, eligibility, ranking, and authority remain server-owned.
             </p>
-            {renderPlaneControls("desktop")}
             {renderPlaneInspector("desktop")}
+            {renderPlaneControls("desktop")}
           </aside>
         </main>
 
@@ -724,20 +727,44 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
         ) : null}
 
         <nav aria-label="Living Universe mobile controls" className={styles.mobileDock}>
-          <details className={styles.mobileDrawer}>
+          <details
+            className={styles.mobileDrawer}
+            data-mobile-drawer="start"
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenMobileDrawer("start");
+              else setOpenMobileDrawer((current) => current === "start" ? null : current);
+            }}
+            open={openMobileDrawer === "start"}
+          >
             <summary>Start</summary>
             <div className={styles.mobileDrawerPanel}>
               {PUBLIC_ACTION_GROUPS.map((category) => renderActionGroup(category, "mobile"))}
             </div>
           </details>
-          <details className={styles.mobileDrawer}>
+          <details
+            className={styles.mobileDrawer}
+            data-mobile-drawer="planes"
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenMobileDrawer("planes");
+              else setOpenMobileDrawer((current) => current === "planes" ? null : current);
+            }}
+            open={openMobileDrawer === "planes"}
+          >
             <summary>Planes · {activePlane.shortTitle}</summary>
             <div className={styles.mobileDrawerPanel}>
               {renderPlaneControls("mobile")}
               {renderPlaneInspector("mobile")}
             </div>
           </details>
-          <details className={styles.mobileDrawer}>
+          <details
+            className={styles.mobileDrawer}
+            data-mobile-drawer="context"
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenMobileDrawer("context");
+              else setOpenMobileDrawer((current) => current === "context" ? null : current);
+            }}
+            open={openMobileDrawer === "context"}
+          >
             <summary>Context</summary>
             <div className={styles.mobileDrawerPanel}>
               <dl className={styles.contextFacts}>
