@@ -107,6 +107,37 @@ jobs:
           cat /tmp/klinikos-start.log
           exit 1
 
+      # Static screenshots do not prove keyboard traversal, focus visibility, mobile
+      # obstruction safety, reduced-motion behavior, or action-driven recomposition.
+      # Drive the exact-head production build in real Chrome before release evidence is
+      # accepted, using the dependency-free DevTools verifier in the repository.
+      - name: Verify frontend browser interactions
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3000 npm start > /tmp/frontend-interactions-start.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          READY=0
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/frontend-interactions-health.json; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            echo "Klinikos exact-head server never became healthy for browser interaction QA."
+            cat /tmp/frontend-interactions-start.log
+            exit 1
+          fi
+
+          node scripts/verify-frontend-browser-interactions.mjs http://127.0.0.1:3000/
+
       # Reviewable browser evidence belongs in CI so frontend acceptance does not depend
       # on one developer machine, cache state, or a desktop browser policy. The screenshots
       # are generated only from this exact-head production build and uploaded as an artifact.
