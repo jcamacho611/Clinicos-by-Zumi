@@ -11,6 +11,7 @@ import {
   projectPublicLivingUniverseForIntent,
 } from "@/lib/orchestration/public-living-universe";
 import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
 
 export const maxDuration = 20;
 
@@ -179,6 +180,19 @@ export async function POST(request: Request) {
   if (parsed.data.actionId && !isPublicLivingActionId(parsed.data.actionId)) {
     return NextResponse.json(
       { error: "That public action is not available." },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
+  }
+
+  // The id and the words are one server-published presentation contract. A known id
+  // paired with different words could otherwise project one governed Path while asking
+  // Zumi about another, so contradictory pairs fail closed before inference.
+  const explicitAction = parsed.data.actionId
+    ? PUBLIC_LIVING_ACTIONS.find((action) => action.id === parsed.data.actionId)
+    : null;
+  if (explicitAction && parsed.data.question !== explicitAction.prompt) {
+    return NextResponse.json(
+      { error: "That public action does not match the selected objective." },
       { status: 400, headers: NO_STORE_HEADERS },
     );
   }

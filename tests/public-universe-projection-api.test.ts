@@ -71,6 +71,13 @@ describe("public Living Universe projection over the API", () => {
     expect(status).toBe(400);
   });
 
+  it("rejects a canonical action identity paired with contradictory words", async () => {
+    const { status, payload } = await ask("I need care", "rooms");
+
+    expect(status).toBe(400);
+    expect(payload).not.toHaveProperty("data.universe");
+  });
+
   it("sends the browser presentation only, never the machinery behind it", async () => {
     const { payload } = await ask("I need weekend RN work");
     const universe = (payload.data?.universe ?? {}) as Record<string, unknown>;
