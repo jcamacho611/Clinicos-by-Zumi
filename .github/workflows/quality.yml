@@ -136,7 +136,7 @@ jobs:
             exit 1
           fi
 
-          node scripts/verify-frontend-browser-interactions.mjs http://127.0.0.1:3000/
+          node --experimental-websocket scripts/verify-frontend-browser-interactions.mjs http://127.0.0.1:3000/
 
       # Reviewable browser evidence belongs in CI so frontend acceptance does not depend
       # on one developer machine, cache state, or a desktop browser policy. The screenshots
