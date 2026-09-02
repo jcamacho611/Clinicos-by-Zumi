@@ -5,14 +5,29 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PERSON_ACCOUNT_SIGNUP_LAWS } from "@/lib/auth/person-account-signup";
 
+type SignupLegalDocument = {
+  title: string;
+  version: string;
+  route: string;
+};
+
 /**
- * Free entry. Three fields, because an account needs three things.
+ * Free entry. Identity stays deliberately small; baseline legal evidence is a separate
+ * pair of explicit controls rather than hidden inside the submit button.
  *
  * What this does not ask for is as deliberate as what it does: no licence number, no
  * employer, no Social Security number, no documents. Those belong to verification,
  * which is a separate decision made against separate evidence.
  */
-export function SignupForm({ returnTo }: { returnTo: string | null }) {
+export function SignupForm({
+  returnTo,
+  websiteTerms,
+  privacyPolicy,
+}: {
+  returnTo: string | null;
+  websiteTerms: SignupLegalDocument;
+  privacyPolicy: SignupLegalDocument;
+}) {
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const loginHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login";
@@ -33,6 +48,12 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
           email: String(form.get("email") ?? ""),
           displayName: String(form.get("displayName") ?? ""),
           password: String(form.get("password") ?? ""),
+          legalAcceptances: {
+            websiteTermsAccepted: form.get("websiteTermsAccepted") === "on",
+            websiteTermsVersion: websiteTerms.version,
+            privacyPolicyAcknowledged: form.get("privacyPolicyAcknowledged") === "on",
+            privacyPolicyVersion: privacyPolicy.version,
+          },
         }),
       });
 
@@ -103,6 +124,32 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
         </p>
       </div>
 
+      <fieldset className="mt-2 grid gap-3 rounded-2xl border border-[#d9918a]/20 bg-black/10 p-4">
+        <legend className="px-1 text-[11px] font-semibold uppercase tracking-[.16em] text-[#c9aaa6]">
+          Before you join
+        </legend>
+        <label className="flex items-start gap-3 text-[12px] leading-5 text-[#c6aeaa]">
+          <input className="mt-1 size-4 accent-[#e6817b]" name="websiteTermsAccepted" required type="checkbox" />
+          <span>
+            I agree to the{" "}
+            <Link className="font-semibold text-[#efaaa1] underline underline-offset-2" href={websiteTerms.route}>
+              {websiteTerms.title}
+            </Link>{" "}
+            (version {websiteTerms.version}).
+          </span>
+        </label>
+        <label className="flex items-start gap-3 text-[12px] leading-5 text-[#c6aeaa]">
+          <input className="mt-1 size-4 accent-[#e6817b]" name="privacyPolicyAcknowledged" required type="checkbox" />
+          <span>
+            I acknowledge the{" "}
+            <Link className="font-semibold text-[#efaaa1] underline underline-offset-2" href={privacyPolicy.route}>
+              {privacyPolicy.title}
+            </Link>{" "}
+            (version {privacyPolicy.version}).
+          </span>
+        </label>
+      </fieldset>
+
       <button
         className="mt-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#e6817b] px-6 text-[14px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] disabled:cursor-not-allowed disabled:opacity-50"
         disabled={status === "submitting"}
@@ -116,8 +163,6 @@ export function SignupForm({ returnTo }: { returnTo: string | null }) {
         {message}
       </p>
 
-      {/* Signing in is the other half of arriving, not a footnote — so it is a real
-          target rather than a few words of link inside a sentence. */}
       <Link
         className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9918a]/30 px-5 text-[13px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/60 hover:text-[#f6dfdc]"
         href={loginHref}
