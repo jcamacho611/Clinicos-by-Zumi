@@ -150,12 +150,23 @@ async function main() {
       'data-public-plane-lens="true"',
       'data-public-inspector="true"',
       'data-public-action-dock="true"',
+      'data-public-intent-constellation="true"',
       "What do you need today?",
-      "I need something",
-      "I have something",
     ];
     for (const marker of requiredExperience) {
       if (!rootDocument.includes(marker)) failures.push(`root HTML is missing Living Universe marker: ${marker}`);
+    }
+
+    const publicActionIds = new Set(
+      Array.from(rootDocument.matchAll(/\bdata-public-action-id=["']([a-z0-9-]+)["']/gi), (match) => match[1]),
+    );
+    if (publicActionIds.size < 12) {
+      failures.push(`root HTML exposes only ${publicActionIds.size} distinct public intent action(s); expected at least 12`);
+    }
+    for (const side of ["need", "have"]) {
+      if (!rootDocument.includes(`data-public-action-side="${side}"`)) {
+        failures.push(`root HTML is missing the ${side} public intent side`);
+      }
     }
 
     for (const retired of ["One system, three extensions", "What it actually does"]) {
