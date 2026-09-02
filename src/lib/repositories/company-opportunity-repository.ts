@@ -638,7 +638,7 @@ export async function createCompanyOpportunity(session: ClinicSession, rawInput:
     await assertActiveCompanyContext(tx, session);
     await assertOptionalOwner(tx, session, input.ownerId);
     const lockKey = `company-opportunity-source:${session.organizationId}:${input.sourceSystem}:${input.sourceFingerprintSha256}`;
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))::text AS "lock"`;
 
     const existing = (await tx.companyExternalOpportunity.findFirst({
       where: {
@@ -893,7 +893,7 @@ export async function appendCompanyOpportunityEvidence(
   return db.$transaction(async (tx) => {
     await assertActiveCompanyContext(tx, session);
     const lockKey = `company-opportunity:${session.organizationId}:${id}`;
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))::text AS "lock"`;
 
     const opportunity = await findOpportunity(tx, session.organizationId, id);
     if (!opportunity) throw new CompanyOpportunityAccessError("Company opportunity not found.", 404);
@@ -1101,7 +1101,7 @@ export async function transitionCompanyOpportunity(
   return db.$transaction(async (tx) => {
     await assertActiveCompanyContext(tx, session);
     const lockKey = `company-opportunity:${session.organizationId}:${id}`;
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))::text AS "lock"`;
 
     const existingEvent = await tx.companyOpportunityEvent.findFirst({
       where: {

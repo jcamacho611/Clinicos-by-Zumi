@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260902090000_company_opportunity_evidence_ledger",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "b9fbe6af66d540294042259e2ff6e4fc045092749618cfe90ce965599750e7ab",
+  "approvalReference": "Empty disposable PostgreSQL migration and Company Opportunity repository proof, 2026-09-02",
+  "rationale": "Adds platform-scoped opportunity, evidence, and event tables with additive constraints and indexes; alters no existing table or record."
+}
