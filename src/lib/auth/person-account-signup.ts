@@ -22,9 +22,9 @@ export const personAccountSignupSchema = z.object({
   // rule bolted on, and the credential store hashes whatever arrives.
   password: z.string().min(12, "Use at least 12 characters.").max(256),
   legalAcceptances: z.object({
-    websiteTermsAccepted: z.literal(true, { errorMap: () => ({ message: "Agree to the Website Terms to continue." }) }),
+    websiteTermsAccepted: z.literal(true, { error: "Agree to the Website Terms to continue." }),
     websiteTermsVersion: z.string().trim().min(1).max(100),
-    privacyPolicyAcknowledged: z.literal(true, { errorMap: () => ({ message: "Acknowledge the Privacy Policy to continue." }) }),
+    privacyPolicyAcknowledged: z.literal(true, { error: "Acknowledge the Privacy Policy to continue." }),
     privacyPolicyVersion: z.string().trim().min(1).max(100),
   }),
 });
