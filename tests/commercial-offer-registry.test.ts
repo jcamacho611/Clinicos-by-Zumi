@@ -93,4 +93,27 @@ describe("buyer-aware commercial offer registry", () => {
       expect(offer.conversionDestination).toBeNull();
     }
   });
+
+  it("keeps publicPurchasable aligned with direct public checkout semantics", () => {
+    expect(getCommercialProduct("operational_audit")?.publicPurchasable).toBe(true);
+
+    for (const key of [
+      "implementation_blueprint",
+      "founding_clinic_implementation",
+      "clinic_core",
+      "clinic_growth",
+      "clinic_scale",
+      "clinic_enterprise",
+    ]) {
+      expect(getCommercialProduct(key)?.publicPurchasable, `${key} must remain governed before payment`).toBe(false);
+    }
+
+    for (const offer of commercialProducts.filter((candidate) => candidate.publicPurchasable)) {
+      expect(offer.lifecycle).toBe("active");
+      expect(offer.commercialRoute).toBe("self_serve");
+      expect(offer.priceType).toBe("fixed");
+      expect(offer.qualificationRequired).toBe(false);
+      expect(offer.priceCents).toBeGreaterThan(0);
+    }
+  });
 });
