@@ -1,6 +1,11 @@
 import { companyMetricRegistry } from "@/lib/company-operating-canon";
+import {
+  companyTruthClasses,
+  type CompanyTruthClass,
+} from "@/lib/company/company-truth";
 
-export type CompanyTruthClass = "CURRENT_FACT" | "PROPOSED" | "EXECUTED";
+export { companyTruthClasses };
+export type { CompanyTruthClass };
 
 export type CompanyRegisterDefinition = {
   id: string;
