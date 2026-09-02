@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const tokens = fs.readFileSync(path.join(process.cwd(), "src/app/design-tokens.css"), "utf8");
+const globals = fs.readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
 const convergence = fs.readFileSync(path.join(process.cwd(), "src/app/experience-convergence.css"), "utf8");
 const appearance = fs.readFileSync(path.join(process.cwd(), "src/lib/design/atmosphere.ts"), "utf8");
 const controller = fs.readFileSync(path.join(process.cwd(), "src/components/design/klinikos-atmosphere.tsx"), "utf8");
@@ -18,6 +19,22 @@ function ruleContaining(selector: string) {
   const endIndex = tokens.indexOf("}", braceIndex);
   if (braceIndex < 0 || endIndex < 0) return "";
   return tokens.slice(braceIndex + 1, endIndex);
+}
+
+function hexToken(rule: string, token: string) {
+  const value = rule.match(new RegExp(`${token}:(#[0-9a-fA-F]{6})`))?.[1];
+  if (!value) throw new Error(`Missing ${token} hexadecimal token.`);
+  return value;
+}
+
+function contrastRatio(foreground: string, background: string) {
+  const luminance = (hex: string) => {
+    const channels = hex.slice(1).match(/../g)?.map((channel) => Number.parseInt(channel, 16) / 255) ?? [];
+    const linear = channels.map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  };
+  const [lighter, darker] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 describe("Klinikos Black Label appearance system", () => {
@@ -43,7 +60,8 @@ describe("Klinikos Black Label appearance system", () => {
     expect(appearance).toContain("prefersDark");
     expect(appearance).toContain("referenceLocked");
     expect(appearance).toContain('location.pathname === "/"');
-    expect(controller).toContain('const referenceLocked = pathname === "/"');
+    expect(controller).toContain("appearancePolicyForPath(pathname)");
+    expect(controller).toContain("appearancePolicy.referenceLocked");
     expect(livingHome).toContain("styles.shell");
     expect(livingHomeMaterials).toContain("--lu-obsidian: #080506");
     expect(livingHomeMaterials).toContain("var(--lu-obsidian)");
@@ -58,6 +76,26 @@ describe("Klinikos Black Label appearance system", () => {
     expect(obsidian).toContain("--k-theme-mode:dark");
     expect(marble).toContain("--k-work-bg:#f6f2ed");
     expect(obsidian).toContain("--k-work-bg:#090506");
+  });
+
+  it("keeps one material-token authority instead of a second stale palette in globals", () => {
+    expect(globals).toContain('@import "./design-tokens.css"');
+    expect(globals).not.toContain("--k-public-bg:");
+    expect(globals).not.toContain('html[data-klinikos-atmosphere="day"]');
+    expect(globals).not.toContain('html[data-klinikos-atmosphere="night"]');
+  });
+
+  it("keeps essential semantic text AA-readable on raised Marble and Obsidian surfaces", () => {
+    for (const selector of [
+      'html:root[data-klinikos-atmosphere="day"]',
+      'html:root[data-klinikos-atmosphere="night"]',
+    ]) {
+      const rule = ruleContaining(selector);
+      const raised = hexToken(rule, "--k-public-raised");
+      for (const textToken of ["--k-text", "--k-muted", "--k-accent"]) {
+        expect(contrastRatio(hexToken(rule, textToken), raised), `${selector} ${textToken}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 
   it("connects the design-system semantic surfaces to shared material variables", () => {

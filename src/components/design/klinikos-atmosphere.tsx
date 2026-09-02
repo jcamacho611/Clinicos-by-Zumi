@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Check, Monitor, Moon, Palette, Sun, X } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
+  appearancePolicyForPath,
   atmosphereForAppearance,
   KLINIKOS_ATMOSPHERE_STORAGE_KEY,
   normalizeAppearancePreference,
@@ -38,12 +40,26 @@ const options: Array<{
   { value: "dark", label: "Dark", description: "Klinikos Obsidian for the cinematic operating environment", icon: Moon },
 ];
 
-export function KlinikosAtmosphereController() {
+export function KlinikosAtmosphereController({
+  onOpenChange,
+  open: controlledOpen,
+}: {
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+} = {}) {
   const pathname = usePathname();
-  const referenceLocked = pathname === "/";
+  const appearancePolicy = appearancePolicyForPath(pathname);
+  const referenceLocked = appearancePolicy.referenceLocked;
   const [preference, setPreference] = useState<KlinikosAppearancePreference>("system");
   const [atmosphere, setAtmosphere] = useState<KlinikosAtmosphere>("day");
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const open = controlledOpen ?? uncontrolledOpen;
+
+  function setOpen(next: boolean) {
+    if (controlledOpen === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   useEffect(() => {
     const stored = window.localStorage.getItem(KLINIKOS_ATMOSPHERE_STORAGE_KEY);
@@ -79,19 +95,27 @@ export function KlinikosAtmosphereController() {
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { preference: next, atmosphere: nextAtmosphere } }));
   }
 
-  if (pathname === "/") return null;
+  if (!appearancePolicy.controllerVisible) return null;
 
   return (
-    <div className="k-atmosphere-control" data-open={open ? "true" : "false"}>
-      {open ? (
-        <div className="k-atmosphere-popover" role="dialog" aria-modal="true" aria-label="Appearance">
+    <Dialog.Root onOpenChange={setOpen} open={open}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[90] bg-black/45 backdrop-blur-[2px]" />
+        <Dialog.Content
+          aria-describedby="klinikos-appearance-description"
+          className="k-atmosphere-popover fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4.25rem))] right-3 z-[100] max-h-[min(680px,calc(100dvh-6rem))] overflow-y-auto overscroll-contain sm:right-6"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            closeButtonRef.current?.focus();
+          }}
+        >
           <div className="flex items-start justify-between gap-5">
             <div>
               <p className="k-kicker">Appearance</p>
-              <h2 className="mt-2 text-lg font-semibold tracking-[-.03em]">Marble or Obsidian</h2>
-              <p className="k-muted mt-2 max-w-xs text-xs leading-5">System follows your device preference. Light uses warm Marble; Dark uses Obsidian.</p>
+              <Dialog.Title className="mt-2 text-lg font-semibold tracking-[-.03em]">Marble or Obsidian</Dialog.Title>
+              <Dialog.Description className="k-muted mt-2 max-w-xs text-xs leading-5" id="klinikos-appearance-description">System follows your device preference. Light uses warm Marble; Dark uses Obsidian.</Dialog.Description>
             </div>
-            <button type="button" className="k-icon-button min-h-11 min-w-11" onClick={() => setOpen(false)} aria-label="Close appearance settings"><X className="size-4" /></button>
+            <Dialog.Close asChild><button ref={closeButtonRef} type="button" className="k-icon-button min-h-11 min-w-11" aria-label="Close appearance settings"><X className="size-4" /></button></Dialog.Close>
           </div>
 
           <div className="mt-6 divide-y divide-[var(--k-line)] border-y border-[var(--k-line)]">
@@ -118,20 +142,20 @@ export function KlinikosAtmosphereController() {
           </div>
 
           <p className="k-muted mt-5 text-xs leading-5">Current presentation: <span className="font-semibold text-[var(--k-text)]">{currentLabel}</span>. Appearance never changes permissions, safety rules, entitlements, or product behavior.</p>
-        </div>
-      ) : null}
+        </Dialog.Content>
+      </Dialog.Portal>
 
-      <button
-        type="button"
-        className="k-atmosphere-trigger min-h-11"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-label="Open appearance settings"
-        title="Appearance"
-      >
-        <Palette className="size-4" />
-        <span className="hidden sm:inline">{preference === "system" ? `System · ${currentLabel}` : currentLabel}</span>
-      </button>
-    </div>
+      <Dialog.Trigger asChild>
+        <button
+          type="button"
+          className="k-atmosphere-trigger min-h-11"
+          aria-label="Open appearance settings"
+          title="Appearance"
+        >
+          <Palette className="size-4" />
+          <span className="hidden sm:inline">{preference === "system" ? `System · ${currentLabel}` : currentLabel}</span>
+        </button>
+      </Dialog.Trigger>
+    </Dialog.Root>
   );
 }

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, GraduationCap, HeartHandshake, Network, PackageSearch, Radar, ShieldCheck, Stethoscope, Users, Wrench } from "lucide-react";
-import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { ArrowRight, BriefcaseBusiness, Building2, GraduationCap, HeartHandshake, Network, PackageSearch, Radar, ShieldCheck, Stethoscope, Users, Wrench } from "lucide-react";
 import { GridLiveMap } from "@/components/grid/grid-live-map";
 import { GridExchangeField } from "@/components/grid/grid-exchange-field";
 import { MarketplaceBrowser } from "@/components/grid/marketplace-browser";
+import { PublicExperienceShell } from "@/components/marketing/public-experience-shell";
 import { UniversalResourceBrowser } from "@/components/grid/universal-resource-browser";
 import { LISTING_NOT_VERIFICATION_NOTICE, MARKETPLACE_SYNTHETIC_NOTICE, marketplaceSurfaces } from "@/lib/design/marketplace-system";
 import { listPublicGridResources } from "@/lib/grid/resource-repository";
@@ -82,21 +82,13 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
   const mapResources = matchingResources.map((resource) => ({ id: resource.id, title: resource.title, resourceType: resource.resourceType, city: resource.city, state: resource.state, latitude: resource.latitude, longitude: resource.longitude }));
 
   const laneClass = (selected: boolean) => selected
-    ? "border-[var(--k-accent)] bg-[var(--k-text)] text-[var(--k-work-bg)]"
-    : "border-[var(--k-line)] bg-[var(--k-public-surface)] text-[var(--k-muted)] hover:text-[var(--k-text)]";
+    ? marketplaceSurfaces.controlActive
+    : marketplaceSurfaces.controlIdle;
 
   return (
-    <main className={marketplaceSurfaces.page}>
-      <header className="border-b border-[var(--k-line)] bg-[var(--k-public-surface)]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-4 px-5 sm:px-8">
-          <KlinikosWordmark href="/grid" framed markClassName="h-10 w-10" textClassName="h-[20px] w-[176px]" className="gap-3" />
-          <span className="hidden text-xs font-extrabold uppercase tracking-[.17em] text-[var(--k-accent)] md:block">Grid discovery</span>
-          <Link className="ml-auto hidden text-xs font-semibold text-[var(--k-muted)] hover:text-[var(--k-text)] sm:block" href="/grid">I have something</Link>
-          <Link className="ml-4 flex min-h-11 items-center rounded-full bg-[var(--k-text)] px-4 text-xs font-semibold text-[var(--k-work-bg)]" href="/login">Sign in</Link>
-        </div>
-      </header>
-
-      <section className="border-b border-[var(--k-line)] bg-[var(--k-public-surface)]">
+    <PublicExperienceShell contextLabel="Grid discovery">
+      <main className={marketplaceSurfaces.browsePage}>
+        <section className="border-b border-[var(--k-line)] bg-[var(--k-public-surface)]">
         <div className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8 lg:py-9">
           <GridExchangeField initialIntent={activeIntent as GridIntentKind} initialQuery={safeQuery} />
           <nav aria-label="Grid discovery lanes" className="mt-5 flex flex-wrap gap-2">
@@ -112,26 +104,32 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
               {copy.note && <p className="mt-3 max-w-3xl border-l-2 border-[var(--k-premium)] pl-4 text-xs leading-5 text-[var(--k-muted)]">{copy.note}</p>}
             </div>
             <div className="flex flex-wrap gap-2 lg:justify-end">
-              <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--k-accent)] px-5 text-xs font-semibold text-white" href="/grid">I have something <ArrowRight className="size-4" /></Link>
+              <Link className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-5 text-xs font-semibold ${marketplaceSurfaces.controlActive}`} href="/grid">I have something <ArrowRight className="size-4" /></Link>
               <Link className="inline-flex min-h-11 items-center rounded-full border border-[var(--k-line)] bg-[var(--k-public-surface)] px-5 text-xs font-semibold text-[var(--k-text)]" href="/grid">Change goal</Link>
             </div>
           </div>
 
-          <p className="mt-5 flex max-w-5xl gap-2.5 border-t border-[var(--k-line)] pt-4 text-xs leading-5 text-[var(--k-muted)]"><ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--k-premium)]" /><span>{LISTING_NOT_VERIFICATION_NOTICE} {MARKETPLACE_SYNTHETIC_NOTICE}</span></p>
+          <aside className="mt-6 grid gap-3 border border-[var(--k-line)] bg-[var(--k-public-raised)] p-5 sm:grid-cols-[auto_1fr]" data-grid-synthetic-disclosure="true" role="note">
+            <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[var(--k-premium)]" />
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--k-text)]">Reference environment — not live supply</p>
+              <p className="mt-2 max-w-5xl text-sm leading-6 text-[var(--k-muted)]">{MARKETPLACE_SYNTHETIC_NOTICE} {LISTING_NOT_VERIFICATION_NOTICE}</p>
+            </div>
+          </aside>
         </div>
-      </section>
+        </section>
 
-      <GridLiveMap locations={visibleLocations} providers={mapProviders} resources={mapResources} />
-      <UniversalResourceBrowser resources={matchingResources} intent={activeIntent} />
-      {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} initialWeekdays={temporalWeekdays} listings={laneListings} />}
+        <GridLiveMap locations={visibleLocations} providers={mapProviders} resources={mapResources} />
+        <UniversalResourceBrowser resources={matchingResources} intent={activeIntent} />
+        {["all", "work", "provider"].includes(activeIntent) && <MarketplaceBrowser initialQuery={searchTerms.join(" ")} initialWeekdays={temporalWeekdays} listings={laneListings} />}
 
-      <footer className="border-t border-[var(--k-line)] bg-[var(--k-public-surface)]">
-        <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8">
-          <Link className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/grid"><ArrowLeft aria-hidden="true" className="size-4" /> Back to Grid</Link>
-          <p className="mt-3 max-w-4xl text-xs leading-6 text-[var(--k-muted)]">Grid does not employ listed participants or direct clinical care. Regulated opportunities require the applicable review and eligibility gates. A request starts a governed connection workflow and does not itself guarantee availability, authorize treatment, or prove that a transaction has settled.</p>
-          <div className="mt-4 flex flex-wrap gap-5 text-xs font-semibold"><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/grid">Grid marketplace terms</Link><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/privacy">Privacy notice</Link></div>
-        </div>
-      </footer>
-    </main>
+        <section className="border-t border-[var(--k-line)] bg-[var(--k-public-surface)]" aria-label="Grid participation boundary">
+          <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8">
+            <p className="max-w-4xl text-xs leading-6 text-[var(--k-muted)]">Grid does not employ listed participants or direct clinical care. Regulated opportunities require the applicable review and eligibility gates. A request starts a governed connection workflow and does not itself guarantee availability, authorize treatment, or prove that a transaction has settled.</p>
+            <div className="mt-4 flex flex-wrap gap-5 text-xs font-semibold"><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/grid">Grid marketplace terms</Link><Link className="text-[var(--k-muted)] hover:text-[var(--k-text)]" href="/legal/privacy">Privacy notice</Link></div>
+          </div>
+        </section>
+      </main>
+    </PublicExperienceShell>
   );
 }

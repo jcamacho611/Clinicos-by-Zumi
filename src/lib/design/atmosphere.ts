@@ -7,6 +7,25 @@ export type KlinikosAtmospherePreference = KlinikosAppearancePreference;
 
 export const KLINIKOS_ATMOSPHERE_STORAGE_KEY = "klinikos-atmosphere";
 
+export type KlinikosAppearancePolicy = {
+  controllerVisible: boolean;
+  referenceLocked: boolean;
+  resolvedBy: "reference" | "user-preference";
+};
+
+/**
+ * Route presentation may suggest a density, never silently override a person's theme.
+ * The approved first-visit Living Home is the only reference-locked surface.
+ */
+export function appearancePolicyForPath(pathname: string): KlinikosAppearancePolicy {
+  const referenceLocked = pathname === "/";
+  return {
+    controllerVisible: !referenceLocked,
+    referenceLocked,
+    resolvedBy: referenceLocked ? "reference" : "user-preference",
+  };
+}
+
 export function atmosphereForLocalHour(hour: number): KlinikosAtmosphere {
   if (hour >= 5 && hour < 9) return "dawn";
   if (hour >= 9 && hour < 17) return "day";
