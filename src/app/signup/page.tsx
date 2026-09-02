@@ -52,8 +52,23 @@ export default async function SignupPage({
   const session = await getPersonAccountSession();
   if (session) redirect(returnTo ?? "/member");
   const memberSignup = getMemberSignupReleaseState();
+  const websiteTerms = memberSignup.acceptanceDocuments.find(
+    (document) => document.documentKey === "website_terms",
+  );
+  const privacyPolicy = memberSignup.acceptanceDocuments.find(
+    (document) => document.documentKey === "privacy_policy",
+  );
 
-  if (!memberSignup.enabled) {
+  // `enabled` already requires exact sources and production approval. Keep an explicit
+  // presentation-side fail-closed guard too: the form never renders unless the server
+  // can issue concrete current version/route descriptors for both required documents.
+  if (
+    !memberSignup.enabled
+    || !websiteTerms?.documentVersion
+    || !websiteTerms.route
+    || !privacyPolicy?.documentVersion
+    || !privacyPolicy.route
+  ) {
     return <SignupReleaseGate returnTo={returnTo} />;
   }
 
@@ -73,7 +88,19 @@ export default async function SignupPage({
           have, and Klinikos works out which parts apply.
         </p>
 
-        <SignupForm returnTo={returnTo} />
+        <SignupForm
+          returnTo={returnTo}
+          websiteTerms={{
+            title: websiteTerms.title,
+            version: websiteTerms.documentVersion,
+            route: websiteTerms.route,
+          }}
+          privacyPolicy={{
+            title: privacyPolicy.title,
+            version: privacyPolicy.documentVersion,
+            route: privacyPolicy.route,
+          }}
+        />
       </div>
     </main>
   );
