@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
 const control = read("src/components/marketing/public-zumi-site-control.tsx");
+const routePolicy = read("src/lib/design/route-presentation-policy.ts");
 const rootLayout = read("src/app/layout.tsx");
 const utilityDock = read("src/components/marketing/public-utility-dock.tsx");
 const clinicLayout = read("src/app/(clinic)/layout.tsx");
@@ -13,12 +14,16 @@ describe("public Zumi site control", () => {
     expect(rootLayout).toContain('import { PublicUtilityDock } from "@/components/marketing/public-utility-dock"');
     expect(rootLayout).toContain("<PublicUtilityDock />");
     expect(utilityDock).toContain("<PublicZumiSiteControl");
+    expect(utilityDock).toContain("routePresentationPolicy");
+    expect(control).toContain("routePresentationPolicy(pathname).publicZumiVisible");
+    expect(control).not.toContain("const PUBLIC_PATHS = new Set");
     for (const pathname of ["/pricing", "/trust", "/how-it-works", "/founding-clinic", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/edu"]) {
-      expect(control, pathname).toContain(`"${pathname}"`);
+      expect(routePolicy, pathname).toContain(`"${pathname}"`);
     }
-    expect(control).not.toContain('"/login",');
-    expect(control).not.toContain('"/portal",');
-    expect(control).not.toContain('"/dashboard",');
+    expect(routePolicy).not.toContain('"/login",');
+    expect(routePolicy).not.toContain('"/portal",');
+    expect(routePolicy).toContain('"/dashboard"');
+    expect(routePolicy).toContain('owner: "authenticated-app"');
   });
 
   it("is a clearly labeled control rather than an unexplained decorative orb", () => {
