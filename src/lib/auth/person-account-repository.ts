@@ -10,6 +10,11 @@ import type { PersonAccountSignupInput } from "@/lib/auth/person-account-signup"
 import type { MemberSignupAcceptanceEvidence } from "@/lib/legal/member-signup-acceptance";
 import { recordMemberSignupLegalEvidence } from "@/lib/legal/member-signup-legal-evidence";
 
+type PersonAccountIdentityInput = Pick<
+  PersonAccountSignupInput,
+  "email" | "displayName" | "password"
+>;
+
 /**
  * Free entry, written against the canonical identity substrate.
  *
@@ -42,7 +47,7 @@ const LOCK_AFTER_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
 
 export async function createFreePersonAccount(
-  input: PersonAccountSignupInput,
+  input: PersonAccountIdentityInput,
   context: { ipAddress?: string; userAgent?: string } = {},
   legalAcceptance: MemberSignupAcceptanceEvidence,
 ): Promise<CreatedPersonAccount> {

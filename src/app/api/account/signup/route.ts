@@ -80,7 +80,11 @@ export async function POST(request: Request) {
     // created; stale, missing, draft, or unapproved source evidence fails closed.
     const legalAcceptance = resolveMemberSignupAcceptance(parsed.data.legalAcceptances);
     const created = await createFreePersonAccount(
-      parsed.data,
+      {
+        email: parsed.data.email,
+        displayName: parsed.data.displayName,
+        password: parsed.data.password,
+      },
       {
         ipAddress: ipAddress === "unknown" ? undefined : ipAddress,
         userAgent: request.headers.get("user-agent") ?? undefined,

@@ -56,7 +56,7 @@ describe("person-account login continuity", () => {
 
   it("preserves a governed path through a closed signup gate and the existing-member sign-in route", () => {
     const paramsRead = signupPage.indexOf("const params = await searchParams");
-    const releaseGate = signupPage.indexOf("if (!memberSignup.enabled)");
+    const releaseGate = signupPage.indexOf("!memberSignup.enabled");
     expect(paramsRead).toBeGreaterThan(-1);
     expect(releaseGate).toBeGreaterThan(paramsRead);
     expect(signupPage).toContain("<SignupReleaseGate returnTo={returnTo}");
@@ -80,7 +80,7 @@ describe("person-account login continuity", () => {
   it("keeps public account creation behind an explicit deployment release gate", () => {
     expect(signupPage).toContain("getMemberSignupReleaseState");
     expect(signupRoute).toContain("getMemberSignupReleaseState");
-    expect(signupRelease).toContain("VERSIONED_MEMBER_ACCEPTANCE_RAIL_IMPLEMENTED = false");
+    expect(signupRelease).toContain("VERSIONED_MEMBER_ACCEPTANCE_RAIL_IMPLEMENTED = true");
     expect(signupRelease).toContain("productionApproved === true");
     expect(signupPage).toMatch(/production-approved terms, privacy notice, legal configuration, and versioned acceptance evidence/i);
   });

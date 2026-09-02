@@ -27,17 +27,17 @@ function sha256(value: string) {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
-function buildTestLegalAcceptance(suffix: string): MemberSignupAcceptanceEvidence {
-  const termsSnapshot = `TEST ONLY Website Terms ${suffix}`;
-  const privacySnapshot = `TEST ONLY Privacy Policy ${suffix}`;
+function buildTestLegalAcceptance(): MemberSignupAcceptanceEvidence {
+  const termsSnapshot = "TEST ONLY Website Terms acceptance source";
+  const privacySnapshot = "TEST ONLY Privacy Policy acknowledgment source";
 
   return {
     documents: [
       {
         documentKey: "website_terms",
-        documentVersion: `test-terms-${suffix}`,
-        title: "TEST ONLY Website Terms",
-        effectiveDate: "2026-09-02",
+        documentVersion: "2026-08-10.1",
+        title: "Website Terms of Use",
+        effectiveDate: "2026-08-10",
         kind: "agreement",
         documentSnapshot: termsSnapshot,
         documentSha256: sha256(termsSnapshot),
@@ -45,9 +45,9 @@ function buildTestLegalAcceptance(suffix: string): MemberSignupAcceptanceEvidenc
       },
       {
         documentKey: "privacy_policy",
-        documentVersion: `test-privacy-${suffix}`,
-        title: "TEST ONLY Privacy Policy",
-        effectiveDate: "2026-09-02",
+        documentVersion: "2026-08-10.1",
+        title: "Privacy Policy",
+        effectiveDate: "2026-08-10",
         kind: "notice",
         documentSnapshot: privacySnapshot,
         documentSha256: sha256(privacySnapshot),
@@ -62,7 +62,7 @@ describe("free person-account signup against PostgreSQL", () => {
     const suffix = String(Date.now());
     const email = `free.entry.${suffix}@example.com`;
     const password = "a-long-enough-passphrase";
-    const legalAcceptance = buildTestLegalAcceptance(suffix);
+    const legalAcceptance = buildTestLegalAcceptance();
 
     const created = await createFreePersonAccount(
       { email, displayName: "Jane Camacho", password },
@@ -105,11 +105,16 @@ describe("free person-account signup against PostgreSQL", () => {
         documentVersion: string;
         documentSha256: string | null;
         authorityConfirmed: boolean;
+        electronicSignatureConsentedAt: Date | null;
+        acknowledgedAt: Date | null;
+        signedAt: Date | null;
+        signatureMethod: string | null;
         source: string;
       }>
     >`
       SELECT "accountId", "personId", "documentKey", "documentVersion",
-             "documentSha256", "authorityConfirmed", "source"
+             "documentSha256", "authorityConfirmed", "electronicSignatureConsentedAt",
+             "acknowledgedAt", "signedAt", "signatureMethod", "source"
       FROM "access_gate_acceptances"
       WHERE "accountId" = ${created.accountId}
       ORDER BY "documentKey" ASC
@@ -131,6 +136,14 @@ describe("free person-account signup against PostgreSQL", () => {
         ),
       ),
     );
+    for (const row of legalRows) {
+      expect(row.electronicSignatureConsentedAt).toBeNull();
+      expect(row.signedAt).toBeNull();
+      expect(row.acknowledgedAt).toBeInstanceOf(Date);
+      expect(row.signatureMethod).toBe(
+        row.documentKey === "website_terms" ? "clickwrap" : "acknowledgment",
+      );
+    }
 
     // A created cookie claim is not enough. The runtime re-reads this durable session,
     // Account, and Person truth on every request before it projects the member surface.
@@ -148,7 +161,7 @@ describe("free person-account signup against PostgreSQL", () => {
   it("rejects a duplicate email without leaving an orphan Person", async () => {
     const suffix = String(Date.now());
     const email = `duplicate.${suffix}@example.com`;
-    const legalAcceptance = buildTestLegalAcceptance(suffix);
+    const legalAcceptance = buildTestLegalAcceptance();
     await createFreePersonAccount(
       { email, displayName: "First", password: "a-long-enough-passphrase" },
       {},
@@ -167,5 +180,25 @@ describe("free person-account signup against PostgreSQL", () => {
     // The Person is created before the Account inside the transaction, so a unique
     // violation on the account must roll the Person back with it.
     expect(await db.person.count()).toBe(before);
+  });
+
+  it("rolls Person and Account back when required legal evidence fails after identity creation", async () => {
+    const suffix = String(Date.now());
+    const email = `legal.rollback.${suffix}@example.com`;
+    const legalAcceptance = buildTestLegalAcceptance();
+    const incompleteAcceptance: MemberSignupAcceptanceEvidence = {
+      documents: [legalAcceptance.documents[0]],
+    };
+
+    await expect(
+      createFreePersonAccount(
+        { email, displayName: "Rollback Person", password: "a-long-enough-passphrase" },
+        {},
+        incompleteAcceptance,
+      ),
+    ).rejects.toThrow(/exactly the Website Terms and Privacy Policy/i);
+
+    expect(await db.person.findFirst({ where: { primaryEmail: email } })).toBeNull();
+    expect(await db.account.findUnique({ where: { primaryEmail: email } })).toBeNull();
   });
 });

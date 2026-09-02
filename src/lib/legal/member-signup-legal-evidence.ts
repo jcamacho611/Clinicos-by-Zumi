@@ -1,8 +1,9 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { MemberSignupAcceptanceEvidence } from "@/lib/legal/member-signup-acceptance";
+import { getLegalDocument } from "@/lib/legal/document-registry";
 
 type MemberSignupLegalEvidenceInput = {
   accountId: string;
@@ -28,6 +29,49 @@ type StoredMemberAcceptance = {
   documentVersion: string;
   documentSha256: string | null;
 };
+
+const REQUIRED_MEMBER_DOCUMENTS = [
+  { documentKey: "website_terms", kind: "agreement", label: "Website Terms" },
+  { documentKey: "privacy_policy", kind: "notice", label: "Privacy Policy" },
+] as const;
+
+function assertValidMemberSignupLegalEvidence(
+  evidence: MemberSignupAcceptanceEvidence,
+) {
+  const keys = evidence.documents.map((document) => document.documentKey);
+  if (
+    evidence.documents.length !== REQUIRED_MEMBER_DOCUMENTS.length
+    || new Set(keys).size !== REQUIRED_MEMBER_DOCUMENTS.length
+    || REQUIRED_MEMBER_DOCUMENTS.some(({ documentKey }) => !keys.includes(documentKey))
+  ) {
+    throw new Error("Member signup legal evidence must contain exactly the Website Terms and Privacy Policy.");
+  }
+
+  for (const expected of REQUIRED_MEMBER_DOCUMENTS) {
+    const document = evidence.documents.find((candidate) => candidate.documentKey === expected.documentKey);
+    if (!document) {
+      throw new Error("Member signup legal evidence must contain exactly the Website Terms and Privacy Policy.");
+    }
+    if (document.kind !== expected.kind) {
+      throw new Error(`${expected.label} must be recorded as an ${expected.kind}.`);
+    }
+
+    const definition = getLegalDocument(expected.documentKey);
+    if (!definition || document.documentVersion !== definition.version) {
+      throw new Error(`${expected.label} version does not match the governed legal document registry.`);
+    }
+    if (!document.documentSnapshot) {
+      throw new Error(`${expected.label} source snapshot is missing.`);
+    }
+
+    const computedSha256 = createHash("sha256")
+      .update(document.documentSnapshot, "utf8")
+      .digest("hex");
+    if (computedSha256 !== document.documentSha256) {
+      throw new Error(`${expected.label} SHA-256 does not match its source snapshot.`);
+    }
+  }
+}
 
 function assertExistingAcceptanceMatches(
   record: StoredMemberAcceptance,
@@ -88,6 +132,8 @@ export async function recordMemberSignupLegalEvidence(
   tx: Prisma.TransactionClient,
   input: MemberSignupLegalEvidenceInput,
 ) {
+  assertValidMemberSignupLegalEvidence(input.legalAcceptance);
+
   for (const document of input.legalAcceptance.documents) {
     await ensureMemberAgreementVersionRegistered(tx, document);
 
@@ -117,7 +163,7 @@ export async function recordMemberSignupLegalEvidence(
         ${acceptanceId}, ${input.email}, ${document.documentKey}, ${document.documentVersion}, ${now},
         ${input.ipAddress ?? null}, ${input.userAgent ?? null}, 'member-signup', ${input.personId}, ${input.accountId},
         'individual', ${signatureMethod}, false,
-        ${document.kind === "agreement" ? now : null}, ${now}, ${document.kind === "agreement" ? now : null},
+        NULL, ${now}, NULL,
         ${document.documentSha256}, ${document.documentSnapshot},
         CAST(${JSON.stringify(document.acknowledgments)} AS JSONB), ${input.sessionId}, ${idempotencyKey},
         '/signup', 'active'
