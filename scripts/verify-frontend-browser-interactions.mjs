@@ -274,10 +274,19 @@ try {
   if (isZoomEvidenceRun) {
     await navigate();
     const layoutMetrics = await command("Page.getLayoutMetrics");
+    await evaluate(`(() => {
+      const trigger = document.querySelector('[data-mobile-drawer="planes"]');
+      trigger?.focus();
+      trigger?.click();
+    })()`);
+    await waitFor("open plane sheet at browser zoom", `document.querySelector('[data-mobile-sheet-panel="true"]')?.getAttribute('data-state') === 'open'`);
     const zoomState = await evaluate(`(() => {
       const composer = document.querySelector('[data-public-action-dock="true"]')?.getBoundingClientRect();
       const controls = document.querySelector('nav[aria-label="Living Universe mobile controls"]')?.getBoundingClientRect();
       const desktopInspector = document.querySelector('#public-plane-readout-desktop');
+      const sheet = document.querySelector('[data-mobile-sheet-panel="true"]');
+      const sheetRect = sheet?.getBoundingClientRect();
+      if (sheet) sheet.scrollTop = sheet.scrollHeight;
       return {
         innerWidth: window.innerWidth,
         innerHeight: window.innerHeight,
@@ -290,6 +299,8 @@ try {
         mobileControlsVisible: Boolean(controls && controls.width > 0 && controls.height > 0),
         desktopControlsHidden: Boolean(desktopInspector && desktopInspector.getClientRects().length === 0),
         collisionFree: Boolean(composer && controls && (controls.top >= composer.bottom || controls.bottom <= composer.top)),
+        zoomSheetFitsViewport: Boolean(sheetRect && sheetRect.top >= 0 && sheetRect.bottom <= window.innerHeight),
+        zoomSheetScrollReachable: Boolean(sheet && sheet.scrollTop + sheet.clientHeight >= sheet.scrollHeight - 1),
         composerRect: composer ? { top: composer.top, right: composer.right, bottom: composer.bottom, left: composer.left } : null,
         controlRect: controls ? { top: controls.top, right: controls.right, bottom: controls.bottom, left: controls.left } : null,
         screenshotSurface: {
@@ -325,9 +336,13 @@ try {
         `Living Universe controls overlap the Zumi composer at ${requestedZoomPercent}% browser zoom: ${JSON.stringify(zoomState)}.`,
       );
     }
+    if (!zoomState.zoomSheetFitsViewport || !zoomState.zoomSheetScrollReachable) {
+      throw new Error(`The open mobile sheet is clipped or cannot reach its final content at ${requestedZoomPercent}% browser zoom: ${JSON.stringify(zoomState)}.`);
+    }
     results.zoomMethod = "verified_chrome_profile_page_zoom";
     results.requestedZoomPercent = requestedZoomPercent;
     results.metrics = zoomState;
+    await evaluate(`(() => { const sheet = document.querySelector('[data-mobile-sheet-panel="true"]'); if (sheet) sheet.scrollTop = 0; })()`);
     results.screenshot = await screenshot("zoom-200-1402x1122");
     writeFileSync(join(evidenceDir, "browser-zoom-200.json"), `${JSON.stringify(results, null, 2)}\n`);
     process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
@@ -421,7 +436,11 @@ try {
   await setViewport(390, 844);
   await navigate();
   results.mobileClosed = await screenshot("browser-mobile-390x844-closed");
-  await evaluate(`document.querySelector('[data-mobile-drawer="planes"] summary')?.click()`);
+  await evaluate(`(() => {
+    const trigger = document.querySelector('[data-mobile-drawer="planes"]');
+    trigger?.focus();
+    trigger?.click();
+  })()`);
   await waitFor(
     "open mobile plane Inspector",
     `(() => {
@@ -431,15 +450,204 @@ try {
   );
   await evaluate(`Array.from(document.querySelectorAll('button[aria-controls="public-plane-readout-mobile"]')).at(-1)?.click()`);
   await waitFor("mobile Compounding Business Inspector", `document.querySelector('#public-plane-readout-mobile')?.textContent?.includes('Compounding Business')`);
+  const mobileIsolationAuditExpression = `(() => {
+    const panel = document.querySelector('[data-mobile-sheet-panel="true"]');
+    const overlay = document.querySelector('[data-mobile-sheet-overlay="true"]');
+    const semanticSelector = 'header, main, footer, nav, [role="main"], [role="navigation"], [role="region"]';
+    const focusableSelector = 'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), iframe, object, embed, audio[controls], video[controls], summary, [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+    const describeNode = (node) => {
+      const path = [];
+      let current = node;
+      while (current && path.length < 8) {
+        const id = current.id ? '#' + current.id : '';
+        const classes = Array.from(current.classList ?? []).slice(0, 3).map((name) => '.' + name).join('');
+        path.unshift(current.tagName.toLowerCase() + id + classes);
+        current = current.parentElement;
+      }
+      return path.join(' > ');
+    };
+    const isVisible = (node) => {
+      const style = getComputedStyle(node);
+      return node.getClientRects().length > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    };
+    const isOutsideDialogPortal = (node) => !panel?.contains(node)
+      && !overlay?.contains(node)
+      && !node.matches('[data-radix-focus-guard]');
+    const isEffectivelyIsolated = (node) => {
+      let current = node;
+      while (current) {
+        if (current.getAttribute('aria-hidden') === 'true' || current.inert === true || current.hasAttribute('inert')) return true;
+        current = current.parentElement;
+      }
+      return false;
+    };
+    const semanticRegions = Array.from(document.querySelectorAll(semanticSelector));
+    const focusableRegions = Array.from(document.querySelectorAll(focusableSelector));
+    const intentionalLiveRegion = document.querySelector('[data-mobile-modal-live-exception="true"][role="status"][aria-live="polite"]');
+    const liveRegions = Array.from(document.querySelectorAll('[aria-live]'));
+    const meaningfulBackgroundRegions = Array.from(new Set([...semanticRegions, ...focusableRegions]))
+      .filter((node) => isOutsideDialogPortal(node) && isVisible(node));
+    const exposedBackgroundRegions = meaningfulBackgroundRegions
+      .filter((node) => !isEffectivelyIsolated(node));
+    const isolatedBackgroundRegions = meaningfulBackgroundRegions
+      .filter((node) => isEffectivelyIsolated(node));
+    const focusableBackgroundExposure = focusableRegions
+      .filter((node) => isOutsideDialogPortal(node) && isVisible(node) && !isEffectivelyIsolated(node));
+    const unintendedLiveRegionExposure = liveRegions
+      .filter((node) => node !== intentionalLiveRegion
+        && isOutsideDialogPortal(node)
+        && isVisible(node)
+        && !isEffectivelyIsolated(node));
+    const ariaHiddenNodes = Array.from(document.querySelectorAll('[aria-hidden="true"]'));
+    return {
+      backgroundIsolated: meaningfulBackgroundRegions.length > 0
+        && exposedBackgroundRegions.length === 0
+        && Boolean(intentionalLiveRegion)
+        && unintendedLiveRegionExposure.length === 0,
+      meaningfulBackgroundRegions: meaningfulBackgroundRegions.length,
+      exposedBackgroundRegions: exposedBackgroundRegions.slice(0, 25).map(describeNode),
+      isolatedBackgroundRegions: isolatedBackgroundRegions.slice(0, 25).map(describeNode),
+      focusableBackgroundExposure: focusableBackgroundExposure.slice(0, 25).map(describeNode),
+      intentionalLiveRegion: intentionalLiveRegion ? describeNode(intentionalLiveRegion) : null,
+      unintendedLiveRegionExposure: unintendedLiveRegionExposure.slice(0, 25).map(describeNode),
+      ariaHiddenNodes: ariaHiddenNodes.slice(0, 25).map(describeNode),
+    };
+  })()`;
+  try {
+    await waitFor(
+      "mobile sheet background isolation",
+      `(${mobileIsolationAuditExpression}).backgroundIsolated`,
+    );
+  } catch (error) {
+    const isolationAudit = await evaluate(mobileIsolationAuditExpression);
+    throw new Error(`The mobile sheet never isolated every meaningful background region: ${JSON.stringify(isolationAudit)}. ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const mobileIsolationAudit = await evaluate(mobileIsolationAuditExpression);
+  results.mobileSheet = await evaluate(`(() => {
+    const sheet = document.querySelector('[data-mobile-sheet-panel="true"]');
+    const overlay = document.querySelector('[data-mobile-sheet-overlay="true"]');
+    const rect = sheet?.getBoundingClientRect();
+    if (sheet) sheet.scrollTop = sheet.scrollHeight;
+    return {
+      mobileSheetScrollReachable: Boolean(sheet && sheet.scrollTop + sheet.clientHeight >= sheet.scrollHeight - 1),
+      mobileSheetFitsViewport: Boolean(rect && rect.top >= 0 && rect.bottom <= window.innerHeight),
+      overlayVisible: Boolean(overlay && overlay.getBoundingClientRect().height >= window.innerHeight),
+      panelBackground: sheet ? getComputedStyle(sheet).backgroundColor : null,
+      mobileSheetTriggerSemantics: (() => {
+        const triggers = Array.from(document.querySelectorAll('[data-mobile-drawer]'));
+        return triggers.length === 3
+          && triggers.every((trigger) => trigger.getAttribute('aria-haspopup') === 'dialog'
+            && trigger.getAttribute('aria-controls') === 'public-mobile-sheet')
+          && triggers.filter((trigger) => trigger.getAttribute('aria-expanded') === 'true').length === 1
+          && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'true';
+      })(),
+    };
+  })()`);
+  results.mobileSheet.mobileSheetModalIsolated = mobileIsolationAudit.backgroundIsolated;
+  results.mobileSheet.meaningfulBackgroundRegions = mobileIsolationAudit.meaningfulBackgroundRegions;
+  results.mobileSheet.exposedBackgroundRegions = mobileIsolationAudit.exposedBackgroundRegions;
+  results.mobileSheet.isolatedBackgroundRegions = mobileIsolationAudit.isolatedBackgroundRegions;
+  results.mobileSheet.focusableBackgroundExposure = mobileIsolationAudit.focusableBackgroundExposure;
+  results.mobileSheet.intentionalLiveRegion = mobileIsolationAudit.intentionalLiveRegion;
+  results.mobileSheet.unintendedLiveRegionExposure = mobileIsolationAudit.unintendedLiveRegionExposure;
+  results.mobileSheet.ariaHiddenNodes = mobileIsolationAudit.ariaHiddenNodes;
+  if (!results.mobileSheet.mobileSheetModalIsolated
+    || !results.mobileSheet.mobileSheetScrollReachable
+    || !results.mobileSheet.mobileSheetFitsViewport
+    || !results.mobileSheet.overlayVisible
+    || !results.mobileSheet.mobileSheetTriggerSemantics
+    || results.mobileSheet.panelBackground !== "rgb(12, 5, 7)") {
+    throw new Error(`The mobile sheet does not isolate and fully occlude the Living Home: ${JSON.stringify(results.mobileSheet)}.`);
+  }
+  const mobileSheetFocusTrapped = await evaluate(`document.querySelector('[data-mobile-sheet-panel="true"]')?.contains(document.activeElement) === true`);
+  await evaluate(`document.querySelector('button[aria-label="Close mobile controls"]')?.focus()`);
+  await pressKey("Tab", "Tab", 9, 8);
+  const reverseFocusTrapped = await evaluate(`document.querySelector('[data-mobile-sheet-panel="true"]')?.contains(document.activeElement) === true`);
+  results.mobileSheet.mobileSheetFocusTrapped = mobileSheetFocusTrapped && reverseFocusTrapped;
+  if (!results.mobileSheet.mobileSheetFocusTrapped) throw new Error("Keyboard focus escaped the open mobile sheet.");
+  await evaluate(`(() => { const sheet = document.querySelector('[data-mobile-sheet-panel="true"]'); if (sheet) sheet.scrollTop = 0; })()`);
   results.mobilePlanes = await screenshot("browser-mobile-390x844-planes-open");
 
-  await evaluate(`document.querySelector('[data-mobile-drawer="start"] summary')?.click()`);
+  await pressKey("Escape", "Escape", 27);
+  await waitFor("mobile plane sheet to close with Escape", `!document.querySelector('[data-mobile-sheet-panel="true"]')`);
+  results.mobileSheet.mobileSheetEscapeClosed = true;
+  await waitFor("mobile sheet focus to return to its trigger", `document.activeElement?.matches('[data-mobile-drawer="planes"]') === true`);
+  results.mobileSheet.mobileSheetFocusReturned = await evaluate(`document.activeElement?.matches('[data-mobile-drawer="planes"]') === true`);
+  if (!results.mobileSheet.mobileSheetFocusReturned) throw new Error("Closing the mobile sheet did not return focus to its trigger.");
+  await evaluate(`(() => {
+    const trigger = document.querySelector('[data-mobile-drawer="start"]');
+    trigger?.focus();
+    trigger?.click();
+  })()`);
   await waitFor(
     "single open mobile action drawer",
-    `document.querySelector('[data-mobile-drawer="start"]')?.open === true
-      && document.querySelectorAll('nav[aria-label="Living Universe mobile controls"] details[open]').length === 1`,
+    `document.querySelector('[data-mobile-sheet-panel="true"]')?.getAttribute('data-mobile-sheet') === 'start'
+      && document.querySelectorAll('[data-mobile-sheet-panel="true"]').length === 1
+      && document.querySelector('[data-mobile-drawer="start"]')?.getAttribute('aria-expanded') === 'true'
+      && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="context"]')?.getAttribute('aria-expanded') === 'false'`,
   );
   results.mobileStart = await screenshot("browser-mobile-390x844-start-open");
+  await evaluate(`document.querySelector('[data-mobile-sheet-panel="true"] button[data-public-action-id]')?.click()`);
+  await waitFor(
+    "mobile action to close its sheet and reveal guidance",
+    `!document.querySelector('[data-mobile-sheet-panel="true"]')
+      && Boolean(document.querySelector('[aria-label="Zumi is responding"], [aria-label="Public Zumi guidance"]'))
+      && document.activeElement?.matches('[data-mobile-drawer="start"]') === true`,
+  );
+  results.mobileActionRevealedResult = await evaluate(`({
+    sheetClosed: !document.querySelector('[data-mobile-sheet-panel="true"]'),
+    liveStatus: document.querySelector('[role="status"]')?.textContent ?? '',
+    focusReturned: document.activeElement?.matches('[data-mobile-drawer="start"]') === true,
+  })`);
+  if (!results.mobileActionRevealedResult.sheetClosed
+    || !results.mobileActionRevealedResult.liveStatus
+    || !results.mobileActionRevealedResult.focusReturned) {
+    throw new Error(`The mobile Start action did not reveal and announce its result: ${JSON.stringify(results.mobileActionRevealedResult)}.`);
+  }
+
+  await evaluate(`(() => {
+    const trigger = document.querySelector('[data-mobile-drawer="context"]');
+    trigger?.focus();
+    trigger?.click();
+  })()`);
+  await waitFor(
+    "open context sheet before responsive transition",
+    `document.querySelector('[data-mobile-sheet-panel="true"]')?.getAttribute('data-state') === 'open'
+      && document.querySelector('[data-mobile-drawer="start"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="context"]')?.getAttribute('aria-expanded') === 'true'`,
+  );
+  await setViewport(1200, 900);
+  await waitFor(
+    "release mobile modal after leaving mobile layout without navigation",
+    `(() => {
+      const activeRect = document.activeElement?.getBoundingClientRect();
+      return !document.querySelector('[data-mobile-sheet-panel="true"]')
+        && !document.querySelector('[data-mobile-sheet-overlay="true"]')
+        && !document.body.hasAttribute('data-scroll-locked')
+        && (${mobileIsolationAuditExpression}).isolatedBackgroundRegions.length === 0
+        && Boolean(activeRect && activeRect.width > 0 && activeRect.height > 0);
+    })()`,
+  );
+  const resizeIsolationAudit = await evaluate(mobileIsolationAuditExpression);
+  results.resizeWithoutNavigation = await evaluate(`(() => {
+    const activeRect = document.activeElement?.getBoundingClientRect();
+    return {
+      resizeSheetClosedWithoutNavigation: !document.querySelector('[data-mobile-sheet-panel="true"]')
+        && !document.querySelector('[data-mobile-sheet-overlay="true"]'),
+      resizeScrollLockReleased: !document.body.hasAttribute('data-scroll-locked'),
+      focusMovedToVisibleSurface: Boolean(activeRect && activeRect.width > 0 && activeRect.height > 0),
+    };
+  })()`);
+  results.resizeWithoutNavigation.resizeModalIsolationReleased = resizeIsolationAudit.isolatedBackgroundRegions.length === 0;
+  results.resizeWithoutNavigation.isolatedBackgroundRegions = resizeIsolationAudit.isolatedBackgroundRegions;
+  if (!results.resizeWithoutNavigation.resizeSheetClosedWithoutNavigation
+    || !results.resizeWithoutNavigation.resizeModalIsolationReleased
+    || !results.resizeWithoutNavigation.resizeScrollLockReleased
+    || !results.resizeWithoutNavigation.focusMovedToVisibleSurface) {
+    throw new Error(`The mobile sheet survived the desktop breakpoint transition: ${JSON.stringify(results.resizeWithoutNavigation)}.`);
+  }
 
   await setViewport(1024, 900);
   await navigate();
