@@ -147,6 +147,32 @@ describe("Symphony consequential send approval", () => {
     expect(sends).toBe(0);
   });
 
+  it("rejects success-shaped approval evidence when it does not match the approval being consumed", async () => {
+    let sends = 0;
+    const consumeApproval: SymphonyApprovalConsumer = async () => ({
+      ok: true,
+      evidence: approvalEvidence("different-approval"),
+    });
+
+    const result = await executeSymphonyEmail({
+      opportunity,
+      history,
+      profile,
+      now,
+      senderAvailable: true,
+      approvalId: "approval-1",
+      consumeApproval,
+      sender: async () => {
+        sends += 1;
+        return { ok: true, provider: "test", providerReference: "provider-1" };
+      },
+    });
+
+    expect(result.state).toBe("USER_ACTION_REQUIRED");
+    expect(result.reason).toContain("approval_mismatch");
+    expect(sends).toBe(0);
+  });
+
   it("requires a new approval after the approval authority reports the first approval consumed", async () => {
     let consumed = false;
     let sends = 0;
