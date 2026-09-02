@@ -4,14 +4,20 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync("src/app/api/paths/route.ts", "utf8");
 
 describe("Living Home Path authority ordering", () => {
-  it("does not require Path mutation authority before classifying a typed request", () => {
+  it("classifies a typed request before any direct Path mutation gate", () => {
     const postStart = source.indexOf("export async function POST");
     const responderStart = source.indexOf("async function respondToTypedIntent");
     const post = source.slice(postStart, responderStart);
+    const classify = post.indexOf("resolveIntentSchema.safeParse(body)");
+    const typedReturn = post.indexOf("respondToTypedIntent(session, intentRequest.data.text, request)");
+    const directInput = post.indexOf("const input = createPathSchema.parse(body)");
+    const directPermission = post.indexOf('enforceApiPermission(session, "tasks", "create"');
 
     expect(postStart).toBeGreaterThan(-1);
-    expect(post).not.toContain('enforceApiPermission(session, "tasks", "create"');
-    expect(post).toContain("resolveIntentSchema.safeParse(body)");
+    expect(classify).toBeGreaterThan(-1);
+    expect(typedReturn).toBeGreaterThan(classify);
+    expect(directInput).toBeGreaterThan(typedReturn);
+    expect(directPermission).toBeGreaterThan(directInput);
   });
 
   it("requires tasks:create immediately before either Path persistence route", () => {
