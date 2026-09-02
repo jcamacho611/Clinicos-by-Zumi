@@ -1,3 +1,5 @@
+import { routePresentationPolicy } from "@/lib/design/route-presentation-policy";
+
 export const klinikosAppearancePreferences = ["system", "light", "dark"] as const;
 export type KlinikosAppearancePreference = (typeof klinikosAppearancePreferences)[number];
 export type KlinikosAtmosphere = "dawn" | "day" | "golden" | "night";
@@ -15,14 +17,16 @@ export type KlinikosAppearancePolicy = {
 
 /**
  * Route presentation may suggest a density, never silently override a person's theme.
- * The approved first-visit Living Home is the only reference-locked surface.
+ * The route-presentation policy owns whether the root Appearance control belongs on a
+ * route; authenticated AppShell and workflow surfaces must not receive a second global
+ * presentation authority from the root layout.
  */
 export function appearancePolicyForPath(pathname: string): KlinikosAppearancePolicy {
-  const referenceLocked = pathname === "/";
+  const presentation = routePresentationPolicy(pathname);
   return {
-    controllerVisible: !referenceLocked,
-    referenceLocked,
-    resolvedBy: referenceLocked ? "reference" : "user-preference",
+    controllerVisible: presentation.appearanceControllerVisible,
+    referenceLocked: presentation.referenceLocked,
+    resolvedBy: presentation.referenceLocked ? "reference" : "user-preference",
   };
 }
 
