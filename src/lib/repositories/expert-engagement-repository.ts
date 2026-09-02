@@ -49,6 +49,27 @@ function validateProposalTerms(terms: ExpertEngagementTerms) {
   }
 }
 
+/**
+ * Proposal creation may persist requested scope, time, purpose and data class, but it
+ * may never accept caller-supplied facts that would imply either party accepted the
+ * engagement, conflicts were cleared, agreements were executed, or scoped data access
+ * was approved. Those facts belong to later governed transitions and evidence rails.
+ */
+function canonicalProposalTerms(terms: ExpertEngagementTerms): ExpertEngagementTerms {
+  return {
+    ...terms,
+    organizationAccepted: false,
+    expertAccepted: false,
+    conflictCleared: false,
+    allowedCapabilityKeys: [...terms.allowedCapabilityKeys],
+    allowedResourceTypes: [...terms.allowedResourceTypes],
+    minimumNecessaryFields: [...terms.minimumNecessaryFields],
+    agreementEvidenceRefs: {},
+    scopedAuthorizationApprovedBy: null,
+    scopedAuthorizationApprovedAt: null,
+  };
+}
+
 function proposalSnapshot(terms: ExpertEngagementTerms) {
   return {
     state: "proposed",
@@ -93,6 +114,7 @@ export async function createExpertEngagementRecord(
   validateProposalTerms(input.terms);
 
   const occurredAt = input.occurredAt ?? new Date();
+  const proposalTerms = canonicalProposalTerms(input.terms);
 
   return db.$transaction(async (tx) => {
     const [request, relationship] = await Promise.all([
@@ -136,19 +158,19 @@ export async function createExpertEngagementRecord(
         expertRelationshipId: input.expertRelationshipId,
         state: "proposed",
         version: 1,
-        purpose: input.terms.purpose,
-        startsAt: input.terms.startsAt,
-        endsAt: input.terms.endsAt,
-        organizationAccepted: input.terms.organizationAccepted,
-        expertAccepted: input.terms.expertAccepted,
-        conflictCleared: input.terms.conflictCleared,
-        allowedCapabilityKeys: input.terms.allowedCapabilityKeys,
-        allowedResourceTypes: input.terms.allowedResourceTypes,
-        dataAccessClass: input.terms.dataAccessClass,
-        minimumNecessaryFields: input.terms.minimumNecessaryFields,
-        agreementEvidenceRefs: input.terms.agreementEvidenceRefs,
-        scopedAuthorizationApprovedBy: input.terms.scopedAuthorizationApprovedBy ?? null,
-        scopedAuthorizationApprovedAt: input.terms.scopedAuthorizationApprovedAt ?? null,
+        purpose: proposalTerms.purpose,
+        startsAt: proposalTerms.startsAt,
+        endsAt: proposalTerms.endsAt,
+        organizationAccepted: proposalTerms.organizationAccepted,
+        expertAccepted: proposalTerms.expertAccepted,
+        conflictCleared: proposalTerms.conflictCleared,
+        allowedCapabilityKeys: proposalTerms.allowedCapabilityKeys,
+        allowedResourceTypes: proposalTerms.allowedResourceTypes,
+        dataAccessClass: proposalTerms.dataAccessClass,
+        minimumNecessaryFields: proposalTerms.minimumNecessaryFields,
+        agreementEvidenceRefs: proposalTerms.agreementEvidenceRefs,
+        scopedAuthorizationApprovedBy: proposalTerms.scopedAuthorizationApprovedBy ?? null,
+        scopedAuthorizationApprovedAt: proposalTerms.scopedAuthorizationApprovedAt ?? null,
         createdByPersonId: input.createdByPersonId,
       },
     });
@@ -163,7 +185,7 @@ export async function createExpertEngagementRecord(
         nextState: "proposed",
         engagementVersion: 1,
         actorPersonId: input.createdByPersonId,
-        snapshot: proposalSnapshot(input.terms),
+        snapshot: proposalSnapshot(proposalTerms),
         occurredAt,
       },
     });
@@ -176,8 +198,8 @@ export async function createExpertEngagementRecord(
       expertRelationshipId: input.expertRelationshipId,
       state: "proposed",
       version: 1,
-      purpose: input.terms.purpose,
-      dataAccessClass: input.terms.dataAccessClass,
+      purpose: proposalTerms.purpose,
+      dataAccessClass: proposalTerms.dataAccessClass,
       createdAt: engagement.createdAt,
       grantsDataAccess: false,
     };
