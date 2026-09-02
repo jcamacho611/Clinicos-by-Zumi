@@ -109,9 +109,9 @@ Minimum fields:
 - `implementation_fee`
 - `included_usage`
 - `overage_policy`
-- `stripe_product_id`
-- `stripe_price_id`
-- `stripe_payment_link_id`
+- `stripe_treatment` (`public_self_serve`, `public_subscribe`, `private_quoted`, `prepaid_usage`, `not_directly_purchasable`)
+- `stripe_lookup_key` when a reusable Stripe Price is appropriate
+- `stripe_pricing_version`
 - `invoice_or_quote_required`
 - `contract_required`
 - `qualification_required`
@@ -124,7 +124,9 @@ Minimum fields:
 - `allowed_ctas`
 - `conversion_destination`
 
-The browser never decides price or entitlement.
+Environment-specific Stripe `prod_...`, `price_...`, `plink_...`, Checkout Session, Subscription, Invoice, and PaymentIntent IDs are processor bindings/evidence, not canonical product authority. They may be persisted only where needed for correlation, reconciliation, fulfillment, or audit. Test and live IDs are expected to differ.
+
+The browser never decides price, lookup key, Stripe object ID, entitlement, or authority.
 
 ## 5. Initial revenue universe
 
