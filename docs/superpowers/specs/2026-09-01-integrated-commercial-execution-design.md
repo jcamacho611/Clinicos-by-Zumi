@@ -217,17 +217,43 @@ Rules:
 
 ## 8. Stripe account model
 
-Current connected Stripe context is test/sandbox and presently contains no active products, prices, payment links, or subscriptions.
+The connected Stripe context currently exposed to ChatGPT is `KLINIKOS.IO` in **test/sandbox mode**. The repository separately contains production live-key/webhook architecture; secrets are never copied into documentation.
 
-Therefore implementation will:
-1. build and validate the canonical catalog in test mode
-2. create test products/prices/links only for approved self-serve lanes
-3. validate checkout, invoice, subscription, and webhook behavior
-4. map test IDs into the Offer Registry
-5. verify no PHI-bearing fields
-6. obtain explicit approval before creating or changing live-mode commercial objects
+A universe-wide Stripe sandbox was created on 2026-09-01 to validate the commercial architecture before live promotion.
 
-Enterprise offers remain quote/invoice-driven rather than forced into Payment Links.
+### Sandbox now contains
+
+- current clinic entry offers and subscriptions;
+- monthly and annual Core/Growth/Scale prices;
+- clinic add-on price primitives;
+- professional membership/business/launch targets;
+- Grid employer/capacity/partner targets;
+- EDU individual and institutional targets;
+- implementation, proof, migration, audit, and retainer targets;
+- prepaid usage-wallet denominations;
+- custom/quote-only enterprise, workforce, private-intelligence, payments, and Grid-transaction product shells;
+- automatic test Payment Links for the approved/current clinic plans and selected target self-serve lanes.
+
+New unimplemented products are explicitly marked `TARGET_TEST` or private in Stripe metadata and are not evidence of live sellability, revenue, or production entitlement support.
+
+Detailed sandbox catalog and payment-link evidence lives in:
+
+- `docs/business/KLINIKOS_UNIVERSE_MONETIZATION_AND_STRIPE_CATALOG_2026-09-01.md`
+- `docs/business/KLINIKOS_STRIPE_CONNECT_PAYMENTS_AND_TRUST_EXPANSION_2026-09-01.md`
+
+### Promotion law
+
+Implementation will:
+1. keep the Canon/Offer Registry above Stripe as product truth;
+2. validate products/prices/links in test mode;
+3. validate checkout, invoice, subscription, cancellation, refund, and webhook behavior;
+4. map stable lookup keys and payment evidence into the Offer Registry;
+5. verify no PHI-bearing fields;
+6. promote only approved offers to the intended live Stripe account;
+7. require verified live payment evidence before entitlement or revenue recognition;
+8. preserve enterprise offers as quote/invoice-driven rather than forcing them into Payment Links.
+
+Do not create a second live Stripe merchant merely because a connector exposes only test mode; first reconnect the existing live Klinikos account so customers, payouts, disputes, tax history, and webhooks remain unified.
 
 ## 9. Outlook Opportunity Router
 
