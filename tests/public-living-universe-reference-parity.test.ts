@@ -41,6 +41,9 @@ describe("public Living Universe approved-reference convergence", () => {
     expect(gateway).toContain("styles.zumiPresence");
     expect(gateway).toContain("styles.composerDock");
     expect(cssRule(".composer")).toContain("min-height: 112px");
+    expect(cssRule(".composerDock")).toContain("width: min(780px, 100%)");
+    expect(cssRule(".zumiPresence > span")).toContain("width: 92px");
+    expect(cssRule(".zumiPresence > span")).toContain("height: 92px");
     expect(materials).toContain("position: absolute");
   });
 
@@ -50,6 +53,8 @@ describe("public Living Universe approved-reference convergence", () => {
     expect(gateway).toContain("PUBLIC_LIVING_ACTIONS.filter");
     expect(gateway).toContain("sendPrompt(action.prompt, action.id)");
     expect(gateway).toContain('data-public-object-row="true"');
+    expect(gateway).toContain('data-public-lower-strip="true"');
+    expect(gateway).toContain('data-public-inspector="true"');
   });
 
   it("uses a healthcare-network lower strip and never restores automobile imagery", () => {

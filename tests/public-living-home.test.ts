@@ -204,6 +204,9 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(sha256("public/klinikos-rose-wide-production.png")).toBe("90482a6b122605d972ba46877dc3ce8fa537b3994190ba160f30220324687a93");
     expect(brand).toContain('const MARK_SRC = "/klinikos-orbital-k-production.png"');
     expect(brand).toContain('const WORDMARK_SRC = "/klinikos-wordmark-production.png"');
+    expect(brand).toContain('data-klinikos-approved-wordmark="true"');
+    expect(brand).toContain("object-contain");
+    expect(brand).not.toContain("mix-blend-screen");
     expect(homeStyles).toContain("url('/klinikos-rose-hero-production.png')");
     expect(homeStyles).toContain("url('/klinikos-rose-wide-production.png')");
     expect(homeStyles).not.toContain("transparent.webp");

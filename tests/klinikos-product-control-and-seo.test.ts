@@ -63,8 +63,12 @@ describe("public comprehension and SEO law", () => {
     expect(rootLayout).toContain('import { KLINIKOS_META } from "@/lib/brand/canonical-messaging"');
     expect(rootLayout).toContain("default: KLINIKOS_META.title");
     expect(rootLayout).toContain("description: KLINIKOS_META.description");
-    expect(home).toContain("title: KLINIKOS_META.title");
-    expect(home).toContain("description: KLINIKOS_META.description");
+    expect(home).toContain("title: KLINIKOS_PUBLIC_META.title");
+    expect(home).toContain("description: KLINIKOS_PUBLIC_META.description");
+    expect(home).toContain("openGraph:");
+    expect(home).toContain("twitter:");
+    expect(messaging).toContain('title: "Klinikos | The operating network for healthcare"');
+    expect(messaging).toContain("care, work, education, capacity, and healthcare operations");
     expect(messaging).toContain('KLINIKOS_ONE_LINE = "Run your clinic from one intelligent operating system."');
   });
 

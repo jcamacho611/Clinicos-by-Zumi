@@ -195,6 +195,12 @@ const navItems = [
 
 const PUBLIC_INTERFACE_STEPS = ["Listening", "Understanding", "Connecting", "Preparing", "Ready"] as const;
 
+const PUBLIC_ACTION_GROUPS = [
+  { id: "need", title: "What I need" },
+  { id: "offer", title: "What I can offer" },
+  { id: "grow", title: "What I want to build" },
+] as const;
+
 const FEATURED_ACTION_IDS = ["care", "work", "rooms", "placement"] as const;
 
 const FEATURED_ACTION_CONTENT = {
@@ -379,11 +385,12 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
       : "Waiting for an objective";
 
   function renderPlaneControls(surface: "desktop" | "mobile") {
+    const readoutId = `public-plane-readout-${surface}`;
     return (
       <div aria-label="Five-plane view" className={styles.planeNav} role="group">
         {PUBLIC_LIVING_PLANE_LENSES.map((plane) => (
           <button
-            aria-controls="public-plane-readout"
+            aria-controls={readoutId}
             aria-pressed={activePlane.id === plane.id}
             className={styles.planeButton}
             data-living-edge={surface === "desktop" && activePlane.id === plane.id ? "active-plane" : undefined}
@@ -402,12 +409,32 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
     );
   }
 
-  function renderActionGroup(side: "need" | "have", surface: "desktop" | "mobile") {
+  function renderPlaneInspector(surface: "desktop" | "mobile") {
     return (
-      <section className={styles.actionGroup} key={`${surface}-${side}`}>
-        <h3 className={styles.actionGroupTitle}>{side === "need" ? "I need something" : "I have something"}</h3>
+      <section
+        className={styles.inspector}
+        aria-label="Inspector"
+        id={`public-plane-readout-${surface}`}
+      >
+        <p className={styles.inspectorLabel}>Inspector · {activePlane.number}</p>
+        <h2>{activePlane.title}</h2>
+        <p>{activePlane.description}</p>
+        <p>{KLINIKOS_HUMAN_AUTHORITY}</p>
+        <div className={styles.truthRow} aria-label="Public safety boundaries">
+          <span>AI ≠ authority</span>
+          <span>Eligibility first</span>
+          <span>Patient data private</span>
+        </div>
+      </section>
+    );
+  }
+
+  function renderActionGroup(category: (typeof PUBLIC_ACTION_GROUPS)[number], surface: "desktop" | "mobile") {
+    return (
+      <section className={styles.actionGroup} key={`${surface}-${category.id}`}>
+        <h3 className={styles.actionGroupTitle}>{category.title}</h3>
         <div className={styles.actionList}>
-          {PUBLIC_LIVING_ACTIONS.filter((action) => action.side === side).map((action) => (
+          {PUBLIC_LIVING_ACTIONS.filter((action) => action.category === category.id).map((action) => (
             <button
               className={styles.actionButton}
               disabled={isSubmitting}
@@ -587,7 +614,6 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                   <PublicLivingUniverseObjectStage
                     item={activeUniverse}
                     signupEnabled={signupEnabled}
-                    variant="obsidian"
                   />
                 </div>
               )}
@@ -648,17 +674,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               This surface shows minimum-necessary public guidance. Policy, eligibility, ranking, and authority remain server-owned.
             </p>
             {renderPlaneControls("desktop")}
-            <section className={styles.inspector} aria-label="Inspector" id="public-plane-readout">
-              <p className={styles.inspectorLabel}>Inspector · {activePlane.number}</p>
-              <h2>{activePlane.title}</h2>
-              <p>{activePlane.description}</p>
-              <p>{KLINIKOS_HUMAN_AUTHORITY}</p>
-              <div className={styles.truthRow} aria-label="Public safety boundaries">
-                <span>AI ≠ authority</span>
-                <span>Eligibility first</span>
-                <span>Patient data private</span>
-              </div>
-            </section>
+            {renderPlaneInspector("desktop")}
           </aside>
         </main>
 
@@ -689,7 +705,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
             <details className={styles.intentLibrary}>
               <summary>See every way to begin</summary>
               <div data-public-intent-constellation="true">
-                {(["need", "have"] as const).map((side) => renderActionGroup(side, "desktop"))}
+                {PUBLIC_ACTION_GROUPS.map((category) => renderActionGroup(category, "desktop"))}
               </div>
             </details>
 
@@ -711,12 +727,15 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
           <details className={styles.mobileDrawer}>
             <summary>Start</summary>
             <div className={styles.mobileDrawerPanel}>
-              {(["need", "have"] as const).map((side) => renderActionGroup(side, "mobile"))}
+              {PUBLIC_ACTION_GROUPS.map((category) => renderActionGroup(category, "mobile"))}
             </div>
           </details>
           <details className={styles.mobileDrawer}>
-            <summary>Planes</summary>
-            <div className={styles.mobileDrawerPanel}>{renderPlaneControls("mobile")}</div>
+            <summary>Planes · {activePlane.shortTitle}</summary>
+            <div className={styles.mobileDrawerPanel}>
+              {renderPlaneControls("mobile")}
+              {renderPlaneInspector("mobile")}
+            </div>
           </details>
           <details className={styles.mobileDrawer}>
             <summary>Context</summary>

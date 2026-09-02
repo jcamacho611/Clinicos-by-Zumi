@@ -25,12 +25,22 @@ describe("public Living Universe responsive clearance", () => {
   });
 
   it("gives the fixed tablet/mobile action dock safe content clearance", () => {
+    expect(css).toMatch(/@media \(max-width: 1024px\)[\s\S]*?\.mobileDock[\s\S]*?position:\s*fixed;/);
+    expect(css).toMatch(/@media \(max-width: 1024px\)[\s\S]*?\.shell[\s\S]*?padding-bottom:\s*calc\(92px \+ env\(safe-area-inset-bottom\)\);/);
     expect(responsiveCss).toMatch(/@media \(max-width: 1024px\)[\s\S]*?\[data-living-universe-stage="true"\][\s\S]*?padding-bottom:\s*calc\(92px \+ env\(safe-area-inset-bottom\)\);/);
-    expect(responsiveCss).toMatch(/nav\[aria-label="Living Universe mobile controls"\][\s\S]*?bottom:\s*calc\(10px \+ env\(safe-area-inset-bottom\)\);/);
   });
 
   it("adds a little more orb-to-disclosure clearance on narrow phones", () => {
     expect(responsiveCss).toMatch(/@media \(max-width: 520px\)[\s\S]*?#public-conversation-disclosure[\s\S]*?margin-top:\s*104px;/);
+  });
+
+  it("moves the control dock above content in the short viewport produced by real browser zoom", () => {
+    expect(css).toMatch(
+      /@media \(min-width: 521px\) and \(max-width: 768px\) and \(max-height: 600px\)[\s\S]*?\.mobileDock[\s\S]*?top:\s*90px;[\s\S]*?bottom:\s*auto;/,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 521px\) and \(max-width: 768px\) and \(max-height: 600px\)[\s\S]*?\.stage[\s\S]*?padding-top:\s*122px;/,
+    );
   });
 
   it("lets every right-rail plane label wrap instead of clipping its meaning", () => {
@@ -48,5 +58,20 @@ describe("public Living Universe responsive clearance", () => {
 
     expect(markup).toContain("One intelligent operating network for healthcare.");
     expect(markup).not.toContain("Run your clinic from one intelligent operating system.");
+  });
+
+  it("gives every plane control an existing visible-surface Inspector target", () => {
+    const markup = renderToStaticMarkup(createElement(PublicLivingGateway, { signupEnabled: false }));
+    const controls = [...markup.matchAll(/aria-controls="([^"]+)"/g)].map((match) => match[1]);
+
+    expect(new Set(controls)).toEqual(new Set([
+      "public-plane-readout-desktop",
+      "public-plane-readout-mobile",
+    ]));
+    for (const id of new Set(controls)) {
+      expect(markup.match(new RegExp(`id="${id}"`, "g")) ?? []).toHaveLength(1);
+    }
+    expect(markup).toContain("Planes · Before, now &amp; next");
+    expect(markup.match(/aria-label="Inspector"/g) ?? []).toHaveLength(2);
   });
 });

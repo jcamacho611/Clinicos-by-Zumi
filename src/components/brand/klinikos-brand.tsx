@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 // Exact production artwork supplied in the approved 2026-08-16 design package.
-// The source images intentionally include a black field. The orbital mark retains
-// that field; the horizontal wordmark is center-cropped and screened into the
-// surrounding surface so its lettering remains faithful without a visible box.
+// The source images intentionally include a black field. Render them directly at their
+// native aspect ratios: blend modes made the approved lettering depend on the pixels
+// behind it, so customer browsers and release screenshots could disagree.
 const MARK_SRC = "/klinikos-orbital-k-production.png";
 const WORDMARK_SRC = "/klinikos-wordmark-production.png";
 
@@ -30,7 +30,8 @@ function KlinikosLettering({ className = "h-[24px] w-auto" }: { className?: stri
     <span className={`relative inline-block overflow-hidden ${className}`}>
       <Image
         alt="Klinikos"
-        className="h-full w-full object-cover object-center mix-blend-screen"
+        className="h-full w-full object-contain object-center"
+        data-klinikos-approved-wordmark="true"
         height={724}
         priority
         src={WORDMARK_SRC}

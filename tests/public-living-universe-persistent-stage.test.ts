@@ -57,8 +57,9 @@ describe("persistent public Living Universe stage", () => {
     expect(publicInterface).toContain("PUBLIC_LIVING_PLANE_LENSES");
     expect(publicInterface.match(/id: "(?:healthcare_universe|economic_resource|lifecycle|operating_infrastructure|compounding_business)"/g) ?? []).toHaveLength(5);
     expect(publicInterface).not.toMatch(/sixth[ _-]?plane/i);
-    expect(gateway).toContain('aria-controls="public-plane-readout"');
-    expect(gateway.match(/id="public-plane-readout"/g) ?? []).toHaveLength(1);
+    expect(gateway).toContain('`public-plane-readout-${surface}`');
+    expect(gateway).toContain('renderPlaneInspector("desktop")');
+    expect(gateway).toContain('renderPlaneInspector("mobile")');
   });
 
   it("keeps the composer persistent as the action dock", () => {
@@ -75,10 +76,11 @@ describe("persistent public Living Universe stage", () => {
     expect(gateway.match(/data-living-edge/g) ?? []).toHaveLength(2);
   });
 
-  it("keeps the active Path readable as Obsidian inside the Marble Object Stage", () => {
+  it("keeps this public tranche truthfully Obsidian without claiming a Marble Object Stage", () => {
     expect(stage).toContain('bg-[#12090b]');
-    expect(stage).toContain('data-material={variant}');
-    expect(gateway).toContain('variant="obsidian"');
+    expect(stage).toContain('data-material="obsidian"');
+    expect(stage).not.toContain('variant?: "obsidian" | "marble"');
+    expect(gateway).not.toContain('variant="obsidian"');
   });
 
   it("keeps one Zumi action dock inside the dominant Object Stage", () => {
