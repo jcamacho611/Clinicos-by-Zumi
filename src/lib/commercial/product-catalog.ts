@@ -2,9 +2,12 @@ import { clinicCommercialOffers, clinicPlans } from "@/lib/commercial/klinikos-c
 
 export const commercialProductKeys = [
   "operational_audit",
+  "implementation_blueprint",
+  "founding_clinic_implementation",
   "clinic_core",
   "clinic_growth",
   "clinic_scale",
+  "clinic_enterprise",
   // Legacy internal aliases remain readable so historical processor/subscription
   // evidence can still resolve. They must not become new checkout products.
   "clinic_operator",
@@ -14,13 +17,38 @@ export const commercialProductKeys = [
 
 export type CommercialProductKey = (typeof commercialProductKeys)[number];
 export type CommercialProductLifecycle = "active" | "legacy_evidence_only";
+export type CommercialAudience = "clinic" | "enterprise" | "professional" | "facility";
+export type CommercialRevenueClass =
+  | "service"
+  | "implementation"
+  | "subscription"
+  | "enterprise_contract"
+  | "historical_evidence";
+export type CommercialRoute =
+  | "self_serve"
+  | "qualified_service"
+  | "sales_led"
+  | "recurring_reviewed"
+  | "enterprise_government"
+  | "historical_evidence_only";
+export type CommercialPriceType = "fixed" | "starting_at" | "custom" | "historical";
 
 export type CommercialProduct = {
   key: CommercialProductKey;
   label: string;
-  audience: "clinic" | "professional" | "facility";
+  audience: CommercialAudience;
   billing: "one_time" | "monthly" | "custom";
   priceCents: number | null;
+  /** What kind of revenue event this offer represents. */
+  revenueClass: CommercialRevenueClass;
+  /** The governed path a qualified buyer should enter. This is separate from the payment processor. */
+  commercialRoute: CommercialRoute;
+  /** Describes whether the displayed commercial amount is exact, a floor, custom, or historical evidence only. */
+  priceType: CommercialPriceType;
+  /** True when a human/system qualification gate must be satisfied before the commercial path advances. */
+  qualificationRequired: boolean;
+  /** Canonical public/sales destination for this offer, or null when the product cannot start a new sale. */
+  conversionDestination: string | null;
   /** Current product can start a new governed checkout. Historical aliases cannot. */
   lifecycle: CommercialProductLifecycle;
   /** May be offered directly on a public purchase surface without another sales gate. */
@@ -39,6 +67,9 @@ export type CommercialProduct = {
 const clinicBoundary =
   "Payment can activate the purchased software entitlement, but production PHI, clinical, connector, credential, integration, and human-review gates remain independent.";
 
+const serviceBoundary =
+  "Payment purchases only the named service. It does not activate production software, PHI workflows, clinical authority, professional eligibility, Grid eligibility, or any regulated capability.";
+
 export const commercialProducts: readonly CommercialProduct[] = [
   {
     key: "operational_audit",
@@ -46,13 +77,55 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "one_time",
     priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
+    revenueClass: "service",
+    commercialRoute: "self_serve",
+    priceType: "fixed",
+    qualificationRequired: false,
+    conversionDestination: "/sales",
+    lifecycle: "active",
+    publicPurchasable: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+  {
+    key: "implementation_blueprint",
+    label: clinicCommercialOffers.foundingEvaluation.name,
+    audience: "clinic",
+    billing: "one_time",
+    priceCents: clinicCommercialOffers.foundingEvaluation.priceCents,
+    revenueClass: "service",
+    commercialRoute: "qualified_service",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
+    lifecycle: "active",
+    publicPurchasable: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+  {
+    key: "founding_clinic_implementation",
+    label: clinicCommercialOffers.foundingImplementation.name,
+    audience: "clinic",
+    billing: "custom",
+    // `from $8,000` is a scope floor, not a fixed amount the browser may charge.
+    priceCents: null,
+    revenueClass: "implementation",
+    commercialRoute: "sales_led",
+    priceType: "starting_at",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
     lifecycle: "active",
     publicPurchasable: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
     postPurchaseBoundary:
-      "Payment purchases the Clinic Operating Analysis only. It does not activate production software, PHI workflows, clinical authority, Grid eligibility, or any regulated capability.",
+      "A scoped implementation agreement funds only its contracted work. Payment never proves production readiness, clinical authority, connector readiness, or PHI eligibility.",
   },
   {
     key: "clinic_core",
@@ -60,6 +133,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.core.monthlyPriceCents,
+    revenueClass: "subscription",
+    commercialRoute: "recurring_reviewed",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
     lifecycle: "active",
     publicPurchasable: true,
     modules: ["advanced_reports"],
@@ -82,6 +160,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.growth.monthlyPriceCents,
+    revenueClass: "subscription",
+    commercialRoute: "recurring_reviewed",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
     lifecycle: "active",
     publicPurchasable: true,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
@@ -104,6 +187,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.scale.monthlyPriceCents,
+    revenueClass: "subscription",
+    commercialRoute: "recurring_reviewed",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
     lifecycle: "active",
     publicPurchasable: true,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
@@ -121,11 +209,35 @@ export const commercialProducts: readonly CommercialProduct[] = [
     postPurchaseBoundary: clinicBoundary,
   },
   {
+    key: "clinic_enterprise",
+    label: clinicPlans.enterprise.name,
+    audience: "enterprise",
+    billing: "custom",
+    priceCents: null,
+    revenueClass: "enterprise_contract",
+    commercialRoute: "enterprise_government",
+    priceType: "custom",
+    qualificationRequired: true,
+    conversionDestination: "/founding-clinic",
+    lifecycle: "active",
+    publicPurchasable: false,
+    modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary:
+      "Enterprise scope, pricing, security, deployment, integrations, procurement, and entitlements remain governed by the executed commercial agreement and independent technical gates.",
+  },
+  {
     key: "clinic_operator",
     label: "Klinikos Clinic Operator (legacy evidence only)",
     audience: "clinic",
     billing: "custom",
     priceCents: null,
+    revenueClass: "historical_evidence",
+    commercialRoute: "historical_evidence_only",
+    priceType: "historical",
+    qualificationRequired: false,
+    conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
@@ -150,6 +262,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
     // Historical processor amount retained for reconciliation only. Current public
     // Grid subscription truth lives in `gridPlans` and must not be inferred from this.
     priceCents: 3_900,
+    revenueClass: "historical_evidence",
+    commercialRoute: "historical_evidence_only",
+    priceType: "historical",
+    qualificationRequired: false,
+    conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["grid"],
@@ -166,6 +283,11 @@ export const commercialProducts: readonly CommercialProduct[] = [
     // Historical processor amount retained for reconciliation only. Current public
     // organization pricing lives in `gridPlans` and must not be inferred from this.
     priceCents: 9_900,
+    revenueClass: "historical_evidence",
+    commercialRoute: "historical_evidence_only",
+    priceType: "historical",
+    qualificationRequired: false,
+    conversionDestination: null,
     lifecycle: "legacy_evidence_only",
     publicPurchasable: false,
     modules: ["grid"],
