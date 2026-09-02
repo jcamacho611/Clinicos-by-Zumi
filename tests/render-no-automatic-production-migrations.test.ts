@@ -98,4 +98,26 @@ describe("Render production migration boundary", () => {
     );
     expect(jobEnv).not.toContain("KLINIKOS_ALLOW_MIGRATION_DEPLOY");
   });
+
+  it("runs disposable database tests in Quality without widening migration authority", () => {
+    const verifyJob = qualityWorkflow.slice(
+      qualityWorkflow.indexOf("verify:"),
+      qualityWorkflow.indexOf("deploy-contract:"),
+    );
+    const jobEnv = verifyJob.slice(
+      verifyJob.indexOf("env:"),
+      verifyJob.indexOf("services:"),
+    );
+    const testStep = verifyJob.slice(
+      verifyJob.indexOf("- name: Test"),
+      verifyJob.indexOf("- name: Verify MVP journeys"),
+    );
+
+    expect(jobEnv).not.toContain("KLINIKOS_ALLOW_MIGRATION_DEPLOY");
+    expect(jobEnv).not.toContain("KLINIKOS_ALLOW_DISPOSABLE_DATABASE_TESTS");
+    expect(testStep).toContain(
+      "KLINIKOS_ALLOW_DISPOSABLE_DATABASE_TESTS: disposable-verification",
+    );
+    expect(testStep).not.toContain("KLINIKOS_ALLOW_MIGRATION_DEPLOY");
+  });
 });

@@ -37,6 +37,7 @@ const CODE_ONLY_DATABASE_TESTS = [
   "tests/person-context-db-ambiguity.test.ts",
   "tests/person-relationship-db.test.ts",
   "tests/person-account-signup-db.test.ts",
+  "tests/company-opportunity-repository.db.test.ts",
   "src/features/zumi/phi-provider-evidence-repository.test.ts",
 ];
 
@@ -140,6 +141,7 @@ async function main() {
       DATABASE_URL: disposableDatabaseUrl,
       DIRECT_DATABASE_URL: disposableDatabaseUrl,
       KLINIKOS_ALLOW_MIGRATION_DEPLOY: "disposable-verification",
+      KLINIKOS_ALLOW_DISPOSABLE_DATABASE_TESTS: "disposable-verification",
     };
 
     await record("Render build + disposable migration", () => run(

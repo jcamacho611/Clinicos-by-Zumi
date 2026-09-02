@@ -77,6 +77,11 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm test
+        env:
+          # Scoped to the test step after the disposable Postgres service has been
+          # migrated. This enables destructive repository tests without granting the
+          # migration-deploy capability to the whole job.
+          KLINIKOS_ALLOW_DISPOSABLE_DATABASE_TESTS: disposable-verification
       - name: Verify MVP journeys against PostgreSQL
         run: npm run test:mvp
       - name: Production build

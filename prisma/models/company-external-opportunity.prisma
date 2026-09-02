@@ -1,0 +1,141 @@
+model CompanyExternalOpportunity {
+  id                         String                       @id @default(cuid())
+  organizationId             String
+  operatingScope             String                       @default("KLINIKOS_COMPANY_OS")
+  version                    Int                          @default(1)
+  title                      String
+  opportunityClass           String
+  targetClass                String
+  targetOrganizationName     String
+  targetOrganizationDomain   String?
+  purpose                    String
+  ask                        String?
+  lifecycleStage             String                       @default("DISCOVERED")
+  qualificationState         String                       @default("UNQUALIFIED")
+  providerState              String                       @default("UNPROVEN")
+  deliveryState              String                       @default("UNPROVEN")
+  responseState              String                       @default("UNPROVEN")
+  submissionState            String                       @default("NOT_STARTED")
+  awardState                 String                       @default("UNPROVEN")
+  contractState              String                       @default("UNPROVEN")
+  cashState                  String                       @default("UNPROVEN")
+  ownerId                    String?
+  deadlineAt                 DateTime?
+  nextAction                 String?
+  nextActionDueAt            DateTime?
+  blocker                    String?
+  sourceSystem               String
+  sourceType                 String
+  sourceReference            String
+  sourceFingerprintSha256    String
+  sourceObservedAt           DateTime
+  createdById                String?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  organization               Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  owner                      User?                        @relation("CompanyOpportunityOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  createdBy                  User?                        @relation("CompanyOpportunityCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  evidence                   CompanyOpportunityEvidence[]
+  events                     CompanyOpportunityEvent[]
+
+  @@unique([organizationId, id], map: "company_external_opportunities_organization_id_key")
+  @@unique([organizationId, sourceSystem, sourceFingerprintSha256], map: "company_external_opportunities_source_fingerprint_key")
+  @@index([organizationId, lifecycleStage, deadlineAt], map: "company_external_opportunities_stage_deadline_idx")
+  @@index([organizationId, qualificationState, updatedAt], map: "company_external_opportunities_qualification_updated_idx")
+  @@index([ownerId, lifecycleStage], map: "company_external_opportunities_owner_stage_idx")
+  @@map("company_external_opportunities")
+}
+
+model CompanyOpportunityEvidence {
+  id                           String                       @id @default(cuid())
+  organizationId               String
+  opportunityId                String
+  claimKey                     String
+  claimText                    String
+  truthClass                   String
+  evidenceType                 String
+  sourceSystem                 String
+  sourceType                   String
+  sourceReference              String
+  sourceThreadId               String?
+  sourceMessageId              String?
+  sourceArtifactId             String?
+  sourceFingerprintSha256      String
+  sourceLocator                String?
+  sourceSection                String?
+  sourcePage                   Int?
+  ingestionKey                 String
+  sourceObservedAt             DateTime
+  observedByActorId            String?
+  verifiedAt                   DateTime?
+  verifiedByActorId            String?
+  approvalState                String                       @default("NEEDS_REVIEW")
+  approvedAt                   DateTime?
+  approvedByActorId            String?
+  disclosureState              String                       @default("INTERNAL_ONLY")
+  reviewAfter                  DateTime?
+  expiresAt                    DateTime?
+  revokedAt                    DateTime?
+  supersedesEvidenceId         String?
+  correctionReason             String?
+  agreementReference           String?
+  counterparty                 String?
+  agreementEffectiveAt         DateTime?
+  signatureEvidenceReference   String?
+  amountCents                  Int?
+  currency                     String?
+  payeeEntityReference         String?
+  externalTransactionReference String?
+  reconciliationState          String?
+  retentionPolicyKey           String                       @default("company_opportunity_evidence")
+  retentionReviewAt            DateTime?
+  legalHoldAt                  DateTime?
+  tombstonedAt                 DateTime?
+  recordedByActorId            String?
+  createdAt                    DateTime                     @default(now())
+  opportunity                  CompanyExternalOpportunity   @relation(fields: [organizationId, opportunityId], references: [organizationId, id], onDelete: Restrict)
+  supersedes                   CompanyOpportunityEvidence?  @relation("CompanyOpportunityEvidenceSupersession", fields: [organizationId, opportunityId, supersedesEvidenceId], references: [organizationId, opportunityId, id], onDelete: Restrict)
+  supersededBy                 CompanyOpportunityEvidence[] @relation("CompanyOpportunityEvidenceSupersession")
+  observedBy                   User?                        @relation("CompanyOpportunityEvidenceObserver", fields: [observedByActorId], references: [id], onDelete: Restrict)
+  verifiedBy                   User?                        @relation("CompanyOpportunityEvidenceVerifier", fields: [verifiedByActorId], references: [id], onDelete: Restrict)
+  approvedBy                   User?                        @relation("CompanyOpportunityEvidenceApprover", fields: [approvedByActorId], references: [id], onDelete: Restrict)
+  recordedBy                   User?                        @relation("CompanyOpportunityEvidenceRecorder", fields: [recordedByActorId], references: [id], onDelete: Restrict)
+  events                       CompanyOpportunityEvent[]    @relation("CompanyOpportunityEventEvidence")
+
+  @@unique([organizationId, opportunityId, id], map: "company_opportunity_evidence_organization_opportunity_id_key")
+  @@unique([organizationId, opportunityId, ingestionKey], map: "company_opportunity_evidence_ingestion_key")
+  @@unique([organizationId, opportunityId, supersedesEvidenceId], map: "company_opportunity_evidence_single_supersession_key")
+  @@index([organizationId, opportunityId, claimKey, createdAt], map: "company_opportunity_evidence_claim_created_idx")
+  @@index([organizationId, reviewAfter, expiresAt], map: "company_opportunity_evidence_review_expiry_idx")
+  @@index([organizationId, opportunityId, supersedesEvidenceId], map: "company_opportunity_evidence_supersedes_idx")
+  @@index([sourceSystem, sourceThreadId, sourceMessageId], map: "company_opportunity_evidence_source_message_idx")
+  @@map("company_opportunity_evidence")
+}
+
+model CompanyOpportunityEvent {
+  id                 String                      @id @default(cuid())
+  organizationId     String
+  opportunityId      String
+  idempotencyKey     String
+  actorId             String?
+  eventType           String
+  expectedVersion     Int
+  resultingVersion    Int
+  fromLifecycleStage  String?
+  toLifecycleStage    String?
+  railType            String?
+  fromRailState       String?
+  toRailState         String?
+  evidenceId          String?
+  reason              String
+  occurredAt          DateTime                    @default(now())
+  createdAt           DateTime                    @default(now())
+  opportunity         CompanyExternalOpportunity  @relation(fields: [organizationId, opportunityId], references: [organizationId, id], onDelete: Restrict)
+  evidence            CompanyOpportunityEvidence? @relation("CompanyOpportunityEventEvidence", fields: [organizationId, opportunityId, evidenceId], references: [organizationId, opportunityId, id], onDelete: Restrict)
+  actor               User?                       @relation("CompanyOpportunityEventActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, opportunityId, idempotencyKey], map: "company_opportunity_events_idempotency_key")
+  @@index([organizationId, opportunityId, occurredAt], map: "company_opportunity_events_occurred_idx")
+  @@index([organizationId, opportunityId, evidenceId], map: "company_opportunity_events_evidence_idx")
+  @@map("company_opportunity_events")
+}

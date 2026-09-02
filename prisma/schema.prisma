@@ -139,6 +139,7 @@ model Organization {
   gridRequestsReceived       GridRequest[]               @relation("GridRequestDestination")
   gridRequestEvents          GridRequestEvent[]
   gridPayouts                GridPayout[]
+  companyExternalOpportunities CompanyExternalOpportunity[]
 
   @@map("organizations")
 }
@@ -206,6 +207,13 @@ model User {
   passkeys       PasskeyCredential[]
   voiceSessions  VoiceSession[]
   provider       Provider?
+  companyOpportunityOwnerships CompanyExternalOpportunity[] @relation("CompanyOpportunityOwner")
+  companyOpportunityCreations CompanyExternalOpportunity[] @relation("CompanyOpportunityCreator")
+  companyOpportunityEvidenceObservations CompanyOpportunityEvidence[] @relation("CompanyOpportunityEvidenceObserver")
+  companyOpportunityEvidenceVerifications CompanyOpportunityEvidence[] @relation("CompanyOpportunityEvidenceVerifier")
+  companyOpportunityEvidenceApprovals CompanyOpportunityEvidence[] @relation("CompanyOpportunityEvidenceApprover")
+  companyOpportunityEvidenceRecordings CompanyOpportunityEvidence[] @relation("CompanyOpportunityEvidenceRecorder")
+  companyOpportunityEvents CompanyOpportunityEvent[] @relation("CompanyOpportunityEventActor")
 
   @@index([organizationId])
   @@map("users")

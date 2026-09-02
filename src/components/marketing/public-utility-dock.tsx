@@ -17,6 +17,8 @@ function RouteScopedPublicUtilityDock({ pathname }: { pathname: string }) {
   const hasVisibleUtility = presentation?.zumiMode === "floating-public"
     || presentation?.appearanceMode === "adaptive";
 
+  if (!presentation.utilityDockVisible) return null;
+
   return (
     <div
       className={hasVisibleUtility
@@ -24,14 +26,18 @@ function RouteScopedPublicUtilityDock({ pathname }: { pathname: string }) {
         : "contents"}
       data-public-utility-dock={hasVisibleUtility ? "true" : undefined}
     >
-      <PublicZumiSiteControl
-        onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
-        open={activePanel === "zumi"}
-      />
-      <KlinikosAtmosphereController
-        onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
-        open={activePanel === "appearance"}
-      />
+      {presentation.publicZumiVisible ? (
+        <PublicZumiSiteControl
+          onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
+          open={activePanel === "zumi"}
+        />
+      ) : null}
+      {presentation.appearanceControllerVisible ? (
+        <KlinikosAtmosphereController
+          onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
+          open={activePanel === "appearance"}
+        />
+      ) : null}
     </div>
   );
 }
