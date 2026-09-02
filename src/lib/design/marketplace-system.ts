@@ -7,10 +7,10 @@
  * remain deterministic and outside this presentation module.
  */
 
-export const MARKETPLACE_EXCEPTION_SCOPE = ["/grid/browse"] as const;
+import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-presentation";
 
 export function isMarketplaceSurface(route: string) {
-  return MARKETPLACE_EXCEPTION_SCOPE.some((prefix) => route === prefix || route.startsWith(`${prefix}/`));
+  return resolvePublicRoutePresentation(route)?.projection === "grid-discovery";
 }
 
 export const marketplacePalette = {

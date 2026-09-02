@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
-
-const publicNavigation = [
-  { label: "How Klinikos helps", href: "/how-it-works" },
-  { label: "Explore Grid", href: "/grid" },
-  { label: "Find care", href: "/grid/browse?intent=provider" },
-  { label: "Learn", href: "/edu" },
-  { label: "For clinics", href: "/founding-clinic" },
-] as const;
+import { PUBLIC_PRIMARY_NAVIGATION } from "@/lib/screen-experience-route-presentation";
 
 export function PublicHeader({ contextLabel }: { contextLabel?: string }) {
   return (
@@ -30,7 +23,7 @@ export function PublicHeader({ contextLabel }: { contextLabel?: string }) {
         </div>
 
         <nav aria-label="Primary Klinikos navigation" className="ml-auto hidden items-center gap-5 text-[11px] font-bold text-[var(--k-muted)] lg:flex">
-          {publicNavigation.map((item) => <Link className="inline-flex min-h-11 items-center hover:text-[var(--k-text)]" href={item.href} key={item.href}>{item.label}</Link>)}
+          {PUBLIC_PRIMARY_NAVIGATION.map((item) => <Link className="inline-flex min-h-11 items-center hover:text-[var(--k-text)]" href={item.href} key={item.href}>{item.label}</Link>)}
         </nav>
 
         <div className="ml-auto hidden items-center gap-3 lg:flex">
@@ -43,7 +36,7 @@ export function PublicHeader({ contextLabel }: { contextLabel?: string }) {
             <Menu aria-hidden="true" className="size-5" />
           </summary>
           <nav aria-label="Mobile Klinikos navigation" className="absolute right-0 top-[calc(100%+.75rem)] grid w-[min(19rem,calc(100vw-2rem))] gap-1 rounded-[20px] border border-[var(--k-line)] bg-[var(--k-public-surface)] p-3 shadow-[var(--k-shadow)]">
-            {publicNavigation.map((item) => <Link className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--k-text)] hover:bg-[var(--k-public-raised)]" href={item.href} key={item.href}>{item.label}</Link>)}
+            {PUBLIC_PRIMARY_NAVIGATION.map((item) => <Link className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--k-text)] hover:bg-[var(--k-public-raised)]" href={item.href} key={item.href}>{item.label}</Link>)}
             <div className="my-1 border-t border-[var(--k-line)]" />
             <Link className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--k-text)] hover:bg-[var(--k-public-raised)]" href="/portal/login">Patient access</Link>
             <Link className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--k-text)] hover:bg-[var(--k-public-raised)]" href="/signup">Membership status</Link>

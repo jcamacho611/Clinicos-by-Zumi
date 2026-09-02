@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import * as registry from "@/lib/screen-experience-route-registry";
 
 const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
 const control = read("src/components/marketing/public-zumi-site-control.tsx");
@@ -13,12 +14,17 @@ describe("public Zumi site control", () => {
     expect(rootLayout).toContain('import { PublicUtilityDock } from "@/components/marketing/public-utility-dock"');
     expect(rootLayout).toContain("<PublicUtilityDock />");
     expect(utilityDock).toContain("<PublicZumiSiteControl");
-    for (const pathname of ["/pricing", "/trust", "/how-it-works", "/founding-clinic", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/edu"]) {
-      expect(control, pathname).toContain(`"${pathname}"`);
+    const resolve = (registry as typeof registry & {
+      resolvePublicRoutePresentation?: (pathname: string) => { zumiMode: string } | null;
+    }).resolvePublicRoutePresentation;
+    for (const pathname of ["/pricing", "/trust", "/how-it-works", "/founding-clinic", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/grid/resource/resource_1", "/grid/join/seller", "/edu"]) {
+      expect(resolve?.(pathname)?.zumiMode, pathname).toBe("floating-public");
     }
-    expect(control).not.toContain('"/login",');
-    expect(control).not.toContain('"/portal",');
-    expect(control).not.toContain('"/dashboard",');
+    expect(resolve?.("/")?.zumiMode).toBe("embedded-command");
+    expect(resolve?.("/login") ?? null).toBeNull();
+    expect(resolve?.("/portal") ?? null).toBeNull();
+    expect(resolve?.("/dashboard") ?? null).toBeNull();
+    expect(control).not.toContain("const PUBLIC_PATHS");
   });
 
   it("is a clearly labeled control rather than an unexplained decorative orb", () => {

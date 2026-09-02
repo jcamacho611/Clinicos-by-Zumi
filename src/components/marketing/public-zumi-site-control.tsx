@@ -6,35 +6,21 @@ import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import type { PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
+import {
+  isPublicDirectDestination,
+  resolvePublicRoutePresentation,
+} from "@/lib/screen-experience-route-presentation";
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
-const PUBLIC_PATHS = new Set([
-  "/about",
-  "/capabilities",
-  "/ecosystem",
-  "/founding-clinic",
-  "/how-it-works",
-  "/operational-audit",
-  "/pricing",
-  "/sales",
-  "/start",
-  "/trust",
-  "/grid",
-  "/grid/browse",
-  "/grid/pricing",
-  "/edu",
-]);
 
 type PublicZumiSuggestion = { id: string; label: string; prompt: string };
 type Turn = { id: number; prompt: string; resolution: PublicLivingResolution; suggestions: PublicZumiSuggestion[] };
 type ApiResponse = { data?: { resolution?: unknown; suggestions?: unknown } };
 
-const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/access"]);
-
 function destinationHref(href: string) {
   if (href === "/login") return "/login";
   if (href === "/portal") return "/portal/login";
-  if (publicActionPaths.has(href)) return href;
+  if (isPublicDirectDestination(href)) return href;
   return `/login?next=${encodeURIComponent(href)}`;
 }
 
@@ -85,16 +71,6 @@ function sessionId() {
   }
 }
 
-function pagePrompt(pathname: string) {
-  if (pathname.startsWith("/grid")) return "What is Grid and what can I do here?";
-  if (pathname === "/pricing") return "Help me understand Klinikos pricing and what it replaces.";
-  if (pathname === "/edu") return "What can Klinikos EDU help with?";
-  if (pathname === "/trust") return "What should I know about Klinikos trust, privacy and authority boundaries?";
-  if (pathname === "/founding-clinic") return "What does the founding clinic path mean for a clinic?";
-  if (pathname === "/operational-audit") return "How does the operating analysis help a clinic?";
-  return "What can Klinikos help me do from this page?";
-}
-
 export function PublicZumiSiteControl({
   onOpenChange,
   open,
@@ -103,13 +79,16 @@ export function PublicZumiSiteControl({
   open: boolean;
 }) {
   const pathname = usePathname();
+  const presentation = resolvePublicRoutePresentation(pathname);
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   const nextId = useRef(1);
   const endRef = useRef<HTMLDivElement>(null);
-  const enabled = PUBLIC_PATHS.has(pathname);
+  const enabled = presentation?.zumiMode === "floating-public";
+  const publicZumiPrompt = presentation?.publicZumiPrompt
+    ?? "What can Klinikos help me do from this page?";
   const latest = turns[turns.length - 1] ?? null;
 
   useEffect(() => () => request.current?.abort(), []);
@@ -207,7 +186,7 @@ export function PublicZumiSiteControl({
               <div className="rounded-[18px] border border-[#d0837d]/14 bg-[#150a0d] p-4">
                 <p className="text-sm font-semibold text-[#f5d5d1]">Ask me about this page or what you are trying to accomplish.</p>
                 <p className="mt-2 text-xs leading-5 text-[#bca5a1]">I can explain public Klinikos workflows and help find a next step. I cannot access private clinic records or execute clinic changes here.</p>
-                <button className="mt-4 min-h-10 rounded-full border border-[#e6817b]/28 px-4 text-xs font-semibold text-[#efaaa1] hover:bg-[#e6817b]/10" onClick={() => void send(pagePrompt(pathname))} type="button">Explain this page</button>
+                <button className="mt-4 min-h-10 rounded-full border border-[#e6817b]/28 px-4 text-xs font-semibold text-[#efaaa1] hover:bg-[#e6817b]/10" onClick={() => void send(publicZumiPrompt)} type="button">Explain this page</button>
               </div>
             )}
 

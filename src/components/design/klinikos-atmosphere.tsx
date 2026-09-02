@@ -6,19 +6,21 @@ import { Check, Monitor, Moon, Palette, Sun, X } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   appearancePolicyForPath,
-  atmosphereForAppearance,
+  atmosphereForPresentation,
   KLINIKOS_ATMOSPHERE_STORAGE_KEY,
   normalizeAppearancePreference,
   type KlinikosAppearancePreference,
   type KlinikosAtmosphere,
 } from "@/lib/design/atmosphere";
+import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-presentation";
 
 const CHANGE_EVENT = "klinikos:atmosphere-change";
 const SYSTEM_QUERY = "(prefers-color-scheme: dark)";
 
-function applyAtmosphere(preference: KlinikosAppearancePreference, referenceLocked: boolean) {
+function applyAtmosphere(preference: KlinikosAppearancePreference, pathname: string) {
   const prefersDark = window.matchMedia(SYSTEM_QUERY).matches;
-  const atmosphere = atmosphereForAppearance(preference, prefersDark, referenceLocked);
+  const appearanceMode = resolvePublicRoutePresentation(pathname)?.appearanceMode;
+  const atmosphere = atmosphereForPresentation(appearanceMode, preference, prefersDark);
   document.documentElement.dataset.klinikosAtmosphere = atmosphere;
   document.documentElement.dataset.klinikosAtmospherePreference = preference;
   document.documentElement.style.colorScheme = atmosphere === "night" ? "dark" : "light";
@@ -49,7 +51,6 @@ export function KlinikosAtmosphereController({
 } = {}) {
   const pathname = usePathname();
   const appearancePolicy = appearancePolicyForPath(pathname);
-  const referenceLocked = appearancePolicy.referenceLocked;
   const [preference, setPreference] = useState<KlinikosAppearancePreference>("system");
   const [atmosphere, setAtmosphere] = useState<KlinikosAtmosphere>("day");
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
@@ -68,12 +69,12 @@ export function KlinikosAtmosphereController({
       window.localStorage.setItem(KLINIKOS_ATMOSPHERE_STORAGE_KEY, nextPreference);
     }
     setPreference(nextPreference);
-    setAtmosphere(applyAtmosphere(nextPreference, referenceLocked));
-  }, [referenceLocked]);
+    setAtmosphere(applyAtmosphere(nextPreference, pathname));
+  }, [pathname]);
 
   useEffect(() => {
     const media = window.matchMedia(SYSTEM_QUERY);
-    const refresh = () => setAtmosphere(applyAtmosphere(preference, referenceLocked));
+    const refresh = () => setAtmosphere(applyAtmosphere(preference, pathname));
     refresh();
     media.addEventListener("change", refresh);
     window.addEventListener("focus", refresh);
@@ -83,14 +84,14 @@ export function KlinikosAtmosphereController({
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [preference, referenceLocked]);
+  }, [pathname, preference]);
 
   const currentLabel = atmosphere === "night" ? "Dark" : "Light";
 
   function choose(next: KlinikosAppearancePreference) {
     setPreference(next);
     window.localStorage.setItem(KLINIKOS_ATMOSPHERE_STORAGE_KEY, next);
-    const nextAtmosphere = applyAtmosphere(next, referenceLocked);
+    const nextAtmosphere = applyAtmosphere(next, pathname);
     setAtmosphere(nextAtmosphere);
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { preference: next, atmosphere: nextAtmosphere } }));
   }

@@ -58,10 +58,11 @@ describe("Klinikos Black Label appearance system", () => {
   it("uses OS color preference for System and keeps the first-visit Living Home Obsidian", () => {
     expect(appearance).toContain('matchMedia("(prefers-color-scheme: dark)")');
     expect(appearance).toContain("prefersDark");
-    expect(appearance).toContain("referenceLocked");
-    expect(appearance).toContain('location.pathname === "/"');
+    expect(appearance).toContain("publicAppearanceBootstrapRules");
+    expect(appearance).toContain("appearanceMode");
     expect(controller).toContain("appearancePolicyForPath(pathname)");
-    expect(controller).toContain("appearancePolicy.referenceLocked");
+    expect(controller).toContain("resolvePublicRoutePresentation(pathname)?.appearanceMode");
+    expect(controller).toContain("atmosphereForPresentation");
     expect(livingHome).toContain("styles.shell");
     expect(livingHomeMaterials).toContain("--lu-obsidian: #080506");
     expect(livingHomeMaterials).toContain("var(--lu-obsidian)");
