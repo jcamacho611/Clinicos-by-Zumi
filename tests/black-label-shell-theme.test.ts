@@ -16,7 +16,16 @@ describe("Black Label authenticated shell material boundary", () => {
   });
 
   it("preserves the existing Obsidian command rail rather than creating a second shell", () => {
-    expect(shell).toContain('bg-[#070304]/98');
+    // The rail is still exactly #070304 in Obsidian — but it reaches that value
+    // through the theme rather than naming it, so Marble gets its own rail
+    // instead of inheriting a dark one. Asserted as two facts rather than one
+    // literal: the shell defers to `--k-shell`, and `--k-shell` is the same
+    // Obsidian value it always was. That pins the appearance more tightly than
+    // the literal did, and it agrees with this file's first test, which already
+    // requires the workspace to follow the shared theme authority.
+    expect(shell).toContain("bg-[color:var(--k-shell)]");
+    expect(tokens).toContain("--k-shell:#070304");
+    expect(shell).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(shell).toContain("<KlinikosWordmark");
     expect(shell).toContain("primaryNavigationForRole");
     expect(shell).toContain('aria-label="Primary Klinikos navigation"');
