@@ -12,17 +12,17 @@ import {
 export const metadata = {
   title: "Start — Klinikos",
   description:
-    "Choose how you want to use Klinikos: operate a clinic, join the Grid, learn through Klinikos EDU, or begin a clinic operating analysis.",
+    "Choose the outcome you need: make unfinished clinic work more reliable, operate in Clinic OS, use the Grid, or learn through Klinikos EDU.",
 };
 
 const entryPaths = [
   {
     icon: Radar,
-    eyebrow: "Clinic owners & operators",
-    title: "Map what is breaking first",
-    body: "Answer a short set of operational questions. Klinikos turns the answers into a practical view of follow-up, paperwork, referrals, results, staffing, and revenue leakage.",
+    eyebrow: "Organizations & operators",
+    title: "Find the unfinished work",
+    body: "Tell Klinikos where work gets stuck. Zumi organizes the signals into a bounded first-result hypothesis so you can see useful value before deciding whether paid capability is warranted.",
     href: "/sales",
-    cta: "Start the clinic analysis",
+    cta: "Get a first useful result",
     primary: true,
   },
   {
@@ -38,7 +38,7 @@ const entryPaths = [
     icon: BriefcaseBusiness,
     eyebrow: "Work, space, services & capacity",
     title: "Klinikos Grid",
-    body: "Find or offer healthcare work, rooms, chairs, services, equipment, products, organizations, referral capacity, and other reviewed healthcare resources.",
+    body: "Find or offer healthcare work, rooms, chairs, services, equipment, organizations, referral capacity, and other reviewed healthcare resources without buying eligibility or authority.",
     href: "/grid",
     cta: "Explore Grid",
     primary: false,
@@ -47,7 +47,7 @@ const entryPaths = [
     icon: GraduationCap,
     eyebrow: "Learn & build readiness",
     title: "Klinikos EDU",
-    body: "Open courses, scenarios, evidence-based practice work, and the education pathway that can connect learning to future Grid opportunity and healthcare capacity.",
+    body: "Open courses, scenarios, evidence-based practice work, and education pathways that can connect learning to future opportunity while keeping competency, placement, credentialing, and licensure distinct.",
     href: "/edu",
     cta: "Explore EDU",
     primary: false,
@@ -62,19 +62,11 @@ export default function StartPage() {
           <div>
             <MissionPhaseProgress current="brief" />
             <p className="mt-10 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#e6c55b]">Start with what you want to accomplish</p>
-            <h1
-              className="mt-5 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl"
-              id="start-heading"
-            >
-              One Klinikos. Different ways in.
-            </h1>
-            <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">
-              Operate a clinic, find or offer healthcare capacity, learn through EDU, or map an operational problem before you buy. Klinikos keeps the complexity underneath and gives each person the doorway that matches what they are here to do.
-            </p>
+            <h1 className="mt-5 max-w-4xl text-balance text-5xl font-extrabold leading-[.96] tracking-[-.065em] text-white sm:text-6xl lg:text-7xl" id="start-heading">One Klinikos. Different ways in.</h1>
+            <p className="mt-8 max-w-2xl text-base leading-8 text-slate-300">Operate a clinic, find or offer healthcare capacity, learn through EDU, or show Klinikos a piece of unfinished work. Each doorway joins the same governed operating network.</p>
           </div>
-
           <ZumiBriefingPanel active>
-            Choose the closest starting point. You can move between Klinikos experiences later when your role and permissions allow it. Clinic intake should never include patient names, diagnoses, records, or PHI.
+            Choose the closest starting point. You can move between Klinikos experiences later when identity, role, authority, and permissions allow it. Public commercial intake should never include patient names, diagnoses, records, or PHI.
           </ZumiBriefingPanel>
         </div>
       </section>
@@ -91,22 +83,12 @@ export default function StartPage() {
             <li className="flex border-t border-white/12 pt-7" key={path.href}>
               <article className="flex w-full flex-col">
                 <div className="flex items-start gap-5">
-                  <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${path.primary ? "bg-cyan-300 text-slate-950" : "border border-white/12 bg-white/[.035] text-slate-300"}`}>
-                    <path.icon aria-hidden="true" className="size-5" />
-                  </span>
+                  <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${path.primary ? "bg-cyan-300 text-slate-950" : "border border-white/12 bg-white/[.035] text-slate-300"}`}><path.icon aria-hidden="true" className="size-5" /></span>
                   <div className="min-w-0">
                     <p className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">{path.eyebrow}</p>
                     <h3 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-white">{path.title}</h3>
                     <p className="mt-4 max-w-xl text-[13px] leading-7 text-slate-400">{path.body}</p>
-                    <div className="mt-7">
-                      <Button
-                        asChild
-                        className={path.primary ? "" : "border border-white/20 bg-transparent text-slate-200 hover:text-white"}
-                        variant={path.primary ? "primary" : "secondary"}
-                      >
-                        <Link href={path.href}>{path.cta} <ArrowRight aria-hidden="true" className="size-4" /></Link>
-                      </Button>
-                    </div>
+                    <div className="mt-7"><Button asChild className={path.primary ? "" : "border border-white/20 bg-transparent text-slate-200 hover:text-white"} variant={path.primary ? "primary" : "secondary"}><Link href={path.href}>{path.cta} <ArrowRight aria-hidden="true" className="size-4" /></Link></Button></div>
                   </div>
                 </div>
               </article>
@@ -114,13 +96,10 @@ export default function StartPage() {
           ))}
         </ul>
 
-        <div className="mt-20 grid gap-5 lg:grid-cols-2">
-          <NoPHINotice />
-          <HumanReviewBanner />
-        </div>
+        <div className="mt-20 grid gap-5 lg:grid-cols-2"><NoPHINotice /><HumanReviewBanner /></div>
         <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-8 text-xs text-slate-500">
           <Link className="font-bold text-slate-300 hover:text-white" href="/access">Request evaluation access</Link>
-          <Link className="font-bold text-slate-300 hover:text-white" href="/pricing">See clinic pricing</Link>
+          <Link className="font-bold text-slate-300 hover:text-white" href="/pricing">Explore commercial capabilities</Link>
           <span className="inline-flex items-center gap-2"><ShieldCheck className="size-3.5" /> Access, payment, credentials, and regulated actions remain separate gates.</span>
         </div>
       </section>
