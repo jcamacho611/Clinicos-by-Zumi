@@ -55,12 +55,14 @@ describe("the production gate is read-only and can actually fail", () => {
       'data-public-plane-lens="true"',
       'data-public-inspector="true"',
       'data-public-action-dock="true"',
+      'data-public-intent-constellation="true"',
       "What do you need today?",
-      "I need something",
-      "I have something",
     ]) {
       expect(source, `does not require ${marker}`).toContain(marker);
     }
+    expect(source).toContain("data-public-action-id");
+    expect(source).toContain("publicActionIds.size < 12");
+    expect(source).toContain('for (const side of ["need", "have"])');
     for (const retired of ["One system, three extensions", "What it actually does"]) {
       expect(source, `does not reject ${retired}`).toContain(retired);
     }
