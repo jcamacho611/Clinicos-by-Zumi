@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 import { GRID_MEMBERSHIP } from "@/lib/commercial/grid-economics";
 
 /**
- * The public Grid pages are light surfaces living inside a dark-themed application, and
- * that is the whole source of their accessibility history.
+ * Some legacy public Grid routes remain intentional Marble surfaces inside a dark-themed
+ * application, and that is the source of their accessibility history. Grid browse is no
+ * longer in this group: it follows the shared System / Light / Dark appearance.
  *
  * The legacy conversion layer darkens legacy backgrounds and lightens the dark text
  * written for them. A light page that does not declare itself gets half of that
@@ -33,7 +34,7 @@ describe("public Grid surfaces", () => {
   it("lets Grid browse follow the shared appearance instead of forcing Marble", () => {
     const source = read("src/lib/design/marketplace-system.ts");
     expect(source).not.toMatch(/browsePage:\s*"[^"]*grid-marble-surface/);
-    expect(source).toContain('browsePage: "min-h-screen bg-[var(--k-work-bg)] text-[var(--k-text)]"');
+    expect(source).toContain('browsePage: "min-h-screen bg-[var(--k-public-bg)] text-[var(--k-text)]"');
   });
 
   it.each(LIGHT_SURFACES)(

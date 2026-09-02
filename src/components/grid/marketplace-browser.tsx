@@ -21,8 +21,8 @@ import {
 } from "@/lib/grid/marketplace-rules";
 
 const toneClass = {
-  verified: "border-[#17745f]/28 bg-[#17745f]/[.07] text-[#17745f]",
-  pending: "border-[#a55a22]/28 bg-[#a55a22]/[.07] text-[#8a481b]",
+  verified: marketplaceSurfaces.statusVerified,
+  pending: marketplaceSurfaces.statusAttention,
 } as const;
 
 const sortLabels: Record<MarketplaceSort, string> = {
@@ -105,7 +105,7 @@ export function MarketplaceBrowser({
   }
 
   return (
-    <section className="border-t border-[var(--k-line)] bg-[var(--k-work-bg)]" aria-labelledby="grid-service-ledger-title">
+    <section className="border-t border-[var(--k-line)] bg-[var(--k-public-bg)]" aria-labelledby="grid-service-ledger-title">
       <div className={marketplaceSurfaces.filterBar}>
         <div className="mx-auto max-w-[1500px] px-5 py-4 sm:px-8">
           <div className="flex flex-wrap items-center gap-3">

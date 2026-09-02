@@ -82,8 +82,8 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
   const mapResources = matchingResources.map((resource) => ({ id: resource.id, title: resource.title, resourceType: resource.resourceType, city: resource.city, state: resource.state, latitude: resource.latitude, longitude: resource.longitude }));
 
   const laneClass = (selected: boolean) => selected
-    ? "border-[var(--k-accent)] bg-[var(--k-text)] text-[var(--k-work-bg)]"
-    : "border-[var(--k-line)] bg-[var(--k-public-surface)] text-[var(--k-muted)] hover:text-[var(--k-text)]";
+    ? marketplaceSurfaces.controlActive
+    : marketplaceSurfaces.controlIdle;
 
   return (
     <PublicExperienceShell contextLabel="Grid discovery">
@@ -104,7 +104,7 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
               {copy.note && <p className="mt-3 max-w-3xl border-l-2 border-[var(--k-premium)] pl-4 text-xs leading-5 text-[var(--k-muted)]">{copy.note}</p>}
             </div>
             <div className="flex flex-wrap gap-2 lg:justify-end">
-              <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--k-accent)] px-5 text-xs font-semibold text-white" href="/grid">I have something <ArrowRight className="size-4" /></Link>
+              <Link className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-5 text-xs font-semibold ${marketplaceSurfaces.controlActive}`} href="/grid">I have something <ArrowRight className="size-4" /></Link>
               <Link className="inline-flex min-h-11 items-center rounded-full border border-[var(--k-line)] bg-[var(--k-public-surface)] px-5 text-xs font-semibold text-[var(--k-text)]" href="/grid">Change goal</Link>
             </div>
           </div>

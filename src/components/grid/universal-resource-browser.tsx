@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CalendarClock, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
+import { marketplaceSurfaces } from "@/lib/design/marketplace-system";
 
 type PublicGridResource = {
   id: string;
@@ -59,7 +60,7 @@ export function UniversalResourceBrowser({ resources, intent }: { resources: Pub
   const visible = resources.filter((resource) => allowedTypes.includes(resource.resourceType));
   if (["work", "provider"].includes(intent)) return null;
 
-  return <section className="border-t border-[var(--k-line)] bg-[var(--k-work-bg)]">
+  return <section className="border-t border-[var(--k-line)] bg-[var(--k-public-bg)]">
     <div className="mx-auto max-w-[1500px] px-5 py-12 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
@@ -79,7 +80,7 @@ export function UniversalResourceBrowser({ resources, intent }: { resources: Pub
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--k-accent)]">{label(resource.resourceType)}</p>
-              <span className="inline-flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-extrabold uppercase tracking-[.1em] text-emerald-700"><ShieldCheck className="size-3" />Reviewed</span>
+              <span className={`inline-flex items-center gap-1 border px-2 py-1 text-xs font-extrabold uppercase tracking-[.1em] ${marketplaceSurfaces.statusVerified}`}><ShieldCheck className="size-3" />Reviewed</span>
             </div>
             <h3 className="mt-2 text-xl font-semibold tracking-[-.04em] text-[var(--k-text)]">{resource.title}</h3>
             <p className="mt-3 line-clamp-2 max-w-2xl text-[13px] leading-6 text-[var(--k-muted)]">{resource.description}</p>

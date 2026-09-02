@@ -34,7 +34,7 @@ export type SurfaceGovernance = {
   primary: "nolan" | "jensen" | "jensen-paper";
   /** What motion is permitted to do here. */
   motionBudget: "narrative" | "state-change-only" | "feedback-only";
-  ground: "obsidian" | "paper";
+  ground: "obsidian" | "paper" | "adaptive";
   rationale: string;
 };
 
@@ -59,9 +59,9 @@ export const surfaceGovernance: Record<SurfaceClass, SurfaceGovernance> = {
     klass: "marketplace",
     primary: "jensen-paper",
     motionBudget: "feedback-only",
-    ground: "paper",
+    ground: "adaptive",
     rationale:
-      "Discovery is scanning many unfamiliar options. It needs Jensen's grid discipline on the system's paper surface, and motion confined to confirming a tap landed.",
+      "Discovery is scanning many unfamiliar options. It needs Jensen's grid discipline on the active shared Marble or Obsidian material, with motion confined to confirming a tap landed.",
   },
 };
 

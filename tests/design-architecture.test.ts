@@ -45,7 +45,7 @@ describe("surface classification", () => {
   it("puts each surface on the ground its discipline calls for", () => {
     expect(governanceFor("/sales").ground).toBe("obsidian");
     expect(governanceFor("/edu/dashboard").ground).toBe("obsidian");
-    expect(governanceFor("/grid/browse").ground).toBe("paper");
+    expect(governanceFor("/grid/browse").ground).toBe("adaptive");
   });
 });
 
@@ -60,7 +60,8 @@ describe("Grid appearance policy", () => {
 
   it("keeps the geographic reading surface semantic instead of nesting forced Marble inside Obsidian", () => {
     expect(mapSource).not.toContain('className="grid-marble-surface');
-    expect(mapSource).toContain("bg-[var(--k-work-bg)]");
+    expect(mapSource).toContain("bg-[var(--k-public-bg)]");
+    expect(mapSource).not.toContain("--k-work-bg");
     expect(mapSource).toContain("text-[var(--k-text)]");
     expect(cinematic).toContain(".klinikos-cinematic-root .grid-marble-surface");
     expect(cinematic).toContain("color-scheme:light");
