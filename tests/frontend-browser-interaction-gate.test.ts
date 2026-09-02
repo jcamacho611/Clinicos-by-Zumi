@@ -24,6 +24,13 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("data-public-inspector");
     expect(browserGate).toContain("data-public-action-dock");
     expect(browserGate).toContain("public-plane-readout-mobile");
+    expect(browserGate).toContain("mobileSheetModalIsolated");
+    expect(browserGate).toContain("mobileSheetFocusTrapped");
+    expect(browserGate).toContain('await pressKey("Tab", "Tab", 9, 8);');
+    expect(browserGate).not.toContain('await pressKey("Tab", "Tab", 9, 1);');
+    expect(browserGate).toContain("mobileSheetEscapeClosed");
+    expect(browserGate).toContain("mobileSheetFocusReturned");
+    expect(browserGate).toContain("mobileSheetScrollReachable");
     expect(browserGate).toContain("firstFoldOperational");
     expect(browserGate).toContain("wordmarkVisibleWidth");
     expect(browserGate).toContain("splitViewportRecomposed");
@@ -39,6 +46,8 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain('command("Page.getLayoutMetrics")');
     expect(browserGate).toContain("cssVisualViewport?.zoom");
     expect(browserGate).toContain("browser-zoom-200.json");
+    expect(browserGate).toContain("zoomSheetFitsViewport");
+    expect(browserGate).toContain("zoomSheetScrollReachable");
     expect(browserGate).toContain("screenshotSurface");
     expect(browserGate).not.toContain("Emulation.setPageScaleFactor");
   });
