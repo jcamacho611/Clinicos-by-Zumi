@@ -24,6 +24,8 @@ import { execFileSync } from "node:child_process";
 
 const DEFAULT_BASE = "https://www.klinikos.io";
 const TIMEOUT_MS = 20_000;
+const DEFAULT_DOCUMENT_LIMIT = 4_000;
+const ROOT_DOCUMENT_LIMIT = 256 * 1024;
 
 const baseFlag = process.argv.indexOf("--base");
 const BASE = (baseFlag > -1 ? process.argv[baseFlag + 1] : process.env.KLINIKOS_PRODUCTION_URL) || DEFAULT_BASE;
@@ -45,18 +47,24 @@ function log(kind, message) {
   process.stdout.write(`${{ ok: "✓", fail: "✗", info: " ", run: "→" }[kind] ?? " "} ${message}\n`);
 }
 
-async function get(path, redirect = "manual") {
+async function get(path, redirect = "manual", documentLimit = DEFAULT_DOCUMENT_LIMIT) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const response = await fetch(`${BASE}${path}`, { redirect, signal: controller.signal });
-    const body = response.status === 200 ? (await response.text()).slice(0, 4000) : "";
+    const body = response.status === 200 ? (await response.text()).slice(0, documentLimit) : "";
     return { status: response.status, location: response.headers.get("location"), body };
   } catch (error) {
     return { status: 0, location: null, body: "", error: error instanceof Error ? error.message : String(error) };
   } finally {
     clearTimeout(timer);
   }
+}
+
+function namedMetaContent(document, name) {
+  const safeName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const tag = document.match(new RegExp(`<meta\\b[^>]*\\bname=["']${safeName}["'][^>]*>`, "i"))?.[0] ?? "";
+  return tag.match(/\bcontent=["']([^"']+)["']/i)?.[1] ?? null;
 }
 
 function localCommits() {
@@ -70,6 +78,8 @@ function localCommits() {
 
 async function main() {
   log("run", `Verifying ${BASE}`);
+  let liveCommit = null;
+  let rootDocument = "";
 
   // 1. Health, and the identity of what is serving.
   const health = await get("/api/health", "follow");
@@ -89,6 +99,7 @@ async function main() {
       if (!payload.databaseConfigured) failures.push("production reports no database configured");
 
       const commit = payload.release?.commit ?? null;
+      liveCommit = commit;
       if (!commit) {
         // Before the build stamped its own commit this was always null, and "what is
         // running?" was unanswerable during exactly the incident where it matters.
@@ -117,13 +128,43 @@ async function main() {
 
   // 2. Public surface.
   for (const route of PUBLIC_ROUTES) {
-    const response = await get(route, "follow");
+    const response = await get(route, "follow", route === "/" ? ROOT_DOCUMENT_LIMIT : DEFAULT_DOCUMENT_LIMIT);
     if (response.status !== 200) {
       failures.push(`public ${route} returned ${response.status || response.error}`);
       log("fail", `${route} → ${response.status || response.error}`);
     }
+    if (route === "/" && response.status === 200) rootDocument = response.body;
   }
   log("ok", `${PUBLIC_ROUTES.length} public routes answer`);
+
+  if (rootDocument) {
+    const htmlCommit = namedMetaContent(rootDocument, "klinikos-release");
+    if (!htmlCommit || !/^[0-9a-f]{40,64}$/i.test(htmlCommit)) {
+      failures.push("root HTML does not expose a valid klinikos-release commit");
+    } else if (liveCommit && htmlCommit !== liveCommit) {
+      failures.push(`root HTML ${htmlCommit.slice(0, 12)} does not match running health ${liveCommit.slice(0, 12)}`);
+    } else {
+      log("ok", `browser HTML matches running release ${htmlCommit.slice(0, 12)}`);
+    }
+
+    const requiredExperience = [
+      'data-public-universe-shell="true"',
+      'data-public-object-stage="true"',
+      'data-public-plane-lens="true"',
+      'data-public-inspector="true"',
+      'data-public-action-dock="true"',
+      "What do you need today?",
+      "I need something",
+      "I have something",
+    ];
+    for (const marker of requiredExperience) {
+      if (!rootDocument.includes(marker)) failures.push(`root HTML is missing Living Universe marker: ${marker}`);
+    }
+
+    for (const retired of ["One system, three extensions", "What it actually does"]) {
+      if (rootDocument.includes(retired)) failures.push(`root HTML still contains retired brochure copy: ${retired}`);
+    }
+  }
 
   // 3. Private surface must not render to an anonymous visitor.
   for (const route of PRIVATE_ROUTES) {

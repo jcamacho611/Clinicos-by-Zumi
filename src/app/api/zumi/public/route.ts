@@ -5,7 +5,11 @@ import { requestMetadata } from "@/lib/auth/request-metadata";
 import { checkZumiProcessRateLimit } from "@/features/zumi/rate-limit";
 import { publicZumiDurableQuotaAttested } from "@/features/zumi/public-quota-attestation";
 import { resolvePublicZumiTurn } from "@/features/zumi/public-intelligence";
-import { projectPublicLivingUniverseForIntent } from "@/lib/orchestration/public-living-universe";
+import {
+  isPublicLivingActionId,
+  projectPublicLivingUniverseForActionId,
+  projectPublicLivingUniverseForIntent,
+} from "@/lib/orchestration/public-living-universe";
 import { resolvePublicLivingIntent, type PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 
 export const maxDuration = 20;
@@ -41,6 +45,7 @@ const priorResolutionSchema = z.object({
 
 const requestSchema = z.object({
   question: z.string().trim().min(1).max(1_200),
+  actionId: z.string().trim().min(1).max(40).regex(/^[a-z0-9-]+$/).optional(),
   priorResolution: priorResolutionSchema.nullish().default(null),
   unresolvedTurns: z.number().int().min(0).max(24).default(0),
   history: z.array(z.object({
@@ -160,12 +165,32 @@ export async function POST(request: Request) {
           // No Object Stage. An emergency answer must not sit above a journey about
           // finding work or filling a shift — safety overrides ordinary projection.
           universe: null,
+          suppressUniverse: true,
           degraded: false,
         },
       },
       { headers: NO_STORE_HEADERS },
     );
   }
+
+  // The browser can identify a control the server published, but it cannot select a
+  // canonical Path. Reject unknown identities before any paid inference and resolve the
+  // accepted id only through the server-owned action-to-Path map.
+  if (parsed.data.actionId && !isPublicLivingActionId(parsed.data.actionId)) {
+    return NextResponse.json(
+      { error: "That public action is not available." },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
+  }
+
+  const projectUniverse = (destinationKey?: string | null) => parsed.data.actionId
+    ? projectPublicLivingUniverseForActionId(parsed.data.actionId)
+    : projectPublicLivingUniverseForIntent(parsed.data.question, destinationKey);
+  // An explicit quick action replaces the Object Stage even when its honest projection
+  // is null (for example, generic learning before a goal is known). Free conversation
+  // keeps the current stage on an unresolved turn so temporary ambiguity does not erase
+  // useful context.
+  const replaceUniverse = Boolean(parsed.data.actionId);
 
   // If the durable quota authority is absent, unavailable, or did not attest this
   // request, fail closed against paid model execution rather than letting spoofable
@@ -195,10 +220,9 @@ export async function POST(request: Request) {
         // The deterministic path is an ordinary successful turn, so it carries the same
         // Object Stage the full path does. Degraded intelligence must not mean a
         // degraded experience: the visitor still sees where their words lead.
-        universe: projectPublicLivingUniverseForIntent(
-          parsed.data.question,
-          local.destination?.key ?? null,
-        ),
+        universe: projectUniverse(local.destination?.key ?? null),
+        replaceUniverse,
+        suppressUniverse: false,
         // Truthful marker: this turn was answered by deterministic guidance, not by the
         // full public intelligence path.
         degraded: true,
@@ -229,10 +253,9 @@ export async function POST(request: Request) {
       // The Object Stage the answer recomposes, from the same words that produced it.
       // Null is an honest outcome: a greeting or an unresolved turn has no Path, and
       // the stage keeps whatever it was showing rather than inventing a journey.
-      universe: projectPublicLivingUniverseForIntent(
-        parsed.data.question,
-        resolution.destination?.key ?? null,
-      ),
+      universe: projectUniverse(resolution.destination?.key ?? null),
+      replaceUniverse,
+      suppressUniverse: false,
     },
   }, { headers: NO_STORE_HEADERS });
 }

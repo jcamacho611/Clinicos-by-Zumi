@@ -4,11 +4,14 @@ import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Menu } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
-import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
+import { KlinikosMark, KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
+import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
+import { PUBLIC_LIVING_PLANE_LENSES } from "@/lib/marketing/public-living-interface";
 import { PublicLivingUniverseObjectStage } from "@/components/marketing/public-living-universe-stage";
 import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
+import styles from "@/components/marketing/public-living-universe-shell.module.css";
 import {
   KLINIKOS_ECONOMIC_THESIS,
   KLINIKOS_HUMAN_AUTHORITY,
@@ -28,8 +31,6 @@ type ConversationTurn = {
   prompt: string;
   resolution: PublicLivingResolution;
   suggestions: PublicZumiSuggestion[];
-  /** The Object Stage this answer recomposes. Null when no Path applies. */
-  universe: PublicLivingUniverseProjection | null;
 };
 
 type PublicZumiApiResponse = {
@@ -37,6 +38,8 @@ type PublicZumiApiResponse = {
     resolution?: unknown;
     suggestions?: unknown;
     universe?: unknown;
+    replaceUniverse?: unknown;
+    suppressUniverse?: unknown;
   };
   emergency?: unknown;
 };
@@ -179,28 +182,6 @@ const navItems = [
   { label: "How Klinikos helps", href: "/how-it-works" },
 ] as const;
 
-/**
- * What a person actually says when they arrive.
- *
- * Nobody lands here wanting "Grid" or "EDU" — they arrive with a sentence. Each of these
- * is a real opener, and clicking one sends it through the same server-side public Zumi
- * path a typed message takes. Nothing is resolved in the browser.
- */
-const quickIntentActions = [
-  { id: "care", label: "I need care", prompt: "I need care" },
-  { id: "work", label: "I need work", prompt: "I need work" },
-  { id: "cover", label: "I need someone tomorrow", prompt: "I need someone tomorrow" },
-  { id: "client", label: "I have my own client", prompt: "I have my own client and need somewhere to treat them" },
-  { id: "room", label: "I need a room", prompt: "I need a room to treat a client" },
-  { id: "space", label: "I have space available", prompt: "I have space available at my clinic" },
-  { id: "learn", label: "I want to learn", prompt: "I want to learn a healthcare skill" },
-  { id: "placement", label: "I need a placement", prompt: "I need a clinical placement" },
-  { id: "students", label: "I can take students", prompt: "I can take students for clinical placement" },
-  { id: "practice", label: "Help me run my practice", prompt: "Help me run my practice" },
-  { id: "paid", label: "I need to get paid", prompt: "I need to get paid for work we already did" },
-  { id: "grow", label: "I want to grow my healthcare business", prompt: "I want to grow my healthcare business" },
-] as const;
-
 const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
   kind: "conversation",
   title: "I can't reach Klinikos right now",
@@ -213,6 +194,8 @@ const UNREACHABLE_RESOLUTION: PublicLivingResolution = {
 export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean }) {
   const [intent, setIntent] = useState("");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
+  const [activeUniverse, setActiveUniverse] = useState<PublicLivingUniverseProjection | null>(null);
+  const [activePlaneId, setActivePlaneId] = useState(PUBLIC_LIVING_PLANE_LENSES[2].id);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nextTurnId = useRef(1);
@@ -235,7 +218,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
 
   useEffect(() => () => activeRequest.current?.abort(), []);
 
-  async function sendPrompt(rawPrompt: string) {
+  async function sendPrompt(rawPrompt: string, actionId?: string) {
     const prompt = rawPrompt.trim();
     if (!prompt || isSubmitting) return;
 
@@ -267,6 +250,8 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
     let resolution: PublicLivingResolution = UNREACHABLE_RESOLUTION;
     let suggestions: PublicZumiSuggestion[] = [];
     let universe: PublicLivingUniverseProjection | null = null;
+    let replaceUniverse = false;
+    let suppressUniverse = false;
 
     try {
       const response = await fetch("/api/zumi/public", {
@@ -274,6 +259,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: prompt,
+          ...(actionId ? { actionId } : {}),
           history,
           priorResolution,
           unresolvedTurns,
@@ -288,6 +274,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
       const emergencyResolution = publicZumiEmergencyResolution(payload);
       if (emergencyResolution) {
         resolution = emergencyResolution;
+        suppressUniverse = true;
       } else if (response.ok && payload && typeof payload === "object") {
         const successPayload = payload as PublicZumiApiResponse;
         if (isPublicLivingResolution(successPayload.data?.resolution)) {
@@ -299,6 +286,8 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
         if (isUniverseProjection(successPayload.data?.universe)) {
           universe = successPayload.data.universe;
         }
+        replaceUniverse = successPayload.data?.replaceUniverse === true;
+        suppressUniverse = successPayload.data?.suppressUniverse === true;
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -308,7 +297,10 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
       if (activeRequest.current === controller) activeRequest.current = null;
     }
 
-    setTurns((current) => [...current, { id, prompt, resolution, suggestions, universe }]);
+    if (suppressUniverse) setActiveUniverse(null);
+    else if (replaceUniverse) setActiveUniverse(universe);
+    else if (universe) setActiveUniverse(universe);
+    setTurns((current) => [...current, { id, prompt, resolution, suggestions }]);
     setPendingPrompt(null);
     setIsSubmitting(false);
   }
@@ -324,169 +316,141 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
     if (!isSubmitting) event.currentTarget.form?.requestSubmit();
   }
 
+  const activePlane = PUBLIC_LIVING_PLANE_LENSES.find((plane) => plane.id === activePlaneId)
+    ?? PUBLIC_LIVING_PLANE_LENSES[2];
+
   return (
     <>
       <div className="sr-only" aria-live="polite" role="status">{liveStatus}</div>
-      <section className="rose-home min-h-screen overflow-hidden bg-[#050303] text-[#f8f0ee]" aria-labelledby="public-living-title" data-living-universe-stage="true">
-        <div className="rose-vignette pointer-events-none fixed inset-0 -z-10" />
-        <div className={`rose-atmosphere pointer-events-none fixed inset-0 -z-10 transition-all duration-700 ${conversationStarted ? "scale-[1.02] opacity-20" : "scale-100 opacity-100"}`} />
-
-        <header className="reference-header relative z-30 flex min-h-[96px] items-center px-5 sm:px-9 lg:px-[38px]">
+      <section
+        aria-labelledby="public-living-title"
+        className={styles.shell}
+        data-living-universe-stage="true"
+        data-public-universe-shell="true"
+      >
+        <header className={styles.header}>
           <KlinikosWordmark
-            className="living-home-brand gap-[18px]"
-            frameClassName="size-[66px]"
+            className="living-home-brand gap-3"
+            frameClassName="size-[52px]"
             href="/"
             framed
             inverse
             markClassName="h-full w-full"
-            textClassName="h-[38px] w-[272px]"
+            textClassName="h-[29px] w-[208px]"
           />
 
-          <nav className="mx-auto hidden items-center gap-8 text-[11px] font-semibold text-[#d8c7c4] lg:flex" aria-label="Primary">
+          <div className={styles.headerContext}>
+            <strong>Living Universe · public entry</strong>
+            <span>One identity · one network · governed healthcare paths</span>
+          </div>
+
+          <nav aria-label="Primary" className={styles.headerActions}>
             {navItems.map((item) => (
-              <Link className="transition-colors hover:text-[#f29a93]" href={item.href} key={item.label}>{item.label}</Link>
+              <Link className={styles.headerLink} href={item.href} key={item.label}>{item.label}</Link>
             ))}
+            <Link className={styles.headerLink} href="/portal/login">Patient access</Link>
+            <Link className={styles.joinLink} href="/signup">
+              {signupEnabled ? "Join free" : "Free membership status"}
+            </Link>
+            <Link className={styles.headerLink} href="/login">Sign in</Link>
           </nav>
 
-          <details className="relative ml-auto lg:hidden">
-            <summary className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 text-[#f6dfdc] [&::-webkit-details-marker]:hidden" aria-label="Open navigation menu">
+          <details className={styles.mobileMenu}>
+            <summary aria-label="Open navigation menu">
               <Menu className="size-5" aria-hidden="true" />
             </summary>
-            <nav className="absolute right-0 top-14 z-50 grid w-56 gap-1 rounded-2xl border border-[#d9837f]/22 bg-[#12090b]/[.98] p-2 shadow-2xl" aria-label="Mobile navigation">
+            <nav aria-label="Mobile navigation">
               {navItems.map((item) => (
-                <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#ead8d4] hover:bg-white/5 hover:text-white" href={item.href} key={item.label}>{item.label}</Link>
+                <Link href={item.href} key={item.label}>{item.label}</Link>
               ))}
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/portal/login">Patient access</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#f6dfdc] hover:bg-white/5" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
-              <Link className="rounded-xl px-4 py-3 text-xs font-semibold text-[#efaaa1] hover:bg-white/5" href="/login">Sign in</Link>
+              <Link href="/portal/login">Patient access</Link>
+              <Link href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
+              <Link href="/login">Sign in</Link>
             </nav>
           </details>
-
-          {/* Membership status sits beside sign-in. The server supplies the release
-              truth, so a disabled deployment never advertises account creation as an
-              executable action. */}
-          <Link className="ml-auto hidden min-h-11 items-center justify-center rounded-full bg-[#e6817b] px-5 text-[11px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] sm:inline-flex lg:ml-0" href="/signup">
-            {signupEnabled ? "Join free" : "Free membership status"}
-          </Link>
-
-          <Link className="reference-auth ml-3 hidden min-h-11 items-center justify-center rounded-full border border-[#d9837f]/25 bg-[#140a0c]/75 px-5 text-[11px] font-semibold text-[#f6dfdc] shadow-[0_0_24px_rgba(211,112,108,.08)] sm:inline-flex" href="/login">
-            Sign in
-          </Link>
         </header>
 
-        {!conversationStarted ? (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-5xl items-center justify-center px-5 pb-16 sm:px-9">
-            <section className="flex w-full flex-col items-center text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#e88f88]">Klinikos</p>
-              <h1 id="public-living-title" className="mt-5 max-w-[900px] text-balance text-[clamp(2.4rem,5.4vw,4.6rem)] font-extralight leading-[1.02] tracking-[-0.045em] text-[#f5edeb]">
-                {KLINIKOS_ONE_LINE}
-              </h1>
-              <p className="mt-6 max-w-[680px] text-sm leading-7 text-[#e2cecb] sm:text-base">
-                {KLINIKOS_SUPPORTING}
-              </p>
-              <p className="mt-4 max-w-[640px] text-[13px] leading-6 text-[#d3bcb8]">
-                {KLINIKOS_ECONOMIC_THESIS}
-              </p>
+        <main className={styles.workspace}>
+          <section className={styles.stage} data-public-object-stage="true">
+            <div className={styles.stageScroll}>
+              {!conversationStarted ? (
+                <div>
+                  <div className={styles.stageIntro}>
+                    <div>
+                      <p className={styles.stageEyebrow}>A living healthcare operating universe</p>
+                      <h1 id="public-living-title">
+                        What do you need today?
+                        <em>{KLINIKOS_ONE_LINE}</em>
+                      </h1>
+                    </div>
+                    <p className={styles.stageSummary}>
+                      {KLINIKOS_SUPPORTING} Tell Klinikos what you need, what you have, or what you are trying to become.
+                    </p>
+                  </div>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                  className="inline-flex items-center gap-2 rounded-full bg-[#e6817b] px-6 py-3 text-sm font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
-                  href="/operational-audit"
-                >
-                  See what Klinikos would replace <ArrowRight aria-hidden="true" className="size-4" />
-                </Link>
-                <Link
-                  className="inline-flex items-center gap-2 rounded-full border border-[#d9918a]/35 px-6 py-3 text-sm font-semibold text-[#f5edeb] transition hover:border-[#efaaa1]/60 hover:bg-[#e6817b]/10"
-                  href="/how-it-works"
-                >
-                  See how it works
-                </Link>
-              </div>
+                  <section aria-label="Neutral Object Stage" className={styles.neutralObject}>
+                    <div className={styles.neutralObjectHeader}>
+                      <KlinikosMark className="size-7 rounded-full" />
+                      <p>Object Stage · waiting for your objective</p>
+                    </div>
+                    <ol className={styles.narrative} aria-label="Before, now, next">
+                      <li>
+                        <span className={styles.narrativeLabel}>Before</span>
+                        <h2>Healthcare work is scattered.</h2>
+                        <p>People, care, capacity, learning, evidence, operations, and money live in separate places.</p>
+                      </li>
+                      <li>
+                        <span className={styles.narrativeLabel}>Now</span>
+                        <h2>{ZUMI_COMPOSER_PROMPT}</h2>
+                        <p>Use your own words. Zumi interprets the goal; governed systems determine what is actually possible.</p>
+                      </li>
+                      <li>
+                        <span className={styles.narrativeLabel}>Next</span>
+                        <h2>Klinikos assembles the path.</h2>
+                        <p>The stage recomposes around the people, resources, evidence, safeguards, and next action that matter.</p>
+                      </li>
+                    </ol>
+                  </section>
 
-              <p className="mt-5 max-w-[620px] text-[12px] leading-5 text-[#c6aeaa]">
-                {KLINIKOS_HUMAN_AUTHORITY}
-              </p>
-
-              <p className="mt-14 text-sm font-semibold tracking-[-.02em] text-[#f2d8d4]">Zumi</p>
-              <p className="mt-4 text-lg font-light tracking-[-.02em] text-[#f5edeb] sm:text-xl">
-                {ZUMI_COMPOSER_PROMPT}
-              </p>
-              <p className="mt-2 max-w-[560px] text-[15px] font-medium leading-7 text-[#f0dcd8]">
-                What do you need today?
-              </p>
-              <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-[#c3aaa6]">
-                Tell Klinikos what you need, what you have, or what you are trying to become. You do not have to know which part of Klinikos to open.
-              </p>
-
-              <form id="living-composer" className="mt-9 w-full max-w-[780px]" onSubmit={submit}>
-                <label className="sr-only" htmlFor="public-klinikos-intent">Message Zumi</label>
-                <div className="reference-composer-shell grid min-h-[88px] grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3 rounded-[28px] border border-[#d9918a]/35 bg-[#1b0d10]/68 px-5 py-3 shadow-[0_22px_70px_rgba(59,8,12,.38)] backdrop-blur-xl focus-within:border-[#ec9b94]/65">
-                  <textarea
-                    aria-describedby="public-conversation-disclosure"
-                    className="max-h-36 min-h-14 min-w-0 w-full resize-none bg-transparent py-4 text-left text-[15px] font-medium text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
-                    id="public-klinikos-intent"
-                    onChange={(event) => setIntent(event.target.value)}
-                    onKeyDown={handleComposerKeyDown}
-                    placeholder="Message Zumi..."
-                    rows={1}
-                    value={intent}
-                  />
-                  <button aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"} className="grid size-12 place-items-center rounded-full border border-[#e6817b]/35 bg-[#16090c] shadow-[0_0_28px_rgba(230,129,123,.16)] transition hover:border-[#efaaa1]/60 hover:bg-[#211013] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
-                    <ZumiSendGlyph active={isSubmitting} />
-                  </button>
+                  <div className={styles.planeReadout} aria-live="polite">
+                    <div>
+                      <strong>{activePlane.title}</strong>
+                      <span>{activePlane.question}</span>
+                    </div>
+                    <p>{activePlane.description}</p>
+                  </div>
                 </div>
-                <p className="mx-auto mt-4 max-w-[680px] text-[11px] leading-5 text-[#ad928d]" id="public-conversation-disclosure">
-                  Public Zumi can answer general Klinikos questions and guide you to a next step. This page cannot open private clinic records or make changes. Do not enter patient information here.
-                </p>
-              </form>
+              ) : (
+                <section aria-label="Public Zumi guidance" className={styles.conversation}>
+                  <div className={styles.conversationHeading}>
+                    <div>
+                      <p className={styles.stageEyebrow}>Zumi · live public guidance</p>
+                      <h1 id="public-living-title">The universe is recomposing.</h1>
+                    </div>
+                    <span>
+                      {activeUniverse
+                        ? "One active path · governed continuation"
+                        : "More context needed · no path inferred"}
+                    </span>
+                  </div>
 
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Common things people need">
-                {quickIntentActions.map((action) => (
-                  <button
-                    className="min-h-11 rounded-full border border-[#d0837d]/25 bg-[#1a0c0f]/70 px-4 text-[12.5px] font-medium text-[#e8cbc7] transition hover:border-[#efaaa1]/50 hover:bg-[#241014] hover:text-[#fff6f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
-                    disabled={isSubmitting}
-                    key={action.id}
-                    onClick={() => void sendPrompt(action.prompt)}
-                    type="button"
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-[#b99a95]">
-                <Link className="font-semibold text-[#efaaa1] hover:text-[#f6dfdc]" href="/signup">{signupEnabled ? "Join free" : "Free membership status"}</Link>
-                <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/portal/login">Patient access</Link>
-                <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/grid">Open Grid</Link>
-                <span aria-hidden="true">·</span>
-                <Link className="hover:text-[#efaaa1]" href="/edu">Explore EDU</Link>
-              </div>
-            </section>
-          </main>
-        ) : (
-          <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-4xl flex-col px-5 pb-8 pt-6 sm:px-9">
-            <section className="flex-1 space-y-8 py-4" aria-label="Public Zumi guidance">
               {turns.map((turn) => {
                 const resolution = turn.resolution;
                 const showSuggestions = turn.id === latestTurn?.id && turn.suggestions.length > 0;
                 return (
-                  <article className="space-y-5" key={turn.id}>
-                    <div className="flex justify-end">
-                      <p className="max-w-[86%] rounded-[22px] border border-[#d0837d]/16 bg-[#211013]/80 px-5 py-3 text-sm leading-6 text-[#fff7f5] sm:max-w-[74%]">{turn.prompt}</p>
-                    </div>
+                  <article className={styles.turn} key={turn.id}>
+                    <p className={styles.visitorMessage}>{turn.prompt}</p>
 
-                    <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-4">
-                      <div className="pt-1" aria-hidden="true"><ZumiOrb state="resolved" size={42} /></div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold text-[#e9aaa4]">Zumi</p>
-                        <h2 className="mt-2 text-xl font-medium tracking-[-.03em] text-[#fff8f6]">{resolution.title}</h2>
-                        <p className="mt-2 max-w-2xl whitespace-pre-line text-sm leading-7 text-[#d8c1bd]">{resolution.body}</p>
+                    <div className={styles.zumiMessage}>
+                      <div aria-hidden="true"><ZumiOrb state="resolved" size={42} /></div>
+                      <div className={styles.zumiAnswer}>
+                        <span>Zumi</span>
+                        <h2>{resolution.title}</h2>
+                        <p>{resolution.body}</p>
 
                         {resolution.destination && (
                           <Link
-                            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-xs font-semibold text-[#1a090a] transition hover:bg-[#efaaa1]"
+                            className={styles.destinationLink}
                             href={destinationActionHref(resolution.destination)}
                           >
                             {resolution.destination.action}
@@ -494,22 +458,11 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                           </Link>
                         )}
 
-                        {/* Zumi recomposes the Object Stage in place. The visitor never
-                            scrolls to a second application to see where their own words
-                            lead — this is the same stage the front door shows, driven by
-                            what they just said. */}
-                        {turn.universe && (
-                          <div className="mt-6">
-                            <PublicLivingUniverseObjectStage item={turn.universe} signupEnabled={signupEnabled} />
-                          </div>
-                        )}
-
                         {showSuggestions && (
-                          <div className="mt-5 flex flex-wrap gap-2" aria-label="Suggested replies">
+                          <div aria-label="Suggested replies" className={styles.suggestions}>
                             {turn.suggestions.map((suggestion) => (
                               <button
                                 aria-label={`Reply: ${suggestion.label}`}
-                                className="min-h-11 rounded-full border border-[#d0837d]/22 bg-[#1a0c0f] px-4 text-left text-[12px] font-semibold text-[#e8cbc7] transition hover:border-[#efaaa1]/45 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b] disabled:opacity-45"
                                 disabled={isSubmitting}
                                 key={suggestion.id}
                                 onClick={() => void sendPrompt(suggestion.prompt)}
@@ -526,47 +479,135 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                 );
               })}
 
-              {pendingPrompt && (
-                <article className="space-y-5" aria-label="Zumi is responding">
-                  <div className="flex justify-end">
-                    <p className="max-w-[86%] rounded-[22px] border border-[#d0837d]/16 bg-[#211013]/80 px-5 py-3 text-sm leading-6 text-[#fff7f5] sm:max-w-[74%]">{pendingPrompt}</p>
-                  </div>
-                  <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-4">
-                    <div className="pt-1" aria-hidden="true"><ZumiOrb state="observing" size={42} /></div>
-                    <div className="min-w-0 py-2">
-                      <p className="text-[11px] font-semibold text-[#e9aaa4]">Zumi</p>
-                      <p className="mt-2 text-sm text-[#b99f9b]">Working on your question…</p>
-                    </div>
-                  </div>
-                </article>
+                  {pendingPrompt && (
+                    <article aria-label="Zumi is responding" className={styles.turn}>
+                      <p className={styles.visitorMessage}>{pendingPrompt}</p>
+                      <div className={styles.zumiMessage}>
+                        <div aria-hidden="true"><ZumiOrb state="observing" size={42} /></div>
+                        <div className={styles.zumiAnswer}>
+                          <span>Zumi</span>
+                          <p>Working on your question…</p>
+                        </div>
+                      </div>
+                    </article>
+                  )}
+
+                  <div ref={threadEnd} />
+                </section>
               )}
 
-              <div ref={threadEnd} />
-            </section>
+              {activeUniverse && (
+                <div className={styles.pathStage} data-living-edge="active-path">
+                  <PublicLivingUniverseObjectStage
+                    item={activeUniverse}
+                    signupEnabled={signupEnabled}
+                    variant="obsidian"
+                  />
+                </div>
+              )}
+            </div>
 
-            <form className="sticky bottom-4 mt-8 rounded-[24px] border border-[#d0837d]/22 bg-[#12090b]/95 p-3 shadow-2xl backdrop-blur-xl" onSubmit={submit}>
-              <label className="sr-only" htmlFor="public-klinikos-follow-up">Continue with public Zumi</label>
-              <div className="flex items-end gap-3">
-                <textarea
-                  aria-describedby="public-follow-up-note"
-                  className="min-h-12 min-w-0 flex-1 resize-none bg-transparent px-3 py-3 text-sm text-[#fff6f4] outline-none placeholder:text-[#b99a95]"
-                  id="public-klinikos-follow-up"
-                  onChange={(event) => setIntent(event.target.value)}
-                  onKeyDown={handleComposerKeyDown}
-                  placeholder="Message Zumi..."
-                  rows={1}
-                  value={intent}
-                />
-                <button aria-label={isSubmitting ? "Zumi is responding" : "Send follow-up to Zumi"} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#e6817b]/35 bg-[#16090c] shadow-[0_0_24px_rgba(230,129,123,.14)] transition hover:border-[#efaaa1]/60 hover:bg-[#211013] disabled:cursor-not-allowed disabled:opacity-45" disabled={isSubmitting || !intent.trim()} type="submit">
-                  <ZumiSendGlyph active={isSubmitting} />
+            <div className={styles.composerDock} data-public-action-dock="true">
+              <form aria-label="Ask Zumi" id="living-composer" onSubmit={submit}>
+                <label className="sr-only" htmlFor="public-klinikos-intent">Message Zumi</label>
+                <div className={`${styles.composer} reference-composer-shell grid-cols-[minmax(0,1fr)_3.5rem]`}>
+                  <textarea
+                    aria-describedby="public-conversation-disclosure"
+                    className="min-w-0 w-full"
+                    id="public-klinikos-intent"
+                    onChange={(event) => setIntent(event.target.value)}
+                    onKeyDown={handleComposerKeyDown}
+                    placeholder="Message Zumi..."
+                    rows={1}
+                    value={intent}
+                  />
+                  <button
+                    aria-label={isSubmitting ? "Zumi is responding" : "Send message to Zumi"}
+                    className={styles.sendButton}
+                    disabled={isSubmitting || !intent.trim()}
+                    type="submit"
+                  >
+                    <ZumiSendGlyph active={isSubmitting} />
+                  </button>
+                </div>
+                <p className={styles.disclosure} id="public-conversation-disclosure">
+                  Public Zumi can answer general Klinikos questions and guide you to a next step. This page cannot open private clinic records or make changes. Do not enter patient information here.
+                </p>
+              </form>
+            </div>
+          </section>
+
+          <aside className={styles.lensRail} data-public-plane-lens="true">
+            <p className={styles.railEyebrow}>Five-plane lens</p>
+            <h2>One universe.<br />Five views.</h2>
+            <p>Change the lens, not the underlying person, need, evidence, or authority.</p>
+
+            <div aria-label="Five-plane view" className={styles.planeNav} role="group">
+              {PUBLIC_LIVING_PLANE_LENSES.map((plane) => (
+                <button
+                  aria-controls="public-plane-readout"
+                  aria-pressed={activePlane.id === plane.id}
+                  className={styles.planeButton}
+                  data-living-edge={activePlane.id === plane.id ? "active-plane" : undefined}
+                  key={plane.id}
+                  onClick={() => setActivePlaneId(plane.id)}
+                  type="button"
+                >
+                  <span className={styles.planeNumber}>{plane.number}</span>
+                  <span>
+                    <strong>{plane.title}</strong>
+                    <small>{plane.shortTitle}</small>
+                  </span>
                 </button>
+              ))}
+            </div>
+          </aside>
+
+          <aside className={styles.intentRail} data-public-inspector="true">
+            <p className={styles.railEyebrow}>Intent constellation</p>
+            <h2>I need / I have</h2>
+            <p>Choose a sentence or write your own. Every choice uses the same Zumi boundary and the same governed Path engine.</p>
+
+            <div className={styles.intentScroller} data-public-intent-constellation="true">
+              {(["need", "have"] as const).map((side) => (
+                <section className={styles.actionGroup} key={side}>
+                  <h3 className={styles.actionGroupTitle}>{side === "need" ? "I need something" : "I have something"}</h3>
+                  <div className={styles.actionList}>
+                    {PUBLIC_LIVING_ACTIONS.filter((action) => action.side === side).map((action, index) => (
+                      <button
+                        className={styles.actionButton}
+                        disabled={isSubmitting}
+                        key={action.id}
+                        onClick={() => void sendPrompt(action.prompt, action.id)}
+                        type="button"
+                      >
+                        <span className={styles.actionIndex}>{String(index + 1).padStart(2, "0")}</span>
+                        <span className={styles.actionText}>{action.label}</span>
+                        <ArrowRight aria-hidden="true" className="size-3" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <section className={styles.inspector} aria-label="Inspector" id="public-plane-readout">
+              <p className={styles.inspectorLabel}>Inspector · {activePlane.number}</p>
+              <h3>{activePlane.title}</h3>
+              <p>{activePlane.description}</p>
+              <div className={styles.truthRow} aria-label="Public safety boundaries">
+                <span>AI ≠ authority</span>
+                <span>Eligibility first</span>
+                <span>Patient data private</span>
               </div>
-              <p className="mt-2 px-3 text-[11px] leading-4 text-[#9a817c]" id="public-follow-up-note">
-                Public Zumi can guide and answer general Klinikos questions, but it cannot access private clinic records or execute changes.
-              </p>
-            </form>
-          </main>
-        )}
+              <p>{KLINIKOS_HUMAN_AUTHORITY}</p>
+              <p>{KLINIKOS_ECONOMIC_THESIS}</p>
+              <Link className={styles.inlineLink} href="/grid/browse">
+                Explore Grid <ArrowRight aria-hidden="true" className="size-3" />
+              </Link>
+            </section>
+          </aside>
+        </main>
       </section>
     </>
   );

@@ -43,9 +43,11 @@ const AVAILABILITY_TONE: Record<PublicLivingUniverseProjection["availability"], 
 export function PublicLivingUniverseObjectStage({
   item,
   signupEnabled,
+  variant = "obsidian",
 }: {
   item: PublicLivingUniverseProjection;
   signupEnabled: boolean;
+  variant?: "obsidian" | "marble";
 }) {
   const currentStep = item.steps.find((step) => step.state === "current") ?? item.steps[0];
   const currentIndex = currentStep ? item.steps.indexOf(currentStep) : -1;
@@ -79,7 +81,8 @@ export function PublicLivingUniverseObjectStage({
 
   return (
     <article
-      className="overflow-hidden rounded-[28px] border border-white/[.09] bg-[linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))] shadow-[0_28px_90px_rgba(0,0,0,.25)]"
+      className="overflow-hidden rounded-[28px] border border-white/[.09] bg-[#12090b] bg-[linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))] shadow-[0_28px_90px_rgba(0,0,0,.25)]"
+      data-material={variant}
       data-object-stage="true"
     >
       <div className="p-5 sm:p-7 lg:p-8">
@@ -120,7 +123,7 @@ export function PublicLivingUniverseObjectStage({
           {item.commercialBoundary ? <p className="mt-3 text-[12px] leading-6 text-[#8e7c79]">{item.commercialBoundary}</p> : null}
         </div>
         <details className="rounded-2xl border border-white/[.07] bg-black/10 p-4">
-          <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[.14em] text-[#cdb7b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]">Path checkpoints</summary>
+          <summary className="flex min-h-11 cursor-pointer items-center text-[11px] font-semibold uppercase tracking-[.14em] text-[#cdb7b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]">Path checkpoints</summary>
           <ol className="mt-4 space-y-3">
             {item.steps.map((step, index) => (
               <li className="flex gap-3" key={`${item.id}-checkpoint-${index}`}>

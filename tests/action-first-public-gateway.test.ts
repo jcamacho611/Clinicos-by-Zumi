@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -13,22 +14,24 @@ describe("Action-First public Living Universe", () => {
   it("leads with everyday intent instead of a module catalog", () => {
     expect(source).toContain("What do you need today?");
     expect(source).toContain("Tell Klinikos what you need");
-    expect(source).toContain("I need care");
-    expect(source).toContain("I need work");
-    expect(source).toContain("I need someone");
-    expect(source).toContain("I have my own client");
-    expect(source).toContain("I need a room");
-    expect(source).toContain("I have space available");
-    expect(source).toContain("I want to learn");
-    expect(source).toContain("I need a placement");
-    expect(source).toContain("Help me run my practice");
-    expect(source).toContain("I need to get paid");
-    expect(source).toContain("I want to grow my healthcare business");
+    const labels = PUBLIC_LIVING_ACTIONS.map((action) => action.label);
+    expect(labels).toContain("I need care");
+    expect(labels).toContain("I need work");
+    expect(labels).toContain("I need someone tomorrow");
+    expect(labels).toContain("I have my own client");
+    expect(labels).toContain("I need a room");
+    expect(labels).toContain("I have rooms open Friday");
+    expect(labels).toContain("I want to learn");
+    expect(labels).toContain("I need a clinical placement");
+    expect(labels).toContain("Help me run my practice");
+    expect(labels).toContain("Why hasn't this been paid?");
   });
 
   it("reuses the current public Zumi server path for quick intents", () => {
-    expect(source).toContain("quickIntentActions");
-    expect(source).toContain("void sendPrompt(action.prompt)");
+    expect(source).toContain("PUBLIC_LIVING_ACTIONS");
+    expect(source).toContain("void sendPrompt(action.prompt, action.id)");
+    expect(source).toContain("...(actionId ? { actionId } : {})");
+    expect(source).not.toContain("...(pathId ? { pathId } : {})");
     expect(source).toContain('fetch("/api/zumi/public"');
     expect(source).toContain("cannot open private clinic records or make changes");
     expect(source).toContain("Do not enter patient information here.");

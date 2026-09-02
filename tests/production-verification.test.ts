@@ -41,6 +41,27 @@ describe("the production gate is read-only and can actually fail", () => {
     expect(source).toContain("is not on origin/main");
   });
 
+  it("proves the browser-visible Living Universe came from the running release", () => {
+    expect(source).toContain("klinikos-release");
+    expect(source).toContain("htmlCommit !== liveCommit");
+    expect(source).toContain("ROOT_DOCUMENT_LIMIT");
+    for (const marker of [
+      'data-public-universe-shell="true"',
+      'data-public-object-stage="true"',
+      'data-public-plane-lens="true"',
+      'data-public-inspector="true"',
+      'data-public-action-dock="true"',
+      "What do you need today?",
+      "I need something",
+      "I have something",
+    ]) {
+      expect(source, `does not require ${marker}`).toContain(marker);
+    }
+    for (const retired of ["One system, three extensions", "What it actually does"]) {
+      expect(source, `does not reject ${retired}`).toContain(retired);
+    }
+  });
+
   it("checks the public health payload carries no secret", () => {
     for (const secret of ["postgres://", "sk_live", "whsec_", "AUTH_SECRET"]) {
       expect(source, `does not check for ${secret}`).toContain(secret);

@@ -512,6 +512,18 @@ Clinical readiness resolves `PROVIDER × ORGANIZATION × LOCATION × SPECIALTY /
 
 **Strategy NOW / Implementation PARTIAL:** Reuse the existing Experience Envelope law, Screen Contract schema, required-family registry, route bindings, and governed Zumi permissions. Current gaps are route coverage, server/runtime enforcement, responsive/accessibility/browser evidence, and exact journey proof—not “zero contracts authored.”
 
+**LIVING UNIVERSE FOUNDATION ≠ FRONTEND COMPLETION.** PR #460 established the valid action-first/person-owned foundation: twelve ordinary-language intents, server-owned intent/Path projection, public Object Stage, Grid continuation, Person/clinic authority separation, Living Home primitives, and fail-closed signup/security controls. Preserve that behavior. It is not evidence that the approved Black Label V2 geometry, materials, brand assets, responsive recomposition, or production-visible customer experience is complete.
+
+Execution consequences:
+
+- **REUSE** PR #460's Person session, public Zumi admission, deterministic Path projection, Object Stage, Grid continuation, same-origin/rate-limit controls, and truthful empty-supply behavior.
+- **EXTEND** the existing public and member surfaces with approved orbital/wordmark assets, authored Marble/Obsidian composition, dominant Object Stage, contextual Inspector, persistent Action Dock, scarce Living Edge, mobile recomposition, and stable semantic release markers.
+- **GENERALIZE** the same release identity and Screen Contract evidence across customer surfaces; do not create a second frontend runtime or route-specific truth store.
+- **CONNECT** the safe customer-surface release marker to the canonical runtime release identity and exact-head deployment verification.
+- **BUILD NEW** only missing presentation adapters, evidence capture, or parity assertions after current equivalent analysis.
+
+Immediate order: customer-visible frontend parity → versioned member agreement acceptance → real provider/organization/location/credential/availability supply. The legal-acceptance rail remains required; visual work changes its order, not its necessity.
+
 **Priority production families:** Living Home/public entry, Grid workspace/map, Clinic OS, Current Visit, patient/provider/EDU/enterprise experiences, and authentication/agreement entry.
 
 ### MF-001 — UNIVERSAL FREE ECOSYSTEM ENTRY
@@ -1102,6 +1114,10 @@ Use `OBSERVE → RESEARCH → VALIDATE → PRIORITIZE → OWN → EXECUTE → VE
 ### PRODUCTION / RELEASE / DEVSECOPS / RESILIENCE
 
 Every release requires migration safety, generated client/schema validation, typecheck, lint, unit/integration/negative-authorization/journey tests, build/startup smoke, security/confidentiality gates, exact-head CI, rollback, observability, and **backup / restore / disaster recovery** evidence appropriate to risk. Red exact-head CI or unresolved critical review means do not merge.
+
+For a customer-facing release, **`MERGED ≠ DEPLOYED ≠ CUSTOMER-VISIBLE`**. **CUSTOMER-VISIBLE FRONTEND PARITY IS A RELEASE REQUIREMENT.** **HEALTH RELEASE IDENTITY ALONE DOES NOT PROVE CUSTOMER-SURFACE PARITY.** Reuse the canonical non-secret release identity so the verifier can prove `EXPECTED REPOSITORY SHA = HEALTH SHA = CUSTOMER-SURFACE RELEASE SHA`, then verify stable Living Universe markers, retired-composition absence, and actual browser output. HTTP 200, a current `/api/health` response, or successful CI alone does not establish visual/runtime parity.
+
+The release-evidence matrix for material frontend work includes canonical-reference, desktop, tablet, and mobile captures plus keyboard/focus, 200% zoom, reduced motion, overflow, loading, no-data, blocked, partial, error, and responsive-Inspector checks. A candidate without that evidence remains code-verified and visually unverified; it is not frontend-complete.
 
 ### ENTERPRISE PROCUREMENT / TRUST / ASSURANCE
 

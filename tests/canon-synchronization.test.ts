@@ -187,6 +187,20 @@ describe("Klinikos Canon synchronization", () => {
     expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
   });
 
+  it("keeps Living Universe foundation, visual completion, and customer-visible release truth separate", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+    const required = [
+      "LIVING UNIVERSE FOUNDATION ≠ FRONTEND COMPLETION",
+      "CUSTOMER-VISIBLE FRONTEND PARITY IS A RELEASE REQUIREMENT",
+      "MERGED ≠ DEPLOYED ≠ CUSTOMER-VISIBLE",
+      "HEALTH RELEASE IDENTITY ALONE DOES NOT PROVE CUSTOMER-SURFACE PARITY",
+    ];
+
+    expect(required.filter((anchor) => !master.includes(anchor))).toEqual([]);
+    expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
+  });
+
   it("preserves the twelve delivery workstreams as a projection of the five-plane Canon", () => {
     const master = read(masterPath);
     const blueprint = read(blueprintPath);

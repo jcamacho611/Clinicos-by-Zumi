@@ -22,13 +22,13 @@ afterEach(() => {
   else process.env.ZUMI_DISABLED = originalDisabled;
 });
 
-async function ask(question: string) {
+async function ask(question: string, actionId?: string) {
   process.env.ZUMI_DISABLED = "1";
   resetProviderRegistry();
   const response = await POST(new Request("http://localhost/api/zumi/public", {
     method: "POST",
     headers: { "content-type": "application/json", origin: "http://localhost" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, ...(actionId ? { actionId } : {}) }),
   }));
   return { status: response.status, payload: await response.json() as { data?: Record<string, unknown> } };
 }
@@ -44,6 +44,31 @@ describe("public Living Universe projection over the API", () => {
     expect(typeof universe?.availabilityCopy).toBe("string");
     expect(typeof universe?.governance).toBe("string");
     expect(Array.isArray(universe?.steps)).toBe(true);
+  });
+
+  it("uses an allowlisted action identity to select the exact server-owned Path", async () => {
+    const { status, payload } = await ask("I have rooms open Friday", "rooms");
+    expect(status).toBe(200);
+    expect(payload.data?.universe).toMatchObject({
+      id: "rooms",
+      pathId: "clinic-monetize-capacity",
+      side: "have",
+    });
+    expect(payload.data?.suppressUniverse).toBe(false);
+    expect(payload.data?.replaceUniverse).toBe(true);
+  });
+
+  it("keeps generic learning in EDU without inventing an injector or placement Path", async () => {
+    const { status, payload } = await ask("I want to learn a healthcare skill", "learn");
+    expect(status).toBe(200);
+    expect(payload.data?.universe ?? null).toBeNull();
+    expect(payload.data?.replaceUniverse).toBe(true);
+    expect(payload.data?.suppressUniverse).toBe(false);
+  });
+
+  it("rejects a client-invented action identity", async () => {
+    const { status } = await ask("Put me anywhere", "invented-client-path");
+    expect(status).toBe(400);
   });
 
   it("sends the browser presentation only, never the machinery behind it", async () => {
@@ -64,11 +89,15 @@ describe("public Living Universe projection over the API", () => {
     // Someone describing an emergency must not be shown a journey about finding work or
     // filling a shift underneath the answer. Safety outranks ordinary projection, and
     // this is the path that must never quietly acquire one.
-    const { status, payload } = await ask("my patient is having chest pain and can't breathe");
+    const { status, payload } = await ask(
+      "my patient is having chest pain and can't breathe",
+      "invented-client-path",
+    );
     expect(status).toBe(200);
     const resolution = payload.data?.resolution as Record<string, unknown>;
     expect(String(resolution?.title)).toMatch(/emergency/i);
     expect(payload.data?.universe ?? null).toBeNull();
+    expect(payload.data?.suppressUniverse).toBe(true);
   });
 
   it("returns no stage rather than inventing a journey", async () => {
@@ -76,5 +105,7 @@ describe("public Living Universe projection over the API", () => {
     // it was already showing.
     const { payload } = await ask("hey");
     expect(payload.data?.universe ?? null).toBeNull();
+    expect(payload.data?.replaceUniverse).toBe(false);
+    expect(payload.data?.suppressUniverse).toBe(false);
   });
 });

@@ -9,6 +9,7 @@ const controller = fs.readFileSync(path.join(process.cwd(), "src/components/desi
 const accountPreferences = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/account-preferences.tsx"), "utf8");
 const layout = fs.readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
 const livingHome = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-living-gateway.tsx"), "utf8");
+const livingHomeMaterials = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-living-universe-shell.module.css"), "utf8");
 
 function ruleContaining(selector: string) {
   const selectorIndex = tokens.indexOf(selector);
@@ -43,7 +44,9 @@ describe("Klinikos Black Label appearance system", () => {
     expect(appearance).toContain("referenceLocked");
     expect(appearance).toContain('location.pathname === "/"');
     expect(controller).toContain('const referenceLocked = pathname === "/"');
-    expect(livingHome).toContain('bg-[#050303]');
+    expect(livingHome).toContain("styles.shell");
+    expect(livingHomeMaterials).toContain("--lu-obsidian: #080506");
+    expect(livingHomeMaterials).toContain("var(--lu-obsidian)");
   });
 
   it("gives Marble and Obsidian distinct semantic material blocks", () => {
