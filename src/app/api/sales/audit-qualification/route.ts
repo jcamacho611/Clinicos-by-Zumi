@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { enforceApiPermission } from "@/lib/auth/api-authorization";
 import { getClinicSession } from "@/lib/auth/session";
-import { createPreferredCommercialCheckout } from "@/lib/commercial/checkout-service";
 import { db } from "@/lib/db";
 import { networkAccessErrorResponse } from "@/lib/network-access-http";
 import { buildSalesAuditNotes, evaluateSalesAuditQualification, salesAuditQualificationSchema } from "@/lib/sales-audit-rules";
@@ -15,8 +14,16 @@ export async function POST(request: Request) {
   try {
     const prospect = salesAuditQualificationSchema.parse(await request.json());
     const input = evaluateSalesAuditQualification(prospect);
-    if (input.status !== "QUALIFIED" || input.score < 70) {
-      return NextResponse.json({ error: "The prospect is not qualified for audit checkout yet." }, { status: 422 });
+    if (!input.firstValueEligible) {
+      return NextResponse.json(
+        {
+          error: input.status === "MORE INFORMATION REQUIRED"
+            ? "More operating context is required before Klinikos can produce a useful first result."
+            : "This account should remain in nurture until there is a clearer unfinished-work or economic signal.",
+          data: { score: input.score, status: input.status, nextAction: input.recommendedNextAction },
+        },
+        { status: 422 },
+      );
     }
 
     const result = await db.$transaction(async (tx) => {
@@ -26,25 +33,25 @@ export async function POST(request: Request) {
           name: input.clinic,
           email: input.email,
           source: "other",
-          campaignSource: "Klinikos Revenue Desk",
-          serviceInterest: "Klinikos Clinic Operating Analysis",
-          appointmentInterest: "Founding Clinic discovery",
-          estimatedValueCents: input.auditPrice * 100,
+          campaignSource: "Klinikos Commercial Fabric",
+          serviceInterest: "Unfinished-work operating improvement",
+          appointmentInterest: "No meeting committed — founder approval required before scheduling",
+          estimatedValueCents: 0,
           assignedTo: session.userId,
           followUpDueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           notes: buildSalesAuditNotes(input),
-          pipelineStage: "audit_checkout",
+          pipelineStage: "first_value_ready",
           status: "contacted",
-          bookingStatus: "audit_checkout_opened",
-          paymentStatus: "pending_external_confirmation",
+          bookingStatus: "not_scheduled",
+          paymentStatus: "not_requested",
         },
       });
       const task = await tx.task.create({
         data: {
           organizationId: session.organizationId,
           category: "lead_follow_up",
-          title: `Confirm audit payment · ${input.clinic}`,
-          details: `lead:${lead.id} Confirm verified payment evidence reached the Klinikos commercial ledger before beginning the audit. Do not infer payment from checkout launch or browser return.`,
+          title: `Produce first useful result · ${input.clinic}`,
+          details: `lead:${lead.id} Use the saved unfinished-work evidence to produce one concrete, bounded result or operating insight. Do not create checkout, accept a meeting, or disclose restricted implementation details. Escalate to a paid commercial capability only when additional economic value is demonstrated and the governed offer fits.`,
           ownerId: session.userId,
           priority: "high",
           riskLevel: "NEEDS_STAFF",
@@ -58,10 +65,10 @@ export async function POST(request: Request) {
           organizationId: session.organizationId,
           leadId: lead.id,
           actorId: session.userId,
-          eventType: "audit_checkout_started",
+          eventType: "first_value_ready",
           toStatus: lead.status,
-          note: "Qualified prospect saved before external checkout.",
-          metadata: { score: input.score, auditPrice: input.auditPrice, paymentStatus: "pending_external_confirmation", taskId: task.id },
+          note: "Account qualified for a first useful result; no paid product or meeting was committed.",
+          metadata: { score: input.score, economicSignal: input.economicSignal, nextAction: input.recommendedNextAction, taskId: task.id },
         },
       });
       await tx.auditLog.create({
@@ -69,42 +76,27 @@ export async function POST(request: Request) {
           organizationId: session.organizationId,
           actorId: session.userId,
           actorType: "user",
-          action: "sales.audit_checkout_started",
+          action: "sales.first_value_ready",
           resourceType: "lead",
           resourceId: lead.id,
-          metadata: { score: input.score, auditPrice: input.auditPrice, buyerEmail: input.email, taskId: task.id },
+          metadata: { score: input.score, economicSignal: input.economicSignal, buyerEmail: input.email, taskId: task.id },
         },
       });
       return { leadId: lead.id, taskId: task.id };
     });
 
-    const checkout = await createPreferredCommercialCheckout({
-      organizationId: session.organizationId,
-      email: input.email,
-      productKey: "operational_audit",
-      expectedAmountCents: input.auditPrice * 100,
-      returnUrl: new URL("/payments/success", request.url).toString(),
-    });
-
-    await db.leadEvent.create({
-      data: {
-        organizationId: session.organizationId,
-        leadId: result.leadId,
-        actorId: session.userId,
-        eventType: "audit_checkout_intent_created",
-        note: "Klinikos created a server-owned commercial checkout intent before opening the selected payment rail.",
-        metadata: {
-          checkoutIntentId: checkout.intentId,
-          provider: checkout.provider,
-          productKey: checkout.productKey,
-          expectedAmountCents: checkout.expectedAmountCents,
-          processorVerificationAvailable: checkout.processorVerificationAvailable,
+    return NextResponse.json(
+      {
+        data: {
+          ...result,
+          qualification: {
+            score: input.score,
+            status: input.status,
+            economicSignal: input.economicSignal,
+            nextAction: input.recommendedNextAction,
+          },
         },
       },
-    });
-
-    return NextResponse.json(
-      { data: { ...result, qualification: { score: input.score, status: input.status, auditPrice: input.auditPrice }, checkout } },
       { status: 201, headers: { "Cache-Control": "private, no-store" } },
     );
   } catch (error) {
