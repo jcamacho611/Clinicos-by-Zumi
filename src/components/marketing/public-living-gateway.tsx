@@ -275,6 +275,15 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
 
   useEffect(() => () => activeRequest.current?.abort(), []);
 
+  useEffect(() => {
+    const mobileViewport = window.matchMedia("(max-width: 1024px)");
+    const closeSheetOutsideMobile = (event: MediaQueryListEvent) => {
+      if (!event.matches) setOpenMobileDrawer(null);
+    };
+    mobileViewport.addEventListener("change", closeSheetOutsideMobile);
+    return () => mobileViewport.removeEventListener("change", closeSheetOutsideMobile);
+  }, []);
+
   async function sendPrompt(rawPrompt: string, actionId?: string) {
     const prompt = rawPrompt.trim();
     if (!prompt || isSubmitting) return;
@@ -459,7 +468,10 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               data-public-action-side={action.side}
               disabled={isSubmitting}
               key={`${surface}-${action.id}`}
-              onClick={() => void sendPrompt(action.prompt, action.id)}
+              onClick={() => {
+                if (surface === "mobile") setOpenMobileDrawer(null);
+                void sendPrompt(action.prompt, action.id);
+              }}
               type="button"
             >
               <span className={styles.actionText}>{action.label}</span>
@@ -754,6 +766,9 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
         >
           <nav aria-label="Living Universe mobile controls" className={styles.mobileDock}>
             <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "start"}
+              aria-haspopup="dialog"
               className={styles.mobileDrawer}
               data-mobile-drawer="start"
               onClick={(event) => {
@@ -765,6 +780,9 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               Start
             </button>
             <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "planes"}
+              aria-haspopup="dialog"
               className={styles.mobileDrawer}
               data-mobile-drawer="planes"
               onClick={(event) => {
@@ -776,6 +794,9 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               Planes · {activePlane.shortTitle}
             </button>
             <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "context"}
+              aria-haspopup="dialog"
               className={styles.mobileDrawer}
               data-mobile-drawer="context"
               onClick={(event) => {
@@ -796,9 +817,12 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               className={styles.mobileDrawerPanel}
               data-mobile-sheet={openMobileDrawer ?? undefined}
               data-mobile-sheet-panel="true"
+              id="public-mobile-sheet"
               onCloseAutoFocus={(event) => {
                 event.preventDefault();
-                mobileDrawerTrigger.current?.focus();
+                const trigger = mobileDrawerTrigger.current;
+                if (trigger?.getClientRects().length) trigger.focus();
+                else document.querySelector('[data-klinikos-approved-wordmark="true"]')?.closest<HTMLAnchorElement>("a")?.focus();
               }}
               onOpenAutoFocus={(event) => {
                 event.preventDefault();

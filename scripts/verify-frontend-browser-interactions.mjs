@@ -471,12 +471,21 @@ try {
       mobileSheetFitsViewport: Boolean(rect && rect.top >= 0 && rect.bottom <= window.innerHeight),
       overlayVisible: Boolean(overlay && overlay.getBoundingClientRect().height >= window.innerHeight),
       panelBackground: sheet ? getComputedStyle(sheet).backgroundColor : null,
+      mobileSheetTriggerSemantics: (() => {
+        const triggers = Array.from(document.querySelectorAll('[data-mobile-drawer]'));
+        return triggers.length === 3
+          && triggers.every((trigger) => trigger.getAttribute('aria-haspopup') === 'dialog'
+            && trigger.getAttribute('aria-controls') === 'public-mobile-sheet')
+          && triggers.filter((trigger) => trigger.getAttribute('aria-expanded') === 'true').length === 1
+          && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'true';
+      })(),
     };
   })()`);
   if (!results.mobileSheet.mobileSheetModalIsolated
     || !results.mobileSheet.mobileSheetScrollReachable
     || !results.mobileSheet.mobileSheetFitsViewport
     || !results.mobileSheet.overlayVisible
+    || !results.mobileSheet.mobileSheetTriggerSemantics
     || results.mobileSheet.panelBackground !== "rgb(12, 5, 7)") {
     throw new Error(`The mobile sheet does not isolate and fully occlude the Living Home: ${JSON.stringify(results.mobileSheet)}.`);
   }
@@ -502,9 +511,85 @@ try {
   await waitFor(
     "single open mobile action drawer",
     `document.querySelector('[data-mobile-sheet-panel="true"]')?.getAttribute('data-mobile-sheet') === 'start'
-      && document.querySelectorAll('[data-mobile-sheet-panel="true"]').length === 1`,
+      && document.querySelectorAll('[data-mobile-sheet-panel="true"]').length === 1
+      && document.querySelector('[data-mobile-drawer="start"]')?.getAttribute('aria-expanded') === 'true'
+      && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="context"]')?.getAttribute('aria-expanded') === 'false'`,
   );
   results.mobileStart = await screenshot("browser-mobile-390x844-start-open");
+  await evaluate(`document.querySelector('[data-mobile-sheet-panel="true"] button[data-public-action-id]')?.click()`);
+  await waitFor(
+    "mobile action to close its sheet and reveal guidance",
+    `!document.querySelector('[data-mobile-sheet-panel="true"]')
+      && Boolean(document.querySelector('[aria-label="Zumi is responding"], [aria-label="Public Zumi guidance"]'))
+      && document.activeElement?.matches('[data-mobile-drawer="start"]') === true`,
+  );
+  results.mobileActionRevealedResult = await evaluate(`({
+    sheetClosed: !document.querySelector('[data-mobile-sheet-panel="true"]'),
+    liveStatus: document.querySelector('[role="status"]')?.textContent ?? '',
+    focusReturned: document.activeElement?.matches('[data-mobile-drawer="start"]') === true,
+  })`);
+  if (!results.mobileActionRevealedResult.sheetClosed
+    || !results.mobileActionRevealedResult.liveStatus
+    || !results.mobileActionRevealedResult.focusReturned) {
+    throw new Error(`The mobile Start action did not reveal and announce its result: ${JSON.stringify(results.mobileActionRevealedResult)}.`);
+  }
+
+  await evaluate(`(() => {
+    const trigger = document.querySelector('[data-mobile-drawer="context"]');
+    trigger?.focus();
+    trigger?.click();
+  })()`);
+  await waitFor(
+    "open context sheet before responsive transition",
+    `document.querySelector('[data-mobile-sheet-panel="true"]')?.getAttribute('data-state') === 'open'
+      && document.querySelector('[data-mobile-drawer="start"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="planes"]')?.getAttribute('aria-expanded') === 'false'
+      && document.querySelector('[data-mobile-drawer="context"]')?.getAttribute('aria-expanded') === 'true'`,
+  );
+  await setViewport(1200, 900);
+  await waitFor(
+    "release mobile modal after leaving mobile layout without navigation",
+    `(() => {
+      const shell = document.querySelector('[data-public-universe-shell="true"]');
+      let backgroundNode = shell;
+      while (backgroundNode) {
+        if (backgroundNode.getAttribute('aria-hidden') === 'true') return false;
+        backgroundNode = backgroundNode.parentElement;
+      }
+      const activeRect = document.activeElement?.getBoundingClientRect();
+      return !document.querySelector('[data-mobile-sheet-panel="true"]')
+        && !document.querySelector('[data-mobile-sheet-overlay="true"]')
+        && !document.body.hasAttribute('data-scroll-locked')
+        && Boolean(activeRect && activeRect.width > 0 && activeRect.height > 0);
+    })()`,
+  );
+  results.resizeWithoutNavigation = await evaluate(`(() => {
+    const shell = document.querySelector('[data-public-universe-shell="true"]');
+    let backgroundNode = shell;
+    let backgroundIsolated = false;
+    while (backgroundNode) {
+      if (backgroundNode.getAttribute('aria-hidden') === 'true') {
+        backgroundIsolated = true;
+        break;
+      }
+      backgroundNode = backgroundNode.parentElement;
+    }
+    const activeRect = document.activeElement?.getBoundingClientRect();
+    return {
+      resizeSheetClosedWithoutNavigation: !document.querySelector('[data-mobile-sheet-panel="true"]')
+        && !document.querySelector('[data-mobile-sheet-overlay="true"]'),
+      resizeModalIsolationReleased: !backgroundIsolated,
+      resizeScrollLockReleased: !document.body.hasAttribute('data-scroll-locked'),
+      focusMovedToVisibleSurface: Boolean(activeRect && activeRect.width > 0 && activeRect.height > 0),
+    };
+  })()`);
+  if (!results.resizeWithoutNavigation.resizeSheetClosedWithoutNavigation
+    || !results.resizeWithoutNavigation.resizeModalIsolationReleased
+    || !results.resizeWithoutNavigation.resizeScrollLockReleased
+    || !results.resizeWithoutNavigation.focusMovedToVisibleSurface) {
+    throw new Error(`The mobile sheet survived the desktop breakpoint transition: ${JSON.stringify(results.resizeWithoutNavigation)}.`);
+  }
 
   await setViewport(1024, 900);
   await navigate();

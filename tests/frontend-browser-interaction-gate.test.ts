@@ -30,6 +30,11 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).not.toContain('await pressKey("Tab", "Tab", 9, 1);');
     expect(browserGate).toContain("mobileSheetEscapeClosed");
     expect(browserGate).toContain("mobileSheetFocusReturned");
+    expect(browserGate).toContain("mobileSheetTriggerSemantics");
+    expect(browserGate).toContain("mobileActionRevealedResult");
+    expect(browserGate).toContain("resizeSheetClosedWithoutNavigation");
+    expect(browserGate).toContain("resizeModalIsolationReleased");
+    expect(browserGate).toContain("resizeScrollLockReleased");
     expect(browserGate).toContain("mobileSheetScrollReachable");
     expect(browserGate).toContain("firstFoldOperational");
     expect(browserGate).toContain("wordmarkVisibleWidth");

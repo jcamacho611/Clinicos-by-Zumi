@@ -207,6 +207,9 @@ describe("public Living Home conversation and accessibility contract", () => {
     expect(source).toContain("<Dialog.Title");
     expect(source).toContain("<Dialog.Close");
     expect(source).toContain('data-mobile-sheet-panel="true"');
+    expect(source).toContain('aria-haspopup="dialog"');
+    expect(source).toContain('aria-controls="public-mobile-sheet"');
+    expect(source).toContain("aria-expanded={openMobileDrawer ===");
     expect(source).not.toContain('className={styles.mobileDrawerPanel}>');
     expect(shellStyles).toContain("overscroll-behavior: contain");
     expect(shellStyles).toContain("background: #0c0507");
