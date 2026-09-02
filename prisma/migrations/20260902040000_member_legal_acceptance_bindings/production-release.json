@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260902040000_member_legal_acceptance_bindings",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "97204224c585f1f8c793ea694264ff1bdcfa33959df40e48e5440b74430639de",
+  "approvalReference": "PR #482 member acceptance evidence bindings TDD; additive evidence-only columns and indexes"
+}
