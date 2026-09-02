@@ -6,10 +6,16 @@ import {
   companyRegisterRegistry,
   companyRevenueEngineRegistry,
   companyStageRegistry,
+  companyTruthClasses,
   zumiCompanyAuthorityRegistry,
 } from "@/lib/company-execution-control-plane";
+import { symphonyTruthClasses } from "@/lib/company/symphony-opportunity-types";
 
 describe("company execution control plane", () => {
+  it("shares the canonical company truth taxonomy with Symphony", () => {
+    expect(companyTruthClasses).toBe(symphonyTruthClasses);
+  });
+
   it("defines unique authoritative company registers", () => {
     const ids = companyRegisterRegistry.map((item) => item.id);
     expect(new Set(ids).size).toBe(ids.length);
