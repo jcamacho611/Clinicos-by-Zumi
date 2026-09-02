@@ -365,6 +365,7 @@ describe.skipIf(!shouldRun)("company opportunity repository against disposable P
       ["multiline-purpose", { purpose: "From: sender@example.test\nTo: operator@example.test\nRaw body" }],
       ["header-ask", { ask: "Subject: copied message content" }],
       ["secret-next-action", { nextAction: "Authorization: Bearer secret-token" }],
+      ["secret-source-reference", { sourceReference: "authoritative-record://api_key=do-not-store-this" }],
       ["oversized-title", { title: "x".repeat(241) }],
     ] as const;
 
@@ -432,6 +433,7 @@ describe.skipIf(!shouldRun)("company opportunity repository against disposable P
     const unsafe = [
       ["secret-claim", { claimText: "Authorization: Bearer do-not-store-this" }],
       ["secret-source", { sourceSystem: "api_key=do-not-store-this" }],
+      ["secret-source-reference", { sourceReference: "authoritative-record://Authorization:Bearer-do-not-store-this" }],
       ["unsafe-thread", { sourceThreadId: "https://example.test/thread" }],
       ["secret-counterparty", {
         evidenceType: "EXECUTED_AGREEMENT",

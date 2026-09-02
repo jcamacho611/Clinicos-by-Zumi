@@ -170,6 +170,26 @@ describe("company opportunity API", () => {
     expect(secretClaim.status).toBe(400);
     expect(appendCompanyOpportunityEvidence).not.toHaveBeenCalled();
 
+    const secretSourceReference = await evidence.POST(
+      request("/api/company/opportunities/opp-1/evidence", "POST", {
+        expectedVersion: 1,
+        ingestionKey: "unsafe-source-reference-secret",
+        claimKey: "source.observed",
+        claimText: "A minimized source reference was observed.",
+        claimTruthClass: "ACTUAL",
+        evidenceType: "OBSERVED_SOURCE",
+        sourceSystem: "outlook",
+        sourceType: "OUTLOOK_MESSAGE",
+        sourceReference: "outlook-message://api_key=do-not-store-this",
+        sourceFingerprintSha256: "c".repeat(64),
+        sourceObservedAt: "2026-08-31T12:00:00.000Z",
+        verifiedByCurrentActor: false,
+      }),
+      { params: Promise.resolve({ opportunityId: "opp-1" }) },
+    );
+    expect(secretSourceReference.status).toBe(400);
+    expect(appendCompanyOpportunityEvidence).not.toHaveBeenCalled();
+
     const unsafeLocator = await evidence.POST(
       request("/api/company/opportunities/opp-1/evidence", "POST", {
         expectedVersion: 1,

@@ -249,6 +249,7 @@ describe("company opportunity repository", () => {
       { ask: "Subject: copied message content" },
       { nextAction: "Authorization: Bearer secret-token" },
       { blocker: "api_key=do-not-store-this" },
+      { sourceReference: "outlook-summary://api_key=do-not-store-this" },
     ]) {
       expect(repository.createCompanyOpportunitySchema.safeParse({
         ...createInput,
@@ -264,6 +265,7 @@ describe("company opportunity repository", () => {
       { claimText: "Authorization: Bearer do-not-store-this" },
       { sourceThreadId: "api_key=do-not-store-this" },
       { sourceMessageId: "https://example.test/message" },
+      { sourceReference: "email-provider-receipt://Authorization:Bearer-do-not-store-this" },
     ]) {
       expect(repository.appendCompanyOpportunityEvidenceSchema.safeParse({
         ...providerEvidenceInput,

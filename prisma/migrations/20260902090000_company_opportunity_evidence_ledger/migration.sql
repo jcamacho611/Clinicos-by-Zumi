@@ -110,7 +110,8 @@ CREATE TABLE "company_external_opportunities" (
   ,CONSTRAINT "company_external_opportunities_source_reference_check"
     CHECK (
       char_length("sourceReference") <= 2048 AND
-      "sourceReference" !~ '[[:space:]?&@%]' AND (
+      "sourceReference" !~ '[[:space:]?&@%]' AND
+      "sourceReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND (
         ("sourceType" = 'OUTLOOK_SUMMARY' AND "sourceReference" ~ '^outlook-summary://[A-Za-z0-9._~:/#=-]+$') OR
         ("sourceType" = 'OUTLOOK_MESSAGE' AND "sourceReference" ~ '^outlook-message://[A-Za-z0-9._~:/#=-]+$') OR
         ("sourceType" = 'ATTACHMENT' AND "sourceReference" ~ '^attachment-sha256://[A-Za-z0-9._~:/#=-]+$') OR
@@ -197,7 +198,8 @@ CREATE TABLE "company_opportunity_evidence" (
     )),
   CONSTRAINT "company_opportunity_evidence_source_reference_check"
     CHECK (
-      "sourceReference" !~ '[[:space:]?&@%]' AND (
+      "sourceReference" !~ '[[:space:]?&@%]' AND
+      "sourceReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND (
         ("sourceType" = 'OUTLOOK_SUMMARY' AND "sourceReference" ~ '^outlook-summary://[A-Za-z0-9._~:/#=-]+$') OR
         ("sourceType" = 'OUTLOOK_MESSAGE' AND "sourceReference" ~ '^outlook-message://[A-Za-z0-9._~:/#=-]+$') OR
         ("sourceType" = 'ATTACHMENT' AND "sourceReference" ~ '^attachment-sha256://[A-Za-z0-9._~:/#=-]+$') OR

@@ -31,6 +31,7 @@ const safeSingleLineText = (max: number) => safeText(max).refine(
   "This field must be a concise single-line claim, not a message body.",
 );
 const unsafeSynopsisPattern = /^(?:from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(?:api[_-]?key|secret|authorization|bearer|password)\s*[:=]/i;
+const unsafeOpaqueReferencePattern = /(?:api[_-]?key|secret|authorization|bearer|password)\s*[:=]/i;
 const safeSynopsisText = (max: number) => safeSingleLineText(max).refine(
   (value) => !unsafeSynopsisPattern.test(value),
   "This field must be a minimized synopsis without message headers or secret-like material.",
@@ -47,7 +48,9 @@ const optionalOpaqueReferenceText = (max: number) => safeOpaqueReferenceText(max
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 const dateInputSchema = z.coerce.date();
 const sourceReferenceSchema = safeSingleLineText(2048).refine(
-  (value) => /^[a-z][a-z0-9-]*:\/\/[A-Za-z0-9._~:/#=-]+$/.test(value) && !/[?&@%]/.test(value),
+  (value) => /^[a-z][a-z0-9-]*:\/\/[A-Za-z0-9._~:/#=-]+$/.test(value) &&
+    !/[?&@%]/.test(value) &&
+    !unsafeOpaqueReferencePattern.test(value),
   "Source references must be inert, allowlisted opaque references without URLs, credentials, or query data.",
 );
 const sourceLocatorSchema = optionalOpaqueReferenceText(1000);
