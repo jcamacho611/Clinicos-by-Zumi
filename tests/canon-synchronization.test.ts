@@ -201,12 +201,42 @@ describe("Klinikos Canon synchronization", () => {
     expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
   });
 
+  it("keeps one program and shell while allowing role-specific application projections", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+    const required = [
+      "ONE PRODUCT / ONE PROGRAM / ONE IDENTITY / ONE SHELL / ONE ZUMI",
+      "APPLICATIONS DIFFERENTIATE THROUGH CONTENT, CONTEXT, AND WORK",
+      "HOME / CLINIC / MONEY / NETWORK / LEARN",
+    ];
+
+    expect(required.filter((anchor) => !master.includes(anchor))).toEqual([]);
+    expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
+  });
+
+  it("keeps Founder Command inside Plane E and connector evidence below Klinikos authority", () => {
+    const master = read(masterPath);
+    const blueprint = read(blueprintPath);
+    const authority = read(authorityMapPath);
+    const required = [
+      "KLINIKOS COMMAND / FOUNDER COMMAND CENTER",
+      "EXTERNAL CONNECTORS ARE EVIDENCE PROVIDERS, NOT AUTHORITIES",
+      "COMPANY AUTHORITY IS SEPARATE FROM CLINICAL AUTHORITY",
+      "CommandSignal / CommandInitiative / CommandOpportunity / CommandRisk / CommandDecision",
+    ];
+
+    expect(required.filter((anchor) => !master.includes(anchor))).toEqual([]);
+    expect(required.filter((anchor) => !blueprint.includes(anchor))).toEqual([]);
+    expect(authority).toContain("one_program_one_shell_multi_application_projection");
+    expect(authority).toContain("company_command_evidence_projection");
+  });
+
   it("versions the public-reference tranche without claiming authenticated member convergence", () => {
     const master = read(masterPath);
     const blueprint = read(blueprintPath);
 
-    expect(master).toContain("Version: `2026-09-01.1`");
-    expect(blueprint).toContain("**Version:** 2026-09-01 rev4");
+    expect(master).toContain("Version: `2026-09-02.1`");
+    expect(blueprint).toContain("**Version:** 2026-09-02 rev5");
     expect(blueprint).toContain("ordinary-language intent actions");
     expect(blueprint).not.toContain("twelve ordinary-language intents");
     expect(blueprint).toContain("This public-first convergence tranche does not claim `/member` visual convergence.");

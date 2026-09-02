@@ -1,4 +1,4 @@
-version: 2026-08-30.2
+version: 2026-09-02.1
 status: ACTIVE
 
 canonical_product_authority:
@@ -46,6 +46,8 @@ canonical_product_authority:
     - legal_product_requirements
     - black_label_design
     - black_label_v2_route_conversion
+    - one_program_one_shell_multi_application_projection
+    - company_command_evidence_projection
     - commercialization
     - pricing_fabric
     - rfp_and_procurement_operating_system
@@ -85,6 +87,8 @@ canonical_implementation_contract:
     - production_wiring
     - scope_classification
     - executive_council_evaluation_frame
+    - one_program_one_shell_multi_application_contract
+    - company_command_connector_evidence_contract
     - reconciliation_program
   implementation_status_sections_are_snapshot_only: true
   snapshot_refresh_rule: CURRENT_VERIFIED_CODE_SCHEMA_TEST_RUNTIME_AND_EXTERNAL_EVIDENCE_WIN_FOR_WHAT_EXISTS_TODAY
