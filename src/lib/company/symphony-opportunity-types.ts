@@ -118,6 +118,8 @@ export type SymphonyContactHistory = {
 
 export type SymphonyOpportunity = {
   id: string;
+  /** Owning Klinikos tenant context; target organization fields below describe the external recipient. */
+  tenantId: string;
   title: string;
   opportunityClass: SymphonyOpportunityClass;
   targetClass: SymphonyTargetClass;

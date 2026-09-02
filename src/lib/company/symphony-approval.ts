@@ -5,6 +5,7 @@ import type { OutboundMessage } from "@/lib/communications/outbound";
 
 export type SymphonyOutboundApprovalRecord = {
   id: string;
+  tenantId: string;
   scope: "SYMPHONY_EMAIL_SEND";
   payloadSha256: string;
   recipient: string;
@@ -25,6 +26,7 @@ export type SymphonyOutboundApprovalRecord = {
 
 export type SymphonyApprovalExpectation = {
   approvalId: string;
+  tenantId: string;
   payloadSha256: string;
   recipient: string;
   opportunityId: string;
@@ -39,6 +41,7 @@ export type SymphonyApprovalExpectation = {
 
 export type SymphonyApprovalValidationReason =
   | "APPROVAL_ID_MISMATCH"
+  | "TENANT_MISMATCH"
   | "SCOPE_MISMATCH"
   | "PAYLOAD_MISMATCH"
   | "RECIPIENT_MISMATCH"
@@ -86,6 +89,9 @@ export function validateClaimedSymphonyApproval(
 ): SymphonyApprovalValidationResult {
   if (approval.id !== expected.approvalId) {
     return { ok: false, reason: "APPROVAL_ID_MISMATCH", detail: "The claimed approval ID does not match the requested approval." };
+  }
+  if (approval.tenantId !== expected.tenantId) {
+    return { ok: false, reason: "TENANT_MISMATCH", detail: "The approval does not belong to the active execution tenant." };
   }
   if (approval.scope !== "SYMPHONY_EMAIL_SEND") {
     return { ok: false, reason: "SCOPE_MISMATCH", detail: "The approval does not authorize a Symphony email send." };

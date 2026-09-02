@@ -23,6 +23,7 @@ const now = new Date("2026-09-02T12:00:00.000Z");
 function opportunity(overrides: Partial<SymphonyOpportunity> = {}): SymphonyOpportunity {
   return {
     id: "opp-approval-1",
+    tenantId: "tenant-klinikos",
     title: "Healthcare technology program",
     opportunityClass: "GRANT_NON_DILUTIVE",
     targetClass: "FUNDER",
@@ -99,6 +100,7 @@ function profile(overrides: Partial<SymphonyCompanyProfile> = {}): SymphonyCompa
 function approvalRecord(messageHash: string, overrides: Partial<SymphonyOutboundApprovalRecord> = {}): SymphonyOutboundApprovalRecord {
   return {
     id: "approval-1",
+    tenantId: "tenant-klinikos",
     scope: "SYMPHONY_EMAIL_SEND",
     payloadSha256: messageHash,
     recipient: "program@example.org",
@@ -229,6 +231,7 @@ describe("Symphony one-time outbound approval", () => {
     const payloadSha256 = hashSymphonyOutboundMessage(message);
     const expected = {
       approvalId: "approval-1",
+      tenantId: "tenant-klinikos",
       payloadSha256,
       recipient: "program@example.org",
       opportunityId: "opp-approval-1",
@@ -242,6 +245,7 @@ describe("Symphony one-time outbound approval", () => {
     };
 
     expect(validateClaimedSymphonyApproval(approvalRecord(payloadSha256), expected)).toEqual({ ok: true });
+    expect(validateClaimedSymphonyApproval(approvalRecord(payloadSha256, { tenantId: "tenant-other" }), expected)).toMatchObject({ ok: false, reason: "TENANT_MISMATCH" });
     expect(validateClaimedSymphonyApproval(approvalRecord(payloadSha256, { payloadSha256: "0".repeat(64) }), expected)).toMatchObject({ ok: false, reason: "PAYLOAD_MISMATCH" });
     expect(validateClaimedSymphonyApproval(approvalRecord(payloadSha256, { recipient: "other@example.org" }), expected)).toMatchObject({ ok: false, reason: "RECIPIENT_MISMATCH" });
     expect(validateClaimedSymphonyApproval(approvalRecord(payloadSha256, { expiresAt: now }), expected)).toMatchObject({ ok: false, reason: "EXPIRED" });
@@ -299,6 +303,7 @@ describe("Symphony one-time outbound approval", () => {
         },
         authorization: {
           approvalId: "approval-1",
+          tenantId: "tenant-klinikos",
           actorId: "symphony-operator-1",
           executionId: "execution-1",
           idempotencyKey: "symphony-send-1",
@@ -337,6 +342,7 @@ describe("Symphony one-time outbound approval", () => {
       },
       authorization: {
         approvalId: "approval-1",
+        tenantId: "tenant-klinikos",
         actorId: "symphony-operator-1",
         executionId: "execution-1",
         idempotencyKey: "symphony-send-1",
@@ -348,6 +354,52 @@ describe("Symphony one-time outbound approval", () => {
     expect(claims).toBe(0);
     expect(sends).toBe(0);
     expect(result.state).toBe("SEND_BLOCKED_POLICY");
+  });
+
+  it("fails closed before store access when execution is routed through another tenant", async () => {
+    let claims = 0;
+    let outcomes = 0;
+    let sends = 0;
+    const store: SymphonyApprovalStore = {
+      claimForSend: async () => {
+        claims += 1;
+        return { status: "REJECTED", reason: "MISSING", detail: "unused" };
+      },
+      recordOutcome: async () => {
+        outcomes += 1;
+      },
+    };
+
+    const result = await executeSymphonyEmail({
+      opportunity: opportunity(),
+      history: history(),
+      profile: profile(),
+      now,
+      sender: {
+        toolId: "klinikos-outbound-email",
+        providerId: "resend",
+        send: async () => {
+          sends += 1;
+          return { ok: true, provider: "resend", providerReference: "provider-1" };
+        },
+      },
+      authorization: {
+        approvalId: "approval-1",
+        tenantId: "tenant-other",
+        actorId: "symphony-operator-1",
+        executionId: "execution-1",
+        idempotencyKey: "symphony-send-1",
+        allowedToolIds: ["klinikos-outbound-email"],
+        allowedProviderIds: ["resend"],
+        store,
+      },
+    });
+
+    expect(result.state).toBe("SEND_BLOCKED_POLICY");
+    expect(result.reason).toMatch(/tenant/i);
+    expect(claims).toBe(0);
+    expect(outcomes).toBe(0);
+    expect(sends).toBe(0);
   });
 
   it("sends once after an exact approval claim and records provider acceptance without inflating downstream truth", async () => {
@@ -370,6 +422,7 @@ describe("Symphony one-time outbound approval", () => {
       },
       authorization: {
         approvalId: "approval-1",
+        tenantId: "tenant-klinikos",
         actorId: "symphony-operator-1",
         executionId: "execution-1",
         idempotencyKey: "symphony-send-1",
@@ -390,6 +443,7 @@ describe("Symphony one-time outbound approval", () => {
     });
     expect(result.auditEvent).toMatchObject({
       executionId: "execution-1",
+      tenantId: "tenant-klinikos",
       approvalId: "approval-1",
       payloadSha256,
       fromState: "EMAIL_PREPARED",
@@ -417,6 +471,7 @@ describe("Symphony one-time outbound approval", () => {
       },
       authorization: {
         approvalId: "approval-1",
+        tenantId: "tenant-klinikos",
         actorId: "symphony-operator-1",
         executionId: "execution-1",
         idempotencyKey: "symphony-send-1",

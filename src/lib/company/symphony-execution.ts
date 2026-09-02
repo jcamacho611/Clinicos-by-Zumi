@@ -35,6 +35,7 @@ export type SymphonyExecutionTruth = {
 export type SymphonyExecutionAuditEvent = {
   executionId: string;
   idempotencyKey: string;
+  tenantId: string;
   opportunityId: string;
   approvalId: string | null;
   payloadSha256: string;
@@ -68,6 +69,7 @@ export type SymphonyApprovalStore = {
 
 export type SymphonySendAuthorization = {
   approvalId: string;
+  tenantId: string;
   actorId: string;
   executionId: string;
   idempotencyKey: string;
@@ -129,6 +131,7 @@ function auditEvent(input: {
   return {
     executionId: input.authorization.executionId,
     idempotencyKey: input.authorization.idempotencyKey,
+    tenantId: input.opportunity.tenantId,
     opportunityId: input.opportunity.id,
     approvalId: input.authorization.approvalId || null,
     payloadSha256: input.payloadSha256,
@@ -200,11 +203,18 @@ export async function executeSymphonyEmail(input: ExecuteSymphonyEmailInput): Pr
   }
 
   requiredIdentifier(authorization.approvalId, "an approval ID");
+  requiredIdentifier(input.opportunity.tenantId, "an opportunity tenant ID");
+  requiredIdentifier(authorization.tenantId, "an authorization tenant ID");
   requiredIdentifier(authorization.actorId, "an executing actor ID");
   requiredIdentifier(authorization.executionId, "an execution ID");
   requiredIdentifier(authorization.idempotencyKey, "an idempotency key");
   requiredIdentifier(sender.toolId, "an outbound tool ID");
   requiredIdentifier(sender.providerId, "an outbound provider ID");
+
+  if (authorization.tenantId !== input.opportunity.tenantId) {
+    const reason = "The outbound authorization tenant does not match the opportunity tenant; execution fails closed before store access.";
+    return { state: "SEND_BLOCKED_POLICY", reason, message, payloadSha256, truth: noDownstreamTruth };
+  }
 
   if (!authorization.allowedToolIds.includes(sender.toolId) || !authorization.allowedProviderIds.includes(sender.providerId)) {
     const reason = "The configured outbound tool or provider is not on the server allowlist.";
@@ -225,6 +235,7 @@ export async function executeSymphonyEmail(input: ExecuteSymphonyEmailInput): Pr
 
   const expected: SymphonyApprovalExpectation = {
     approvalId: authorization.approvalId,
+    tenantId: authorization.tenantId,
     payloadSha256,
     recipient: message.to,
     opportunityId: input.opportunity.id,

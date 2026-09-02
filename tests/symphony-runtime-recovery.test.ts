@@ -16,6 +16,7 @@ const now = new Date("2026-09-02T12:00:00.000Z");
 function opportunity(overrides: Partial<SymphonyOpportunity> = {}): SymphonyOpportunity {
   return {
     id: "opp-1",
+    tenantId: "tenant-klinikos",
     title: "Healthcare AI program",
     opportunityClass: "GRANT_NON_DILUTIVE",
     targetClass: "FUNDER",
