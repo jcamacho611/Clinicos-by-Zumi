@@ -2,6 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -9,6 +10,7 @@ import {
   GraduationCap,
   HeartPulse,
   Menu,
+  X,
 } from "lucide-react";
 import { ZumiOrb } from "@/components/ds";
 import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
@@ -254,6 +256,8 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
   const nextTurnId = useRef(1);
   const activeRequest = useRef<AbortController | null>(null);
   const threadEnd = useRef<HTMLDivElement>(null);
+  const mobileDrawerTrigger = useRef<HTMLButtonElement | null>(null);
+  const mobileDrawerClose = useRef<HTMLButtonElement | null>(null);
   const conversationStarted = turns.length > 0 || pendingPrompt !== null;
   const latestTurn = turns[turns.length - 1] ?? null;
 
@@ -270,6 +274,15 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
   }, [conversationStarted, turns.length, pendingPrompt]);
 
   useEffect(() => () => activeRequest.current?.abort(), []);
+
+  useEffect(() => {
+    const mobileViewport = window.matchMedia("(max-width: 1024px)");
+    const closeSheetOutsideMobile = (event: MediaQueryListEvent) => {
+      if (!event.matches) setOpenMobileDrawer(null);
+    };
+    mobileViewport.addEventListener("change", closeSheetOutsideMobile);
+    return () => mobileViewport.removeEventListener("change", closeSheetOutsideMobile);
+  }, []);
 
   async function sendPrompt(rawPrompt: string, actionId?: string) {
     const prompt = rawPrompt.trim();
@@ -386,6 +399,16 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
     : latestTurn
       ? "More context needed"
       : "Waiting for an objective";
+  const mobileDrawerTitle = openMobileDrawer === "start"
+    ? "Start with an objective"
+    : openMobileDrawer === "planes"
+      ? `Planes · ${activePlane.shortTitle}`
+      : "Public context";
+  const mobileDrawerDescription = openMobileDrawer === "start"
+    ? "Choose what you need, what you have, or what you are trying to become."
+    : openMobileDrawer === "planes"
+      ? "Choose one of the five governed lenses and inspect what it means."
+      : "Review the identity, path, and authority limits for this public surface.";
 
   function renderPlaneControls(surface: "desktop" | "mobile") {
     const readoutId = `public-plane-readout-${surface}`;
@@ -445,7 +468,10 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               data-public-action-side={action.side}
               disabled={isSubmitting}
               key={`${surface}-${action.id}`}
-              onClick={() => void sendPrompt(action.prompt, action.id)}
+              onClick={() => {
+                if (surface === "mobile") setOpenMobileDrawer(null);
+                void sendPrompt(action.prompt, action.id);
+              }}
               type="button"
             >
               <span className={styles.actionText}>{action.label}</span>
@@ -732,56 +758,110 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
           </section>
         ) : null}
 
-        <nav aria-label="Living Universe mobile controls" className={styles.mobileDock}>
-          <details
-            className={styles.mobileDrawer}
-            data-mobile-drawer="start"
-            onToggle={(event) => {
-              if (event.currentTarget.open) setOpenMobileDrawer("start");
-              else setOpenMobileDrawer((current) => current === "start" ? null : current);
-            }}
-            open={openMobileDrawer === "start"}
-          >
-            <summary>Start</summary>
-            <div className={styles.mobileDrawerPanel}>
-              {PUBLIC_ACTION_GROUPS.map((category) => renderActionGroup(category, "mobile"))}
-            </div>
-          </details>
-          <details
-            className={styles.mobileDrawer}
-            data-mobile-drawer="planes"
-            onToggle={(event) => {
-              if (event.currentTarget.open) setOpenMobileDrawer("planes");
-              else setOpenMobileDrawer((current) => current === "planes" ? null : current);
-            }}
-            open={openMobileDrawer === "planes"}
-          >
-            <summary>Planes · {activePlane.shortTitle}</summary>
-            <div className={styles.mobileDrawerPanel}>
-              {renderPlaneControls("mobile")}
-              {renderPlaneInspector("mobile")}
-            </div>
-          </details>
-          <details
-            className={styles.mobileDrawer}
-            data-mobile-drawer="context"
-            onToggle={(event) => {
-              if (event.currentTarget.open) setOpenMobileDrawer("context");
-              else setOpenMobileDrawer((current) => current === "context" ? null : current);
-            }}
-            open={openMobileDrawer === "context"}
-          >
-            <summary>Context</summary>
-            <div className={styles.mobileDrawerPanel}>
-              <dl className={styles.contextFacts}>
-                <div><dt>Mode</dt><dd>Public guidance</dd></div>
-                <div><dt>Identity</dt><dd>Not assumed</dd></div>
-                <div><dt>Path</dt><dd>{activePathLabel}</dd></div>
-              </dl>
-            </div>
-          </details>
-          <Link href="/grid/browse">Grid</Link>
-        </nav>
+        <Dialog.Root
+          onOpenChange={(open) => {
+            if (!open) setOpenMobileDrawer(null);
+          }}
+          open={openMobileDrawer !== null}
+        >
+          <nav aria-label="Living Universe mobile controls" className={styles.mobileDock}>
+            <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "start"}
+              aria-haspopup="dialog"
+              className={styles.mobileDrawer}
+              data-mobile-drawer="start"
+              onClick={(event) => {
+                mobileDrawerTrigger.current = event.currentTarget;
+                setOpenMobileDrawer("start");
+              }}
+              type="button"
+            >
+              Start
+            </button>
+            <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "planes"}
+              aria-haspopup="dialog"
+              className={styles.mobileDrawer}
+              data-mobile-drawer="planes"
+              onClick={(event) => {
+                mobileDrawerTrigger.current = event.currentTarget;
+                setOpenMobileDrawer("planes");
+              }}
+              type="button"
+            >
+              Planes · {activePlane.shortTitle}
+            </button>
+            <button
+              aria-controls="public-mobile-sheet"
+              aria-expanded={openMobileDrawer === "context"}
+              aria-haspopup="dialog"
+              className={styles.mobileDrawer}
+              data-mobile-drawer="context"
+              onClick={(event) => {
+                mobileDrawerTrigger.current = event.currentTarget;
+                setOpenMobileDrawer("context");
+              }}
+              type="button"
+            >
+              Context
+            </button>
+            <Link href="/grid/browse">Grid</Link>
+          </nav>
+
+          <Dialog.Portal>
+            <Dialog.Overlay className={styles.mobileDrawerOverlay} data-mobile-sheet-overlay="true" />
+            <Dialog.Content
+              aria-describedby="public-mobile-sheet-description"
+              className={styles.mobileDrawerPanel}
+              data-mobile-sheet={openMobileDrawer ?? undefined}
+              data-mobile-sheet-panel="true"
+              id="public-mobile-sheet"
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                const trigger = mobileDrawerTrigger.current;
+                if (trigger?.getClientRects().length) trigger.focus();
+                else document.querySelector('[data-klinikos-approved-wordmark="true"]')?.closest<HTMLAnchorElement>("a")?.focus();
+              }}
+              onOpenAutoFocus={(event) => {
+                event.preventDefault();
+                mobileDrawerClose.current?.focus();
+              }}
+            >
+              <div className={styles.mobileDrawerHeader}>
+                <div>
+                  <Dialog.Title>{mobileDrawerTitle}</Dialog.Title>
+                  <Dialog.Description id="public-mobile-sheet-description">
+                    {mobileDrawerDescription}
+                  </Dialog.Description>
+                </div>
+                <Dialog.Close asChild>
+                  <button aria-label="Close mobile controls" className={styles.mobileDrawerClose} ref={mobileDrawerClose} type="button">
+                    <X aria-hidden="true" className="size-4" />
+                  </button>
+                </Dialog.Close>
+              </div>
+
+              {openMobileDrawer === "start"
+                ? PUBLIC_ACTION_GROUPS.map((category) => renderActionGroup(category, "mobile"))
+                : null}
+              {openMobileDrawer === "planes" ? (
+                <>
+                  {renderPlaneControls("mobile")}
+                  {renderPlaneInspector("mobile")}
+                </>
+              ) : null}
+              {openMobileDrawer === "context" ? (
+                <dl className={styles.contextFacts}>
+                  <div><dt>Mode</dt><dd>Public guidance</dd></div>
+                  <div><dt>Identity</dt><dd>Not assumed</dd></div>
+                  <div><dt>Path</dt><dd>{activePathLabel}</dd></div>
+                </dl>
+              ) : null}
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
       </section>
     </>
   );

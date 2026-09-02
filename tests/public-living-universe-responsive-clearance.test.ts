@@ -62,28 +62,43 @@ describe("public Living Universe responsive clearance", () => {
 
   it("gives every plane control an existing visible-surface Inspector target", () => {
     const markup = renderToStaticMarkup(createElement(PublicLivingGateway, { signupEnabled: false }));
-    const controls = [...markup.matchAll(/aria-controls="([^"]+)"/g)].map((match) => match[1]);
+    const controls = [...markup.matchAll(/aria-controls="(public-plane-readout-[^"]+)"/g)].map((match) => match[1]);
 
-    expect(new Set(controls)).toEqual(new Set([
-      "public-plane-readout-desktop",
-      "public-plane-readout-mobile",
-    ]));
+    expect(new Set(controls)).toEqual(new Set(["public-plane-readout-desktop"]));
     for (const id of new Set(controls)) {
       expect(markup.match(new RegExp(`id="${id}"`, "g")) ?? []).toHaveLength(1);
     }
     expect(markup).toContain("Planes · Before, now &amp; next");
-    expect(markup.match(/aria-label="Inspector"/g) ?? []).toHaveLength(2);
+    expect(markup.match(/aria-label="Inspector"/g) ?? []).toHaveLength(1);
+    const source = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
+    expect(source).toContain('renderPlaneControls("mobile")');
+    expect(source).toContain('renderPlaneInspector("mobile")');
   });
 
   it("keeps the canonical desktop workspace bounded so the operational row enters the first fold", () => {
     expect(css).toMatch(/\.contextRail\s*\{[\s\S]*?max-height:\s*650px;[\s\S]*?overflow-y:\s*auto;/);
   });
 
-  it("keeps only one mobile control drawer open at a time", () => {
+  it("keeps one controlled modal sheet with explicit semantics for all three mobile triggers", () => {
     const source = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
+    const markup = renderToStaticMarkup(createElement(PublicLivingGateway, { signupEnabled: false }));
 
     expect(source).toContain("openMobileDrawer");
     expect(source).toContain("setOpenMobileDrawer");
-    expect(source).toContain("onToggle");
+    expect(source.match(/<Dialog\.Root/g)).toHaveLength(1);
+    expect(source).toContain('id="public-mobile-sheet"');
+    expect(source).not.toContain("onToggle");
+    expect(markup.match(/aria-haspopup="dialog"/g) ?? []).toHaveLength(3);
+    expect(markup.match(/aria-controls="public-mobile-sheet"/g) ?? []).toHaveLength(3);
+    expect(markup.match(/aria-expanded="false"/g) ?? []).toHaveLength(3);
+  });
+
+  it("closes the modal when an action continues or the viewport leaves mobile layout", () => {
+    const source = readFileSync("src/components/marketing/public-living-gateway.tsx", "utf8");
+
+    expect(source).toContain('if (surface === "mobile") setOpenMobileDrawer(null)');
+    expect(source).toContain('window.matchMedia("(max-width: 1024px)")');
+    expect(source).toContain('mobileViewport.addEventListener("change", closeSheetOutsideMobile)');
+    expect(source).toContain('mobileViewport.removeEventListener("change", closeSheetOutsideMobile)');
   });
 });
