@@ -1,6 +1,11 @@
-export const symphonyTruthClasses = ["ACTUAL", "CONTRACTED", "PIPELINE", "ASSUMPTION", "SCENARIO", "TARGET"] as const;
+import {
+  companyTruthClasses,
+  type CompanyTruthClass,
+} from "@/lib/company/company-truth";
 
-export type SymphonyTruthClass = (typeof symphonyTruthClasses)[number];
+export { companyTruthClasses as symphonyTruthClasses };
+
+export type SymphonyTruthClass = CompanyTruthClass;
 
 export const symphonyOpportunityClasses = [
   "CUSTOMER_REVENUE",

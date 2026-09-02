@@ -52,6 +52,7 @@ describe("Render release contract", () => {
       "tests/person-context-db-ambiguity.test.ts",
       "tests/person-relationship-db.test.ts",
       "tests/person-account-signup-db.test.ts",
+      "tests/company-opportunity-repository.db.test.ts",
       "src/features/zumi/phi-provider-evidence-repository.test.ts",
     ]) {
       expect(verifyRelease).toContain(databaseTest);
