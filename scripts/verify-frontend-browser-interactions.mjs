@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { attachBrowserPageTarget } from "./frontend-browser-target.mjs";
 
 const chrome = process.env.CHROME_BIN;
 // Use the same browser origin as Next's production server authority. The health
@@ -72,14 +73,14 @@ class PipeCdp {
     }
   }
 
-  command(method, params = {}, sessionId) {
+  command(method, params = {}, sessionId, timeoutMs = 15_000) {
     const id = this.nextId++;
     const message = { id, method, params, ...(sessionId ? { sessionId } : {}) };
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`${method} timed out.`));
-      }, 15_000);
+      }, timeoutMs);
       this.pending.set(id, {
         method,
         resolve: (value) => { clearTimeout(timeout); resolve(value); },
@@ -261,9 +262,11 @@ async function typeAndSubmit(text) {
 }
 
 try {
-  const target = await cdp.command("Target.createTarget", { url: "about:blank" });
-  const attached = await cdp.command("Target.attachToTarget", { targetId: target.targetId, flatten: true });
+  const attached = await attachBrowserPageTarget({
+    command: (method, params, timeoutMs) => cdp.command(method, params, undefined, timeoutMs),
+  });
   sessionId = attached.sessionId;
+  results.browserTargetSource = attached.targetSource;
   await command("Page.enable");
   await command("Runtime.enable");
   await command("Network.enable");
