@@ -1,0 +1,61 @@
+// Durable Expert Grid engagement persistence.
+//
+// These records persist governed engagement terms and append-only history. They do
+// NOT grant data access, professional authority, or clinical authority. Sensitive
+// access remains a separately re-evaluated, purpose-bound authorization decision.
+// Source request / Person / relationship IDs are intentionally durable references;
+// repositories validate them when writing without making deletion cascade away the
+// historical engagement record.
+model ExpertEngagement {
+  id                            String   @id @default(cuid())
+  organizationId                String
+  sourceRequestId                String
+  expertPersonId                 String
+  expertRelationshipId           String
+  state                          String   @default("proposed")
+  version                        Int      @default(1)
+  purpose                        String
+  startsAt                       DateTime
+  endsAt                         DateTime
+  organizationAccepted           Boolean  @default(false)
+  expertAccepted                 Boolean  @default(false)
+  conflictCleared                Boolean  @default(false)
+  allowedCapabilityKeys          Json
+  allowedResourceTypes           Json
+  dataAccessClass                String   @default("none")
+  minimumNecessaryFields         Json
+  agreementEvidenceRefs          Json
+  scopedAuthorizationApprovedBy String?
+  scopedAuthorizationApprovedAt DateTime?
+  createdByPersonId              String
+  activatedAt                    DateTime?
+  completedAt                    DateTime?
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  @@index([organizationId, state])
+  @@index([expertPersonId, state])
+  @@index([sourceRequestId])
+  @@index([startsAt, endsAt])
+  @@map("expert_engagements")
+}
+
+model ExpertEngagementEvent {
+  id                String   @id @default(cuid())
+  engagementId      String
+  organizationId    String
+  eventSequence     Int
+  eventType         String
+  previousState     String?
+  nextState         String
+  engagementVersion Int
+  actorPersonId     String?
+  snapshot          Json?
+  occurredAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@unique([engagementId, eventSequence])
+  @@index([organizationId, occurredAt])
+  @@index([engagementId, occurredAt])
+  @@map("expert_engagement_events")
+}
