@@ -571,6 +571,7 @@ try {
   await pressKey("Escape", "Escape", 27);
   await waitFor("mobile plane sheet to close with Escape", `!document.querySelector('[data-mobile-sheet-panel="true"]')`);
   results.mobileSheet.mobileSheetEscapeClosed = true;
+  await waitFor("mobile sheet focus to return to its trigger", `document.activeElement?.matches('[data-mobile-drawer="planes"]') === true`);
   results.mobileSheet.mobileSheetFocusReturned = await evaluate(`document.activeElement?.matches('[data-mobile-drawer="planes"]') === true`);
   if (!results.mobileSheet.mobileSheetFocusReturned) throw new Error("Closing the mobile sheet did not return focus to its trigger.");
   await evaluate(`(() => {

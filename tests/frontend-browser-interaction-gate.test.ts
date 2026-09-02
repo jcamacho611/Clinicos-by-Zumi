@@ -40,6 +40,7 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).not.toContain('await pressKey("Tab", "Tab", 9, 1);');
     expect(browserGate).toContain("mobileSheetEscapeClosed");
     expect(browserGate).toContain("mobileSheetFocusReturned");
+    expect(browserGate).toContain('waitFor("mobile sheet focus to return to its trigger"');
     expect(browserGate).toContain("mobileSheetTriggerSemantics");
     expect(browserGate).toContain("mobileActionRevealedResult");
     expect(browserGate).toContain("resizeSheetClosedWithoutNavigation");
