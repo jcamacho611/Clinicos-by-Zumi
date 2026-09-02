@@ -58,18 +58,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getClinicSession();
   if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const denied = await enforceApiPermission(session, "tasks", "create", { request });
-  if (denied) return denied;
 
   try {
     const body = await request.json();
     const intentRequest = resolveIntentSchema.safeParse(body);
 
     if (intentRequest.success) {
-      return await respondToTypedIntent(session, intentRequest.data.text);
+      return await respondToTypedIntent(session, intentRequest.data.text, request);
     }
 
     const input = createPathSchema.parse(body);
+    const denied = await enforceApiPermission(session, "tasks", "create", { request });
+    if (denied) return denied;
     const snapshot = await createPathInstance(session, input);
     return NextResponse.json(
       {
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
  * against what this session may actually open, which is a decision the client cannot be
  * trusted to make about itself.
  */
-async function respondToTypedIntent(session: ClinicSession, text: string) {
+async function respondToTypedIntent(session: ClinicSession, text: string, request: Request) {
   // Before anything else. Someone describing an emergency must not be routed into a
   // scheduling Path, and no routine automation may run on the strength of that sentence.
   // Klinikos does not triage here — it stops, and it shows approved language.
@@ -131,6 +131,8 @@ async function respondToTypedIntent(session: ClinicSession, text: string) {
     });
   }
 
+  const denied = await enforceApiPermission(session, "tasks", "create", { request });
+  if (denied) return denied;
   const snapshot = await createPathInstance(session, { pathId, goal: text });
   return NextResponse.json(
     {
