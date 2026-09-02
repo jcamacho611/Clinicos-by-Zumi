@@ -17,12 +17,21 @@ export type StripeCommercialTreatment =
   | "prepaid_usage"
   | "not_directly_purchasable";
 
+export type StripeCommercialRail =
+  | "checkout"
+  | "billing"
+  | "quote_invoice"
+  | "prepaid_usage"
+  | "none";
+
 export type StripeCommercialCadence = "one_time" | "month" | "year";
 
 export type StripeCommercialProjection = {
   offerKey: CommercialProductKey;
   pricingVersion: typeof STRIPE_PRICING_VERSION;
+  pricingStatus: CommercialProduct["pricingStatus"];
   treatment: StripeCommercialTreatment;
+  rail: StripeCommercialRail;
   cadence: StripeCommercialCadence;
   currency: "usd";
   amountCents: number | null;
@@ -37,6 +46,7 @@ export type StripeCommercialProjection = {
 type ProjectionInput = Omit<
   StripeCommercialProjection,
   | "pricingVersion"
+  | "pricingStatus"
   | "currency"
   | "qualificationRequired"
   | "commercialRoute"
@@ -50,6 +60,7 @@ function project(input: ProjectionInput): StripeCommercialProjection {
   return Object.freeze({
     ...input,
     pricingVersion: STRIPE_PRICING_VERSION,
+    pricingStatus: offer.pricingStatus,
     currency: "usd" as const,
     qualificationRequired: offer.qualificationRequired,
     commercialRoute: offer.commercialRoute,
@@ -61,6 +72,7 @@ const fixedProjections: readonly ProjectionInput[] = [
   {
     offerKey: "operational_audit",
     treatment: "public_self_serve",
+    rail: "checkout",
     cadence: "one_time",
     amountCents: getCommercialProduct("operational_audit")?.priceCents ?? null,
     lookupKey: "klinikos_operational_audit_one_time_v1",
@@ -70,6 +82,7 @@ const fixedProjections: readonly ProjectionInput[] = [
   {
     offerKey: "implementation_blueprint",
     treatment: "private_quoted",
+    rail: "quote_invoice",
     cadence: "one_time",
     amountCents: getCommercialProduct("implementation_blueprint")?.priceCents ?? null,
     lookupKey: "klinikos_implementation_blueprint_one_time_v1",
@@ -79,6 +92,7 @@ const fixedProjections: readonly ProjectionInput[] = [
   {
     offerKey: "founding_clinic_implementation",
     treatment: "private_quoted",
+    rail: "quote_invoice",
     cadence: "one_time",
     amountCents: null,
     lookupKey: "klinikos_founding_implementation_starting_v1",
@@ -88,11 +102,12 @@ const fixedProjections: readonly ProjectionInput[] = [
   {
     offerKey: "clinic_enterprise",
     treatment: "private_quoted",
+    rail: "quote_invoice",
     cadence: "one_time",
     amountCents: null,
     lookupKey: null,
     publicLinkEligible: false,
-    automaticCollection: false,
+    automaticCollection: true,
   },
 ] as const;
 
@@ -104,6 +119,7 @@ const clinicSubscriptionProjections: readonly ProjectionInput[] = [
   {
     offerKey: offerKey as CommercialProductKey,
     treatment: "public_subscribe" as const,
+    rail: "billing" as const,
     cadence: "month" as const,
     amountCents: monthlyAmountCents as number,
     lookupKey: `klinikos_clinic_${slug}_monthly_v1`,
@@ -113,6 +129,7 @@ const clinicSubscriptionProjections: readonly ProjectionInput[] = [
   {
     offerKey: offerKey as CommercialProductKey,
     treatment: "public_subscribe" as const,
+    rail: "billing" as const,
     cadence: "year" as const,
     amountCents: annualAmountCents as number,
     lookupKey: `klinikos_clinic_${slug}_annual_v1`,
@@ -126,6 +143,7 @@ const historicalProjections: readonly ProjectionInput[] = commercialProducts
   .map((offer) => ({
     offerKey: offer.key,
     treatment: "not_directly_purchasable" as const,
+    rail: "none" as const,
     cadence: "one_time" as const,
     amountCents: null,
     lookupKey: null,
