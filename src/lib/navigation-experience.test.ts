@@ -41,6 +41,18 @@ describe("Klinikos progressive navigation", () => {
     }
   });
 
+  it("uses the longest explicit workspace rule for nested destinations before family fallback", () => {
+    expect(canOpen("clinic_owner", "/owner/founding-program")).toBe(true);
+    expect(canOpen("clinic_owner", "/admin/sales")).toBe(true);
+    expect(canOpen("provider", "/owner/founding-program")).toBe(false);
+    expect(canOpen("provider", "/admin/sales")).toBe(false);
+  });
+
+  it("keeps nested Grid destinations governed by the top-level Grid rule when no explicit child rule exists", () => {
+    expect(canOpen("contractor", "/grid/workspace")).toBe(true);
+    expect(canOpen("contractor", "/grid/opportunities")).toBe(true);
+  });
+
   it("uses outcome-oriented ambient prompts rather than announcing an AI product", () => {
     expect(klinikosPromptForWorkspace("dashboard")).toBe("What needs to happen?");
     expect(klinikosPromptForWorkspace("grid")).toBe("What do you need or have?");
