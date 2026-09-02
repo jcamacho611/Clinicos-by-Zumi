@@ -450,6 +450,34 @@ try {
   );
   await evaluate(`Array.from(document.querySelectorAll('button[aria-controls="public-plane-readout-mobile"]')).at(-1)?.click()`);
   await waitFor("mobile Compounding Business Inspector", `document.querySelector('#public-plane-readout-mobile')?.textContent?.includes('Compounding Business')`);
+  try {
+    await waitFor(
+      "mobile sheet background isolation",
+      `(() => {
+        let node = document.querySelector('[data-public-universe-shell="true"]');
+        while (node) {
+          if (node.getAttribute('aria-hidden') === 'true') return true;
+          node = node.parentElement;
+        }
+        return false;
+      })()`,
+    );
+  } catch (error) {
+    const ariaHiddenNodes = await evaluate(`Array.from(document.querySelectorAll('[aria-hidden="true"]'))
+      .slice(0, 25)
+      .map((node) => {
+        const path = [];
+        let current = node;
+        while (current && path.length < 8) {
+          const id = current.id ? '#' + current.id : '';
+          const classes = Array.from(current.classList ?? []).slice(0, 3).map((name) => '.' + name).join('');
+          path.unshift(current.tagName.toLowerCase() + id + classes);
+          current = current.parentElement;
+        }
+        return path.join(' > ');
+      })`);
+    throw new Error(`The mobile sheet never isolated its background: ${JSON.stringify({ ariaHiddenNodes })}. ${error instanceof Error ? error.message : String(error)}`);
+  }
   results.mobileSheet = await evaluate(`(() => {
     const shell = document.querySelector('[data-public-universe-shell="true"]');
     const sheet = document.querySelector('[data-mobile-sheet-panel="true"]');
@@ -471,6 +499,17 @@ try {
       mobileSheetFitsViewport: Boolean(rect && rect.top >= 0 && rect.bottom <= window.innerHeight),
       overlayVisible: Boolean(overlay && overlay.getBoundingClientRect().height >= window.innerHeight),
       panelBackground: sheet ? getComputedStyle(sheet).backgroundColor : null,
+      ariaHiddenNodes: Array.from(document.querySelectorAll('[aria-hidden="true"]')).slice(0, 25).map((node) => {
+          const path = [];
+          let current = node;
+          while (current && path.length < 8) {
+            const id = current.id ? '#' + current.id : '';
+            const classes = Array.from(current.classList ?? []).slice(0, 3).map((name) => '.' + name).join('');
+            path.unshift(current.tagName.toLowerCase() + id + classes);
+            current = current.parentElement;
+          }
+          return path.join(' > ');
+        }),
       mobileSheetTriggerSemantics: (() => {
         const triggers = Array.from(document.querySelectorAll('[data-mobile-drawer]'));
         return triggers.length === 3

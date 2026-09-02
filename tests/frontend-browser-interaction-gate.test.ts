@@ -25,6 +25,9 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("data-public-action-dock");
     expect(browserGate).toContain("public-plane-readout-mobile");
     expect(browserGate).toContain("mobileSheetModalIsolated");
+    expect(browserGate).toContain('"mobile sheet background isolation"');
+    expect(browserGate).toContain("The mobile sheet never isolated its background");
+    expect(browserGate).toContain("ariaHiddenNodes");
     expect(browserGate).toContain("mobileSheetFocusTrapped");
     expect(browserGate).toContain('await pressKey("Tab", "Tab", 9, 8);');
     expect(browserGate).not.toContain('await pressKey("Tab", "Tab", 9, 1);');
