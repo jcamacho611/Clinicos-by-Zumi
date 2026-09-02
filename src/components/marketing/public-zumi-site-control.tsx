@@ -95,9 +95,14 @@ function pagePrompt(pathname: string) {
   return "What can Klinikos help me do from this page?";
 }
 
-export function PublicZumiSiteControl() {
+export function PublicZumiSiteControl({
+  onOpenChange,
+  open,
+}: {
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState<string | null>(null);
@@ -129,7 +134,7 @@ export function PublicZumiSiteControl() {
 
     setInput("");
     setPending(prompt);
-    setOpen(true);
+    onOpenChange(true);
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -180,11 +185,11 @@ export function PublicZumiSiteControl() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="contents">
       {open && (
         <section
           aria-label="Public Zumi assistant"
-          className="flex max-h-[min(680px,calc(100vh-7rem))] w-[min(430px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[24px] border border-[#d0837d]/25 bg-[#0b0507]/[.98] text-[#fff7f5] shadow-[0_28px_90px_rgba(0,0,0,.52)] backdrop-blur-xl"
+          className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4.25rem))] right-3 z-[85] flex max-h-[min(680px,calc(100dvh-6rem))] w-[min(430px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[24px] border border-[#d0837d]/25 bg-[#0b0507]/[.98] text-[#fff7f5] shadow-[0_28px_90px_rgba(0,0,0,.52)] backdrop-blur-xl sm:right-6"
           id="public-zumi-site-panel"
           role="dialog"
         >
@@ -194,7 +199,7 @@ export function PublicZumiSiteControl() {
               <p className="text-sm font-semibold">Zumi</p>
               <p className="truncate text-[11px] text-[#a98f8b]">Your public Klinikos assistant · {pathname}</p>
             </div>
-            <button aria-label="Close public Zumi" className="grid size-10 place-items-center rounded-full text-[#bca5a1] hover:bg-white/5 hover:text-white" onClick={() => setOpen(false)} type="button"><X className="size-4" /></button>
+            <button aria-label="Close public Zumi" className="grid size-10 place-items-center rounded-full text-[#bca5a1] hover:bg-white/5 hover:text-white" onClick={() => onOpenChange(false)} type="button"><X className="size-4" /></button>
           </header>
 
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
@@ -257,7 +262,7 @@ export function PublicZumiSiteControl() {
         aria-expanded={open}
         aria-label={open ? "Public Zumi assistant is open" : "Open Zumi assistant"}
         className="flex min-h-12 items-center gap-2 rounded-full border border-[#d0837d]/30 bg-[#12090b]/95 px-3 pr-4 text-sm font-semibold text-[#f4d8d4] shadow-[0_14px_44px_rgba(0,0,0,.4)] backdrop-blur-xl transition hover:border-[#efaaa1]/50 hover:bg-[#211013] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => onOpenChange(!open)}
         type="button"
       >
         <ZumiOrb state={pending ? "analyzing" : "observing"} size={32} />

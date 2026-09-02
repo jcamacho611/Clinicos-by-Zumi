@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Crosshair, ExternalLink, LoaderCircle, MapPin, Navigation, ShieldCheck } from "lucide-react";
+import { marketplaceSurfaces } from "@/lib/design/marketplace-system";
 import { openStreetMapUrl, type GridCoordinates } from "@/lib/grid/geo-rules";
 
 type GridMapPoint = {
@@ -319,7 +320,7 @@ export function GoogleGridMap({
                 : "No reviewed public Grid pins yet"}
       </span>
       {providerState === "openfreemap" && <span className="border border-[var(--k-line)] bg-[var(--k-public-surface)]/95 px-3 py-2 text-xs font-bold text-[var(--k-muted)] shadow-sm">OpenFreeMap · no Google credential required</span>}
-      {providerError && <span className="border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Primary map provider failed; geographic fallback is active.</span>}
+      {providerError && <span className={`border px-3 py-2 text-xs font-bold ${marketplaceSurfaces.statusAttention}`}>Primary map provider failed; geographic fallback is active.</span>}
     </div>
   </div>;
 }

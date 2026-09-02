@@ -5,12 +5,14 @@ import { describe, expect, it } from "vitest";
 const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
 const control = read("src/components/marketing/public-zumi-site-control.tsx");
 const rootLayout = read("src/app/layout.tsx");
+const utilityDock = read("src/components/marketing/public-utility-dock.tsx");
 const clinicLayout = read("src/app/(clinic)/layout.tsx");
 
 describe("public Zumi site control", () => {
   it("mounts one bounded public assistant at the root layout but renders only on approved public acquisition pages", () => {
-    expect(rootLayout).toContain('import { PublicZumiSiteControl } from "@/components/marketing/public-zumi-site-control"');
-    expect(rootLayout).toContain("<PublicZumiSiteControl />");
+    expect(rootLayout).toContain('import { PublicUtilityDock } from "@/components/marketing/public-utility-dock"');
+    expect(rootLayout).toContain("<PublicUtilityDock />");
+    expect(utilityDock).toContain("<PublicZumiSiteControl");
     for (const pathname of ["/pricing", "/trust", "/how-it-works", "/founding-clinic", "/operational-audit", "/grid", "/grid/browse", "/grid/pricing", "/edu"]) {
       expect(control, pathname).toContain(`"${pathname}"`);
     }

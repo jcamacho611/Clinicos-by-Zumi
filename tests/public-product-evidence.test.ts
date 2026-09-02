@@ -84,9 +84,12 @@ describe("public product evidence", () => {
     expect(items.some((item) => item.urgency === "due_soon")).toBe(true);
   });
 
-  it("stays on the public design system instead of reintroducing a third palette", () => {
-    // This page was light-blue while the rest of the public site is dark rose.
+  it("stays on the semantic public design system instead of freezing a route palette", () => {
+    // This page was light-blue, then hard-coded Obsidian. Both choices bypassed the
+    // shared Marble / Obsidian appearance authority.
     expect(howItWorks).not.toMatch(/#174ea6|#f7f8fa|bg-white\b/);
-    expect(howItWorks).toContain("#050303");
+    expect(howItWorks).not.toContain("#050303");
+    expect(howItWorks).toContain("var(--k-public-surface)");
+    expect(howItWorks).toContain("var(--k-muted)");
   });
 });

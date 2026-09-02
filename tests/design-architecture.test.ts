@@ -45,11 +45,11 @@ describe("surface classification", () => {
   it("puts each surface on the ground its discipline calls for", () => {
     expect(governanceFor("/sales").ground).toBe("obsidian");
     expect(governanceFor("/edu/dashboard").ground).toBe("obsidian");
-    expect(governanceFor("/grid/browse").ground).toBe("paper");
+    expect(governanceFor("/grid/browse").ground).toBe("adaptive");
   });
 });
 
-describe("Grid Marble mode", () => {
+describe("Grid appearance policy", () => {
   const mapSource = readFileSync(join(process.cwd(), "src/components/grid/grid-live-map.tsx"), "utf8");
   const cinematic = readFileSync(join(process.cwd(), "src/app/cinematic-global.css"), "utf8");
   const enrollmentSources = [
@@ -58,8 +58,11 @@ describe("Grid Marble mode", () => {
     "src/app/grid/join/seller/page.tsx",
   ].map((path) => readFileSync(join(process.cwd(), path), "utf8"));
 
-  it("keeps the geographic reading surface light and legible inside the Obsidian shell", () => {
-    expect(mapSource).toContain('className="grid-marble-surface');
+  it("keeps the geographic reading surface semantic instead of nesting forced Marble inside Obsidian", () => {
+    expect(mapSource).not.toContain('className="grid-marble-surface');
+    expect(mapSource).toContain("bg-[var(--k-public-bg)]");
+    expect(mapSource).not.toContain("--k-work-bg");
+    expect(mapSource).toContain("text-[var(--k-text)]");
     expect(cinematic).toContain(".klinikos-cinematic-root .grid-marble-surface");
     expect(cinematic).toContain("color-scheme:light");
     expect(cinematic.indexOf(".grid-marble-surface")).toBeGreaterThan(cinematic.indexOf("Legacy-page compatibility layer"));

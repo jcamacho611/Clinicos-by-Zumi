@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { appearancePolicyForPath } from "@/lib/design/atmosphere";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
 
 function read(relative: string) {
@@ -215,7 +216,9 @@ describe("public Living Home conversation and accessibility contract", () => {
   });
 
   it("keeps the global appearance control off the focused root experience", () => {
-    expect(atmosphere).toContain('if (pathname === "/") return null');
+    expect(appearancePolicyForPath("/")).toMatchObject({ controllerVisible: false, referenceLocked: true });
+    expect(appearancePolicyForPath("/grid/browse")).toMatchObject({ controllerVisible: true, referenceLocked: false });
+    expect(atmosphere).toContain("appearancePolicyForPath(pathname)");
     expect(atmosphere).toContain("usePathname()");
   });
 });
