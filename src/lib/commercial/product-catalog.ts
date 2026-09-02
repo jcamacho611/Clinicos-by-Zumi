@@ -83,7 +83,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: false,
     conversionDestination: "/sales",
     lifecycle: "active",
-    publicPurchasable: false,
+    publicPurchasable: true,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -139,7 +139,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: true,
+    publicPurchasable: false,
     modules: ["advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
@@ -166,7 +166,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: true,
+    publicPurchasable: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
@@ -193,7 +193,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     qualificationRequired: true,
     conversionDestination: "/founding-clinic",
     lifecycle: "active",
-    publicPurchasable: true,
+    publicPurchasable: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
     allowanceEnv: {
