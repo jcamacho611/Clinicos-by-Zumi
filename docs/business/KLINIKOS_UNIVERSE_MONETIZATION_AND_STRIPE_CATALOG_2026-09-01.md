@@ -1,13 +1,15 @@
 # Klinikos Universe Monetization & Stripe Catalog — 2026-09-01
 
-Status: `SANDBOX COMMERCIAL ARCHITECTURE / NOT LIVE REVENUE EVIDENCE`
+Status: `DATED SPECIALIST COMMERCIAL DESIGN / NOT CANON / NOT LIVE REVENUE EVIDENCE`
 
 Governing authority:
-1. verified current implementation/runtime truth;
-2. `docs/KLINIKOS_MASTER_CANON.md`;
-3. current commercial/product registries;
-4. this document as the current Stripe-commercial projection;
-5. Stripe objects and links as execution artifacts, never as independent product truth.
+1. `docs/KLINIKOS_MASTER_CANON.md` governs company/product architecture and accepted commercial law;
+2. current code, schema, tests, exact-head CI, verified deployment/runtime, and processor evidence govern what exists and may execute now;
+3. the server-owned `commercialProducts` registry governs current offer lifecycle, buyer, price type, qualification, commercial route, public presentation, direct-checkout eligibility, and post-purchase boundary;
+4. this dated document is a subordinate planning and external-evidence reconciliation input;
+5. Stripe objects and links are environment-specific execution artifacts, never independent product truth.
+
+This document cannot make an offer public, direct-checkout eligible, entitled, live, or lawfully transactable. When it differs from the Master Canon or verified code/runtime, those higher authorities win and this document must be corrected.
 
 > **Klinikos does not monetize by charging for every screen. It monetizes every durable economic layer it can legitimately own while keeping identity, trust, regulated authority, eligibility, clinical truth, and core network liquidity outside the paywall.**
 
@@ -41,9 +43,18 @@ The permanent commercial question is:
 
 ---
 
-## 2. Five Stripe treatments
+## 2. Commercial state is not one Stripe treatment
 
-Every monetizable object must be assigned one treatment before it is exposed to a buyer.
+The executable registry deliberately separates states that this draft previously compressed:
+
+- `publicPurchasable`: the current offer may be presented to a buyer and start its governed commercial route; it does **not** mean Buy Now;
+- `directPublicCheckoutEligible`: a buyer may enter immediate public checkout without qualification or sales review;
+- `qualificationRequired`: a deterministic/human gate must pass before the commercial path advances;
+- `commercialRoute`: `self_serve`, `qualified_service`, `sales_led`, `recurring_reviewed`, `enterprise_government`, or `historical_evidence_only`;
+- payment rail: Checkout, Billing, Payment Link, Quote/Invoice, Connect, ACH/manual reconciliation, or another approved rail selected only after the route and policy state are known;
+- verified payment evidence and entitlement/delivery state: downstream truths that remain separate from all of the above.
+
+`PUBLIC_SELF_SERVE`, `PUBLIC_SUBSCRIBE`, `PRIVATE_QUOTED`, and `PREPAID_USAGE` may be useful Stripe projection treatments, but they may not override `commercialProducts`. A sellable offer can remain qualification-gated; a public price can remain non-checkout; a payment rail can remain unavailable; and a collected payment can remain unfulfilled pending bounded reconciliation.
 
 ### A. `PUBLIC_SELF_SERVE`
 
@@ -51,30 +62,30 @@ Use when the buyer can safely purchase immediately without a sales, legal, clini
 
 Examples:
 - Clinic Operating Analysis;
-- Implementation Blueprint;
-- standard clinic subscriptions once entitlement handling is verified;
 - Professional Pro / Professional Business once product rails exist;
 - Professional Launch;
 - EDU Plus / Course / Pathway once learning entitlements exist;
-- prepaid customer usage wallet.
+- prepaid customer usage funding only after it reuses the existing commercial ledger and exact funding correlation exists.
+
+Current executable mapping: only `operational_audit` satisfies every direct-public-checkout predicate. Implementation Blueprint and clinic subscriptions do not.
 
 ### B. `PUBLIC_SUBSCRIBE`
 
-Recurring self-serve software/membership where Stripe may collect automatically and a verified webhook activates a bounded entitlement.
+Recurring software/membership where Stripe Billing may eventually collect automatically and verified evidence may activate a bounded entitlement only after the registry allows direct checkout and every qualification, packaging, tax, customer-identity, cancellation, refund, and provisioning gate exists.
 
 Examples:
-- Core;
-- Growth;
-- Scale;
 - Professional Pro;
 - Professional Business;
 - EDU Plus.
+
+Current executable mapping: `clinic_core`, `clinic_growth`, and `clinic_scale` are `publicPurchasable: true` but `directPublicCheckoutEligible: false`, `qualificationRequired: true`, and `commercialRoute: recurring_reviewed`. They are reviewed recurring offers, not current public self-subscribe checkout.
 
 ### C. `PRIVATE_QUOTED`
 
 Use when scope, risk, location, integration, migration, volume, contract, or institutional complexity materially changes price or delivery.
 
 Examples:
+- Implementation Blueprint under its current `qualified_service` route;
 - Founding Clinic Implementation;
 - Enterprise;
 - workforce programs;
@@ -98,7 +109,7 @@ Examples:
 - maps;
 - external connector/vendor usage.
 
-The customer buys a bounded prepaid balance. A stored card is not a blank check.
+The customer may fund a bounded prepaid balance. Implementation must **REUSE/EXTEND** the existing provider-neutral commercial account, allowance, reservation, usage-entry, settlement, overrun, release, idempotency, and audit machinery. Do not build a second Stripe-specific wallet or ledger. A stored card is not a blank check.
 
 ### E. `NOT_DIRECTLY_PURCHASABLE`
 
@@ -155,17 +166,19 @@ No paid plan may buy credential status, eligibility, ranking priority over a har
 
 ## 4. Clinic / organization revenue stack
 
-### Existing public anchors
+### Current executable registry mapping
 
-| Offer | Price | Stripe treatment | Strategic purpose |
-| --- | ---: | --- | --- |
-| Clinic Operating Analysis | $500 one-time | PUBLIC_SELF_SERVE | low-friction paid diagnosis |
-| Implementation Blueprint | $1,500 one-time | PUBLIC_SELF_SERVE | convert diagnosis into implementation plan |
-| Founding Clinic Implementation | from $8,000 | PRIVATE_QUOTED | implementation revenue + setup |
-| Klinikos Core | $995/mo or $10,149/yr | PUBLIC_SUBSCRIBE | daily operating system |
-| Klinikos Growth | $1,995/mo or $20,349/yr | PUBLIC_SUBSCRIBE | revenue/network/automation expansion |
-| Klinikos Scale | $3,995/mo or $40,749/yr | PUBLIC_SUBSCRIBE | multi-location / higher-volume operating layer |
-| Klinikos Enterprise | custom | PRIVATE_QUOTED | institutional deployment |
+| Offer / key | Current price truth | `publicPurchasable` | `directPublicCheckoutEligible` | Qualification / route | Payment-rail consequence |
+| --- | ---: | --- | --- | --- | --- |
+| Clinic Operating Analysis / `operational_audit` | $500 one-time, fixed | true | true | no / `self_serve` | May enter the configured server-owned direct checkout path; signed/API evidence still governs payment and bounded service fulfillment. |
+| Implementation Blueprint / `implementation_blueprint` | $1,500 one-time, fixed | true | false | yes / `qualified_service` | Presentable to buyers, but qualification precedes any approved hosted payment, invoice, or reconciliation path. |
+| Founding Clinic Implementation / `founding_clinic_implementation` | from $8,000, starting-at | true | false | yes / `sales_led` | Scope, SOW/contract, and approved deposit/invoice rail; the browser may not charge the floor as an exact price. |
+| Klinikos Core / `clinic_core` | $995/month, fixed registry anchor | true | false | yes / `recurring_reviewed` | Reviewed recurring route; no direct public subscription checkout until the registry and runtime are deliberately changed and verified. |
+| Klinikos Growth / `clinic_growth` | $1,995/month, fixed registry anchor | true | false | yes / `recurring_reviewed` | Reviewed recurring route; no direct public subscription checkout today. |
+| Klinikos Scale / `clinic_scale` | $3,995/month, fixed registry anchor | true | false | yes / `recurring_reviewed` | Reviewed recurring route; no direct public subscription checkout today. |
+| Klinikos Enterprise / `clinic_enterprise` | custom | false | false | yes / `enterprise_government` | Sales/procurement/contract/quote/invoice only; never consumer Buy Now. |
+
+Current main's environment-neutral Stripe projection includes monthly and annual Core/Growth/Scale variants, but marks their public links ineligible while preserving qualification and the `recurring_reviewed` route. Those variants are not direct checkout truth merely because a sandbox Price may have existed; Billing lifecycle and verified runtime remain separate execution gates.
 
 Annual clinic prices preserve the current 15% annual-commitment savings strategy and improve upfront cash flow.
 
@@ -178,7 +191,7 @@ Annual clinic prices preserve the current 15% annual-commitment savings strategy
 | Network | from $300/mo + from $1,000 setup | PRIVATE_QUOTED initially |
 | Integration Launch | $2,500 starting anchor | PRIVATE_QUOTED |
 | Data Migration & Go-Live | $5,000 starting anchor | PRIVATE_QUOTED |
-| Usage Wallet | $100 / $250 / $500 / $1,000 prepaid | PREPAID_USAGE |
+| Prepaid usage funding (existing commercial ledger) | $100 / $250 / $500 / $1,000 planning denominations | PREPAID_USAGE / REUSE-EXTEND |
 
 These are expansion rails, not unrelated products. They should attach to a verified customer need and existing entitlement.
 
@@ -388,11 +401,11 @@ Commercial rule:
 
 ---
 
-## 10. Customer-funded usage architecture
+## 10. Customer-funded usage architecture — reuse the existing ledger
 
 Klinikos should not absorb unbounded third-party variable cost.
 
-### Usage Wallet denominations created in Stripe sandbox
+### Previously proposed sandbox funding denominations
 
 - $100;
 - $250;
@@ -410,7 +423,19 @@ Eligible cost buckets may include:
 - storage;
 - integration/vendor calls.
 
-Server law:
+These denominations are planning inputs, not proof of current Stripe objects or executable funding. Any funding product must correlate verified processor evidence into the existing provider-neutral commercial account.
+
+Current reusable substrate already includes:
+
+- included allowances and hard limits;
+- prepaid balance and reserved balance;
+- explicitly authorized bounded overage;
+- tenant/capability/bucket-scoped reservations;
+- idempotency keys;
+- actual-cost settlement and unfunded-overrun handling;
+- reservation release/expiry and auditable usage entries.
+
+Implementation law:
 
 1. use included allowance first;
 2. then prepaid usage balance;
@@ -418,6 +443,8 @@ Server law:
 4. otherwise stop or degrade safely.
 
 A saved card is never unlimited post-paid authorization.
+
+Do not create a separate `UsageWallet` balance, Stripe-owned usage truth, or second settlement ledger. **REUSE** the commercial ledger, **EXTEND** it only for verified funding correlation, refunds/disputes/reversals, customer-facing balance projection, and any missing denomination/product mapping, then **CONNECT** Stripe as one replaceable payment evidence rail.
 
 ---
 
@@ -476,7 +503,7 @@ Flow:
 
 `SERVER INTENT → STRIPE CHECKOUT → SIGNED WEBHOOK → PAYMENT EVIDENCE → ENTITLEMENT / NEXT ACTION`.
 
-This is the preferred automatic activation rail for clinic subscriptions.
+This is a target automatic-collection rail for clinic subscriptions after the current reviewed-recurring route passes qualification and the registry, Billing lifecycle, tax, customer correlation, entitlement, and production evidence permit activation. It is not current public self-subscribe authority.
 
 ### Rail 2 — Payment Links
 
@@ -511,9 +538,21 @@ The quote is the commercial entry object; accepted quote may create subscription
 
 Klinikos is likely a hybrid platform and should not force every Connect use case into one merchant model.
 
+Connect is not one switch. Before creating a charge or moving money, the server must resolve:
+
+- canonical buyer, seller/provider, organization, and account-controller relationships;
+- who owns the end-customer relationship and which account owns the Stripe Customer/payment method;
+- merchant of record, statement descriptor, receipt/support/refund responsibility, dispute/chargeback owner, negative-balance/reserve exposure, and loss liability;
+- direct charge versus destination charge versus separate charge and transfer versus platform charge;
+- connected-account country/currency, requirements, restrictions, requested capabilities, `charges_enabled`, `payouts_enabled`, and transfer/payout eligibility;
+- resource-class and jurisdiction permission, including clinical-fee, referral, fee-splitting, corporate-practice, employment/contractor, money-transmission, privacy, and consumer-protection review;
+- tax collection, marketplace-facilitator, exemption, filing/reporting, and information-reporting responsibility.
+
+The browser never selects these states. Unknown, unverified, expired, restricted, or legally unresolved state fails closed or routes to review.
+
 #### Clinic SaaS payments
 
-When Klinikos enables a clinic/business to accept payments from its own customers, direct charges on an appropriate connected account are the natural SaaS pattern. The connected business remains merchant of record for its own sale.
+When Klinikos enables a clinic/business to accept payments from its own customers, direct charges on an appropriate connected account may be the natural SaaS pattern. The connected business is merchant of record only after account configuration and the commercial/legal relationship establish that fact. Customer, refund, dispute, support, capability, and tax responsibilities must match that model.
 
 #### Grid marketplace/resource transactions
 
@@ -521,9 +560,11 @@ For permitted marketplace transactions where Klinikos is the marketplace and rou
 
 Do not activate a marketplace charge type for regulated professional medical fees until the resource-class/jurisdiction policy explicitly permits the economics.
 
-### Rail 6 — Prepaid Usage Wallet
+Fulfillment, transfer, payout, refund, reversal, dispute, and settlement remain distinct lifecycle events. A successful charge does not prove lawful fulfillment; a transfer does not prove payout; and a payout does not prove final settlement or clinical authority.
 
-Use one-time payments to create bounded internal usage credit after verified payment evidence.
+### Rail 6 — Prepaid usage funding
+
+Use one-time payments to fund bounded internal usage credit only after verified payment evidence. Project that evidence into the existing commercial ledger; do not build a Stripe-specific wallet.
 
 ---
 
@@ -532,6 +573,8 @@ Use one-time payments to create bounded internal usage credit after verified pay
 ### Stable lookup keys
 
 Every standardized Stripe Price should have a stable lookup key and a pricing version.
+
+Current main implements the environment-neutral bridge in `src/lib/commercial/stripe-commercial-projection.ts`. Reuse and extend that module; do not introduce a parallel catalog, environment-specific product map, or hard-coded Payment Link registry.
 
 Example:
 
@@ -567,6 +610,23 @@ Use annual commitment to improve:
 
 Do not discount enterprise/custom commitments automatically.
 
+### Tax activation
+
+No price, Checkout, Payment Link, Subscription, Invoice, or Connect flow is production-ready until the applicable tax decision is documented and configured. The gate must cover at least:
+
+- seller/merchant and marketplace-facilitator responsibility;
+- nexus/registration and supported jurisdictions;
+- product/service tax codes and one-time versus recurring treatment;
+- customer and transaction-location evidence;
+- tax-inclusive versus tax-exclusive presentation;
+- B2B/exemption evidence and expiry;
+- refunds, credits, discounts, and annual-prepay treatment;
+- Connect account/charge-type allocation;
+- filing, remittance, information reporting, and record retention;
+- test evidence and production-account configuration.
+
+Stripe Tax or any other provider is execution infrastructure. It does not determine legal taxability, create registrations, validate exemptions by implication, or replace qualified tax/legal review.
+
 ---
 
 ## 14. Things Stripe must never decide
@@ -593,89 +653,41 @@ Payment evidence may unlock a paid capability only after the appropriate Kliniko
 
 ---
 
-## 15. Sandbox Stripe catalog created 2026-09-01
+## 15. Unverified external sandbox snapshot — dated 2026-09-01
 
-The connected Stripe MCP account currently exposes `KLINIKOS.IO` in **test mode**. The following sandbox objects were created to model the universe. They are not evidence of live customer availability or revenue.
+A prior connector session reported that a Stripe account labeled `KLINIKOS.IO` exposed test-mode Product/Price/Payment Link objects for clinic, professional, EDU, services, usage-funding, enterprise, Connect, and Grid target concepts.
 
-### Current-canon products created/mirrored
+That report is now classified:
 
-- Clinic Operating Analysis — $500 one-time;
-- Implementation Blueprint — $1,500 one-time;
-- Founding Clinic Implementation — $8,000 starting transaction primitive;
-- Klinikos Core — monthly + annual;
-- Klinikos Growth — monthly + annual;
-- Klinikos Scale — monthly + annual;
-- Zumi Intelligence Plus — monthly + annual starting anchors;
-- Revenue OS — monthly + annual + setup;
-- Network — monthly + annual + setup.
+`DATED EXTERNAL SNAPSHOT / STALE UNTIL RECONCILED / NOT PRODUCT AUTHORITY / NOT RUNTIME EVIDENCE`.
 
-### New sandbox target products
+It does not prove that the same account is connected now, that any object still exists or is active, that metadata/amounts remain correct, that an object belongs to the intended merchant, or that any test object has a corresponding live object. It also does not promote a target offer into `commercialProducts`.
 
-- Professional Pro — $39/mo, $399/yr;
-- Professional Business — $129/mo, $1,299/yr;
-- Professional Launch — $499 one-time;
-- Grid Employer Access — $499/mo, $5,090/yr;
-- Capacity Host — $199/mo, $2,030/yr;
-- Partner OS — $299/mo, $3,050/yr;
-- EDU Plus — $29/mo, $296/yr;
-- EDU Course — $99 standard transaction primitive;
-- EDU Pathway — $349 standard transaction primitive;
-- Placement OS — $999/mo, $10,190/yr;
-- Deep Operating Audit — $3,000 one-time;
-- Proof Sprint — $3,500 one-time;
-- Optimization Retainer — $2,500/mo;
-- Integration Launch — $2,500 starting anchor;
-- Data Migration & Go-Live — $5,000 starting anchor;
-- Enterprise Architecture Workshop — $7,500 one-time;
-- Usage Wallet — $100 / $250 / $500 / $1,000 prepaid;
-- Klinikos Enterprise — quote-only product shell;
-- Workforce Program — quote-only product shell;
-- Private Intelligence Node — quote-only target shell;
-- Grid Transaction Service — policy-priced/Connect-or-invoice target shell.
+Before any object is reused or promoted, a read-only reconciliation must compare the intended Stripe account and mode against:
+
+- current `commercialProducts` offer key, lifecycle, buyer, price type, amount, qualification, commercial route, public-purchase state, direct-checkout state, and post-purchase boundary;
+- environment-neutral lookup key and pricing version where a reusable Price is appropriate;
+- currency, cadence, tax behavior, active/archive state, metadata, and no-PHI policy;
+- entitlement/delivery correlation, refund/dispute behavior, and verified webhook support;
+- target/test objects that must remain private or be archived rather than exposed.
+
+Any mismatch creates a reconciliation task and blocks activation. A new verified dated evidence record may store non-secret object identifiers when operationally necessary, but this specialist planning document must not become their runtime registry.
 
 ---
 
-## 16. Sandbox automatic Payment Links created
+## 16. Payment Link evidence boundary
 
-The following are TEST links only. They collect test payment automatically and are not live-customer links.
+Exact test Payment Link URLs are intentionally not carried as authority in this document. Prior notes reported links for entry offers, clinic plan variants, professional/EDU targets, and prepaid-usage denominations, but those observations are stale and unverified.
 
-### Existing entry offers
+Rules:
 
-- Clinic Operating Analysis: `https://buy.stripe.com/test_eVqbIU3mX8xi8l30VK0co00`
-- Implementation Blueprint: `https://buy.stripe.com/test_eVq6oAaPp7tebxf6g40co01`
-
-### Professional
-
-- Professional Pro monthly: `https://buy.stripe.com/test_9B628kaPp00M8l36g40co02`
-- Professional Pro annual: `https://buy.stripe.com/test_6oU6oA8Hh14QfNv5c00co0f`
-- Professional Business monthly: `https://buy.stripe.com/test_cNi8wI4r18xi30JgUI0co03`
-- Professional Business annual: `https://buy.stripe.com/test_aFaaEQ9Ll7te58Rawk0co0g`
-- Professional Launch: `https://buy.stripe.com/test_14AfZa8Hh7teeJr5c00co04`
-
-### EDU
-
-- EDU Plus monthly: `https://buy.stripe.com/test_3cI7sEf5FbJu1WFdIw0co05`
-- EDU Plus annual: `https://buy.stripe.com/test_bJe4gs9LlcNyfNvdIw0co0h`
-- EDU Course: `https://buy.stripe.com/test_bJe3cof5FdRCeJrgUI0co06`
-- EDU Pathway: `https://buy.stripe.com/test_8x25kw1eP3cY0SB9sg0co07`
-
-### Clinic subscriptions
-
-- Core monthly: `https://buy.stripe.com/test_14AdR24r114Qbxf6g40co09`
-- Core annual: `https://buy.stripe.com/test_aFafZa6z914Q58R1ZO0co0a`
-- Growth monthly: `https://buy.stripe.com/test_5kQcMYf5F4h230J47W0co0b`
-- Growth annual: `https://buy.stripe.com/test_eVq14g8Hh28U1WF33S0co0c`
-- Scale monthly: `https://buy.stripe.com/test_8x2dR26z99Bm9p747W0co0d`
-- Scale annual: `https://buy.stripe.com/test_6oU3co8Hh3cYdFn8oc0co0e`
-
-### Usage Wallet
-
-- $100: `https://buy.stripe.com/test_7sYfZa7Dd7tebxf8oc0co08`
-- $250: `https://buy.stripe.com/test_bJeaEQ9Ll5l61WFawk0co0i`
-- $500: `https://buy.stripe.com/test_dRmdR2cXxaFq0SB0VK0co0j`
-- $1,000: `https://buy.stripe.com/test_eVq3coaPp3cYdFn33S0co0k`
-
-These URLs must never be presented as live production purchase paths.
+- no test or live URL is a canonical offer identifier;
+- no link may be published merely because it accepts a test payment;
+- no static link may bypass qualification, customer/tenant correlation, tax, authority, entitlement, refund/dispute, or regulated-policy gates;
+- Core/Growth/Scale and Implementation Blueprint remain non-direct-checkout under the current registry even if an external test link exists;
+- a link payment without deterministic buyer/offer correlation routes to bounded reconciliation, not automatic entitlement;
+- runtime resolves environment-specific processor objects from one environment-neutral server projection and verifies their attributes before use;
+- external Stripe state must be freshly reconciled before any operational claim or promotion.
 
 ---
 
@@ -683,18 +695,20 @@ These URLs must never be presented as live production purchase paths.
 
 A sandbox object becomes a live offer only when all applicable gates pass:
 
-1. product is approved in current Canon/commercial registry;
-2. exact amount/price generation is approved;
-3. server entitlement mapping exists;
-4. signed live-webhook verification exists;
-5. payment evidence reconciliation exists;
-6. cancellation/refund/failure behavior exists;
-7. customer-facing terms accurately describe what payment buys;
-8. privacy/security/PHI boundaries remain separate;
-9. tax treatment has been reviewed/configured;
-10. for regulated marketplace transactions, resource-class/jurisdiction economics are approved;
-11. production environment is using the intended live Stripe account;
-12. production smoke/evidence confirms the payment rail.
+1. product is approved by the Master Canon and exists in current `commercialProducts` with the intended lifecycle;
+2. `publicPurchasable`, `directPublicCheckoutEligible`, `qualificationRequired`, `commercialRoute`, price type, amount, and conversion destination all permit the proposed buyer path;
+3. exact amount/price generation and environment-neutral lookup-key/pricing-version projection are approved;
+4. payment rail matches the commercial route and cannot bypass qualification, contract, procurement, or review;
+5. deterministic buyer/customer/organization correlation and server entitlement/delivery mapping exist;
+6. signed live-webhook/API verification and payment-evidence reconciliation exist;
+7. cancellation, refund, credit, dispute, chargeback, reversal, failed-payment, duplicate-event, and recovery behavior exists;
+8. customer-facing terms accurately describe what payment buys and which party fulfills/supports it;
+9. privacy/security/PHI boundaries remain separate;
+10. seller/merchant, tax nexus/registration, product tax code, location, exemption, inclusive/exclusive display, marketplace-facilitator, Connect allocation, filing/reporting, and refund/credit treatment have qualified review and exact environment configuration;
+11. for regulated marketplace transactions, resource-class/jurisdiction economics and fee/referral/employment/clinical boundaries are approved;
+12. for Connect, canonical account relationship, controller authority, capabilities, merchant-of-record, customer ownership, charge type, dispute/loss model, transfer/payout policy, and account requirements are verified;
+13. production environment is using the intended live Stripe account without creating a duplicate merchant history;
+14. production smoke/evidence confirms the exact payment rail and customer-visible path.
 
 No sandbox object should be promoted merely because its checkout works.
 
@@ -779,28 +793,32 @@ Each requires product evidence, legal/policy analysis, unit economics, or market
 
 ## 21. Next implementation sequence
 
-### Wave 1 — reconcile existing live-capable clinic rail
+### Wave 1 — reconcile the existing commercial kernel and direct Analysis rail
 
 - resolve live Stripe account exposure;
 - confirm production live key/webhook signing secret without surfacing secrets;
-- promote only existing approved clinic prices/links;
-- ensure Core/Growth/Scale monthly and annual entitlement handling is exact;
+- preserve `commercialProducts` as the executable registry and add one environment-neutral Stripe projection rather than a second catalog;
+- keep Clinic Operating Analysis as the only current direct-public-checkout offer;
+- keep Blueprint and Core/Growth/Scale on qualified/reviewed routes unless a later verified registry change deliberately promotes them;
+- reconcile any external test/live Product/Price/Payment Link state and archive/block contradictory objects;
+- ensure future Core/Growth/Scale monthly/annual Billing and entitlement handling is exact before enabling direct subscription;
 - configure customer portal/recovery behavior;
 - verify live payment evidence end to end.
 
-### Wave 2 — professional + EDU entitlements
+### Wave 2 — professional + EDU offer definition and entitlements
 
-- add product keys to server-owned catalog;
+- add approved product keys to the existing server-owned catalog only after product/delivery truth is established;
 - define exact entitlements;
 - write RED tests for payment-event mapping;
 - add webhook reconciliation;
 - provision only after verified payment evidence;
 - test cancellation/renewal/refund behavior;
-- then promote Professional Pro, Professional Business, EDU Plus, Course, Pathway.
+- then deliberately classify public presentation, qualification, direct-checkout eligibility, and payment rail before any promotion.
 
-### Wave 3 — usage wallet
+### Wave 3 — prepaid usage funding through the existing ledger
 
-- build bounded prepaid balance ledger;
+- reuse existing commercial accounts, allowances, prepaid/reserved balances, reservations, usage entries, actual-cost settlement, overrun, release, and audit;
+- extend only the missing verified-funding/refund/dispute/customer-projection mappings;
 - bind purchases to customer/organization;
 - consume by approved capability bucket;
 - preserve provider-neutral cost accounting;
@@ -818,9 +836,13 @@ Each requires product evidence, legal/policy analysis, unit economics, or market
 ### Wave 5 — Connect
 
 - separate clinic SaaS merchant-payments use case from Grid marketplace use case;
-- use appropriate connected-account/charge model for each;
+- bind each connected account to canonical Person/Organization/controller authority;
+- define customer ownership, merchant of record, support/refund/dispute/chargeback/negative-balance/loss responsibility;
+- select direct, destination, separate-charge/transfer, or platform charge only through server policy;
 - implement embedded onboarding/requirements remediation;
-- hard-gate merchant capability before payment/transfer;
+- hard-gate country/currency, requirements, restrictions, charges/payouts/transfer capabilities before payment/transfer/payout;
+- connect fulfillment, refund, reversal, dispute, transfer, payout, and settlement exception states to Financial OS;
+- complete tax/marketplace-facilitator/information-reporting and legal-policy gates;
 - enable platform fraud controls where applicable;
 - do not enable regulated professional-fee marketplace economics until policy permits them.
 

@@ -1,6 +1,13 @@
 # Klinikos Stripe Connect, Payments & Trust Expansion — 2026-09-01
 
-Status: `SANDBOX TARGET / SUBORDINATE TO MASTER CANON`
+Status: `DATED SPECIALIST DESIGN / SANDBOX TARGET / SUBORDINATE TO MASTER CANON AND VERIFIED CODE`
+
+Authority boundary:
+
+- `docs/KLINIKOS_MASTER_CANON.md` remains the sole company/product authority.
+- Current code, schema, tests, exact-head CI, deployed runtime, and verified processor evidence determine what exists and what may execute now.
+- This dated specialist document may guide reconciliation and implementation, but it may not make an offer sellable, a checkout direct, a Stripe account configured, or a Connect flow lawful.
+- Any previously observed Stripe sandbox object is external evidence requiring fresh read-only reconciliation; it is not canonical product or runtime truth.
 
 This specialist commercial supplement closes two monetization gaps discovered during the universe-wide Stripe review:
 
@@ -11,17 +18,19 @@ This specialist commercial supplement closes two monetization gaps discovered du
 
 ## 1. Klinikos Payments
 
-Stripe sandbox product created:
+An earlier external sandbox snapshot reported a product labeled:
 
 `Klinikos Payments`
 
-Classification: `TARGET_PRIVATE`
+Classification: `TARGET_PRIVATE / EXTERNAL_SNAPSHOT_UNVERIFIED`
+
+That observation is stale until reconciled against the intended Stripe account, mode, current object state, metadata, lookup-key policy, and the server-owned `commercialProducts` registry. Do not depend on an external object ID, Price, Payment Link, or prior connector transcript as authority.
 
 No fixed public Price is attached because the correct economics depend on the merchant/payment model and final Connect configuration.
 
 ### SaaS payment use case
 
-When a clinic, practice, professional business, school, or other approved organization uses Klinikos software to accept payment from its own customer, the natural Stripe Connect design is a SaaS-platform flow using the connected business as the merchant of record where appropriate.
+When a clinic, practice, professional business, school, or other approved organization uses Klinikos software to accept payment from its own customer, the candidate Stripe Connect design is a SaaS-platform flow using the connected business as merchant of record only where the account configuration, customer relationship, charge type, liability allocation, capability state, and applicable law all support it.
 
 Potential Klinikos economics may include:
 
@@ -34,6 +43,15 @@ Potential Klinikos economics may include:
 
 This revenue is compensation for payment technology and operating infrastructure. It must not be described as a percentage of a clinical professional fee merely because the underlying business happens to provide healthcare.
 
+Before this rail may execute, Klinikos must determine and persist at least:
+
+- which legal entity is the seller/merchant of record and which Stripe account owns the customer/payment method;
+- which party controls product/service terms, fulfillment, receipts, statement descriptors, refunds, support, disputes, chargebacks, negative balances, reserves, and loss liability;
+- whether the charge is a direct charge, destination charge, separate charge and transfer, or platform charge, with no browser-selectable charge type;
+- whether the connected account's country, currency, requested capabilities, `charges_enabled`, `payouts_enabled`, requirements, restrictions, and beneficial-owner/business verification permit the action;
+- whether the transaction class passes server-side clinical-fee, referral, corporate-practice, fee-splitting, employment/contractor, money-transmission, consumer-protection, privacy, and jurisdiction policy gates;
+- which party is responsible for sales tax, marketplace-facilitator obligations, exemption evidence, information reporting, and tax documentation.
+
 ### Marketplace payment use case
 
 Grid may eventually use a different Connect charge architecture for permitted marketplace transactions:
@@ -43,6 +61,8 @@ Grid may eventually use a different Connect charge architecture for permitted ma
 - no marketplace payment rail for a resource class until the server policy classifies the transaction as permitted.
 
 The platform must not assume one charge type for all Grid objects.
+
+Connected-account onboarding or a successful test charge does not prove that a Grid resource class may lawfully transact. Resource-class and jurisdiction policy must fail closed when absent, unknown, expired, or under legal review.
 
 ### Two-lane law
 
@@ -101,6 +121,15 @@ Preferred principles:
 - platform may add Radar for Platforms for additional monitoring;
 - financial truth remains `charge ≠ payment ≠ payout ≠ settlement`.
 
+Additional execution gates:
+
+- bind the connected account to the canonical Klinikos Person/Organization relationship and verify that the actor has authority to configure payments for that entity;
+- scope customer/payment-method objects to the correct merchant relationship and never silently reuse them across unrelated connected accounts or tenants;
+- evaluate account requirements and capabilities at onboarding and again before charge, transfer, payout, refund, or dispute action;
+- route refunds, disputes, chargebacks, negative balances, reserves, and account restrictions into auditable Financial OS exception states;
+- use signed webhooks and provider API reconciliation for money truth; redirect, account onboarding completion, or dashboard state alone is insufficient;
+- do not place PHI or regulated clinical detail in Stripe metadata, descriptions, receipts, URLs, statements, or analytics.
+
 ### Grid marketplace rail
 
 Target pattern:
@@ -114,6 +143,16 @@ Principles:
 - Radar/platform risk controls required from launch;
 - transfer is not proof that the underlying healthcare service was clinically authorized;
 - Grid policy decides whether the resource class may use this rail at all.
+
+The platform must also define who owns the buyer/customer relationship, who is merchant of record, who handles disputes/refunds/support, how transfers are reversed when fulfillment fails, which account bears negative balances, and which legal/tax duties attach to the selected charge type before enabling the lane.
+
+### Connect decision gate
+
+No Connect implementation may treat "connected account exists" as sufficient. The server-owned decision must evaluate:
+
+`CANONICAL PARTICIPANTS + CUSTOMER RELATIONSHIP + RESOURCE CLASS + JURISDICTION + MERCHANT OF RECORD + CHARGE TYPE + ACCOUNT CAPABILITIES + LIABILITY/DISPUTE MODEL + TAX RESPONSIBILITY + LEGAL/POLICY APPROVAL → ALLOW / REVIEW / BLOCK`.
+
+If any material input is unknown, unverified, expired, or incompatible, the action routes to review or blocks. Payment cannot cure the missing state.
 
 ---
 
@@ -159,7 +198,7 @@ This is likely the strongest long-term enterprise model.
 
 ## 5. Trust & Credential Operations
 
-Stripe sandbox product created:
+An earlier external sandbox snapshot reported a product labeled:
 
 `Klinikos Trust & Credential Operations`
 
@@ -169,7 +208,9 @@ Sandbox pricing target:
 - **$4,070/year**;
 - **$1,500 starting setup**.
 
-Classification: `TARGET_TEST`.
+Classification: `TARGET_TEST / EXTERNAL_SNAPSHOT_UNVERIFIED`.
+
+The label and price observations are planning evidence only until read-only reconciliation proves the current sandbox objects, and until a server-owned Offer Registry entry, entitlement mapping, packaging rule, tax treatment, and delivery path exist. They are not an executable current offer.
 
 ### What the customer pays for
 
@@ -242,6 +283,12 @@ Potential future value for eligible connected accounts if Stripe product availab
 
 Gate: Connect account configuration, payout eligibility, user disclosure, economics, and financial-services policy.
 
+### Tax and reporting operations
+
+Potential value may include tax configuration, exemption-document workflow, reconciliation, and reporting support, but Klinikos must not sell or activate automated tax treatment from a generic assumption.
+
+Gate: qualified tax/legal review; nexus and registration facts; product/service tax classification; customer and transaction location evidence; inclusive/exclusive price policy; exemptions; marketplace-facilitator analysis; Connect merchant/charge model; refunds/credits; recurring versus one-time treatment; filing/reporting responsibility; test-mode verification; and production account configuration. Stripe Tax availability is infrastructure, not a tax determination.
+
 ### Patient premium
 
 Potential optional consumer utility subscription for convenience/intelligence features, but **do not charge for basic access to the network or make healthcare access dependent on a premium plan**.
@@ -259,3 +306,5 @@ Already represented as a quote-only sandbox target. No fixed recurring price unt
 > **Klinikos should monetize money movement where Klinikos genuinely provides payment infrastructure, but money must never buy clinical authority, credential truth, referral priority, or permission that law/policy controls.**
 
 > **Use Stripe to move and reconcile money. Use Klinikos policy engines to decide whether the underlying action is allowed.**
+
+> **A connected account, enabled capability, charge, transfer, payout, or sandbox object is evidence of only that bounded state. None proves legal permission, fulfillment, clinical authority, settlement, tax compliance, or a sellable Klinikos offer.**
