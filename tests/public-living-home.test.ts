@@ -80,6 +80,7 @@ describe("public Living Home conversation and accessibility contract", () => {
   const atmosphere = read("src/components/design/klinikos-atmosphere.tsx");
   const brand = read("src/components/brand/klinikos-brand.tsx");
   const homeStyles = read("src/app/cinematic-home-overrides.css");
+  const shellStyles = read("src/components/marketing/public-living-universe-shell.module.css");
 
   it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
@@ -196,6 +197,24 @@ describe("public Living Home conversation and accessibility contract", () => {
     // Entry paths a small screen must not lose.
     expect(source).toContain('href="/portal/login"');
     expect(source).toContain('href="/signup"');
+  });
+
+  it("uses one isolated mobile sheet instead of translucent fixed disclosures", () => {
+    expect(source).toContain('import * as Dialog from "@radix-ui/react-dialog"');
+    expect(source.match(/<Dialog\.Root/g)).toHaveLength(1);
+    expect(source).toContain("<Dialog.Overlay");
+    expect(source).toContain("<Dialog.Content");
+    expect(source).toContain("<Dialog.Title");
+    expect(source).toContain("<Dialog.Close");
+    expect(source).toContain('data-mobile-sheet-panel="true"');
+    expect(source).toContain('aria-haspopup="dialog"');
+    expect(source).toContain('aria-controls="public-mobile-sheet"');
+    expect(source).toContain("aria-expanded={openMobileDrawer ===");
+    expect(source).toContain('aria-live={openMobileDrawer === null ? "polite" : undefined}');
+    expect(source).not.toContain('<div className={styles.stageReadout} aria-live="polite">');
+    expect(source).not.toContain('className={styles.mobileDrawerPanel}>');
+    expect(shellStyles).toContain("overscroll-behavior: contain");
+    expect(shellStyles).toContain("background: #0c0507");
   });
 
   it("ships the exact approved production artwork instead of broken substitutes", () => {

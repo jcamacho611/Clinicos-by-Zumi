@@ -92,7 +92,7 @@ describe("public Living Universe approved-reference convergence", () => {
       ".actionButton",
       ".featuredButton",
       ".intentLibrary summary",
-      ".mobileDrawer summary",
+      ".mobileDrawer",
     ]) {
       const target = cssRule(selector).match(/min-height:\s*([0-9.]+)px/);
       expect(Number(target?.[1] ?? 0), `${selector} has no 44px target contract`).toBeGreaterThanOrEqual(44);
