@@ -476,6 +476,32 @@ function applyInvalidatedEvidenceToTruthRails(
   return next;
 }
 
+function qualifiedBeforeTemporalInvalidation(
+  evidence: CompanyOpportunityEvidenceQualification,
+  now: Date,
+) {
+  const invalidatedAt = [evidence.expiresAt, evidence.revokedAt]
+    .filter((value): value is Date => Boolean(value && value <= now))
+    .sort((left, right) => left.getTime() - right.getTime())[0];
+  if (!invalidatedAt) return false;
+
+  // An invalidation may describe truth only if this exact evidence was capable of
+  // establishing the rail immediately before it expired or was revoked. Removing
+  // the temporal invalidation must not cure a wrong source, wrong truth class,
+  // missing verification, rejection, or malformed consequential payload.
+  const approvalState = evidence.revokedAt &&
+    evidence.revokedAt <= now &&
+    evidence.approvalState === "REVOKED"
+    ? "APPROVED"
+    : evidence.approvalState;
+  return evaluateCompanyOpportunityEvidence({
+    ...evidence,
+    approvalState,
+    expiresAt: null,
+    revokedAt: null,
+  }, new Date(invalidatedAt.getTime() - 1)).qualifies;
+}
+
 /**
  * Derive current rails from active evidence in chronological order.
  *
@@ -492,10 +518,7 @@ export function deriveCompanyOpportunityTruthRails(
     const evaluation = evaluateCompanyOpportunityEvidence(item, now);
     if (evaluation.qualifies) {
       rails = applyCompanyOpportunityEvidenceToTruthRails(rails, item, now);
-    } else if (
-      (item.revokedAt && item.revokedAt <= now) ||
-      (item.expiresAt && item.expiresAt <= now)
-    ) {
+    } else if (qualifiedBeforeTemporalInvalidation(item, now)) {
       rails = applyInvalidatedEvidenceToTruthRails(rails, item, now);
     }
   }

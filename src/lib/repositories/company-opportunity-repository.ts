@@ -30,7 +30,12 @@ const safeSingleLineText = (max: number) => safeText(max).refine(
   (value) => !/[\r\n]/.test(value),
   "This field must be a concise single-line claim, not a message body.",
 );
-const optionalText = (max: number) => safeText(max).nullable().optional();
+const unsafeSynopsisPattern = /^(?:from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(?:api[_-]?key|secret|authorization|bearer|password)\s*[:=]/i;
+const safeSynopsisText = (max: number) => safeSingleLineText(max).refine(
+  (value) => !unsafeSynopsisPattern.test(value),
+  "This field must be a minimized synopsis without message headers or secret-like material.",
+);
+const optionalSynopsisText = (max: number) => safeSynopsisText(max).nullable().optional();
 const optionalSingleLineText = (max: number) => safeSingleLineText(max).nullable().optional();
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 const dateInputSchema = z.coerce.date();
@@ -57,21 +62,21 @@ function addSourceReferenceIssue(
 }
 
 export const createCompanyOpportunitySchema = z.object({
-  title: safeText(240),
+  title: safeSynopsisText(240),
   opportunityClass: z.enum(symphonyOpportunityClasses),
   targetClass: z.enum(symphonyTargetClasses),
-  targetOrganizationName: safeText(300),
+  targetOrganizationName: safeSynopsisText(300),
   targetOrganizationDomain: z.string().trim().min(1).max(253).regex(
     /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i,
   ).nullable().optional(),
-  purpose: safeText(1200),
-  ask: optionalText(1200),
-  ownerId: optionalText(200),
+  purpose: safeSynopsisText(1200),
+  ask: optionalSynopsisText(1200),
+  ownerId: optionalSingleLineText(200),
   deadlineAt: dateInputSchema.nullable().optional(),
-  nextAction: optionalText(600),
+  nextAction: optionalSynopsisText(600),
   nextActionDueAt: dateInputSchema.nullable().optional(),
-  blocker: optionalText(600),
-  sourceSystem: safeText(120),
+  blocker: optionalSynopsisText(600),
+  sourceSystem: safeSynopsisText(120),
   sourceType: companyOpportunitySourceTypeSchema,
   sourceReference: sourceReferenceSchema,
   sourceFingerprintSha256: sha256Schema,
@@ -79,17 +84,17 @@ export const createCompanyOpportunitySchema = z.object({
 }).strict().superRefine(addSourceReferenceIssue);
 
 const contractEvidenceInputSchema = z.object({
-  agreementReference: safeText(300),
-  counterparty: safeText(300),
+  agreementReference: safeSingleLineText(300),
+  counterparty: safeSynopsisText(300),
   effectiveAt: dateInputSchema,
-  signatureEvidenceReference: safeText(500),
+  signatureEvidenceReference: safeSingleLineText(500),
 }).strict();
 
 const cashEvidenceInputSchema = z.object({
   amountCents: z.number().int().positive(),
   currency: z.string().regex(/^[A-Z]{3}$/),
-  payeeEntityReference: safeText(300),
-  externalTransactionReference: safeText(500),
+  payeeEntityReference: safeSingleLineText(300),
+  externalTransactionReference: safeSingleLineText(500),
   reconciliationState: z.enum(["SETTLED", "REVERSED"]),
 }).strict();
 
@@ -99,7 +104,7 @@ const evidenceAppendBaseSchema = z.object({
   claimKey: safeSingleLineText(200),
   claimText: safeSingleLineText(600),
   claimTruthClass: companyTruthClassSchema,
-  sourceSystem: safeText(120),
+  sourceSystem: safeSynopsisText(120),
   sourceType: companyOpportunitySourceTypeSchema,
   sourceReference: sourceReferenceSchema,
   sourceThreadId: optionalSingleLineText(300),
@@ -197,8 +202,8 @@ export const appendCompanyOpportunityEvidenceSchema = z.discriminatedUnion("evid
 export const transitionCompanyOpportunitySchema = z.object({
   expectedVersion: z.number().int().positive(),
   targetStage: companyOpportunityLifecycleStageSchema,
-  idempotencyKey: safeText(300),
-  reason: safeText(1000),
+  idempotencyKey: safeSingleLineText(300),
+  reason: safeSynopsisText(1000),
 }).strict();
 
 export const listCompanyOpportunitiesSchema = z.object({
@@ -375,7 +380,7 @@ const opportunityWithEvidenceSelect = {
   ...opportunitySelect,
   evidence: {
     select: evidenceSelect,
-    orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
+    orderBy: [{ sourceObservedAt: "asc" as const }, { createdAt: "asc" as const }, { id: "asc" as const }],
   },
 } satisfies Prisma.CompanyExternalOpportunitySelect;
 
@@ -587,7 +592,17 @@ function activeEvidence(records: readonly EvidenceRecord[], now: Date) {
   );
   return [...records]
     .filter((record) => !record.tombstonedAt && !supersededIds.has(record.id))
-    .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime())
+    .sort((left, right) => {
+      const effectiveTime = (record: EvidenceRecord) =>
+        (record.evidenceType === "EXECUTED_AGREEMENT" || record.evidenceType === "CONTRACT_TERMINATION") &&
+        record.agreementEffectiveAt
+          ? record.agreementEffectiveAt.getTime()
+          : record.sourceObservedAt.getTime();
+      return effectiveTime(left) - effectiveTime(right) ||
+        left.sourceObservedAt.getTime() - right.sourceObservedAt.getTime() ||
+        left.createdAt.getTime() - right.createdAt.getTime() ||
+        left.id.localeCompare(right.id);
+    })
     .map(evidenceQualification)
     .filter((item): item is CompanyOpportunityEvidenceQualification => Boolean(item));
 }
@@ -630,7 +645,8 @@ async function findOpportunity(tx: Transaction, organizationId: string, opportun
 export async function createCompanyOpportunity(session: ClinicSession, rawInput: unknown) {
   requireCompanyOpportunityAccess(session, "create");
   const input = createCompanyOpportunitySchema.parse(rawInput);
-  if (input.sourceObservedAt > new Date()) {
+  const now = new Date();
+  if (input.sourceObservedAt > now) {
     throw new CompanyOpportunityAccessError("Opportunity source cannot be observed in the future.", 400);
   }
 
@@ -646,8 +662,8 @@ export async function createCompanyOpportunity(session: ClinicSession, rawInput:
         sourceSystem: input.sourceSystem,
         sourceFingerprintSha256: input.sourceFingerprintSha256,
       },
-      select: opportunitySelect,
-    })) as OpportunityRecord | null;
+      select: opportunityWithEvidenceSelect,
+    })) as OpportunityWithEvidenceRecord | null;
     if (existing) {
       if (!createSemanticsMatch(existing, input)) {
         throw new CompanyOpportunityAccessError(
@@ -655,7 +671,7 @@ export async function createCompanyOpportunity(session: ClinicSession, rawInput:
           409,
         );
       }
-      return toCompanyOpportunityDto(existing);
+      return toCompanyOpportunityDto(existing, deriveTruthRails(existing.evidence, now));
     }
 
     const created = (await tx.companyExternalOpportunity.create({

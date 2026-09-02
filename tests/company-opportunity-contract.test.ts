@@ -402,6 +402,58 @@ describe("company opportunity truth contract", () => {
     ).toMatchObject({ allowed: false });
   });
 
+  it("keeps never-qualified expired or revoked evidence neutral", () => {
+    const unverifiedExpiredQualification = evidence({
+      evidenceType: "QUALIFIED_PIPELINE",
+      claimTruthClass: "PIPELINE",
+      sourceType: "AUTHORITATIVE_RECORD",
+      sourceReference: "authoritative-record://qualification-unverified",
+      verifiedAt: null,
+      verifiedByActorId: null,
+      approvalState: "NEEDS_REVIEW",
+      expiresAt: new Date("2026-09-02T11:00:00.000Z"),
+    });
+    const rejectedRevokedProvider = evidence({
+      evidenceType: "PROVIDER_ACCEPTANCE",
+      sourceType: "EMAIL_PROVIDER_RECEIPT",
+      sourceReference: "email-provider-receipt://provider-rejected",
+      approvalState: "REJECTED",
+      revokedAt: new Date("2026-09-02T11:00:00.000Z"),
+    });
+    const wrongSourceExpiredCash = evidence({
+      evidenceType: "PAYMENT_SETTLEMENT",
+      sourceType: "OUTLOOK_SUMMARY",
+      sourceReference: "outlook-summary://payment-wrong-source",
+      expiresAt: new Date("2026-09-02T11:00:00.000Z"),
+      cash: {
+        amountCents: 50000,
+        currency: "USD",
+        payeeEntityReference: "klinikos-inc",
+        externalTransactionReference: "txn-wrong-source",
+        reconciliationState: "SETTLED",
+      },
+    });
+    const wrongTruthExpiredAward = evidence({
+      evidenceType: "AWARD_NOTICE",
+      claimTruthClass: "PIPELINE",
+      sourceType: "OFFICIAL_NOTICE",
+      sourceReference: "official-notice://award-wrong-truth",
+      expiresAt: new Date("2026-09-02T11:00:00.000Z"),
+    });
+    const malformedExpiredEvidence = {
+      ...evidence({ expiresAt: new Date("2026-09-02T11:00:00.000Z") }),
+      evidenceType: "NOT_A_REAL_EVIDENCE_TYPE",
+    } as unknown as CompanyOpportunityEvidenceQualification;
+
+    expect(deriveCompanyOpportunityTruthRails([
+      unverifiedExpiredQualification,
+      rejectedRevokedProvider,
+      wrongSourceExpiredCash,
+      wrongTruthExpiredAward,
+      malformedExpiredEvidence,
+    ], now)).toEqual(emptyCompanyOpportunityTruthRails);
+  });
+
   it("rejects unrelated contract or cash payloads even on otherwise valid evidence", () => {
     expect(
       evaluateCompanyOpportunityEvidence(

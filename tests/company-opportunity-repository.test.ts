@@ -243,6 +243,22 @@ beforeEach(() => {
 });
 
 describe("company opportunity repository", () => {
+  it("rejects multiline message bodies, email headers, and secret-like text at creation", () => {
+    for (const unsafe of [
+      { purpose: "From: sender@example.test\nTo: operator@example.test\nFull email body" },
+      { ask: "Subject: copied message content" },
+      { nextAction: "Authorization: Bearer secret-token" },
+      { blocker: "api_key=do-not-store-this" },
+    ]) {
+      expect(repository.createCompanyOpportunitySchema.safeParse({
+        ...createInput,
+        ...unsafe,
+      }).success).toBe(false);
+    }
+
+    expect(repository.createCompanyOpportunitySchema.safeParse(createInput).success).toBe(true);
+  });
+
   it("fails before persistence outside the configured first-party platform organization", async () => {
     await expect(
       repository.createCompanyOpportunity(session("clinic_owner", "customer-clinic", "org-customer"), createInput),
@@ -311,15 +327,75 @@ describe("company opportunity repository", () => {
   });
 
   it("makes duplicate source import idempotent only when the semantic payload matches", async () => {
-    opportunityFindFirst.mockResolvedValueOnce(opportunity);
+    opportunityFindFirst.mockResolvedValueOnce({ ...opportunity, evidence: [] });
     await expect(repository.createCompanyOpportunity(session(), createInput)).resolves.toMatchObject({ id: "opp-1" });
     expect(opportunityCreate).not.toHaveBeenCalled();
     expect(evidenceCreate).not.toHaveBeenCalled();
 
-    opportunityFindFirst.mockResolvedValueOnce(opportunity);
+    opportunityFindFirst.mockResolvedValueOnce({ ...opportunity, evidence: [] });
     await expect(
       repository.createCompanyOpportunity(session(), { ...createInput, title: "Different semantic claim" }),
     ).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("re-derives time-sensitive rails on an idempotent create retry", async () => {
+    const expiredQualification = persistedProviderEvidence({
+      id: "qualification-idempotent-retry",
+      claimKey: "pipeline.qualified",
+      claimText: "The opportunity was previously qualified.",
+      truthClass: "PIPELINE",
+      evidenceType: "QUALIFIED_PIPELINE",
+      sourceType: "AUTHORITATIVE_RECORD",
+      sourceReference: "authoritative-record://qualification-idempotent-retry",
+      expiresAt: new Date("2026-09-01T14:00:00.000Z"),
+      createdAt: new Date("2026-09-01T13:00:00.000Z"),
+    });
+    opportunityFindFirst.mockResolvedValueOnce({
+      ...opportunity,
+      qualificationState: "QUALIFIED",
+      evidence: [expiredQualification],
+    });
+
+    await expect(repository.createCompanyOpportunity(session(), createInput)).resolves.toMatchObject({
+      id: "opp-1",
+      qualificationState: "STALE",
+    });
+  });
+
+  it("orders late-ingested evidence by effective observation rather than ingestion time", async () => {
+    const newerAward = persistedProviderEvidence({
+      id: "award-newer-observation",
+      claimKey: "award.actual",
+      claimText: "The authoritative notice records an award.",
+      truthClass: "ACTUAL",
+      evidenceType: "AWARD_NOTICE",
+      sourceType: "OFFICIAL_NOTICE",
+      sourceReference: "official-notice://award-newer-observation",
+      sourceObservedAt: new Date("2026-09-01T12:30:00.000Z"),
+      verifiedAt: new Date("2026-09-01T12:45:00.000Z"),
+      createdAt: new Date("2026-09-01T13:00:00.000Z"),
+    });
+    const olderDeclineIngestedLater = persistedProviderEvidence({
+      id: "decline-older-observation",
+      claimKey: "award.declined",
+      claimText: "An older authoritative notice recorded a decline.",
+      truthClass: "ACTUAL",
+      evidenceType: "DECLINE_NOTICE",
+      sourceType: "OFFICIAL_NOTICE",
+      sourceReference: "official-notice://decline-older-observation",
+      sourceObservedAt: new Date("2026-09-01T12:00:00.000Z"),
+      verifiedAt: new Date("2026-09-01T12:15:00.000Z"),
+      createdAt: new Date("2026-09-01T14:00:00.000Z"),
+    });
+    opportunityFindFirst.mockResolvedValueOnce({
+      ...opportunity,
+      awardState: "DECLINED",
+      evidence: [newerAward, olderDeclineIngestedLater],
+    });
+
+    await expect(repository.getCompanyOpportunity(session(), "opp-1")).resolves.toMatchObject({
+      awardState: "AWARDED",
+    });
   });
 
   it("appends rather than mutates evidence and updates only the independently proven rail", async () => {

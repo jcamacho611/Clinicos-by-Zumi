@@ -112,6 +112,29 @@ function directEvidence(
   };
 }
 
+function directOpportunity(
+  label: string,
+  overrides: Partial<Prisma.CompanyExternalOpportunityUncheckedCreateInput> = {},
+): Prisma.CompanyExternalOpportunityUncheckedCreateInput {
+  return {
+    organizationId,
+    title: `Direct ${label} opportunity`,
+    opportunityClass: "GOVERNMENT_CONTRACT",
+    targetClass: "GOVERNMENT_PROGRAM",
+    targetOrganizationName: "Example Workforce Agency",
+    purpose: "Verify a minimized Company OS synopsis.",
+    ask: "Confirm the authoritative application path.",
+    nextAction: "Review the primary source",
+    sourceSystem: "repository-db-constraint-test",
+    sourceType: "AUTHORITATIVE_RECORD",
+    sourceReference: `authoritative-record://${suffix}/opportunity/${label}`,
+    sourceFingerprintSha256: hashFor(`direct-opportunity:${label}`),
+    sourceObservedAt: observedAt(),
+    createdById: userId,
+    ...overrides,
+  };
+}
+
 async function expectConstraintViolation(
   opportunityId: string,
   label: string,
@@ -283,6 +306,83 @@ describe.skipIf(!shouldRun)("company opportunity repository against disposable P
       cashState: "UNPROVEN",
     });
     expect(await aggregateCounts(created.id)).toEqual({ evidence: 2, events: 4, audits: 4 });
+  });
+
+  it("re-derives expired and revoked rails on an idempotent create retry", async () => {
+    const input = createInput("idempotent-expiry");
+    const created = await createCompanyOpportunity(session(), input);
+    opportunityIds.add(created.id);
+    const verificationAt = new Date(Date.now() - 90 * 60_000);
+
+    await db.companyOpportunityEvidence.createMany({
+      data: [
+        directEvidence(created.id, "expired-qualification-retry", {
+          claimKey: "pipeline.qualified",
+          claimText: "The opportunity was previously qualified.",
+          truthClass: "PIPELINE",
+          evidenceType: "QUALIFIED_PIPELINE",
+          sourceType: "AUTHORITATIVE_RECORD",
+          sourceReference: `authoritative-record://${suffix}/expired-qualification-retry`,
+          sourceObservedAt: new Date(Date.now() - 2 * 60 * 60_000),
+          verifiedAt: verificationAt,
+          verifiedByActorId: userId,
+          approvalState: "APPROVED",
+          approvedAt: verificationAt,
+          approvedByActorId: userId,
+          expiresAt: new Date(Date.now() - 60 * 60_000),
+        }),
+        directEvidence(created.id, "revoked-provider-retry", {
+          claimKey: "provider.accepted",
+          claimText: "The provider previously accepted the message.",
+          truthClass: "ACTUAL",
+          evidenceType: "PROVIDER_ACCEPTANCE",
+          sourceType: "EMAIL_PROVIDER_RECEIPT",
+          sourceReference: `email-provider-receipt://${suffix}/revoked-provider-retry`,
+          sourceObservedAt: new Date(Date.now() - 2 * 60 * 60_000),
+          verifiedAt: verificationAt,
+          verifiedByActorId: userId,
+          approvalState: "APPROVED",
+          approvedAt: verificationAt,
+          approvedByActorId: userId,
+          revokedAt: new Date(Date.now() - 60 * 60_000),
+        }),
+      ],
+    });
+    await db.companyExternalOpportunity.update({
+      where: { id: created.id },
+      data: { qualificationState: "QUALIFIED", providerState: "ACCEPTED" },
+    });
+
+    await expect(createCompanyOpportunity(session(), input)).resolves.toMatchObject({
+      id: created.id,
+      qualificationState: "STALE",
+      providerState: "REVOKED",
+    });
+  });
+
+  it("enforces minimized opportunity synopsis fields directly in PostgreSQL", async () => {
+    const unsafe = [
+      ["multiline-purpose", { purpose: "From: sender@example.test\nTo: operator@example.test\nRaw body" }],
+      ["header-ask", { ask: "Subject: copied message content" }],
+      ["secret-next-action", { nextAction: "Authorization: Bearer secret-token" }],
+      ["oversized-title", { title: "x".repeat(241) }],
+    ] as const;
+
+    for (const [label, override] of unsafe) {
+      await expect(
+        db.companyExternalOpportunity.create({ data: directOpportunity(label, override) }),
+      ).rejects.toBeDefined();
+      expect(await db.companyExternalOpportunity.count({
+        where: { organizationId, sourceFingerprintSha256: hashFor(`direct-opportunity:${label}`) },
+      })).toBe(0);
+    }
+
+    const valid = await db.companyExternalOpportunity.create({
+      data: directOpportunity("minimized-positive-control"),
+      select: { id: true, title: true },
+    });
+    opportunityIds.add(valid.id);
+    expect(valid.title).toBe("Direct minimized-positive-control opportunity");
   });
 
   it("rolls back evidence, rail, version, and audit writes atomically when the event append fails", async () => {

@@ -114,6 +114,22 @@ describe("company opportunity API", () => {
     expect(response.status).toBe(400);
     expect(createCompanyOpportunity).not.toHaveBeenCalled();
 
+    const rawOpportunityMessage = await collection.POST(request("/api/company/opportunities", "POST", {
+      title: "Workforce opportunity",
+      opportunityClass: "GOVERNMENT_CONTRACT",
+      targetClass: "GOVERNMENT_PROGRAM",
+      targetOrganizationName: "Example Agency",
+      purpose: "From: sender@example.test\nTo: operator@example.test\nFull copied message body",
+      ask: "Confirm the authoritative application path.",
+      sourceSystem: "outlook-audit",
+      sourceType: "OUTLOOK_SUMMARY",
+      sourceReference: "outlook-summary://message-1",
+      sourceFingerprintSha256: "a".repeat(64),
+      sourceObservedAt: "2026-08-31T12:00:00.000Z",
+    }));
+    expect(rawOpportunityMessage.status).toBe(400);
+    expect(createCompanyOpportunity).not.toHaveBeenCalled();
+
     const rawMessage = await evidence.POST(
       request("/api/company/opportunities/opp-1/evidence", "POST", {
         expectedVersion: 1,

@@ -44,6 +44,36 @@ CREATE TABLE "company_external_opportunities" (
     CHECK ("operatingScope" = 'KLINIKOS_COMPANY_OS'),
   CONSTRAINT "company_external_opportunities_version_check"
     CHECK ("version" > 0),
+  CONSTRAINT "company_external_opportunities_minimized_text_length_check"
+    CHECK (
+      char_length(btrim("title")) BETWEEN 1 AND 240 AND
+      char_length(btrim("targetOrganizationName")) BETWEEN 1 AND 300 AND
+      char_length(btrim("purpose")) BETWEEN 1 AND 1200 AND
+      ("ask" IS NULL OR char_length(btrim("ask")) BETWEEN 1 AND 1200) AND
+      ("nextAction" IS NULL OR char_length(btrim("nextAction")) BETWEEN 1 AND 600) AND
+      ("blocker" IS NULL OR char_length(btrim("blocker")) BETWEEN 1 AND 600) AND
+      char_length(btrim("sourceSystem")) BETWEEN 1 AND 120
+    ),
+  CONSTRAINT "company_external_opportunities_single_line_check"
+    CHECK (
+      "title" !~ E'[\\r\\n]' AND
+      "targetOrganizationName" !~ E'[\\r\\n]' AND
+      "purpose" !~ E'[\\r\\n]' AND
+      ("ask" IS NULL OR "ask" !~ E'[\\r\\n]') AND
+      ("nextAction" IS NULL OR "nextAction" !~ E'[\\r\\n]') AND
+      ("blocker" IS NULL OR "blocker" !~ E'[\\r\\n]') AND
+      "sourceSystem" !~ E'[\\r\\n]'
+    ),
+  CONSTRAINT "company_external_opportunities_sensitive_synopsis_check"
+    CHECK (
+      "title" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      "targetOrganizationName" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      "purpose" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      ("ask" IS NULL OR "ask" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]') AND
+      ("nextAction" IS NULL OR "nextAction" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]') AND
+      ("blocker" IS NULL OR "blocker" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]') AND
+      "sourceSystem" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]'
+    ),
   CONSTRAINT "company_external_opportunities_lifecycle_check"
     CHECK ("lifecycleStage" IN (
       'DISCOVERED', 'FIT_REVIEW', 'QUALIFIED', 'CONTACT_PREPARATION',
