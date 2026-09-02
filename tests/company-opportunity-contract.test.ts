@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyCompanyOpportunityEvidenceToTruthRails,
   companyOpportunityEvidenceTypes,
+  companyOpportunityEvidenceQualificationSchema,
   companyOpportunityLifecycleStages,
   companyOpportunitySourceReferenceSchemes,
   emptyCompanyOpportunityTruthRails,
@@ -232,6 +233,21 @@ describe("company opportunity truth contract", () => {
         now,
       ),
     ).toMatchObject({ qualifies: false });
+  });
+
+  it.each([
+    "authoritative-record://api_key=do-not-store-this",
+    "authoritative-record://Authorization:Bearer-do-not-store-this",
+  ])("rejects secret-like material from the shared evidence contract: %s", (sourceReference) => {
+    const unsafeEvidence = evidence({
+      evidenceType: "QUALIFIED_PIPELINE",
+      claimTruthClass: "PIPELINE",
+      sourceType: "AUTHORITATIVE_RECORD",
+      sourceReference,
+    });
+
+    expect(companyOpportunityEvidenceQualificationSchema.safeParse(unsafeEvidence).success).toBe(false);
+    expect(evaluateCompanyOpportunityEvidence(unsafeEvidence, now)).toMatchObject({ qualifies: false });
   });
 
   it("blocks illegal jumps, backwards transitions, and stale compare-and-swap versions", () => {

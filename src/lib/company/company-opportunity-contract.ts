@@ -148,6 +148,22 @@ export const companyOpportunitySourceReferenceSchemes: Readonly<
   OTHER_REVIEW_REQUIRED: "review-required://",
 });
 
+export const companyOpportunityUnsafeSourceReferencePattern =
+  /(?:api[_-]?key|secret|authorization|bearer|password)\s*[:=]/i;
+
+export const companyOpportunitySourceReferenceSchema = z.string().trim().min(1).max(2048)
+  .refine(
+    (value) => !/[\r\n]/.test(value),
+    "Source references must be concise single-line identifiers.",
+  )
+  .regex(/^[a-z][a-z0-9-]*:\/\/[A-Za-z0-9._~:/#=-]+$/)
+  .refine(
+    (value) =>
+      !/[?&@%]/.test(value) &&
+      !companyOpportunityUnsafeSourceReferencePattern.test(value),
+    "Source references must be inert opaque identifiers without URLs, credentials, or query data.",
+  );
+
 const contractEvidenceSchema = z.object({
   agreementReference: z.string().trim().min(1).max(300),
   counterparty: z.string().trim().min(1).max(300),
@@ -167,9 +183,7 @@ export const companyOpportunityEvidenceQualificationSchema = z.object({
   evidenceType: companyOpportunityEvidenceTypeSchema,
   claimTruthClass: companyTruthClassSchema,
   sourceType: companyOpportunitySourceTypeSchema,
-  sourceReference: z.string().trim().min(1).max(2048).regex(
-    /^[a-z][a-z0-9-]*:\/\/[A-Za-z0-9._~:/#=-]+$/,
-  ).refine((value) => !/[?&@%]/.test(value), "Source reference must be an inert opaque identifier."),
+  sourceReference: companyOpportunitySourceReferenceSchema,
   sourceFingerprintSha256: z.string().regex(/^[a-f0-9]{64}$/),
   sourceObservedAt: z.date(),
   verifiedAt: z.date().nullable(),
