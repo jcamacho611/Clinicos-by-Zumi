@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { resolvePublicLivingIntent } from "@/lib/orchestration/public-living-intent";
-import { projectPublicLivingUniverseForIntent } from "@/lib/orchestration/public-living-universe";
+import {
+  projectPublicLivingUniverseForActionId,
+  projectPublicLivingUniverseForIntent,
+} from "@/lib/orchestration/public-living-universe";
 import { isUniverseProjection } from "@/components/marketing/public-living-gateway";
+import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
 
 function project(prompt: string) {
   const resolution = resolvePublicLivingIntent(prompt);
@@ -12,6 +16,53 @@ function project(prompt: string) {
 }
 
 describe("public Living Universe direction and governance", () => {
+  const expectedActionPaths = [
+    ["care", "patient-find-care"],
+    ["work", "find-extra-work"],
+    ["cover", "fill-staffing-need"],
+    ["room", "find-healthcare-resource"],
+    ["placement", "student-clinical-placement"],
+    ["paid", "clinic-improve-revenue"],
+    ["followup", "fix-referral-leakage"],
+    ["resource", "find-healthcare-resource"],
+    ["client", "find-healthcare-resource"],
+    ["rooms", "clinic-monetize-capacity"],
+    ["students", "organization-education-partner"],
+    ["precept", "educator-preceptor-opportunity"],
+    ["learn", null],
+    ["ownpractice", "clinician-independent-practice"],
+    ["runclinic", "clinic-operational-optimization"],
+    ["aesthetics", "become-grid-ready"],
+    ["procurement", "prepare-procurement-response"],
+  ] as const;
+
+  it("keeps the client vocabulary and server action contract in one-to-one coverage", () => {
+    expect(PUBLIC_LIVING_ACTIONS.map(({ id }) => id)).toEqual(expectedActionPaths.map(([id]) => id));
+  });
+
+  it.each(expectedActionPaths)(
+    "projects the allowlisted %s action to its exact server-owned Path",
+    (actionId, expectedPathId) => {
+      const action = PUBLIC_LIVING_ACTIONS.find((candidate) => candidate.id === actionId);
+      const universe = projectPublicLivingUniverseForActionId(actionId);
+      if (expectedPathId === null) {
+        expect(universe).toBeNull();
+        return;
+      }
+      expect(universe, `missing projection for ${actionId}`).not.toBeNull();
+      expect(universe).toMatchObject({
+        id: actionId,
+        label: action?.label,
+        side: action?.side,
+        pathId: expectedPathId,
+      });
+    },
+  );
+
+  it("rejects an action identity the public surface did not issue", () => {
+    expect(projectPublicLivingUniverseForActionId("invented-client-path")).toBeNull();
+  });
+
   it.each([
     ["I need care", "patient-find-care"],
     ["I need work", "find-extra-work"],

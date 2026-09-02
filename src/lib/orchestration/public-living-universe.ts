@@ -4,6 +4,10 @@ import {
   type KlinikosPathAvailability,
   type KlinikosPathDefinition,
 } from "@/lib/paths/catalog";
+import {
+  PUBLIC_LIVING_ACTIONS,
+  type PublicLivingAction,
+} from "@/lib/marketing/public-living-actions";
 
 /**
  * The action-first public surface.
@@ -20,31 +24,37 @@ import {
  * grant.
  */
 
-export type PublicLivingUniverseAction = {
-  id: string;
-  /** What the person says, in their words. Never a module name. */
-  label: string;
-  /** Who tends to say it — used to group the surface, not to create role accounts. */
-  side: "need" | "have";
-  pathId: string;
-};
+export type PublicLivingUniverseAction = PublicLivingAction;
+export const PUBLIC_LIVING_UNIVERSE_ACTIONS = PUBLIC_LIVING_ACTIONS;
 
-export const PUBLIC_LIVING_UNIVERSE_ACTIONS: readonly PublicLivingUniverseAction[] = [
-  { id: "work", label: "I need work", side: "need", pathId: "find-extra-work" },
-  { id: "cover", label: "I need someone tomorrow", side: "need", pathId: "fill-staffing-need" },
-  { id: "placement", label: "I need a clinical placement", side: "need", pathId: "student-clinical-placement" },
-  { id: "care", label: "I need care", side: "need", pathId: "patient-find-care" },
-  { id: "paid", label: "Why hasn't this been paid?", side: "need", pathId: "clinic-improve-revenue" },
-  { id: "followup", label: "I need to close open loops", side: "need", pathId: "fix-referral-leakage" },
-  { id: "rooms", label: "I have rooms open Friday", side: "have", pathId: "clinic-monetize-capacity" },
-  { id: "resource", label: "I need healthcare space or equipment", side: "need", pathId: "find-healthcare-resource" },
-  { id: "students", label: "I can take students", side: "have", pathId: "organization-education-partner" },
-  { id: "precept", label: "I want to precept", side: "have", pathId: "educator-preceptor-opportunity" },
-  { id: "ownpractice", label: "I want to work for myself", side: "have", pathId: "clinician-independent-practice" },
-  { id: "runclinic", label: "Help me run my practice", side: "have", pathId: "clinic-operational-optimization" },
-  { id: "aesthetics", label: "I want to build an injector career", side: "have", pathId: "become-grid-ready" },
-  { id: "procurement", label: "I need to prepare an RFP response", side: "need", pathId: "prepare-procurement-response" },
-] as const;
+/**
+ * Canonical Path selection for the public action vocabulary.
+ *
+ * This mapping is intentionally server-owned. The browser sends an opaque action id;
+ * it cannot choose a Path or turn a presentation control into routing authority.
+ */
+const PUBLIC_LIVING_ACTION_PATHS = {
+  care: "patient-find-care",
+  work: "find-extra-work",
+  cover: "fill-staffing-need",
+  room: "find-healthcare-resource",
+  placement: "student-clinical-placement",
+  paid: "clinic-improve-revenue",
+  followup: "fix-referral-leakage",
+  resource: "find-healthcare-resource",
+  client: "find-healthcare-resource",
+  rooms: "clinic-monetize-capacity",
+  students: "organization-education-partner",
+  precept: "educator-preceptor-opportunity",
+  // Generic learning stays in EDU without inventing a profession, placement, or
+  // injector objective. The stage remains intentionally unprojected until the person
+  // provides enough context for a governed Path.
+  learn: null,
+  ownpractice: "clinician-independent-practice",
+  runclinic: "clinic-operational-optimization",
+  aesthetics: "become-grid-ready",
+  procurement: "prepare-procurement-response",
+} as const satisfies Record<PublicLivingAction["id"], string | null>;
 
 /** Reader-facing wording for each catalog state. Renames only — never promotes. */
 const AVAILABILITY_COPY: Record<KlinikosPathAvailability, string> = {
@@ -124,6 +134,23 @@ function projectPath(
   };
 }
 
+export function isPublicLivingActionId(value: string): value is PublicLivingAction["id"] {
+  return Object.hasOwn(PUBLIC_LIVING_ACTION_PATHS, value);
+}
+
+/** Exact projection for a control the server itself allowlisted. */
+export function projectPublicLivingUniverseForActionId(
+  actionId: string,
+): PublicLivingUniverseProjection | null {
+  if (!isPublicLivingActionId(actionId)) return null;
+  const action = PUBLIC_LIVING_ACTIONS.find((candidate) => candidate.id === actionId);
+  const pathId = PUBLIC_LIVING_ACTION_PATHS[actionId];
+  if (!pathId) return null;
+  const path = klinikosPathCatalog.find((candidate) => candidate.id === pathId);
+  if (!action || !path) return null;
+  return projectPath(path, action);
+}
+
 /**
  * Which Path each public destination stands for.
  *
@@ -190,7 +217,9 @@ export function projectPublicLivingUniverseForIntent(
 
   // Prefer the everyday label the front door already offers for this Path, so the stage
   // headline reads in the person's language rather than the catalog's.
-  const known = PUBLIC_LIVING_UNIVERSE_ACTIONS.find((action) => action.pathId === path.id);
+  const known = PUBLIC_LIVING_UNIVERSE_ACTIONS.find(
+    (action) => PUBLIC_LIVING_ACTION_PATHS[action.id] === path.id,
+  );
   return projectPath(path, {
     id: known?.id ?? path.id,
     label: known?.label ?? path.title,
