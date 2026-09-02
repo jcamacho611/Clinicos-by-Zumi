@@ -10,7 +10,7 @@ import { goDaddyPaymentConnector } from "@/lib/commercial/payment-connectors/god
 import { stripeLivePaymentStatus, stripePaymentConnector } from "@/lib/commercial/payment-connectors/stripe";
 import type { CommercialPaymentConnector, CommercialProcessorMode } from "@/lib/commercial/payment-connectors/types";
 import {
-  canStartNewCommercialCheckout,
+  canStartDirectCommercialCheckout,
   getCommercialProduct,
   resolveCommercialCheckoutAmount,
   type CommercialProductKey,
@@ -50,8 +50,10 @@ async function createCommercialCheckoutWithConnector(
 ) {
   const product = getCommercialProduct(input.productKey);
   if (!product) throw new Error("Unknown Klinikos commercial product.");
-  if (!canStartNewCommercialCheckout(product)) {
-    throw new Error("This Klinikos commercial product is retained for historical payment evidence only and cannot start a new checkout.");
+  if (!canStartDirectCommercialCheckout(product)) {
+    throw new Error(
+      "This Klinikos offer requires its governed sales or qualification path and cannot start a direct checkout.",
+    );
   }
   const expectedAmountCents = resolveCommercialCheckoutAmount(product, input.expectedAmountCents);
   const currency = "USD";
