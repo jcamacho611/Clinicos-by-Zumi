@@ -100,3 +100,15 @@ export const KLINIKOS_META = {
     + "documents and revenue work — with Zumi intelligence surfacing what needs attention. "
     + "Built to replace fragmented software while connecting the healthcare systems that must stay external.",
 } as const;
+
+/**
+ * Root discovery describes the whole governed network. Clinic-specific acquisition
+ * pages retain KLINIKOS_META; the universal front door must not collapse patients,
+ * professionals, learners, partners, or institutions into one clinic-buyer story.
+ */
+export const KLINIKOS_PUBLIC_META = {
+  title: "Klinikos | The operating network for healthcare",
+  description:
+    "Klinikos connects care, work, education, capacity, and healthcare operations in one governed network, "
+    + "with Zumi helping each person understand what needs to happen next while authority stays with the people and systems qualified to decide.",
+} as const;

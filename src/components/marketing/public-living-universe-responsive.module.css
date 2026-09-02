@@ -12,10 +12,6 @@
   .releaseSurface :global([data-living-universe-stage="true"]) {
     padding-bottom: calc(92px + env(safe-area-inset-bottom));
   }
-
-  .releaseSurface :global(nav[aria-label="Living Universe mobile controls"]) {
-    bottom: calc(10px + env(safe-area-inset-bottom));
-  }
 }
 
 @media (max-width: 520px) {

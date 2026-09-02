@@ -25,6 +25,16 @@ describe("Action-First public Living Universe", () => {
     expect(labels).toContain("I need a clinical placement");
     expect(labels).toContain("Help me run my practice");
     expect(labels).toContain("Why hasn't this been paid?");
+    expect(PUBLIC_LIVING_ACTIONS).toHaveLength(17);
+    expect(new Set(PUBLIC_LIVING_ACTIONS.map((action) => action.category))).toEqual(
+      new Set(["need", "offer", "grow"]),
+    );
+    expect(PUBLIC_LIVING_ACTIONS.filter((action) => action.category === "need")).toHaveLength(9);
+    expect(PUBLIC_LIVING_ACTIONS.filter((action) => action.category === "offer")).toHaveLength(4);
+    expect(PUBLIC_LIVING_ACTIONS.filter((action) => action.category === "grow")).toHaveLength(4);
+    expect(source).toContain("What I need");
+    expect(source).toContain("What I can offer");
+    expect(source).toContain("What I want to build");
   });
 
   it("reuses the current public Zumi server path for quick intents", () => {

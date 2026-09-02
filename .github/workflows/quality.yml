@@ -112,11 +112,57 @@ jobs:
           cat /tmp/klinikos-start.log
           exit 1
 
+      - name: Verify frontend browser interactions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/frontend-evidence
+
+          PORT=3000 npm start > /tmp/frontend-interaction-start.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "Klinikos exact-head server never became healthy for browser interaction verification."
+              cat /tmp/frontend-interaction-start.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          CHROME=""
+          for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
+            if command -v "$candidate" >/dev/null 2>&1; then
+              CHROME="$(command -v "$candidate")"
+              break
+            fi
+          done
+          if [ -z "$CHROME" ]; then
+            echo "No supported headless Chrome/Chromium binary is available on this runner."
+            exit 1
+          fi
+
+          CHROME_BIN="$CHROME" \
+          FRONTEND_BASE_URL=http://localhost:3000 \
+          FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
+            node scripts/verify-frontend-browser-interactions.mjs
+
       # Reviewable browser evidence belongs in CI so frontend acceptance does not depend
       # on one developer machine, cache state, or a desktop browser policy. The screenshots
       # are generated only from this exact-head production build and uploaded as an artifact.
       - name: Capture frontend release evidence
         shell: bash
+        env:
+          TESTED_MERGE_SHA: ${{ github.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
         run: |
           set -euo pipefail
           mkdir -p artifacts/frontend-evidence
@@ -131,6 +177,8 @@ jobs:
           for attempt in {1..30}; do
             if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > artifacts/frontend-evidence/health.json; then
               curl --fail --silent --show-error http://127.0.0.1:3000/ > artifacts/frontend-evidence/root.html
+              grep -F 'data-living-universe-stage="true"' artifacts/frontend-evidence/root.html
+              grep -F 'data-public-action-dock="true"' artifacts/frontend-evidence/root.html
               break
             fi
             if [ "$attempt" -eq 30 ]; then
@@ -163,6 +211,8 @@ jobs:
               --disable-gpu \
               --disable-dev-shm-usage \
               --hide-scrollbars \
+              --run-all-compositor-stages-before-draw \
+              --virtual-time-budget=5000 \
               --window-size="$size" \
               "$@" \
               --screenshot="artifacts/frontend-evidence/${label}.png" \
@@ -175,13 +225,30 @@ jobs:
           capture wide-1920x1080 1920,1080
           capture tablet-landscape-1024x900 1024,900
           capture tablet-768x1024 768,1024
-          capture mobile-390x844 390,844
+          capture mobile-390x844-closed 390,844
           capture reduced-motion-1402x1122 1402,1122 --force-prefers-reduced-motion
-          # A 701 CSS-pixel viewport at 2x scale exercises the layout constraints a
-          # 1402-pixel-wide visitor encounters at 200% zoom without browser scripting.
-          capture zoom-200-1402x1122 701,561 --force-device-scale-factor=2
+          # Run a second isolated Chrome profile with actual 200% browser page zoom.
+          # The verifier proves the CSS/visual viewport contracts to ~701px, confirms
+          # the responsive controls are active, and rejects composer/dock collisions.
+          # Device-scale or screenshot scaling cannot satisfy those assertions.
+          CHROME_BIN="$CHROME" \
+          FRONTEND_BASE_URL=http://localhost:3000 \
+          FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
+          FRONTEND_BROWSER_ZOOM_PERCENT=200 \
+            node scripts/verify-frontend-browser-interactions.mjs
+          test -s artifacts/frontend-evidence/zoom-200-1402x1122.png
+          test -s artifacts/frontend-evidence/browser-zoom-200.json
 
-          printf 'chrome=%s\nhead_sha=%s\n' "$CHROME" "$GITHUB_SHA" > artifacts/frontend-evidence/manifest.txt
+          printf '%s\n' \
+            "chrome=$CHROME" \
+            "tested_merge_sha=$TESTED_MERGE_SHA" \
+            "pr_head_sha=$PR_HEAD_SHA" \
+            "base_sha=$BASE_SHA" \
+            "capture_wait=server_markers_then_5000ms_virtual_time" \
+            "mobile_drawer_state=closed" \
+            "zoom_method=verified_chrome_profile_page_zoom_200_percent" \
+            "zoom_verification=css_viewport_and_responsive_layout_asserted" \
+            > artifacts/frontend-evidence/manifest.txt
           ls -lh artifacts/frontend-evidence
 
       - name: Upload frontend release evidence
