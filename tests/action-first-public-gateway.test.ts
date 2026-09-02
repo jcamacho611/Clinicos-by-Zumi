@@ -35,6 +35,9 @@ describe("Action-First public Living Universe", () => {
     expect(source).toContain("What I need");
     expect(source).toContain("What I can offer");
     expect(source).toContain("What I want to build");
+    expect(source).toContain("data-public-action-id={action.id}");
+    expect(source).toContain("data-public-action-side={action.side}");
+    expect(source).toContain("data-public-action-category={action.category}");
   });
 
   it("reuses the current public Zumi server path for quick intents", () => {

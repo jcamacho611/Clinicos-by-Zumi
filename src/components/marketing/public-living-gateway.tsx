@@ -440,6 +440,9 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
           {PUBLIC_LIVING_ACTIONS.filter((action) => action.category === category.id).map((action) => (
             <button
               className={styles.actionButton}
+              data-public-action-category={action.category}
+              data-public-action-id={action.id}
+              data-public-action-side={action.side}
               disabled={isSubmitting}
               key={`${surface}-${action.id}`}
               onClick={() => void sendPrompt(action.prompt, action.id)}
@@ -689,6 +692,9 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                 return (
                   <button
                     className={styles.featuredButton}
+                    data-public-action-category={action.category}
+                    data-public-action-id={action.id}
+                    data-public-action-side={action.side}
                     disabled={isSubmitting}
                     key={action.id}
                     onClick={() => void sendPrompt(action.prompt, action.id)}
