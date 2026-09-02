@@ -83,7 +83,7 @@ describe("public Living Home conversation and accessibility contract", () => {
   it("uses one calm conversation-first surface", () => {
     expect(source).toContain("turns.map((turn)");
     expect(source).toContain("priorResolution");
-    expect(source).toContain("KLINIKOS_ONE_LINE");
+    expect(source).toContain("KLINIKOS_PUBLIC_ENTRY_LINE");
     expect(source).toContain("KLINIKOS_SUPPORTING");
     expect(source).toContain('aria-label="Public Zumi guidance"');
     expect(page).toContain("PublicLivingGateway");

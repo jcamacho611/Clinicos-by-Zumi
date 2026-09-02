@@ -14,6 +14,9 @@ describe("frontend release evidence workflow", () => {
     expect(workflow).toContain("768,1024");
     expect(workflow).toContain("390,844");
     expect(workflow).toContain("force-prefers-reduced-motion");
+    expect(workflow).toContain("zoom-200-1402x1122");
+    expect(workflow).toContain("701,561");
+    expect(workflow).toContain("force-device-scale-factor=2");
   });
 
   it("uploads the evidence instead of leaving it only on the runner", () => {

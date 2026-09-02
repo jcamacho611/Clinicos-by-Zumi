@@ -172,6 +172,9 @@ jobs:
           capture tablet-768x1024 768,1024
           capture mobile-390x844 390,844
           capture reduced-motion-1402x1122 1402,1122 --force-prefers-reduced-motion
+          # A 701 CSS-pixel viewport at 2x scale exercises the layout constraints a
+          # 1402-pixel-wide visitor encounters at 200% zoom without browser scripting.
+          capture zoom-200-1402x1122 701,561 --force-device-scale-factor=2
 
           printf 'chrome=%s\nhead_sha=%s\n' "$CHROME" "$GITHUB_SHA" > artifacts/frontend-evidence/manifest.txt
           ls -lh artifacts/frontend-evidence

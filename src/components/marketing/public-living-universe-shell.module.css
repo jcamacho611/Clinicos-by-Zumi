@@ -700,11 +700,10 @@
 
 .planeButton small {
   margin-top: 2px;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   color: #9f8581;
   font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .inspector {

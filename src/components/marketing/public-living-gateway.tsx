@@ -15,13 +15,15 @@ import { KlinikosWordmark } from "@/components/brand/klinikos-brand";
 import type { PublicLivingDestination, PublicLivingResolution } from "@/lib/orchestration/public-living-intent";
 import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
 import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
-import { PUBLIC_LIVING_PLANE_LENSES } from "@/lib/marketing/public-living-interface";
+import {
+  KLINIKOS_PUBLIC_ENTRY_LINE,
+  PUBLIC_LIVING_PLANE_LENSES,
+} from "@/lib/marketing/public-living-interface";
 import { PublicLivingUniverseObjectStage } from "@/components/marketing/public-living-universe-stage";
 import { protectedPublicContinuationHref } from "@/lib/distribution/public-continuation";
 import styles from "@/components/marketing/public-living-universe-shell.module.css";
 import {
   KLINIKOS_HUMAN_AUTHORITY,
-  KLINIKOS_ONE_LINE,
   KLINIKOS_SUPPORTING,
 } from "@/lib/brand/canonical-messaging";
 
@@ -499,7 +501,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
                 <section className={styles.stageIntro} aria-label="Public Living Universe Object Stage">
                   <p className={styles.stageEyebrow}>Klinikos intelligence</p>
                   <h1 id="public-living-title">What do you need today?</h1>
-                  <p className={styles.stageThesis}>{KLINIKOS_ONE_LINE}</p>
+                  <p className={styles.stageThesis}>{KLINIKOS_PUBLIC_ENTRY_LINE}</p>
                   <p className={styles.stageSummary}>
                     Tell Klinikos what you need, what you have, or what you are trying to become. The system projects a governed path without inventing identity, eligibility, availability, or authority.
                   </p>

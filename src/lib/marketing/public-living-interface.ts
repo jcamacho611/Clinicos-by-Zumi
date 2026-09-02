@@ -15,6 +15,9 @@ export type PublicLivingPlaneLens = {
   question: string;
 };
 
+/** Public entry thesis only; canonical domain and server authority remain unchanged. */
+export const KLINIKOS_PUBLIC_ENTRY_LINE = "One intelligent operating network for healthcare.";
+
 export const PUBLIC_LIVING_PLANE_LENSES: readonly PublicLivingPlaneLens[] = [
   {
     id: "healthcare_universe",
