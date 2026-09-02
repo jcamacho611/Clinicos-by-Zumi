@@ -112,7 +112,7 @@ export default async function GridBrowsePage({ searchParams }: { searchParams: P
           <aside className="mt-6 grid gap-3 border border-[var(--k-line)] bg-[var(--k-public-raised)] p-5 sm:grid-cols-[auto_1fr]" data-grid-synthetic-disclosure="true" role="note">
             <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[var(--k-premium)]" />
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--k-premium)]">Reference environment — not live supply</p>
+              <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[var(--k-text)]">Reference environment — not live supply</p>
               <p className="mt-2 max-w-5xl text-sm leading-6 text-[var(--k-muted)]">{MARKETPLACE_SYNTHETIC_NOTICE} {LISTING_NOT_VERIFICATION_NOTICE}</p>
             </div>
           </aside>

@@ -31,13 +31,19 @@ describe("Grid public appearance and truth", () => {
       expect(source, `${path} must not inherit the clinical Marble canvas`).not.toContain("--k-work-bg");
       expect(source, `${path} must not carry a fixed light/status palette`).not.toMatch(bannedLegacySurface);
       expect(source, `${path} must consume the shared public appearance contract`).toContain("--k-");
+      expect(source, `${path} must not use the premium accent for essential small-copy contrast`).not.toMatch(
+        /<(?:p|span)[^>]*text-\[var\(--k-premium\)\]/,
+      );
     }
+
+    expect(materials).toMatch(/statusAttention:\s*"[^"]*text-\[var\(--k-text\)\]/);
   });
 
   it("puts the synthetic inventory boundary before discovery results as a prominent note", () => {
     expect(browse).toContain('data-grid-synthetic-disclosure="true"');
     expect(browse).toContain('role="note"');
     expect(browse).toContain("Reference environment — not live supply");
+    expect(browse).toContain('tracking-[.16em] text-[var(--k-text)]">Reference environment — not live supply');
     expect(browse.indexOf("data-grid-synthetic-disclosure")).toBeLessThan(browse.indexOf("<GridLiveMap"));
     expect(browse).toContain("MARKETPLACE_SYNTHETIC_NOTICE");
     expect(browse).toContain("LISTING_NOT_VERIFICATION_NOTICE");

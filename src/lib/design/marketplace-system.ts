@@ -42,7 +42,7 @@ export const marketplaceSurfaces = {
   controlIdle: "border-[var(--k-line)] bg-[var(--k-public-surface)] text-[var(--k-muted)] hover:text-[var(--k-text)]",
   controlActive: "border-[var(--k-text)] bg-[var(--k-text)] text-[var(--k-public-surface)]",
   statusVerified: "border-[var(--k-accent)] bg-[var(--k-public-raised)] text-[var(--k-accent)]",
-  statusAttention: "border-[var(--k-premium)] bg-[var(--k-public-raised)] text-[var(--k-premium)]",
+  statusAttention: "border-[var(--k-premium)] bg-[var(--k-public-raised)] text-[var(--k-text)]",
   eyebrow: "text-xs font-extrabold uppercase tracking-[.16em] text-[var(--k-accent)]",
   headline: "font-semibold tracking-[-.05em] text-[var(--k-text)]",
   meta: "text-xs leading-5 text-[var(--k-muted)]",
