@@ -18,4 +18,10 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("data-public-inspector");
     expect(browserGate).toContain("data-public-action-dock");
   });
+
+  it("waits for Chrome to exit before removing its profile and retries transient cleanup races", () => {
+    expect(browserGate).toContain("waitForChromeExit");
+    expect(browserGate).toContain("maxRetries");
+    expect(browserGate).toContain("retryDelay");
+  });
 });
