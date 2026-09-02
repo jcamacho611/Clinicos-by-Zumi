@@ -13,6 +13,7 @@ import { evaluateSymphonySendPolicy, requiresSymphonyUserAction } from "@/lib/co
 import { scoreSymphonyOpportunity } from "@/lib/company/symphony-priority";
 import { buildSymphonyEmail, type SymphonyCompanyProfile } from "@/lib/company/symphony-message-builder";
 import { executeSymphonyEmail } from "@/lib/company/symphony-execution";
+import type { SymphonyApprovalConsumer } from "@/lib/company/symphony-approval";
 
 const now = new Date("2026-08-27T12:00:00.000Z");
 
@@ -63,6 +64,18 @@ const profile: SymphonyCompanyProfile = {
   ],
   visionStatements: ["Klinikos is building toward a broader healthcare operating network spanning operations, workforce, and governed intelligence."],
 };
+
+const approvalId = "approval-test-1";
+const approveSend: SymphonyApprovalConsumer = async ({ approvalId: requestedApprovalId, requestedAt }) => ({
+  ok: true,
+  evidence: {
+    approvalId: requestedApprovalId,
+    approvedBy: "person-founder",
+    approvedAt: new Date(requestedAt.getTime() - 60_000),
+    consumedAt: requestedAt,
+    evidenceReference: `evidence://symphony/${requestedApprovalId}`,
+  },
+});
 
 describe("Symphony vocabulary and register mapping", () => {
   it("defines the approved opportunity, target, message, state, and user-gate vocabulary", () => {
@@ -325,30 +338,36 @@ describe("Symphony execution", () => {
     expect(result.message?.to).toBe("program@example.org");
   });
 
-  it("records provider acceptance only with a real provider reference", async () => {
+  it("records provider acceptance only with a real provider reference and consumed approval evidence", async () => {
     const result = await executeSymphonyEmail({
       opportunity: opportunity(),
       history: history(),
       profile,
       now,
       senderAvailable: true,
+      approvalId,
+      consumeApproval: approveSend,
       sender: async () => ({ ok: true, providerReference: "provider-message-123", provider: "test" }),
     });
     expect(result.state).toBe("PROVIDER_ACCEPTED");
     expect(result.providerReference).toBe("provider-message-123");
+    expect(result.approvalEvidence?.approvalId).toBe(approvalId);
     expect(result.nextFollowUpAt?.toISOString()).toBe("2026-08-30T12:00:00.000Z");
   });
 
-  it("records provider failure as failure, not delivery", async () => {
+  it("records provider failure as failure, not delivery, while preserving consumed approval evidence", async () => {
     const result = await executeSymphonyEmail({
       opportunity: opportunity(),
       history: history(),
       profile,
       now,
       senderAvailable: true,
+      approvalId,
+      consumeApproval: approveSend,
       sender: async () => ({ ok: false, reason: "provider_error", detail: "provider unavailable" }),
     });
     expect(result.state).toBe("DELIVERY_FAILED");
     expect(result.providerReference).toBeUndefined();
+    expect(result.approvalEvidence?.approvalId).toBe(approvalId);
   });
 });
