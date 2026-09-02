@@ -37,16 +37,20 @@ const safeSynopsisText = (max: number) => safeSingleLineText(max).refine(
 );
 const optionalSynopsisText = (max: number) => safeSynopsisText(max).nullable().optional();
 const optionalSingleLineText = (max: number) => safeSingleLineText(max).nullable().optional();
+const safeOpaqueReferenceText = (max: number) => safeSynopsisText(max).refine(
+  (value) => /^[A-Za-z0-9._~:/#=-]+$/.test(value) &&
+    !/[?&@%]/.test(value) &&
+    !/^(?:https?|ftp|file):/i.test(value),
+  "This field must be an inert opaque reference without URLs, credentials, query data, or whitespace.",
+);
+const optionalOpaqueReferenceText = (max: number) => safeOpaqueReferenceText(max).nullable().optional();
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 const dateInputSchema = z.coerce.date();
 const sourceReferenceSchema = safeSingleLineText(2048).refine(
   (value) => /^[a-z][a-z0-9-]*:\/\/[A-Za-z0-9._~:/#=-]+$/.test(value) && !/[?&@%]/.test(value),
   "Source references must be inert, allowlisted opaque references without URLs, credentials, or query data.",
 );
-const sourceLocatorSchema = safeSingleLineText(1000).refine(
-  (value) => !/^(?:https?|ftp|file):/i.test(value) && !/[?&@\r\n]/.test(value),
-  "Source locators must be inert identifiers without fetchable URLs, credentials, or query data.",
-).nullable().optional();
+const sourceLocatorSchema = optionalOpaqueReferenceText(1000);
 
 function addSourceReferenceIssue(
   input: { sourceType: z.infer<typeof companyOpportunitySourceTypeSchema>; sourceReference: string },
@@ -84,35 +88,35 @@ export const createCompanyOpportunitySchema = z.object({
 }).strict().superRefine(addSourceReferenceIssue);
 
 const contractEvidenceInputSchema = z.object({
-  agreementReference: safeSingleLineText(300),
+  agreementReference: safeOpaqueReferenceText(300),
   counterparty: safeSynopsisText(300),
   effectiveAt: dateInputSchema,
-  signatureEvidenceReference: safeSingleLineText(500),
+  signatureEvidenceReference: safeOpaqueReferenceText(500),
 }).strict();
 
 const cashEvidenceInputSchema = z.object({
   amountCents: z.number().int().positive(),
   currency: z.string().regex(/^[A-Z]{3}$/),
-  payeeEntityReference: safeSingleLineText(300),
-  externalTransactionReference: safeSingleLineText(500),
+  payeeEntityReference: safeOpaqueReferenceText(300),
+  externalTransactionReference: safeOpaqueReferenceText(500),
   reconciliationState: z.enum(["SETTLED", "REVERSED"]),
 }).strict();
 
 const evidenceAppendBaseSchema = z.object({
   expectedVersion: z.number().int().positive(),
-  ingestionKey: safeSingleLineText(300),
-  claimKey: safeSingleLineText(200),
-  claimText: safeSingleLineText(600),
+  ingestionKey: safeOpaqueReferenceText(300),
+  claimKey: safeOpaqueReferenceText(200),
+  claimText: safeSynopsisText(600),
   claimTruthClass: companyTruthClassSchema,
   sourceSystem: safeSynopsisText(120),
   sourceType: companyOpportunitySourceTypeSchema,
   sourceReference: sourceReferenceSchema,
-  sourceThreadId: optionalSingleLineText(300),
-  sourceMessageId: optionalSingleLineText(300),
-  sourceArtifactId: optionalSingleLineText(300),
+  sourceThreadId: optionalOpaqueReferenceText(300),
+  sourceMessageId: optionalOpaqueReferenceText(300),
+  sourceArtifactId: optionalOpaqueReferenceText(300),
   sourceFingerprintSha256: sha256Schema,
   sourceLocator: sourceLocatorSchema,
-  sourceSection: optionalSingleLineText(300),
+  sourceSection: optionalSynopsisText(300),
   sourcePage: z.number().int().positive().nullable().optional(),
   sourceObservedAt: dateInputSchema,
   verifiedByCurrentActor: z.boolean().default(false),
@@ -154,8 +158,8 @@ const correctionEvidenceAppendSchema = evidenceAppendBaseSchema.extend({
   evidenceType: z.literal("EVIDENCE_CORRECTION"),
   verifiedByCurrentActor: z.literal(true),
   expiresAt: z.null().optional(),
-  supersedesEvidenceId: safeSingleLineText(200),
-  correctionReason: safeSingleLineText(600),
+  supersedesEvidenceId: safeOpaqueReferenceText(200),
+  correctionReason: safeSynopsisText(600),
   ...noContract,
   ...noCash,
 }).strict();
@@ -202,7 +206,7 @@ export const appendCompanyOpportunityEvidenceSchema = z.discriminatedUnion("evid
 export const transitionCompanyOpportunitySchema = z.object({
   expectedVersion: z.number().int().positive(),
   targetStage: companyOpportunityLifecycleStageSchema,
-  idempotencyKey: safeSingleLineText(300),
+  idempotencyKey: safeOpaqueReferenceText(300),
   reason: safeSynopsisText(1000),
 }).strict();
 
@@ -553,6 +557,7 @@ function evidenceQualification(record: EvidenceRecord): CompanyOpportunityEviden
     verifiedAt: z.date().nullable(),
     verifiedByActorId: z.string().nullable(),
     approvalState: z.enum(["NEEDS_REVIEW", "APPROVED", "REJECTED", "REVOKED"]),
+    approvedAt: z.date().nullable(),
     expiresAt: z.date().nullable(),
     revokedAt: z.date().nullable(),
     contract: contractEvidenceInputSchema.optional(),
@@ -567,6 +572,7 @@ function evidenceQualification(record: EvidenceRecord): CompanyOpportunityEviden
     verifiedAt: record.verifiedAt,
     verifiedByActorId: record.verifiedByActorId,
     approvalState: record.approvalState,
+    approvedAt: record.approvedAt,
     expiresAt: record.expiresAt,
     revokedAt: record.revokedAt,
     ...(contract ? { contract } : {}),
@@ -883,6 +889,7 @@ function qualificationFromAppendInput(
     verifiedAt: input.verifiedByCurrentActor ? now : null,
     verifiedByActorId: input.verifiedByCurrentActor ? actorId : null,
     approvalState: input.verifiedByCurrentActor ? "APPROVED" : "NEEDS_REVIEW",
+    approvedAt: input.verifiedByCurrentActor ? now : null,
     expiresAt: input.expiresAt ?? null,
     revokedAt: null,
     ...(input.contract ? { contract: input.contract } : {}),

@@ -175,6 +175,7 @@ export const companyOpportunityEvidenceQualificationSchema = z.object({
   verifiedAt: z.date().nullable(),
   verifiedByActorId: z.string().trim().min(1).max(200).nullable(),
   approvalState: z.enum(companyOpportunityEvidenceApprovalStates),
+  approvedAt: z.date().nullable(),
   expiresAt: z.date().nullable(),
   revokedAt: z.date().nullable(),
   contract: contractEvidenceSchema.optional(),
@@ -340,6 +341,22 @@ export function evaluateCompanyOpportunityEvidence(
   if (evidence.verifiedAt && evidence.verifiedAt < evidence.sourceObservedAt) {
     return { qualifies: false, reason: "Verification cannot precede the source observation it verifies." };
   }
+  if (evidence.approvedAt && evidence.approvedAt > now) {
+    return { qualifies: false, reason: "Future approval evidence cannot qualify a consequential transition." };
+  }
+  if (evidence.approvedAt && evidence.approvedAt < evidence.sourceObservedAt) {
+    return { qualifies: false, reason: "Approval cannot precede the source observation it reviews." };
+  }
+  if (evidence.verifiedAt && evidence.approvedAt && evidence.approvedAt < evidence.verifiedAt) {
+    return { qualifies: false, reason: "Approval cannot precede verification." };
+  }
+  if (evidence.approvalState === "REVOKED") {
+    if (!evidence.approvedAt || !evidence.revokedAt || evidence.revokedAt < evidence.approvedAt) {
+      return { qualifies: false, reason: "Revoked evidence requires proof of prior approval before revocation." };
+    }
+  } else if (evidence.revokedAt) {
+    return { qualifies: false, reason: "A revocation timestamp requires the REVOKED approval state." };
+  }
   if (evidence.revokedAt && evidence.revokedAt <= now) {
     return { qualifies: false, reason: "Revoked evidence cannot qualify a consequential transition." };
   }
@@ -361,7 +378,7 @@ export function evaluateCompanyOpportunityEvidence(
   if (rule.verified && (!evidence.verifiedAt || !evidence.verifiedByActorId)) {
     return { qualifies: false, reason: "Consequential evidence requires a verified timestamp and actor." };
   }
-  if (rule.verified && evidence.approvalState !== "APPROVED") {
+  if (rule.verified && (evidence.approvalState !== "APPROVED" || !evidence.approvedAt)) {
     return { qualifies: false, reason: "Consequential evidence requires explicit approved review state." };
   }
   if (rule.contract && !evidence.contract) {

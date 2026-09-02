@@ -150,6 +150,26 @@ describe("company opportunity API", () => {
     expect(rawMessage.status).toBe(400);
     expect(appendCompanyOpportunityEvidence).not.toHaveBeenCalled();
 
+    const secretClaim = await evidence.POST(
+      request("/api/company/opportunities/opp-1/evidence", "POST", {
+        expectedVersion: 1,
+        ingestionKey: "provider-acceptance-secret",
+        claimKey: "provider.accepted",
+        claimText: "Authorization: Bearer do-not-store-this",
+        claimTruthClass: "ACTUAL",
+        evidenceType: "PROVIDER_ACCEPTANCE",
+        sourceSystem: "email-provider",
+        sourceType: "EMAIL_PROVIDER_RECEIPT",
+        sourceReference: "email-provider-receipt://message-secret",
+        sourceFingerprintSha256: "b".repeat(64),
+        sourceObservedAt: "2026-08-31T12:00:00.000Z",
+        verifiedByCurrentActor: true,
+      }),
+      { params: Promise.resolve({ opportunityId: "opp-1" }) },
+    );
+    expect(secretClaim.status).toBe(400);
+    expect(appendCompanyOpportunityEvidence).not.toHaveBeenCalled();
+
     const unsafeLocator = await evidence.POST(
       request("/api/company/opportunities/opp-1/evidence", "POST", {
         expectedVersion: 1,

@@ -341,7 +341,7 @@ describe.skipIf(!shouldRun)("company opportunity repository against disposable P
           sourceObservedAt: new Date(Date.now() - 2 * 60 * 60_000),
           verifiedAt: verificationAt,
           verifiedByActorId: userId,
-          approvalState: "APPROVED",
+          approvalState: "REVOKED",
           approvedAt: verificationAt,
           approvedByActorId: userId,
           revokedAt: new Date(Date.now() - 60 * 60_000),
@@ -383,6 +383,87 @@ describe.skipIf(!shouldRun)("company opportunity repository against disposable P
     });
     opportunityIds.add(valid.id);
     expect(valid.title).toBe("Direct minimized-positive-control opportunity");
+  });
+
+  it("enforces approval and revocation chronology directly in PostgreSQL", async () => {
+    const created = await createOpportunity("revocation-chronology");
+    const sourceObservedAt = new Date(Date.now() - 4 * 60 * 60_000);
+    const verifiedAt = new Date(Date.now() - 3 * 60 * 60_000);
+    const approvedAt = new Date(Date.now() - 2 * 60 * 60_000);
+    const revokedAt = new Date(Date.now() - 60 * 60_000);
+    const reviewed = {
+      sourceObservedAt,
+      verifiedAt,
+      verifiedByActorId: userId,
+      approvedAt,
+      approvedByActorId: userId,
+    };
+
+    await expectConstraintViolation(created.id, "revoked-without-timestamp", {
+      ...reviewed,
+      approvalState: "REVOKED",
+      revokedAt: null,
+    });
+    await expectConstraintViolation(created.id, "approval-after-revocation", {
+      ...reviewed,
+      approvalState: "REVOKED",
+      approvedAt: new Date(revokedAt.getTime() + 60_000),
+      revokedAt,
+    });
+    await expectConstraintViolation(created.id, "approved-state-with-revocation", {
+      ...reviewed,
+      approvalState: "APPROVED",
+      revokedAt,
+    });
+
+    const valid = await db.companyOpportunityEvidence.create({
+      data: directEvidence(created.id, "valid-revocation", {
+        ...reviewed,
+        approvalState: "REVOKED",
+        revokedAt,
+      }),
+      select: { id: true, approvalState: true, revokedAt: true },
+    });
+    expect(valid).toMatchObject({ approvalState: "REVOKED", revokedAt });
+  });
+
+  it("rejects secret-like evidence text and unsafe opaque references directly in PostgreSQL", async () => {
+    const created = await createOpportunity("evidence-minimization");
+    const unsafe = [
+      ["secret-claim", { claimText: "Authorization: Bearer do-not-store-this" }],
+      ["secret-source", { sourceSystem: "api_key=do-not-store-this" }],
+      ["unsafe-thread", { sourceThreadId: "https://example.test/thread" }],
+      ["secret-counterparty", {
+        evidenceType: "EXECUTED_AGREEMENT",
+        truthClass: "CONTRACTED",
+        sourceType: "EXECUTED_DOCUMENT",
+        sourceReference: `executed-document-sha256://${suffix}/secret-counterparty`,
+        agreementReference: "agreement-secret-counterparty",
+        counterparty: "Authorization: Bearer do-not-store-this",
+        agreementEffectiveAt: observedAt(),
+        signatureEvidenceReference: "signature-sha256://agreement-secret-counterparty",
+      }],
+      ["unsafe-transaction-reference", {
+        evidenceType: "PAYMENT_SETTLEMENT",
+        sourceType: "PAYMENT_PROCESSOR",
+        sourceReference: `payment-processor://${suffix}/unsafe-transaction-reference`,
+        amountCents: 1000,
+        currency: "USD",
+        payeeEntityReference: "klinikos-inc",
+        externalTransactionReference: "https://processor.test/payment?token=secret",
+        reconciliationState: "SETTLED",
+      }],
+    ] as const;
+
+    for (const [label, override] of unsafe) {
+      await expectConstraintViolation(created.id, label, override);
+    }
+
+    const valid = await db.companyOpportunityEvidence.create({
+      data: directEvidence(created.id, "evidence-minimization-positive"),
+      select: { id: true, claimText: true },
+    });
+    expect(valid.claimText).toBe("Database constraint control for evidence-minimization-positive.");
   });
 
   it("rolls back evidence, rail, version, and audit writes atomically when the event append fails", async () => {

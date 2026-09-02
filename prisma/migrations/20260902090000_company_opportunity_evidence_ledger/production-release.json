@@ -3,7 +3,7 @@
   "migration": "20260902090000_company_opportunity_evidence_ledger",
   "classification": "additive-only",
   "automaticProductionDeploy": true,
-  "sha256": "be25337aff0ae7563614e841336e4005ffda2a3a5a36812014e2c399eaf7800d",
+  "sha256": "e7d30d7a5fb6a2b7488ac78d11e11bf41808a0be6c505c3c242f4afabeb85d83",
   "approvalReference": "Fresh 70-migration disposable PostgreSQL chain plus Company Opportunity semantic and direct-constraint proof, 2026-09-02",
   "rationale": "Adds platform-scoped opportunity, evidence, and event tables with additive constraints, minimized synopsis checks, and indexes; alters no existing table or record."
 }

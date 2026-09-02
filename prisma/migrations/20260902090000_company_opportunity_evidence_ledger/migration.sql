@@ -215,14 +215,53 @@ CREATE TABLE "company_opportunity_evidence" (
     ),
   CONSTRAINT "company_opportunity_evidence_minimized_text_check"
     CHECK (
-      char_length("claimKey") <= 200 AND "claimKey" !~ E'[\r\n]' AND
-      char_length("claimText") <= 600 AND "claimText" !~ E'[\r\n]' AND
+      char_length(btrim("claimKey")) BETWEEN 1 AND 200 AND "claimKey" !~ E'[\r\n]' AND
+      char_length(btrim("claimText")) BETWEEN 1 AND 600 AND "claimText" !~ E'[\r\n]' AND
+      char_length(btrim("sourceSystem")) BETWEEN 1 AND 120 AND "sourceSystem" !~ E'[\r\n]' AND
       char_length("sourceReference") <= 2048 AND
       ("sourceLocator" IS NULL OR (
         char_length("sourceLocator") <= 1000 AND
-        "sourceLocator" !~ E'[\r\n?&@]' AND
-        "sourceLocator" !~* '^(https?|ftp|file):'
-      ))
+        "sourceLocator" !~ E'[\r\n]'
+      )) AND
+      ("sourceSection" IS NULL OR (char_length(btrim("sourceSection")) BETWEEN 1 AND 300 AND "sourceSection" !~ E'[\r\n]')) AND
+      ("correctionReason" IS NULL OR (char_length(btrim("correctionReason")) BETWEEN 1 AND 600 AND "correctionReason" !~ E'[\r\n]')) AND
+      ("counterparty" IS NULL OR (char_length(btrim("counterparty")) BETWEEN 1 AND 300 AND "counterparty" !~ E'[\r\n]'))
+    ),
+  CONSTRAINT "company_opportunity_evidence_sensitive_text_check"
+    CHECK (
+      "claimText" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      "sourceSystem" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      ("sourceSection" IS NULL OR "sourceSection" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]') AND
+      ("correctionReason" IS NULL OR "correctionReason" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]') AND
+      ("counterparty" IS NULL OR "counterparty" !~* '^(from|to|cc|bcc|subject|date|message-id|reply-to):|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')
+    ),
+  CONSTRAINT "company_opportunity_evidence_opaque_reference_check"
+    CHECK (
+      "claimKey" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "claimKey" !~ '[?&@%]' AND "claimKey" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      char_length("ingestionKey") BETWEEN 1 AND 300 AND "ingestionKey" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "ingestionKey" !~ '[?&@%]' AND "ingestionKey" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]' AND
+      ("sourceThreadId" IS NULL OR (char_length("sourceThreadId") <= 300 AND "sourceThreadId" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "sourceThreadId" !~ '[?&@%]' AND "sourceThreadId" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("sourceMessageId" IS NULL OR (char_length("sourceMessageId") <= 300 AND "sourceMessageId" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "sourceMessageId" !~ '[?&@%]' AND "sourceMessageId" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("sourceArtifactId" IS NULL OR (char_length("sourceArtifactId") <= 300 AND "sourceArtifactId" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "sourceArtifactId" !~ '[?&@%]' AND "sourceArtifactId" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("sourceLocator" IS NULL OR ("sourceLocator" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "sourceLocator" !~ '[?&@%]' AND "sourceLocator" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("supersedesEvidenceId" IS NULL OR (char_length("supersedesEvidenceId") <= 200 AND "supersedesEvidenceId" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "supersedesEvidenceId" !~ '[?&@%]' AND "supersedesEvidenceId" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("agreementReference" IS NULL OR (char_length("agreementReference") <= 300 AND "agreementReference" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "agreementReference" !~ '[?&@%]' AND "agreementReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("signatureEvidenceReference" IS NULL OR (char_length("signatureEvidenceReference") <= 500 AND "signatureEvidenceReference" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "signatureEvidenceReference" !~ '[?&@%]' AND "signatureEvidenceReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("payeeEntityReference" IS NULL OR (char_length("payeeEntityReference") <= 300 AND "payeeEntityReference" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "payeeEntityReference" !~ '[?&@%]' AND "payeeEntityReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]')) AND
+      ("externalTransactionReference" IS NULL OR (char_length("externalTransactionReference") <= 500 AND "externalTransactionReference" ~ '^[A-Za-z0-9._~:/#=-]+$' AND "externalTransactionReference" !~ '[?&@%]' AND "externalTransactionReference" !~* '(api[_-]?key|secret|authorization|bearer|password)[[:space:]]*[:=]'))
+    ),
+  CONSTRAINT "company_opportunity_evidence_no_fetchable_reference_check"
+    CHECK (
+      "claimKey" !~* '^(https?|ftp|file):' AND
+      "ingestionKey" !~* '^(https?|ftp|file):' AND
+      ("sourceThreadId" IS NULL OR "sourceThreadId" !~* '^(https?|ftp|file):') AND
+      ("sourceMessageId" IS NULL OR "sourceMessageId" !~* '^(https?|ftp|file):') AND
+      ("sourceArtifactId" IS NULL OR "sourceArtifactId" !~* '^(https?|ftp|file):') AND
+      ("sourceLocator" IS NULL OR "sourceLocator" !~* '^(https?|ftp|file):') AND
+      ("supersedesEvidenceId" IS NULL OR "supersedesEvidenceId" !~* '^(https?|ftp|file):') AND
+      ("agreementReference" IS NULL OR "agreementReference" !~* '^(https?|ftp|file):') AND
+      ("signatureEvidenceReference" IS NULL OR "signatureEvidenceReference" !~* '^(https?|ftp|file):') AND
+      ("payeeEntityReference" IS NULL OR "payeeEntityReference" !~* '^(https?|ftp|file):') AND
+      ("externalTransactionReference" IS NULL OR "externalTransactionReference" !~* '^(https?|ftp|file):')
     ),
   CONSTRAINT "company_opportunity_evidence_fingerprint_check"
     CHECK ("sourceFingerprintSha256" ~ '^[a-f0-9]{64}$'),
@@ -230,20 +269,25 @@ CREATE TABLE "company_opportunity_evidence" (
     CHECK (("verifiedAt" IS NULL) = ("verifiedByActorId" IS NULL)),
   CONSTRAINT "company_opportunity_evidence_approval_check"
     CHECK (
-      ("approvalState" = 'NEEDS_REVIEW' AND "approvedAt" IS NULL AND "approvedByActorId" IS NULL) OR
-      ("approvalState" IN ('APPROVED', 'REJECTED', 'REVOKED') AND
-       "approvedAt" IS NOT NULL AND "approvedByActorId" IS NOT NULL)
+      ("approvalState" = 'NEEDS_REVIEW' AND "approvedAt" IS NULL AND "approvedByActorId" IS NULL AND "revokedAt" IS NULL) OR
+      ("approvalState" IN ('APPROVED', 'REJECTED') AND
+       "approvedAt" IS NOT NULL AND "approvedByActorId" IS NOT NULL AND "revokedAt" IS NULL) OR
+      ("approvalState" = 'REVOKED' AND
+       "approvedAt" IS NOT NULL AND "approvedByActorId" IS NOT NULL AND "revokedAt" IS NOT NULL)
     ),
   CONSTRAINT "company_opportunity_evidence_approved_verification_check"
     CHECK (
-      "approvalState" <> 'APPROVED' OR
+      "approvalState" NOT IN ('APPROVED', 'REVOKED') OR
       ("verifiedAt" IS NOT NULL AND "verifiedByActorId" IS NOT NULL)
     ),
   CONSTRAINT "company_opportunity_evidence_temporal_check"
     CHECK (
       ("verifiedAt" IS NULL OR "verifiedAt" >= "sourceObservedAt") AND
+      ("approvedAt" IS NULL OR "approvedAt" >= "sourceObservedAt") AND
+      ("verifiedAt" IS NULL OR "approvedAt" IS NULL OR "approvedAt" >= "verifiedAt") AND
       ("reviewAfter" IS NULL OR "reviewAfter" >= "sourceObservedAt") AND
-      ("expiresAt" IS NULL OR "expiresAt" > "sourceObservedAt")
+      ("expiresAt" IS NULL OR "expiresAt" > "sourceObservedAt") AND
+      ("revokedAt" IS NULL OR "revokedAt" >= "approvedAt")
     ),
   CONSTRAINT "company_opportunity_evidence_disclosure_check"
     CHECK ("disclosureState" IN ('INTERNAL_ONLY', 'APPROVED_EXTERNAL', 'RESTRICTED')),

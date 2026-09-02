@@ -32,6 +32,7 @@ function evidence(
     verifiedAt: new Date("2026-09-01T13:00:00.000Z"),
     verifiedByActorId: "founder-1",
     approvalState: "APPROVED",
+    approvedAt: new Date("2026-09-01T14:00:00.000Z"),
     expiresAt: null,
     revokedAt: null,
     ...overrides,
@@ -411,6 +412,7 @@ describe("company opportunity truth contract", () => {
       verifiedAt: null,
       verifiedByActorId: null,
       approvalState: "NEEDS_REVIEW",
+      approvedAt: null,
       expiresAt: new Date("2026-09-02T11:00:00.000Z"),
     });
     const rejectedRevokedProvider = evidence({
@@ -452,6 +454,39 @@ describe("company opportunity truth contract", () => {
       wrongTruthExpiredAward,
       malformedExpiredEvidence,
     ], now)).toEqual(emptyCompanyOpportunityTruthRails);
+  });
+
+  it("requires timestamp proof that REVOKED evidence was approved before revocation", () => {
+    const revokedWithoutApprovalTime = evidence({
+      evidenceType: "PROVIDER_ACCEPTANCE",
+      sourceType: "EMAIL_PROVIDER_RECEIPT",
+      sourceReference: "email-provider-receipt://provider-revoked-without-prior-approval",
+      approvalState: "REVOKED",
+      approvedAt: null,
+      revokedAt: new Date("2026-09-02T11:00:00.000Z"),
+    });
+    const revokedAfterPriorApproval = {
+      ...evidence({
+        evidenceType: "PROVIDER_ACCEPTANCE",
+        sourceType: "EMAIL_PROVIDER_RECEIPT",
+        sourceReference: "email-provider-receipt://provider-valid-revocation",
+        approvalState: "REVOKED",
+        revokedAt: new Date("2026-09-02T11:00:00.000Z"),
+      }),
+      approvedAt: new Date("2026-09-02T10:00:00.000Z"),
+    } as CompanyOpportunityEvidenceQualification;
+    const approvedOnlyAfterRevocation = {
+      ...revokedAfterPriorApproval,
+      sourceReference: "email-provider-receipt://provider-invalid-revocation-order",
+      approvedAt: new Date("2026-09-02T11:30:00.000Z"),
+    } as CompanyOpportunityEvidenceQualification;
+
+    expect(deriveCompanyOpportunityTruthRails([revokedWithoutApprovalTime], now))
+      .toEqual(emptyCompanyOpportunityTruthRails);
+    expect(deriveCompanyOpportunityTruthRails([revokedAfterPriorApproval], now).provider)
+      .toBe("REVOKED");
+    expect(deriveCompanyOpportunityTruthRails([approvedOnlyAfterRevocation], now))
+      .toEqual(emptyCompanyOpportunityTruthRails);
   });
 
   it("rejects unrelated contract or cash payloads even on otherwise valid evidence", () => {

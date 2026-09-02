@@ -259,6 +259,21 @@ describe("company opportunity repository", () => {
     expect(repository.createCompanyOpportunitySchema.safeParse(createInput).success).toBe(true);
   });
 
+  it("rejects secret-like evidence claims and unsafe opaque references", () => {
+    for (const unsafe of [
+      { claimText: "Authorization: Bearer do-not-store-this" },
+      { sourceThreadId: "api_key=do-not-store-this" },
+      { sourceMessageId: "https://example.test/message" },
+    ]) {
+      expect(repository.appendCompanyOpportunityEvidenceSchema.safeParse({
+        ...providerEvidenceInput,
+        ...unsafe,
+      }).success).toBe(false);
+    }
+
+    expect(repository.appendCompanyOpportunityEvidenceSchema.safeParse(providerEvidenceInput).success).toBe(true);
+  });
+
   it("fails before persistence outside the configured first-party platform organization", async () => {
     await expect(
       repository.createCompanyOpportunity(session("clinic_owner", "customer-clinic", "org-customer"), createInput),
@@ -640,6 +655,8 @@ describe("company opportunity repository", () => {
     });
     const revokedProvider = persistedProviderEvidence({
       id: "provider-1",
+      approvalState: "REVOKED",
+      approvedAt: new Date("2026-09-01T13:00:00.000Z"),
       revokedAt: new Date("2026-09-01T15:00:00.000Z"),
       expiresAt: null,
       createdAt: new Date("2026-09-01T14:00:00.000Z"),
