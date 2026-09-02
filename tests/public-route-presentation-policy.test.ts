@@ -13,12 +13,12 @@ type Presentation = {
 type PresentationRegistry = typeof registry & {
   PUBLIC_ROUTE_PRESENTATION_POLICIES?: readonly Presentation[];
   resolvePublicRoutePresentation?: (pathname: string) => Presentation | null;
-  publicSitemapEntries?: readonly Array<{
+  publicSitemapEntries?: ReadonlyArray<{
     path: string;
     changeFrequency: string;
     priority: number;
   }>;
-  PUBLIC_PRIMARY_NAVIGATION?: readonly Array<{ label: string; href: string }>;
+  PUBLIC_PRIMARY_NAVIGATION?: ReadonlyArray<{ label: string; href: string }>;
   isPublicDirectDestination?: (href: string) => boolean;
 };
 
