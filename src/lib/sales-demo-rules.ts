@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
+import { commercialFabricOffers } from "@/lib/commercial/klinikos-commercial";
 
 export const productStatusLabels = [
   "Live",
@@ -11,48 +11,44 @@ export const productStatusLabels = [
   "Human review required",
 ] as const;
 
-export const demoOfferKeys = [
-  "private_workflow_demo",
-  "founding_clinic_evaluation",
-  "founding_clinic_program",
-] as const;
-
+export const demoOfferKeys = ["first_value", "deep_operating_audit", "proof_sprint"] as const;
 export const demoOfferSchema = z.enum(demoOfferKeys);
 export type DemoOfferKey = z.infer<typeof demoOfferSchema>;
-
-type CanonicalClinicCommercialOffer = (typeof clinicCommercialOffers)[keyof typeof clinicCommercialOffers];
 
 type DemoOffer = {
   name: string;
   priceCents: number;
   shortPrice: string;
-  creditForward: string;
   status: (typeof productStatusLabels)[number];
+  commercialRoute: "free_value" | "qualified_service";
+  rule: string;
 };
 
-function projectCommercialOffer(
-  offer: CanonicalClinicCommercialOffer,
-  status: DemoOffer["status"],
-): DemoOffer {
-  return {
-    name: offer.name,
-    priceCents: offer.priceCents,
-    shortPrice: offer.priceLabel,
-    creditForward: offer.creditForward,
-    status,
-  };
-}
-
-/**
- * Persisted/internal sales keys stay stable, but all customer-facing commercial
- * facts come from the single canonical Klinikos commercial catalog. Sales owns
- * only workflow-specific status semantics; it does not own another copy of price,
- * name, price label, or credit-forward terms.
- */
 export const demoOffers: Record<DemoOfferKey, DemoOffer> = {
-  private_workflow_demo: projectCommercialOffer(clinicCommercialOffers.privateWorkflowReview, "Demo"),
-  founding_clinic_evaluation: projectCommercialOffer(clinicCommercialOffers.foundingEvaluation, "Human review required"),
-  founding_clinic_program: projectCommercialOffer(clinicCommercialOffers.foundingImplementation, "Requires production review"),
+  first_value: {
+    name: "First Useful Result",
+    priceCents: 0,
+    shortPrice: "Free",
+    status: "Demo",
+    commercialRoute: "free_value",
+    rule: "Produce one legitimate bounded result before asking the customer to buy additional capability where policy permits.",
+  },
+  deep_operating_audit: {
+    name: commercialFabricOffers.deepOperatingAudit.name,
+    priceCents: commercialFabricOffers.deepOperatingAudit.priceCents,
+    shortPrice: commercialFabricOffers.deepOperatingAudit.priceLabel,
+    status: "Human review required",
+    commercialRoute: "qualified_service",
+    rule: "Independent scoped service. Offer only when the first-value evidence shows material operating complexity and an economic case.",
+  },
+  proof_sprint: {
+    name: commercialFabricOffers.proofSprint.name,
+    priceCents: commercialFabricOffers.proofSprint.priceCents,
+    shortPrice: commercialFabricOffers.proofSprint.priceLabel,
+    status: "Human review required",
+    commercialRoute: "qualified_service",
+    rule: "Independent bounded proof engagement. It is not a mandatory stage before software, implementation, or enterprise work.",
+  },
 };
 
 export const salesPainPoints = [
@@ -79,7 +75,6 @@ export const painPointKeys = salesPainPoints.map(([key]) => key) as [
 ];
 export const painPointSchema = z.enum(painPointKeys);
 export type SalesPainPoint = z.infer<typeof painPointSchema>;
-
 export const painPointLabel = Object.fromEntries(salesPainPoints) as Record<SalesPainPoint, string>;
 
 export const clinicTypeOptions = [
@@ -103,22 +98,8 @@ export const currentSystemsSchema = z.object({
 });
 
 /**
- * What a purchase actually requires.
- *
- * Creating the reservation and the server-owned checkout intent reads an email, a clinic
- * and contact name, an explicit acknowledgment, and an offer key whose price the server
- * owns. That is the whole dependency. Role, phone, provider count, location count,
- * current vendors, monthly software spend and a repeated pain-point selection were all
- * demanded before payment and none of them are read by either step — they were
- * consulting homework standing between a ready buyer and giving us money.
- *
- * `clinicType` and `biggestPainPoint` stay required because the Zumi operating interview
- * already carries them into this form; the buyer is not answering them twice.
- *
- * Everything else is optional here and collected after payment, during implementation
- * discovery, where it is genuinely useful. Optional means absent, not defaulted: writing
- * providerCount = 1 for a twelve-provider clinic invents a fact that would flow into
- * proposals and any later ROI claim, so an uncollected answer stays null.
+ * Public intake captures enough context to create a truthful first useful result.
+ * It does not require payment, commit a meeting, or force a customer into a service.
  */
 export const salesIntakeSchema = z.object({
   clinicName: z.string().trim().min(2).max(140),
@@ -127,9 +108,7 @@ export const salesIntakeSchema = z.object({
   clinicType: z.enum(clinicTypeOptions),
   biggestPainPoint: painPointSchema,
   acknowledgesSyntheticData: z.literal(true),
-  selectedOffer: demoOfferSchema.default("private_workflow_demo"),
-
-  // Collected after payment. Present when the buyer volunteered it, null otherwise.
+  selectedOffer: demoOfferSchema.default("first_value"),
   contactRole: z.string().trim().min(2).max(100).nullable().default(null),
   contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
   providerCount: z.number().int().min(1).max(10_000).nullable().default(null),
@@ -137,19 +116,13 @@ export const salesIntakeSchema = z.object({
   currentSystems: currentSystemsSchema.nullable().default(null),
   estimatedSoftwareSpendDollars: z.number().int().min(0).max(10_000_000).nullable().default(null),
   painPoints: z.array(painPointSchema).max(salesPainPoints.length).nullable().default(null),
-
-  wantsFreeIntro: z.boolean().default(false),
-  wantsPaidDemo: z.boolean().default(true),
-  wantsFoundingEvaluation: z.boolean().default(false),
-  wantsFoundingProgram: z.boolean().default(false),
+  wantsFirstValue: z.boolean().default(true),
+  wantsProof: z.boolean().default(false),
+  wantsDeepOperatingAudit: z.boolean().default(false),
+  wantsDeployment: z.boolean().default(false),
   website: z.string().max(0).optional(),
 }).strict();
 
-/**
- * The qualification a person is asked for after they have paid, when it informs
- * implementation rather than gating a purchase. Every field is optional: an unanswered
- * question stays unanswered.
- */
 export const salesQualificationSchema = z.object({
   contactRole: z.string().trim().min(2).max(100).nullable().default(null),
   contactPhone: z.string().trim().min(7).max(40).nullable().default(null),
@@ -161,47 +134,46 @@ export const salesQualificationSchema = z.object({
 }).strict();
 
 export type SalesQualification = z.infer<typeof salesQualificationSchema>;
-
 export type SalesIntake = z.infer<typeof salesIntakeSchema>;
 
+/**
+ * These states describe value progression, not a consulting package ladder.
+ * Historical rows may retain older strings; repository adapters treat those as
+ * evidence-only and new writes use these states.
+ */
 export const demoReservationStatuses = [
   "inquiry",
   "qualified",
-  "payment_pending",
-  "reserved",
-  "scheduled",
-  "completed",
-  "no_show",
-  "moved_to_evaluation",
-  "moved_to_founding",
+  "first_value_ready",
+  "first_value_delivered",
+  "paid_capability_review",
+  "proof_in_progress",
+  "measured",
+  "expansion_ready",
   "closed_lost",
 ] as const;
-
 export const demoReservationStatusSchema = z.enum(demoReservationStatuses);
 export type DemoReservationStatus = z.infer<typeof demoReservationStatusSchema>;
 
 export const demoPaymentStatuses = [
-  "not_started",
-  "manual_link_required",
+  "not_requested",
+  "scope_pending",
   "payment_pending",
   "payment_recorded",
-  "credited_forward",
   "waived",
   "refunded",
 ] as const;
-
 export const demoPaymentStatusSchema = z.enum(demoPaymentStatuses);
 
 const reservationTransitions: Record<DemoReservationStatus, readonly DemoReservationStatus[]> = {
   inquiry: ["qualified", "closed_lost"],
-  qualified: ["payment_pending", "reserved", "closed_lost"],
-  payment_pending: ["reserved", "closed_lost"],
-  reserved: ["scheduled", "closed_lost"],
-  scheduled: ["completed", "no_show", "closed_lost"],
-  completed: ["moved_to_evaluation", "moved_to_founding", "closed_lost"],
-  no_show: ["scheduled", "closed_lost"],
-  moved_to_evaluation: ["moved_to_founding", "closed_lost"],
-  moved_to_founding: [],
+  qualified: ["first_value_ready", "closed_lost"],
+  first_value_ready: ["first_value_delivered", "closed_lost"],
+  first_value_delivered: ["paid_capability_review", "measured", "closed_lost"],
+  paid_capability_review: ["proof_in_progress", "measured", "closed_lost"],
+  proof_in_progress: ["measured", "closed_lost"],
+  measured: ["expansion_ready", "closed_lost"],
+  expansion_ready: ["closed_lost"],
   closed_lost: ["qualified"],
 };
 
@@ -235,36 +207,12 @@ interface ScenarioInput {
 }
 
 const scenarioBlueprints: Partial<Record<SalesPainPoint, { title: string; summary: string; revenueLabel: string }>> = {
-  referrals: {
-    title: "The referral that never disappears",
-    summary: "A synthetic primary-care referral moves from order to partner acknowledgment, scheduling, returned consultation note, and staff follow-through.",
-    revenueLabel: "Referral leakage and repeat staff outreach",
-  },
-  injury_cases: {
-    title: "One injury case, every handoff visible",
-    summary: "A synthetic no-fault episode connects intake, missing forms, MRI, physical therapy, attorney contact, result review, and billing readiness.",
-    revenueLabel: "Case packet delay and unbilled work",
-  },
-  med_spa_leads: {
-    title: "From inquiry to booked treatment workflow",
-    summary: "A synthetic med-spa lead moves through response, consultation, consent, deposit placeholder, provider review, booking, and rebooking follow-up.",
-    revenueLabel: "Unbooked consultation and missed reactivation",
-  },
-  diagnostic_tracking: {
-    title: "Results move with an owner and a next step",
-    summary: "A synthetic imaging request shows capacity, manual delivery, report receipt, provider review, portal release control, and patient notification.",
-    revenueLabel: "Repeat calls and delayed result follow-through",
-  },
-  owner_visibility: {
-    title: "Every location, one operational pulse",
-    summary: "A synthetic multi-location clinic reveals overdue work, responsible staff, referral bottlenecks, result queues, and revenue risk in one owner view.",
-    revenueLabel: "Invisible backlog across locations",
-  },
-  staff_accountability: {
-    title: "Every task has an owner",
-    summary: "A synthetic patient journey turns verbal follow-up into assigned, time-bound, escalated work with an audit receipt.",
-    revenueLabel: "Unowned tasks and missed follow-up",
-  },
+  referrals: { title: "The referral that never disappears", summary: "A synthetic primary-care referral moves from order to partner acknowledgment, scheduling, returned consultation note, and staff follow-through.", revenueLabel: "Referral leakage and repeat staff outreach" },
+  injury_cases: { title: "One injury case, every handoff visible", summary: "A synthetic no-fault episode connects intake, missing forms, MRI, physical therapy, attorney contact, result review, and billing readiness.", revenueLabel: "Case packet delay and unbilled work" },
+  med_spa_leads: { title: "From inquiry to booked treatment workflow", summary: "A synthetic med-spa lead moves through response, consultation, consent, deposit placeholder, provider review, booking, and rebooking follow-up.", revenueLabel: "Unbooked consultation and missed reactivation" },
+  diagnostic_tracking: { title: "Results move with an owner and a next step", summary: "A synthetic imaging request shows capacity, manual delivery, report receipt, provider review, portal release control, and patient notification.", revenueLabel: "Repeat calls and delayed result follow-through" },
+  owner_visibility: { title: "Every location, one operational pulse", summary: "A synthetic multi-location clinic reveals overdue work, responsible staff, referral bottlenecks, result queues, and revenue risk in one owner view.", revenueLabel: "Invisible backlog across locations" },
+  staff_accountability: { title: "Every task has an owner", summary: "A synthetic patient journey turns verbal follow-up into assigned, time-bound, escalated work with an audit receipt.", revenueLabel: "Unowned tasks and missed follow-up" },
 };
 
 export function buildSyntheticDemoScenario(input: ScenarioInput) {
@@ -310,8 +258,8 @@ export function buildDemoRecapDraft(input: {
   return {
     painPoint: painPointLabel[input.biggestPainPoint],
     whatWasShown: [input.scenarioTitle, "Synthetic workflow command center", "Named owners and next actions", "Truthful integration and review states"],
-    workflowGaps: selected.map((label) => `${label}: validate the current owner, handoff, and completion evidence.`),
-    recommendedNextStep: `Review the draft with ${input.clinicName}, confirm the actual workflow, then decide whether an Implementation Blueprint is appropriate.`,
+    workflowGaps: selected.map((label) => `${label}: validate the current owner, handoff, baseline, and completion evidence.`),
+    recommendedNextStep: `Confirm ${input.clinicName}'s real workflow, produce one bounded useful result, measure what changed, and only then decide which governed paid capability—if any—is justified.`,
     estimatedValueAreas: ["Staff time recovered", "Fewer dropped follow-ups", "Faster billing readiness", "Clearer owner visibility"],
     productStatusSnapshot: [
       { label: "ClinicOS workflow foundation", status: "Live" },
@@ -319,8 +267,11 @@ export function buildDemoRecapDraft(input: {
       { label: "External vendor delivery", status: "Pending connection" },
       { label: "Clinical and financial decisions", status: "Human review required" },
     ],
-    priceOption: { name: demoOffers.founding_clinic_evaluation.name, priceCents: demoOffers.founding_clinic_evaluation.priceCents, creditForward: demoOffers.founding_clinic_evaluation.creditForward },
-    callToAction: "Invite the clinic to review an Implementation Blueprint after a human reviews this draft.",
+    priceOption: {
+      status: "not_selected",
+      rule: "No paid capability is selected automatically. Human review chooses an independent service, subscription, implementation, or enterprise route only after additional economic value is established.",
+    },
+    callToAction: "Record the first useful result and decide whether a scoped paid capability is justified. Do not schedule a meeting without founder approval.",
     status: "draft" as const,
     reviewStatus: "human_review_required" as const,
     draftedBy: "deterministic_fallback" as const,
