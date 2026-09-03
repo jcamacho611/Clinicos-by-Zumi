@@ -8,6 +8,18 @@ Describe the coherent product/engineering outcome this PR delivers.
 - What remains pending/external/manual?
 - What exact evidence proves the current state?
 
+## Execution traceability
+
+- **Requirement IDs:**
+- **Canon references:**
+- **Code disposition** (`REUSE / EXTEND / GENERALIZE / CONNECT / PARTNER / BUILD NEW`):
+- **Implementation-state change:**
+- **Commercial consequence** (or `N/A`):
+- **Authority / security / legal consequence** (or `N/A`):
+- **Expected evidence:**
+
+These fields are review context, not checkbox theater. Any applicable consequence omitted here must be resolved before merge.
+
 ## Frontend confidentiality / trade-secret boundary
 
 Read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before completing this section for any frontend, API, Zumi, Grid, Assurance/Quality, pricing, analytics, admin, integration, or client-visible change.
