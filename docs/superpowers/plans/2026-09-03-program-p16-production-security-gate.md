@@ -2,99 +2,32 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make production-PHI/security readiness a fail-closed, evidence-backed release decision that protects tenant boundaries, browser/AI/vendor data flows, secrets, dependencies, uploads, recovery, legal/vendor evidence, and future enterprise diligence without manufacturing compliance claims.
+**Goal:** Make production-PHI/security readiness a fail-closed, evidence-backed release decision that protects tenant boundaries, P01/P02 browser/API disclosure, Zumi/external-AI egress, dependencies, uploads, recovery, vendor/legal evidence, and enterprise diligence without manufacturing compliance claims.
 
-**Architecture:** Extend the current security substrate (`scripts/security/*`, existing auth/resource authorization, Zumi PHI-egress controls, Quality/deploy-contract, P00 traceability) with one subordinate machine-readable security evidence register, a dependency-free validator, and a pure production-readiness decision function. Unknown required evidence remains blocking. P16 records exact environment/control evidence and gates P01/P02 and every later PHI/enterprise program; it does not create another Canon and does not label Klinikos broadly compliant.
+**Architecture:** Extend the existing `scripts/security/*` chain, current server-side authorization/repository patterns, Zumi PHI-egress policy, Quality/deploy-contract, and P00 traceability. Add exactly one subordinate machine-readable security evidence register plus a dependency-free validator and a pure production-readiness evaluator. Unknown required evidence remains blocking for the capability that needs it; P16 does not create another Canon and does not broadly label Klinikos compliant.
 
-**Tech Stack:** Existing Node security scripts, Next.js 15.5.22, React 19.1.1, TypeScript 5.9.2, Prisma/PostgreSQL, Zod 4.0.17, current auth/session/authorization layers, existing Zumi policy/redaction/audit controls, Vitest, npm audit/SBOM-capable npm tooling, GitHub Actions Quality/deploy-contract.
+**Tech Stack:** Node built-ins for evidence validation, Next.js 15.5.22, React 19.1.1, TypeScript 5.9.2, Prisma/PostgreSQL, existing auth/RBAC/resource repositories, existing Zumi policy/redaction/audit controls, npm audit, Vitest, GitHub Actions Quality/deploy-contract.
 
 **Spec:** `docs/superpowers/specs/2026-09-03-program-p16-production-security-gate-design.md`
 
 ## Global Constraints
 
-- Real PHI is not enabled and Klinikos does not claim production PHI readiness merely because UI/schema/encryption/provider settings exist.
-- `PRODUCTION_VERIFIED` is scoped to an exact environment, data class, capability, provider/rail where applicable, evidence timestamp, and applicable control set.
+- Real PHI is not enabled merely because UI/schema/provider code exists.
+- `PRODUCTION_VERIFIED` is scoped to exact environment + data class + capability + provider/rail where applicable.
 - Unknown required evidence fails closed.
-- Do not create a second source of product/company law; P16 evidence is subordinate to P00 and the Master Canon.
-- Do not claim “HIPAA compliant,” “SOC 2 compliant,” “certified,” or equivalent broad status from internal tests alone.
-- Do not fabricate BAAs, DPAs, vendor attestations, backup/restore proof, WAF state, MFA state, or external deployment evidence.
-- Existing exact-head Quality, migration, browser, confidentiality, and deploy-contract gates may only be strengthened, never weakened.
-- P01 canvas/scene graphs count as browser surfaces and receive no confidentiality exemption.
-- P02 anonymous public text is potentially sensitive and must not be persisted/logged/telemetered as raw content.
-- `npm audit fix --force` is prohibited without a separate reviewed compatibility decision.
-- Prefer current CI, native tooling, and low-cost/open-source controls before paid security vendors.
-- Branch-protection documentation remains `MANUAL_ADMIN_ACTION_REQUIRED` until live GitHub API/ruleset evidence proves enforcement.
-- Every code task uses RED → GREEN TDD and ends with an independently reviewable commit.
+- Never claim “HIPAA compliant”, “SOC 2 compliant”, “certified”, or equivalent broad status from internal tests alone.
+- Never fabricate BAA/DPA/vendor, WAF, MFA, backup/restore, incident, or deployment evidence.
+- Existing Quality/migration/browser/confidentiality/deploy-contract gates may only be strengthened.
+- P01 canvas/scene code is a browser disclosure surface.
+- P02 raw anonymous public text is potentially sensitive.
+- Never run `npm audit fix --force` as automatic remediation.
+- Branch protection remains `MANUAL_ADMIN_ACTION_REQUIRED` until live GitHub evidence proves enforcement.
+- Prefer native/current/open-source controls before adding paid security vendors.
+- Every code task follows RED → GREEN and ends with an independently reviewable commit.
 
 ---
 
-### Task 1: Lock the RED security-evidence and production-readiness contract
-
-**Files:**
-- Create: `tests/security/production-security-gate-contract.test.ts`
-- Read: `scripts/security/browser-confidentiality-gate.mjs`
-- Read: `scripts/security/server-env-taint-gate.mjs`
-- Read: `scripts/security/api-disclosure-gate.mjs`
-- Read: `.github/workflows/quality.yml`
-- Read: `docs/governance/GITHUB_MAIN_PROTECTION.md`
-- Read: `docs/ZUMI.md`
-
-**Interfaces:**
-- Produces RED requirements for a security evidence register, validator, and runtime/readiness decision module.
-
-- [ ] **Step 1: Write failing contract tests**
-
-```ts
-import { existsSync, readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-
-const read = (path: string) => readFileSync(path, "utf8");
-
-describe("P16 production security gate contract", () => {
-  it("has one subordinate machine-readable security evidence register", () => {
-    expect(existsSync("docs/governance/KLINIKOS_SECURITY_EVIDENCE.json")).toBe(true);
-  });
-
-  it("validates security evidence in the existing security gate chain", () => {
-    expect(existsSync("scripts/security/validate-security-evidence.mjs")).toBe(true);
-    const pkg = JSON.parse(read("package.json"));
-    expect(pkg.scripts["security:evidence"]).toBe("node scripts/security/validate-security-evidence.mjs");
-    expect(pkg.scripts["security:check"]).toContain("security:evidence");
-  });
-
-  it("implements a fail-closed PHI production decision", () => {
-    expect(existsSync("src/lib/security/production-readiness.ts")).toBe(true);
-  });
-});
-```
-
-- [ ] **Step 2: Run RED**
-
-```bash
-npx vitest run tests/security/production-security-gate-contract.test.ts
-```
-
-Expected: FAIL because P16 evidence/decision artifacts do not exist.
-
-- [ ] **Step 3: Prove existing security baseline before edits**
-
-```bash
-npm run security:check
-npm run governance:traceability
-```
-
-Expected: PASS on the clean base.
-
-- [ ] **Step 4: Commit RED contract**
-
-```bash
-git add tests/security/production-security-gate-contract.test.ts
-git commit -m "test(security): lock P16 production gate contract"
-```
-
----
-
-### Task 2: Create the subordinate security evidence register and dependency-free validator
+### Task 1: Add the one subordinate security-evidence register and validator
 
 **Files:**
 - Create: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
@@ -103,29 +36,49 @@ git commit -m "test(security): lock P16 production gate contract"
 - Create: `tests/security/security-evidence-validator.test.ts`
 
 **Interfaces:**
-- Register control states:
-  - `NOT_EVALUATED`
-  - `BLOCKED`
-  - `PARTIAL`
-  - `TECHNICAL_EVIDENCE_GREEN`
-  - `EXTERNAL_EVIDENCE_REQUIRED`
-  - `LEGAL_REVIEW_REQUIRED`
-  - `PRODUCTION_APPROVAL_REQUIRED`
-  - `PRODUCTION_VERIFIED`
-  - `DEGRADED_OR_REVOKED`
-- Each record includes: `controlId`, `family`, `environments`, `dataClasses`, `capabilities`, `state`, `disposition`, `technicalEvidenceRefs`, `operationalEvidenceRefs`, `externalEvidenceRefs`, `legalEvidenceRefs`, `owner`, `lastVerifiedAt`, `expiresAt`, `blockerReason`, `allowedClaim`.
+- `SecurityEvidenceState = NOT_EVALUATED | BLOCKED | PARTIAL | TECHNICAL_EVIDENCE_GREEN | EXTERNAL_EVIDENCE_REQUIRED | LEGAL_REVIEW_REQUIRED | PRODUCTION_APPROVAL_REQUIRED | PRODUCTION_VERIFIED | DEGRADED_OR_REVOKED`
+- Each record has `controlId`, `family`, `environments`, `dataClasses`, `capabilities`, `state`, `technicalEvidenceRefs`, `operationalEvidenceRefs`, `externalEvidenceRefs`, `legalEvidenceRefs`, `owner`, `lastVerifiedAt`, `expiresAt`, `blockerReason`, `allowedClaim`.
 
-- [ ] **Step 1: Write RED validator mutation tests**
+- [ ] **Step 1: Write the RED validator tests**
 
-Require rejection of:
-- unknown state/family/data class;
-- duplicate `controlId`;
-- placeholder owner or evidence;
-- `PRODUCTION_VERIFIED` with empty technical evidence;
-- `PRODUCTION_VERIFIED` for PHI/external rail with required legal/vendor evidence empty;
-- future `lastVerifiedAt`;
-- expired evidence that still claims verified;
-- `allowedClaim` containing broad unsupported phrases such as `HIPAA compliant`, `SOC 2 compliant`, or `certified` without an exact external evidence class defined by the register.
+```ts
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+
+const canonical = "docs/governance/KLINIKOS_SECURITY_EVIDENCE.json";
+const validator = "scripts/security/validate-security-evidence.mjs";
+function run(path = canonical) {
+  return execFileSync(process.execPath, [validator, path], { encoding: "utf8" });
+}
+function mutate(mutator: (ledger: any) => void) {
+  const ledger = JSON.parse(readFileSync(canonical, "utf8"));
+  mutator(ledger);
+  const path = resolve(mkdtempSync(resolve(tmpdir(), "k-sec-")), "ledger.json");
+  writeFileSync(path, JSON.stringify(ledger));
+  return path;
+}
+
+describe("P16 security evidence", () => {
+  it("accepts the checked-in register", () => expect(run()).toContain("Security evidence valid"));
+  it("rejects duplicate control IDs", () => {
+    const path = mutate((l) => l.controls.push({ ...l.controls[0] }));
+    expect(() => run(path)).toThrow(/duplicate control/i);
+  });
+  it("rejects broad unsupported compliance claims", () => {
+    const path = mutate((l) => { l.controls[0].allowedClaim = "HIPAA compliant"; });
+    expect(() => run(path)).toThrow(/unsupported broad claim/i);
+  });
+  it("rejects PHI production verified without scoped evidence", () => {
+    const path = mutate((l) => {
+      l.controls[0] = { ...l.controls[0], dataClasses: ["PHI"], state: "PRODUCTION_VERIFIED", technicalEvidenceRefs: [], legalEvidenceRefs: [] };
+    });
+    expect(() => run(path)).toThrow(/PRODUCTION_VERIFIED/i);
+  });
+});
+```
 
 - [ ] **Step 2: Run RED**
 
@@ -133,73 +86,146 @@ Require rejection of:
 npx vitest run tests/security/security-evidence-validator.test.ts
 ```
 
-- [ ] **Step 3: Create an initial truthful register**
+Expected: FAIL because register/validator do not exist.
 
-Seed only observed/known controls. Examples:
-- existing browser confidentiality gate → `TECHNICAL_EVIDENCE_GREEN` with script/test refs;
-- existing API disclosure gate → `TECHNICAL_EVIDENCE_GREEN`;
-- existing server-env taint gate → `TECHNICAL_EVIDENCE_GREEN`;
-- production PHI overall → `BLOCKED` or `PARTIAL` until exact environment/vendor/legal/recovery evidence is present;
-- branch protection → `BLOCKED` / manual admin action with `docs/governance/GITHUB_MAIN_PROTECTION.md` evidence;
-- MFA/passkeys → `NOT_EVALUATED` or `BLOCKED` for privileged PHI use until implementation is verified;
-- backup/restore → `EXTERNAL_EVIDENCE_REQUIRED` unless exact provider/restore evidence already exists;
-- BAAs/DPAs → `EXTERNAL_EVIDENCE_REQUIRED` or `LEGAL_REVIEW_REQUIRED` unless exact signed evidence is available.
+- [ ] **Step 3: Create the initial truthful register**
 
-Do not populate a control as green based on assumptions.
+```json
+{
+  "version": "2026-09-03.1",
+  "status": "SUBORDINATE_SECURITY_EVIDENCE",
+  "authority": {
+    "parent": "docs/KLINIKOS_MASTER_CANON.md",
+    "traceability": "docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json",
+    "mayOverrideProductAuthority": false
+  },
+  "states": [
+    "NOT_EVALUATED", "BLOCKED", "PARTIAL", "TECHNICAL_EVIDENCE_GREEN",
+    "EXTERNAL_EVIDENCE_REQUIRED", "LEGAL_REVIEW_REQUIRED",
+    "PRODUCTION_APPROVAL_REQUIRED", "PRODUCTION_VERIFIED", "DEGRADED_OR_REVOKED"
+  ],
+  "dataClasses": ["PUBLIC", "INTERNAL_CONFIDENTIAL", "PII", "PHI", "SECRET", "CROWN_JEWEL"],
+  "controls": [
+    {
+      "controlId": "P16-BROWSER-CONFIDENTIALITY",
+      "family": "browser_disclosure",
+      "environments": ["repository"],
+      "dataClasses": ["INTERNAL_CONFIDENTIAL", "PII", "PHI", "SECRET", "CROWN_JEWEL"],
+      "capabilities": ["frontend"],
+      "state": "TECHNICAL_EVIDENCE_GREEN",
+      "technicalEvidenceRefs": ["scripts/security/browser-confidentiality-gate.mjs"],
+      "operationalEvidenceRefs": [], "externalEvidenceRefs": [], "legalEvidenceRefs": [],
+      "owner": "Security Engineering",
+      "lastVerifiedAt": "2026-09-03T00:00:00Z", "expiresAt": null,
+      "blockerReason": null,
+      "allowedClaim": "Repository browser-confidentiality source gate is implemented and passing at the cited candidate."
+    },
+    {
+      "controlId": "P16-PRODUCTION-PHI",
+      "family": "production_phi",
+      "environments": ["production"],
+      "dataClasses": ["PHI"],
+      "capabilities": ["clinical_phi"],
+      "state": "BLOCKED",
+      "technicalEvidenceRefs": [], "operationalEvidenceRefs": [], "externalEvidenceRefs": [], "legalEvidenceRefs": [],
+      "owner": "Security Engineering",
+      "lastVerifiedAt": null, "expiresAt": null,
+      "blockerReason": "Exact production database, tenant, access, audit, encryption, vendor/legal, recovery and operational evidence is incomplete.",
+      "allowedClaim": "Production PHI readiness is not yet verified."
+    }
+  ]
+}
+```
 
-- [ ] **Step 4: Implement dependency-free validator**
+Keep existing branch protection, MFA/passkey, backup/restore, BAA/DPA, and external provider items non-green unless exact evidence exists at execution time.
 
-Use Node built-ins only. Keep the register subordinate by requiring `authority.parent` to point to P00/Master Canon and rejecting any field that claims the register overrides product authority.
+- [ ] **Step 4: Implement the dependency-free validator**
 
-- [ ] **Step 5: Wire into existing security chain**
+```js
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-Add:
+const path = resolve(process.argv[2] ?? "docs/governance/KLINIKOS_SECURITY_EVIDENCE.json");
+const ledger = JSON.parse(readFileSync(path, "utf8"));
+const errors = [];
+const forbiddenClaims = /\b(?:HIPAA compliant|SOC ?2 compliant|certified)\b/i;
+const ids = new Set();
+
+for (const [index, c] of (ledger.controls ?? []).entries()) {
+  if (!c.controlId || ids.has(c.controlId)) errors.push(`duplicate control ${c.controlId ?? index}`);
+  ids.add(c.controlId);
+  if (!ledger.states?.includes(c.state)) errors.push(`${c.controlId}: unknown state`);
+  if (forbiddenClaims.test(c.allowedClaim ?? "")) errors.push(`${c.controlId}: unsupported broad claim`);
+  if (c.state === "PRODUCTION_VERIFIED") {
+    if (!Array.isArray(c.technicalEvidenceRefs) || c.technicalEvidenceRefs.length === 0) errors.push(`${c.controlId}: PRODUCTION_VERIFIED lacks technical evidence`);
+    if ((c.dataClasses ?? []).includes("PHI") &&
+        (!Array.isArray(c.operationalEvidenceRefs) || c.operationalEvidenceRefs.length === 0))
+      errors.push(`${c.controlId}: PRODUCTION_VERIFIED PHI lacks operational evidence`);
+  }
+}
+if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
+console.log(`Security evidence valid: ${ledger.version}`);
+```
+
+Extend this exact implementation with timestamp expiry/future-date, placeholder owner, and scoped legal/vendor evidence checks asserted by the tests; do not introduce a YAML twin.
+
+- [ ] **Step 5: Wire into the current security chain**
 
 ```json
 "security:evidence": "node scripts/security/validate-security-evidence.mjs"
 ```
 
-and append it to `security:check` without removing existing gates.
+Append `npm run security:evidence` to existing `security:check`; retain all existing browser/env/API checks.
 
-- [ ] **Step 6: Run GREEN**
+- [ ] **Step 6: Run GREEN and commit**
 
 ```bash
 npm run security:evidence
-npx vitest run tests/security/security-evidence-validator.test.ts tests/security/production-security-gate-contract.test.ts
-```
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add docs/governance/KLINIKOS_SECURITY_EVIDENCE.json scripts/security/validate-security-evidence.mjs package.json tests/security
+npx vitest run tests/security/security-evidence-validator.test.ts
+npm run security:check
+git add docs/governance/KLINIKOS_SECURITY_EVIDENCE.json scripts/security/validate-security-evidence.mjs package.json tests/security/security-evidence-validator.test.ts
 git commit -m "feat(security): add evidence-backed P16 register"
 ```
 
 ---
 
-### Task 3: Implement the pure fail-closed production-readiness decision function
+### Task 2: Implement the pure fail-closed production-readiness evaluator
 
 **Files:**
 - Create: `src/lib/security/production-readiness.ts`
 - Create: `tests/security/production-readiness.test.ts`
 
 **Interfaces:**
-- `DataClass = "PUBLIC" | "INTERNAL_CONFIDENTIAL" | "PII" | "PHI" | "SECRET" | "CROWN_JEWEL"`
-- `evaluateProductionReadiness(input: ProductionReadinessInput): ProductionReadinessDecision`
-- Decision states: `BLOCKED | PARTIAL | PRODUCTION_VERIFIED | DEGRADED_OR_REVOKED`
+- `evaluateProductionReadiness(input): ProductionReadinessDecision`
+- Decision state: `BLOCKED | PARTIAL | PRODUCTION_VERIFIED | DEGRADED_OR_REVOKED`.
 
-- [ ] **Step 1: Write RED decision-table tests**
+- [ ] **Step 1: Write RED decision tests**
 
-Cover:
-- all applicable evidence verified → `PRODUCTION_VERIFIED` for the exact scope only;
-- one required control unknown → `BLOCKED`;
-- required BAA missing for an external PHI rail → `BLOCKED`;
-- AI egress environment flag true but legal/vendor evidence absent → `BLOCKED`;
-- verified technical controls but production approval pending → `PARTIAL`;
-- expired/revoked evidence → `DEGRADED_OR_REVOKED`;
-- evidence for staging does not authorize production;
-- evidence for one provider/model does not authorize another;
-- public data capability may be released without PHI-specific controls when its own applicable set is green.
+```ts
+import { describe, expect, it } from "vitest";
+import { evaluateProductionReadiness } from "@/lib/security/production-readiness";
+
+const base = {
+  environment: "production",
+  dataClass: "PHI" as const,
+  capability: "zumi_phi",
+  provider: "provider-a",
+};
+
+describe("production readiness", () => {
+  it("blocks unknown required evidence", () => {
+    expect(evaluateProductionReadiness({ ...base, controls: [] }).state).toBe("BLOCKED");
+  });
+  it("does not let an environment flag replace BAA/vendor evidence", () => {
+    const d = evaluateProductionReadiness({ ...base, controls: [{ controlId: "egress", applicable: true, state: "TECHNICAL_EVIDENCE_GREEN" }] });
+    expect(d.state).not.toBe("PRODUCTION_VERIFIED");
+  });
+  it("does not reuse staging evidence in production", () => {
+    const d = evaluateProductionReadiness({ ...base, controls: [{ controlId: "x", applicable: false, state: "PRODUCTION_VERIFIED" }] });
+    expect(d.state).toBe("BLOCKED");
+  });
+});
+```
 
 - [ ] **Step 2: Run RED**
 
@@ -207,75 +233,51 @@ Cover:
 npx vitest run tests/security/production-readiness.test.ts
 ```
 
-- [ ] **Step 3: Implement a pure evaluator**
+- [ ] **Step 3: Implement exact pure types/evaluator**
 
-The evaluator takes explicit evidence records as input; do not import browser/client modules. It returns a decision plus blocking control IDs and the narrow allowed claim. It must never mutate evidence state.
+```ts
+export type ReadinessState = "BLOCKED" | "PARTIAL" | "PRODUCTION_VERIFIED" | "DEGRADED_OR_REVOKED";
+export type ReadinessControl = {
+  controlId: string;
+  applicable: boolean;
+  state: "NOT_EVALUATED" | "BLOCKED" | "PARTIAL" | "TECHNICAL_EVIDENCE_GREEN" |
+    "EXTERNAL_EVIDENCE_REQUIRED" | "LEGAL_REVIEW_REQUIRED" | "PRODUCTION_APPROVAL_REQUIRED" |
+    "PRODUCTION_VERIFIED" | "DEGRADED_OR_REVOKED";
+};
+export type ProductionReadinessDecision = { state: ReadinessState; blockers: string[] };
 
-- [ ] **Step 4: Run GREEN**
+export function evaluateProductionReadiness(input: {
+  environment: string;
+  dataClass: "PUBLIC" | "INTERNAL_CONFIDENTIAL" | "PII" | "PHI" | "SECRET" | "CROWN_JEWEL";
+  capability: string;
+  provider?: string;
+  controls: ReadinessControl[];
+}): ProductionReadinessDecision {
+  const applicable = input.controls.filter((c) => c.applicable);
+  if (applicable.length === 0) return { state: "BLOCKED", blockers: ["NO_APPLICABLE_EVIDENCE"] };
+  const degraded = applicable.filter((c) => c.state === "DEGRADED_OR_REVOKED");
+  if (degraded.length) return { state: "DEGRADED_OR_REVOKED", blockers: degraded.map((c) => c.controlId) };
+  const blockers = applicable.filter((c) => c.state !== "PRODUCTION_VERIFIED").map((c) => c.controlId);
+  if (blockers.length === 0) return { state: "PRODUCTION_VERIFIED", blockers: [] };
+  const hasTechnical = applicable.some((c) => c.state === "TECHNICAL_EVIDENCE_GREEN" || c.state === "PARTIAL");
+  return { state: hasTechnical ? "PARTIAL" : "BLOCKED", blockers };
+}
+```
+
+The caller—not this pure function—selects only controls whose environment/data/capability/provider scope exactly matches the requested operation. Tests must prove staging/provider-B evidence is not selected for production/provider-A.
+
+- [ ] **Step 4: Run GREEN and commit**
 
 ```bash
 npx vitest run tests/security/production-readiness.test.ts
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
+npm run type-check
 git add src/lib/security/production-readiness.ts tests/security/production-readiness.test.ts
-git commit -m "feat(security): fail closed on production PHI readiness"
+git commit -m "feat(security): fail closed on production readiness"
 ```
 
 ---
 
-### Task 4: Build the cross-tenant/context adversarial authorization suite
-
-**Files:**
-- Create: `tests/security/tenant-context-adversarial.test.ts`
-- Reuse current auth/session/tenant/resource fixtures/helpers discovered in existing tests
-- Modify production authorization code only when the new negative test exposes a real defect
-
-**Interfaces:**
-- Produces denial evidence across representative actors/objects without creating a parallel auth framework.
-
-- [ ] **Step 1: Enumerate current representative protected resources from the repository**
-
-Use existing implemented routes/entities in these families where available on current main: patient/encounter, appointment, task, referral, claim/billing, organization/clinic, Grid private action, file/export, and admin/company endpoints. Select at least five different resource families plus one list/search endpoint.
-
-- [ ] **Step 2: Write RED/verification matrix**
-
-For each selected family test:
-- wrong tenant ID substitution;
-- wrong Person/context;
-- stale/revoked membership fixture where supported;
-- role label without resource authority;
-- guessed object ID;
-- list/search does not reveal cross-tenant records;
-- export/download independently reauthorizes;
-- context switch recomputes access.
-
-Tests may initially pass; the purpose is to create persistent negative evidence. Any failure is a merge blocker and must be fixed in the owning authorization layer, not hidden in the test.
-
-- [ ] **Step 3: Run the suite**
-
-```bash
-npx vitest run tests/security/tenant-context-adversarial.test.ts
-```
-
-- [ ] **Step 4: Fix actual defects with the smallest owning-layer change**
-
-Never add client-side filtering as the security fix. Authorization must reject before returning the resource.
-
-- [ ] **Step 5: Re-run and commit**
-
-```bash
-npx vitest run tests/security/tenant-context-adversarial.test.ts
-npm run security:api-disclosure
-git add tests/security/tenant-context-adversarial.test.ts src
-git commit -m "test(security): prove tenant and context isolation"
-```
-
----
-
-### Task 5: Extend browser/API disclosure gates for P01/P02 and sensitive new client surfaces
+### Task 3: Extend the existing disclosure gates to P01 and P02
 
 **Files:**
 - Modify: `scripts/security/browser-confidentiality-gate.mjs`
@@ -284,102 +286,141 @@ git commit -m "test(security): prove tenant and context isolation"
 - Create: `tests/security/public-growth-disclosure.test.ts`
 
 **Interfaces:**
-- P01 scene DTOs and P02 continuation/public-result payloads become explicitly covered disclosure surfaces.
+- P01 `RealityProjection`/`RealityClientIntent` and P02 public Path/return-to payloads become first-class existing-gate targets.
 
-- [ ] **Step 1: Write RED leakage fixtures/tests**
+- [ ] **Step 1: Write leakage mutation tests**
 
-Mutation cases must fail when a client/scene/public response includes names such as:
-- `rankingWeight`
-- `eligibilityScore`
-- `hiddenPrompt`
-- `systemPrompt`
-- `riskWeight`
-- `internalMargin`
-- raw `prompt` continuation
-- raw ORM-style nested record spreads
-- server-only secret/env values.
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
-- [ ] **Step 2: Extend rules narrowly**
+const forbidden = [
+  "rankingWeight", "eligibilityScore", "hiddenPrompt", "systemPrompt",
+  "riskWeight", "internalMargin", "rawOrm", "process.env",
+];
 
-Add P01 `src/components/living-reality/**`, `src/lib/living-reality/**` client-safe outputs, P02 public/continuation DTOs, and new APIs to the existing rules rather than creating another disclosure scanner.
+describe("P01 browser disclosure", () => {
+  it("keeps proprietary/authority fields out of Living Reality client files", () => {
+    const files = [
+      "src/lib/living-reality/reality-projection.ts",
+      "src/lib/living-reality/reality-client-intent.ts",
+      "src/components/living-reality/living-reality-runtime.tsx",
+    ];
+    const source = files.map((f) => readFileSync(f, "utf8")).join("\n");
+    for (const value of forbidden) expect(source).not.toContain(value);
+  });
+});
+```
 
-- [ ] **Step 3: Prove positive safe cases**
+P02 test must assert `src/lib/distribution/public-continuation.ts`, public Path projections, signup/login return-to code, and any growth-event payload do not serialize raw prompt/email/patient/notes.
 
-Safe `RealityProjection`, public intent enums, and sanitized continuation fields must pass; do not create a rule so broad it bans legitimate display labels.
+- [ ] **Step 2: Extend the current gate rule lists**
 
-- [ ] **Step 4: Run GREEN**
+Add exact P01/P02 paths to the existing scanners and add field-name deny rules for the forbidden names above. Keep allowlisted display labels possible; do not ban generic words like `state` or `score` globally.
+
+- [ ] **Step 3: Run GREEN and commit**
 
 ```bash
 npm run security:client-boundary
 npm run security:api-disclosure
 npx vitest run tests/security/living-reality-disclosure.test.ts tests/security/public-growth-disclosure.test.ts
+git add scripts/security tests/security/living-reality-disclosure.test.ts tests/security/public-growth-disclosure.test.ts
+git commit -m "feat(security): gate P01 and P02 disclosure"
+```
+
+---
+
+### Task 4: Prove tenant/resource authorization on concrete clinical and scheduling boundaries
+
+**Files:**
+- Create: `tests/security/tenant-resource-adversarial.test.ts`
+- Reuse/modify only when a test exposes a defect:
+  - `src/app/api/appointments/route.ts`
+  - `src/lib/repositories/appointment-repository.ts`
+  - `src/lib/auth/api-authorization.ts`
+  - representative existing referral/billing/clinical repository selected by exact current-main path during task start
+
+**Interfaces:**
+- Existing appointment boundary is canonical evidence pattern: route obtains `session.organizationId`; repository query includes both `appointment.organizationId` and `patient.organizationId`; mutations use organization-scoped `findFirst/updateMany`.
+
+- [ ] **Step 1: Write the concrete appointment negative contract**
+
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+const route = readFileSync("src/app/api/appointments/route.ts", "utf8");
+const repo = readFileSync("src/lib/repositories/appointment-repository.ts", "utf8");
+
+describe("appointment tenant boundary", () => {
+  it("takes organization scope only from the authenticated clinic session", () => {
+    expect(route).toContain("listAppointmentsForOrganization(session.organizationId)");
+    expect(route).toContain("organizationId: session.organizationId");
+  });
+  it("scopes appointment and patient rows to the same organization", () => {
+    expect(repo).toContain("organizationId,");
+    expect(repo).toContain("patient: { organizationId }");
+    expect(repo).toContain("updateMany");
+  });
+});
+```
+
+- [ ] **Step 2: Add a mocked repository behavior test**
+
+Mock Prisma and call `listAppointmentsForOrganization("org-a")`; assert every `findMany/findFirst` where clause receives `org-a` and a guessed `org-b` patient/provider cannot be projected. Use the same mock style already used by repository tests in this repo; do not require a live production database.
+
+- [ ] **Step 3: Add two more concrete families after reading current main**
+
+At task start, select the currently implemented referral and billing/claim repositories that expose `...ForOrganization` functions. Add table-driven source + mocked behavior tests with the same invariant: authenticated organization is passed by the route and included in the repository where clause. If either family lacks an organization-scoped repository, the test is intentionally RED and the fix is to add one there—not client filtering.
+
+- [ ] **Step 4: Run and repair true defects**
+
+```bash
+npx vitest run tests/security/tenant-resource-adversarial.test.ts
+npm run security:api-disclosure
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/security tests/security/living-reality-disclosure.test.ts tests/security/public-growth-disclosure.test.ts
-git commit -m "feat(security): gate 3D and growth disclosure boundaries"
+git add tests/security/tenant-resource-adversarial.test.ts src/app/api src/lib/repositories src/lib/auth/api-authorization.ts
+git commit -m "test(security): prove tenant resource isolation"
 ```
 
 ---
 
-### Task 6: Prove Zumi/external-AI PHI egress remains fail-closed
+### Task 5: Prove Zumi/external-PHI egress stays fail-closed and dependency risk is explicit
 
 **Files:**
-- Read/modify the existing Zumi admission/policy/adapter files that enforce PHI egress
-- Modify: `docs/ZUMI.md` only if current implementation evidence changes
 - Create: `tests/security/zumi-phi-egress-adversarial.test.ts`
-- Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
-
-**Interfaces:**
-- Produces negative evidence for exact provider/model/environment PHI egress and records legal/external blockers separately from technical capability.
-
-- [ ] **Step 1: Write adversarial tests**
-
-Require denial when:
-- request contains PHI-class input and `ZUMI_PHI_EGRESS_APPROVED` is absent/false;
-- adapter BAA-required declaration is false/missing;
-- provider/model differs from the approved evidence scope;
-- user/client tries to override the gate;
-- prompt injection asks Zumi/tooling to expose hidden prompts, secrets, tenant data, or bypass human approval;
-- provider unavailable triggers a safe fallback rather than a silent provider substitution.
-
-- [ ] **Step 2: Run tests before changing implementation**
-
-```bash
-npx vitest run tests/security/zumi-phi-egress-adversarial.test.ts
-```
-
-If already green, retain existing implementation and record evidence. If a case fails, fix the server admission/policy layer.
-
-- [ ] **Step 3: Update evidence register narrowly**
-
-Technical gate can be green while external/legal state remains required. Do not upgrade the overall PHI capability to `PRODUCTION_VERIFIED` without exact BAA/vendor/deployment evidence.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add tests/security/zumi-phi-egress-adversarial.test.ts src docs/ZUMI.md docs/governance/KLINIKOS_SECURITY_EVIDENCE.json
-git commit -m "test(zumi): prove fail-closed PHI egress"
-```
-
----
-
-### Task 7: Investigate and remediate the three inherited high-severity dependency advisories safely
-
-**Files:**
-- Modify: `package.json` / `package-lock.json` only for targeted compatible remediation
 - Create: `docs/security/DEPENDENCY_RISK_REGISTER.md`
 - Create: `tests/security/dependency-risk-contract.test.ts`
+- Modify only if a failing test proves a defect: current Zumi admission/policy/adapter files
 - Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
+- Modify: `package.json` / `package-lock.json` only for targeted compatible dependency fixes
 
 **Interfaces:**
-- Produces exact advisory/package/path/exposure/decision evidence; no force upgrade.
+- External PHI requires exact provider/model/environment + egress approval + contractual/vendor evidence where applicable; no one flag is sufficient.
+- Every high/critical npm advisory must be `REMEDIATED | MITIGATED_WITH_EVIDENCE | BLOCKING`.
 
-- [ ] **Step 1: Capture exact current audit evidence**
+- [ ] **Step 1: Write Zumi denial tests before modifying policy**
 
-Run:
+```ts
+import { describe, expect, it } from "vitest";
+// Import the current server-side Zumi admission function discovered from docs/ZUMI.md.
+// Bind its exact current signature here before implementation edits.
+
+describe("Zumi PHI egress", () => {
+  it("denies PHI when deployment approval is absent", async () => {
+    // Call current admission with PHI-class input and ZUMI_PHI_EGRESS_APPROVED unset.
+    // Assert its existing denied/blocked result; never snapshot provider prompt text.
+  });
+});
+```
+
+During task start, replace the comments with the exact current admission function call after reading its module; this test file is committed only once it contains the real signature and assertion. Required cases: approval flag absent, BAA-required adapter evidence absent, provider/model mismatch, client override attempt, provider outage with no silent provider substitution, prompt injection requesting secrets/hidden prompts/other-tenant data.
+
+- [ ] **Step 2: Capture exact dependency evidence**
 
 ```bash
 npm ci --ignore-scripts
@@ -387,202 +428,153 @@ npm audit --json > /tmp/klinikos-npm-audit.json
 npm audit
 ```
 
-Record each high advisory ID, dependency path, affected range, patched range, direct/transitive status, and runtime vs dev/build exposure in `docs/security/DEPENDENCY_RISK_REGISTER.md`.
+Normalize each high/critical advisory into `docs/security/DEPENDENCY_RISK_REGISTER.md` with advisory ID, package, direct/transitive path, affected/patched range, runtime/build exposure, disposition, owner, review date.
 
-- [ ] **Step 2: Write a contract test that prevents silent regression**
+- [ ] **Step 3: Add dependency risk contract**
 
-The test should parse a checked-in normalized risk summary, not the volatile full npm audit output. It must require every high/critical advisory to have one of: `REMEDIATED`, `MITIGATED_WITH_EVIDENCE`, or `BLOCKING`, plus owner and review date.
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+const register = readFileSync("docs/security/DEPENDENCY_RISK_REGISTER.md", "utf8");
+describe("dependency risk register", () => {
+  it("does not leave high/critical findings without a disposition", () => {
+    expect(register).toMatch(/REMEDIATED|MITIGATED_WITH_EVIDENCE|BLOCKING/);
+    expect(register).not.toMatch(/\bTBD\b|\bTODO\b/);
+  });
+});
+```
 
-- [ ] **Step 3: Attempt minimal compatible upgrades one advisory at a time**
+- [ ] **Step 4: Apply only compatible targeted fixes**
 
-Use normal `npm install <package>@<patched-compatible-version>` or `overrides` only when dependency semantics justify it. After each change run targeted tests + `npm run build`.
-
-- [ ] **Step 4: Never force an unreviewed major upgrade**
-
-Do not run `npm audit fix --force`. If no safe compatible patch exists, keep the residual risk explicit with a mitigation/expiry and keep PHI production blocked if exploitability warrants it.
-
-- [ ] **Step 5: Run full security/build verification**
+For each advisory with a compatible patched version:
 
 ```bash
-npm run security:check
-npm run type-check
+npm install <exact-package>@<compatible-patched-version>
 npm test
 npm run build
+npm audit
 ```
 
-- [ ] **Step 6: Commit**
+Do not run `npm audit fix --force`. If no safe patch exists, keep it explicit and block the affected production capability if exploitability warrants it.
+
+- [ ] **Step 5: Run/commit**
 
 ```bash
-git add package.json package-lock.json docs/security/DEPENDENCY_RISK_REGISTER.md tests/security/dependency-risk-contract.test.ts docs/governance/KLINIKOS_SECURITY_EVIDENCE.json
-git commit -m "fix(security): reconcile inherited dependency advisories"
+npx vitest run tests/security/zumi-phi-egress-adversarial.test.ts tests/security/dependency-risk-contract.test.ts
+npm run security:check
+npm run build
+git add tests/security docs/security/DEPENDENCY_RISK_REGISTER.md docs/governance/KLINIKOS_SECURITY_EVIDENCE.json package.json package-lock.json src
+git commit -m "fix(security): reconcile AI egress and dependency risk"
 ```
 
 ---
 
-### Task 8: Gate uploads/file claims until quarantine and malware-scanning evidence is real
+### Task 6: Fail closed on unverified uploads, recovery, vendor/legal, MFA, and branch-protection evidence
 
 **Files:**
-- Discover current upload/file route and storage modules on current main
 - Create: `src/lib/security/upload-readiness.ts`
 - Create: `tests/security/upload-readiness.test.ts`
-- Modify upload routes only where they currently accept untrusted files without a safe gate
-- Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
-
-**Interfaces:**
-- `evaluateUploadReadiness({ dataClass, quarantine, typeValidation, malwareScan, storageAuthorization, audit }): UploadReadinessDecision`
-
-- [ ] **Step 1: Inventory active upload paths**
-
-Search source for `FormData`, multipart handlers, file/blob/storage APIs, document/image uploads, and signed upload URLs. Classify each path as public, internal, PII, PHI-capable, or inactive/demo.
-
-- [ ] **Step 2: Write RED/readiness tests**
-
-For PHI-capable/untrusted upload, require:
-- size/type validation;
-- quarantine before broad access;
-- malware/content scan state;
-- authorized storage;
-- independent read authorization;
-- audit;
-- retention/deletion state.
-
-If malware scanning is not implemented, decision must be `BLOCKED`/`EXTERNAL_EVIDENCE_REQUIRED`; UI/claims must not say files are scanned.
-
-- [ ] **Step 3: Implement fail-closed readiness evaluation**
-
-Do not buy a scanner in this task. Reuse existing provider scanning if verified; otherwise keep the relevant production feature blocked and record the cheapest viable future connection (for example a self-hosted/open-source scanner) as a strategy disposition, not as implemented truth.
-
-- [ ] **Step 4: Run tests and commit**
-
-```bash
-npx vitest run tests/security/upload-readiness.test.ts
-npm run security:check
-git add src/lib/security/upload-readiness.ts tests/security/upload-readiness.test.ts src docs/governance/KLINIKOS_SECURITY_EVIDENCE.json
-git commit -m "feat(security): fail closed on unverified upload safety"
-```
-
----
-
-### Task 9: Add backup/restore, incident-response, and vendor/legal evidence contracts without faking external proof
-
-**Files:**
 - Create: `docs/security/BACKUP_RESTORE_EVIDENCE.md`
 - Create: `docs/security/INCIDENT_RESPONSE_RUNBOOK.md`
 - Create: `docs/security/VENDOR_DATA_EVIDENCE_REGISTER.md`
 - Create: `tests/security/operational-evidence-contract.test.ts`
 - Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
+- Modify: `docs/governance/GITHUB_MAIN_PROTECTION.md` only if fresh live GitHub evidence changes it.
 
 **Interfaces:**
-- Produces operational evidence requirements and truthful external-evidence states; these docs do not themselves make the controls verified.
+- `evaluateUploadReadiness(input): { state: "BLOCKED" | "PRODUCTION_VERIFIED"; blockers: string[] }`
+- Missing scan/quarantine for untrusted PHI-capable uploads is blocking.
 
-- [ ] **Step 1: Write RED structural tests**
+- [ ] **Step 1: Write upload RED tests**
 
-Require the backup/restore evidence doc to contain exact fields for datastore/environment, backup source, schedule, retention, access control, restore procedure, restore test date, integrity result, RPO target, RTO target, owner, and evidence reference. Require `restore test date` to remain explicitly unverified when no actual test exists.
+```ts
+import { describe, expect, it } from "vitest";
+import { evaluateUploadReadiness } from "@/lib/security/upload-readiness";
 
-Require incident runbook sections for severity, intake/detection, containment, evidence preservation, credential/session revocation, notification decision path, recovery, post-incident review, and corrective-action tracking.
+describe("upload readiness", () => {
+  it("blocks an untrusted PHI upload without quarantine and malware scan", () => {
+    expect(evaluateUploadReadiness({
+      dataClass: "PHI", untrusted: true, sizeTypeValidated: true,
+      quarantined: false, malwareScanned: false, storageAuthorized: true, audited: true,
+    }).state).toBe("BLOCKED");
+  });
+});
+```
 
-Require vendor register fields for exact service/product, data classes, role, contract status, BAA/DPA state, retention/training terms, subprocessors/region where relevant, termination/export/deletion, owner, renewal/review date.
+- [ ] **Step 2: Implement pure upload evaluator**
 
-- [ ] **Step 2: Create docs from verified facts only**
+```ts
+export function evaluateUploadReadiness(i: {
+  dataClass: "PUBLIC" | "PII" | "PHI";
+  untrusted: boolean;
+  sizeTypeValidated: boolean;
+  quarantined: boolean;
+  malwareScanned: boolean;
+  storageAuthorized: boolean;
+  audited: boolean;
+}) {
+  const blockers = [
+    !i.sizeTypeValidated && "SIZE_TYPE_VALIDATION",
+    i.untrusted && !i.quarantined && "QUARANTINE",
+    i.untrusted && !i.malwareScanned && "MALWARE_SCAN",
+    !i.storageAuthorized && "STORAGE_AUTHORIZATION",
+    !i.audited && "AUDIT",
+  ].filter(Boolean) as string[];
+  return { state: blockers.length ? "BLOCKED" as const : "PRODUCTION_VERIFIED" as const, blockers };
+}
+```
 
-Where external facts are not available, write `EXTERNAL_EVIDENCE_REQUIRED` or `LEGAL_REVIEW_REQUIRED`; do not use `compliant`, `covered`, `certified`, or invented contract dates.
+Do not claim scanning exists unless an actual upload path has a verified scanner connection.
 
-- [ ] **Step 3: Add one tabletop scenario**
+- [ ] **Step 3: Create operational evidence templates with truthful states**
 
-Use a cross-tenant PHI exposure scenario with detection → containment → session/secret revocation → evidence preservation → legal/customer notification decision → recovery → postmortem. Label it `TABLETOP_PLAN` until actually executed; execution evidence is a separate future artifact.
+`BACKUP_RESTORE_EVIDENCE.md` must contain fields: environment/datastore, backup source, schedule, retention, access control, restore procedure, last restore-test date, integrity result, RPO target, RTO target, owner, evidence ref. Unknown external fields are literally `EXTERNAL_EVIDENCE_REQUIRED`, not guessed.
 
-- [ ] **Step 4: Run GREEN and commit**
+`INCIDENT_RESPONSE_RUNBOOK.md` must contain severity, detection/intake, containment, evidence preservation, session/credential revocation, notification decision path, recovery, post-incident review, corrective-action tracking. Include one `TABLETOP_PLAN` cross-tenant PHI scenario; do not call it executed.
+
+`VENDOR_DATA_EVIDENCE_REGISTER.md` must contain service/product, data classes, role, contract status, BAA/DPA state, retention/training terms, subprocessors/region where relevant, deletion/export/termination, owner, review date.
+
+- [ ] **Step 4: Add structural evidence tests**
+
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+describe("operational security evidence", () => {
+  it("does not manufacture restore/vendor proof", () => {
+    const backup = readFileSync("docs/security/BACKUP_RESTORE_EVIDENCE.md", "utf8");
+    const vendor = readFileSync("docs/security/VENDOR_DATA_EVIDENCE_REGISTER.md", "utf8");
+    expect(backup).toContain("restore-test");
+    expect(backup).toMatch(/EXTERNAL_EVIDENCE_REQUIRED|PRODUCTION_VERIFIED/);
+    expect(vendor).toMatch(/LEGAL_REVIEW_REQUIRED|EXTERNAL_EVIDENCE_REQUIRED|PRODUCTION_VERIFIED/);
+  });
+});
+```
+
+- [ ] **Step 5: Refresh branch/MFA truth**
+
+Re-query live GitHub main/rulesets. If protection is still absent, preserve `MANUAL_ADMIN_ACTION_REQUIRED`. Search current code for verified WebAuthn/passkey/MFA enforcement; if absent, record privileged-PHI stronger authentication as `BLOCKED`/`NOT_EVALUATED`, while leaving non-PHI free-Person capability independently evaluable.
+
+- [ ] **Step 6: Run/commit**
 
 ```bash
-npx vitest run tests/security/operational-evidence-contract.test.ts
+npx vitest run tests/security/upload-readiness.test.ts tests/security/operational-evidence-contract.test.ts
 npm run security:evidence
-git add docs/security tests/security/operational-evidence-contract.test.ts docs/governance/KLINIKOS_SECURITY_EVIDENCE.json
-git commit -m "docs(security): establish recovery incident and vendor evidence contracts"
+git add src/lib/security/upload-readiness.ts tests/security docs/security docs/governance/KLINIKOS_SECURITY_EVIDENCE.json docs/governance/GITHUB_MAIN_PROTECTION.md
+git commit -m "feat(security): gate uploads and operational evidence"
 ```
 
 ---
 
-### Task 10: Verify session/origin/rate/secret controls used by P02 and privileged paths
-
-**Files:**
-- Create: `tests/security/session-origin-abuse.test.ts`
-- Reuse current account/session, same-origin, admission/rate-limit, return-to, and secret config modules
-- Modify production code only when a new negative test exposes a defect
-
-**Interfaces:**
-- Produces negative evidence for session fixation, logout/revocation, safe redirects, CSRF/same-origin, enumeration, rate controls, and secret/client separation.
-
-- [ ] **Step 1: Add negative tests**
-
-Cover:
-- old session cookie cannot survive account/session rotation where the current design rotates;
-- logout clears appropriate auth state;
-- cross-origin state-changing account/continuation requests fail;
-- return-to rejects external/protocol-relative URLs;
-- public/account rate limits fail safely;
-- trusted proxy headers are ignored unless explicitly enabled;
-- client bundle/source cannot import server secret config;
-- user-controlled role/intent/continuation cannot widen authority.
-
-- [ ] **Step 2: Run and repair true defects**
-
-```bash
-npx vitest run tests/security/session-origin-abuse.test.ts
-```
-
-Fix the server-owned control, not the test expectation, for genuine vulnerabilities.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add tests/security/session-origin-abuse.test.ts src
-git commit -m "test(security): harden session origin and abuse controls"
-```
-
----
-
-### Task 11: Carry branch-protection truth and privileged-auth gap as explicit release risks
-
-**Files:**
-- Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
-- Modify: `docs/governance/GITHUB_MAIN_PROTECTION.md` only after fresh live GitHub evidence changes
-- Create: `tests/security/release-governance-truth.test.ts`
-
-**Interfaces:**
-- Produces truthful state for branch policy and stronger-auth readiness.
-
-- [ ] **Step 1: Re-query live GitHub branch/ruleset evidence during execution**
-
-If protection/rulesets still are not enforced, keep `MANUAL_ADMIN_ACTION_REQUIRED`. Do not change the state from documentation alone.
-
-- [ ] **Step 2: Record privileged-auth truth**
-
-If no MFA/passkey/WebAuthn implementation is found and verified, record privileged/PHI stronger-auth control as `BLOCKED` or `NOT_EVALUATED` according to scope. Do not block free public Person P02 merely because privileged clinical authentication is unfinished; do block any future capability whose risk profile requires it.
-
-- [ ] **Step 3: Write truth tests**
-
-The test must fail if the evidence register claims branch protection `PRODUCTION_VERIFIED` while `GITHUB_MAIN_PROTECTION.md` says manual action, or claims MFA verified without a concrete implementation/evidence ref.
-
-- [ ] **Step 4: Run and commit**
-
-```bash
-npx vitest run tests/security/release-governance-truth.test.ts
-npm run security:evidence
-git add docs/governance tests/security/release-governance-truth.test.ts
-git commit -m "docs(security): preserve release governance truth"
-```
-
----
-
-### Task 12: Run the full P16 gate, reconcile P00 traceability, and capture exact-head evidence
+### Task 7: Run the full P16 gate and reconcile exact-head truth
 
 **Files:**
 - Modify: `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json`
 - Modify: `docs/governance/KLINIKOS_SECURITY_EVIDENCE.json`
-- Reuse the current release/evidence registry and Quality workflow
+- Reuse existing Quality/release evidence; do not create another release registry.
 
 **Interfaces:**
-- Produces final W0/W1 P16 evidence state without converting unknown external evidence into false green claims.
+- Produces exact P16 state and blockers for P01/P02 and future PHI/enterprise programs.
 
 - [ ] **Step 1: Run complete local verification**
 
@@ -599,19 +591,21 @@ npm run test:mvp
 npm run build
 ```
 
-All applicable checks must pass.
+- [ ] **Step 2: Search for unsupported broad claims**
 
-- [ ] **Step 2: Update P00 traceability with implemented P16 controls**
+```bash
+grep -RInE 'HIPAA compliant|SOC ?2 compliant|certified|production ready' docs src governance || true
+```
 
-Record new tests/gates, exact residual blockers, operational/external evidence states, and the security consequence for P01/P02. Keep production-PHI implementation state scoped and truthful.
+Review every match. Historical quoted/negative text may remain clearly marked; active unsupported claims are corrected to exact evidence-backed wording.
 
-- [ ] **Step 3: Push final candidate and require exact-head GitHub Quality**
+- [ ] **Step 3: Update P00/P16 machine evidence**
 
-Both `Quality / verify` and `Quality / deploy-contract` must be green on the same final SHA. A prior green SHA is not release evidence.
+Populate exact test/evidence refs, residual blockers, environment scope, and implementation state. Public/P01/P02 non-PHI capabilities may be green even while production PHI remains blocked; do not collapse them.
 
-- [ ] **Step 4: Final claim review**
+- [ ] **Step 4: Push final candidate and require exact-head GitHub Quality**
 
-Search changed docs/UI for unsupported broad phrases (`HIPAA compliant`, `SOC 2 compliant`, `certified`, `production ready`) and replace them with exact verified control statements or explicit remaining evidence requirements.
+Both `Quality / verify` and `Quality / deploy-contract` must pass on the same final SHA.
 
 - [ ] **Step 5: Commit evidence reconciliation**
 
@@ -624,16 +618,14 @@ git commit -m "docs(governance): record P16 security evidence"
 
 P16's W0/W1 tranche is complete only when:
 
-1. one subordinate security evidence register is machine-validated and wired into `security:check`;
-2. production readiness is fail-closed by exact environment/data/capability/provider evidence;
-3. cross-tenant/context negative tests cover representative protected resources;
-4. P01 scene and P02 continuation/public surfaces are covered by confidentiality/API disclosure gates;
-5. Zumi PHI egress remains fail-closed and legal/vendor evidence stays separate from technical capability;
-6. inherited high advisories are remediated or explicitly risk-classified without force-upgrade theater;
-7. PHI-capable untrusted upload claims remain blocked until quarantine/scanning evidence is real;
-8. backup/restore, incident, and vendor/legal evidence requirements are explicit and truthful;
-9. session/origin/rate/redirect/secret negative controls are tested;
-10. branch protection and MFA/passkey state are represented as actually verified, not aspirational;
-11. no broad compliance/certification claim exceeds evidence;
-12. exact-head Quality/deploy-contract are green;
-13. unknown external/legal/operational evidence remains blocking for the exact capabilities that require it, without unnecessarily blocking public/free-Person functionality that does not use PHI.
+1. one subordinate machine-readable security evidence register is validated inside `security:check`;
+2. production readiness fails closed by exact environment/data/capability/provider evidence;
+3. P01 scene and P02 continuation/public surfaces are covered by existing confidentiality/API-disclosure gates;
+4. tenant/resource negative evidence covers concrete appointment plus referral and billing/claim families;
+5. Zumi external-PHI egress remains fail-closed and legal/vendor evidence is separate from technical capability;
+6. high/critical dependency advisories are remediated or explicitly risk-classified without force-upgrade theater;
+7. untrusted PHI-capable upload claims remain blocked until quarantine/scanning evidence is real;
+8. backup/restore, incident, vendor/legal, branch-protection, and privileged-auth evidence are truthful;
+9. no broad compliance/certification claim exceeds evidence;
+10. exact-head Quality/deploy-contract are green;
+11. unknown regulated evidence blocks only the capabilities that require it rather than unnecessarily blocking public/free-Person non-PHI functionality.
