@@ -59,6 +59,8 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Validate execution traceability
+        run: npm run governance:traceability
       - name: Source confidentiality gates
         run: npm run security:check
       - name: Install dependencies
