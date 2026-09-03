@@ -74,6 +74,15 @@ describe("P00 execution traceability governance", () => {
     expect(existsSync(yamlLedger)).toBe(false);
   });
 
+  it("keeps the active execution router on JSON and retires YAML as machine authority", () => {
+    const engine = read(
+      resolve(root, "docs/superpowers/plans/2026-09-03-klinikos-master-execution-engine.md"),
+    );
+    expect(engine).toContain("`docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json`");
+    expect(engine).not.toContain("`docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.yaml`");
+    expect(engine).toContain("earlier YAML transport is retired");
+  });
+
   it("keeps the approved commercial and authority laws machine-readable", () => {
     const ledger = JSON.parse(read(jsonLedger));
     expect(ledger.commercialLaws.personAccount).toBe("FREE");
