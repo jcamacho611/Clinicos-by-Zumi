@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   canStartDirectCommercialCheckout,
+  commercialProducts,
   getCommercialProduct,
 } from "@/lib/commercial/product-catalog";
 
@@ -13,23 +14,17 @@ function requireOffer(key: string) {
 }
 
 describe("governed direct commercial checkout", () => {
-  it("allows the fixed $500 Clinic Operating Analysis direct checkout path", () => {
-    expect(canStartDirectCommercialCheckout(requireOffer("operational_audit"))).toBe(true);
+  it("blocks the retired $500 Clinic Operating Analysis from new direct checkout", () => {
+    const audit = requireOffer("operational_audit");
+    expect(audit.lifecycle).toBe("retired");
+    expect(audit.publicPurchasable).toBe(false);
+    expect(audit.directPublicCheckoutEligible).toBe(false);
+    expect(canStartDirectCommercialCheckout(audit)).toBe(false);
   });
 
-  it("blocks qualified, starting-at, recurring-reviewed, enterprise, and historical offers from blind direct checkout", () => {
-    for (const key of [
-      "implementation_blueprint",
-      "founding_clinic_implementation",
-      "clinic_core",
-      "clinic_growth",
-      "clinic_scale",
-      "clinic_enterprise",
-      "clinic_operator",
-      "grid_professional",
-      "grid_facility",
-    ]) {
-      expect(canStartDirectCommercialCheckout(requireOffer(key)), key).toBe(false);
+  it("blocks every currently registered non-direct or historical offer from blind direct checkout", () => {
+    for (const offer of commercialProducts) {
+      expect(canStartDirectCommercialCheckout(offer), offer.key).toBe(false);
     }
   });
 
