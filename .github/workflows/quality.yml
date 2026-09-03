@@ -61,6 +61,9 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
+      # Native Node + checked-in JSON only, so governance can fail before dependency install.
+      - name: Validate execution traceability
+        run: npm run governance:traceability
       - name: Install dependencies
         run: npm ci --ignore-scripts
       - name: Generate Prisma client
