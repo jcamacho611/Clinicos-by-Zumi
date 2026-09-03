@@ -1,16 +1,21 @@
 # GitHub `main` Protection Contract
 
-Status: `MANUAL_ADMIN_ACTION_REQUIRED`  
-Observed: `2026-09-03`  
-Repository: `jcamacho611/Clinicos-by-Zumi`
+**Authority:** operational governance evidence; subordinate to the Master Canon.  
+**Current enforcement state:** `MANUAL_ADMIN_ACTION_REQUIRED`  
+**Observed at:** `2026-09-03T09:26:34Z`  
+**Repository:** `jcamacho611/Clinicos-by-Zumi`  
+**Branch:** `main`
 
 ## Current verified state
 
-GitHub repository evidence observed during P00 execution shows:
+Live GitHub repository evidence observed during P00 execution shows:
 
 - branch `main` reports `protected: false`;
+- branch protection metadata in the branch payload reports `enabled: false` and required-status enforcement `off` with no required checks;
 - repository rulesets endpoint returns an empty collection (`[]`);
-- the existing `Quality` workflow is real and executes `verify` and `deploy-contract`, but GitHub branch-level policy does **not currently require** those checks before `main` can change.
+- direct `GET /repos/jcamacho611/Clinicos-by-Zumi/branches/main/protection` returned `403 Resource not accessible by integration`, so this connected integration cannot independently inspect protected-rule details through that endpoint;
+- the existing `Quality` workflow is real and executes `verify` and `deploy-contract`, but GitHub branch-level policy does **not currently require** those checks before `main` can change;
+- `main` was observed at `7eb82612e1c7a8089daded85642da4fdf4b427d4` during this evidence refresh.
 
 A strong CI workflow is not the same as enforced branch protection. This document is evidence and an operator contract; it does not claim the repository setting has been changed.
 
@@ -29,13 +34,23 @@ Required controls:
 7. Configure stale-approval/status behavior using the strongest repository-supported settings that do not create a deadlock for the current team size.
 8. Preserve the existing Quality workflow; protection must enforce it, not replace or weaken it.
 
+## Live evidence
+
+Evidence sources for this observation:
+
+- `/repos/jcamacho611/Clinicos-by-Zumi/branches/main` → `protected: false`, protection disabled, required-status enforcement off;
+- `/repos/jcamacho611/Clinicos-by-Zumi/rulesets` → `[]`;
+- `/repos/jcamacho611/Clinicos-by-Zumi/branches/main/protection` → `403 Resource not accessible by integration`.
+
+The `403` is an integration-access limitation, not evidence that protection exists. The branch payload and empty ruleset result are the evidence for the current unprotected state.
+
 ## Operator action required
 
 The connected GitHub capability used during P00 can read branch/ruleset state but does not expose an administrative branch-protection/ruleset write action. Therefore the repository setting remains an external administrative action.
 
 In GitHub repository settings, create a branch protection rule or repository ruleset targeting `main` with the controls above. Select the actual check names shown by GitHub for the current `Quality` workflow rather than guessing names from documentation.
 
-After the setting is applied, P00 must re-query both the `main` branch and repository rulesets/branch-protection evidence. Only then may this document move from `MANUAL_ADMIN_ACTION_REQUIRED` to an enforced/verified state.
+After the setting is applied, P00 must re-query the `main` branch and repository ruleset/protection evidence. Only then may this document move from `MANUAL_ADMIN_ACTION_REQUIRED` to an enforced/verified state.
 
 ## Break-glass evidence contract
 
