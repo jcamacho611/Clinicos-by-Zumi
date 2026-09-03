@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { clinicActivationDraftFieldsSchema, clinicActivationSchema, clinicCheckoutRequestSchema } from "@/lib/commercial/clinic-activation-rules";
 import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
-import { getCommercialProduct } from "@/lib/commercial/product-catalog";
+import { canStartNewCommercialCheckout, getCommercialProduct } from "@/lib/commercial/product-catalog";
 import { findBannedPublicCopy } from "@/lib/design/command-system";
 
 function read(relative: string) {
@@ -22,25 +22,34 @@ function publicPageFiles(root = path.join(process.cwd(), "src", "app")): string[
 }
 
 describe("Klinikos MVP commercial activation", () => {
-  it("keeps clinic plan prices server-owned while reviewed subscriptions stay sellable but not direct-public", () => {
+  it("keeps historical clinic plan prices server-owned while retiring them from new sales", () => {
     expect(getCommercialProduct("clinic_core")?.priceCents).toBe(clinicPlans.core.monthlyPriceCents);
     expect(getCommercialProduct("clinic_growth")?.priceCents).toBe(clinicPlans.growth.monthlyPriceCents);
     expect(getCommercialProduct("clinic_scale")?.priceCents).toBe(clinicPlans.scale.monthlyPriceCents);
 
     for (const key of ["clinic_core", "clinic_growth", "clinic_scale"] as const) {
-      expect(getCommercialProduct(key)).toMatchObject({
+      const product = getCommercialProduct(key);
+      expect(product).toMatchObject({
         commercialRoute: "recurring_reviewed",
         qualificationRequired: true,
-        publicPurchasable: true,
+        lifecycle: "retired",
+        publicPurchasable: false,
         directPublicCheckoutEligible: false,
       });
+      expect(product && canStartNewCommercialCheckout(product)).toBe(false);
     }
     expect(getCommercialProduct("clinic_operator")?.publicPurchasable).toBe(false);
     expect(getCommercialProduct("clinic_operator")?.directPublicCheckoutEligible).toBe(false);
   });
 
-  it("accepts only the named purchasable clinic plans at the activation desk boundary", () => {
-    expect(clinicCheckoutRequestSchema.safeParse({ clinicName: "Northstar Clinic", email: "owner@example.com", productKey: "clinic_core" }).success).toBe(true);
+  it("keeps the legacy clinic-plan request parser narrow without making retired plans newly sellable", () => {
+    const parsed = clinicCheckoutRequestSchema.safeParse({
+      clinicName: "Northstar Clinic",
+      email: "owner@example.com",
+      productKey: "clinic_core",
+    });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && canStartNewCommercialCheckout(getCommercialProduct(parsed.data.productKey)!)).toBe(false);
     expect(clinicCheckoutRequestSchema.safeParse({ clinicName: "Northstar Clinic", email: "owner@example.com", productKey: "clinic_operator" }).success).toBe(false);
     expect(clinicCheckoutRequestSchema.safeParse({ clinicName: "Northstar Clinic", email: "owner@example.com", productKey: "grid_professional" }).success).toBe(false);
   });
@@ -107,16 +116,12 @@ describe("Klinikos MVP commercial activation", () => {
     const source = read("src/app/api/onboarding/organizations/route.ts");
     expect(source).toContain('process.env.NODE_ENV !== "production"');
     expect(source).toContain("KLINIKOS_SYNTHETIC_WORKSPACE_CREATION");
-    // This endpoint was hardened to stop returning any workspace detail at all, so the
-    // old `productionAccessActivated: false` field no longer exists — not because the
-    // guarantee weakened, but because the response body it lived in was removed. Assert
-    // the guarantees that actually protect the endpoint instead of one disclosed field.
     expect(source).toContain("PRIVATE_NO_STORE_HEADERS");
     expect(source).not.toMatch(/organizationId:|organizationSlug:|trialEndsAt:/);
     expect(source).toMatch(/RateLimit/);
   });
 
-  it("requires exact-value GoDaddy paylinks for Core, Growth, and Scale instead of falling back to the audit link", () => {
+  it("keeps historical GoDaddy clinic-plan paylink mappings available for reconciliation without making those offers active", () => {
     const source = read("src/lib/commercial/payment-connectors/godaddy.ts");
     const env = read(".env.example");
     expect(source).toContain('clinic_core: "KLINIKOS_GODADDY_CORE_PAYLINK"');
@@ -127,6 +132,11 @@ describe("Klinikos MVP commercial activation", () => {
     expect(env).toContain('KLINIKOS_GODADDY_CORE_PAYLINK=""');
     expect(env).toContain('KLINIKOS_GODADDY_GROWTH_PAYLINK=""');
     expect(env).toContain('KLINIKOS_GODADDY_SCALE_PAYLINK=""');
+    for (const key of ["clinic_core", "clinic_growth", "clinic_scale"] as const) {
+      const product = getCommercialProduct(key);
+      expect(product?.lifecycle).toBe("retired");
+      expect(product && canStartNewCommercialCheckout(product)).toBe(false);
+    }
   });
 
   it("redirects the old capability encyclopedia into the plain-English product explanation", () => {
