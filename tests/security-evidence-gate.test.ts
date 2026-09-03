@@ -66,6 +66,16 @@ describe("P16 security evidence release authority", () => {
     expect(runGate()).toContain("Klinikos security evidence valid: 2026-09-03.1");
   });
 
+  it("makes security evidence part of the existing release-security chain", () => {
+    const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+    const quality = readFileSync(resolve(root, ".github/workflows/quality.yml"), "utf8");
+    expect(pkg.scripts["security:evidence"]).toBe("node scripts/security/security-evidence-gate.mjs");
+    expect(pkg.scripts["security:check"]).toBe(
+      "npm run security:client-boundary && npm run security:env-boundary && npm run security:api-disclosure && npm run security:evidence",
+    );
+    expect(quality).toContain("npm run security:check");
+  });
+
   it("keeps production PHI fail-closed in W1", () => {
     const evidence = readEvidence();
     const phi = control(evidence, "P16-PRODUCTION-PHI");
