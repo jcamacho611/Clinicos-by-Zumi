@@ -119,6 +119,20 @@ describe("P00 execution traceability governance", () => {
     expect(`${result.stdout}${result.stderr}`).toContain("Duplicate program id: P00");
   });
 
+  it("rejects hard dependency cycles", () => {
+    const result = validateFixture((ledger) => {
+      const p00 = ledger.programs.find((program) => program.id === "P00");
+      const p01 = ledger.programs.find((program) => program.id === "P01");
+      if (!p00 || !p01) throw new Error("P00/P01 fixtures are required");
+      p00.dependencies = ["P01"];
+      p01.dependencies = ["P00"];
+    });
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      "Program dependency cycle detected: P00 -> P01 -> P00",
+    );
+  });
+
   it("rejects requirements routed to a non-existent program", () => {
     const result = validateFixture((ledger) => {
       ledger.requirements.push({
