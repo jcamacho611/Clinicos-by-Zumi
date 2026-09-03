@@ -1,5 +1,18 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const dbMocks = vi.hoisted(() => ({
+  appointmentFindMany: vi.fn(),
+}));
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db", () => ({
+  db: {
+    appointment: { findMany: dbMocks.appointmentFindMany },
+  },
+}));
+
+import { listAppointmentsForOrganization } from "@/lib/repositories/appointment-repository";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -21,6 +34,21 @@ describe("P16 concrete tenant/resource boundaries", () => {
       "where: { id: current.id, organizationId: input.organizationId, status: current.status }",
     );
     expect(appointmentRepository).toContain("updateMany");
+  });
+
+  it("executes appointment reads with appointment and patient organization scope", async () => {
+    dbMocks.appointmentFindMany.mockResolvedValueOnce([]);
+
+    await listAppointmentsForOrganization("org-a");
+
+    expect(dbMocks.appointmentFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: "org-a",
+          patient: { organizationId: "org-a" },
+        }),
+      }),
+    );
   });
 
   it("requires referral source/destination authority instead of trusting a destination identifier alone", () => {
