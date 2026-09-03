@@ -1,0 +1,14 @@
+// Aggregate-only public growth evidence. This table intentionally stores no
+// row-level visitor identity or free-form interaction content.
+model PublicGrowthDailyCounter {
+  day       DateTime @db.Date
+  eventType String
+  pathId    String   @default("")
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(3)
+
+  @@id([day, eventType, pathId], map: "public_growth_daily_counters_pkey")
+  @@index([eventType, day], map: "public_growth_daily_counters_event_day_idx")
+  @@map("public_growth_daily_counters")
+}
