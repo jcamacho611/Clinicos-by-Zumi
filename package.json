@@ -17,7 +17,8 @@
     "security:client-boundary": "node scripts/security/browser-confidentiality-gate.mjs",
     "security:env-boundary": "node scripts/security/server-env-taint-gate.mjs",
     "security:api-disclosure": "node scripts/security/api-disclosure-gate.mjs",
-    "security:check": "npm run security:client-boundary && npm run security:env-boundary && npm run security:api-disclosure",
+    "security:evidence": "node scripts/security/validate-security-evidence.mjs",
+    "security:check": "npm run security:client-boundary && npm run security:env-boundary && npm run security:api-disclosure && npm run security:evidence",
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate",
@@ -59,7 +60,7 @@
   "devDependencies": {
     "@types/node": "^22.17.1",
     "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
+    "@types/react-dom": "^19.1.1",
     "eslint": "^9.33.0",
     "eslint-config-next": "15.5.22",
     "postcss": "8.5.25",
