@@ -93,6 +93,7 @@ function launchChrome(label) {
   const process = spawn(chrome, [
     "--headless=new",
     "--no-sandbox",
+    "--disable-gpu",
     "--disable-dev-shm-usage",
     "--hide-scrollbars",
     "--remote-debugging-pipe",
