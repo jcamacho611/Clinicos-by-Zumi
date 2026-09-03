@@ -33,6 +33,10 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
       DIRECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/klinikos_ci?schema=public
+    # A real Postgres so migrations can be applied to an empty database on every run.
+    # Without this the deploy path was never exercised: nine migrations referenced Prisma
+    # model names instead of their mapped table names and could not apply anywhere, and
+    # CI stayed green throughout because it never ran them.
     services:
       postgres:
         image: postgres:16
@@ -65,6 +69,8 @@ jobs:
         run: npm run db:generate
       - name: Validate Prisma schema
         run: npm run db:validate
+      # The gate that makes a broken deploy path impossible to miss. A migration that
+      # cannot apply to an empty database fails here rather than in production.
       - name: Apply migrations to a fresh database
         run: npx prisma migrate deploy
       - name: Type check
@@ -74,6 +80,9 @@ jobs:
       - name: Test
         run: npm test
         env:
+          # Scoped to the test step after the disposable Postgres service has been
+          # migrated. This enables destructive repository tests without granting the
+          # migration-deploy capability to the whole job.
           KLINIKOS_ALLOW_DISPOSABLE_DATABASE_TESTS: disposable-verification
       - name: Verify MVP journeys against PostgreSQL
         run: npm run test:mvp
@@ -152,6 +161,9 @@ jobs:
           FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
             node scripts/verify-living-reality-browser.mjs
 
+      # Reviewable browser evidence belongs in CI so frontend acceptance does not depend
+      # on one developer machine, cache state, or a desktop browser policy. The screenshots
+      # are generated only from this exact-head production build and uploaded as an artifact.
       - name: Capture frontend release evidence
         shell: bash
         env:
@@ -222,6 +234,10 @@ jobs:
           capture tablet-768x1024 768,1024
           capture mobile-390x844-closed 390,844
           capture reduced-motion-1402x1122 1402,1122 --force-prefers-reduced-motion
+          # Run a second isolated Chrome profile with actual 200% browser page zoom.
+          # The verifier proves the CSS/visual viewport contracts to ~701px, confirms
+          # the responsive controls are active, and rejects composer/dock collisions.
+          # Device-scale or screenshot scaling cannot satisfy those assertions.
           CHROME_BIN="$CHROME" \
           FRONTEND_BASE_URL=http://localhost:3000 \
           FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
@@ -250,6 +266,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # The deployment contract, run exactly as the production host runs it.
+  #
+  # `verify` builds with the repository's own scripts and a developer-shaped install, so
+  # it cannot see defects that only appear under the host's conditions. Two already
+  # reached production that way: NODE_ENV=production prunes devDependencies, which
+  # removed tailwindcss and @tailwindcss/postcss and broke the PostCSS plugin
+  # resolution; and the canonical command passes --ignore-scripts, which skips every
+  # dependency install script as well as this repository's own postinstall.
+  #
+  # This job therefore hardcodes the canonical Render commands rather than reusing the
+  # npm scripts around them. If the deployment contract in render.yaml changes, change it
+  # here too — the duplication is the point, because this is the thing being verified.
   deploy-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -282,14 +310,24 @@ jobs:
           cache: npm
       - name: Source confidentiality gates
         run: npm run security:check
+      # Render's Build Command, verbatim except for the explicit disposable-verification
+      # migration token above, which is CI-only and points at this job's disposable DB.
       - name: Install exactly as the production host installs
         run: npm ci --include=dev --ignore-scripts
       - name: Build exactly as the production host builds
         run: npm run render:build
         env:
+          # Scoped to this one step, never to the job. A job-level grant would hand every
+          # future step here a fail-open migration control.
+          #
+          # This flag states an intent and grants nothing on its own: render-build.mjs
+          # proves the target is an empty, non-managed database before it honours it, and
+          # fails the step if it is not. Pointing this job at anything real therefore stops
+          # the build rather than migrating it.
           KLINIKOS_ALLOW_MIGRATION_DEPLOY: disposable-verification
       - name: Post-build confidentiality gates
         run: npm run security:check
+      # Render's Start Command, verbatim. A build that cannot start is not a deploy.
       - name: Start exactly as the production host starts
         shell: bash
         run: |
