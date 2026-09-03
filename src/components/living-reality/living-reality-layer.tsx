@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
 import styles from "@/components/living-reality/living-reality.module.css";
 import type { RealityPalette } from "@/components/living-reality/living-reality-scene";
 import type { RealityPerformanceMode, RealityProjection } from "@/lib/living-reality/reality-projection";
@@ -22,6 +22,28 @@ const defaultPalette: RealityPalette = {
   success: "#d68f87",
   livingEdge: "#b9575b",
 };
+
+type RuntimeFailureReason = "context-lost" | "render-error";
+
+class LivingRealityErrorBoundary extends Component<{
+  children: ReactNode;
+  onRuntimeFailure: (reason: RuntimeFailureReason) => void;
+}, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onRuntimeFailure("render-error");
+  }
+
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
+}
 
 function presentationPreference(): RealityPerformanceMode | null {
   try {
@@ -95,7 +117,7 @@ export function LivingRealityLayer({
     setStatus(nextMode === "PRECISION_MODE" ? "precision" : "ready");
   }, [projection.modeHint]);
 
-  const onRuntimeFailure = useCallback(() => {
+  const onRuntimeFailure = useCallback((_reason: RuntimeFailureReason) => {
     setMode((current) => {
       const next = degradeRealityMode(current);
       setStatus(next === "PRECISION_MODE" ? "precision" : "degraded");
@@ -115,12 +137,14 @@ export function LivingRealityLayer({
         </p>
       ) : (
         <div aria-hidden="true" className={styles.canvas}>
-          <LivingRealityCanvas
-            mode={mode}
-            onRuntimeFailure={onRuntimeFailure}
-            palette={palette}
-            projection={projection}
-          />
+          <LivingRealityErrorBoundary key={mode} onRuntimeFailure={onRuntimeFailure}>
+            <LivingRealityCanvas
+              mode={mode}
+              onRuntimeFailure={onRuntimeFailure}
+              palette={palette}
+              projection={projection}
+            />
+          </LivingRealityErrorBoundary>
         </div>
       )}
     </div>
