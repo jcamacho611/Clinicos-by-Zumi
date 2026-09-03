@@ -41,6 +41,13 @@ describe("P01 Living Reality degraded and accessible production states", () => {
     expect(canvas).toContain("onRuntimeFailure");
   });
 
+  it("isolates renderer exceptions from the semantic application and retries by mode", () => {
+    expect(layer).toContain("getDerivedStateFromError");
+    expect(layer).toContain("componentDidCatch");
+    expect(layer).toContain('onRuntimeFailure("render-error")');
+    expect(layer).toContain("key={mode}");
+  });
+
   it("honors an explicit Precision presentation preference", () => {
     expect(selectInitialRealityMode({
       webgl: true,
