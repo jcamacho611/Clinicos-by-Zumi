@@ -193,4 +193,24 @@ describe("P00 execution traceability governance", () => {
     expect(template).toContain("Authority / security / legal consequence");
     expect(template).toContain("Expected evidence");
   });
+
+  it("records main protection as live evidence rather than inferred documentation", () => {
+    const doc = read(resolve(root, "docs/governance/GITHUB_MAIN_PROTECTION.md"));
+    expect(doc).toContain("MANUAL_ADMIN_ACTION_REQUIRED");
+    expect(doc).toContain("Current verified state");
+    expect(doc).toContain("Required target state");
+    expect(doc).toContain("Operator action required");
+    expect(doc).toContain("protected: false");
+    expect(doc).toContain("[]");
+  });
+
+  it("keeps execution traceability subordinate in the authority map", () => {
+    const authority = read(resolve(root, "docs/KLINIKOS_AUTHORITY_MAP.yaml"));
+    expect(authority).toContain("execution_traceability:");
+    expect(authority).toContain("machine_ledger: docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json");
+    expect(authority).toContain("authority: SUBORDINATE_EXECUTION_CONTROL");
+    expect(authority).toContain("may_override_master: false");
+    expect(authority).toContain("may_override_blueprint: false");
+    expect(authority).toContain("may_override_verified_implementation: false");
+  });
 });
