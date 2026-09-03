@@ -46,7 +46,7 @@
 
 - [ ] **Step 1: Write the failing structural tests**
 
-Create `tests/living-universe-spatial-experience.test.ts` with these imports and assertions:
+Create `tests/living-universe-spatial-experience.test.ts`:
 
 ```ts
 import { readFileSync } from "node:fs";
@@ -124,7 +124,7 @@ describe("Spatial Living Universe S1", () => {
     expect(spatial).toContain("transform: none");
   });
 
-  it("uses semantic material tokens instead of a new Living Universe hex palette", () => {
+  it("uses semantic material tokens instead of a new Living Universe literal palette", () => {
     const files = [
       "src/components/living-universe/universe-shell.tsx",
       "src/components/living-universe/object-stage.tsx",
@@ -133,7 +133,10 @@ describe("Spatial Living Universe S1", () => {
       "src/components/living-universe/action-dock.tsx",
     ];
     for (const path of files) {
-      expect(read(path), path).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+      const source = read(path);
+      expect(source, path).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+      expect(source, path).not.toMatch(/(?:bg|text|border|ring)-white(?:\/|\b)/);
+      expect(source, path).not.toMatch(/(?:bg|text|border|ring)-black(?:\/|\b)/);
     }
 
     const tokens = read("src/app/design-tokens.css");
@@ -160,17 +163,13 @@ describe("Spatial Living Universe S1", () => {
 
 - [ ] **Step 2: Run the new test and prove RED**
 
-Run:
-
 ```bash
 npx vitest run tests/living-universe-spatial-experience.test.ts
 ```
 
-Expected: FAIL because `living-universe-spatial.module.css`, `data-spatial-depth`, new spatial tokens, and no-hex convergence do not yet exist.
+Expected: FAIL because `living-universe-spatial.module.css`, `data-spatial-depth`, new spatial tokens, and literal-palette convergence do not yet exist.
 
 - [ ] **Step 3: Re-run the pre-existing member-home test as a baseline**
-
-Run:
 
 ```bash
 npx vitest run tests/living-universe-member-home.test.ts
@@ -187,7 +186,7 @@ git commit -m "test(living-universe): lock spatial S1 contract"
 
 ---
 
-### Task 2: Add the shared spatial semantic tokens and depth stylesheet
+### Task 2: Add shared spatial semantic tokens and the depth stylesheet
 
 **Files:**
 - Modify: `src/app/design-tokens.css`
@@ -198,12 +197,11 @@ git commit -m "test(living-universe): lock spatial S1 contract"
 - Consumes: existing Marble/Obsidian semantic token authority.
 - Produces: CSS variables `--k-spatial-perspective`, `--k-spatial-stage-z`, `--k-spatial-inspector-z`, `--k-spatial-shadow-stage`, `--k-spatial-shadow-inspector`, `--k-spatial-context-opacity`, `--k-living-edge`, plus module classes `environment`, `workspace`, `stagePlane`, `inspectorPlane`, `decisionPlane`.
 
-- [ ] **Step 1: Add non-color spatial geometry tokens once**
+- [ ] **Step 1: Add non-color spatial geometry tokens to the existing shared design-token scope**
 
-In the shared token scope in `src/app/design-tokens.css`, add:
+Add these declarations to the existing `[data-klinikos-ds]` shared-token block rather than creating a new theme root:
 
 ```css
-[data-klinikos-ds] {
   --k-spatial-perspective: 1400px;
   --k-spatial-stage-z: 22px;
   --k-spatial-inspector-z: 10px;
@@ -211,10 +209,7 @@ In the shared token scope in `src/app/design-tokens.css`, add:
   --k-spatial-focus-scale: 1.006;
   --k-spatial-duration: var(--duration-base);
   --k-spatial-ease: var(--ease-out-expo);
-}
 ```
-
-Do not create a second token root.
 
 - [ ] **Step 2: Add material-specific spatial attention/elevation tokens to Obsidian**
 
@@ -237,6 +232,8 @@ Inside the existing Marble `dawn/day/golden` block, add:
   --k-spatial-shadow-inspector: 0 18px 56px rgba(63, 32, 36, .11);
   --k-spatial-context-wash: color-mix(in srgb, var(--k-public-surface) 92%, transparent);
 ```
+
+These literal values live only inside the centralized token authority. Touched component source must not carry its own palette.
 
 - [ ] **Step 4: Create the CSS-module depth layer**
 
@@ -299,17 +296,13 @@ Do not add continuous keyframes.
 
 - [ ] **Step 5: Run the token/spatial-file subset**
 
-Run:
-
 ```bash
 npx vitest run tests/living-universe-spatial-experience.test.ts -t "keeps true 3D|keeps reduced-motion"
 ```
 
-Expected: the CSS-file/dependency/reduced-motion assertions pass; render/no-hex assertions remain RED until later tasks.
+Expected: the CSS-file/dependency/reduced-motion assertions pass; render/material assertions remain RED until later tasks.
 
 - [ ] **Step 6: Run theme-system regression tests**
-
-Run:
 
 ```bash
 npx vitest run tests/klinikos-theme-system.test.ts tests/black-label-design-contract.test.ts tests/design-system-adherence.test.ts
@@ -340,13 +333,11 @@ git commit -m "feat(design): add shared spatial experience tokens"
 
 - [ ] **Step 1: Import the spatial module into `UniverseShell`**
 
-Add:
-
 ```ts
 import spatial from "@/components/living-universe/living-universe-spatial.module.css";
 ```
 
-- [ ] **Step 2: Mark and style the spatial hierarchy in `UniverseShell`**
+- [ ] **Step 2: Mark and style the hierarchy in `UniverseShell`**
 
 Change the outer `<main>` so it includes `spatial.environment`, preserves `data-member-living-universe`, and adds:
 
@@ -354,7 +345,7 @@ Change the outer `<main>` so it includes `spatial.environment`, preserves `data-
 data-spatial-depth="environment"
 ```
 
-Replace its hardcoded background/text colors with existing semantic values:
+Use:
 
 ```tsx
 className={`${spatial.environment} min-h-screen overflow-x-hidden bg-[var(--k-public-bg)] text-[var(--k-text)]`}
@@ -397,9 +388,9 @@ Wrap Inspector in:
 
 Do not move `ActionDock` into a transformed ancestor beyond the existing Stage column.
 
-- [ ] **Step 3: Convert the touched `UniverseShell` colors to semantic tokens**
+- [ ] **Step 3: Convert all touched `UniverseShell` color/line/surface classes to semantic tokens**
 
-Use the existing token authority, including these mappings:
+Use these mappings throughout the file:
 
 ```text
 page/background → var(--k-public-bg) / var(--k-ambient)
@@ -411,7 +402,7 @@ raised/panel surfaces → var(--k-public-surface) / var(--k-public-raised)
 shell/work depth → var(--k-shell) / var(--k-work-bg)
 ```
 
-Examples of valid Tailwind arbitrary values:
+Valid class examples:
 
 ```tsx
 bg-[var(--k-public-bg)]
@@ -422,21 +413,19 @@ ring-[var(--k-accent)]
 bg-[var(--k-public-surface)]
 ```
 
-The file must contain zero hex literals when complete.
+The file must contain no hex literals and no direct Tailwind white/black palette classes when complete.
 
 - [ ] **Step 4: Convert `ObjectStage` to semantic material and Living Edge tokens**
 
-Keep the current semantic markup and `data-living-object-id`. Replace hardcoded surface/text/line/glow colors with existing semantic tokens plus the new spatial tokens. The outer section should resolve through:
+Keep current markup and `data-living-object-id`. The outer section becomes:
 
 ```tsx
 className="relative min-w-0 overflow-hidden rounded-[30px] border border-[var(--k-line)] bg-[var(--k-public-raised)] px-5 py-6 shadow-[var(--k-spatial-shadow-stage)] sm:px-8 sm:py-8"
 ```
 
-Use `var(--k-accent)`, `var(--k-muted)`, `var(--k-text)`, `var(--k-line)`, and `var(--k-living-edge)` for the remaining touched visual states. Do not change `claimStatus`, `authorityNotice`, timeline ordering, or the `Before / Now / Next` semantics.
+Use `var(--k-accent)`, `var(--k-muted)`, `var(--k-text)`, `var(--k-line)`, `var(--k-living-edge)`, `var(--status-resolved)`, and the shared surfaces for all other touched states. Do not change `claimStatus`, `authorityNotice`, timeline ordering, or `Before / Now / Next` semantics.
 
 - [ ] **Step 5: Run the spatial render test**
-
-Run:
 
 ```bash
 npx vitest run tests/living-universe-spatial-experience.test.ts -t "renders the approved spatial depth contract"
@@ -444,15 +433,13 @@ npx vitest run tests/living-universe-spatial-experience.test.ts -t "renders the 
 
 Expected: PASS.
 
-- [ ] **Step 6: Run the member-home regression suite**
-
-Run:
+- [ ] **Step 6: Run member-home regression**
 
 ```bash
 npx vitest run tests/living-universe-member-home.test.ts
 ```
 
-Expected: PASS, including exactly five lenses, one Person object, allowed-action filtering, and member route wiring.
+Expected: PASS, including exactly five lenses, one Person object, allowed-action filtering, and route wiring.
 
 - [ ] **Step 7: Commit**
 
@@ -474,11 +461,11 @@ git commit -m "feat(living-universe): establish spatial object-stage hierarchy"
 
 **Interfaces:**
 - Consumes: current component APIs unchanged.
-- Produces: zero-hex touched Living Universe component set; Inspector/Action Dock remain semantically and behaviorally identical while inheriting Marble/Obsidian.
+- Produces: zero-literal-palette touched Living Universe component set; Inspector/Action Dock remain behaviorally identical while inheriting Marble/Obsidian.
 
-- [ ] **Step 1: Convert `PlaneLens` color literals to semantic tokens**
+- [ ] **Step 1: Convert `PlaneLens` to semantic tokens**
 
-Preserve `aria-pressed`, button behavior, horizontal mobile scrolling, and five-plane labels. Resolve focus/line/surface/text through:
+Preserve `aria-pressed`, button behavior, horizontal mobile scrolling, and five-plane labels. Use:
 
 ```text
 border → var(--k-line)
@@ -491,9 +478,9 @@ active marker → var(--k-accent)
 attention shadow → color-mix(in srgb, var(--k-living-edge) 70%, transparent)
 ```
 
-- [ ] **Step 2: Convert `Inspector` color literals to semantic tokens**
+- [ ] **Step 2: Convert `Inspector` to semantic tokens**
 
-Preserve both desktop `<aside>` and mobile `<details data-mobile-inspector="true">`. Use:
+Preserve desktop `<aside>` and mobile `<details data-mobile-inspector="true">`. Use:
 
 ```text
 surface → var(--k-public-surface)
@@ -501,29 +488,25 @@ line → var(--k-line)
 primary text → var(--k-text)
 secondary text → var(--k-muted)
 accent → var(--k-accent)
-verified/evidence marker → existing semantic status token (`--status-resolved`)
+verified/evidence marker → var(--status-resolved)
 shadow → var(--k-spatial-shadow-inspector)
 ```
 
 Do not remove evidence or authority content on mobile.
 
-- [ ] **Step 3: Convert `ActionDock` color literals to semantic tokens**
+- [ ] **Step 3: Convert `ActionDock` to semantic tokens**
 
-Preserve `isAllowedMemberActionHref()`, sticky behavior, link destinations, and 44px minimum height. The first action may use `var(--k-accent)` as the primary treatment; all other actions use shared surfaces/lines/text. Focus uses `var(--k-accent)`.
+Preserve `isAllowedMemberActionHref()`, sticky behavior, link destinations, and 44px minimum height. First action may use `var(--k-accent)` as primary treatment; remaining actions use shared surfaces/lines/text. Focus uses `var(--k-accent)`.
 
-- [ ] **Step 4: Run the no-hex/material contract**
-
-Run:
+- [ ] **Step 4: Run material contract**
 
 ```bash
 npx vitest run tests/living-universe-spatial-experience.test.ts -t "uses semantic material tokens"
 ```
 
-Expected: PASS for all five touched components and all required spatial tokens.
+Expected: PASS for all five touched components and required spatial tokens.
 
 - [ ] **Step 5: Run member-home and theme regressions**
-
-Run:
 
 ```bash
 npx vitest run \
@@ -558,11 +541,9 @@ git commit -m "feat(living-universe): converge spatial context and actions"
 
 **Interfaces:**
 - Consumes: completed S1 implementation.
-- Produces: source-level regression protection for no camera authority, no canvas/WebGL dependency, semantic focus order, and browser-safe presentation boundaries.
+- Produces: regression protection for no camera authority, no canvas/WebGL dependency, semantic focus order, and browser-safe presentation boundaries.
 
 - [ ] **Step 1: Add source assertions against camera/canvas authority**
-
-Extend the test file:
 
 ```ts
 it("keeps spatial composition as presentation rather than navigation authority", () => {
@@ -580,7 +561,7 @@ it("keeps spatial composition as presentation rather than navigation authority",
 
 This does not forbid legitimate Next.js links; it forbids S1 from inventing a client camera/router authority.
 
-- [ ] **Step 2: Add the current authority assertions to the spatial test**
+- [ ] **Step 2: Add authority-boundary assertions**
 
 ```ts
 it("does not widen the existing presentation contract into authority", () => {
@@ -604,7 +585,7 @@ npx vitest run tests/living-universe-spatial-experience.test.ts tests/living-uni
 
 Expected: PASS.
 
-- [ ] **Step 4: Run the repository confidentiality gates**
+- [ ] **Step 4: Run confidentiality gates**
 
 ```bash
 npm run security:check
@@ -619,7 +600,7 @@ npm run type-check
 npm run lint
 ```
 
-Expected: PASS with no new warnings attributable to S1.
+Expected: PASS with no new warning attributable to S1.
 
 - [ ] **Step 6: Commit**
 
@@ -633,73 +614,67 @@ git commit -m "test(living-universe): guard spatial authority and disclosure"
 ### Task 6: Run the full release gate and capture customer-visible evidence
 
 **Files:**
-- Modify only if the repository's existing release-evidence tooling writes tracked evidence files.
 - Verify: `.github/workflows/quality.yml`
-- Verify: existing frontend browser/evidence scripts referenced by Quality.
+- Verify: `scripts/verify-release.mjs`
+- Verify: `scripts/verify-frontend-browser-interactions.mjs`
+- Modify only if existing release-evidence tooling intentionally writes tracked evidence files.
 
 **Interfaces:**
-- Consumes: exact S1 head.
-- Produces: exact-head evidence that S1 works in the same production build/start path as Klinikos.
+- Consumes: exact S1 implementation head.
+- Produces: exact-head evidence that S1 works in the same migration/build/start/browser path as production Klinikos.
 
-- [ ] **Step 1: Run the local full release verifier available in the repo**
+- [ ] **Step 1: Run the repository's full local release verifier**
 
 ```bash
 npm run verify:release
 ```
 
-Expected: the command completes successfully. If it reports an unavailable external production prerequisite rather than a code defect, preserve that as explicit evidence instead of weakening the verifier.
+Expected: the established local gate completes successfully, including its own disposable-database migration/test/journey/build/start/health path. Do not replace it with an ad-hoc long-running `npm start` session.
 
-- [ ] **Step 2: Run the production-host contract locally**
+- [ ] **Step 2: Run the targeted browser verifier against an exact-head production build when local Chrome is available**
+
+Use the same server-start pattern as `.github/workflows/quality.yml`, not a new command:
 
 ```bash
-npm run render:build
-npm run start
+set -euo pipefail
+PORT=3000 npm start > /tmp/spatial-s1-browser.log 2>&1 &
+SERVER_PID=$!
+trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+for attempt in {1..30}; do
+  if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /dev/null; then
+    break
+  fi
+  if [ "$attempt" -eq 30 ]; then
+    cat /tmp/spatial-s1-browser.log
+    exit 1
+  fi
+  sleep 1
+done
+CHROME=""
+for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    CHROME="$(command -v "$candidate")"
+    break
+  fi
+done
+if [ -z "$CHROME" ]; then
+  echo "No supported Chrome/Chromium available locally; exact-head CI remains mandatory."
+  exit 2
+fi
+CHROME_BIN="$CHROME" FRONTEND_BASE_URL=http://localhost:3000 node scripts/verify-frontend-browser-interactions.mjs
 ```
 
-Then verify the startup/health route using the repository's existing production startup smoke mechanism. Do not invent a parallel start command.
+Expected when Chrome is available: PASS. If local Chrome is unavailable, record that limitation; do not weaken the CI browser gate.
 
-- [ ] **Step 3: Verify browser behavior at required viewports**
+- [ ] **Step 3: Push and require exact-head GitHub Quality**
 
-Use the existing browser interaction/evidence tooling exercised by Quality and verify at minimum:
-
-```text
-1440 desktop
-1024 desktop/tablet transition
-768 tablet
-390 mobile
-```
-
-At each viewport verify:
-
-```text
-Object Stage readable
-Inspector available
-Action Dock reachable
-five lenses usable
-no horizontal body overflow
-no focus target hidden by transform
-no required hover-only content
-```
-
-- [ ] **Step 4: Verify both materials**
-
-Run the same Living Universe member surface in Obsidian and Marble. Confirm that no new component paints an Obsidian-only hardcoded surface over Marble and that text/line contrast remains legible.
-
-- [ ] **Step 5: Verify reduced motion**
-
-Run with `prefers-reduced-motion: reduce` and confirm the spatial stage/Inspector transforms are removed while all information and actions remain present.
-
-- [ ] **Step 6: Push and require exact-head Quality**
-
-Push the implementation branch and wait for the repository `Quality` workflow on the exact S1 head.
-
-Required exact-head result:
+The exact S1 head must pass the existing Quality sequence:
 
 ```text
 source confidentiality
 → install
 → Prisma generate/validate
-→ fresh migrations
+→ fresh PostgreSQL migrations
 → typecheck
 → lint
 → tests
@@ -709,22 +684,53 @@ source confidentiality
 → production startup smoke
 → frontend browser interactions
 → frontend release evidence
-→ production-host/deploy contract
+→ production-host deploy contract
 ```
 
 Do not merge if the exact head is RED, cancelled, or stale relative to the reviewed diff.
 
-- [ ] **Step 7: Review for visual regression and merge readiness**
+- [ ] **Step 4: Review the uploaded frontend evidence artifact**
 
-Review the exact evidence rather than relying only on CI status. If Marble or mobile behavior is visibly wrong, fix it and rerun the exact-head gate.
+Use the `living-universe-release-evidence` artifact from the exact-head Quality run. Inspect at minimum the existing captures:
 
-- [ ] **Step 8: Commit any generated tracked evidence, if and only if existing repo tooling requires it**
+```text
+canonical 1402×1122
+desktop 1440×1000
+wide 1920×1080
+tablet transition 1024×900
+tablet 768×1024
+mobile 390×844
+reduced motion 1402×1122
+verified browser zoom 200%
+```
+
+For the member Living Universe surface, additionally verify through the browser interaction test or an authenticated test fixture that:
+
+```text
+Object Stage is readable
+Inspector is available
+Action Dock remains reachable
+five lenses remain usable
+no horizontal body overflow appears
+focus targets are not hidden by transform
+no required information is hover-only
+```
+
+- [ ] **Step 5: Verify both Marble and Obsidian before merge**
+
+Use the existing theme control/fixture rather than adding a second theme mechanism. Confirm no touched Living Universe component paints an Obsidian-only literal surface over Marble and that text/line contrast remains legible in both modes.
+
+- [ ] **Step 6: Verify reduced motion before merge**
+
+Use `prefers-reduced-motion: reduce` and confirm `stagePlane` and `inspectorPlane` transforms are removed while all information and actions remain present.
+
+- [ ] **Step 7: Commit generated tracked evidence only if existing repository tooling intentionally requires it**
 
 ```bash
 git status --short
 ```
 
-If the existing verifier created tracked release-evidence files, add only those exact files and commit them using the repository's established evidence convention. If no tracked files were generated, make no evidence-only commit.
+If the existing verifier created tracked evidence files, add only those exact files and use the repo's established evidence commit convention. If evidence exists only as the GitHub artifact, make no evidence-only repository commit.
 
 ---
 
