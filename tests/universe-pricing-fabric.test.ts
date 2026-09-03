@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  universePricingFabric,
-  publicSelfServeOffers,
-  stripeCatalogOffers,
+  activationCandidates,
+  directCheckoutOffers,
   nonPurchasableUniverseClasses,
+  stripeCatalogOffers,
+  universePricingFabric,
 } from "@/lib/commercial/universe-pricing";
 
 describe("Klinikos universe pricing fabric", () => {
@@ -31,7 +32,7 @@ describe("Klinikos universe pricing fabric", () => {
     expect(universePricingFabric.professional.launchSetup.priceCents).toBe(49_900);
   });
 
-  it("turns EDU ranges into clear default self-serve anchors while keeping variable catalogs flexible", () => {
+  it("turns EDU ranges into clear candidate anchors while keeping variable catalogs flexible", () => {
     expect(universePricingFabric.edu.free.monthlyPriceCents).toBe(0);
     expect(universePricingFabric.edu.plus.monthlyPriceCents).toBe(2_900);
     expect(universePricingFabric.edu.pathway.priceCents).toBe(29_900);
@@ -52,28 +53,48 @@ describe("Klinikos universe pricing fabric", () => {
     ]);
   });
 
-  it("uses public self-serve only for offers that can be bought without negotiation or regulated approval", () => {
-    const keys = publicSelfServeOffers.map((offer) => offer.key);
-    expect(keys).toEqual(
-      expect.arrayContaining([
-        "operational_audit",
-        "implementation_blueprint",
-        "grid_pro",
-        "grid_pro_plus",
-        "edu_plus",
-        "edu_pathway",
-      ]),
-    );
-    expect(keys).not.toContain("professional_business");
-    expect(keys).not.toContain("edu_institutional_seat");
-    expect(keys).not.toContain("clinic_enterprise");
+  it("does not let a Stripe price widen current direct-checkout authority", () => {
+    expect(directCheckoutOffers.map((offer) => offer.key)).toEqual(["operational_audit"]);
+
+    for (const key of [
+      "implementation_blueprint",
+      "clinic_core_monthly",
+      "clinic_growth_monthly",
+      "clinic_scale_monthly",
+      "grid_pro",
+      "grid_pro_plus",
+      "professional_business",
+      "edu_plus",
+      "edu_pathway",
+    ]) {
+      expect(directCheckoutOffers.map((offer) => offer.key)).not.toContain(key);
+    }
   });
 
-  it("gives every Stripe-backed offer a stable lookup key, classification and billing model", () => {
+  it("preserves the broader approved pricing strategy as activation candidates rather than fake live sellability", () => {
+    const keys = activationCandidates.map((offer) => offer.key);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "grid_pro_plus",
+        "professional_business",
+        "professional_launch_setup",
+        "grid_organization_scale",
+        "edu_plus",
+        "edu_pathway",
+        "edu_institutional_seat",
+        "usage_pack_250",
+        "usage_pack_2500",
+      ]),
+    );
+    expect(activationCandidates.every((offer) => offer.directPublicCheckoutEligible === false)).toBe(true);
+  });
+
+  it("gives every Stripe-backed offer a stable lookup key, classification, route state and billing model", () => {
     for (const offer of stripeCatalogOffers) {
       expect(offer.stripeLookupKey).toMatch(/^klinikos_[a-z0-9_]+_v1$/);
       expect(["ACTIVE_PUBLIC", "ACTIVE_PRIVATE", "TARGET"]).toContain(offer.classification);
       expect(["one_time", "month", "year"]).toContain(offer.billing);
+      expect(typeof offer.directPublicCheckoutEligible).toBe("boolean");
       expect(offer.priceCents).toBeGreaterThan(0);
     }
   });
