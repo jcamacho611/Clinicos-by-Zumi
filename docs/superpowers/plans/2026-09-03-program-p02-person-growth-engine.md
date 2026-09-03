@@ -2,97 +2,73 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Finish the existing value-before-signup → free Person → resumed-goal path without creating a second continuation/auth system, while proving conversion, privacy, truthful empty states, and authority separation.
+**Goal:** Finish and prove the existing value-before-signup → free Person → resumed-goal journey, add privacy-minimized funnel evidence, and avoid building a duplicate continuation/auth system.
 
-**Architecture:** Current `main` already contains the core P02 substrate: public Path projection with `continuationHref: /member?path=...`, `PublicLivingUniverseObjectStage` with `Join free and start here`, canonical `/signup`, `safePersonReturnTo`, Person account/session creation, `/member?path=...`, and `getMemberHomeProjection(..., requestedPathId)` which re-resolves the catalog Path server-side and exposes a governed `Continue this path` action. P02 therefore **reuses and generalizes those rails**. `src/lib/distribution/public-continuation.ts` remains the one low-sensitivity public continuation helper for protected public destinations; no signed entry-intent cookie, duplicate `entry-intent.ts`, or second auth rail is added in W1 unless a later test proves the existing bounded Path continuation cannot satisfy a required case.
+**Architecture:** Current `main` already implements most of P02. Public Path projections expose `continuationHref: /member?path=...`; `PublicLivingUniverseObjectStage` renders value and `Join free and start here`; `safeMemberReturnTo/safePersonReturnTo` validate the destination; canonical signup creates only Person/Account/session/legal evidence; `/member?path=...` re-resolves the Path through `klinikosPathCatalog`; `getMemberHomeProjection()` offers `Continue this path` only through person-safe route rules. P02 **reuses those exact rails**. `src/lib/distribution/public-continuation.ts` remains the one bounded public continuation helper; no `entry-intent.ts`, signed intent cookie, duplicate return parser, or second signup rail is added in W1.
 
-**Tech Stack:** Next.js 15.5.22, React 19.1.1, TypeScript 5.9.2, Prisma/PostgreSQL, existing Path catalog, existing Person auth/session/legal-release rails, existing public Zumi route and deterministic resolver, Vitest, Quality/deploy-contract.
+**Tech Stack:** Next.js 15.5.22, React 19.1.1, TypeScript 5.9.2, Prisma/PostgreSQL, existing Path catalog, Person auth/session/legal-release rails, public Zumi deterministic + provider paths, Vitest, Quality/deploy-contract.
 
 **Spec:** `docs/superpowers/specs/2026-09-03-program-p02-person-growth-engine-design.md`
 
-## Current Verified Reuse Targets
-
-- `src/lib/orchestration/public-living-universe.ts`
-  - `continuationHrefForPathId(pathId)` returns `/member?path=<canonical-id>` only after resolving the server-owned catalog.
-  - `PublicLivingUniverseProjection.continuationHref` is typed as `/member?path=${string}`.
-- `src/components/marketing/public-living-universe-stage.tsx`
-  - renders public value before signup;
-  - builds `/signup?returnTo=<continuationHref>`;
-  - says `Join free and start here` when the release gate is enabled;
-  - truthfully exposes availability/governance before signup.
-- `src/lib/auth/return-to.ts`
-  - `safeMemberReturnTo` accepts only `/member` or one catalog-validated `path` query parameter;
-  - `safePersonReturnTo` limits Person continuation to `/member`, `/grid`, or `/edu`.
-- `src/app/signup/page.tsx` + `src/app/signup/signup-form.tsx`
-  - preserve safe Person `returnTo`;
-  - remain fail-closed on current Terms/Privacy/release evidence;
-  - canonical signup stays the only Person creation path.
-- `src/app/api/account/signup/route.ts`
-  - creates only Person + Account + session/legal evidence;
-  - does not create organization, professional, patient, clinical, billing, payment, or Grid authority.
-- `src/app/member/page.tsx`
-  - validates requested Path against `klinikosPathCatalog` before passing it to the repository.
-- `src/lib/member/member-home-repository.ts`
-  - resolves the Path again server-side;
-  - treats query-string Path as navigation input, never evidence;
-  - creates a person-safe entry action only through `personEntryHrefForPath()` + `isAllowedMemberActionHref()`.
-- `src/lib/distribution/public-continuation.ts`
-  - already carries bounded low-sensitivity destination metadata across login for protected destinations;
-  - never carries the raw Public Zumi prompt.
-
 ## Global Constraints
 
-- **REUSE before build-new.** Do not create `src/lib/auth/entry-intent.ts`, an intent-continuation database, another return-to parser, or a parallel signup/auth rail unless a specific failing requirement proves the existing Path continuation is insufficient.
-- Person account remains free. No card, organization subscription, or paid tier is required to create one Person identity.
-- Raw anonymous free text is potentially sensitive. Never put raw public prompt text in continuation URLs, localStorage, browser analytics payloads, durable anonymous intent records, or member Path parameters.
-- Public continuation is **navigation context, not authority**.
-- After authentication the server must resolve the requested Path from the current catalog and then resolve the person-safe entry route under current state.
-- Self-asserted role/ownership/student/professional claims create no verification, membership, tenant authority, enrollment truth, clinical authority, or Grid eligibility.
-- Preserve versioned Terms/Privacy acceptance and `getMemberSignupReleaseState()`; P02 implementation cannot open public signup by UI change alone.
-- Public Zumi may degrade or be unavailable; deterministic public value and Path projection remain usable.
+- **REUSE before build-new.** Existing Path continuation is the P02 continuation mechanism unless a failing accepted requirement proves otherwise.
+- Person account remains free; no card or organization subscription is required to create one Person identity.
+- Raw anonymous free text is potentially sensitive and never enters continuation URLs, localStorage, durable funnel telemetry, or member Path parameters.
+- Public continuation is navigation context only, never authority.
+- After authentication the server re-resolves the requested Path and its person-safe entry route.
+- Self-asserted clinic ownership, profession, student status, or other role creates no verification, membership, tenant authority, enrollment truth, clinical authority, or Grid eligibility.
+- Preserve current Terms/Privacy/versioned acceptance and `getMemberSignupReleaseState()`; UI code cannot independently open public signup.
+- External public AI may be degraded/unavailable; deterministic public value and Path projection remain usable.
 - No fabricated jobs, clinicians, placements, availability, revenue, customer outcomes, or network density.
-- P01 may enhance this journey visually but WebGL is never required for intent, value, signup, sign-in, continuation, errors, or the first authenticated action.
-- P16 owns privacy/abuse/disclosure gates and is a merge blocker for P02.
-- Every code task uses RED → GREEN TDD and ends in an independently reviewable commit.
+- P01 WebGL is optional presentation; acquisition/continuation must work in Precision/no-WebGL mode.
+- P16 disclosure/security gates are merge blockers.
+- Every code task follows RED → GREEN and ends with an independently reviewable commit.
 
 ---
 
-### Task 1: Lock the P02 convergence contract against current implementation truth
+### Task 1: Lock the existing P02 reuse contract
 
 **Files:**
 - Create: `tests/person-growth-engine-contract.test.ts`
-- Read/Test: `src/lib/orchestration/public-living-universe.ts`
-- Read/Test: `src/components/marketing/public-living-universe-stage.tsx`
-- Read/Test: `src/lib/auth/return-to.ts`
-- Read/Test: `src/app/signup/page.tsx`
-- Read/Test: `src/app/signup/signup-form.tsx`
-- Read/Test: `src/app/api/account/signup/route.ts`
-- Read/Test: `src/app/member/page.tsx`
-- Read/Test: `src/lib/member/member-home-repository.ts`
-- Read/Test: `src/lib/distribution/public-continuation.ts`
+- Read/Test existing:
+  - `src/lib/orchestration/public-living-universe.ts`
+  - `src/components/marketing/public-living-universe-stage.tsx`
+  - `src/lib/auth/return-to.ts`
+  - `src/app/signup/page.tsx`
+  - `src/app/api/account/signup/route.ts`
+  - `src/app/member/page.tsx`
+  - `src/lib/member/member-home-repository.ts`
+  - `src/lib/distribution/public-continuation.ts`
 
 **Interfaces:**
-- Produces a machine-enforced contract that the existing continuation substrate remains the P02 rail and that a duplicate token/cookie/identity system cannot silently appear.
+- Machine-locks current continuation/auth reuse and forbids silent `SignupV2`/`entry-intent` duplication.
 
-- [ ] **Step 1: Add the contract test**
-
-Require all of the following:
+- [ ] **Step 1: Write the contract test**
 
 ```ts
-expect(source("src/lib/orchestration/public-living-universe.ts")).toContain("continuationHrefForPathId");
-expect(source("src/lib/orchestration/public-living-universe.ts")).toContain("/member?path=");
-expect(source("src/components/marketing/public-living-universe-stage.tsx")).toContain("Join free and start here");
-expect(source("src/lib/auth/return-to.ts")).toContain("safeMemberReturnTo");
-expect(source("src/app/member/page.tsx")).toContain("klinikosPathCatalog.find");
-expect(source("src/lib/member/member-home-repository.ts")).toContain("Continue this path");
-expect(source("src/lib/distribution/public-continuation.ts")).toContain("raw Public Zumi prompt never belongs in the URL");
-expect(existsSync("src/lib/auth/entry-intent.ts")).toBe(false);
-expect(existsSync("src/app/api/account/entry-intent/route.ts")).toBe(false);
+import { existsSync, readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+const read = (p: string) => readFileSync(p, "utf8");
+
+describe("P02 reuse contract", () => {
+  it("uses the canonical Path continuation", () => {
+    expect(read("src/lib/orchestration/public-living-universe.ts")).toContain("continuationHrefForPathId");
+    expect(read("src/lib/orchestration/public-living-universe.ts")).toContain("/member?path=");
+    expect(read("src/components/marketing/public-living-universe-stage.tsx")).toContain("Join free and start here");
+    expect(read("src/lib/auth/return-to.ts")).toContain("safeMemberReturnTo");
+    expect(read("src/app/member/page.tsx")).toContain("klinikosPathCatalog.find");
+    expect(read("src/lib/member/member-home-repository.ts")).toContain("Continue this path");
+  });
+  it("does not create parallel signup or intent-token rails", () => {
+    expect(existsSync("src/app/signup-v2/page.tsx")).toBe(false);
+    expect(existsSync("src/lib/auth/entry-intent.ts")).toBe(false);
+    expect(existsSync("src/app/api/account/entry-intent/route.ts")).toBe(false);
+  });
+});
 ```
 
-Also assert the canonical Person signup route remains `src/app/api/account/signup/route.ts` and no `signup-v2` route exists.
-
-- [ ] **Step 2: Run the contract + existing baselines**
+- [ ] **Step 2: Run existing + new baselines**
 
 ```bash
 npx vitest run \
@@ -103,7 +79,7 @@ npx vitest run \
   src/lib/distribution/public-continuation.test.ts
 ```
 
-Expected: existing behavior passes; only genuinely missing new P02 assertions may be RED.
+Expected: PASS on current behavior; any failure identifies drift before P02 changes.
 
 - [ ] **Step 3: Commit**
 
@@ -114,43 +90,71 @@ git commit -m "test(growth): lock P02 reuse contract"
 
 ---
 
-### Task 2: Prove value-before-signup across every mapped public Path family
+### Task 2: Prove value-before-signup and exact canonical Path continuation
 
 **Files:**
 - Create: `tests/public-value-before-signup.test.ts`
-- Modify only if tests expose a gap:
+- Modify only if a test proves a defect:
   - `src/lib/orchestration/public-living-universe.ts`
   - `src/components/marketing/public-living-universe-stage.tsx`
-  - `src/components/marketing/public-living-gateway.tsx`
   - `src/lib/marketing/public-living-actions.ts`
 
 **Interfaces:**
-- Consumes server-owned `PublicLivingUniverseProjection`.
-- Produces a truthful public Object Stage plus free-Person continuation for all supported Path projections.
+- `projectPublicLivingUniverseForActionId(actionId)` → `PublicLivingUniverseProjection | null`.
+- `continuationHrefForPathId(pathId)` → `/member?path=<catalog-id> | null`.
 
-- [ ] **Step 1: Write table-driven tests using the existing action vocabulary**
+- [ ] **Step 1: Write the table-driven test**
 
-For each action with an intentionally mapped canonical Path, require:
-- a public-safe projection exists;
-- it exposes title/summary/from/to/availability/governance before signup;
-- `continuationHref` equals `/member?path=<the same canonical path id>`;
-- the CTA points to `/signup?returnTo=<encoded member continuation>`;
-- availability wording never upgrades `defined`, `requires_setup`, `requires_verification`, or `requires_organization_connection` into `available_now`;
-- no Person/credential/organization/patient authority is implied.
+```ts
+import { describe, expect, it } from "vitest";
+import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
+import { projectPublicLivingUniverseForActionId } from "@/lib/orchestration/public-living-universe";
 
-For intentionally unmapped generic actions such as broad `learn`, require a truthful non-fabricated state rather than inventing a clinical or placement Path.
+const intentionallyUnmapped = new Set(["learn"]);
 
-- [ ] **Step 2: Run RED/verification**
-
-```bash
-npx vitest run tests/public-value-before-signup.test.ts
+describe("public value before signup", () => {
+  it("projects truthful Path value before asking for an account", () => {
+    for (const action of PUBLIC_LIVING_ACTIONS) {
+      const result = projectPublicLivingUniverseForActionId(action.id);
+      if (intentionallyUnmapped.has(action.id)) {
+        expect(result).toBeNull();
+        continue;
+      }
+      expect(result, action.id).not.toBeNull();
+      expect(result!.title.length).toBeGreaterThan(0);
+      expect(result!.summary.length).toBeGreaterThan(0);
+      expect(result!.governance.length).toBeGreaterThan(0);
+      expect(result!.continuationHref).toBe(`/member?path=${encodeURIComponent(result!.pathId)}`);
+      expect(["available_now", "requires_setup", "requires_verification", "requires_organization_connection", "defined"])
+        .toContain(result!.availability);
+    }
+  });
+});
 ```
 
-- [ ] **Step 3: Fix only proven coverage defects**
+If additional actions are intentionally unmapped on current main, add them to `intentionallyUnmapped` only when the approved product truth genuinely says the visitor has not provided enough context; do not use this set to hide a broken mapping.
 
-Prefer adding/reconciling an existing catalog mapping over inventing new Path IDs. If a goal cannot yet be mapped truthfully, preserve a conversation/no-result state.
+- [ ] **Step 2: Add source assertion for the semantic CTA**
 
-- [ ] **Step 4: Run GREEN**
+```ts
+import { readFileSync } from "node:fs";
+const stage = readFileSync("src/components/marketing/public-living-universe-stage.tsx", "utf8");
+expect(stage).toContain('const signupHref = `/signup?returnTo=${encodeURIComponent(item.continuationHref)}`');
+expect(stage).toContain("Join free and start here");
+expect(stage).toContain("Joining costs nothing and is not a credential.");
+```
+
+- [ ] **Step 3: Run RED/verification**
+
+```bash
+npx vitest run tests/public-value-before-signup.test.ts tests/public-living-home.test.ts
+```
+
+- [ ] **Step 4: Repair only real mapping/copy defects**
+
+A valid fix changes the existing server map/catalog projection or semantic stage. Do not invent a new Path ID or turn `requires_*`/`defined` into `available_now`.
+
+- [ ] **Step 5: Run GREEN and commit**
 
 ```bash
 npx vitest run \
@@ -158,293 +162,304 @@ npx vitest run \
   tests/public-living-universe-reference-parity.test.ts \
   tests/public-living-universe-persistent-stage.test.ts \
   tests/public-living-home.test.ts
-```
-
-- [ ] **Step 5: Commit only if code/test changes occurred**
-
-```bash
-git add tests/public-value-before-signup.test.ts src/lib/orchestration/public-living-universe.ts src/components/marketing src/lib/marketing/public-living-actions.ts
-git commit -m "test(growth): prove public value before signup"
+git add tests/public-value-before-signup.test.ts src/lib/orchestration/public-living-universe.ts src/components/marketing/public-living-universe-stage.tsx src/lib/marketing/public-living-actions.ts
+git commit -m "test(growth): prove value before signup"
 ```
 
 ---
 
-### Task 3: Prove canonical signup preserves the Path and still creates only one free Person
+### Task 3: Prove signup/login preserve only safe Person Path context
 
 **Files:**
-- Create: `tests/person-path-signup-continuity.test.ts`
+- Create: `tests/person-path-auth-continuity.test.ts`
 - Reuse/modify only if a defect is proven:
+  - `src/lib/auth/return-to.ts`
   - `src/app/signup/page.tsx`
   - `src/app/signup/signup-form.tsx`
+  - `src/app/login/page.tsx`
+  - `src/components/clinic/login-form.tsx`
   - `src/app/api/account/signup/route.ts`
-  - `src/lib/auth/return-to.ts`
-  - `src/lib/auth/person-account-repository.ts`
 
 **Interfaces:**
-- Public Path CTA → `/signup?returnTo=/member?path=<id>` → successful signup → `/member?path=<id>`.
+- `safeMemberReturnTo(value)` accepts only `/member` or `/member?path=<known-catalog-id>`.
+- `safePersonReturnTo(value)` accepts only safe member, `/grid`, `/edu` targets.
 
-- [ ] **Step 1: Write RED/verification tests**
+- [ ] **Step 1: Write exact return-target tests**
 
-Cover:
-- valid catalog Path survives `safePersonReturnTo`;
-- unknown Path is rejected and falls back safely;
-- duplicate `path` query parameters are rejected;
-- hash fragments are rejected for `/member` continuation;
-- external/protocol-relative/backslash/CRLF return targets are rejected;
-- signup form redirects only to its server-sanitized `returnTo` or `/member`;
-- account creation still creates no Organization, membership, professional verification, patient relationship, Grid eligibility, payment, or clinic workspace;
-- legal acceptance and release gate remain mandatory.
+```ts
+import { describe, expect, it } from "vitest";
+import { safeMemberReturnTo, safePersonReturnTo } from "@/lib/auth/return-to";
+import { klinikosPathCatalog } from "@/lib/paths/catalog";
 
-- [ ] **Step 2: Run tests**
+describe("Person Path auth continuity", () => {
+  const pathId = klinikosPathCatalog[0]!.id;
+  it("preserves one known Path", () => {
+    const target = `/member?path=${encodeURIComponent(pathId)}`;
+    expect(safeMemberReturnTo(target)).toBe(target);
+    expect(safePersonReturnTo(target)).toBe(target);
+  });
+  it("rejects unknown/ambiguous/external return targets", () => {
+    expect(safePersonReturnTo("/member?path=not-real")).toBeNull();
+    expect(safePersonReturnTo(`/member?path=${pathId}&path=${pathId}`)).toBeNull();
+    expect(safePersonReturnTo("//evil.example/member")).toBeNull();
+    expect(safePersonReturnTo("https://evil.example/member")).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Add source-level authority separation assertions**
+
+```ts
+import { readFileSync } from "node:fs";
+const signup = readFileSync("src/app/api/account/signup/route.ts", "utf8");
+const login = readFileSync("src/app/login/page.tsx", "utf8");
+expect(login).toContain("safeClinicReturnTo");
+expect(login).toContain("safePersonReturnTo");
+for (const forbiddenCreation of ["organization.create", "membership.create", "provider.create", "patient.create"])
+  expect(signup).not.toContain(forbiddenCreation);
+```
+
+- [ ] **Step 3: Run**
 
 ```bash
 npx vitest run \
-  tests/person-path-signup-continuity.test.ts \
+  tests/person-path-auth-continuity.test.ts \
   tests/person-account-login-continuity.test.ts \
   tests/member-signup-legal-evidence-contract.test.ts \
   tests/person-account-authentication.test.ts
 ```
 
-- [ ] **Step 3: Fix only server-owned defects**
+- [ ] **Step 4: Fix only server-owned defects and re-run**
 
-Do not move return-target validation into client code. Do not weaken the release gate to make the journey test easier.
+Do not move redirect validation to the client and do not weaken the signup release/legal gate.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add tests/person-path-signup-continuity.test.ts src/app/signup src/app/api/account/signup/route.ts src/lib/auth
-git commit -m "test(auth): prove free Person Path continuity"
+git add tests/person-path-auth-continuity.test.ts src/lib/auth/return-to.ts src/app/signup src/app/login src/components/clinic/login-form.tsx src/app/api/account/signup/route.ts
+git commit -m "test(auth): prove safe free Person continuation"
 ```
 
 ---
 
-### Task 4: Prove returning-Person sign-in resumes the same safe Path
-
-**Files:**
-- Create: `tests/person-path-login-continuity.test.ts`
-- Reuse/modify only if a defect is proven:
-  - `src/app/login/page.tsx`
-  - `src/components/clinic/login-form.tsx`
-  - `src/lib/auth/return-to.ts`
-  - existing Person login/auth route used by `LoginForm`
-
-**Interfaces:**
-- Protected public action and free-Person continuity must not collapse clinic-session authority and Person-session authority into one login meaning.
-
-- [ ] **Step 1: Write tests**
-
-Require:
-- an existing Person session presented with `/member?path=<valid-id>` lands on that Person Path;
-- an invalid Person return target falls back to `/member`;
-- clinic sessions continue through `safeClinicReturnTo` and never acquire Person authority merely because the public intent was person-oriented;
-- the “Join free” link on `/login` carries only `safePersonReturnTo` values;
-- legacy `next` remains same-origin guarded and cannot bypass canonical `returnTo` safety;
-- account/clinic credential disambiguation remains unchanged.
-
-- [ ] **Step 2: Run**
-
-```bash
-npx vitest run tests/person-path-login-continuity.test.ts tests/person-account-login-continuity.test.ts
-```
-
-- [ ] **Step 3: Repair only proven continuity/auth defects, then commit**
-
-```bash
-git add tests/person-path-login-continuity.test.ts src/app/login src/components/clinic/login-form.tsx src/lib/auth
-git commit -m "test(auth): prove returning Person goal continuity"
-```
-
----
-
-### Task 5: Prove authenticated re-resolution and first governed action
+### Task 4: Prove member re-resolution never turns query input into authority
 
 **Files:**
 - Create: `tests/member-path-reresolution.test.ts`
-- Reuse/modify only if a gap is proven:
+- Reuse/modify only if a defect is proven:
   - `src/app/member/page.tsx`
   - `src/lib/member/member-home-repository.ts`
   - `src/lib/member/member-action-routes.ts`
-  - `tests/living-universe-member-home.test.ts`
 
 **Interfaces:**
-- Query input → canonical server Path → `personEntryHrefForPath(path)` → `isAllowedMemberActionHref(candidate)` → `MemberHomeProjection.actions`.
+- `getMemberHomeProjection(session, requestedPathId?)` resolves `requestedPathId` back through `klinikosPathCatalog`.
+- Person-safe action is generated through `personEntryHrefForPath()` then `isAllowedMemberActionHref()`.
 
-- [ ] **Step 1: Write tests for every Person-reachable Path class**
+- [ ] **Step 1: Write repository/source contract**
 
-Require:
-- query `path` is looked up against the server catalog before display or route generation;
-- unknown Path never appears in title/timeline/action;
-- `Continue this path` is emitted only when the person-safe entry href passes the allowlist;
-- requested Path changes navigation/context only, not credential, eligibility, membership, authority, or verification state;
-- a clinic-oriented Path can route a Person toward an allowed claim/setup entry but cannot manufacture clinic membership;
-- Grid/EDU destinations independently enforce their own downstream state.
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
-- [ ] **Step 2: Run**
+const page = readFileSync("src/app/member/page.tsx", "utf8");
+const repo = readFileSync("src/lib/member/member-home-repository.ts", "utf8");
+
+describe("member Path re-resolution", () => {
+  it("treats query Path as navigation rather than evidence", () => {
+    expect(page).toContain("klinikosPathCatalog.find");
+    expect(repo).toContain("klinikosPathCatalog.find");
+    expect(repo).toContain("personEntryHrefForPath");
+    expect(repo).toContain("isAllowedMemberActionHref");
+    expect(repo).toContain("navigation input, never evidence");
+  });
+  it("keeps authority separation visible", () => {
+    expect(repo).toContain("not a license, organization role, patient relationship, Grid eligibility decision, or payment authority");
+  });
+});
+```
+
+- [ ] **Step 2: Add behavior test with existing repository mocks/fixtures**
+
+Use the same Prisma mock style as current member/account tests. Call `getMemberHomeProjection()` with one valid catalog Path and one invalid ID. Assert valid input emits `continue-path` and invalid input emits no `continue-path`; neither changes claims/verification status.
+
+The committed test must contain real mock calls and assertions—remove any scaffolding comments before commit.
+
+- [ ] **Step 3: Run and fix**
 
 ```bash
 npx vitest run tests/member-path-reresolution.test.ts tests/living-universe-member-home.test.ts
 ```
 
-- [ ] **Step 3: Fix and commit if required**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add tests/member-path-reresolution.test.ts src/app/member/page.tsx src/lib/member
-git commit -m "test(member): prove authenticated Path re-resolution"
+git commit -m "test(member): prove Path re-resolution"
 ```
 
 ---
 
-### Task 6: Keep raw anonymous input out of continuation/storage/analytics boundaries
+### Task 5: Add privacy-minimized funnel counters without a surveillance data model
 
 **Files:**
-- Create: `tests/public-growth-privacy.test.ts`
-- Modify only if a violation is found:
-  - `src/components/marketing/public-living-gateway.tsx`
-  - `src/lib/distribution/public-continuation.ts`
-  - `src/lib/orchestration/public-living-universe.ts`
-  - `src/app/api/zumi/public/route.ts`
-  - existing public Zumi quota/session modules
-
-**Interfaces:**
-- The current browser session identifier may remain a random opaque ID; raw prompt history must not be persisted by P02 continuation mechanics.
-
-- [ ] **Step 1: Add privacy/source tests**
-
-Require:
-- `protectedPublicContinuationHref()` never accepts/stores prompt text;
-- Path continuation contains only a catalog Path ID;
-- raw prompt is never written to localStorage/IndexedDB;
-- sessionStorage use remains limited to the existing opaque public-conversation identifier, not prompt history;
-- signup/login URLs contain no free text;
-- growth event payloads added by P02 cannot contain email, name, raw prompt, patient details, notes, or arbitrary object spreads;
-- public API error/no-result output remains `Cache-Control: no-store` where already required by the route contract.
-
-- [ ] **Step 2: Run P16 disclosure/security checks**
-
-```bash
-npx vitest run tests/public-growth-privacy.test.ts
-npm run security:client-boundary
-npm run security:api-disclosure
-```
-
-- [ ] **Step 3: Fix any leakage at the owning server/client boundary, then commit**
-
-```bash
-git add tests/public-growth-privacy.test.ts src/components/marketing/public-living-gateway.tsx src/lib/distribution/public-continuation.ts src/lib/orchestration/public-living-universe.ts src/app/api/zumi/public/route.ts
-git commit -m "test(growth): enforce public continuation privacy"
-```
-
----
-
-### Task 7: Add privacy-minimized P02 KPI evidence by reusing existing event substrates
-
-**Files:**
-- Read first:
-  - `prisma/models/universal-account.prisma` (`AccountEvent`)
-  - `src/lib/auth/person-account-repository.ts`
-  - current public Zumi quota/usage repository and event/cost modules discovered from `/api/zumi/public`
-- Create only if no equivalent typed registry exists: `src/lib/distribution/public-growth-events.ts`
+- Create: `prisma/models/public-growth.prisma`
+- Create: migration under `prisma/migrations/<timestamp>_public_growth_daily_counter/migration.sql`
+- Create: `src/lib/distribution/public-growth-events.ts`
+- Create: `src/lib/repositories/public-growth-repository.ts`
 - Create: `tests/public-growth-telemetry.test.ts`
-- Modify the smallest existing server-side event/repository modules required for controlled counters.
+- Modify: `src/app/api/zumi/public/route.ts`
+- Modify: `src/app/api/account/signup/route.ts`
+- Modify: `src/app/member/page.tsx`
 
 **Interfaces:**
-- KPI events/classes:
-  - `public_first_value`
-  - `public_no_result`
-  - `free_signup_started`
-  - `free_signup_completed`
-  - `person_path_resumed`
-  - `first_governed_action_selected`
-- Event payloads contain controlled enum/path IDs, coarse source, boolean outcome, and timing bucket only.
+- Daily aggregate only; no user/session/prompt/email/name/IP columns.
+- Events: `PUBLIC_FIRST_VALUE | PUBLIC_NO_RESULT | FREE_SIGNUP_COMPLETED | PERSON_PATH_RESUMED`.
+- `recordPublicGrowthEvent({ eventType, pathId?, day? }): Promise<void>` increments one aggregate row.
 
-- [ ] **Step 1: Audit before adding persistence**
+- [ ] **Step 1: Write the RED telemetry/privacy test**
 
-Prefer existing public Zumi durable usage/quota/event persistence for pre-auth aggregate counts and existing `AccountEvent` for authenticated signup/resume evidence. Do **not** add a new analytics vendor or a generic event table if current substrates can support controlled counters.
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
-If current public storage cannot safely support these counters without storing sensitive conversation content, add only the smallest aggregate counter/event record required and document why reuse was insufficient.
+const schema = readFileSync("prisma/models/public-growth.prisma", "utf8");
+const events = readFileSync("src/lib/distribution/public-growth-events.ts", "utf8");
 
-- [ ] **Step 2: Write RED/privacy tests**
+describe("P02 funnel telemetry", () => {
+  it("stores aggregate counts without user-level tracking", () => {
+    for (const required of ["day", "eventType", "count"]) expect(schema).toContain(required);
+    for (const forbidden of ["personId", "accountId", "sessionId", "email", "ipAddress", "userAgent", "prompt", "question", "metadata"])
+      expect(schema).not.toContain(forbidden);
+  });
+  it("accepts only controlled event names", () => {
+    for (const name of ["PUBLIC_FIRST_VALUE", "PUBLIC_NO_RESULT", "FREE_SIGNUP_COMPLETED", "PERSON_PATH_RESUMED"])
+      expect(events).toContain(name);
+  });
+});
+```
 
-Require typed event names and reject raw prompt, email, name, patient detail, free-text body, arbitrary query string, arbitrary metadata object, or scene payload. Verify account-linked events are written only after authentication exists.
+- [ ] **Step 2: Add the aggregate model**
 
-- [ ] **Step 3: Instrument conversion boundaries**
+```prisma
+model PublicGrowthDailyCounter {
+  id        String   @id @default(cuid())
+  day       DateTime @db.Date
+  eventType String
+  pathId    String   @default("")
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-Instrument server-confirmable moments rather than arbitrary client clicks whenever possible:
-- public value: after a real public Path/Object Stage projection is produced;
-- signup completed: canonical signup transaction/event;
-- resumed: member server successfully resolves a requested Path;
-- first governed action: server-safe route/action selection where an evidence hook exists.
+  @@unique([day, eventType, pathId])
+  @@index([eventType, day])
+  @@map("public_growth_daily_counters")
+}
+```
 
-- [ ] **Step 4: Run**
+Migration must create the table, unique key, and index only; no PII columns.
+
+- [ ] **Step 3: Add typed event registry and repository**
+
+```ts
+// src/lib/distribution/public-growth-events.ts
+export const PUBLIC_GROWTH_EVENT_TYPES = [
+  "PUBLIC_FIRST_VALUE", "PUBLIC_NO_RESULT", "FREE_SIGNUP_COMPLETED", "PERSON_PATH_RESUMED",
+] as const;
+export type PublicGrowthEventType = typeof PUBLIC_GROWTH_EVENT_TYPES[number];
+```
+
+```ts
+// src/lib/repositories/public-growth-repository.ts
+import "server-only";
+import { db } from "@/lib/db";
+import type { PublicGrowthEventType } from "@/lib/distribution/public-growth-events";
+
+export async function recordPublicGrowthEvent(input: { eventType: PublicGrowthEventType; pathId?: string; day?: Date }) {
+  const d = input.day ?? new Date();
+  const day = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const pathId = input.pathId?.trim().slice(0, 120) ?? "";
+  await db.publicGrowthDailyCounter.upsert({
+    where: { day_eventType_pathId: { day, eventType: input.eventType, pathId } },
+    create: { day, eventType: input.eventType, pathId, count: 1 },
+    update: { count: { increment: 1 } },
+  });
+}
+```
+
+Before recording a non-empty `pathId`, callers must obtain it from a server-owned `PublicLivingUniverseProjection` or `klinikosPathCatalog`; never pass arbitrary request text.
+
+- [ ] **Step 4: Instrument only server-confirmable boundaries**
+
+In `/api/zumi/public`, after computing a non-null `universe`, fire-and-forget `PUBLIC_FIRST_VALUE` with `universe.pathId`; when the turn truthfully produces no universe/routeable result, record `PUBLIC_NO_RESULT`. Do not let telemetry failure fail the public answer:
+
+```ts
+void recordPublicGrowthEvent({ eventType: universe ? "PUBLIC_FIRST_VALUE" : "PUBLIC_NO_RESULT", pathId: universe?.pathId })
+  .catch(() => undefined);
+```
+
+In canonical signup route, after successful Person transaction/session creation, record `FREE_SIGNUP_COMPLETED` with no path/user identifier.
+
+In `/member`, after `requestedPath` is resolved from the catalog, record `PERSON_PATH_RESUMED` with `requestedPath.id`; do not pass account/person/session identifiers.
+
+- [ ] **Step 5: Run migration/test/security verification**
 
 ```bash
+npm run db:generate
+npm run db:validate
 npx vitest run tests/public-growth-telemetry.test.ts
 npm run security:check
+npm run type-check
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/distribution/public-growth-events.ts src/lib/auth src/lib/repositories prisma tests/public-growth-telemetry.test.ts
-git commit -m "feat(growth): measure free Person conversion safely"
+git add prisma src/lib/distribution/public-growth-events.ts src/lib/repositories/public-growth-repository.ts tests/public-growth-telemetry.test.ts src/app/api/zumi/public/route.ts src/app/api/account/signup/route.ts src/app/member/page.tsx
+git commit -m "feat(growth): add privacy-safe funnel evidence"
 ```
 
 ---
 
-### Task 8: Prove no-result, provider-outage, disabled-signup, and P01-failure journeys
+### Task 6: Prove degraded states, run P16 gates, and reconcile exact-head P02 truth
 
 **Files:**
 - Create: `tests/person-growth-engine-degraded-states.test.ts`
-- Modify only when a missing state is proven:
+- Modify only if a test proves a defect:
   - `src/components/marketing/public-living-gateway.tsx`
   - `src/components/marketing/public-living-universe-stage.tsx`
   - `src/app/signup/page.tsx`
   - `src/app/member/page.tsx`
-  - existing public Zumi fallback modules
-  - browser verification script
-
-**Interfaces:**
-- Every degraded state remains actionable and truthful without WebGL or external AI.
-
-- [ ] **Step 1: Add tests**
-
-Cover:
-- public Zumi provider unavailable → deterministic public intent/path behavior or truthful fallback;
-- no canonical Path → no fabricated card/result;
-- public signup release disabled → `View free membership status`, not fake `Join free` success;
-- invalid/stale Path ID → safe member fallback;
-- P01 canvas unavailable → same value→signup→member path remains complete;
-- 390px mobile + keyboard path can reach public value, free membership status/signup, and resumed member action;
-- reduced motion does not remove the acquisition path.
-
-- [ ] **Step 2: Run targeted tests + browser QA**
-
-```bash
-npx vitest run tests/person-growth-engine-degraded-states.test.ts
-npm run build
-```
-
-Extend the existing browser interaction verifier only where current coverage cannot exercise these states.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add tests/person-growth-engine-degraded-states.test.ts src/components/marketing src/app/signup src/app/member scripts/verify-frontend-browser-interactions.mjs
-git commit -m "test(growth): prove degraded free Person journeys"
-```
-
----
-
-### Task 9: Run the P02 + P16 release gate and reconcile implementation truth
-
-**Files:**
+  - `scripts/verify-frontend-browser-interactions.mjs`
 - Modify: `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json`
-- Reuse current release/evidence registry; do not create another P02 status document.
 
 **Interfaces:**
-- Produces exact P02 state/evidence while keeping environment-level public signup availability separate.
+- Proves no-result, provider outage, signup-disabled, invalid Path, no-WebGL, mobile/reduced-motion paths.
 
-- [ ] **Step 1: Run complete verification**
+- [ ] **Step 1: Write degraded-state source/behavior test**
+
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+const stage = readFileSync("src/components/marketing/public-living-universe-stage.tsx", "utf8");
+const publicRoute = readFileSync("src/app/api/zumi/public/route.ts", "utf8");
+
+describe("P02 degraded states", () => {
+  it("keeps a deterministic public path when paid public inference is unavailable", () => {
+    expect(publicRoute).toContain("if (!publicZumiDurableQuotaAttested(request))");
+    expect(publicRoute).toContain("resolvePublicLivingIntent");
+    expect(publicRoute).toContain("degraded: true");
+  });
+  it("does not fake enabled signup", () => {
+    expect(stage).toContain("View free membership status");
+    expect(stage).toContain("Account creation remains closed until its release evidence is complete.");
+  });
+});
+```
+
+Add browser assertions for 390px, keyboard, reduced motion, and P01 forced Precision/no-WebGL. The journey must reach public value/status/signup and member continuation without interacting with canvas.
+
+- [ ] **Step 2: Run complete local release suite**
 
 ```bash
 npm run security:check
@@ -458,22 +473,22 @@ npm run test:mvp
 npm run build
 ```
 
-- [ ] **Step 2: Record what was reused versus changed**
+- [ ] **Step 3: Update existing P02 traceability record**
 
-Trace P02 requirements to the existing public Path projection, continuation href, return-to guard, signup rail, member Path re-resolution, new coverage/telemetry tests, and any minimal fixes actually required.
+Record reused continuation files, exact new tests, aggregate KPI evidence, P16 gates, and any minimal defects fixed. Do not create a separate P02 status registry.
 
-- [ ] **Step 3: Keep release truth precise**
+- [ ] **Step 4: Keep environment-level release truth separate**
 
-Do not claim “free signup is live” from implementation/CI alone. `getMemberSignupReleaseState().enabled` remains the environment/legal release authority.
+`getMemberSignupReleaseState().enabled` remains the authority for whether free signup is actually open in a deployment. CI green means implementation evidence, not public release approval.
 
-- [ ] **Step 4: Push final candidate and require exact-head GitHub Quality**
+- [ ] **Step 5: Push final candidate and require exact-head GitHub Quality**
 
 Both `Quality / verify` and `Quality / deploy-contract` must pass on the same final SHA.
 
-- [ ] **Step 5: Commit evidence reconciliation**
+- [ ] **Step 6: Commit evidence**
 
 ```bash
-git add docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json
+git add tests/person-growth-engine-degraded-states.test.ts scripts/verify-frontend-browser-interactions.mjs docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json
 git commit -m "docs(governance): record P02 growth-engine evidence"
 ```
 
@@ -481,14 +496,14 @@ git commit -m "docs(governance): record P02 growth-engine evidence"
 
 P02 is complete only when:
 
-1. mapped visitors receive real public-safe Path value before signup;
-2. public Path continuation reuses the canonical `/member?path=<catalog-id>` rail;
-3. the canonical free Person signup/login path preserves only server-validated continuation;
-4. member entry re-resolves the Path from the server catalog and routes only through person-safe action rules;
-5. no continuation query creates verification, eligibility, membership, tenant, professional, patient, clinical, billing, or payment authority;
-6. raw anonymous prompt text never enters continuation URLs, browser persistence, or growth telemetry;
-7. signup-disabled, no-result, provider-outage, invalid-Path, mobile, reduced-motion, and no-WebGL states are truthful and complete;
-8. P02 KPIs have privacy-minimized evidence using existing storage/event substrates wherever possible;
-9. P16 disclosure/abuse/security gates pass;
+1. mapped visitors receive truthful public-safe Path value before signup;
+2. continuation reuses canonical `/member?path=<catalog-id>` rather than a duplicate token/auth system;
+3. signup/login preserve only server-validated Person continuation;
+4. `/member` re-resolves the Path and routes only through person-safe action rules;
+5. Path/query input never creates verification, eligibility, membership, tenant, professional, patient, clinical, billing, or payment authority;
+6. raw anonymous prompt text never enters continuation URLs, durable funnel telemetry, or member Path state;
+7. funnel evidence is daily aggregate only and stores no user/session/PII identifiers;
+8. signup-disabled, no-result, provider-degraded, invalid-Path, mobile, reduced-motion, and no-WebGL states are truthful and complete;
+9. P16 disclosure/security gates pass;
 10. exact-head `Quality / verify` and `Quality / deploy-contract` are green;
 11. implementation readiness is not misrepresented as public membership release approval.
