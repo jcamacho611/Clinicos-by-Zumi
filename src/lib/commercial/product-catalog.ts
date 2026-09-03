@@ -16,7 +16,7 @@ export const commercialProductKeys = [
 ] as const;
 
 export type CommercialProductKey = (typeof commercialProductKeys)[number];
-export type CommercialProductLifecycle = "active" | "legacy_evidence_only";
+export type CommercialProductLifecycle = "active" | "retired" | "legacy_evidence_only";
 export type CommercialAudience = "clinic" | "enterprise" | "professional" | "facility";
 export type CommercialRevenueClass =
   | "service"
@@ -39,30 +39,22 @@ export type CommercialProduct = {
   audience: CommercialAudience;
   billing: "one_time" | "monthly" | "custom";
   priceCents: number | null;
-  /** What kind of revenue event this offer represents. */
   revenueClass: CommercialRevenueClass;
-  /** The governed path a qualified buyer should enter. This is separate from the payment processor. */
   commercialRoute: CommercialRoute;
-  /** Describes whether the displayed commercial amount is exact, a floor, custom, or historical evidence only. */
   priceType: CommercialPriceType;
-  /** True when a human/system qualification gate must be satisfied before the commercial path advances. */
   qualificationRequired: boolean;
-  /** Canonical public/sales destination for this offer, or null when the product cannot start a new sale. */
   conversionDestination: string | null;
-  /** Current product can start a new governed checkout. Historical aliases cannot. */
   lifecycle: CommercialProductLifecycle;
-  /** Current sellable offer that may be presented to a buyer; its route may still require qualification, review, scope, or contract. */
   publicPurchasable: boolean;
-  /** Buyer may start a public checkout immediately, without a qualification or sales gate. */
   directPublicCheckoutEligible: boolean;
   modules: readonly string[];
   whopPlanEnvVars: readonly string[];
-  /**
-   * Variable-cost allowances are deliberately configured outside source code.
-   * This avoids silently spending vendor money before a commercial package has
-   * actually funded the corresponding usage bucket.
-   */
-  allowanceEnv: Partial<Record<"ai" | "voice" | "sms" | "email" | "maps" | "document_processing" | "storage" | "integrations", string>>;
+  allowanceEnv: Partial<
+    Record<
+      "ai" | "voice" | "sms" | "email" | "maps" | "document_processing" | "storage" | "integrations",
+      string
+    >
+  >;
   postPurchaseBoundary: string;
 };
 
@@ -72,6 +64,14 @@ const clinicBoundary =
 const serviceBoundary =
   "Payment purchases only the named service. It does not activate production software, PHI workflows, clinical authority, professional eligibility, Grid eligibility, or any regulated capability.";
 
+/**
+ * These historical clinic offers remain resolvable because payment, quote, contract,
+ * subscription and reconciliation evidence may still reference their stable keys.
+ * They are retired from NEW sales under the current governing doctrine:
+ * FREE HEALTHCARE NETWORK + PAID OPERATING INFRASTRUCTURE.
+ *
+ * Do not delete or silently reuse these keys for a different new offer.
+ */
 export const commercialProducts: readonly CommercialProduct[] = [
   {
     key: "operational_audit",
@@ -83,10 +83,10 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "self_serve",
     priceType: "fixed",
     qualificationRequired: false,
-    conversionDestination: "/sales",
-    lifecycle: "active",
-    publicPurchasable: true,
-    directPublicCheckoutEligible: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
+    directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
@@ -102,9 +102,9 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "qualified_service",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
-    lifecycle: "active",
-    publicPurchasable: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
     directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
@@ -116,15 +116,14 @@ export const commercialProducts: readonly CommercialProduct[] = [
     label: clinicCommercialOffers.foundingImplementation.name,
     audience: "clinic",
     billing: "custom",
-    // `from $8,000` is a scope floor, not a fixed amount the browser may charge.
     priceCents: null,
     revenueClass: "implementation",
     commercialRoute: "sales_led",
     priceType: "starting_at",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
-    lifecycle: "active",
-    publicPurchasable: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
     directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
@@ -142,9 +141,9 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
-    lifecycle: "active",
-    publicPurchasable: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
     directPublicCheckoutEligible: false,
     modules: ["advanced_reports"],
     whopPlanEnvVars: [],
@@ -170,9 +169,9 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
-    lifecycle: "active",
-    publicPurchasable: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
     directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
@@ -198,9 +197,9 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
-    lifecycle: "active",
-    publicPurchasable: true,
+    conversionDestination: null,
+    lifecycle: "retired",
+    publicPurchasable: false,
     directPublicCheckoutEligible: false,
     modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
     whopPlanEnvVars: [],
@@ -269,8 +268,6 @@ export const commercialProducts: readonly CommercialProduct[] = [
     label: "Klinikos Grid Professional (legacy Whop evidence)",
     audience: "professional",
     billing: "monthly",
-    // Historical processor amount retained for reconciliation only. Current public
-    // Grid subscription truth lives in `gridPlans` and must not be inferred from this.
     priceCents: 3_900,
     revenueClass: "historical_evidence",
     commercialRoute: "historical_evidence_only",
@@ -291,8 +288,6 @@ export const commercialProducts: readonly CommercialProduct[] = [
     label: "Klinikos Grid Facility (legacy Whop evidence)",
     audience: "facility",
     billing: "monthly",
-    // Historical processor amount retained for reconciliation only. Current public
-    // organization pricing lives in `gridPlans` and must not be inferred from this.
     priceCents: 9_900,
     revenueClass: "historical_evidence",
     commercialRoute: "historical_evidence_only",
@@ -330,7 +325,10 @@ export function canStartDirectCommercialCheckout(product: CommercialProduct) {
   );
 }
 
-export function resolveCommercialCheckoutAmount(product: CommercialProduct, requestedAmountCents?: number | null) {
+export function resolveCommercialCheckoutAmount(
+  product: CommercialProduct,
+  requestedAmountCents?: number | null,
+) {
   const amountCents = requestedAmountCents ?? product.priceCents ?? null;
   if (amountCents !== null && (!Number.isInteger(amountCents) || amountCents < 0)) {
     throw new Error("Expected checkout amount must be a non-negative integer number of cents.");
@@ -349,7 +347,10 @@ export function whopPlanIdForProduct(product: CommercialProduct, env: NodeJS.Pro
   return null;
 }
 
-export function productForWhopPlanId(planId: string | null | undefined, env: NodeJS.ProcessEnv = process.env) {
+export function productForWhopPlanId(
+  planId: string | null | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+) {
   const candidate = planId?.trim();
   if (!candidate) return undefined;
   return commercialProducts.find((product) => whopPlanIdForProduct(product, env) === candidate);
