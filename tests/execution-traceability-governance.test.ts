@@ -10,6 +10,19 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
+type ProgramFixture = Record<string, unknown>;
+type RequirementFixture = Record<string, unknown>;
+type LedgerFixture = {
+  commercialLaws: {
+    personAccount: string;
+    organizationActivation: string;
+    paymentNeverCreates: string[];
+  };
+  openReconciliations: Array<{ subjectRef: string }>;
+  programs: ProgramFixture[];
+  requirements: RequirementFixture[];
+};
+
 const root = process.cwd();
 const jsonLedger = resolve(root, "docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json");
 const yamlLedger = resolve(root, "docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.yaml");
@@ -20,11 +33,11 @@ function read(path: string) {
   return readFileSync(path, "utf8");
 }
 
-function loadLedger() {
-  return JSON.parse(read(jsonLedger));
+function loadLedger(): LedgerFixture {
+  return JSON.parse(read(jsonLedger)) as LedgerFixture;
 }
 
-function validateFixture(mutator: (ledger: any) => void) {
+function validateFixture(mutator: (ledger: LedgerFixture) => void) {
   const ledger = loadLedger();
   mutator(ledger);
   const dir = mkdtempSync(resolve(tmpdir(), "klinikos-traceability-"));
@@ -68,7 +81,7 @@ describe("P00 execution traceability governance", () => {
 
   it("registers the known draft conflicts instead of silently inheriting them", () => {
     const ledger = loadLedger();
-    const refs = ledger.openReconciliations.map((item: { subjectRef: string }) => item.subjectRef);
+    const refs = ledger.openReconciliations.map((item) => item.subjectRef);
     expect(refs).toContain("PR#519");
     expect(refs).toContain("PR#524");
   });
@@ -76,7 +89,9 @@ describe("P00 execution traceability governance", () => {
   it("ships a dependency-free validator and wires it into package + Quality", () => {
     expect(existsSync(validator)).toBe(true);
 
-    const pkg = JSON.parse(read(resolve(root, "package.json")));
+    const pkg = JSON.parse(read(resolve(root, "package.json"))) as {
+      scripts: Record<string, string>;
+    };
     expect(pkg.scripts["governance:traceability"]).toBe(
       "node scripts/validate-execution-traceability.mjs",
     );
