@@ -1,5 +1,7 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
@@ -9,6 +11,22 @@ const validator = resolve(root, "scripts/validate-execution-traceability.mjs");
 
 function read(path: string) {
   return readFileSync(path, "utf8");
+}
+
+function runValidator(path = jsonLedger) {
+  return spawnSync(process.execPath, [validator, path], {
+    cwd: root,
+    encoding: "utf8",
+  });
+}
+
+function mutatedLedger(mutator: (ledger: Record<string, unknown>) => void) {
+  const dir = mkdtempSync(resolve(tmpdir(), "klinikos-traceability-"));
+  const path = resolve(dir, "ledger.json");
+  const ledger = JSON.parse(read(jsonLedger)) as Record<string, unknown>;
+  mutator(ledger);
+  writeFileSync(path, `${JSON.stringify(ledger, null, 2)}\n`, "utf8");
+  return path;
 }
 
 describe("P00 execution traceability governance", () => {
@@ -39,6 +57,118 @@ describe("P00 execution traceability governance", () => {
     const refs = ledger.openReconciliations.map((item: { subjectRef: string }) => item.subjectRef);
     expect(refs).toContain("PR#519");
     expect(refs).toContain("PR#524");
+  });
+
+  it("accepts the checked-in canonical ledger", () => {
+    const result = runValidator();
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Execution traceability valid");
+  });
+
+  it("rejects malformed JSON", () => {
+    const dir = mkdtempSync(resolve(tmpdir(), "klinikos-traceability-bad-json-"));
+    const path = resolve(dir, "ledger.json");
+    writeFileSync(path, "{ not-json", "utf8");
+    const result = runValidator(path);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("malformed JSON");
+  });
+
+  it("rejects duplicate requirement IDs", () => {
+    const path = mutatedLedger((ledger) => {
+      const planned = {
+        requirementId: "REQ-DUP",
+        title: "Trace one planned requirement",
+        sourceRefs: ["source:accepted"],
+        canonRefs: ["canon:accepted"],
+        strategyState: "NOW",
+        implementationState: "PLANNED",
+        programId: "P00",
+        realityIds: [],
+        journeyIds: [],
+        frameIds: ["F5"],
+        domainObjects: [],
+        routeOrApiContracts: [],
+        events: [],
+        zumiCapabilities: [],
+        monetizationClasses: [],
+        authorityGates: [],
+        securityPrivacyLegalGates: [],
+        codeDisposition: "EXTEND",
+        reuseTargets: ["existing governance substrate"],
+        testContracts: ["tests/execution-traceability-governance.test.ts"],
+        dependencies: [],
+        owner: "architecture",
+        kpis: ["orphan_requirement_count"],
+        releaseWave: "W0",
+        evidenceRefs: [],
+        currentGap: "Implementation remains planned.",
+      };
+      ledger.requirements = [planned, { ...planned }];
+    });
+    const result = runValidator(path);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("duplicate REQ-DUP");
+  });
+
+  it("rejects an unknown program reference and invalid strategy state", () => {
+    const path = mutatedLedger((ledger) => {
+      ledger.requirements = [{
+        requirementId: "REQ-BAD-PROGRAM",
+        title: "Invalid record",
+        sourceRefs: ["source:accepted"],
+        canonRefs: ["canon:accepted"],
+        strategyState: "MAGIC",
+        implementationState: "PLANNED",
+        programId: "P99",
+        realityIds: [],
+        journeyIds: [],
+        frameIds: [],
+        domainObjects: [],
+        routeOrApiContracts: [],
+        events: [],
+        zumiCapabilities: [],
+        monetizationClasses: [],
+        authorityGates: [],
+        securityPrivacyLegalGates: [],
+        codeDisposition: "REUSE",
+        reuseTargets: ["governance"],
+        testContracts: ["test"],
+        dependencies: [],
+        owner: "architecture",
+        kpis: ["orphan_requirement_count"],
+        releaseWave: "W0",
+        evidenceRefs: [],
+        currentGap: "Planned.",
+      }];
+    });
+    const result = runValidator(path);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unknown value MAGIC");
+    expect(result.stderr).toContain("unknown program P99");
+  });
+
+  it("rejects placeholders and broken commercial authority law", () => {
+    const path = mutatedLedger((ledger) => {
+      const commercialLaws = ledger.commercialLaws as Record<string, unknown>;
+      commercialLaws.organizationActivation = "FREE";
+      const programs = ledger.programs as Record<string, Record<string, unknown>>;
+      programs.P00.name = "TODO";
+    });
+    const result = runValidator(path);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("organizationActivation: expected COMMERCIAL");
+    expect(result.stderr).toContain("placeholder values are forbidden");
+  });
+
+  it("rejects invalid reconciliation state", () => {
+    const path = mutatedLedger((ledger) => {
+      const reconciliations = ledger.openReconciliations as Array<Record<string, unknown>>;
+      reconciliations[0].state = "IGNORE_IT";
+    });
+    const result = runValidator(path);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unknown value IGNORE_IT");
   });
 
   it("ships a dependency-free validator and wires it into package + Quality", () => {
