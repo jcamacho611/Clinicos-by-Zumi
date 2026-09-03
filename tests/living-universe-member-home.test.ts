@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { UniverseShell, type MemberHomeProjection } from "@/components/living-universe/universe-shell";
 import { canonicalEcosystemGraph } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import { memberRealityProjection } from "@/lib/living-reality/member-reality-projection";
 
 const projection: MemberHomeProjection = {
   person: {
@@ -44,10 +45,11 @@ const projection: MemberHomeProjection = {
     { id: "home", label: "Return home", href: "/member" },
   ],
 };
+const realityProjection = memberRealityProjection(projection);
 
 describe("person-level Living Universe home", () => {
   it("renders the server-projected canonical plane order, titles and numbers", () => {
-    const html = renderToStaticMarkup(createElement(UniverseShell, { projection }));
+    const html = renderToStaticMarkup(createElement(UniverseShell, { projection, realityProjection }));
     const expected = canonicalEcosystemGraph.planes.map((plane, index) => ({
       id: plane.id,
       title: plane.label,
@@ -62,7 +64,7 @@ describe("person-level Living Universe home", () => {
   });
 
   it("keeps one Person object while explaining lifecycle and authority truth", () => {
-    const html = renderToStaticMarkup(createElement(UniverseShell, { projection }));
+    const html = renderToStaticMarkup(createElement(UniverseShell, { projection, realityProjection }));
 
     expect(html).toContain("Jordan Lee");
     expect(html).toContain('data-living-object-id="person-profile"');
@@ -87,7 +89,8 @@ describe("person-level Living Universe home", () => {
         { id: "unsafe", label: "Untrusted", href: "https://example.test" },
       ],
     } as unknown as MemberHomeProjection;
-    const html = renderToStaticMarkup(createElement(UniverseShell, { projection: unsafe }));
+    const unsafeRealityProjection = memberRealityProjection(unsafe);
+    const html = renderToStaticMarkup(createElement(UniverseShell, { projection: unsafe, realityProjection: unsafeRealityProjection }));
 
     expect(html).toContain('data-mobile-inspector="true"');
     expect(html).toContain("Open Inspector");
@@ -105,9 +108,10 @@ describe("person-level Living Universe home", () => {
 
     expect(page).toContain("requirePersonAccountSession");
     expect(page).toContain("getMemberHomeProjection");
+    expect(page).toContain("memberRealityProjection");
     expect(page).toContain("klinikosPathCatalog.find");
     expect(page).toContain("requestedPath?.id");
-    expect(page).toContain("<UniverseShell projection={projection}");
+    expect(page).toContain("realityProjection={realityProjection}");
     expect(page).not.toContain("demo");
     expect(page).not.toContain("mock");
   });
