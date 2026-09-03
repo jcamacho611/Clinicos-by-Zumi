@@ -72,7 +72,9 @@ export type ExecutionRecord = {
 };
 ```
 
-**Required machine artifact:** `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.yaml`.
+**Required machine artifact:** `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json`.
+
+P00 makes JSON the sole canonical machine ledger. The earlier YAML transport is retired to avoid a second machine authority and an unnecessary parser dependency.
 
 A requirement is not considered reconciled until every non-empty field required by its class is populated and a reviewer can trace it into an implementation or explicit gap.
 
@@ -932,7 +934,7 @@ A program wave is not complete until all applicable gates are green:
 
 # 11. IMMEDIATE EXECUTION ORDER AFTER THIS PLAN IS APPROVED
 
-1. Create `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.yaml` with program records and recovered-scope entries.
+1. Maintain `docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json` as the sole canonical machine ledger; the earlier YAML transport is retired by P00.
 2. Produce `P00` detailed plan and reconcile open PR portfolio/branch protection/CI truth.
 3. Produce `P01` detailed Living Reality v2 plan that explicitly supersedes PR #524's final rendering limit while preserving its accessibility/server-authority laws.
 4. Produce `P02` detailed public-value/free-Person plan against current signup/public gateway implementation.

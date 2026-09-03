@@ -8,6 +8,21 @@ Describe the coherent product/engineering outcome this PR delivers.
 - What remains pending/external/manual?
 - What exact evidence proves the current state?
 
+## Execution traceability
+
+Record the execution consequences of this PR. Use `N/A — <reason>` only when a dimension truly does not apply.
+
+- **Requirement IDs:**
+- **Canon references:**
+- **Program / release wave:**
+- **Code disposition:** `REUSE / EXTEND / GENERALIZE / CONNECT / PARTNER / BUILD NEW`
+- **Implementation-state change:**
+- **Commercial consequence:**
+- **Authority / security / legal consequence:**
+- **Expected evidence:**
+
+If this PR adds or changes an accepted requirement, update the canonical execution traceability ledger or explain why the existing record already covers the change. A PR must not create product/company law by editing the ledger alone; the Master Canon remains the intended-truth authority.
+
 ## Frontend confidentiality / trade-secret boundary
 
 Read `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` before completing this section for any frontend, API, Zumi, Grid, Assurance/Quality, pricing, analytics, admin, integration, or client-visible change.
