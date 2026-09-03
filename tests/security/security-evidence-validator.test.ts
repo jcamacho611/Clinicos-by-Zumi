@@ -7,12 +7,15 @@ import { describe, expect, it } from "vitest";
 const canonical = "docs/governance/KLINIKOS_SECURITY_EVIDENCE.json";
 const validator = "scripts/security/validate-security-evidence.mjs";
 
+type MutableControl = Record<string, unknown>;
+type MutableLedger = { controls: MutableControl[] };
+
 function run(path = canonical) {
   return execFileSync(process.execPath, [validator, path], { encoding: "utf8" });
 }
 
-function mutate(mutator: (ledger: any) => void) {
-  const ledger = JSON.parse(readFileSync(canonical, "utf8"));
+function mutate(mutator: (ledger: MutableLedger) => void) {
+  const ledger = JSON.parse(readFileSync(canonical, "utf8")) as MutableLedger;
   mutator(ledger);
   const path = resolve(mkdtempSync(resolve(tmpdir(), "k-sec-")), "ledger.json");
   writeFileSync(path, JSON.stringify(ledger));
@@ -30,18 +33,15 @@ describe("P16 security evidence", () => {
   });
 
   it("rejects broad unsupported compliance claims", () => {
-    const path = mutate((ledger) => {
-      ledger.controls[0].allowedClaim = "HIPAA compliant";
-    });
+    const path = mutate((ledger) => { ledger.controls[0].allowedClaim = "HIPAA compliant"; });
     expect(() => run(path)).toThrow(/unsupported broad claim/i);
   });
 
   it("rejects PHI production verified without scoped evidence", () => {
     const path = mutate((ledger) => {
       ledger.controls[0] = {
-        ...ledger.controls[0], environments: ["production"], dataClasses: ["PHI"],
-        capabilities: ["clinical_phi"], state: "PRODUCTION_VERIFIED",
-        technicalEvidenceRefs: [], operationalEvidenceRefs: [], externalEvidenceRefs: [], legalEvidenceRefs: [],
+        ...ledger.controls[0], environments: ["production"], dataClasses: ["PHI"], capabilities: ["clinical_phi"],
+        state: "PRODUCTION_VERIFIED", technicalEvidenceRefs: [], operationalEvidenceRefs: [], externalEvidenceRefs: [], legalEvidenceRefs: [],
       };
     });
     expect(() => run(path)).toThrow(/PRODUCTION_VERIFIED/i);
