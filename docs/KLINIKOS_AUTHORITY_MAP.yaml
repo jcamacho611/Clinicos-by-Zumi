@@ -1,4 +1,4 @@
-version: 2026-09-02.1
+version: 2026-09-03.2
 status: ACTIVE
 
 canonical_product_authority:
@@ -145,6 +145,25 @@ execution_controls:
       - docs/KLINIKOS_CURRENT_PROJECT_STATE.md
     branch_and_pr_state:
       - docs/BRANCH_LEDGER.md
+  conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS
+
+execution_traceability:
+  authority: SUBORDINATE_EXECUTION_CONTROL
+  master_execution_engine: docs/superpowers/plans/2026-09-03-klinikos-master-execution-engine.md
+  machine_ledger: docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json
+  validator: scripts/validate-execution-traceability.mjs
+  governance_test: tests/execution-traceability-governance.test.ts
+  may_override_master: false
+  may_override_blueprint: false
+  may_override_verified_implementation: false
+  may_manufacture_implementation_status: false
+  yaml_machine_ledger_retired: true
+  purpose:
+    - route_accepted_requirements_to_programs
+    - require_evidence_and_tests
+    - expose_open_reconciliations
+    - preserve_strategy_vs_implementation_state
+    - preserve_commercial_and_authority_consequences
   conflict_rule: MASTER_CANON_WINS_FOR_PRODUCT_DIRECTION_CURRENT_VERIFIED_IMPLEMENTATION_WINS_FOR_WHAT_EXISTS
 
 subordinate_specialist_docs:
