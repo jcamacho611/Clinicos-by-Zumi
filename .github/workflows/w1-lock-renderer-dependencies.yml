@@ -1,0 +1,45 @@
+name: W1 renderer dependency lock refresh
+
+on:
+  push:
+    branches: [feat/w1-p01-p16-living-reality]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact feature branch
+        uses: actions/checkout@v5
+        with:
+          ref: feat/w1-p01-p16-living-reality
+          fetch-depth: 1
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install current lock exactly
+        run: npm ci --ignore-scripts
+      - name: Generate bounded React 19 renderer lock
+        run: |
+          npm install --save-exact three@0.185.1 @react-three/fiber@9.7.0
+          npm install --save-dev --save-exact @types/three@0.185.1
+          npm ls react react-dom next three @react-three/fiber @types/three
+      - name: Commit only package manifest and lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency lock changes were produced."
+            exit 0
+          fi
+          git commit -m "build(p01): lock React 19 renderer dependencies"
+          git push origin HEAD:feat/w1-p01-p16-living-reality
