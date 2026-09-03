@@ -38,24 +38,25 @@ const projection: MemberHomeProjection = {
 };
 
 describe("P01 member Living Reality integration", () => {
-  it("adds the spatial projection without replacing the semantic member application", () => {
+  it("preserves the semantic member application when the spatial projection is present", () => {
     const realityProjection = memberRealityProjection(projection);
     const html = renderToStaticMarkup(createElement(UniverseShell, { projection, realityProjection }));
 
+    expect(realityProjection.realityId).toBe("member-living-home");
     expect(html).toContain('data-member-living-universe="true"');
-    expect(html).toContain('data-living-reality-host="member"');
-    expect(html).toContain('data-reality-id="member-living-home"');
     expect(html).toContain('href="/grid"');
     expect(html).toContain('href="/member"');
     expect(html).toContain("Evidence and authority");
   });
 
-  it("passes only the server-built RealityProjection into the renderer", () => {
+  it("mounts the client-only Living Reality host from the server-built projection", () => {
     const page = readFileSync("src/app/member/page.tsx", "utf8");
     const shell = readFileSync("src/components/living-universe/universe-shell.tsx", "utf8");
 
     expect(page).toContain("const realityProjection = memberRealityProjection(projection)");
     expect(page).toContain("realityProjection={realityProjection}");
+    expect(shell).toContain('data-living-reality-host="member"');
+    expect(shell).toContain("data-reality-id={realityProjection.realityId}");
     expect(shell).toContain("<LivingRealityLayer projection={realityProjection} />");
     expect(shell).not.toContain("member-reality-projection");
     expect(shell).not.toMatch(/@\/lib\/(db|repositories|orchestration)/);
