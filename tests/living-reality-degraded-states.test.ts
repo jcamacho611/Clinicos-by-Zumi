@@ -52,6 +52,7 @@ describe("P01 Living Reality degraded and accessible production states", () => {
   });
 
   it("requires the production browser verifier to prove GPU-less Precision continuity", () => {
+    expect(realityVerifier).toContain('"--disable-gpu"');
     expect(realityVerifier).toContain("livingRealityPrecision");
     expect(realityVerifier).toContain("PRECISION_MODE");
     expect(realityVerifier).toContain("Full interface available without 3D.");
