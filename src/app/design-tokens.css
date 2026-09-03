@@ -200,6 +200,13 @@ html:root[data-klinikos-atmosphere="golden"] {
   --status-analyzing:#efaaa1;
   --status-signal:#ef6d68;
   --status-resolved:#d68f87;
+  --k-reality-environment:var(--k-public-bg);
+  --k-reality-object:var(--k-public-surface);
+  --k-reality-line:var(--k-line);
+  --k-reality-attention:var(--k-accent);
+  --k-reality-selected:var(--k-accent);
+  --k-reality-blocked:var(--status-signal);
+  --k-reality-verified:var(--status-resolved);
   --glow-cyan:0 0 40px color-mix(in srgb,var(--k-accent) 35%,transparent);
   --glow-gold:0 0 30px color-mix(in srgb,var(--k-premium) 26%,transparent);
   --shadow-card:var(--k-shadow);
