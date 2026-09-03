@@ -1,0 +1,415 @@
+{
+  "version": "2026-09-03.1",
+  "status": "IMPLEMENTATION_CONTRACT",
+  "authority": {
+    "masterCanon": "docs/KLINIKOS_MASTER_CANON.md",
+    "masterEngineeringBlueprint": "docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md",
+    "executionEngine": "docs/superpowers/plans/2026-09-03-klinikos-master-execution-engine.md",
+    "rule": "This ledger routes accepted requirements into implementation/evidence consequences. It is subordinate to the Master Canon and may not create product/company law."
+  },
+  "truthClasses": [
+    "ACTUAL",
+    "CONTRACTED",
+    "PIPELINE",
+    "ASSUMPTION",
+    "SCENARIO",
+    "TARGET"
+  ],
+  "strategyStates": [
+    "NOW",
+    "NEXT",
+    "LATER",
+    "PARTNER",
+    "CONNECT",
+    "INTERNALIZE",
+    "NEVER_BUILD"
+  ],
+  "implementationStates": [
+    "LIVE_VERIFIED",
+    "BUILT_NEEDS_VERIFICATION",
+    "PARTIAL",
+    "DESIGNED",
+    "PLANNED",
+    "EXTERNAL_CONNECTION_REQUIRED",
+    "LEGAL_REVIEW_REQUIRED",
+    "NOT_BUILT",
+    "HISTORICAL_ONLY"
+  ],
+  "codeDispositions": [
+    "REUSE",
+    "EXTEND",
+    "GENERALIZE",
+    "CONNECT",
+    "PARTNER",
+    "BUILD_NEW"
+  ],
+  "commercialLaws": {
+    "personAccount": "FREE",
+    "organizationActivation": "COMMERCIAL",
+    "paymentNeverCreates": [
+      "identity_authority",
+      "professional_verification",
+      "clinical_authority",
+      "eligibility",
+      "legal_authority",
+      "tenant_permission",
+      "referral_priority"
+    ]
+  },
+  "experienceFrames": [
+    { "id": "F0", "name": "Arrival" },
+    { "id": "F1", "name": "Intent" },
+    { "id": "F2", "name": "Interpretation" },
+    { "id": "F3", "name": "ActiveObject" },
+    { "id": "F4", "name": "Relationships" },
+    { "id": "F5", "name": "Inspector" },
+    { "id": "F6", "name": "MissionOrPrecisionWorkspace" },
+    { "id": "F7", "name": "GovernedAction" },
+    { "id": "F8", "name": "VerifiedOutcome" },
+    { "id": "F9", "name": "NextAction" },
+    { "id": "F10", "name": "TimeAndChange" },
+    { "id": "F11", "name": "RegionalNetworkSpatial" }
+  ],
+  "performanceModes": [
+    "FULL_REALITY",
+    "BALANCED_REALITY",
+    "PRECISION_MODE"
+  ],
+  "programs": [
+    {
+      "id": "P00",
+      "name": "Truth Canon Evidence Release Governance",
+      "wave": "W0",
+      "realities": ["CompanyCommand", "TruthRegistry", "EvidenceRegister"],
+      "primaryScope": ["1-5", "108-123", "128-140", "167-173", "187-189"],
+      "dependencies": [],
+      "kpis": ["orphan_requirement_count", "false_status_claim_count", "exact_release_evidence_rate"]
+    },
+    {
+      "id": "P01",
+      "name": "Living Reality Runtime Black Label True 3D",
+      "wave": "W1",
+      "realities": ["PublicLivingHome", "MemberLivingHome", "GridSpatial", "NetworkSpatial", "MissionRooms", "TexasTwin"],
+      "primaryScope": ["5-13", "64", "124-127", "138", "153-156", "181"],
+      "dependencies": ["P00"],
+      "kpis": ["public_intent_completion", "interaction_latency", "precision_fallback_success", "accessibility_pass_rate"]
+    },
+    {
+      "id": "P02",
+      "name": "Public Value Free Person Growth Signup Continuity",
+      "wave": "W1",
+      "realities": ["PublicLivingGateway", "Signup", "MemberLivingHome"],
+      "primaryScope": ["13-21", "83-86", "151-160", "174-175"],
+      "dependencies": ["P00", "P01"],
+      "kpis": ["value_before_signup_rate", "signup_conversion", "first_value_rate", "intent_resume_success"]
+    },
+    {
+      "id": "P03",
+      "name": "Identity Trust Relationships Professional Passport",
+      "wave": "W2",
+      "realities": ["IdentityReality", "ProfessionalPassport", "TrustReality"],
+      "primaryScope": ["14-21", "45-46", "61", "72-73", "129", "173-177"],
+      "dependencies": ["P00"],
+      "kpis": ["verified_professionals", "credential_freshness", "public_private_leak_count", "identity_duplication_rate"]
+    },
+    {
+      "id": "P04",
+      "name": "Organization Claim Commercial Activation Configuration Fabric",
+      "wave": "W2",
+      "realities": ["OrganizationReality", "OrganizationBlueprint", "ConfigurationStudio"],
+      "primaryScope": ["15", "40", "57-58", "87-92", "141-150", "174"],
+      "dependencies": ["P03", "P08"],
+      "kpis": ["organization_claims", "qualified_orgs", "paid_activations", "activation_time"]
+    },
+    {
+      "id": "P05",
+      "name": "Clinic Operations Front Desk Scheduling Intake",
+      "wave": "W4",
+      "realities": ["ClinicReality", "Today", "FrontDesk", "Schedule", "Intake"],
+      "primaryScope": ["40-43", "46", "59", "84", "92", "160", "178"],
+      "dependencies": ["P03", "P04"],
+      "kpis": ["readiness_rate", "intake_completion", "no_show_recovery", "staff_task_completion"]
+    },
+    {
+      "id": "P06",
+      "name": "Full EHR Current Visit Clinical Change Specialty Packs",
+      "wave": "W4",
+      "realities": ["CurrentVisit", "PatientSnapshot", "WhatChanged", "BodyMap", "Documentation", "CodingSupport"],
+      "primaryScope": ["41-58", "62", "132-134", "137", "173", "185-186"],
+      "dependencies": ["P03", "P05", "P07", "P08", "P16"],
+      "kpis": ["visit_close_rate", "unresolved_work_rate", "documentation_readiness", "clinical_safety_failures"]
+    },
+    {
+      "id": "P07",
+      "name": "Telemedicine Orders Results Referrals Prior Auth Interoperability",
+      "wave": "W4",
+      "realities": ["Telemedicine", "OrdersResults", "ReferralClosure", "PriorAuthorization", "IntegrationWorkbench"],
+      "primaryScope": ["47", "50-54", "81-82", "89-90", "133-134", "185"],
+      "dependencies": ["P06", "P16"],
+      "kpis": ["result_review_time", "referral_closure_rate", "integration_exception_rate", "verified_external_rail_count"]
+    },
+    {
+      "id": "P08",
+      "name": "Financial OS Revenue Cycle Claims Payments NoFault WorkersComp",
+      "wave": "W5",
+      "realities": ["FinancialReality", "RevenueMissionRoom", "Claims", "Payments", "RCM"],
+      "primaryScope": ["54-56", "62-63", "90-91", "103", "134", "140-150", "186"],
+      "dependencies": ["P06", "P07", "P16"],
+      "kpis": ["billing_ready_rate", "claim_exception_resolution", "reconciliation_accuracy", "verified_revenue_recovered"]
+    },
+    {
+      "id": "P09",
+      "name": "Grid Max Capacity Exchange Marketplace Spatial Map",
+      "wave": "W2",
+      "realities": ["GridMap", "GridGraph", "GridMarket", "NeedHaveComposer"],
+      "primaryScope": ["22-31", "58", "95", "130", "142-146", "151-152", "175-180", "182"],
+      "dependencies": ["P03", "P04", "P08", "P16"],
+      "kpis": ["active_needs", "active_haves", "eligible_match_rate", "fulfillment_rate", "network_density"]
+    },
+    {
+      "id": "P10",
+      "name": "Career Jobs Staffing Healthcare Economic Participation",
+      "wave": "W3",
+      "realities": ["CareerReality", "OpportunityFeed", "StaffingMissionRoom"],
+      "primaryScope": ["17-24", "36-39", "85", "174-175", "179"],
+      "dependencies": ["P03", "P09", "P16"],
+      "kpis": ["jobs_filled", "shifts_filled", "repeat_employers", "work_income_enabled"]
+    },
+    {
+      "id": "P11",
+      "name": "EDU Simulation Competency Placement Workforce",
+      "wave": "W3",
+      "realities": ["EDUReality", "VirtualClinic", "InstructorWorkspace", "InstitutionCommand", "Placement"],
+      "primaryScope": ["32-39", "85", "98-99", "101-102", "131", "149-150", "173-175", "184"],
+      "dependencies": ["P03", "P09"],
+      "kpis": ["learner_progress", "evidence_reviewed", "placements", "learning_to_work_conversion"]
+    },
+    {
+      "id": "P12",
+      "name": "Zumi Intelligence Memory Knowledge Interface Composition",
+      "wave": "W5",
+      "realities": ["ZumiCommandSurface", "MemoryControls"],
+      "primaryScope": ["48-49", "65-80", "117", "135", "165", "177-181"],
+      "dependencies": ["P00", "P03", "P16"],
+      "kpis": ["safe_action_rate", "hallucination_eval_rate", "tool_success_rate", "cost_per_successful_outcome"]
+    },
+    {
+      "id": "P13",
+      "name": "Opportunity OS Sales RFP Grant Procurement",
+      "wave": "W5",
+      "realities": ["OpportunityReality", "SalesPipeline", "RFPMissionRoom", "GrantMissionRoom"],
+      "primaryScope": ["96-103", "157-160", "164-166", "174", "180", "183"],
+      "dependencies": ["P00", "P14", "P16"],
+      "kpis": ["qualified_opportunities", "bid_no_bid_accuracy", "submission_timeliness", "contracted_value"]
+    },
+    {
+      "id": "P14",
+      "name": "Company Command Diligence Capital CFO",
+      "wave": "W5",
+      "realities": ["CompanyCommand", "CapitalReality", "DiligenceRooms"],
+      "primaryScope": ["100-107", "161-171", "187-189"],
+      "dependencies": ["P00", "P13", "P16"],
+      "kpis": ["cash_visibility", "pipeline_evidence_quality", "diligence_completion_time", "capital_efficiency"]
+    },
+    {
+      "id": "P15",
+      "name": "Texas Infrastructure Digital Twin",
+      "wave": "W5",
+      "realities": ["TexasInfrastructureReality", "RegionalHubTwin"],
+      "primaryScope": ["104-106", "164", "170", "188-189"],
+      "dependencies": ["P14", "P16"],
+      "currentPlanningTargets": {
+        "phase1Investment": "~$5M TARGET",
+        "expansionInvestment": "~$25M TARGET",
+        "jobsYear2": "25 direct jobs TARGET",
+        "longRangeDirectJobs": "up to ~705 TARGET/SCENARIO"
+      },
+      "kpis": ["sources_uses_reconciliation", "milestone_evidence_rate", "target_actual_separation"]
+    },
+    {
+      "id": "P16",
+      "name": "Security Privacy Legal IP Production PHI Gate",
+      "wave": "W0",
+      "realities": ["TrustSecurityAdmin", "AuditEvidence"],
+      "primaryScope": ["108-121", "124-127", "169-173"],
+      "dependencies": ["P00"],
+      "kpis": ["tenant_boundary_failures", "phi_egress_failures", "security_gate_pass_rate", "restore_proof_age"]
+    },
+    {
+      "id": "P17",
+      "name": "Data Fabric Events Analytics Digital Twin Evolution",
+      "wave": "W2",
+      "realities": ["Analytics", "EvolutionEngine", "RegionalCapacityIntelligence"],
+      "primaryScope": ["27", "31", "64", "70-75", "120", "128-137", "162-165", "177", "181", "186"],
+      "dependencies": ["P00"],
+      "kpis": ["event_replay_integrity", "provenance_completeness", "experiment_rollback_success"]
+    },
+    {
+      "id": "P18",
+      "name": "Enterprise Partner Vendor Developer API Procurement",
+      "wave": "W6",
+      "realities": ["EnterpriseReality", "PartnerVendorReality", "DeveloperPortal", "Procurement"],
+      "primaryScope": ["79-80", "89-95", "100", "107-110", "161-163", "185"],
+      "dependencies": ["P04", "P16", "P17"],
+      "kpis": ["enterprise_pipeline", "verified_integrations", "api_partner_adoption", "procurement_fulfillment"]
+    },
+    {
+      "id": "P19",
+      "name": "Marketing Brand SEO Growth Public Story",
+      "wave": "W3",
+      "realities": ["PublicLivingHome", "CampaignEntry", "ResearchContent"],
+      "primaryScope": ["83-88", "153-160", "174-175", "183"],
+      "dependencies": ["P01", "P02", "P04", "P20"],
+      "kpis": ["qualified_traffic", "useful_intent_rate", "signup_cac", "organization_pipeline_cac"]
+    },
+    {
+      "id": "P20",
+      "name": "Customer Success Implementation Klinikos10 Expansion",
+      "wave": "W3",
+      "realities": ["ImplementationMissionRoom", "CustomerSuccess"],
+      "primaryScope": ["85-93", "121-123", "160", "170", "174", "183", "188"],
+      "dependencies": ["P04"],
+      "kpis": ["time_to_launch", "time_to_first_value", "implementation_margin", "retention", "expansion"]
+    },
+    {
+      "id": "P21",
+      "name": "Quality Guardian QA Reliability Release Proof",
+      "wave": "CONTINUOUS",
+      "realities": ["QualityGuardian", "ReleaseEvidence"],
+      "primaryScope": ["75-76", "113-127", "168-173", "188"],
+      "dependencies": ["P00"],
+      "kpis": ["escaped_defect_rate", "release_failure_rate", "exact_deployed_sha_verification", "browser_qa_pass_rate"]
+    },
+    {
+      "id": "P22",
+      "name": "Research NIH SBIR Accelerators Strategic Programs",
+      "wave": "W5",
+      "realities": ["ResearchMissionRoom"],
+      "primaryScope": ["78-80", "100-102"],
+      "dependencies": ["P00", "P13", "P14"],
+      "kpis": ["qualified_research_opportunities", "submitted_research_opportunities", "awarded_nondilutive_capital"]
+    },
+    {
+      "id": "P23",
+      "name": "Economic Participation Vendor Sponsorship New Revenue Hunt",
+      "wave": "W2",
+      "realities": ["CommercialFabric", "VendorSponsor", "CapacityYield"],
+      "primaryScope": ["93-95", "143-150", "175-180", "186"],
+      "dependencies": ["P16"],
+      "kpis": ["paid_orgs", "gross_margin_by_revenue_class", "lawful_transaction_capture", "expansion_revenue"]
+    }
+  ],
+  "releaseWaves": {
+    "W0": {
+      "days": "0-7",
+      "programs": ["P00", "P16", "P21"],
+      "outcome": "Truth control, PR/CI governance, security blockers, traceability."
+    },
+    "W1": {
+      "days": "1-14",
+      "programs": ["P01", "P02", "P16", "P21"],
+      "outcome": "Living Reality foundation plus value-before-signup and free Person continuity."
+    },
+    "W2": {
+      "days": "15-30",
+      "programs": ["P03", "P04", "P09", "P17", "P23"],
+      "outcome": "Identity/trust, paid organization activation, Grid core, event/provenance foundation."
+    },
+    "W3": {
+      "days": "31-45",
+      "programs": ["P10", "P11", "P20", "P19"],
+      "outcome": "Career/workforce, EDU/placement, implementation proof, network-cell acquisition."
+    },
+    "W4": {
+      "days": "46-60",
+      "programs": ["P05", "P06", "P07", "P16", "P21"],
+      "outcome": "Clinic operations and Current Visit Golden Case with external-care foundations."
+    },
+    "W5": {
+      "days": "61-75",
+      "programs": ["P08", "P12", "P13", "P14", "P15", "P22"],
+      "outcome": "Revenue, Zumi, Opportunity OS, Company Command, Texas twin, research pipeline."
+    },
+    "W6": {
+      "days": "76-90",
+      "programs": ["P18", "P19", "P17", "P21", "P23"],
+      "outcome": "Enterprise/partner foundations, controlled launch, Evolution Engine and hardening."
+    }
+  },
+  "programDefinitionOfDone": [
+    "requirement_traceability_complete",
+    "reuse_equivalence_documented",
+    "tdd_contract_green_where_code_changes",
+    "schema_migration_chain_valid",
+    "typecheck_lint_tests_green",
+    "confidentiality_security_gates_green",
+    "browser_mobile_accessibility_proof",
+    "truthful_external_integration_state",
+    "exact_candidate_sha_recorded",
+    "exact_deployed_sha_verified_for_production_claim",
+    "empty_error_degraded_manual_states_proven",
+    "kpi_telemetry_present",
+    "commercial_authority_consequence_matches_canon",
+    "evidence_registry_updated",
+    "zero_orphan_requirements"
+  ],
+  "nextChildPlans": [
+    "docs/superpowers/plans/2026-09-03-program-p00-truth-governance.md",
+    "docs/superpowers/plans/2026-09-03-program-p01-living-reality-runtime.md",
+    "docs/superpowers/plans/2026-09-03-program-p02-person-growth-engine.md",
+    "docs/superpowers/plans/2026-09-03-program-p16-production-security-gate.md"
+  ],
+  "requirements": [],
+  "openReconciliations": [
+    {
+      "id": "REC-PR-519",
+      "subjectType": "PULL_REQUEST",
+      "subjectRef": "PR#519",
+      "state": "PARTIALLY_SUPERSEDED",
+      "preservedLaws": [
+        "Preserve lawful authority separation, Grid/network-density goals, and reusable integration ideas that remain compatible with the Master Canon."
+      ],
+      "conflictingLaws": [
+        "Free organization core activation conflicts with the founder-approved law that Person accounts are free while activated organization capability is commercial."
+      ],
+      "requiredAction": "Revise to the person-free / organization-commercial model or close as superseded after compatible content is merged forward into approved artifacts.",
+      "evidenceRefs": [
+        "docs/KLINIKOS_MASTER_CANON.md",
+        "docs/superpowers/specs/2026-09-03-klinikos-p00-truth-governance-release-design.md"
+      ]
+    },
+    {
+      "id": "REC-PR-524",
+      "subjectType": "PULL_REQUEST",
+      "subjectRef": "PR#524",
+      "state": "PARTIALLY_SUPERSEDED",
+      "preservedLaws": [
+        "Preserve semantic accessibility, server-owned truth, minimum-necessary projection, and safe reality-slot architecture."
+      ],
+      "conflictingLaws": [
+        "A blanket final-direction prohibition on Three.js, React Three Fiber, or canvas conflicts with the founder-approved true-3D Living Healthcare Reality direction."
+      ],
+      "requiredAction": "Extract compatible safety laws into P01 and do not merge conflicting implementation doctrine unchanged.",
+      "evidenceRefs": [
+        "docs/KLINIKOS_MASTER_CANON.md",
+        "docs/superpowers/specs/2026-09-03-klinikos-p00-truth-governance-release-design.md"
+      ]
+    },
+    {
+      "id": "REC-MAIN-PROTECTION",
+      "subjectType": "BRANCH",
+      "subjectRef": "main",
+      "state": "BLOCKED",
+      "preservedLaws": [
+        "Existing exact-head Quality verification remains authoritative evidence and must not be weakened."
+      ],
+      "conflictingLaws": [
+        "The repository currently reports main protected=false and no active rulesets, so required checks are not enforced at branch level."
+      ],
+      "requiredAction": "Enable the approved main branch protection/ruleset contract through an authorized GitHub administrative surface, then replace this blocked state only after fresh live evidence.",
+      "evidenceRefs": [
+        "docs/governance/GITHUB_MAIN_PROTECTION.md"
+      ]
+    }
+  ]
+}
