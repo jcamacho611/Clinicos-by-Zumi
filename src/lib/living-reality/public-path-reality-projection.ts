@@ -12,6 +12,23 @@ export function publicPathRealityProjection(item: PublicLivingUniverseProjection
     claimStatus: null,
     routeRef: null,
   })) satisfies RealityProjection["nodes"];
+  const attention: RealityProjection["attention"] = item.steps.flatMap<RealityProjection["attention"][number]>((step, index) => {
+    if (step.state === "current") {
+      return [{
+        nodeId: `checkpoint:${item.pathId}:${index}`,
+        level: "elevated",
+        explanation: "Current modeled stage",
+      }];
+    }
+    if (step.state === "blocked") {
+      return [{
+        nodeId: `checkpoint:${item.pathId}:${index}`,
+        level: "critical",
+        explanation: "Blocked pending requirements",
+      }];
+    }
+    return [];
+  });
 
   return {
     realityId: "public-path",
@@ -46,23 +63,7 @@ export function publicPathRealityProjection(item: PublicLivingUniverseProjection
       kind: "path",
       label: item.steps[index]?.label ?? "Path checkpoint",
     })),
-    attention: item.steps.flatMap((step, index) => {
-      if (step.state === "current") {
-        return [{
-          nodeId: `checkpoint:${item.pathId}:${index}`,
-          level: "elevated" as const,
-          explanation: "Current modeled stage",
-        }];
-      }
-      if (step.state === "blocked") {
-        return [{
-          nodeId: `checkpoint:${item.pathId}:${index}`,
-          level: "critical" as const,
-          explanation: "Blocked pending requirements",
-        }];
-      }
-      return [];
-    }),
+    attention,
     cameraIntent: "SHOW_RELATIONSHIPS",
     precisionActions: [],
   };
