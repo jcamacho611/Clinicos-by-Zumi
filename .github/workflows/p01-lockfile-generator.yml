@@ -10,7 +10,7 @@ on:
       - "tests/living-reality-runtime-contract.test.ts"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
@@ -29,12 +31,13 @@ jobs:
           npm install --package-lock-only --ignore-scripts three@^0.185.1 @react-three/fiber@^9.7.0
           npm install --package-lock-only --ignore-scripts --save-dev @types/three@^0.185.4
           npm ls --package-lock-only three @react-three/fiber @types/three react react-dom
-      - name: Upload generated manifest and lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: p01-generated-lockfile
-          path: |
-            package.json
-            package-lock.json
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit only generated manifests and remove this one-shot workflow
+        run: |
+          set -euo pipefail
+          git config user.name "klinikos-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add package.json package-lock.json
+          git rm .github/workflows/p01-lockfile-generator.yml
+          test "$(git diff --cached --name-only | sort)" = $'.github/workflows/p01-lockfile-generator.yml\npackage-lock.json\npackage.json'
+          git commit -m "build(living-reality): add React 19 3D runtime"
+          git push origin HEAD:${{ github.head_ref }}
