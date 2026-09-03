@@ -9,6 +9,15 @@ const jsonLedger = resolve(root, "docs/governance/KLINIKOS_EXECUTION_TRACEABILIT
 const yamlLedger = resolve(root, "docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.yaml");
 const validator = resolve(root, "scripts/validate-execution-traceability.mjs");
 
+type TestLedger = {
+  commercialLaws: {
+    personAccount: string;
+    organizationActivation: string;
+  };
+  requirements: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+};
+
 function read(path: string) {
   return readFileSync(path, "utf8");
 }
@@ -21,8 +30,8 @@ function runValidator(path = jsonLedger) {
   });
 }
 
-function writeMutatedLedger(mutator: (ledger: any) => void) {
-  const ledger = JSON.parse(read(jsonLedger));
+function writeMutatedLedger(mutator: (ledger: TestLedger) => void) {
+  const ledger = JSON.parse(read(jsonLedger)) as TestLedger;
   mutator(ledger);
   const dir = mkdtempSync(resolve(tmpdir(), "klinikos-trace-"));
   const path = resolve(dir, "ledger.json");
