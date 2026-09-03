@@ -1,11 +1,12 @@
 {
   "version": "2026-09-03.1",
   "status": "IMPLEMENTATION_CONTRACT",
+  "dependencySemantics": "HARD_PREREQUISITES_ONLY",
   "authority": {
     "masterCanon": "docs/KLINIKOS_MASTER_CANON.md",
     "masterEngineeringBlueprint": "docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md",
     "executionEngine": "docs/superpowers/plans/2026-09-03-klinikos-master-execution-engine.md",
-    "rule": "This ledger routes accepted requirements into implementation/evidence consequences. It is subordinate to the Master Canon and may not create product/company law."
+    "rule": "This ledger routes accepted requirements into implementation/evidence consequences. It is subordinate to the Master Canon and may not create product/company law. Program dependencies in this machine ledger are hard prerequisites only; broader integration relationships remain documented in program specifications."
   },
   "truthClasses": [
     "ACTUAL",
@@ -118,7 +119,7 @@
       "wave": "W2",
       "realities": ["OrganizationReality", "OrganizationBlueprint", "ConfigurationStudio"],
       "primaryScope": ["15", "40", "57-58", "87-92", "141-150", "174"],
-      "dependencies": ["P03", "P08"],
+      "dependencies": ["P03", "P16"],
       "kpis": ["organization_claims", "qualified_orgs", "paid_activations", "activation_time"]
     },
     {
@@ -136,7 +137,7 @@
       "wave": "W4",
       "realities": ["CurrentVisit", "PatientSnapshot", "WhatChanged", "BodyMap", "Documentation", "CodingSupport"],
       "primaryScope": ["41-58", "62", "132-134", "137", "173", "185-186"],
-      "dependencies": ["P03", "P05", "P07", "P08", "P16"],
+      "dependencies": ["P03", "P05", "P16"],
       "kpis": ["visit_close_rate", "unresolved_work_rate", "documentation_readiness", "clinical_safety_failures"]
     },
     {
@@ -163,7 +164,7 @@
       "wave": "W2",
       "realities": ["GridMap", "GridGraph", "GridMarket", "NeedHaveComposer"],
       "primaryScope": ["22-31", "58", "95", "130", "142-146", "151-152", "175-180", "182"],
-      "dependencies": ["P03", "P04", "P08", "P16"],
+      "dependencies": ["P03", "P04", "P16"],
       "kpis": ["active_needs", "active_haves", "eligible_match_rate", "fulfillment_rate", "network_density"]
     },
     {
@@ -199,7 +200,7 @@
       "wave": "W5",
       "realities": ["OpportunityReality", "SalesPipeline", "RFPMissionRoom", "GrantMissionRoom"],
       "primaryScope": ["96-103", "157-160", "164-166", "174", "180", "183"],
-      "dependencies": ["P00", "P14", "P16"],
+      "dependencies": ["P00", "P16"],
       "kpis": ["qualified_opportunities", "bid_no_bid_accuracy", "submission_timeliness", "contracted_value"]
     },
     {
