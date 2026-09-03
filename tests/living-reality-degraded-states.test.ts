@@ -7,7 +7,9 @@ import {
 
 const layer = readFileSync("src/components/living-reality/living-reality-layer.tsx", "utf8");
 const canvas = readFileSync("src/components/living-reality/living-reality-canvas.tsx", "utf8");
-const verifier = readFileSync("scripts/verify-frontend-browser-interactions.mjs", "utf8");
+const realityVerifier = readFileSync("scripts/verify-living-reality-browser.mjs", "utf8");
+const generalVerifier = readFileSync("scripts/verify-frontend-browser-interactions.mjs", "utf8");
+const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 
 describe("P01 Living Reality degraded and accessible production states", () => {
   it("falls back to Precision when WebGL is unavailable", () => {
@@ -50,20 +52,21 @@ describe("P01 Living Reality degraded and accessible production states", () => {
   });
 
   it("requires the production browser verifier to prove GPU-less Precision continuity", () => {
-    expect(verifier).toContain("livingRealityPrecision");
-    expect(verifier).toContain("PRECISION_MODE");
-    expect(verifier).toContain("Full interface available without 3D.");
-    expect(verifier).toContain("data-living-reality-status");
-    expect(verifier).toContain("livingRealitySemanticWorkflow");
-    expect(verifier).toContain("hasCanvas: false");
+    expect(realityVerifier).toContain("livingRealityPrecision");
+    expect(realityVerifier).toContain("PRECISION_MODE");
+    expect(realityVerifier).toContain("Full interface available without 3D.");
+    expect(realityVerifier).toContain("data-living-reality-status");
+    expect(realityVerifier).toContain("livingRealitySemanticWorkflow");
+    expect(realityVerifier).toContain("hasCanvas: false");
+    expect(qualityWorkflow).toContain("node scripts/verify-living-reality-browser.mjs");
   });
 
   it("requires production evidence for reduced motion, mobile recomposition and true browser zoom", () => {
-    expect(verifier).toContain("livingRealityReducedMotion");
-    expect(verifier).toContain("BALANCED_REALITY");
-    expect(verifier).toContain("livingRealityMobile");
-    expect(verifier).toContain("noHorizontalOverflow");
-    expect(verifier).toContain("verified_chrome_profile_page_zoom");
-    expect(verifier).toContain("requestedZoomPercent = Number");
+    expect(realityVerifier).toContain("livingRealityReducedMotion");
+    expect(realityVerifier).toContain("BALANCED_REALITY");
+    expect(realityVerifier).toContain("livingRealityMobile");
+    expect(realityVerifier).toContain("noHorizontalOverflow");
+    expect(generalVerifier).toContain("verified_chrome_profile_page_zoom");
+    expect(generalVerifier).toContain("requestedZoomPercent = Number");
   });
 });
