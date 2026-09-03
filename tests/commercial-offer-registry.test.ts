@@ -1,130 +1,82 @@
 import { describe, expect, it } from "vitest";
 import {
+  canStartDirectCommercialCheckout,
+  canStartNewCommercialCheckout,
   commercialProducts,
   getCommercialProduct,
 } from "@/lib/commercial/product-catalog";
 
+const retiredClinicLadderKeys = [
+  "operational_audit",
+  "implementation_blueprint",
+  "founding_clinic_implementation",
+  "clinic_core",
+  "clinic_growth",
+  "clinic_scale",
+] as const;
+
 describe("buyer-aware commercial offer registry", () => {
-  it("keeps one server-owned record for every first clinic revenue step", () => {
-    for (const key of [
-      "operational_audit",
-      "implementation_blueprint",
-      "founding_clinic_implementation",
-      "clinic_core",
-      "clinic_growth",
-      "clinic_scale",
-      "clinic_enterprise",
-    ]) {
-      expect(getCommercialProduct(key), `missing commercial offer ${key}`).toBeDefined();
-    }
-  });
-
-  it("routes the $500 Clinic Operating Analysis through the low-friction paid-entry path", () => {
-    const offer = getCommercialProduct("operational_audit");
-    expect(offer).toMatchObject({
-      audience: "clinic",
-      revenueClass: "service",
-      commercialRoute: "self_serve",
-      priceType: "fixed",
-      priceCents: 50_000,
-      qualificationRequired: false,
-      conversionDestination: "/sales",
-      publicPurchasable: true,
-      directPublicCheckoutEligible: true,
-    });
-  });
-
-  it("requires qualification before the $1,500 Implementation Blueprint path", () => {
-    const offer = getCommercialProduct("implementation_blueprint");
-    expect(offer).toMatchObject({
-      audience: "clinic",
-      revenueClass: "service",
-      commercialRoute: "qualified_service",
-      priceType: "fixed",
-      priceCents: 150_000,
-      qualificationRequired: true,
-      conversionDestination: "/founding-clinic",
-      publicPurchasable: true,
-      directPublicCheckoutEligible: false,
-    });
-  });
-
-  it("never represents the from-$8k implementation as a fixed self-service purchase", () => {
-    const offer = getCommercialProduct("founding_clinic_implementation");
-    expect(offer).toMatchObject({
-      audience: "clinic",
-      revenueClass: "implementation",
-      commercialRoute: "sales_led",
-      priceType: "starting_at",
-      qualificationRequired: true,
-      conversionDestination: "/founding-clinic",
-      publicPurchasable: true,
-      directPublicCheckoutEligible: false,
-    });
-    expect(offer?.priceCents).toBeNull();
-  });
-
-  it("routes clinic subscriptions through a reviewed recurring path", () => {
-    for (const key of ["clinic_core", "clinic_growth", "clinic_scale"]) {
+  it("keeps superseded clinic offers traceable without leaving them sellable", () => {
+    for (const key of retiredClinicLadderKeys) {
       const offer = getCommercialProduct(key);
-      expect(offer).toMatchObject({
-        audience: "clinic",
-        revenueClass: "subscription",
-        commercialRoute: "recurring_reviewed",
-        priceType: "fixed",
-        qualificationRequired: true,
-        conversionDestination: "/founding-clinic",
-        publicPurchasable: true,
-        directPublicCheckoutEligible: false,
-      });
-      expect(offer?.priceCents).toBeGreaterThan(0);
+      expect(offer, `missing historical commercial offer ${key}`).toBeDefined();
+      expect(offer?.lifecycle).toBe("retired");
+      expect(offer?.publicPurchasable).toBe(false);
+      expect(offer?.directPublicCheckoutEligible).toBe(false);
+      expect(offer?.conversionDestination).toBeNull();
+      if (offer) {
+        expect(canStartNewCommercialCheckout(offer)).toBe(false);
+        expect(canStartDirectCommercialCheckout(offer)).toBe(false);
+      }
     }
   });
 
-  it("keeps enterprise on a custom sales-led path rather than consumer checkout", () => {
-    expect(getCommercialProduct("clinic_enterprise")).toMatchObject({
+  it("preserves prior amounts as historical reconciliation evidence instead of deleting them", () => {
+    expect(getCommercialProduct("operational_audit")?.priceCents).toBe(50_000);
+    expect(getCommercialProduct("implementation_blueprint")?.priceCents).toBe(150_000);
+    expect(getCommercialProduct("founding_clinic_implementation")?.priceCents).toBeNull();
+    expect(getCommercialProduct("clinic_core")?.priceCents).toBe(99_500);
+    expect(getCommercialProduct("clinic_growth")?.priceCents).toBe(199_500);
+    expect(getCommercialProduct("clinic_scale")?.priceCents).toBe(399_500);
+  });
+
+  it("keeps enterprise custom and governed rather than consumer checkout", () => {
+    const enterprise = getCommercialProduct("clinic_enterprise");
+    expect(enterprise).toMatchObject({
       audience: "enterprise",
       revenueClass: "enterprise_contract",
       commercialRoute: "enterprise_government",
       priceType: "custom",
       priceCents: null,
       qualificationRequired: true,
-      conversionDestination: "/founding-clinic",
       publicPurchasable: false,
       directPublicCheckoutEligible: false,
+      lifecycle: "active",
     });
+    expect(enterprise && canStartDirectCommercialCheckout(enterprise)).toBe(false);
   });
 
-  it("keeps legacy payment aliases as evidence-only offers", () => {
+  it("keeps older processor aliases evidence-only", () => {
     for (const offer of commercialProducts.filter((candidate) => candidate.lifecycle === "legacy_evidence_only")) {
       expect(offer.publicPurchasable).toBe(false);
       expect(offer.directPublicCheckoutEligible).toBe(false);
       expect(offer.commercialRoute).toBe("historical_evidence_only");
       expect(offer.conversionDestination).toBeNull();
+      expect(canStartNewCommercialCheckout(offer)).toBe(false);
     }
   });
 
-  it("keeps direct public checkout eligibility stricter than general sellability", () => {
-    expect(getCommercialProduct("operational_audit")?.directPublicCheckoutEligible).toBe(true);
-
-    for (const key of [
-      "implementation_blueprint",
-      "founding_clinic_implementation",
-      "clinic_core",
-      "clinic_growth",
-      "clinic_scale",
-      "clinic_enterprise",
-    ]) {
-      expect(getCommercialProduct(key)?.directPublicCheckoutEligible, `${key} must remain governed before direct checkout`).toBe(false);
-    }
-
-    for (const offer of commercialProducts.filter((candidate) => candidate.directPublicCheckoutEligible)) {
-      expect(offer.lifecycle).toBe("active");
-      expect(offer.publicPurchasable).toBe(true);
-      expect(offer.commercialRoute).toBe("self_serve");
-      expect(offer.priceType).toBe("fixed");
-      expect(offer.qualificationRequired).toBe(false);
-      expect(offer.priceCents).toBeGreaterThan(0);
+  it("allows direct checkout only for a truly active explicitly self-serve fixed offer", () => {
+    for (const offer of commercialProducts) {
+      if (canStartDirectCommercialCheckout(offer)) {
+        expect(offer.lifecycle).toBe("active");
+        expect(offer.publicPurchasable).toBe(true);
+        expect(offer.directPublicCheckoutEligible).toBe(true);
+        expect(offer.commercialRoute).toBe("self_serve");
+        expect(offer.priceType).toBe("fixed");
+        expect(offer.qualificationRequired).toBe(false);
+        expect(offer.priceCents).not.toBeNull();
+      }
     }
   });
 });
