@@ -1,0 +1,40 @@
+name: P01 Lockfile Generator
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/p01-lockfile-generator.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/living-reality-runtime-contract.test.ts"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    if: github.head_ref == 'feat/p01-living-reality-runtime'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Generate approved dependency lock without lifecycle scripts
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts three@^0.185.1 @react-three/fiber@^9.7.0
+          npm install --package-lock-only --ignore-scripts --save-dev @types/three@^0.185.4
+          npm ls --package-lock-only three @react-three/fiber @types/three react react-dom
+      - name: Upload generated manifest and lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: p01-generated-lockfile
+          path: |
+            package.json
+            package-lock.json
+          if-no-files-found: error
+          retention-days: 1
