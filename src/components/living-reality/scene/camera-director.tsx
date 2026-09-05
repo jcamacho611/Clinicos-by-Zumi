@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
+import { PerspectiveCamera } from "three";
 import type { CameraIntent } from "@/lib/living-reality/reality-projection";
 
 export const TRANSITION_MS = 420;
@@ -41,6 +42,7 @@ export function CameraDirector({ cameraIntent }: CameraDirectorProps) {
   useEffect(() => {
     const preset = CAMERA_PRESETS[cameraIntent ?? "ARRIVAL"];
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const perspectiveCamera = camera instanceof PerspectiveCamera ? camera : null;
 
     if (frameRef.current !== null) {
       cancelAnimationFrame(frameRef.current);
@@ -49,7 +51,7 @@ export function CameraDirector({ cameraIntent }: CameraDirectorProps) {
 
     const applyTarget = () => {
       camera.position.set(...preset.position);
-      camera.fov = preset.fov;
+      if (perspectiveCamera) perspectiveCamera.fov = preset.fov;
       camera.updateProjectionMatrix();
       invalidate();
     };
@@ -60,7 +62,7 @@ export function CameraDirector({ cameraIntent }: CameraDirectorProps) {
     }
 
     const startPosition = camera.position.clone();
-    const startFov = camera.fov;
+    const startFov = perspectiveCamera?.fov ?? null;
     const startedAt = performance.now();
 
     const animate = (now: number) => {
@@ -72,7 +74,9 @@ export function CameraDirector({ cameraIntent }: CameraDirectorProps) {
         startPosition.y + (preset.position[1] - startPosition.y) * eased,
         startPosition.z + (preset.position[2] - startPosition.z) * eased,
       );
-      camera.fov = startFov + (preset.fov - startFov) * eased;
+      if (perspectiveCamera && startFov !== null) {
+        perspectiveCamera.fov = startFov + (preset.fov - startFov) * eased;
+      }
       camera.updateProjectionMatrix();
       invalidate();
 
