@@ -2,11 +2,14 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const agents = readFileSync("AGENTS.md", "utf8");
+const controlPath = "docs/KLINIKOS_MULTI_AGENT_EXECUTION_CONTROL.md";
+const control = readFileSync(controlPath, "utf8");
 const indexPath = "docs/KLINIKOS_EXECUTION_INDEX.md";
 
 describe("Klinikos execution organization index", () => {
-  it("is mandatory from the root agent bootstrap", () => {
-    expect(agents).toContain(indexPath);
+  it("is reachable from the mandatory root agent bootstrap", () => {
+    expect(agents).toContain(controlPath);
+    expect(control).toContain(indexPath);
   });
 
   it("is explicitly non-authoritative and points back to the Master Canon", () => {
