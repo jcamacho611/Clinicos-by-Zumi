@@ -256,3 +256,17 @@ Completion requires applicable:
 - current handoff and project-state update.
 
 When verification cannot run because of an external platform limitation, record that limitation explicitly. Never convert unverified work into a green claim.
+
+## 11. Founder orchestration, specialist councils, capability routing, and no-blocker law
+
+Every agent working under this control plane must also read:
+
+`docs/governance/KLINIKOS_SPECIALIST_COUNCIL_AND_CAPABILITY_ROUTING_PROTOCOL.md`
+
+That protocol is subordinate execution law. It persists the founder-approved council model, capability/plugin routing, source-recovery anti-compression rules, provider-neutral fallback discipline, cost law, and the rule:
+
+`BLOCKER → ROUTE AROUND → VERIFY → CONTINUE`
+
+The council names are expert evaluation lenses, not separate products or authority systems. Capability use is task-based, not ceremonial. A missing vendor, model, plugin, account tier or convenience service does not stop independent safe work when another path can preserve the same outcome.
+
+Fallback routing must never silently spend funds, enter contracts, send external communications, accept meetings, weaken security/privacy, expose PHI/PII, change customer terms, alter approved architecture, create regulated authority or fabricate evidence. Those remain authority-gated actions.
