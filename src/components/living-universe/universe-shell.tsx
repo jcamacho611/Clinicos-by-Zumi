@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CircleUserRound, Sparkles } from "lucide-react";
 import type { CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import type { RealityProjection } from "@/lib/living-reality/reality-projection";
 import { ObjectStage } from "@/components/living-universe/object-stage";
 import {
   PlaneLens,
@@ -11,6 +12,7 @@ import {
 } from "@/components/living-universe/plane-lens";
 import { Inspector } from "@/components/living-universe/inspector";
 import { ActionDock } from "@/components/living-universe/action-dock";
+import { LivingRealityLayer } from "@/components/living-reality/living-reality-layer";
 
 export type MemberObjectProjection = {
   id: string;
@@ -71,7 +73,13 @@ function lensProjection(
   };
 }
 
-export function UniverseShell({ projection }: { projection: MemberHomeProjection }) {
+export function UniverseShell({
+  projection,
+  realityProjection,
+}: {
+  projection: MemberHomeProjection;
+  realityProjection: RealityProjection;
+}) {
   // A member arrives in their lifecycle first. Switching lenses changes only the
   // explanation around this same object; it never asks the server to mutate authority.
   const [activeLens, setActiveLens] = useState<CanonicalPlaneId>(projection.activeLens);
@@ -82,13 +90,16 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
 
   return (
     <main
-      className="min-h-screen overflow-x-hidden bg-[#070405] bg-[radial-gradient(circle_at_54%_12%,rgba(181,111,103,.12),transparent_27%),radial-gradient(circle_at_0%_84%,rgba(101,68,64,.10),transparent_26%),linear-gradient(180deg,#080506_0%,#050304_100%)] text-[#f3ece8]"
+      className="relative isolate min-h-screen overflow-x-hidden bg-[#070405] bg-[radial-gradient(circle_at_54%_12%,rgba(181,111,103,.12),transparent_27%),radial-gradient(circle_at_0%_84%,rgba(101,68,64,.10),transparent_26%),linear-gradient(180deg,#080506_0%,#050304_100%)] text-[#f3ece8]"
+      data-living-reality-host="member"
       data-member-living-universe="true"
       data-person-object-id={projection.object.id}
+      data-reality-id={realityProjection.realityId}
     >
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d08a80]/40 to-transparent" />
+      <LivingRealityLayer projection={realityProjection} />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[#d08a80]/40 to-transparent" />
 
-      <header className="mx-auto flex min-h-[88px] max-w-[1500px] items-center gap-4 px-4 sm:px-7 lg:px-10">
+      <header className="relative z-10 mx-auto flex min-h-[88px] max-w-[1500px] items-center gap-4 px-4 sm:px-7 lg:px-10">
         <Link
           aria-label="Klinikos member home"
           className="flex min-h-11 items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d99287]"
@@ -103,7 +114,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
           </span>
         </Link>
 
-        <div className="ml-auto flex min-w-0 items-center gap-3 rounded-full border border-white/[.07] bg-white/[.025] py-1.5 pl-2 pr-2">
+        <div className="ml-auto flex min-w-0 items-center gap-3 rounded-full border border-white/[.07] bg-white/[.025] py-1.5 pl-2 pr-2 backdrop-blur-md">
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#261416] text-[#d79a91]">
             <CircleUserRound aria-hidden="true" className="size-4" />
           </span>
@@ -122,7 +133,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1500px] px-4 pb-8 sm:px-7 lg:px-10">
+      <div className="relative z-10 mx-auto max-w-[1500px] px-4 pb-8 sm:px-7 lg:px-10">
         <section className="mb-5 border-y border-white/[.055] py-4" aria-labelledby="member-context-title">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#9b7872]" id="member-context-title">
@@ -135,7 +146,7 @@ export function UniverseShell({ projection }: { projection: MemberHomeProjection
         </section>
 
         <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)_270px]">
-          <aside className="min-w-0 rounded-[24px] border border-white/[.06] bg-[#0c0809]/72 p-3 lg:p-4">
+          <aside className="min-w-0 rounded-[24px] border border-white/[.06] bg-[#0c0809]/72 p-3 backdrop-blur-md lg:p-4">
             <p className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#9f8985]">Five-plane lens</p>
             <PlaneLens
               activeLens={activeLens}

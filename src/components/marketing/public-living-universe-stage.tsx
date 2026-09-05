@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { LivingRealityLayer } from "@/components/living-reality/living-reality-layer";
+import { publicPathRealityProjection } from "@/lib/living-reality/public-path-reality-projection";
 import type { PublicLivingUniverseProjection } from "@/lib/orchestration/public-living-universe";
 
 /**
@@ -47,6 +49,7 @@ export function PublicLivingUniverseObjectStage({
   item: PublicLivingUniverseProjection;
   signupEnabled: boolean;
 }) {
+  const realityProjection = publicPathRealityProjection(item);
   const currentStep = item.steps.find((step) => step.state === "current") ?? item.steps[0];
   const currentIndex = currentStep ? item.steps.indexOf(currentStep) : -1;
   const nextStep = item.steps.slice(currentIndex + 1).find((step) => step.state === "upcoming" || step.state === "blocked")
@@ -79,11 +82,13 @@ export function PublicLivingUniverseObjectStage({
 
   return (
     <article
-      className="overflow-hidden rounded-[28px] border border-white/[.09] bg-[#12090b] bg-[linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))] shadow-[0_28px_90px_rgba(0,0,0,.25)]"
+      className="relative isolate overflow-hidden rounded-[28px] border border-white/[.09] bg-[#12090b] bg-[linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))] shadow-[0_28px_90px_rgba(0,0,0,.25)]"
+      data-living-reality-host="public-path"
       data-material="obsidian"
       data-object-stage="true"
     >
-      <div className="p-5 sm:p-7 lg:p-8">
+      <LivingRealityLayer projection={realityProjection} />
+      <div className="relative z-10 p-5 sm:p-7 lg:p-8">
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-semibold uppercase tracking-[.16em] text-[#8e7c79]">
@@ -102,7 +107,7 @@ export function PublicLivingUniverseObjectStage({
 
       <ol aria-label="Starting point, orchestration, continuation" className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-white/[.07] bg-white/[.07] md:grid-cols-3">
         {narrative.map((moment) => (
-          <li className="min-w-0 bg-[#0b0607]/95 p-5" key={moment.key}>
+          <li className="min-w-0 bg-[#0b0607]/90 p-5 backdrop-blur-sm" key={moment.key}>
             <div className="flex items-center gap-2">
               <span aria-hidden="true" className={`size-2 rounded-full ${moment.key === "before" ? PATH_STATE_DOT.complete : moment.key === "now" ? PATH_STATE_DOT.current : PATH_STATE_DOT.upcoming}`} />
               <p className="text-[12px] font-semibold uppercase tracking-[.2em] text-[#e89b94]">{moment.label}</p>
@@ -120,7 +125,7 @@ export function PublicLivingUniverseObjectStage({
           <p className="mt-3 text-[12.5px] leading-6 text-[#bda5a1]">{item.governance}</p>
           {item.commercialBoundary ? <p className="mt-3 text-[12px] leading-6 text-[#8e7c79]">{item.commercialBoundary}</p> : null}
         </div>
-        <details className="rounded-2xl border border-white/[.07] bg-black/10 p-4">
+        <details className="rounded-2xl border border-white/[.07] bg-black/10 p-4 backdrop-blur-sm">
           <summary className="flex min-h-11 cursor-pointer items-center text-[12px] font-semibold uppercase tracking-[.14em] text-[#cdb7b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]">Path checkpoints</summary>
           <ol className="mt-4 space-y-3">
             {item.steps.map((step, index) => (
@@ -136,7 +141,7 @@ export function PublicLivingUniverseObjectStage({
       </aside>
       </div>
 
-      <footer aria-label="Action dock" className="flex flex-wrap items-center gap-3 border-t border-white/[.08] bg-black/15 px-5 py-4 sm:px-7 lg:px-8">
+      <footer aria-label="Action dock" className="relative z-10 flex flex-wrap items-center gap-3 border-t border-white/[.08] bg-black/25 px-5 py-4 backdrop-blur-md sm:px-7 lg:px-8">
         <Link
           className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e6817b] px-5 text-[13px] font-semibold text-[#1a090a] transition hover:bg-[#efaaa1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c2bc] motion-reduce:transition-none"
           href={signupHref}

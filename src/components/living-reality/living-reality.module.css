@@ -1,0 +1,32 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  opacity: .96;
+  mask-image: radial-gradient(circle at 50% 44%, #000 0%, rgba(0,0,0,.94) 54%, transparent 94%);
+}
+
+.precisionStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas {
+    opacity: .72;
+  }
+}

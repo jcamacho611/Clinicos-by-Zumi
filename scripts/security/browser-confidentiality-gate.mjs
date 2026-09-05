@@ -51,6 +51,8 @@ const CLIENT_FORBIDDEN_MARKERS = [
   "ANTHROPIC_API_KEY",
   "GOOGLE_AI_API_KEY",
   "DATABASE_URL",
+  "passwordHash",
+  "internalScore",
   "Trusted Klinikos orchestration result:",
   "Trusted Quality Guardian result:",
   "Approved durable memory relevant to this user",
@@ -357,7 +359,6 @@ function run() {
   scanRepositorySecretShapes();
   scanNextConfig();
   scanBuiltBrowserArtifacts();
-
   if (failures.length) {
     console.error("\nKlinikos browser confidentiality gate FAILED.\n");
     for (const item of failures) console.error(`- ${item}`);

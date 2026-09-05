@@ -1,5 +1,6 @@
 import { UniverseShell } from "@/components/living-universe/universe-shell";
 import { requirePersonAccountSession } from "@/lib/auth/account-session";
+import { memberRealityProjection } from "@/lib/living-reality/member-reality-projection";
 import { getMemberHomeProjection } from "@/lib/member/member-home-repository";
 import { PRIVATE_PAGE_METADATA } from "@/lib/seo/private-metadata";
 import { klinikosPathCatalog } from "@/lib/paths/catalog";
@@ -24,6 +25,7 @@ export default async function MemberHomePage({
     : "/member";
   const session = await requirePersonAccountSession(memberReturnTo);
   const projection = await getMemberHomeProjection(session, requestedPath?.id);
+  const realityProjection = memberRealityProjection(projection);
 
-  return <UniverseShell projection={projection} />;
+  return <UniverseShell projection={projection} realityProjection={realityProjection} />;
 }
