@@ -270,3 +270,13 @@ That protocol is subordinate execution law. It persists the founder-approved cou
 The council names are expert evaluation lenses, not separate products or authority systems. Capability use is task-based, not ceremonial. A missing vendor, model, plugin, account tier or convenience service does not stop independent safe work when another path can preserve the same outcome.
 
 Fallback routing must never silently spend funds, enter contracts, send external communications, accept meetings, weaken security/privacy, expose PHI/PII, change customer terms, alter approved architecture, create regulated authority or fabricate evidence. Those remain authority-gated actions.
+
+## 12. Organized execution index
+
+Every material run must also read:
+
+`docs/KLINIKOS_EXECUTION_INDEX.md`
+
+The index is a **NON-AUTHORITATIVE EXECUTION INDEX**. It exists to organize the current authority stack, implementation-state vocabulary, active PR ownership, evidence discipline, retirement/provenance rules, and next execution order. It does not override the Master Canon, canonical engineering contract, specialist Canon, or current verified implementation evidence.
+
+If the index is stale, update the index after verifying current GitHub/runtime truth. Never treat a stale snapshot, SHA, PR state, or execution note in the index as stronger than live evidence.
