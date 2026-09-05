@@ -95,7 +95,10 @@ export const PUBLIC_ROUTE_PRESENTATION_POLICIES: readonly PublicRoutePresentatio
     ...commonPublic,
     id: "ecosystem",
     pathname: "/ecosystem",
-    match: "exact",
+    // Prefix, not exact: /ecosystem/universe is the same public surface seen
+    // spatially, so it must inherit the same chrome and appearance bootstrap
+    // rather than resolving to no policy at all.
+    match: "prefix",
     sitemap: { changeFrequency: "monthly", priority: 0.8 },
   },
   {

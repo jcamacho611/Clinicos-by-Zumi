@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { projectSpatialUniverse } from "@/lib/universe/spatial-projection";
 import { canonicalEcosystemGraph, CANONICAL_PLANE_IDS } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-registry";
 
 const component = fs.readFileSync(
   path.join(process.cwd(), "src/components/universe/spatial-universe.tsx"),
@@ -13,6 +14,10 @@ const projection = fs.readFileSync(
   "utf8",
 );
 const tokens = fs.readFileSync(path.join(process.cwd(), "src/app/design-tokens.css"), "utf8");
+const page = fs.readFileSync(
+  path.join(process.cwd(), "src/app/ecosystem/universe/page.tsx"),
+  "utf8",
+);
 
 describe("spatial universe — disclosure boundary", () => {
   it("never ships internal source paths to the browser", () => {
@@ -112,5 +117,32 @@ describe("spatial universe — material and access", () => {
     expect(component).toContain("prefers-reduced-motion: reduce");
     expect(component).toContain("cancelAnimationFrame");
     expect(component).toContain("removeEventListener");
+  });
+});
+
+describe("spatial universe — reachable and server-bounded", () => {
+  it("is mounted on a real route rather than existing as an unused component", () => {
+    // A component nobody can navigate to is not shipped. This asserts the route
+    // file both exists and actually renders the universe.
+    expect(page).toContain("SpatialUniverse");
+    expect(page).toContain("projectSpatialUniverse");
+  });
+
+  it("runs the projection on the server so the graph never reaches the browser", () => {
+    // No "use client" on the page: the projection executes during render on the
+    // server, and only its return value is serialized across the boundary. If
+    // this page ever became a Client Component, the canonical graph — evidence
+    // paths and all — would be pulled into the browser bundle by its import.
+    expect(page).not.toMatch(/^\s*"use client"/m);
+    expect(component).toMatch(/^"use client"/);
+  });
+
+  it("gives the child route the same public presentation as /ecosystem", () => {
+    // Without this the spatial route resolves to no presentation policy, which
+    // means no appearance bootstrap and therefore a theme flash on first paint.
+    const policy = resolvePublicRoutePresentation("/ecosystem/universe");
+    expect(policy).not.toBeNull();
+    expect(policy?.id).toBe("ecosystem");
+    expect(policy).toMatchObject(resolvePublicRoutePresentation("/ecosystem") ?? {});
   });
 });
