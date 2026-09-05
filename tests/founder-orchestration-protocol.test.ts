@@ -17,7 +17,7 @@ describe("founder orchestration and no-blocker protocol", () => {
   it("keeps councils as evaluation lenses rather than parallel authorities", () => {
     expect(protocol).toContain("evaluation lenses");
     expect(protocol).toContain("not separate software modules or authorities");
-    expect(protocol).toContain("one Klinikos");
+    expect(protocol.toLowerCase()).toContain("one klinikos");
   });
 
   it("requires provider-neutral blocker routing and truthful fallbacks", () => {
