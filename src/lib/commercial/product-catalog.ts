@@ -17,6 +17,14 @@ export const commercialProductKeys = [
 
 export type CommercialProductKey = (typeof commercialProductKeys)[number];
 export type CommercialProductLifecycle = "active" | "legacy_evidence_only";
+export type CommercialPricingStatus =
+  | "ACTIVE_PUBLIC"
+  | "ACTIVE_PRIVATE"
+  | "LEGACY_QUOTED"
+  | "GRANDFATHERED"
+  | "TARGET"
+  | "SCENARIO"
+  | "RETIRED";
 export type CommercialAudience = "clinic" | "enterprise" | "professional" | "facility";
 export type CommercialRevenueClass =
   | "service"
@@ -39,6 +47,8 @@ export type CommercialProduct = {
   audience: CommercialAudience;
   billing: "one_time" | "monthly" | "custom";
   priceCents: number | null;
+  /** Master Canon pricing-generation state. This is separate from executable lifecycle and checkout eligibility. */
+  pricingStatus: CommercialPricingStatus;
   /** What kind of revenue event this offer represents. */
   revenueClass: CommercialRevenueClass;
   /** The governed path a qualified buyer should enter. This is separate from the payment processor. */
@@ -79,6 +89,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "one_time",
     priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "service",
     commercialRoute: "self_serve",
     priceType: "fixed",
@@ -98,6 +109,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "one_time",
     priceCents: clinicCommercialOffers.foundingEvaluation.priceCents,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "service",
     commercialRoute: "qualified_service",
     priceType: "fixed",
@@ -118,6 +130,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     billing: "custom",
     // `from $8,000` is a scope floor, not a fixed amount the browser may charge.
     priceCents: null,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "implementation",
     commercialRoute: "sales_led",
     priceType: "starting_at",
@@ -138,6 +151,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.core.monthlyPriceCents,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "subscription",
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
@@ -166,6 +180,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.growth.monthlyPriceCents,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "subscription",
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
@@ -194,6 +209,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "monthly",
     priceCents: clinicPlans.scale.monthlyPriceCents,
+    pricingStatus: "ACTIVE_PUBLIC",
     revenueClass: "subscription",
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
@@ -222,6 +238,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "enterprise",
     billing: "custom",
     priceCents: null,
+    pricingStatus: "ACTIVE_PRIVATE",
     revenueClass: "enterprise_contract",
     commercialRoute: "enterprise_government",
     priceType: "custom",
@@ -242,6 +259,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     audience: "clinic",
     billing: "custom",
     priceCents: null,
+    pricingStatus: "RETIRED",
     revenueClass: "historical_evidence",
     commercialRoute: "historical_evidence_only",
     priceType: "historical",
@@ -272,6 +290,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     // Historical processor amount retained for reconciliation only. Current public
     // Grid subscription truth lives in `gridPlans` and must not be inferred from this.
     priceCents: 3_900,
+    pricingStatus: "RETIRED",
     revenueClass: "historical_evidence",
     commercialRoute: "historical_evidence_only",
     priceType: "historical",
@@ -294,6 +313,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     // Historical processor amount retained for reconciliation only. Current public
     // organization pricing lives in `gridPlans` and must not be inferred from this.
     priceCents: 9_900,
+    pricingStatus: "RETIRED",
     revenueClass: "historical_evidence",
     commercialRoute: "historical_evidence_only",
     priceType: "historical",
@@ -314,13 +334,18 @@ export function getCommercialProduct(key: string | null | undefined) {
   return commercialProducts.find((product) => product.key === key);
 }
 
+export function isCurrentCommercialPricing(product: CommercialProduct) {
+  return product.pricingStatus === "ACTIVE_PUBLIC" || product.pricingStatus === "ACTIVE_PRIVATE";
+}
+
 export function canStartNewCommercialCheckout(product: CommercialProduct) {
-  return product.lifecycle === "active";
+  return product.lifecycle === "active" && isCurrentCommercialPricing(product);
 }
 
 export function canStartDirectCommercialCheckout(product: CommercialProduct) {
   return (
     product.lifecycle === "active" &&
+    product.pricingStatus === "ACTIVE_PUBLIC" &&
     product.publicPurchasable &&
     product.directPublicCheckoutEligible &&
     product.commercialRoute === "self_serve" &&

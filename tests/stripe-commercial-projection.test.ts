@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clinicPlans } from "@/lib/commercial/klinikos-commercial";
+import { getCommercialProduct } from "@/lib/commercial/product-catalog";
 import {
   STRIPE_PRICING_VERSION,
   getStripeCommercialProjection,
@@ -11,7 +12,9 @@ describe("Stripe commercial projection", () => {
     expect(getStripeCommercialProjection("operational_audit", "one_time")).toMatchObject({
       offerKey: "operational_audit",
       pricingVersion: STRIPE_PRICING_VERSION,
+      pricingStatus: "ACTIVE_PUBLIC",
       treatment: "public_self_serve",
+      rail: "checkout",
       cadence: "one_time",
       currency: "usd",
       amountCents: 50_000,
@@ -21,16 +24,20 @@ describe("Stripe commercial projection", () => {
     });
   });
 
-  it("keeps qualified and starting-at services off direct public checkout", () => {
+  it("keeps qualified and starting-at services on automatic qualified checkout or invoice rails, never generic public links", () => {
     expect(getStripeCommercialProjection("implementation_blueprint", "one_time")).toMatchObject({
+      pricingStatus: "ACTIVE_PUBLIC",
       treatment: "private_quoted",
+      rail: "quote_invoice",
       amountCents: 150_000,
       lookupKey: "klinikos_implementation_blueprint_one_time_v1",
       publicLinkEligible: false,
       automaticCollection: true,
     });
     expect(getStripeCommercialProjection("founding_clinic_implementation", "one_time")).toMatchObject({
+      pricingStatus: "ACTIVE_PUBLIC",
       treatment: "private_quoted",
+      rail: "quote_invoice",
       amountCents: null,
       lookupKey: "klinikos_founding_implementation_starting_v1",
       publicLinkEligible: false,
@@ -48,7 +55,9 @@ describe("Stripe commercial projection", () => {
     for (const [offerKey, monthly, annual, slug] of expected) {
       expect(getStripeCommercialProjection(offerKey, "month")).toMatchObject({
         offerKey,
+        pricingStatus: "ACTIVE_PUBLIC",
         treatment: "public_subscribe",
+        rail: "billing",
         cadence: "month",
         currency: "usd",
         amountCents: monthly,
@@ -58,7 +67,9 @@ describe("Stripe commercial projection", () => {
       });
       expect(getStripeCommercialProjection(offerKey, "year")).toMatchObject({
         offerKey,
+        pricingStatus: "ACTIVE_PUBLIC",
         treatment: "public_subscribe",
+        rail: "billing",
         cadence: "year",
         currency: "usd",
         amountCents: annual,
@@ -69,21 +80,31 @@ describe("Stripe commercial projection", () => {
     }
   });
 
-  it("keeps enterprise and historical aliases out of direct Stripe purchase treatments", () => {
+  it("keeps enterprise and historical aliases on the correct non-public rails", () => {
     expect(getStripeCommercialProjection("clinic_enterprise", "one_time")).toMatchObject({
+      pricingStatus: "ACTIVE_PRIVATE",
       treatment: "private_quoted",
+      rail: "quote_invoice",
       amountCents: null,
       lookupKey: null,
       publicLinkEligible: false,
     });
     for (const key of ["clinic_operator", "grid_professional", "grid_facility"] as const) {
       expect(getStripeCommercialProjection(key, "one_time")).toMatchObject({
+        pricingStatus: "RETIRED",
         treatment: "not_directly_purchasable",
+        rail: "none",
         amountCents: null,
         lookupKey: null,
         publicLinkEligible: false,
         automaticCollection: false,
       });
+    }
+  });
+
+  it("inherits pricing status from the canonical Offer Registry instead of inventing processor state", () => {
+    for (const projection of stripeCommercialProjections) {
+      expect(projection.pricingStatus).toBe(getCommercialProduct(projection.offerKey)?.pricingStatus);
     }
   });
 
