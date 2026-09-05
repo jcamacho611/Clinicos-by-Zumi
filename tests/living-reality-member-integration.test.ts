@@ -46,7 +46,10 @@ describe("P01 member Living Reality integration", () => {
     expect(html).toContain('data-member-living-universe="true"');
     expect(html).toContain('href="/grid"');
     expect(html).toContain('href="/member"');
-    expect(html).toContain("Evidence and authority");
+    expect(html).toContain("Evidence");
+    expect(html).toContain("Account evidence");
+    expect(html).toContain("Authority");
+    expect(html).toContain("No clinical authority");
   });
 
   it("mounts the client-only Living Reality host from the server-built projection", () => {
