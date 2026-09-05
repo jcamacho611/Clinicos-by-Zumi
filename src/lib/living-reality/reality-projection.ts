@@ -10,7 +10,9 @@ export type CameraIntent =
   | "INSPECT"
   | "MISSION"
   | "OUTCOME"
-  | "NETWORK_OVERVIEW";
+  | "NETWORK_OVERVIEW"
+  | "TIME_COMPARE"
+  | "PRECISION_LOCK";
 
 export type SpatialNodeProjection = {
   id: string;
