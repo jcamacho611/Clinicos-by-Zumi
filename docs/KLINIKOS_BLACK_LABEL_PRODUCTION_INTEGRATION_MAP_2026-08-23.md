@@ -76,7 +76,12 @@ PR #260 contains the workforce/institutional EDU engine, including real sessions
 
 ## Current CI blocker
 
-GitHub Actions is currently failing **before checkout** across unrelated exact heads.
+**Resolved 2026-09-05.** The observation below is retained as an accurate record of 2026-08-23: at that
+time GitHub Actions was failing **before checkout** across unrelated exact heads, and the run IDs cited
+are real. That condition no longer holds — runners are allocated and jobs execute to completion (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures).
+Read this section as history, not as current state.
+
+As observed on 2026-08-23, GitHub Actions was failing **before checkout** across unrelated exact heads.
 
 Observed signature:
 
@@ -133,7 +138,8 @@ Check Marble, Obsidian, keyboard, touch where relevant, reduced motion, loading/
 ### Phase 0 — restore executable evidence
 
 1. Restore GitHub Actions runner allocation or another trusted exact-head execution lane.
-2. Do not spend repeated runs while jobs continue to return `steps:null`.
+2. Do not spend repeated runs while jobs return `steps:null`. (No longer binding as of 2026-09-05 —
+   jobs execute; the rule stands only if the non-execution signature ever returns.)
 3. Re-check `main` immediately before reconciliation.
 
 ### Phase 1 — presentation substrate

@@ -10,7 +10,11 @@ The branch has been re-anchored onto current main as concurrent non-overlapping 
 
 ## GitHub Actions truth
 
-Exact-head GitHub Actions runs have been rejected before runner startup. Both `verify` and `deploy-contract` returned `steps: null` and no job logs. No executable CI pass is claimed from those runs.
+As of 2026-08-18, exact-head GitHub Actions runs were rejected before runner startup: both `verify` and
+`deploy-contract` returned `steps: null` and no job logs. No executable CI pass is claimed from those
+runs. **Correction, 2026-09-05:** that condition is resolved — Actions allocates runners and executes
+jobs to completion (401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded).
+This paragraph describes the August 2026 state of those specific runs, not current CI capability.
 
 ## Disposable Neon validation
 
