@@ -1,40 +1,41 @@
+import type { CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import { PLANE_LANGUAGE } from "@/lib/universe/plane-language";
 import {
-  CANONICAL_PLANE_IDS,
-  canonicalEcosystemGraph,
-  type CanonicalPlaneId,
-  type EcosystemNode,
-} from "@/lib/ecosystem/canonical-ecosystem-graph";
-import { planeLanguage } from "@/lib/universe/plane-language";
+  ECOSYSTEM_ROOT_ID,
+  ecosystemRealityProjection,
+} from "@/lib/living-reality/ecosystem-reality-projection";
+import type { RealityProjection } from "@/lib/living-reality/reality-projection";
 
 /**
- * Browser projection of the canonical five-plane ecosystem graph.
+ * Depth layout for the public ecosystem Reality.
  *
- * The canonical graph is the authority; this is a disclosure boundary. Two fields
- * are deliberately dropped rather than forwarded:
+ * This is no longer a second projection. `ecosystemRealityProjection()` is the
+ * one server truth; everything here is a pure function of it, adding only what
+ * a depth-ordered view needs and the contract has no business carrying: which
+ * plane a node sits on for stacking, and where on that plane it sits.
  *
- *   evidencePaths        — internal source paths ("src/lib/grid/eligibility.ts").
- *                          Shipping these hands a reader a map of where Klinikos
- *                          keeps its eligibility, composition and ranking logic.
- *   externalDependencies — names the vendors and rails a capability leans on,
- *                          which is procurement and attack-surface intelligence.
+ * Two consequences worth stating, because they are the point of the change:
  *
- * What survives is what a person actually needs to understand the universe:
- * what the thing is, which plane it lives on, how far along it is, who holds
- * authority over it, and whether a legal or privacy boundary governs it.
+ *   1. The plain-language state a person reads is applied once, on the server,
+ *      in the shared module — not re-derived here and again in the component.
+ *   2. `legalSecurityGates` no longer reaches the browser at all. It named which
+ *      legal and security controls gate each capability, which is a map of our
+ *      compliance posture. The canonical contract has no field for it, and it
+ *      should not get one.
  */
 
 export type SpatialNode = {
   id: string;
   label: string;
   planeId: CanonicalPlaneId;
-  /** Strategic intent. NOW never means "this is live." */
-  strategyState: EcosystemNode["strategyState"];
-  /** Implementation reality, shown honestly beside the intent. */
-  implementationState: EcosystemNode["implementationState"];
-  authorityOwner: EcosystemNode["authorityOwner"];
-  /** Plain-language boundary notes only; never an internal path. */
-  boundaries: readonly string[];
-  /** Deterministic position on the plane. Stable across renders and reloads. */
+  /** Plain language, applied server-side. Never an internal enum. */
+  state: string;
+  /** What we intend, beside where it actually is. */
+  summary: string;
+  /** Verified capabilities read bright; claims and intentions read quiet. */
+  claimStatus: RealityProjection["nodes"][number]["claimStatus"];
+  attention: "normal" | "elevated" | "critical";
+  /** Deterministic position. Stable across renders and reloads. */
   angle: number;
   radius: number;
 };
@@ -42,33 +43,27 @@ export type SpatialNode = {
 export type SpatialPlane = {
   id: CanonicalPlaneId;
   label: string;
-  /** Plain-language line. Simple above, technical below. */
   meaning: string;
   depth: number;
   nodes: readonly SpatialNode[];
 };
 
 export type SpatialUniverse = {
+  /** The canonical contract. The same shape every other Reality speaks. */
+  reality: RealityProjection;
   planes: readonly SpatialPlane[];
   connections: readonly { from: string; to: string }[];
   nodeCount: number;
 };
 
-/** Human meaning for each plane. The person never reads "plane" jargon alone. */
-
 /**
  * Stable layout hash. The same node lands in the same place every time, on every
  * device, for every viewer — so the universe is a place people can learn, not a
- * shuffled cloud. No randomness, and nothing is invented: position is derived
- * purely from the canonical node id.
+ * new arrangement on each visit. Never Math.random.
  */
 function layoutFor(id: string, index: number, total: number) {
   let hash = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  // Even angular distribution keeps dense planes readable; the hash only nudges
-  // each node off the perfect ring so the field feels alive rather than clocklike.
+  for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   const base = (index / Math.max(total, 1)) * Math.PI * 2;
   const jitter = ((hash % 1000) / 1000 - 0.5) * 0.35;
   const radius = 30 + ((hash >>> 10) % 62);
@@ -76,38 +71,57 @@ function layoutFor(id: string, index: number, total: number) {
 }
 
 export function projectSpatialUniverse(): SpatialUniverse {
-  const planes = CANONICAL_PLANE_IDS.map((planeId, depthIndex) => {
-    const planeNodes = canonicalEcosystemGraph.nodes.filter((n) => n.planeId === planeId);
-    const label =
-      canonicalEcosystemGraph.planes.find((p) => p.id === planeId)?.label ?? planeId;
+  const reality = ecosystemRealityProjection();
+
+  const attentionByNode = new Map(
+    reality.attention.map((entry) => [entry.nodeId, entry.level] as const),
+  );
+
+  // Which plane owns which capability comes from the projection's own edges, so
+  // the layout cannot disagree with the contract about where something lives.
+  const planeByCapability = new Map<string, CanonicalPlaneId>();
+  for (const edge of reality.edges) {
+    if (edge.kind !== "relationship") continue;
+    const planeId = edge.fromId.replace(/^plane:/, "") as CanonicalPlaneId;
+    planeByCapability.set(edge.toId, planeId);
+  }
+
+  const nodeById = new Map(reality.nodes.map((node) => [node.id, node] as const));
+
+  const planes = PLANE_LANGUAGE.map((plane, depth) => {
+    const owned = reality.nodes.filter(
+      (node) => planeByCapability.get(node.id) === plane.id,
+    );
 
     return {
-      id: planeId,
-      label,
-      meaning: planeLanguage(planeId).meaning,
-      depth: depthIndex,
-      nodes: planeNodes.map((n, index) => ({
-        id: n.id,
-        label: n.label,
-        planeId: n.planeId,
-        strategyState: n.strategyState,
-        implementationState: n.implementationState,
-        authorityOwner: n.authorityOwner,
-        boundaries: n.legalSecurityGates,
-        ...layoutFor(n.id, index, planeNodes.length),
+      id: plane.id,
+      label: plane.label,
+      meaning: plane.meaning,
+      depth,
+      nodes: owned.map((node, index) => ({
+        id: node.id,
+        label: node.label,
+        planeId: plane.id,
+        state: node.state,
+        summary: node.summary,
+        claimStatus: node.claimStatus,
+        attention: attentionByNode.get(node.id) ?? ("normal" as const),
+        ...layoutFor(node.id, index, owned.length),
       })),
     } satisfies SpatialPlane;
   });
 
-  const known = new Set(canonicalEcosystemGraph.nodes.map((n) => n.id));
+  // Capability-to-capability lines only. The root and plane scaffolding is
+  // structure, not a relationship anyone needs drawn.
+  const connections = reality.edges
+    .filter((edge) => edge.kind === "relationship" && edge.fromId !== ECOSYSTEM_ROOT_ID)
+    .map((edge) => ({ from: edge.fromId, to: edge.toId }))
+    .filter((edge) => nodeById.has(edge.to));
 
   return {
+    reality,
     planes,
-    // Edges carry structure, not the relation verb: the verb set is part of how
-    // Klinikos reasons about the graph and does not need to reach the browser.
-    connections: canonicalEcosystemGraph.edges
-      .filter((e) => known.has(e.from) && known.has(e.to))
-      .map((e) => ({ from: e.from, to: e.to })),
-    nodeCount: canonicalEcosystemGraph.nodes.length,
+    connections,
+    nodeCount: planes.reduce((total, plane) => total + plane.nodes.length, 0),
   };
 }

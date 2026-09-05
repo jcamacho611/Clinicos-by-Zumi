@@ -13,6 +13,12 @@ const projection = fs.readFileSync(
   path.join(process.cwd(), "src/lib/universe/spatial-projection.ts"),
   "utf8",
 );
+// The disclosure boundary moved onto the canonical Reality contract. Both files
+// are read, so a leak reintroduced in either one fails.
+const adapter = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/living-reality/ecosystem-reality-projection.ts"),
+  "utf8",
+);
 const tokens = fs.readFileSync(path.join(process.cwd(), "src/app/design-tokens.css"), "utf8");
 const page = fs.readFileSync(
   path.join(process.cwd(), "src/app/ecosystem/universe/page.tsx"),
@@ -66,21 +72,35 @@ describe("spatial universe — canon", () => {
 
   it("shows intent and reality separately so NOW can never read as live", () => {
     const universe = projectSpatialUniverse();
-    const now = universe.planes
-      .flatMap((p) => p.nodes)
-      .filter((n) => n.strategyState === "NOW" && n.implementationState !== "LIVE_VERIFIED");
-    // The graph genuinely contains NOW-but-not-live nodes; the UI must be able to
-    // say so, which is why the two states stay separate fields.
-    expect(now.length).toBeGreaterThan(0);
-    expect(component).toContain("What we intend");
+    const nodes = universe.planes.flatMap((p) => p.nodes);
+
+    // The graph genuinely contains intended-now-but-not-live capabilities. Every
+    // node's summary states both, so an intention can never be read as a result.
+    const intendedNowNotLive = nodes.filter(
+      (n) => n.summary.startsWith("Intent: Now.") && n.claimStatus !== "verified",
+    );
+    expect(intendedNowNotLive.length).toBeGreaterThan(0);
+
+    for (const node of nodes) {
+      expect(node.summary).toMatch(/^Intent: .+\. Where it actually is: .+\.$/);
+    }
+
     expect(component).toContain("Where it actually is");
+    // Only a checked, running capability may read as verified.
+    const verified = nodes.filter((n) => n.claimStatus === "verified");
+    for (const node of verified) {
+      expect(node.state).toBe("Live");
+    }
   });
 
   it("lays every node out deterministically", () => {
     const a = projectSpatialUniverse();
     const b = projectSpatialUniverse();
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(projection).not.toMatch(/Math\.random/);
+    // The call form, not the word: both modules name Math.random in a comment to
+    // say it is deliberately not used.
+    expect(projection).not.toMatch(/Math\.random\(/);
+    expect(adapter).not.toMatch(/Math\.random\(/);
   });
 });
 

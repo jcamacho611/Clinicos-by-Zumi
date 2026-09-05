@@ -20,31 +20,26 @@ import type { SpatialUniverse, SpatialNode } from "@/lib/universe/spatial-projec
 
 const PLANE_GAP = 340;
 
-/** Honest state chips. Intent and reality are shown side by side, never merged. */
-const IMPLEMENTATION_LABEL: Record<string, string> = {
-  LIVE_VERIFIED: "Live",
-  BUILT_NEEDS_VERIFICATION: "Built · needs checking",
-  PARTIAL: "Partly built",
-  DESIGNED: "Designed",
-  PLANNED: "Planned",
-  EXTERNAL_CONNECTION_REQUIRED: "Needs an outside connection",
-  LEGAL_REVIEW_REQUIRED: "Waiting on legal review",
-  NOT_BUILT: "Not built yet",
+/** How a claim state reads to a person. Never the enum. */
+const CLAIM_LABEL: Record<string, string> = {
+  verified: "Checked and running",
+  claimed: "Built, not yet checked",
+  in_review: "Being reviewed",
+  unverified: "Not yet built",
 };
 
-const STRATEGY_LABEL: Record<string, string> = {
-  NOW: "Now",
-  NEXT: "Next",
-  LATER: "Later",
-  PARTNER: "With a partner",
-  CONNECT: "Connect, don't rebuild",
-  INTERNALIZE: "Bring in-house",
-  NEVER_BUILD: "Never build",
+/** Server-derived attention, said plainly. The browser never decides this. */
+const ATTENTION_LABEL: Record<string, string> = {
+  elevated: "Needs an outside connection before it can work.",
+  critical: "Waiting on legal review.",
 };
 
-/** Nodes that are genuinely running read bright; everything else reads quiet. */
+/**
+ * Verified capabilities read bright; claims and intentions read quiet.
+ * The server already decided this — the browser only renders the decision.
+ */
 function isRealizedNow(node: SpatialNode) {
-  return node.implementationState === "LIVE_VERIFIED";
+  return node.claimStatus === "verified";
 }
 
 export function SpatialUniverse({ universe }: { universe: SpatialUniverse }) {
@@ -246,7 +241,7 @@ export function SpatialUniverse({ universe }: { universe: SpatialUniverse }) {
                       {node.label}
                     </span>
                     <span className="block text-[11px] text-[color:var(--k-muted)]">
-                      {IMPLEMENTATION_LABEL[node.implementationState] ?? node.implementationState}
+                      {node.state}
                     </span>
                   </span>
                 </button>
@@ -262,23 +257,20 @@ export function SpatialUniverse({ universe }: { universe: SpatialUniverse }) {
           className="absolute inset-x-4 bottom-4 rounded-2xl border border-[color:var(--k-accent)] bg-[color:var(--k-public-raised)] p-4 shadow-[var(--k-shadow)] sm:inset-x-auto sm:right-6 sm:w-[min(360px,90%)]"
         >
           <p className="text-[15px] text-[color:var(--k-text)]">{selected.label}</p>
+          <p className="mt-2 text-[12px] leading-5 text-[color:var(--k-muted)]">{selected.summary}</p>
           <dl className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
             <div>
-              <dt className="text-[color:var(--k-muted)]">What we intend</dt>
-              <dd className="mt-0.5 text-[color:var(--k-text)]">
-                {STRATEGY_LABEL[selected.strategyState] ?? selected.strategyState}
-              </dd>
+              <dt className="text-[color:var(--k-muted)]">Where it actually is</dt>
+              <dd className="mt-0.5 text-[color:var(--k-text)]">{selected.state}</dd>
             </div>
             <div>
-              <dt className="text-[color:var(--k-muted)]">Where it actually is</dt>
-              <dd className="mt-0.5 text-[color:var(--k-text)]">
-                {IMPLEMENTATION_LABEL[selected.implementationState] ?? selected.implementationState}
-              </dd>
+              <dt className="text-[color:var(--k-muted)]">Checked?</dt>
+              <dd className="mt-0.5 text-[color:var(--k-text)]">{CLAIM_LABEL[selected.claimStatus ?? "unverified"]}</dd>
             </div>
           </dl>
-          {selected.boundaries.length > 0 ? (
+          {selected.attention !== "normal" ? (
             <p className="mt-3 border-t border-[color:var(--k-line)] pt-3 text-[11px] leading-5 text-[color:var(--k-muted)]">
-              {selected.boundaries.join(" · ")}
+              {ATTENTION_LABEL[selected.attention]}
             </p>
           ) : null}
           <button
