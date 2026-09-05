@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "migration": "20260903170000_public_growth_daily_counter",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "c889ee0ae81903d94f0fbe6a247ccbd26f16ef71d178b1c6677565d3b07df633",
+  "approvalReference": "P02 privacy-minimized aggregate Person growth telemetry migration reviewed as additive-only, 2026-09-05"
+}
