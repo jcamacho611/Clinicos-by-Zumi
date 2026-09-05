@@ -48,11 +48,22 @@ filename**). That file is the authority.
   gradient";
 - add an override stylesheet above the token layer.
 
-**The override layers are the disease.** `06_WAVE_0_TRUTH.md` records nine
-stylesheets in `src/app`, five of them override layers sitting above the token
-layer — that is the mechanism producing thousands of hardcoded theme literals and
-an unreachable light mode. Deleting the override layers is a prerequisite for
-this system to work at all, not a cleanup task for later.
+**The override layers are the disease.**
+
+> **CORRECTION — 2026-09-05, measured on `main@799612bf`.** This paragraph as
+> received read *"`06_WAVE_0_TRUTH.md` records nine stylesheets in `src/app`, five
+> of them override layers."* Both halves were wrong: the count is **12**, and `06`
+> recorded no such fact — the citation was dangling. `06` now carries the measured
+> version under **The override stack — measured**, and the numbers below come from
+> it. The disease is real; only the arithmetic was borrowed.
+
+`src/app` holds **12 stylesheets** — 9 global, 3 route-scoped CSS Modules. The token
+authority is `design-tokens.css`, reached only through `globals.css:2`. Above it,
+`layout.tsx:8-13` loads **six override layers** carrying **268 hardcoded literals and
+281 `!important` declarations** that overrule the tokens by import order. That is the
+mechanism producing the 2,735 theme literals and the unreachable Marble material.
+Deleting those six imports is a prerequisite for this system to work at all, not a
+cleanup task for later.
 
 ## 1.2 Two materials, one vocabulary
 

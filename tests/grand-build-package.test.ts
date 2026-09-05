@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { globSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const DIR = "docs/grand-build";
@@ -79,9 +80,141 @@ describe("grand build package", () => {
   });
 
   it("states the measured literal baseline, not the stale ceiling", () => {
-    // main@dd385aba measures 2,735. Older documents said 2,206.
+    // main@799612bf measures 2,735. Older documents said 2,206.
     expect(read("06_WAVE_0_TRUTH.md")).toContain("2,735");
     expect(all).not.toMatch(/ratchet ceiling: 2206|ceiling of 2,206 is current/);
+  });
+
+  it("carries no stylesheet count that the evidence document does not record", () => {
+    // 11 cited 06 for "nine stylesheets, five override layers". 06 recorded neither, and
+    // src/app holds twelve. A citation is only valid if the cited document carries it.
+    const truth = read("06_WAVE_0_TRUTH.md");
+    const frontend = read("11_FRONTEND_PROMPT.md");
+
+    // The stale sentence is legitimately quoted inside the CORRECTION block. What must
+    // never happen is it standing as a live claim, so require every occurrence to be a
+    // quoted line. A test that just forbade the words would fail on its own correction.
+    const stale = frontend
+      .split("\n")
+      .filter((line) => /records nine/.test(line));
+    expect(stale.length).toBeGreaterThan(0); // the correction must still cite what it corrects
+    for (const line of stale) expect(line.trimStart().startsWith(">")).toBe(true);
+
+    expect(frontend).toContain("12 stylesheets");
+    expect(frontend).toContain("CORRECTION");
+
+    expect(truth).toContain("six override layers");
+  });
+
+  it("states override-stack numbers that are true of the repository right now", () => {
+    // Measure from the files, then require the documents to state what was measured.
+    // A substring check would pass on a number that merely appears somewhere.
+    const layout = readFileSync("src/app/layout.tsx", "utf8");
+    const imported = [...layout.matchAll(/import "\.\/([\w-]+\.css)"/g)].map((m) => m[1]);
+    const overrides = imported.slice(
+      imported.indexOf("globals.css") + 1,
+      imported.indexOf("accessibility.css"),
+    );
+
+    const count = (files: string[]) =>
+      files.reduce(
+        (acc, file) => {
+          const css = readFileSync(file, "utf8");
+          return {
+            literals: acc.literals + (css.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).length,
+            importants: acc.importants + (css.match(/!important/g) ?? []).length,
+          };
+        },
+        { literals: 0, importants: 0 },
+      );
+
+    const stack = count(overrides.map((f) => `src/app/${f}`));
+    const modules = count(globSync("src/app/**/*.module.css"));
+
+    const truth = read("06_WAVE_0_TRUTH.md");
+    const frontend = read("11_FRONTEND_PROMPT.md");
+
+    // summary table
+    expect(truth).toMatch(
+      new RegExp(`\\| Literals inside those 6 layers \\| \\*\\*${stack.literals}\\*\\*`),
+    );
+    expect(truth).toMatch(
+      new RegExp(
+        `\\| \`!important\` inside those 6 layers \\| \\*\\*${stack.importants}\\*\\*`,
+      ),
+    );
+
+    // the prose in both documents must carry the same pair
+    const prose = new RegExp(
+      `\\*\\*${stack.literals} hardcoded literals and\\s+${stack.importants} \`!important\``,
+    );
+    expect(truth).toMatch(prose);
+    expect(frontend).toMatch(
+      new RegExp(
+        `\\*\\*${stack.literals} hardcoded literals and\\s+${stack.importants} \`!important\``,
+      ),
+    );
+
+    // the route-scoped modules are counted separately and must also be true
+    expect(truth).toMatch(
+      new RegExp(
+        `${modules.literals} literals and ${modules.importants} \`!important\` declarations`,
+      ),
+    );
+
+    // and every per-file line of the import-order block must match its file
+    for (const file of [...overrides, "accessibility.css"]) {
+      const css = readFileSync(`src/app/${file}`, "utf8");
+      const literals = (css.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).length;
+      const importants = (css.match(/!important/g) ?? []).length;
+      expect(truth).toMatch(
+        new RegExp(
+          `${file.replace(/[.]/g, "\\.")}\\s+${literals} literals?\\s+·\\s+${importants} !important`,
+        ),
+      );
+    }
+  });
+
+  it("discloses the literals this package's own branch adds", () => {
+    // The four are token definitions in design-tokens.css, not component literals.
+    const truth = read("06_WAVE_0_TRUTH.md");
+    expect(truth).toContain("2,739");
+    expect(truth).toContain("design-tokens.css");
+
+    const tokens = readFileSync("src/app/design-tokens.css", "utf8");
+    for (const literal of ["#f0aaa3", "#6f4a4b", "#a84d55", "#c2a6a6"]) {
+      expect(truth).toContain(literal);
+      expect(tokens).toContain(literal);
+    }
+  });
+
+  it("defers the council roster to the governance protocol on main", () => {
+    const council = read("03_COUNCIL_PACK.md");
+    const protocol = readFileSync(
+      "docs/governance/KLINIKOS_SPECIALIST_COUNCIL_AND_CAPABILITY_ROUTING_PROTOCOL.md",
+      "utf8",
+    );
+    expect(council).toContain("KLINIKOS_SPECIALIST_COUNCIL_AND_CAPABILITY_ROUTING_PROTOCOL.md");
+    expect(council).toMatch(/governance protocol wins/i);
+    // the three councils 03 does not carry must exist in the protocol it points at
+    for (const name of ["Customer Success", "Digital Twin", "Company Command"]) {
+      expect(council).toContain(name);
+      expect(protocol).toContain(name);
+    }
+  });
+
+  it("places the package below every slot of the execution index", () => {
+    const start = read("00_START_HERE.md");
+    expect(start).toContain("KLINIKOS_EXECUTION_INDEX.md");
+    expect(start).toMatch(/Loses to all eight|wins on nothing/);
+    // every authority file 00 points at must exist
+    for (const file of [
+      "docs/KLINIKOS_EXECUTION_INDEX.md",
+      "docs/KLINIKOS_MASTER_CANON.md",
+      "docs/governance/KLINIKOS_EXECUTION_TRACEABILITY.json",
+    ]) {
+      expect(existsSync(file)).toBe(true);
+    }
   });
 
   it("makes no unverified live-revenue claim", () => {

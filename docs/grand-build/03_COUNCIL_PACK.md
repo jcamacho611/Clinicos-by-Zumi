@@ -8,6 +8,28 @@ applicable council → the current task and evidence.
 A council is a **reasoning lens**, not a new application, team, product or authority. Attach
 one at a time. Attaching all twelve produces mush.
 
+## Roster authority — this document does not own the list
+
+`docs/governance/KLINIKOS_SPECIALIST_COUNCIL_AND_CAPABILITY_ROUTING_PROTOCOL.md` landed on
+`main` on 2026-09-05 and is registered in `docs/KLINIKOS_EXECUTION_INDEX.md` §1 slot 4 as
+execution control. **It owns the council roster and the capability-routing law.** It lists
+**fifteen** councils; councils 1–12 match this document by name and number.
+
+This document owns only what that protocol does not cover: how a council **session is run** —
+the truth-and-expiry opening, the mandatory dissent close, and the professional-advice
+boundary below. Where the two disagree on *which councils exist* or *how tools are routed*,
+**the governance protocol wins.** Do not re-author its roster here.
+
+The three councils this document does not carry — attach them from the protocol:
+
+| # | Council | Owns |
+|---|---|---|
+| 13 | Customer Success / Implementation | onboarding, configuration, adoption, implementation margin |
+| 14 | Data / Analytics / Digital Twin | event/data architecture, provenance, measurement, simulation |
+| 15 | Company Command / Corporate Development | company truth, pipeline, capital, operating KPIs |
+
+They inherit the same opening, dissent and advice-boundary discipline as 1–12.
+
 Every council inherits: ONE KLINIKOS · ONE MASTER CANON · ONE PERSON IDENTITY · ONE GRAPH ·
 ONE ZUMI · ONE AUTHORITY MODEL · PERSON FREE / ORGANIZATION COMMERCIAL ·
 `REUSE → EXTEND → GENERALIZE → CONNECT → PARTNER → BUILD NEW` ·

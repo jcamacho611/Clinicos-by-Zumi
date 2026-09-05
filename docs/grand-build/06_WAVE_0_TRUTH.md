@@ -2,7 +2,8 @@
 
 **Status:** SUBORDINATE EVIDENCE SNAPSHOT — NOT A CANON
 **Verified:** 2026-09-05 by direct API and repository inspection
-**Baseline:** `main@dd385aba249a7c6dd53f2baedb98b48ca6b3bb65`
+**Baseline:** `main@799612bff2932f95d56e6b4dce56ca3167f60513` (re-measured 2026-09-05; the
+earlier `dd385aba` measurement is superseded — every count below was re-run, not carried over)
 **Re-verify trigger:** any claim below is stale the moment `main` moves. Re-measure before use.
 
 Every line here was measured, not recalled. Where something was not measured in this
@@ -13,15 +14,29 @@ session it says so explicitly.
 | Fact | Value | How verified |
 |---|---|---|
 | Repository | `jcamacho611/Clinicos-by-Zumi` | — |
-| `main` HEAD | `dd385aba` | `git rev-parse origin/main` |
+| `main` HEAD | `799612bf` | `git rev-parse origin/main` |
 | Visibility | **PUBLIC** (`private: false`) | GitHub API, 2026-09-05 |
 | `main` protection | **NONE** (`protected: false`, required checks off) | GitHub API, 2026-09-05 |
 | Open PRs | 20+ | GitHub API |
-| Routes | 106 `page.tsx` | repository walk |
+| Routes | 106 `page.tsx` on `main`; 107 on this branch (`/ecosystem/universe`) | repository walk |
 | Theme literals | **2,735** across `src` css/ts/tsx | `grep -ohE '#[0-9a-fA-F]{3,8}'` |
+| Stylesheets in `src/app` | **12** — 9 global, 3 route-scoped CSS Modules | `find src/app -name '*.css'` |
+| Token authority | `src/app/design-tokens.css`, reached only via `globals.css:2` `@import` | grep |
+| Override layers above the token layer | **6** | `src/app/layout.tsx:8-13` import order |
+| Literals inside those 6 layers | **268** | per-file `grep -ohE '#[0-9a-fA-F]{3,8}'` |
+| `!important` inside those 6 layers | **281** | per-file `grep -o '!important'` |
 
-**The 2,206 literal ceiling quoted in older documents is stale.** The current baseline is
-2,735; the W1 merge raised it. Any "count did not increase" gate must ratchet from 2,735.
+**The 2,206 literal ceiling quoted in older documents is stale.** The current `main`
+baseline is **2,735**; the W1 merge raised it. Any "count did not increase" gate must
+ratchet from 2,735.
+
+**Disclosure — this package's own branch raises it to 2,739.** Branch
+`claude/whop-portal-grid-marketplace-wdw811` adds four literals:
+`#f0aaa3 #6f4a4b #a84d55 #c2a6a6`, all of them **token definitions inside
+`src/app/design-tokens.css`** — the one file where a hex value is not a violation. Zero
+literals were added to a component. Stated here rather than left for someone else to find:
+a ratchet gate that counts files indiscriminately will flag this branch, and it should be
+answered with this line, not with a suppression.
 
 ## CI — corrected
 
@@ -38,6 +53,31 @@ therefore CI evidence cannot exist. **That premise is false as of 2026-09-05.**
 Runners are allocated and jobs execute to completion. This is reliable, not intermittent.
 The discipline survives the correction: **a run that executed no steps is infrastructure
 evidence, not a pass, and mergeable-state is not CI-green.**
+
+## The override stack — measured
+
+`src/app/layout.tsx` imports eight global stylesheets in this order:
+
+```
+ 7  globals.css              ← @imports design-tokens.css (the token authority)
+ 8  cinematic-global.css              183 literals · 135 !important
+ 9  cinematic-legacy-overrides.css     50 literals ·  17 !important
+10  cinematic-command-overrides.css    13 literals ·   9 !important
+11  cinematic-home-overrides.css       12 literals ·  41 !important
+12  experience-convergence.css          1 literal  ·  15 !important
+13  unicorn-experience.css              9 literals ·  64 !important
+14  accessibility.css                   9 literals ·   6 !important
+```
+
+Lines 8–13 are the six override layers: **268 hardcoded literals and 281 `!important`
+declarations loading after the tokens they overrule.** `accessibility.css` (line 14) is a
+concern layer, not a theme override, and is counted separately.
+
+The three route-scoped CSS Modules (`billing`, `current-visit`, `front-desk` Black Label)
+carry a further 14 literals and 76 `!important` declarations, scoped to their routes.
+
+This is the mechanism behind the 2,735 literal count and the unreachable Marble material.
+Deleting lines 8–13 is a prerequisite, not a cleanup task.
 
 ## Living Reality runtime — what actually exists
 
