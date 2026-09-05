@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "migration": "20260902043000_expert_engagement_persistence",
+  "classification": "additive-only",
+  "automaticProductionDeploy": true,
+  "sha256": "bf86551e5ec1b2a29cf802d43228ffd0ef18419b578026633a74aca49c36a8f0",
+  "approvalReference": "Expert Grid durable engagement persistence TDD contract, 2026-09-02",
+  "rationale": "Adds durable ExpertEngagement and append-only ExpertEngagementEvent tables. Existing identity, Grid, quality, credential, and authorization records are not modified or deleted. Persisted engagement state does not grant data access; purpose-bound scoped authorization remains separately re-evaluated."
+}
