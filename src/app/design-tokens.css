@@ -226,6 +226,14 @@ html:root[data-klinikos-atmosphere="golden"] {
   --shadow-card-light:0 12px 30px rgba(63,32,36,.10);
 }
 
+/* Ambient drift for the spatial universe. A CSS keyframe rather than a canvas
+   render loop: the approved Spatial Living Universe design forbids a continuous
+   render loop, and a compositor-driven transform costs no main-thread work. */
+@keyframes k-mote-drift {
+  from { transform: translate3d(0, 6%, 0); }
+  to { transform: translate3d(0, -6%, 0); }
+}
+
 @keyframes zumi-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

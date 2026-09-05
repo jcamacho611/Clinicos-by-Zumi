@@ -295,75 +295,46 @@ export function SpatialUniverse({ universe }: { universe: SpatialUniverse }) {
 }
 
 /**
- * Ambient field. Canvas 2D rather than WebGL: it costs a few kilobytes instead of
- * a megabyte, runs on the low-end clinical workstations this product has to live
- * on, and never blocks the main thread long enough to be felt. When someone asks
- * for less motion, it draws once and stops.
+ * Ambient field.
+ *
+ * Deliberately CSS, not a canvas. The approved Spatial Living Universe design
+ * rules out a continuous render loop, and it is right to: a rAF loop keeps the
+ * main thread and the GPU awake for the whole time a page is open, which on a
+ * shared clinical workstation is a real cost for decoration. These are plain
+ * elements drifting on a compositor-driven keyframe, so the work happens off
+ * the main thread and stops when the tab is not visible without us asking.
+ *
+ * Positions are a deterministic function of the index, never Math.random, so
+ * the field is the same field on every visit rather than a new one each time.
  */
+const MOTES = Array.from({ length: 46 }, (_, i) => ({
+  left: (i * 97) % 100,
+  top: (i * 61) % 100,
+  size: 0.6 + ((i % 5) * 0.35),
+  duration: 14 + ((i % 7) * 3),
+  delay: -((i * 13) % 20),
+}));
+
 function AmbientField({ calm }: { calm: boolean }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = ref.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
-
-    let frame = 0;
-    let width = 0;
-    let height = 0;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-
-    const motes = Array.from({ length: 46 }, (_, i) => ({
-      x: ((i * 97) % 100) / 100,
-      y: ((i * 61) % 100) / 100,
-      drift: 0.00006 + ((i % 7) * 0.00002),
-      size: 0.6 + ((i % 5) * 0.35),
-    }));
-
-    const resize = () => {
-      width = canvas.clientWidth;
-      height = canvas.clientHeight;
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    };
-
-    const paint = (time: number) => {
-      context.clearRect(0, 0, width, height);
-      context.fillStyle =
-        getComputedStyle(canvas).getPropertyValue("--k-field").trim() || "transparent";
-      for (const mote of motes) {
-        const y = calm ? mote.y : (mote.y + time * mote.drift) % 1;
-        context.beginPath();
-        context.arc(mote.x * width, y * height, mote.size, 0, Math.PI * 2);
-        context.fill();
-      }
-    };
-
-    resize();
-    paint(0);
-
-    if (calm) {
-      const onResize = () => {
-        resize();
-        paint(0);
-      };
-      window.addEventListener("resize", onResize);
-      return () => window.removeEventListener("resize", onResize);
-    }
-
-    const loop = (time: number) => {
-      paint(time);
-      frame = window.requestAnimationFrame(loop);
-    };
-    frame = window.requestAnimationFrame(loop);
-    const onResize = () => resize();
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [calm]);
-
-  return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {MOTES.map((mote, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: `${mote.left}%`,
+            top: `${mote.top}%`,
+            height: `${mote.size * 2}px`,
+            width: `${mote.size * 2}px`,
+            background: "var(--k-field)",
+            // When someone asks for less motion, the field simply holds still.
+            animation: calm
+              ? undefined
+              : `k-mote-drift ${mote.duration}s ${mote.delay}s ease-in-out infinite alternate`,
+          }}
+        />
+      ))}
+    </div>
+  );
 }

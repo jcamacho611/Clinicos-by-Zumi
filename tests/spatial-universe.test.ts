@@ -113,10 +113,27 @@ describe("spatial universe — material and access", () => {
     expect(component).not.toMatch(/zustand|three|@react-three/);
   });
 
-  it("yields to reduced motion and cleans up its animation frame", () => {
+  it("yields to reduced motion and unbinds every listener it adds", () => {
     expect(component).toContain("prefers-reduced-motion: reduce");
-    expect(component).toContain("cancelAnimationFrame");
     expect(component).toContain("removeEventListener");
+    // Every addEventListener has a matching removal, so navigating away does not
+    // leave a keydown or media-query handler bound to a dead component.
+    const added = component.split("addEventListener").length - 1;
+    const removed = component.split("removeEventListener").length - 1;
+    expect(removed).toBe(added);
+  });
+
+  it("runs no continuous render loop, as the approved spatial design requires", () => {
+    // The Spatial Living Universe design rules out Three.js, React Three Fiber,
+    // canvas and any continuous render loop. Ambient motion is a compositor-driven
+    // CSS keyframe instead, so nothing keeps the main thread awake to decorate.
+    expect(component).not.toMatch(/requestAnimationFrame|getContext\(|<canvas/);
+    expect(component).toContain("k-mote-drift");
+    expect(tokens).toContain("@keyframes k-mote-drift");
+    // Deterministic, so the field is the same place on every visit.
+    // The call form, not the word: the file names Math.random in a comment to say
+    // it is deliberately not used.
+    expect(component).not.toMatch(/Math\.random\(/);
   });
 });
 
