@@ -146,7 +146,7 @@ async function runScenario(label, configure, execute) {
   const waitFor = async (name, expression, timeoutMs = 15_000) => {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
-      if (await evaluate(expression)) return;
+      if (await evaluate(`Boolean(${expression})`)) return;
       await delay(100);
     }
     throw new Error(`Timed out waiting for ${name}.`);
