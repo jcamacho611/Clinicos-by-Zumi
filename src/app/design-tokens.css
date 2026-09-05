@@ -121,6 +121,16 @@ html:root[data-klinikos-atmosphere="night"] {
   --k-work-header:rgba(10,5,6,.92);
   --k-ambient:radial-gradient(circle at 50% 34%,rgba(137,34,41,.26),transparent 34%),radial-gradient(circle at 78% 8%,rgba(232,129,123,.08),transparent 28%),linear-gradient(180deg,#050303 0%,#0b0506 100%);
   --k-shadow:0 28px 100px rgba(0,0,0,.42);
+  /* Spatial universe. Obsidian is depth: planes recede toward near-black and the
+     nodes are the only light source, so distance reads as darkness. */
+  --k-plane-surface:rgba(18,9,11,.42);
+  --k-plane-edge:rgba(230,129,123,.16);
+  --k-plane-label:rgba(248,239,237,.62);
+  --k-node-core:#f0aaa3;
+  --k-node-quiet:#6f4a4b;
+  --k-node-glow:0 0 0 1px rgba(240,170,163,.30),0 0 18px 2px rgba(230,129,123,.34);
+  --k-field:rgba(230,129,123,.34);
+  --k-depth-veil:linear-gradient(180deg,transparent,rgba(5,3,3,.78));
   --mode-background:var(--k-work-bg);
   --mode-header:var(--k-work-header);
 }
@@ -158,6 +168,16 @@ html:root[data-klinikos-atmosphere="golden"] {
   --k-work-header:rgba(252,249,245,.94);
   --k-ambient:radial-gradient(circle at 50% 28%,rgba(183,95,101,.12),transparent 35%),radial-gradient(circle at 82% 8%,rgba(232,129,123,.08),transparent 28%),linear-gradient(180deg,#fbf7f2 0%,#f4ede8 100%);
   --k-shadow:0 22px 70px rgba(63,32,36,.12);
+  /* Marble is air, not darkness: planes are frosted sheets over warm light and
+     distance reads as haze. Same structure, genuinely different material. */
+  --k-plane-surface:rgba(255,255,255,.55);
+  --k-plane-edge:rgba(84,43,47,.14);
+  --k-plane-label:rgba(49,29,32,.58);
+  --k-node-core:#a84d55;
+  --k-node-quiet:#c2a6a6;
+  --k-node-glow:0 0 0 1px rgba(168,77,85,.22),0 6px 18px -4px rgba(127,45,55,.30);
+  --k-field:rgba(127,45,55,.22);
+  --k-depth-veil:linear-gradient(180deg,transparent,rgba(248,244,239,.82));
   --mode-background:var(--k-work-bg);
   --mode-header:var(--k-work-header);
 }
