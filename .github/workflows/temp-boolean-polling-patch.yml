@@ -1,0 +1,45 @@
+name: Temporary boolean polling patch
+
+on:
+  push:
+    branches:
+      - fix/living-reality-browser-boolean-polling-20260905
+    paths:
+      - .github/workflows/temp-boolean-polling-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply exact polling fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          targets = [
+              Path('scripts/verify-living-reality-browser.mjs'),
+              Path('scripts/verify-frontend-browser-interactions.mjs'),
+          ]
+          old = 'if (await evaluate(expression)) return;'
+          new = 'if (await evaluate(`Boolean(${expression})`)) return;'
+          for path in targets:
+              text = path.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one unsafe polling expression, found {count}')
+              path.write_text(text.replace(old, new, 1))
+          PY
+      - name: Remove one-shot workflow and commit repair
+        run: |
+          git rm .github/workflows/temp-boolean-polling-patch.yml
+          git config user.name "Klinikos CI Repair"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/verify-living-reality-browser.mjs scripts/verify-frontend-browser-interactions.mjs
+          git commit -m "fix(ci): coerce browser wait predicates to booleans"
+          git push origin HEAD:fix/living-reality-browser-boolean-polling-20260905
