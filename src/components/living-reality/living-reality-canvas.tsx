@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
+import { CameraDirector } from "@/components/living-reality/scene/camera-director";
+import { LivingRealityScene, type RealityPalette } from "@/components/living-reality/living-reality-scene";
 import type { RealityPerformanceMode, RealityProjection } from "@/lib/living-reality/reality-projection";
 import { runtimeDprCap } from "@/lib/living-reality/runtime-mode";
-import { LivingRealityScene, type RealityPalette } from "@/components/living-reality/living-reality-scene";
 
 type ActiveRealityMode = Exclude<RealityPerformanceMode, "PRECISION_MODE">;
 
@@ -44,6 +45,7 @@ export function LivingRealityCanvas({ projection, mode, palette, onRuntimeFailur
       }}
     >
       <ContextLossGuard onRuntimeFailure={onRuntimeFailure} />
+      <CameraDirector cameraIntent={projection.cameraIntent} />
       <LivingRealityScene mode={mode} palette={palette} projection={projection} />
     </Canvas>
   );
