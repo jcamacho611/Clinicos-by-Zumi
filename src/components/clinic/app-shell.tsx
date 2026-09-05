@@ -51,13 +51,13 @@ function SidebarLink({ active, href, icon: iconName, label, onNavigate }: {
       className={cn(
         "group flex min-h-11 items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13px] font-semibold transition duration-200",
         active
-          ? "border border-[#e6817b]/18 bg-[#e6817b]/[.09] text-[#fff8f6] shadow-[0_0_28px_rgba(230,129,123,.05)]"
-          : "border border-transparent text-[#b89f9b] hover:border-[#e6817b]/10 hover:bg-[#e6817b]/[.045] hover:text-[#f8efed]",
+          ? "border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-active)] text-[color:var(--k-text-strong)] shadow-[0_0_28px_var(--k-shell-hover)]"
+          : "border border-transparent text-[color:var(--k-muted)] hover:border-[color:var(--k-line)] hover:bg-[color:var(--k-shell-hover)] hover:text-[color:var(--k-text)]",
       )}
       href={href}
       onClick={onNavigate}
     >
-      <Icon aria-hidden="true" className={cn("size-[17px]", active ? "text-[#e6817b]" : "text-[#866d69] group-hover:text-[#e6817b]")} strokeWidth={1.65} />
+      <Icon aria-hidden="true" className={cn("size-[17px]", active ? "text-[color:var(--k-accent)]" : "text-[color:var(--k-muted-2)] group-hover:text-[color:var(--k-accent)]")} strokeWidth={1.65} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
     </Link>
   );
@@ -76,18 +76,18 @@ function Sidebar({
   const primaryNavigation = primaryNavigationForRole(session.role);
 
   return (
-    <aside className="flex h-full w-[240px] flex-col border-r border-[#e28b85]/12 bg-[#070304]/98 text-[#f8efed] shadow-[20px_0_70px_rgba(0,0,0,.28)]">
+    <aside className="flex h-full w-[240px] flex-col border-r border-[color:var(--k-line)] bg-[color:var(--k-shell)] text-[color:var(--k-text)] shadow-[20px_0_70px_rgba(0,0,0,.28)]">
       <div className="flex h-[88px] items-center px-5">
         <KlinikosWordmark href="/dashboard" framed inverse markClassName="h-7 w-7" textClassName="h-[20px] w-auto" className="gap-3" />
       </div>
 
       <div className="mx-4 px-1 py-3">
-        <p className="truncate text-xs font-semibold text-[#f8efed]">{session.organizationName}</p>
-        <p className="mt-1 text-[11px] text-[#8f7773]">{roleLabel(session.role)}</p>
+        <p className="truncate text-xs font-semibold text-[color:var(--k-text)]">{session.organizationName}</p>
+        <p className="mt-1 text-[11px] text-[color:var(--k-muted-2)]">{roleLabel(session.role)}</p>
       </div>
 
       <nav className="mt-2 flex-1 px-3" aria-label="Primary Klinikos navigation">
-        <div className="space-y-1 border-y border-[#e28b85]/10 py-4">
+        <div className="space-y-1 border-y border-[color:var(--k-line)] py-4">
           {primaryNavigation.map((item) => (
             <SidebarLink
               active={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`))}
@@ -101,29 +101,29 @@ function Sidebar({
         </div>
 
         <button
-          className="mt-4 flex min-h-11 w-full items-center gap-3 rounded-[14px] border border-transparent px-3 text-left text-[13px] font-semibold text-[#9f8985] transition hover:border-[#e6817b]/10 hover:bg-[#e6817b]/[.045] hover:text-[#f8efed]"
+          className="mt-4 flex min-h-11 w-full items-center gap-3 rounded-[14px] border border-transparent px-3 text-left text-[13px] font-semibold text-[color:var(--k-muted)] transition hover:border-[color:var(--k-line)] hover:bg-[color:var(--k-shell-hover)] hover:text-[color:var(--k-text)]"
           onClick={() => {
             onNavigate?.();
             onExplore();
           }}
           type="button"
         >
-          <Search aria-hidden="true" className="size-[17px] text-[#806965]" />
+          <Search aria-hidden="true" className="size-[17px] text-[color:var(--k-muted-2)]" />
           <span className="flex-1">Explore Klinikos</span>
-          <span className="text-[11px] font-medium text-[#8d7572]">⌘K</span>
+          <span className="text-[11px] font-medium text-[color:var(--k-muted-2)]">⌘K</span>
         </button>
       </nav>
 
-      <div className="border-t border-[#e28b85]/10 p-4">
+      <div className="border-t border-[color:var(--k-line)] p-4">
         <div className="flex items-center gap-3">
-          <span className="grid size-9 place-items-center rounded-full border border-[#efaaa1]/18 bg-[#e6817b]/[.06] text-xs font-semibold text-[#f8efed]">{initials(session.name)}</span>
+          <span className="grid size-9 place-items-center rounded-full border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-hover)] text-xs font-semibold text-[color:var(--k-text)]">{initials(session.name)}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-[#f8efed]">{session.name}</p>
-            <Link className="mt-1 block text-[11px] text-[#8f7773] hover:text-[#efaaa1]" href="/settings" onClick={onNavigate}>Profile & settings</Link>
+            <p className="truncate text-xs font-semibold text-[color:var(--k-text)]">{session.name}</p>
+            <Link className="mt-1 block text-[11px] text-[color:var(--k-muted-2)] hover:text-[color:var(--k-premium)]" href="/settings" onClick={onNavigate}>Profile & settings</Link>
           </div>
         </div>
         <form action="/api/auth/logout" className="mt-3" method="post">
-          <button className="flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#e6817b]/10 bg-[#0d0608] px-3 text-[11px] font-semibold text-[#9f8985] transition hover:border-[#e6817b]/22 hover:bg-[#e6817b]/[.07] hover:text-[#fff8f6]" type="submit"><LogOut className="size-4" />Sign out</button>
+          <button className="flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--k-line)] bg-[color:var(--k-shell-raised)] px-3 text-[11px] font-semibold text-[color:var(--k-muted)] transition hover:border-[color:var(--k-accent-line)] hover:bg-[color:var(--k-shell-active)] hover:text-[color:var(--k-text-strong)]" type="submit"><LogOut className="size-4" />Sign out</button>
         </form>
       </div>
     </aside>
@@ -152,19 +152,19 @@ function ExploreKlinikos({
     .filter((group) => group.items.length > 0);
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-start bg-[#030203]/80 px-4 py-[8vh] backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Explore Klinikos">
+    <div className="fixed inset-0 z-[80] grid place-items-start bg-[color:var(--k-scrim)] px-4 py-[8vh] backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Explore Klinikos">
       <button aria-label="Close Explore Klinikos" className="absolute inset-0 cursor-default" onClick={onClose} type="button" />
-      <section className="relative mx-auto flex max-h-[84vh] w-full max-w-3xl flex-col overflow-hidden rounded-[26px] border border-[#e6817b]/16 bg-[#0a0506] shadow-[0_32px_120px_rgba(0,0,0,.62)]">
-        <div className="flex items-center gap-3 border-b border-[#e6817b]/12 px-5 py-4 sm:px-6">
-          <Search aria-hidden="true" className="size-5 text-[#e6817b]" />
+      <section className="relative mx-auto flex max-h-[84vh] w-full max-w-3xl flex-col overflow-hidden rounded-[26px] border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-panel)] shadow-[0_32px_120px_rgba(0,0,0,.62)]">
+        <div className="flex items-center gap-3 border-b border-[color:var(--k-line)] px-5 py-4 sm:px-6">
+          <Search aria-hidden="true" className="size-5 text-[color:var(--k-accent)]" />
           <input
             autoFocus
-            className="min-w-0 flex-1 bg-transparent text-base text-[#fff8f6] outline-none placeholder:text-[#78625f]"
+            className="min-w-0 flex-1 bg-transparent text-base text-[color:var(--k-text-strong)] outline-none placeholder:text-[color:var(--k-muted-2)]"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Find what you need…"
             value={query}
           />
-          <button aria-label="Close" className="grid size-9 place-items-center rounded-full text-[#8f7773] hover:bg-[#e6817b]/[.08] hover:text-[#f8efed]" onClick={onClose} type="button"><X className="size-4" /></button>
+          <button aria-label="Close" className="grid size-9 place-items-center rounded-full text-[color:var(--k-muted-2)] hover:bg-[color:var(--k-shell-active)] hover:text-[color:var(--k-text)]" onClick={onClose} type="button"><X className="size-4" /></button>
         </div>
 
         <div className="overflow-y-auto px-5 py-5 sm:px-6">
@@ -172,16 +172,16 @@ function ExploreKlinikos({
             <div className="space-y-7">
               {filteredGroups.map((group) => (
                 <section key={group.label}>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[.2em] text-[#806965]">{group.label}</p>
-                  <div className="divide-y divide-[#e6817b]/10">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[.2em] text-[color:var(--k-muted-2)]">{group.label}</p>
+                  <div className="divide-y divide-[color:var(--k-line)]">
                     {group.items.map((item) => {
                       const Icon = icons[item.icon as IconName];
                       return (
                         <Link className="group flex min-h-16 items-center gap-4 py-3" href={item.href} key={item.href} onClick={onClose}>
-                          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#e6817b]/[.06] text-[#c58d88] group-hover:text-[#efaaa1]">{Icon ? <Icon className="size-4" /> : null}</span>
+                          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[color:var(--k-shell-hover)] text-[color:var(--k-muted)] group-hover:text-[color:var(--k-premium)]">{Icon ? <Icon className="size-4" /> : null}</span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold text-[#f8efed]">{item.label}</span>
-                            <span className="mt-1 block text-xs leading-5 text-[#8f7773]">{item.description}</span>
+                            <span className="block text-sm font-semibold text-[color:var(--k-text)]">{item.label}</span>
+                            <span className="mt-1 block text-xs leading-5 text-[color:var(--k-muted-2)]">{item.description}</span>
                           </span>
                         </Link>
                       );
@@ -192,8 +192,8 @@ function ExploreKlinikos({
             </div>
           ) : (
             <div className="py-14 text-center">
-              <p className="text-sm font-semibold text-[#f8efed]">Nothing matches that phrase.</p>
-              <p className="mt-2 text-xs leading-5 text-[#8f7773]">Close this and ask Zumi what you want to accomplish.</p>
+              <p className="text-sm font-semibold text-[color:var(--k-text)]">Nothing matches that phrase.</p>
+              <p className="mt-2 text-xs leading-5 text-[color:var(--k-muted-2)]">Close this and ask Zumi what you want to accomplish.</p>
             </div>
           )}
         </div>
@@ -262,49 +262,49 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
 
   return (
     <div className="klinikos-platform min-h-screen bg-[var(--mode-background)] text-[var(--k-text)] transition-colors duration-500" data-clinic-mode={designMode} data-klinikos-ds>
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_72%_0%,rgba(150,41,48,.14),transparent_28%),radial-gradient(circle_at_20%_85%,rgba(230,129,123,.035),transparent_28%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[image:var(--k-shell-ambient)]" />
       <div className="fixed inset-y-0 left-0 z-40 hidden lg:block"><Sidebar onExplore={() => setExploreOpen(true)} session={session} /></div>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-[#050303]/82 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
+          <button className="absolute inset-0 bg-[color:var(--k-scrim)] backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
           <div className="relative h-full w-[270px] shadow-2xl"><Sidebar onExplore={() => setExploreOpen(true)} onNavigate={() => setMobileOpen(false)} session={session} /></div>
-          <button className="absolute left-[282px] top-4 grid size-10 place-items-center rounded-full border border-[#efaaa1]/15 bg-[#0c0607] text-[#f8efed] shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
+          <button className="absolute left-[282px] top-4 grid size-10 place-items-center rounded-full border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-raised)] text-[color:var(--k-text)] shadow-xl" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X className="size-5" /></button>
         </div>
       ) : null}
 
       <div className="relative lg:pl-[240px]">
-        <header className="sticky top-0 z-30 flex h-[78px] items-center gap-4 border-b border-[#e28b85]/10 bg-[color:var(--mode-header)] px-4 backdrop-blur-2xl transition-colors duration-500 sm:px-7 lg:px-10">
-          <Button className="border-[#e28b85]/15 bg-transparent text-[#f8efed] lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
+        <header className="sticky top-0 z-30 flex h-[78px] items-center gap-4 border-b border-[color:var(--k-line)] bg-[color:var(--mode-header)] px-4 backdrop-blur-2xl transition-colors duration-500 sm:px-7 lg:px-10">
+          <Button className="border-[color:var(--k-line)] bg-transparent text-[color:var(--k-text)] lg:hidden" size="icon" variant="secondary" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#b9837e]">{meta.eyebrow}</p>
-            <h1 className="truncate text-xl font-light tracking-[-.035em] text-[#f8efed]">{meta.title}</h1>
+            <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[color:var(--k-muted)]">{meta.eyebrow}</p>
+            <h1 className="truncate text-xl font-light tracking-[-.035em] text-[color:var(--k-text)]">{meta.title}</h1>
           </div>
 
           {!expandedZumiConversation ? (
-            <form className="ml-auto hidden w-full max-w-[520px] items-center gap-2 rounded-full border border-[#e28b85]/14 bg-[#12090b]/58 px-4 py-2 md:flex" onSubmit={submitZumi}>
-              <span className="shrink-0 text-[11px] font-semibold text-[#c58d88]">Zumi</span>
+            <form className="ml-auto hidden w-full max-w-[520px] items-center gap-2 rounded-full border border-[color:var(--k-line)] bg-[color:var(--k-shell-raised)] px-4 py-2 md:flex" onSubmit={submitZumi}>
+              <span className="shrink-0 text-[11px] font-semibold text-[color:var(--k-muted)]">Zumi</span>
               <input
                 aria-label="Message Zumi"
-                className="min-w-0 flex-1 bg-transparent text-xs text-[#f8efed] outline-none placeholder:text-[#806965]"
+                className="min-w-0 flex-1 bg-transparent text-xs text-[color:var(--k-text)] outline-none placeholder:text-[color:var(--k-muted-2)]"
                 onChange={(event) => setZumiPrompt(event.target.value)}
                 placeholder={promptPlaceholder}
                 value={zumiPrompt}
               />
-              <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[#e28b85]/12 [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[12px] [&_button]:text-[#d8c1bd]" onTranscript={(transcript) => { setZumiPrompt(""); sendToZumi(transcript, true); }} />
+              <VoiceInputButton className="[&_button]:h-7 [&_button]:border-[color:var(--k-line)] [&_button]:bg-transparent [&_button]:px-2 [&_button]:text-[12px] [&_button]:text-[color:var(--k-muted)]" onTranscript={(transcript) => { setZumiPrompt(""); sendToZumi(transcript, true); }} />
               <button
                 aria-controls="zumi-presence-panel"
                 aria-haspopup="dialog"
                 aria-label={shellControlLabel}
-                className="relative grid size-8 place-items-center rounded-full border border-[#e6817b]/18 bg-[#16090c] transition hover:border-[#efaaa1]/40 hover:bg-[#241014] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6817b]"
+                className="relative grid size-8 place-items-center rounded-full border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-raised)] transition hover:border-[color:var(--k-premium)] hover:bg-[color:var(--k-shell-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--k-accent)]"
                 title={`${shellControlLabel} · Ctrl/Cmd+J`}
                 type="submit"
               >
-                <span className="absolute inset-1 rounded-full border border-[#e6817b]/10" />
+                <span className="absolute inset-1 rounded-full border border-[color:var(--k-line)]" />
                 <img alt="" className="relative h-5 w-5 object-contain" src="/klinikos-orbital-k-production.png" />
               </button>
             </form>
-          ) : <div className="ml-auto hidden text-[11px] font-semibold uppercase tracking-[.15em] text-[#806965] md:block">Zumi conversation</div>}
+          ) : <div className="ml-auto hidden text-[11px] font-semibold uppercase tracking-[.15em] text-[color:var(--k-muted-2)] md:block">Zumi conversation</div>}
 
           <div className="flex items-center gap-2">
             {!expandedZumiConversation ? (
@@ -312,19 +312,19 @@ export function AppShell({ children, session }: { children: React.ReactNode; ses
                 aria-controls="zumi-presence-panel"
                 aria-haspopup="dialog"
                 aria-label={shellControlLabel}
-                className="gap-2 border-[#e28b85]/18 bg-[#e6817b]/[.08] px-3 text-[#efaaa1] hover:bg-[#e6817b]/14 hover:text-[#fff8f6] md:hidden"
+                className="gap-2 border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-active)] px-3 text-[color:var(--k-premium)] hover:bg-[color:var(--k-shell-active)] hover:text-[color:var(--k-text-strong)] md:hidden"
                 onClick={sendOrFocusZumi}
                 title={`${shellControlLabel} · Ctrl/Cmd+J`}
                 type="button"
                 variant="secondary"
               >
-                <span className="relative grid size-6 place-items-center rounded-full border border-[#e6817b]/18 bg-[#16090c]">
+                <span className="relative grid size-6 place-items-center rounded-full border border-[color:var(--k-accent-line)] bg-[color:var(--k-shell-raised)]">
                   <img alt="" className="h-4 w-4 object-contain" src="/klinikos-orbital-k-production.png" />
                 </span>
                 <span className="hidden text-xs font-semibold sm:inline">Zumi</span>
               </Button>
             ) : null}
-            <Button asChild className="relative hidden border-[#e28b85]/14 bg-[#12090b]/40 text-[#b89f9b] hover:bg-[#e6817b]/10 hover:text-[#f8efed] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
+            <Button asChild className="relative hidden border-[color:var(--k-line)] bg-[color:var(--k-shell-raised)] text-[color:var(--k-muted)] hover:bg-[color:var(--k-shell-hover)] hover:text-[color:var(--k-text)] sm:inline-flex" size="icon" variant="secondary"><Link aria-label="Open action center" href="/action-center" title="Open action center"><Bell className="size-4" /></Link></Button>
           </div>
         </header>
 
