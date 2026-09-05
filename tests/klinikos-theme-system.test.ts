@@ -7,6 +7,7 @@ const globals = fs.readFileSync(path.join(process.cwd(), "src/app/globals.css"),
 const convergence = fs.readFileSync(path.join(process.cwd(), "src/app/experience-convergence.css"), "utf8");
 const appearance = fs.readFileSync(path.join(process.cwd(), "src/lib/design/atmosphere.ts"), "utf8");
 const controller = fs.readFileSync(path.join(process.cwd(), "src/components/design/klinikos-atmosphere.tsx"), "utf8");
+const utilityDock = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-utility-dock.tsx"), "utf8");
 const accountPreferences = fs.readFileSync(path.join(process.cwd(), "src/components/clinic/account-preferences.tsx"), "utf8");
 const layout = fs.readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
 const livingHome = fs.readFileSync(path.join(process.cwd(), "src/components/marketing/public-living-gateway.tsx"), "utf8");
@@ -58,10 +59,13 @@ describe("Klinikos Black Label appearance system", () => {
   it("uses OS color preference for System and keeps the first-visit Living Home Obsidian", () => {
     expect(appearance).toContain('matchMedia("(prefers-color-scheme: dark)")');
     expect(appearance).toContain("prefersDark");
-    expect(appearance).toContain("referenceLocked");
-    expect(appearance).toContain('location.pathname === "/"');
+    expect(appearance).toContain("publicAppearanceBootstrapRules");
+    expect(appearance).toContain("appearanceMode");
     expect(controller).toContain("appearancePolicyForPath(pathname)");
-    expect(controller).toContain("appearancePolicy.referenceLocked");
+    expect(controller).toContain("resolvePublicRoutePresentation(pathname)?.appearanceMode");
+    expect(controller).toContain("atmosphereForPresentation");
+    expect(controller).toContain("export function KlinikosAtmosphereRouteSync");
+    expect(utilityDock).toContain("<KlinikosAtmosphereRouteSync pathname={pathname} />");
     expect(livingHome).toContain("styles.shell");
     expect(livingHomeMaterials).toContain("--lu-obsidian: #080506");
     expect(livingHomeMaterials).toContain("var(--lu-obsidian)");

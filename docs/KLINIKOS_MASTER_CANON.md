@@ -1,6 +1,6 @@
 # KLINIKOS MASTER CANON
 
-Version: `2026-09-01.1`
+Version: `2026-09-02.1`
 Status: `ACTIVE — SOLE COMPANY / PRODUCT / ARCHITECTURE / BUSINESS / EXPERIENCE AUTHORITY`
 Canonical implementation contract: `docs/superpowers/specs/2026-08-29-klinikos-master-engineering-blueprint.md`
 Machine-readable routing: `docs/KLINIKOS_AUTHORITY_MAP.yaml`
@@ -1490,6 +1490,10 @@ The **PUBLIC HOMEPAGE** must explain the healthcare-fragmentation problem, Klini
 
 The **AUTHENTICATED SHELL** provides adaptive navigation, Living Home, persistent Zumi, search/current work, notifications/obligations, explicit context switching, the Object Stage, Inspector, and only the relevant applications/actions for the active Experience Envelope.
 
+**ONE PRODUCT / ONE PROGRAM / ONE IDENTITY / ONE SHELL / ONE ZUMI.** Klinikos is one continuous product and one governed frontend/runtime system. Living Home, Clinic OS, Current Visit, Money/Financial OS, Network/Grid, EDU/Learn, patient/member, enterprise, and Company/Command are application projections inside that program. They are not separate products, accounts, sites, brands, bots, design systems, databases, or frontend runtimes. The shared shell may visually recede or recompose for a patient, clinician, operator, learner, Grid participant, executive, or mobile user, but identity, context continuity, authority, navigation policy, objects, evidence, search, activity, next-action language, materials, and Zumi remain governed by the same substrate.
+
+The customer-facing top-level target is **`HOME / CLINIC / MONEY / NETWORK / LEARN`**, progressively filtered by the active Experience Envelope rather than exposing the full route catalog. Public Klinikos is the same product before authentication; public intent must survive join/sign-in and continue with the newly authorized context. A role-specific experience may be purposefully distinct, but **APPLICATIONS DIFFERENTIATE THROUGH CONTENT, CONTEXT, AND WORK**, not independent chrome or duplicated machinery.
+
 The **OBJECT STAGE** is the shared stateful focus primitive for one consequential object, workflow, or decision. The **INSPECTOR** explains why it matters, what supports it, what changed, who acted, related context, authority, and next permitted action without replacing the primary workspace. The **LIVING EDGE** is a scarce attention signal reserved for consequential change, exception, or required action—not decoration.
 
 Black Label supports **TWO DENSITY MODES**: `CONTEMPLATIVE` for orientation, conversation, learning, and deliberate review; `OPERATIVE` for dense, time-sensitive clinical, financial, administrative, and network work. It uses **FIVE DEPTH LEVELS**: `ENVIRONMENT → WORKSPACE → ACTIVE SURFACE / OBJECT STAGE → CONTEXT / INSPECTOR → MODAL / CRITICAL DECISION`.
@@ -1600,6 +1604,20 @@ Company flywheel:
 Major initiative decisions should answer:
 
 `BUILD / SELL / COLLECT / RETAIN / EXPAND / DEFEND / MEASURE / LEARN / SCALE`.
+
+## 47.1 Klinikos Command / Founder operating projection
+
+**KLINIKOS COMMAND / FOUNDER COMMAND CENTER** is the privileged authenticated projection of the Plane E Company Compounding System. It is not the universal shell, a customer clinical workspace, a second company operating system, a separate executive application/runtime, or a sixth plane. It composes the existing company-opportunity/evidence ledger, execution controls, product and release truth, pricing/payment truth, customer and pipeline evidence, risk/security evidence, capital/financial evidence, tasks, decisions, outcomes, and Zumi into one source-linked operating view.
+
+Working source labels such as **`CommandSignal / CommandInitiative / CommandOpportunity / CommandRisk / CommandDecision`** describe views or candidate extensions. They do not authorize parallel tables, ledgers, workflow engines, or truth stores. Engineering must first **REUSE / EXTEND / GENERALIZE** canonical CompanyOpportunity, evidence, task, risk, decision, financial, release, relationship, and audit primitives; `BUILD NEW` requires equivalence analysis and a proven missing state.
+
+**EXTERNAL CONNECTORS ARE EVIDENCE PROVIDERS, NOT AUTHORITIES.** GitHub may provide engineering, PR, CI, release, and deployment evidence. Outlook may provide authorized correspondence, deadline, relationship, and opportunity evidence. Stripe may provide catalog, checkout, event, payment, refund, dispute, and settlement evidence. Approved financial systems may provide cash, receivable, burn, runway, and scenario inputs. Each connector must pass through a server-side scoped adapter, normalization, provenance/freshness classification, policy, and canonical evidence boundary. The browser must not call external systems directly, connector health does not establish business truth, and no source may silently upgrade `LEAD → PIPELINE → CONTRACT → CASH`, `MERGED → DEPLOYED → CUSTOMER-VISIBLE`, or `CHECKOUT → PAYMENT → SETTLEMENT`.
+
+**COMPANY AUTHORITY IS SEPARATE FROM CLINICAL AUTHORITY.** A clinic-owner, enterprise-admin, investor, or founder label does not itself grant Company Command access; company capabilities require explicit purpose-scoped authorization and audit. Company Command receives no raw PHI by default and may not use internal-company authority to bypass patient, tenant, professional, clinical, financial, or legal boundaries.
+
+Command should feel like a quiet Obsidian decision instrument: one dominant priority or decision, explicit `ACTUAL / CONTRACTED / PIPELINE / ASSUMPTION / SCENARIO / TARGET` classification, evidence, freshness, owner, blocker, money/risk consequence, and next action—not a generic KPI/card wall or a permanent second sidebar. Unknown, stale, unavailable, incomplete, and adverse are different states. Mobile recomposes to the active decision with contextual drawers/sheets. Zumi may retrieve authorized evidence, compare, explain, rank, recommend, and prepare; sending correspondence, changing price, merging/deploying code, committing money, or changing authoritative state requires the deterministic system, current evidence, explicit authority, confirmation where required, and audit.
+
+Current implementation/evidence state: **DESIGNED / PARTIAL**. The executive cadence and CompanyOpportunity/evidence foundations exist; the complete private Command experience, capability policy, connector normalization, cross-source freshness, financial actuals, and production browser evidence remain unverified until exact code, tests, deployment, runtime, and external-connection evidence prove them.
 
 ---
 

@@ -50,6 +50,14 @@ describe("frontend browser interaction release gate", () => {
     expect(browserGate).toContain("firstFoldOperational");
     expect(browserGate).toContain("wordmarkVisibleWidth");
     expect(browserGate).toContain("splitViewportRecomposed");
+    expect(browserGate).toContain("routePresentationTransitions");
+    expect(browserGate).toContain("root-reference-obsidian");
+    expect(browserGate).toContain("how-it-works-adaptive-marble");
+    expect(browserGate).toContain("grid-fixed-obsidian");
+    expect(browserGate).toContain("grid-pricing-fixed-marble");
+    expect(browserGate).toContain("client-side route transition");
+    expect(browserGate).toContain("window.localStorage.setItem('klinikos-atmosphere', 'light')");
+    expect(browserGate).toContain("document.documentElement.dataset.klinikosAtmosphere");
     expect(browserGate).toContain('waitForEvent("Page.loadEventFired"');
   });
 

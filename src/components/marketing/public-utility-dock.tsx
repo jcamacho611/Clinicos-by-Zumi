@@ -2,34 +2,46 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { KlinikosAtmosphereController } from "@/components/design/klinikos-atmosphere";
+import {
+  KlinikosAtmosphereController,
+  KlinikosAtmosphereRouteSync,
+} from "@/components/design/klinikos-atmosphere";
 import { PublicZumiSiteControl } from "@/components/marketing/public-zumi-site-control";
-import { routePresentationPolicy } from "@/lib/design/route-presentation-policy";
+import { resolvePublicRoutePresentation } from "@/lib/screen-experience-route-presentation";
 
 export function PublicUtilityDock() {
   const pathname = usePathname();
-  const presentation = routePresentationPolicy(pathname);
-  const [activePanel, setActivePanel] = useState<"zumi" | "appearance" | null>(null);
+  return <RouteScopedPublicUtilityDock key={pathname} pathname={pathname} />;
+}
 
-  if (!presentation.utilityDockVisible) return null;
+function RouteScopedPublicUtilityDock({ pathname }: { pathname: string }) {
+  const [activePanel, setActivePanel] = useState<"zumi" | "appearance" | null>(null);
+  const presentation = resolvePublicRoutePresentation(pathname);
+  const hasVisibleUtility = presentation?.zumiMode === "floating-public"
+    || presentation?.appearanceMode === "adaptive";
 
   return (
-    <div
-      className="fixed bottom-[max(.75rem,env(safe-area-inset-bottom))] right-3 z-[80] flex items-center gap-2 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-6"
-      data-public-utility-dock="true"
-    >
-      {presentation.publicZumiVisible ? (
-        <PublicZumiSiteControl
-          onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
-          open={activePanel === "zumi"}
-        />
+    <>
+      <KlinikosAtmosphereRouteSync pathname={pathname} />
+      {hasVisibleUtility ? (
+        <div
+          className="fixed bottom-[max(.75rem,env(safe-area-inset-bottom))] right-3 z-[80] flex items-center gap-2 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-6"
+          data-public-utility-dock="true"
+        >
+          {presentation?.zumiMode === "floating-public" ? (
+            <PublicZumiSiteControl
+              onOpenChange={(open) => setActivePanel(open ? "zumi" : null)}
+              open={activePanel === "zumi"}
+            />
+          ) : null}
+          {presentation?.appearanceMode === "adaptive" ? (
+            <KlinikosAtmosphereController
+              onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
+              open={activePanel === "appearance"}
+            />
+          ) : null}
+        </div>
       ) : null}
-      {presentation.appearanceControllerVisible ? (
-        <KlinikosAtmosphereController
-          onOpenChange={(open) => setActivePanel(open ? "appearance" : null)}
-          open={activePanel === "appearance"}
-        />
-      ) : null}
-    </div>
+    </>
   );
 }

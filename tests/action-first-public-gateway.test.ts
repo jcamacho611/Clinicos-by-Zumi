@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { PUBLIC_LIVING_ACTIONS } from "@/lib/marketing/public-living-actions";
+import { PUBLIC_PRIMARY_NAVIGATION } from "@/lib/screen-experience-route-presentation";
 
 function read(relative: string) {
   return fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -51,7 +52,8 @@ describe("Action-First public Living Universe", () => {
   });
 
   it("keeps public navigation simple and offers a real free entry", () => {
-    expect(source).toContain('{ label: "How Klinikos helps", href: "/how-it-works" }');
+    const publicDestinations = PUBLIC_PRIMARY_NAVIGATION.map((item) => item.href);
+    expect(publicDestinations).toContain("/how-it-works");
     // Free entry moved from the Grid-specific funnel to the one Person account.
     // The law this asserts — the front door offers a real free entry — is unchanged;
     // /signup is now the entry that creates the single Klinikos identity, and it is
@@ -60,11 +62,11 @@ describe("Action-First public Living Universe", () => {
     expect(source).toContain("Join free");
     expect(source).toContain('href="/login"');
 
-    expect(source).not.toContain('{ label: "Clinics", href: "/founding-clinic" }');
-    expect(source).not.toContain('{ label: "Grid", href: "/grid" }');
-    expect(source).not.toContain('{ label: "EDU", href: "/edu" }');
-    expect(source).not.toContain('{ label: "Pricing", href: "/pricing" }');
-    expect(source).not.toContain('{ label: "Trust", href: "/trust" }');
+    expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.label)).not.toContain("Clinics");
+    expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.label)).not.toContain("Grid");
+    expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.label)).not.toContain("EDU");
+    expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.label)).not.toContain("Pricing");
+    expect(PUBLIC_PRIMARY_NAVIGATION.map((item) => item.label)).not.toContain("Trust");
   });
 
   it("keeps the root focused on the Living Universe gateway", () => {

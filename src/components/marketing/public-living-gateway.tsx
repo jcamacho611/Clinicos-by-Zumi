@@ -28,6 +28,10 @@ import {
   KLINIKOS_HUMAN_AUTHORITY,
   KLINIKOS_SUPPORTING,
 } from "@/lib/brand/canonical-messaging";
+import {
+  isPublicDirectDestination,
+  PUBLIC_PRIMARY_NAVIGATION,
+} from "@/lib/screen-experience-route-presentation";
 
 type PublicZumiSuggestion = {
   id: string;
@@ -128,11 +132,9 @@ export function isUniverseProjection(value: unknown): value is PublicLivingUnive
 }
 
 const PUBLIC_SESSION_KEY = "klinikos.public.zumi.session";
-const publicActionPaths = new Set(["/grid", "/edu", "/pricing", "/trust", "/ecosystem", "/how-it-works", "/founding-clinic", "/sales", "/operational-audit", "/start", "/access"]);
-
 function destinationActionHref(destination: PublicLivingDestination) {
   if (destination.href === "/portal") return "/portal/login";
-  if (publicActionPaths.has(destination.href)) return destination.href;
+  if (isPublicDirectDestination(destination.href)) return destination.href;
   return protectedPublicContinuationHref(destination.href, destination.key);
 }
 
@@ -188,14 +190,6 @@ function ZumiSendGlyph({ active }: { active: boolean }) {
     </span>
   );
 }
-
-const navItems = [
-  { label: "How Klinikos helps", href: "/how-it-works" },
-  { label: "Explore Grid", href: "/grid" },
-  { label: "Find care", href: "/grid/browse?intent=provider" },
-  { label: "Learn", href: "/edu" },
-  { label: "For clinics", href: "/founding-clinic" },
-] as const;
 
 const PUBLIC_INTERFACE_STEPS = ["Listening", "Understanding", "Connecting", "Preparing", "Ready"] as const;
 
@@ -511,7 +505,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
           />
 
           <nav aria-label="Primary" className={styles.primaryNavigation}>
-            {navItems.map((item) => (
+            {PUBLIC_PRIMARY_NAVIGATION.map((item) => (
               <Link className={styles.headerLink} href={item.href} key={item.label}>{item.label}</Link>
             ))}
           </nav>
@@ -528,7 +522,7 @@ export function PublicLivingGateway({ signupEnabled }: { signupEnabled: boolean 
               <Menu className="size-5" aria-hidden="true" />
             </summary>
             <nav aria-label="Mobile navigation">
-              {navItems.map((item) => (
+              {PUBLIC_PRIMARY_NAVIGATION.map((item) => (
                 <Link href={item.href} key={item.label}>{item.label}</Link>
               ))}
               <Link href="/portal/login">Patient access</Link>
