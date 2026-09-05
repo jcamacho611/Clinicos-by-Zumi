@@ -1,15 +1,21 @@
-import { clinicCommercialOffers, clinicPlans } from "@/lib/commercial/klinikos-commercial";
+import { clinicPlans, commercialFabricOffers } from "@/lib/commercial/klinikos-commercial";
 
 export const commercialProductKeys = [
-  "operational_audit",
-  "implementation_blueprint",
-  "founding_clinic_implementation",
+  "deep_operating_audit",
+  "proof_sprint",
+  "optimization_retainer",
+  "integration_launch",
+  "data_migration_go_live",
+  "enterprise_architecture_workshop",
   "clinic_core",
   "clinic_growth",
   "clinic_scale",
   "clinic_enterprise",
-  // Legacy internal aliases remain readable so historical processor/subscription
-  // evidence can still resolve. They must not become new checkout products.
+  // Evidence-only aliases preserve reconciliation of historical processor/database
+  // records. They cannot begin a new commercial path.
+  "operational_audit",
+  "implementation_blueprint",
+  "founding_clinic_implementation",
   "clinic_operator",
   "grid_professional",
   "grid_facility",
@@ -17,7 +23,7 @@ export const commercialProductKeys = [
 
 export type CommercialProductKey = (typeof commercialProductKeys)[number];
 export type CommercialProductLifecycle = "active" | "legacy_evidence_only";
-export type CommercialAudience = "clinic" | "enterprise" | "professional" | "facility";
+export type CommercialAudience = "clinic" | "enterprise" | "professional" | "facility" | "organization";
 export type CommercialRevenueClass =
   | "service"
   | "implementation"
@@ -25,13 +31,12 @@ export type CommercialRevenueClass =
   | "enterprise_contract"
   | "historical_evidence";
 export type CommercialRoute =
-  | "self_serve"
   | "qualified_service"
   | "sales_led"
   | "recurring_reviewed"
   | "enterprise_government"
   | "historical_evidence_only";
-export type CommercialPriceType = "fixed" | "starting_at" | "custom" | "historical";
+export type CommercialPriceType = "fixed" | "custom" | "historical";
 
 export type CommercialProduct = {
   key: CommercialProductKey;
@@ -39,70 +44,38 @@ export type CommercialProduct = {
   audience: CommercialAudience;
   billing: "one_time" | "monthly" | "custom";
   priceCents: number | null;
-  /** What kind of revenue event this offer represents. */
   revenueClass: CommercialRevenueClass;
-  /** The governed path a qualified buyer should enter. This is separate from the payment processor. */
   commercialRoute: CommercialRoute;
-  /** Describes whether the displayed commercial amount is exact, a floor, custom, or historical evidence only. */
   priceType: CommercialPriceType;
-  /** True when a human/system qualification gate must be satisfied before the commercial path advances. */
   qualificationRequired: boolean;
-  /** Canonical public/sales destination for this offer, or null when the product cannot start a new sale. */
   conversionDestination: string | null;
-  /** Current product can start a new governed checkout. Historical aliases cannot. */
   lifecycle: CommercialProductLifecycle;
-  /** Current sellable offer that may be presented to a buyer; its route may still require qualification, review, scope, or contract. */
   publicPurchasable: boolean;
-  /** Buyer may start a public checkout immediately, without a qualification or sales gate. */
   directPublicCheckoutEligible: boolean;
   modules: readonly string[];
   whopPlanEnvVars: readonly string[];
-  /**
-   * Variable-cost allowances are deliberately configured outside source code.
-   * This avoids silently spending vendor money before a commercial package has
-   * actually funded the corresponding usage bucket.
-   */
   allowanceEnv: Partial<Record<"ai" | "voice" | "sms" | "email" | "maps" | "document_processing" | "storage" | "integrations", string>>;
   postPurchaseBoundary: string;
 };
 
 const clinicBoundary =
-  "Payment can activate the purchased software entitlement, but production PHI, clinical, connector, credential, integration, and human-review gates remain independent.";
+  "Payment can activate only the contracted software entitlement. Production PHI, clinical, connector, credential, integration, tenant, and human-review gates remain independent.";
 
 const serviceBoundary =
-  "Payment purchases only the named service. It does not activate production software, PHI workflows, clinical authority, professional eligibility, Grid eligibility, or any regulated capability.";
+  "Payment purchases only the scoped service. It does not create identity, production software authority, PHI access, clinical authority, professional eligibility, Grid eligibility, referral priority, or any regulated capability.";
 
-export const commercialProducts: readonly CommercialProduct[] = [
+const serviceProducts: readonly CommercialProduct[] = [
   {
-    key: "operational_audit",
-    label: clinicCommercialOffers.privateWorkflowReview.name,
-    audience: "clinic",
+    key: "deep_operating_audit",
+    label: commercialFabricOffers.deepOperatingAudit.name,
+    audience: "organization",
     billing: "one_time",
-    priceCents: clinicCommercialOffers.privateWorkflowReview.priceCents,
-    revenueClass: "service",
-    commercialRoute: "self_serve",
-    priceType: "fixed",
-    qualificationRequired: false,
-    conversionDestination: "/sales",
-    lifecycle: "active",
-    publicPurchasable: true,
-    directPublicCheckoutEligible: true,
-    modules: [],
-    whopPlanEnvVars: [],
-    allowanceEnv: {},
-    postPurchaseBoundary: serviceBoundary,
-  },
-  {
-    key: "implementation_blueprint",
-    label: clinicCommercialOffers.foundingEvaluation.name,
-    audience: "clinic",
-    billing: "one_time",
-    priceCents: clinicCommercialOffers.foundingEvaluation.priceCents,
+    priceCents: commercialFabricOffers.deepOperatingAudit.priceCents,
     revenueClass: "service",
     commercialRoute: "qualified_service",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/sales",
     lifecycle: "active",
     publicPurchasable: true,
     directPublicCheckoutEligible: false,
@@ -112,26 +85,103 @@ export const commercialProducts: readonly CommercialProduct[] = [
     postPurchaseBoundary: serviceBoundary,
   },
   {
-    key: "founding_clinic_implementation",
-    label: clinicCommercialOffers.foundingImplementation.name,
-    audience: "clinic",
-    billing: "custom",
-    // `from $8,000` is a scope floor, not a fixed amount the browser may charge.
-    priceCents: null,
-    revenueClass: "implementation",
-    commercialRoute: "sales_led",
-    priceType: "starting_at",
+    key: "proof_sprint",
+    label: commercialFabricOffers.proofSprint.name,
+    audience: "organization",
+    billing: "one_time",
+    priceCents: commercialFabricOffers.proofSprint.priceCents,
+    revenueClass: "service",
+    commercialRoute: "qualified_service",
+    priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/sales",
     lifecycle: "active",
     publicPurchasable: true,
     directPublicCheckoutEligible: false,
     modules: [],
     whopPlanEnvVars: [],
     allowanceEnv: {},
-    postPurchaseBoundary:
-      "A scoped implementation agreement funds only its contracted work. Payment never proves production readiness, clinical authority, connector readiness, or PHI eligibility.",
+    postPurchaseBoundary: serviceBoundary,
   },
+  {
+    key: "optimization_retainer",
+    label: commercialFabricOffers.optimizationRetainer.name,
+    audience: "organization",
+    billing: "monthly",
+    priceCents: commercialFabricOffers.optimizationRetainer.priceCents,
+    revenueClass: "service",
+    commercialRoute: "qualified_service",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/sales",
+    lifecycle: "active",
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+  {
+    key: "integration_launch",
+    label: commercialFabricOffers.integrationLaunch.name,
+    audience: "organization",
+    billing: "one_time",
+    priceCents: commercialFabricOffers.integrationLaunch.priceCents,
+    revenueClass: "implementation",
+    commercialRoute: "sales_led",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/sales",
+    lifecycle: "active",
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+  {
+    key: "data_migration_go_live",
+    label: commercialFabricOffers.dataMigrationGoLive.name,
+    audience: "organization",
+    billing: "one_time",
+    priceCents: commercialFabricOffers.dataMigrationGoLive.priceCents,
+    revenueClass: "implementation",
+    commercialRoute: "sales_led",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/sales",
+    lifecycle: "active",
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+  {
+    key: "enterprise_architecture_workshop",
+    label: commercialFabricOffers.enterpriseArchitectureWorkshop.name,
+    audience: "enterprise",
+    billing: "one_time",
+    priceCents: commercialFabricOffers.enterpriseArchitectureWorkshop.priceCents,
+    revenueClass: "service",
+    commercialRoute: "enterprise_government",
+    priceType: "fixed",
+    qualificationRequired: true,
+    conversionDestination: "/sales",
+    lifecycle: "active",
+    publicPurchasable: true,
+    directPublicCheckoutEligible: false,
+    modules: [],
+    whopPlanEnvVars: [],
+    allowanceEnv: {},
+    postPurchaseBoundary: serviceBoundary,
+  },
+];
+
+const clinicProducts: readonly CommercialProduct[] = [
   {
     key: "clinic_core",
     label: clinicPlans.core.name,
@@ -142,7 +192,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/pricing",
     lifecycle: "active",
     publicPurchasable: true,
     directPublicCheckoutEligible: false,
@@ -170,7 +220,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/pricing",
     lifecycle: "active",
     publicPurchasable: true,
     directPublicCheckoutEligible: false,
@@ -198,7 +248,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "recurring_reviewed",
     priceType: "fixed",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/pricing",
     lifecycle: "active",
     publicPurchasable: true,
     directPublicCheckoutEligible: false,
@@ -226,7 +276,7 @@ export const commercialProducts: readonly CommercialProduct[] = [
     commercialRoute: "enterprise_government",
     priceType: "custom",
     qualificationRequired: true,
-    conversionDestination: "/founding-clinic",
+    conversionDestination: "/pricing",
     lifecycle: "active",
     publicPurchasable: false,
     directPublicCheckoutEligible: false,
@@ -236,132 +286,48 @@ export const commercialProducts: readonly CommercialProduct[] = [
     postPurchaseBoundary:
       "Enterprise scope, pricing, security, deployment, integrations, procurement, and entitlements remain governed by the executed commercial agreement and independent technical gates.",
   },
-  {
-    key: "clinic_operator",
-    label: "Klinikos Clinic Operator (legacy evidence only)",
-    audience: "clinic",
-    billing: "custom",
-    priceCents: null,
-    revenueClass: "historical_evidence",
-    commercialRoute: "historical_evidence_only",
-    priceType: "historical",
-    qualificationRequired: false,
-    conversionDestination: null,
-    lifecycle: "legacy_evidence_only",
-    publicPurchasable: false,
-    directPublicCheckoutEligible: false,
-    modules: ["revenue_recovery", "billing_readiness", "grid", "advanced_reports"],
-    whopPlanEnvVars: ["WHOP_PLAN_CLINIC_OPERATOR"],
-    allowanceEnv: {
-      ai: "KLINIKOS_ALLOWANCE_CLINIC_AI_CENTS",
-      voice: "KLINIKOS_ALLOWANCE_CLINIC_VOICE_CENTS",
-      sms: "KLINIKOS_ALLOWANCE_CLINIC_SMS_CENTS",
-      email: "KLINIKOS_ALLOWANCE_CLINIC_EMAIL_CENTS",
-      maps: "KLINIKOS_ALLOWANCE_CLINIC_MAPS_CENTS",
-      document_processing: "KLINIKOS_ALLOWANCE_CLINIC_DOCUMENTS_CENTS",
-      storage: "KLINIKOS_ALLOWANCE_CLINIC_STORAGE_CENTS",
-      integrations: "KLINIKOS_ALLOWANCE_CLINIC_INTEGRATIONS_CENTS",
-    },
-    postPurchaseBoundary: clinicBoundary,
-  },
-  {
-    key: "grid_professional",
-    label: "Klinikos Grid Professional (legacy Whop evidence)",
-    audience: "professional",
-    billing: "monthly",
-    // Historical processor amount retained for reconciliation only. Current public
-    // Grid subscription truth lives in `gridPlans` and must not be inferred from this.
-    priceCents: 3_900,
-    revenueClass: "historical_evidence",
-    commercialRoute: "historical_evidence_only",
-    priceType: "historical",
-    qualificationRequired: false,
-    conversionDestination: null,
-    lifecycle: "legacy_evidence_only",
-    publicPurchasable: false,
-    directPublicCheckoutEligible: false,
-    modules: ["grid"],
-    whopPlanEnvVars: ["WHOP_PLAN_GRID_PROFESSIONAL", "WHOP_PLAN_GRID_PROVIDER"],
-    allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_PROFESSIONAL_MAPS_CENTS" },
-    postPurchaseBoundary:
-      "Historical payment evidence never verifies a professional credential or makes someone eligible for regulated work. Grid eligibility remains deterministic and contextual.",
-  },
-  {
-    key: "grid_facility",
-    label: "Klinikos Grid Facility (legacy Whop evidence)",
-    audience: "facility",
-    billing: "monthly",
-    // Historical processor amount retained for reconciliation only. Current public
-    // organization pricing lives in `gridPlans` and must not be inferred from this.
-    priceCents: 9_900,
-    revenueClass: "historical_evidence",
-    commercialRoute: "historical_evidence_only",
-    priceType: "historical",
-    qualificationRequired: false,
-    conversionDestination: null,
-    lifecycle: "legacy_evidence_only",
-    publicPurchasable: false,
-    directPublicCheckoutEligible: false,
-    modules: ["grid"],
-    whopPlanEnvVars: ["WHOP_PLAN_GRID_FACILITY", "WHOP_PLAN_GRID_LOCATION_PARTNER"],
-    allowanceEnv: { maps: "KLINIKOS_ALLOWANCE_GRID_FACILITY_MAPS_CENTS" },
-    postPurchaseBoundary:
-      "Historical payment evidence never verifies facility authority, permitted use, insurance, or regulated-service eligibility. Those checks remain separate.",
-  },
-] as const;
+];
+
+const historicalBoundary =
+  "Historical commercial evidence is retained only for reconciliation. It cannot begin a new sale, create a new entitlement, or establish any governed authority.";
+
+const historicalProducts: readonly CommercialProduct[] = [
+  "operational_audit",
+  "implementation_blueprint",
+  "founding_clinic_implementation",
+  "clinic_operator",
+  "grid_professional",
+  "grid_facility",
+].map((key) => ({
+  key: key as CommercialProductKey,
+  label: "Retired legacy commercial evidence",
+  audience: key.startsWith("grid_") ? ("professional" as const) : ("clinic" as const),
+  billing: "custom" as const,
+  priceCents: null,
+  revenueClass: "historical_evidence" as const,
+  commercialRoute: "historical_evidence_only" as const,
+  priceType: "historical" as const,
+  qualificationRequired: false,
+  conversionDestination: null,
+  lifecycle: "legacy_evidence_only" as const,
+  publicPurchasable: false,
+  directPublicCheckoutEligible: false,
+  modules: [],
+  whopPlanEnvVars: key === "clinic_operator" ? ["WHOP_PLAN_CLINIC_OPERATOR"] : [],
+  allowanceEnv: {},
+  postPurchaseBoundary: historicalBoundary,
+}));
+
+export const commercialProducts: readonly CommercialProduct[] = Object.freeze([
+  ...serviceProducts,
+  ...clinicProducts,
+  ...historicalProducts,
+]);
 
 export function getCommercialProduct(key: string | null | undefined) {
   return commercialProducts.find((product) => product.key === key);
 }
 
 export function canStartNewCommercialCheckout(product: CommercialProduct) {
-  return product.lifecycle === "active";
-}
-
-export function canStartDirectCommercialCheckout(product: CommercialProduct) {
-  return (
-    product.lifecycle === "active" &&
-    product.publicPurchasable &&
-    product.directPublicCheckoutEligible &&
-    product.commercialRoute === "self_serve" &&
-    product.priceType === "fixed" &&
-    product.priceCents !== null &&
-    product.qualificationRequired === false
-  );
-}
-
-export function resolveCommercialCheckoutAmount(product: CommercialProduct, requestedAmountCents?: number | null) {
-  const amountCents = requestedAmountCents ?? product.priceCents ?? null;
-  if (amountCents !== null && (!Number.isInteger(amountCents) || amountCents < 0)) {
-    throw new Error("Expected checkout amount must be a non-negative integer number of cents.");
-  }
-  if (product.priceCents !== null && amountCents !== product.priceCents) {
-    throw new Error(`Checkout amount does not match the server-owned price for ${product.label}.`);
-  }
-  return amountCents;
-}
-
-export function whopPlanIdForProduct(product: CommercialProduct, env: NodeJS.ProcessEnv = process.env) {
-  for (const key of product.whopPlanEnvVars) {
-    const value = env[key]?.trim();
-    if (value) return value;
-  }
-  return null;
-}
-
-export function productForWhopPlanId(planId: string | null | undefined, env: NodeJS.ProcessEnv = process.env) {
-  const candidate = planId?.trim();
-  if (!candidate) return undefined;
-  return commercialProducts.find((product) => whopPlanIdForProduct(product, env) === candidate);
-}
-
-export function configuredAllowanceCents(product: CommercialProduct, env: NodeJS.ProcessEnv = process.env) {
-  return Object.entries(product.allowanceEnv).flatMap(([bucket, variable]) => {
-    if (!variable) return [];
-    const raw = env[variable]?.trim();
-    if (!raw) return [];
-    const amount = Number(raw);
-    if (!Number.isInteger(amount) || amount < 0) return [];
-    return [{ bucket, amountCents: amount }];
-  });
+  return product.lifecycle === "active" && product.directPublicCheckoutEligible;
 }

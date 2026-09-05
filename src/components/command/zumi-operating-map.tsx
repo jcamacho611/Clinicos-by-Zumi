@@ -1,13 +1,5 @@
 import { ArrowRight, Banknote, Compass, TriangleAlert } from "lucide-react";
 import type { OperatingSignal, OperatingSignalSummary } from "@/lib/sales/zumi-command";
-import { canonicalizeSalesDisplayText } from "@/lib/sales/canonical-display";
-
-/**
- * The live operating map and its analysis panels.
- *
- * Every status is derived from what the operator reported, and the copy says so.
- * Nothing here claims Klinikos measured the clinic.
- */
 
 const statusPresentation: Record<OperatingSignal["status"], { label: string; className: string }> = {
   attention: { label: "Needs attention", className: "border-rose-400/40 bg-rose-500/[.08] text-rose-200" },
@@ -18,31 +10,16 @@ const statusPresentation: Record<OperatingSignal["status"], { label: string; cla
 export function OperatingMapPanel({ signals }: { signals: OperatingSignal[] }) {
   return (
     <section aria-labelledby="operating-map-heading">
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-rose-200" id="operating-map-heading">
-        Live Clinic Operating Map
-      </h2>
-      <p className="mt-2 text-sm leading-6 text-slate-400">
-        Built from your answers as you go. Status reflects what you reported, not a measurement of your clinic.
-      </p>
-
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[.18em] text-rose-200" id="operating-map-heading">Live unfinished-work map</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-400">Built from your answers as you go. Status reflects what you reported, not a measurement of your organization.</p>
       <ul className="mt-6 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-2">
         {signals.map((signal) => {
           const presentation = statusPresentation[signal.status];
           return (
             <li className="bg-[#070d15] p-5" key={signal.key}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-extrabold text-white">{signal.label}</h3>
-                <span className={`border px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-[.12em] ${presentation.className}`}>
-                  {presentation.label}
-                </span>
-              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-sm font-extrabold text-white">{signal.label}</h3><span className={`border px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-[.12em] ${presentation.className}`}>{presentation.label}</span></div>
               <p className="mt-3 text-[12px] leading-5 text-slate-300">{signal.detected}</p>
-              {signal.status !== "stable" && (
-                <>
-                  <p className="mt-2 text-[12px] leading-5 text-slate-400">{signal.whyItMatters}</p>
-                  <p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-5 text-amber-100">{signal.humanReview}</p>
-                </>
-              )}
+              {signal.status !== "stable" && <><p className="mt-2 text-[12px] leading-5 text-slate-400">{signal.whyItMatters}</p><p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-5 text-amber-100">{signal.humanReview}</p></>}
             </li>
           );
         })}
@@ -52,54 +29,21 @@ export function OperatingMapPanel({ signals }: { signals: OperatingSignal[] }) {
 }
 
 export function WorkflowLeakageCard({ summary }: { summary: OperatingSignalSummary }) {
-  return (
-    <article className="border border-white/10 bg-white/[.04] p-5">
-      <h3 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-300">
-        <TriangleAlert aria-hidden="true" className="size-4 text-rose-300" /> Top operational bottleneck
-      </h3>
-      <p className="mt-3 text-lg font-extrabold tracking-[-.03em] text-white">{summary.topBottleneck}</p>
-      <p className="mt-3 text-[12px] leading-6 text-slate-400">{summary.accountabilityGap}.</p>
-    </article>
-  );
+  return <article className="border border-white/10 bg-white/[.04] p-5"><h3 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-300"><TriangleAlert aria-hidden="true" className="size-4 text-rose-300" /> Top operating bottleneck</h3><p className="mt-3 text-lg font-extrabold tracking-[-.03em] text-white">{summary.topBottleneck}</p><p className="mt-3 text-[12px] leading-6 text-slate-400">{summary.accountabilityGap}.</p></article>;
 }
 
 export function RevenueSignalCard({ summary }: { summary: OperatingSignalSummary }) {
-  return (
-    <article className="border border-white/10 bg-white/[.04] p-5">
-      <h3 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-300">
-        <Banknote aria-hidden="true" className="size-4 text-amber-200" /> Possible revenue category
-      </h3>
-      <p className="mt-3 text-lg font-extrabold tracking-[-.03em] text-white">{summary.leakageCategory}</p>
-      <p className="mt-3 text-[12px] leading-6 text-slate-400">
-        An estimated category to review. Klinikos does not calculate recovered revenue and does not guarantee a financial outcome.
-      </p>
-    </article>
-  );
+  return <article className="border border-white/10 bg-white/[.04] p-5"><h3 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-slate-300"><Banknote aria-hidden="true" className="size-4 text-amber-200" /> Possible economic category</h3><p className="mt-3 text-lg font-extrabold tracking-[-.03em] text-white">{summary.leakageCategory}</p><p className="mt-3 text-[12px] leading-6 text-slate-400">A hypothesis to review. Klinikos does not treat this as measured savings or guarantee a financial outcome.</p></article>;
 }
 
 export function NextBestActionPanel({ summary }: { summary: OperatingSignalSummary }) {
-  const narrative = canonicalizeSalesDisplayText(summary.narrative);
-  const nextBestAction = canonicalizeSalesDisplayText(summary.nextBestAction);
-
   return (
     <section aria-labelledby="next-action-heading" className="border border-rose-300/30 bg-rose-400/[.06] p-6">
-      <h2 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="next-action-heading">
-        <Compass aria-hidden="true" className="size-4" /> Zumi&apos;s Operating Signal
-      </h2>
-      <p className="mt-4 text-sm leading-7 text-slate-200">{narrative}</p>
-
+      <h2 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="next-action-heading"><Compass aria-hidden="true" className="size-4" /> Zumi&apos;s operating signal</h2>
+      <p className="mt-4 text-sm leading-7 text-slate-200">{summary.narrative}</p>
       <dl className="mt-6 grid gap-x-8 gap-y-4 border-t border-white/10 pt-5 sm:grid-cols-2">
-        <div>
-          <dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Recommended starting module</dt>
-          <dd className="mt-1 text-sm font-extrabold text-white">{summary.recommendedModule}</dd>
-        </div>
-        <div>
-          <dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Next best action</dt>
-          <dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-rose-100">
-            <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {nextBestAction}
-          </dd>
-        </div>
+        <div><dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Suggested operating surface</dt><dd className="mt-1 text-sm font-extrabold text-white">{summary.recommendedModule}</dd></div>
+        <div><dt className="text-[12px] font-bold uppercase tracking-[.14em] text-slate-500">Next best action</dt><dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-rose-100"><ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{summary.nextBestAction}</dd></div>
       </dl>
     </section>
   );
@@ -108,26 +52,12 @@ export function NextBestActionPanel({ summary }: { summary: OperatingSignalSumma
 export function QualificationSummary({ summary, answeredCount, totalCount }: { summary: OperatingSignalSummary; answeredCount: number; totalCount: number }) {
   return (
     <section aria-labelledby="qualification-heading" className="border border-white/10 bg-white/[.04] p-6">
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="qualification-heading">
-        Founding Clinic Qualification
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-slate-300">
-        {answeredCount} of {totalCount} operating questions answered. A Klinikos reviewer confirms this summary with you before any
-        production activation.
-      </p>
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[.16em] text-rose-200" id="qualification-heading">First-value readiness</h2>
+      <p className="mt-3 text-sm leading-6 text-slate-300">{answeredCount} of {totalCount} operating questions answered. A human confirms the real workflow and evidence boundary before any production or paid expansion decision.</p>
       <dl className="mt-5 grid gap-4 border-t border-white/10 pt-5">
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Bottleneck</dt>
-          <dd className="text-[12px] font-semibold text-slate-200">{summary.topBottleneck}</dd>
-        </div>
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Revenue category</dt>
-          <dd className="text-[12px] font-semibold text-slate-200">{summary.leakageCategory}</dd>
-        </div>
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Recommended module</dt>
-          <dd className="text-[12px] font-semibold text-slate-200">{summary.recommendedModule}</dd>
-        </div>
+        <div className="flex flex-wrap justify-between gap-2"><dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Bottleneck</dt><dd className="text-[12px] font-semibold text-slate-200">{summary.topBottleneck}</dd></div>
+        <div className="flex flex-wrap justify-between gap-2"><dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Economic hypothesis</dt><dd className="text-[12px] font-semibold text-slate-200">{summary.leakageCategory}</dd></div>
+        <div className="flex flex-wrap justify-between gap-2"><dt className="text-[11px] font-bold uppercase tracking-[.12em] text-slate-500">Suggested surface</dt><dd className="text-[12px] font-semibold text-slate-200">{summary.recommendedModule}</dd></div>
       </dl>
     </section>
   );

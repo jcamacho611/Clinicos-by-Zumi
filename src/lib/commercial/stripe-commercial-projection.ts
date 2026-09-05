@@ -8,7 +8,7 @@ import {
   type CommercialProductKey,
 } from "@/lib/commercial/product-catalog";
 
-export const STRIPE_PRICING_VERSION = "2026-09-01.v1" as const;
+export const STRIPE_PRICING_VERSION = "2026-09-02.fabric-v2" as const;
 
 export type StripeCommercialTreatment =
   | "public_self_serve"
@@ -57,44 +57,24 @@ function project(input: ProjectionInput): StripeCommercialProjection {
   });
 }
 
-const fixedProjections: readonly ProjectionInput[] = [
-  {
-    offerKey: "operational_audit",
-    treatment: "public_self_serve",
-    cadence: "one_time",
-    amountCents: getCommercialProduct("operational_audit")?.priceCents ?? null,
-    lookupKey: "klinikos_operational_audit_one_time_v1",
-    publicLinkEligible: true,
-    automaticCollection: true,
-  },
-  {
-    offerKey: "implementation_blueprint",
-    treatment: "private_quoted",
-    cadence: "one_time",
-    amountCents: getCommercialProduct("implementation_blueprint")?.priceCents ?? null,
-    lookupKey: "klinikos_implementation_blueprint_one_time_v1",
-    publicLinkEligible: false,
-    automaticCollection: true,
-  },
-  {
-    offerKey: "founding_clinic_implementation",
-    treatment: "private_quoted",
-    cadence: "one_time",
-    amountCents: null,
-    lookupKey: "klinikos_founding_implementation_starting_v1",
-    publicLinkEligible: false,
-    automaticCollection: true,
-  },
-  {
-    offerKey: "clinic_enterprise",
-    treatment: "private_quoted",
-    cadence: "one_time",
-    amountCents: null,
-    lookupKey: null,
-    publicLinkEligible: false,
-    automaticCollection: false,
-  },
-] as const;
+const serviceProjections: readonly ProjectionInput[] = [
+  "deep_operating_audit",
+  "proof_sprint",
+  "optimization_retainer",
+  "integration_launch",
+  "data_migration_go_live",
+  "enterprise_architecture_workshop",
+].map((offerKey) => ({
+  offerKey: offerKey as CommercialProductKey,
+  treatment: "private_quoted" as const,
+  cadence: offerKey === "optimization_retainer" ? ("month" as const) : ("one_time" as const),
+  amountCents: getCommercialProduct(offerKey)?.priceCents ?? null,
+  // Qualified services are scoped before payment. A Stripe lookup key can be added
+  // only when the corresponding server-owned product/price is actually provisioned.
+  lookupKey: null,
+  publicLinkEligible: false,
+  automaticCollection: false,
+}));
 
 const clinicSubscriptionProjections: readonly ProjectionInput[] = [
   ["clinic_core", "core", clinicPlans.core.monthlyPriceCents, clinicPlans.core.annualPriceCents],
@@ -121,6 +101,18 @@ const clinicSubscriptionProjections: readonly ProjectionInput[] = [
   },
 ]);
 
+const enterpriseProjection: readonly ProjectionInput[] = [
+  {
+    offerKey: "clinic_enterprise",
+    treatment: "private_quoted",
+    cadence: "one_time",
+    amountCents: null,
+    lookupKey: null,
+    publicLinkEligible: false,
+    automaticCollection: false,
+  },
+];
+
 const historicalProjections: readonly ProjectionInput[] = commercialProducts
   .filter((offer) => offer.lifecycle === "legacy_evidence_only")
   .map((offer) => ({
@@ -134,8 +126,9 @@ const historicalProjections: readonly ProjectionInput[] = commercialProducts
   }));
 
 export const stripeCommercialProjections: readonly StripeCommercialProjection[] = Object.freeze([
-  ...fixedProjections.map(project),
+  ...serviceProjections.map(project),
   ...clinicSubscriptionProjections.map(project),
+  ...enterpriseProjection.map(project),
   ...historicalProjections.map(project),
 ]);
 

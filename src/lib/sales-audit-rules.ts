@@ -1,7 +1,4 @@
 import { z } from "zod";
-import { clinicCommercialOffers } from "@/lib/commercial/klinikos-commercial";
-
-export const CLINIC_OPERATING_ANALYSIS_PRICE_DOLLARS = clinicCommercialOffers.privateWorkflowReview.priceCents / 100;
 
 export const salesAuditQualificationSchema = z.object({
   clinic: z.string().trim().min(2).max(160),
@@ -26,11 +23,13 @@ export const salesAuditQualificationSchema = z.object({
 });
 
 export type SalesAuditQualificationInput = z.infer<typeof salesAuditQualificationSchema>;
-export type SalesAuditStatus = "QUALIFIED" | "MORE INFORMATION REQUIRED" | "DO NOT SELL AUDIT YET";
+export type SalesAuditStatus = "READY FOR FIRST VALUE" | "MORE INFORMATION REQUIRED" | "NURTURE";
 export type SalesAuditQualification = SalesAuditQualificationInput & {
   score: number;
   status: SalesAuditStatus;
-  auditPrice: number;
+  firstValueEligible: boolean;
+  economicSignal: "HIGH" | "MEDIUM" | "LOW";
+  recommendedNextAction: "FIRST_USEFUL_RESULT" | "DISCOVERY" | "NURTURE";
 };
 
 export function calculateSalesAuditScore(input: SalesAuditQualificationInput) {
@@ -48,28 +47,28 @@ export function calculateSalesAuditScore(input: SalesAuditQualificationInput) {
 }
 
 export function salesAuditStatusForScore(score: number): SalesAuditStatus {
-  if (score >= 70) return "QUALIFIED";
+  if (score >= 70) return "READY FOR FIRST VALUE";
   if (score >= 45) return "MORE INFORMATION REQUIRED";
-  return "DO NOT SELL AUDIT YET";
-}
-
-export function calculateSalesAuditPrice(_input: SalesAuditQualificationInput) {
-  return CLINIC_OPERATING_ANALYSIS_PRICE_DOLLARS;
+  return "NURTURE";
 }
 
 export function evaluateSalesAuditQualification(input: SalesAuditQualificationInput): SalesAuditQualification {
   const score = calculateSalesAuditScore(input);
+  const status = salesAuditStatusForScore(score);
   return {
     ...input,
     score,
-    status: salesAuditStatusForScore(score),
-    auditPrice: calculateSalesAuditPrice(input),
+    status,
+    firstValueEligible: status === "READY FOR FIRST VALUE",
+    economicSignal: score >= 70 ? "HIGH" : score >= 45 ? "MEDIUM" : "LOW",
+    recommendedNextAction:
+      score >= 70 ? "FIRST_USEFUL_RESULT" : score >= 45 ? "DISCOVERY" : "NURTURE",
   };
 }
 
 export function buildSalesAuditNotes(input: SalesAuditQualification) {
   return [
-    "Klinikos Clinic Operating Analysis qualification",
+    "Klinikos unfinished-work qualification",
     `Decision maker: ${input.decisionMaker}`,
     `Buyer email: ${input.email}`,
     `Locations: ${input.locations}; providers: ${input.providers}; staff: ${input.staff}; encounters/month: ${input.encounters}`,
@@ -79,8 +78,8 @@ export function buildSalesAuditNotes(input: SalesAuditQualification) {
     `Owner/admin after-hours: ${input.afterHours}`,
     `Workflow flags: referrals=${input.referrals}; labs=${input.labs}; claims=${input.claims}; multi-location=${input.multiLocation}`,
     `Biggest operating frustration: ${input.biggestPain || "not recorded"}`,
-    `Qualification score: ${input.score}/100; status: ${input.status}`,
-    `Clinic Operating Analysis price: $${input.auditPrice.toLocaleString()}`,
-    "Qualification score and status are derived server-side from the saved prospect inputs. The analysis price comes from the canonical commercial offer and must match the official Klinikos GoDaddy paylink. Checkout launch is not payment proof; payment must be independently reconciled before the analysis is marked paid.",
+    `Readiness score: ${input.score}/100; status: ${input.status}; economic signal: ${input.economicSignal}`,
+    `Next action: ${input.recommendedNextAction}`,
+    "This qualification identifies where Klinikos can produce a first useful result. It does not create a purchase, payment, entitlement, regulated authority, or automatic meeting. Any paid capability follows additional economic value and the appropriate governed commercial route.",
   ].join("\n");
 }
