@@ -1,5 +1,4 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { globSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const DIR = "docs/grand-build";
@@ -20,7 +19,26 @@ const EXPECTED = [
 ];
 
 const read = (f: string) => readFileSync(`${DIR}/${f}`, "utf8");
+
+// node:fs globSync is not available on every Node this repo builds on, and readdirSync's
+// `recursive` option is also version-dependent. Walk it by hand so the check runs anywhere.
+function cssUnder(dir: string, suffix = ".css"): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return cssUnder(path, suffix);
+    return entry.name.endsWith(suffix) ? [path] : [];
+  });
+}
 const all = EXPECTED.map(read).join("\n");
+
+function overrideLayers(): string[] {
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  const imported = [...layout.matchAll(/import "\.\/([\w-]+\.css)"/g)].map((m) => m[1]);
+  return imported.slice(
+    imported.indexOf("globals.css") + 1,
+    imported.indexOf("accessibility.css"),
+  );
+}
 
 describe("grand build package", () => {
   it("contains exactly the twelve canonical documents", () => {
@@ -104,17 +122,16 @@ describe("grand build package", () => {
     expect(frontend).toContain("CORRECTION");
 
     expect(truth).toContain("six override layers");
+
+    // and "12" must be true of the repository, not merely present in the prose
+    expect(cssUnder("src/app")).toHaveLength(12);
+    expect(overrideLayers()).toHaveLength(6);
   });
 
   it("states override-stack numbers that are true of the repository right now", () => {
     // Measure from the files, then require the documents to state what was measured.
     // A substring check would pass on a number that merely appears somewhere.
-    const layout = readFileSync("src/app/layout.tsx", "utf8");
-    const imported = [...layout.matchAll(/import "\.\/([\w-]+\.css)"/g)].map((m) => m[1]);
-    const overrides = imported.slice(
-      imported.indexOf("globals.css") + 1,
-      imported.indexOf("accessibility.css"),
-    );
+    const overrides = overrideLayers();
 
     const count = (files: string[]) =>
       files.reduce(
@@ -129,7 +146,7 @@ describe("grand build package", () => {
       );
 
     const stack = count(overrides.map((f) => `src/app/${f}`));
-    const modules = count(globSync("src/app/**/*.module.css"));
+    const modules = count(cssUnder("src/app", ".module.css"));
 
     const truth = read("06_WAVE_0_TRUTH.md");
     const frontend = read("11_FRONTEND_PROMPT.md");
