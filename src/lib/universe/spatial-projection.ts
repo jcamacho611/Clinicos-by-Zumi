@@ -4,6 +4,7 @@ import {
   type CanonicalPlaneId,
   type EcosystemNode,
 } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import { planeLanguage } from "@/lib/universe/plane-language";
 
 /**
  * Browser projection of the canonical five-plane ecosystem graph.
@@ -54,13 +55,6 @@ export type SpatialUniverse = {
 };
 
 /** Human meaning for each plane. The person never reads "plane" jargon alone. */
-const PLANE_MEANING: Record<CanonicalPlaneId, string> = {
-  healthcare_universe: "Everyone and every organization in healthcare.",
-  economic_resource: "Everything that can be needed, offered, or exchanged.",
-  lifecycle: "How something moves from a need to a finished, proven result.",
-  operating_infrastructure: "The Klinikos machinery that makes it all work.",
-  compounding_business: "How useful work makes the whole network stronger.",
-};
 
 /**
  * Stable layout hash. The same node lands in the same place every time, on every
@@ -90,7 +84,7 @@ export function projectSpatialUniverse(): SpatialUniverse {
     return {
       id: planeId,
       label,
-      meaning: PLANE_MEANING[planeId],
+      meaning: planeLanguage(planeId).meaning,
       depth: depthIndex,
       nodes: planeNodes.map((n, index) => ({
         id: n.id,
