@@ -156,6 +156,11 @@ jobs:
           FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
             node scripts/verify-frontend-browser-interactions.mjs
 
+          CHROME_BIN="$CHROME" \
+          FRONTEND_BASE_URL=http://localhost:3000 \
+          FRONTEND_EVIDENCE_DIR=artifacts/frontend-evidence \
+            node scripts/verify-living-reality-browser.mjs
+
       # Reviewable browser evidence belongs in CI so frontend acceptance does not depend
       # on one developer machine, cache state, or a desktop browser policy. The screenshots
       # are generated only from this exact-head production build and uploaded as an artifact.

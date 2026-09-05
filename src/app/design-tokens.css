@@ -133,6 +133,14 @@ html:root[data-klinikos-atmosphere="night"] {
   --k-depth-veil:linear-gradient(180deg,transparent,rgba(5,3,3,.78));
   --mode-background:var(--k-work-bg);
   --mode-header:var(--k-work-header);
+  --k-reality-environment:#050303;
+  --k-reality-surface:#4e292c;
+  --k-reality-edge:#7d4a4f;
+  --k-reality-active:#efaaa1;
+  --k-reality-attention:#e6817b;
+  --k-reality-blocked:#ef6d68;
+  --k-reality-success:#d68f87;
+  --k-reality-living-edge:#b9575b;
 }
 
 /* Marble is warm architectural light, never hospital white. Internal dawn/day/golden
@@ -180,6 +188,14 @@ html:root[data-klinikos-atmosphere="golden"] {
   --k-depth-veil:linear-gradient(180deg,transparent,rgba(248,244,239,.82));
   --mode-background:var(--k-work-bg);
   --mode-header:var(--k-work-header);
+  --k-reality-environment:#f8f4ef;
+  --k-reality-surface:#eadbd8;
+  --k-reality-edge:#a9827f;
+  --k-reality-active:#7f2d37;
+  --k-reality-attention:#a84d55;
+  --k-reality-blocked:#b13f48;
+  --k-reality-success:#6f7864;
+  --k-reality-living-edge:#9f5f55;
 }
 
 [data-klinikos-ds] {

@@ -131,7 +131,8 @@ describe("P00 execution traceability governance", () => {
   });
 
   it("accepts the checked-in canonical ledger", () => {
-    expect(runValidator()).toContain("Execution traceability valid: 2026-09-03.2");
+    const ledger = JSON.parse(read(jsonLedger)) as { version: string };
+    expect(runValidator()).toContain(`Execution traceability valid: ${ledger.version}`);
   });
 
   it("rejects duplicate requirement IDs", () => {

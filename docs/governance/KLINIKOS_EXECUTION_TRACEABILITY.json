@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-03.2",
+  "version": "2026-09-03.3",
   "status": "IMPLEMENTATION_CONTRACT",
   "authority": {
     "parent": "docs/KLINIKOS_MASTER_CANON.md",
@@ -57,7 +57,36 @@
     "P22": {"name":"Research NIH SBIR Accelerators Strategic Programs","wave":"W5","realities":["ResearchMissionRoom"],"primaryScope":["78-80","100-102"],"dependencies":["P00","P13","P14"],"kpis":["qualified_research_opportunities","submitted_research_opportunities","awarded_nondilutive_capital"]},
     "P23": {"name":"Economic Participation Vendor Sponsorship New Revenue Hunt","wave":"W2","realities":["CommercialFabric","VendorSponsor","CapacityYield"],"primaryScope":["93-95","143-150","175-180","186"],"dependencies":["P16"],"kpis":["paid_orgs","gross_margin_by_revenue_class","lawful_transaction_capture","expansion_revenue"]}
   },
-  "requirements": [],
+  "requirements": [
+    {
+      "requirementId": "P01-W1-LIVING-REALITY-RUNTIME",
+      "title": "Living Reality true-3D projection runtime with semantic Precision continuity",
+      "sourceRefs": ["docs/superpowers/specs/2026-09-03-program-p01-living-reality-runtime-design.md", "docs/superpowers/plans/2026-09-03-program-p01-living-reality-runtime.md", "PR#531"],
+      "canonRefs": ["docs/KLINIKOS_MASTER_CANON.md"],
+      "strategyState": "NOW",
+      "implementationState": "BUILT_NEEDS_VERIFICATION",
+      "codeDisposition": "EXTEND",
+      "programId": "P01",
+      "realityIds": ["PublicLivingHome", "MemberLivingHome"],
+      "journeyIds": ["public_intent_to_governed_path_reality", "member_person_to_living_reality"],
+      "frameIds": ["F0", "F1", "F2", "F3", "F4", "F5", "F7", "F9"],
+      "domainObjects": ["RealityProjection", "RealityNode", "RealityEdge"],
+      "routeOrApiContracts": ["/", "/member"],
+      "events": [],
+      "zumiCapabilities": ["public_intent_recomposition_projection_only"],
+      "monetizationClasses": [],
+      "authorityGates": ["server_constructed_member_projection", "semantic_dom_remains_authoritative", "3d_presentation_never_grants_authority"],
+      "securityPrivacyLegalGates": ["P16-P01-SPATIAL-PROJECTION", "P16-PRODUCTION-PHI remains BLOCKED"],
+      "reuseTargets": ["UniverseShell", "PublicLivingGateway", "PublicLivingUniverseStage", "existing route authority", "existing design token authority"],
+      "testContracts": ["tests/living-reality-runtime-contract.test.ts", "tests/living-reality-projection.test.ts", "tests/living-reality-member-server-boundary.test.ts", "tests/public-living-reality-projection.test.ts", "tests/living-reality-degraded-states.test.ts", "tests/living-reality-confidentiality.test.ts", "scripts/verify-living-reality-browser.mjs"],
+      "dependencies": ["P00", "P16", "P21"],
+      "kpis": ["public_intent_completion", "interaction_latency", "precision_fallback_success", "accessibility_pass_rate"],
+      "evidenceRefs": ["src/lib/living-reality/reality-projection.ts", "src/lib/living-reality/member-reality-projection.ts", "src/lib/living-reality/public-path-reality-projection.ts", "src/components/living-reality/living-reality-layer.tsx", "src/components/living-reality/living-reality-canvas.tsx", "src/components/living-reality/living-reality-scene.tsx", "PR#531"],
+      "owner": "Platform Product Engineering",
+      "releaseWave": "W1",
+      "currentGap": "Final exact-head Quality verify and deploy-contract plus uploaded browser evidence are required before merge; production PHI authority remains blocked."
+    }
+  ],
   "openReconciliations": [
     {
       "id": "REC-PR-519-COMMERCIAL",
