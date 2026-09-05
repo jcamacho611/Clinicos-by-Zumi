@@ -113,7 +113,9 @@ This is not a substitute for backward-compatible migrations, release testing, ba
 
 The following remain external launch/diligence conditions unless later evidence proves otherwise:
 
-- **GitHub Actions account condition:** restore runner/billing/spending allowance and obtain real exact-head quality/deploy evidence. `steps:null` is not CI-green.
+- **GitHub Actions account condition — RESOLVED 2026-09-05.** Runners are allocated and jobs execute
+  to completion (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures). This is no longer an external blocker. The standard it set survives:
+  `steps:null` is not CI-green, and exact-head run evidence is still required.
 - **Counsel:** finalize and approve public terms, privacy language, clinic agreements, BAA, security/data-processing terms, AI terms, Grid terms, communications terms, and jurisdiction-specific requirements for the launch scope.
 - **Production PHI:** approve the exact database/hosting/storage/AI/communications/integration stack, BAAs, access controls, retention/deletion, logging, incident response, backups/restore, vendor register, and workload before PHI is allowed.
 - **Deployment identity:** independently verify the production release SHA after each critical merge. A repo merge is not deployment proof.

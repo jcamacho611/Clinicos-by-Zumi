@@ -618,7 +618,13 @@ Current release truth as of the 2026-08-25 capital refresh:
 - repeated verification after the release fix still observed `https://www.klinikos.io/` returning **503 Service Unavailable**;
 - therefore there is no current evidence in this register that the newest `main` is healthy in production;
 - `main` remains reported by GitHub as unprotected with required status checks disabled;
-- GitHub Actions runner allocation has repeatedly returned no executable steps / no runner, so hosted CI must not be described as green merely because a workflow object exists.
+- hosted CI must not be described as green merely because a workflow object exists — a run that
+  executed no steps is infrastructure evidence, not a pass. **Correction, 2026-09-05:** the earlier
+  statement here that runner allocation "has repeatedly returned no executable steps / no runner"
+  described an August 2026 condition that no longer holds. GitHub Actions now allocates runners and
+  executes jobs to completion (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures; workflow run `33938042954` on PR #504 head `d0601395`
+  ran `verify` and `deploy-contract` to `success`). The discipline above stands; the claim that CI
+  cannot execute does not.
 
 Therefore:
 - never imply every current `main` capability is already live in production;

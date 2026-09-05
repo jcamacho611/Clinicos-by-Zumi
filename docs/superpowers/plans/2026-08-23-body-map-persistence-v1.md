@@ -51,7 +51,13 @@ Tests were committed before each corresponding production fix for:
 
 ### Exact-source local executable checks
 
-Because the environment cannot clone GitHub and GitHub Actions receives no runner, exact GitHub file contents were reconstructed into an offline harness and hash-checked against their Git blob IDs.
+Because the environment could not clone GitHub and GitHub Actions was receiving no runner at the time
+of this work (2026-08-23), exact GitHub file contents were reconstructed into an offline harness and
+hash-checked against their Git blob IDs.
+
+**Correction, 2026-09-05:** that justification no longer holds. Actions allocates runners and executes
+jobs (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures). The harness and its results below are retained as the evidence actually produced at
+the time; this work can now additionally be verified against real CI.
 
 Verified executable behavior includes:
 
@@ -97,7 +103,12 @@ No migration or synthetic data was applied to production.
 
 ### GitHub Actions limitation
 
-Fresh PR workflow runs continue to fail before checkout with `steps:null` / no runner allocation. That is infrastructure non-execution, not repository pass/fail evidence.
+As of 2026-08-23, fresh PR workflow runs were failing before checkout with `steps:null` / no runner
+allocation. A run that executes no steps is infrastructure non-execution, not repository pass/fail
+evidence — that distinction still stands.
+
+**Correction, 2026-09-05:** the non-execution condition is resolved (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures). The gates listed
+below as unexecuted should be re-checked against current CI rather than assumed unrunnable.
 
 Unexecuted full-repository gates remain:
 

@@ -45,7 +45,7 @@ This file records what is known about production environment configuration witho
 | Healthcare transactions | `STEDI_API_KEY`, `STEDI_MODE` | `SANDBOX CONTRACT EXISTS IN REPO / PRODUCTION PENDING` | BAA, payer enrollment/testing, and production credentials for eligibility/claims |
 | Object storage | `OBJECT_STORAGE_*` | `PENDING PRODUCTION STORAGE` | Choose approved encrypted private storage, IAM, retention, backup/restore, and BAA posture if PHI |
 | Production database HIPAA posture | Neon project | Last inspected setting reported HIPAA mode disabled | Resolve before production PHI approval; do not infer compliance from application code |
-| GitHub Actions verification | Repository Actions | `EXTERNAL INFRASTRUCTURE BLOCKED`: recent jobs have repeatedly been refused before step 1 with `steps:null` and no repository logs | Restore GitHub billing/Actions allowance, rerun current-main quality/deploy gates, and record the resulting exact-head evidence |
+| GitHub Actions verification | Repository Actions | `EXECUTING` as of 2026-09-05: runners are allocated and jobs run to completion (verified 2026-09-05: 401 `main` runs and 2,464 total; the eight most recent `main` runs all succeeded, and PR runs 2394-2433 executed to real conclusions including genuine test failures). The August 2026 `steps:null` refusal condition recorded here is resolved. A run that executes no steps remains infrastructure evidence rather than a pass. | Keep recording exact-head run IDs as evidence; do not treat mergeable-state as CI-green |
 
 ## Stripe activation law
 

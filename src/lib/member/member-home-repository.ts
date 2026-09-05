@@ -2,8 +2,9 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import type { PersonAccountSession } from "@/lib/auth/account-types";
-import { canonicalEcosystemGraph, type CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
+import type { CanonicalPlaneId } from "@/lib/ecosystem/canonical-ecosystem-graph";
 import { buildEffectiveRelationshipWhere } from "@/lib/identity/relationship-repository";
+import { PLANE_LANGUAGE } from "@/lib/universe/plane-language";
 import type { MemberHomeProjection } from "@/components/living-universe/universe-shell";
 import { klinikosPathCatalog } from "@/lib/paths/catalog";
 import {
@@ -11,13 +12,6 @@ import {
   personEntryHrefForPath,
 } from "@/lib/member/member-action-routes";
 
-const PLANE_DESCRIPTIONS: Record<CanonicalPlaneId, string> = {
-  healthcare_universe: "Your Person identity can participate in governed contexts without collapsing them into one role.",
-  economic_resource: "Grid can show public-safe work, services, space, equipment, learning, and capacity without asserting eligibility.",
-  lifecycle: "Claims, evidence, verification, eligibility, fulfillment, and outcomes remain separate states.",
-  operating_infrastructure: "Identity, Grid, EDU, Network, and Zumi coordinate context while deterministic systems retain authority.",
-  compounding_business: "Only completed, governed activity may contribute to continuity, reputation evidence, and future value.",
-};
 
 function lensStatus(id: CanonicalPlaneId, input: { hasClaims: boolean; hasRelationships: boolean }) {
   if (id === "healthcare_universe") return input.hasRelationships ? "context_claimed" : "person_present";
@@ -92,11 +86,14 @@ export async function getMemberHomeProjection(
     (relationship) => relationship.verificationState === "verified",
   );
 
-  const lenses = canonicalEcosystemGraph.planes.map((plane, index) => ({
+  // Ordinal, title and description all come from the shared plane language, so
+  // the member's rail and the public universe cannot disagree about what a plane
+  // is called or where it sits in the order.
+  const lenses = PLANE_LANGUAGE.map((plane) => ({
     id: plane.id,
-    number: String(index + 1).padStart(2, "0"),
+    number: plane.ordinal,
     title: plane.label,
-    description: PLANE_DESCRIPTIONS[plane.id],
+    description: plane.governance,
     status: lensStatus(plane.id, { hasClaims, hasRelationships }),
   }));
 

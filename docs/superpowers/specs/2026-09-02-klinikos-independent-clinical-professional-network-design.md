@@ -277,8 +277,14 @@ evaluation, and let declared jurisdiction policy answer.
 
 Rules become declared data, versioned, with provenance, evaluated server-side.
 
+The record is deliberately split in two. A **candidate rule** is what research
+and drafting produced. An **effective policy result** is what authorization is
+allowed to consume. They are different things, and conflating them is how a
+system ends up holding an uncleared legal hypothesis and treating it as
+permission.
+
 ```
-JurisdictionPolicy
+JurisdictionPolicyCandidate          ← drafted; never consumed directly
   jurisdiction            "NY"
   activity                GridActivityKey
   siteClass               SiteClass
@@ -291,23 +297,49 @@ JurisdictionPolicy
   entityRestriction                   none | professional_entity_required | UNKNOWN
   feeSplittingRestriction             none | restricted | UNKNOWN
   productCustodyRequirement           string | UNKNOWN
-  outcome   ALLOWED | ALLOWED_WITH_CONDITIONS | REVIEW_REQUIRED
-          | LEGAL_REVIEW_REQUIRED | EXTERNAL_VERIFICATION_REQUIRED
-          | BLOCKED | UNKNOWN
-  source                  citation + reviewedBy + reviewedAt + version
-  counselCleared          bool
+  proposedOutcome   ALLOWED | ALLOWED_WITH_CONDITIONS | REVIEW_REQUIRED
+                  | LEGAL_REVIEW_REQUIRED | EXTERNAL_VERIFICATION_REQUIRED
+                  | BLOCKED | UNKNOWN
+  source                  citation + version
+  counselReview           { clearedBy, clearedAt, scope } | null
 ```
+
+The effective result is **derived, never stored as an independently settable
+field**:
+
+```
+effectivePolicy(candidate) →
+  if candidate.counselReview is null
+      → LEGAL_REVIEW_REQUIRED
+        (or UNKNOWN when the candidate rule itself is not established)
+  else
+      → candidate.proposedOutcome
+```
+
+`proposedOutcome` is not readable by authorization. Only `effectivePolicy()` is.
+There is no second flag for a caller to remember to check, because there is no
+path to an allow that does not pass through counsel review.
 
 Laws:
 
 1. **`UNKNOWN` fails closed.** Absence of a rule is never permission.
-2. **No AI-authored legal permission.** A policy row is only `ALLOWED` when
-   `counselCleared` is true and a human reviewer is named. Zumi may draft a
-   candidate row; it may never set `counselCleared`.
-3. **Seed narrowly and honestly.** Ship New York first, `UNKNOWN` everywhere
-   else, and let the product say so. An empty policy table is a truthful product;
-   a guessed one is a liability.
-4. Policy is server-only. It is exactly the kind of proprietary governed logic
+2. **Counsel clearance is a necessary condition of any effective allow.** An
+   effective `ALLOWED` or `ALLOWED_WITH_CONDITIONS` is unreachable while
+   `counselReview` is null. This is structural, not a convention: the type of an
+   uncleared candidate cannot produce an allow.
+3. **No AI-authored legal permission.** Zumi may draft a candidate row. It may
+   never write `counselReview`, and it may never present a candidate's
+   `proposedOutcome` to a person as though it were the answer.
+4. **Only an effective row participates in an Encounter Authorization Set.** A
+   candidate is research; it never fills a slot in §4.
+5. **Seed narrowly and honestly.** Ship New York first, `UNKNOWN` everywhere
+   else, and let the product say so. An empty policy table is a truthful
+   product; a guessed one is a liability.
+6. Provenance stays attached and versioned on the candidate, so a later reviewer
+   can see what was drafted, from what source, and what counsel actually cleared
+   — clearance carries a `scope`, because counsel may clear part of a candidate
+   and not the rest.
+7. Policy is server-only. It is exactly the kind of proprietary governed logic
    `docs/FRONTEND_TRADE_SECRET_AND_SERVER_BOUNDARY_CANON.md` keeps off the wire.
 
 ### 6.1 The New York starting point
@@ -319,21 +351,30 @@ restricts fee splitting connected with professional care. Federally, Botox
 Cosmetic and approved dermal fillers are prescription-only and are not to be
 sold directly to the public.
 
-Therefore the seeded New York default for aesthetic injectables is:
+That research produces a **candidate**, not a rule:
 
 ```
-requiresPatientSpecificOrder        = true
-requiresPriorEvaluationByClinician  = true
-entityRestriction                   = professional_entity_required
-feeSplittingRestriction             = restricted
-siteClass mobile_patient_residence  = REVIEW_REQUIRED
-outcome                             = ALLOWED_WITH_CONDITIONS
-counselCleared                      = false   ← until counsel signs
+JurisdictionPolicyCandidate  NY / perform_aesthetic_injection / RN
+  requiresPatientSpecificOrder        = true
+  requiresPriorEvaluationByClinician  = true
+  entityRestriction                   = professional_entity_required
+  feeSplittingRestriction             = restricted
+  siteClass mobile_patient_residence  = REVIEW_REQUIRED
+  proposedOutcome                     = ALLOWED_WITH_CONDITIONS
+  counselReview                       = null
+
+  effectivePolicy()                   = LEGAL_REVIEW_REQUIRED
 ```
 
-Until `counselCleared` is true, the product surfaces the Path as
-`requires_verification` and does not transact. That is the honest state, and
-`klinikosPathCatalog` already supports expressing it.
+Read the last two lines together. The candidate records what we believe the
+conditions are; the effective result records that nobody with authority has
+confirmed it. Authorization sees only `LEGAL_REVIEW_REQUIRED`, so no encounter
+can be authorized, no inventory reserved, and no payment taken on this basis.
+
+The product state is therefore `requires_verification`, and
+`klinikosPathCatalog` already expresses exactly that. Only when counsel writes
+`counselReview` does `effectivePolicy()` begin returning
+`ALLOWED_WITH_CONDITIONS`, and the Path becomes transactable in the same motion.
 
 ---
 
@@ -517,7 +558,7 @@ Each of these is a test that must fail before its implementation exists.
 9. Inventory cannot be reserved to an encounter without a current, in-scope
    patient-specific order.
 10. Unknown jurisdiction policy blocks; absence of a rule is never permission.
-11. Zumi cannot set `counselCleared`, cannot authorize an encounter, and cannot
+11. Zumi cannot write `counselReview`, cannot authorize an encounter, and cannot
     resolve a legal question.
 12. A credential that expires mid-engagement fails the whole engagement.
 13. Patient identity and patient intent never appear in public Grid supply.
@@ -528,6 +569,9 @@ Each of these is a test that must fail before its implementation exists.
 17. An indemnification agreement does not satisfy any responsibility-map row.
 18. Percentage fees on professional care and referrals stay refused absent
     counsel clearance carrying evidence.
+19. `effectivePolicy()` cannot return `ALLOWED` or `ALLOWED_WITH_CONDITIONS`
+    for a candidate whose `counselReview` is null — for any combination of
+    fields. An uncleared legal hypothesis has no expressible allow.
 
 ---
 
@@ -536,7 +580,7 @@ Each of these is a test that must fail before its implementation exists.
 - A public marketplace for Botox, fillers, or any prescription product.
 - Doctor-to-nurse resale of prescription inventory.
 - Any "the physician is not liable" representation.
-- AI prescribing, AI legal clearance, or AI-set `counselCleared`.
+- AI prescribing, AI legal clearance, or an AI-written `counselReview`.
 - Automatic credential verification from a resume.
 - A universal percentage on clinical transactions.
 - Referral compensation tied to volume or value.
@@ -552,7 +596,9 @@ Backend authority contracts precede UI. Each phase is TDD: RED, minimum
 implementation, GREEN, regression, exact-head verification.
 
 **P1 — Jurisdiction policy engine.** Declared data, `UNKNOWN` fails closed,
-NY seeded with `counselCleared = false`. Server-only. Tests 10 and 11.
+candidate and effective result kept structurally separate, New York seeded with
+`counselReview = null`. Server-only. Tests 10, 11 and 19 — and 19 is the one to
+write first, because it is the invariant the rest of the phase exists to keep.
 
 **P2 — Site class.** Replace `requiresFacilityPrivilege` with a
 `(jurisdiction, activity, siteClass)` requirement resolution inside the existing
